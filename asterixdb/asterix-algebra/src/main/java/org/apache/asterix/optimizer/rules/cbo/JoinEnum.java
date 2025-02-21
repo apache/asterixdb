@@ -33,6 +33,7 @@ import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnot
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -68,6 +69,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinalityAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -284,9 +286,16 @@ public class JoinEnum {
         ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
         for (int joinNum : newJoinConditions) {
-            // need to AND all the expressions.
+            // need to AND all the expressions. skip derived exprs for now.
             JoinCondition jc = joinConditions.get(joinNum);
+            if (jc.derived) {
+                continue;
+            }
             andExpr.getArguments().add(new MutableObject<>(jc.joinCondition));
+        }
+
+        if (andExpr.getArguments().size() == 1) {
+            return andExpr.getArguments().get(0).getValue(); // remove the AND if there is only one argument
         }
         return andExpr;
     }
@@ -458,7 +467,9 @@ public class JoinEnum {
                     if (jc.outerJoin) {
                         outerJoin = true;
                     }
-                    jc.joinCondition = conj.getValue().cloneExpression();
+                    jc.joinCondition = conj.getValue();
+                    LOGGER.info("adding JC " + jc.joinCondition);
+                    jc.usedVars = getUsedVars(jc);
                     joinConditions.add(jc);
                     jc.joinOp = jOp;
                 }
@@ -469,14 +480,15 @@ public class JoinEnum {
                     if (jc.outerJoin) {
                         outerJoin = true;
                     }
-                    // change to not a true condition
-                    jc.joinCondition = expr.cloneExpression();
+                    jc.joinCondition = expr;
+                    LOGGER.info("adding JC " + jc.joinCondition);
+                    jc.usedVars = getUsedVars(jc);
                     joinConditions.add(jc);
                     jc.joinOp = jOp;
                 }
             }
         }
-
+        addTCPreds(); // transitive close of join predicates
         // now patch up any join conditions that have variables referenced in any internal assign statements.
         List<LogicalVariable> usedVars = new ArrayList<>();
         List<AssignOperator> erase = new ArrayList<>();
@@ -529,6 +541,99 @@ public class JoinEnum {
                 }
             }
         }
+    }
+
+    // transitive close of join predicates; add only if they are not already present; user may have added them in the query
+    private void addTCPreds() {
+        boolean changes = true;
+        while (changes) {
+            changes = false;
+            int size = joinConditions.size(); // store the size here. We will add more join conditions.
+            for (int i = 0; i < size - 1; i++) {
+                List<LogicalVariable> vars1 = joinConditions.get(i).usedVars; // see if the predicate just added will yield any TC preds.
+                if (vars1 != null) {
+                    for (int j = i + 1; j < size; j++) {
+                        ILogicalExpression newExpr = null;
+                        List<LogicalVariable> vars2 = joinConditions.get(j).usedVars;
+                        if (vars2 != null) {
+                            if (vars1.get(0) == vars2.get(0)) {
+                                if (notFound(vars1.get(1), vars2.get(1))) {
+                                    newExpr = makeNewEQJoinExpr(vars1.get(1), vars2.get(1));
+                                }
+                            } else if (vars1.get(0) == vars2.get(1)) {
+                                if (notFound(vars1.get(1), vars2.get(0))) {
+                                    newExpr = makeNewEQJoinExpr(vars1.get(1), vars2.get(0));
+                                }
+                            } else if (vars1.get(1) == vars2.get(1)) {
+                                if (notFound(vars1.get(0), vars2.get(0))) {
+                                    newExpr = makeNewEQJoinExpr(vars1.get(0), vars2.get(0));
+                                }
+                            } else if (vars1.get(1) == vars2.get(0)) {
+                                if (notFound(vars1.get(0), vars2.get(1))) {
+                                    newExpr = makeNewEQJoinExpr(vars1.get(0), vars2.get(1));
+                                }
+                            }
+                        }
+                        if (newExpr != null) {
+                            changes = true;
+                            LOGGER.info("vars1 " + vars1 + "; vars2 " + vars2 + " = " + "newExpr " + newExpr);
+                            JoinCondition jc = new JoinCondition();
+                            jc.outerJoin = false;
+                            jc.derived = true; // useful to exclude for NL Joins since NL joins can take only one pred
+                            jc.joinCondition = newExpr;
+                            jc.usedVars = getUsedVars(jc);
+                            joinConditions.add(jc);
+                            jc.joinOp = joinConditions.get(i).joinOp; // borrowing the joinOp here as this does not have a joinOp of its own.
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected ILogicalExpression makeNewEQJoinExpr(LogicalVariable var1, LogicalVariable var2) {
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        VariableReferenceExpression e1 = new VariableReferenceExpression(var1);
+        arguments.add(new MutableObject<>(e1));
+        VariableReferenceExpression e2 = new VariableReferenceExpression(var2);
+        arguments.add(new MutableObject<>(e2));
+        ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), arguments);
+        return expr;
+    }
+
+    private boolean notFound(LogicalVariable var1, LogicalVariable var2) {
+        for (int i = 0; i < joinConditions.size(); i++) {
+            List<LogicalVariable> vars = joinConditions.get(i).usedVars;
+            if (vars != null) {
+                if (vars.get(0) == var1 && vars.get(1) == var2) {
+                    return false;
+                }
+                if (vars.get(1) == var1 && vars.get(0) == var2) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // This routine is collecting information about the variables in the predicates to see if we can do a Transitive closure.
+    // Only considering equi join predicates for now.
+    private List<LogicalVariable> getUsedVars(JoinCondition jc) {
+        ILogicalExpression exp = jc.joinCondition;
+        if (!jc.outerJoin) {
+            if (exp.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                AbstractFunctionCallExpression afcexpr = (AbstractFunctionCallExpression) exp;
+                if (afcexpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)) {
+                    List<LogicalVariable> usedVars = new ArrayList<>();
+                    exp.getUsedVariables(usedVars);
+                    if (usedVars.size() == 2) {
+                        return usedVars;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     // in case we have l.partkey = ps.partkey and l.suppkey = ps.suppkey, we will only use the first one for cardinality computations.

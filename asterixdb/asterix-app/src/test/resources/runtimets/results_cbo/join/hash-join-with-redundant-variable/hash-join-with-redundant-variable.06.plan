@@ -1,16 +1,16 @@
-distribute result [$$36] [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
+distribute result [$$36] [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 19667.04]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
+  exchange [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 19667.04]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
+    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 19667.04]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
+      exchange [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 19667.04]
       -- SORT_MERGE_EXCHANGE [$$43(ASC), $$44(ASC), $$42(ASC) ]  |PARTITIONED|
-        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
+        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 19667.04]
         -- STABLE_SORT [$$43(ASC), $$44(ASC), $$42(ASC)]  |PARTITIONED|
-          exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 19521.94]
+          exchange [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 14112.35]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            select (eq($$43, $$42)) [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 19521.94]
+            select (eq($$43, $$42)) [cardinality: 601.63, doc-size: 10.0, op-cost: 0.0, total-cost: 14112.35]
             -- STREAM_SELECT  |PARTITIONED|
               assign [$$42] <- [$$l.getField(2)] project: [$$43, $$44, $$42] [cardinality: 6010.65, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
               -- ASSIGN  |PARTITIONED|

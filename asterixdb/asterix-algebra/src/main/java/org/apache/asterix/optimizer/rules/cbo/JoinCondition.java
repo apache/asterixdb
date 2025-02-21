@@ -19,7 +19,10 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import java.util.List;
+
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class JoinCondition {
 
@@ -27,7 +30,7 @@ public class JoinCondition {
 
     protected ILogicalExpression joinCondition;
     protected boolean outerJoin;
-    private boolean derived = false;
+    protected boolean derived = false;
     protected boolean partOfComposite = false;
     protected boolean deleted = false;
     protected int numberOfVars = 0; // how many variables
@@ -39,7 +42,8 @@ public class JoinCondition {
     protected int rightSideBits;
     protected double selectivity;
     protected comparisonOp comparisonType;
-    protected JoinOperator joinOp;
+    protected JoinOperator joinOp = null;
+    protected List<LogicalVariable> usedVars = null;
 
     protected enum comparisonOp {
         OP_EQ,

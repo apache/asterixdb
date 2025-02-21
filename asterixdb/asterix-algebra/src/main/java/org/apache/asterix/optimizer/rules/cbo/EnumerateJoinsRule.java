@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -51,7 +50,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -469,7 +467,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 LogicalVariable var1 = fakeDs.getVariables().get(0);
                 MutableObject<ILogicalOperator> q = new MutableObject<>(fakeDs);
                 LogicalVariable var2 = modify(q.getValue(), context); // so as to make it fake, remove teh original variables
-                ILogicalExpression expr = makeNewexpr(var1, var2);
+                ILogicalExpression expr = joinEnum.makeNewEQJoinExpr(var1, var2);
                 foj = new LeftOuterJoinOperator(new MutableObject<>(expr), new MutableObject<>(leftChild), q,
                         ConstantExpression.MISSING.getValue());
                 if (LOGGER.isTraceEnabled()) {
@@ -486,17 +484,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
             }
         }
-    }
-
-    private ILogicalExpression makeNewexpr(LogicalVariable var1, LogicalVariable var2) {
-        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
-        VariableReferenceExpression e1 = new VariableReferenceExpression(var1);
-        arguments.add(new MutableObject<>(e1));
-        VariableReferenceExpression e2 = new VariableReferenceExpression(var2);
-        arguments.add(new MutableObject<>(e2));
-        ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), arguments);
-        return expr;
     }
 
     // remove the old variables and add a new variable.
