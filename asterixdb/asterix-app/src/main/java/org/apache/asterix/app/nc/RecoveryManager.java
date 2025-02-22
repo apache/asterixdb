@@ -131,7 +131,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
      * not supported, yet.
      */
     @Override
-    public SystemState getSystemState() throws ACIDException {
+    public SystemState getSystemState() throws ACIDException, HyracksDataException {
         //read checkpoint file
         Checkpoint checkpointObject = checkpointManager.getLatest();
         if (checkpointObject == null) {

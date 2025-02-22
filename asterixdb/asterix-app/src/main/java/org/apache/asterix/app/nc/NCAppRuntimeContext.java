@@ -225,13 +225,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             IConfigValidatorFactory configValidatorFactory, IReplicationStrategyFactory replicationStrategyFactory,
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
+        threadExecutor =
+                MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
         CloudConfigurator cloudConfigurator;
         IDiskResourceCacheLockNotifier lockNotifier;
         IDiskCachedPageAllocator pageAllocator;
         IBufferCacheReadContext defaultContext;
         if (isCloudDeployment()) {
             cloudConfigurator = CloudConfigurator.of(cloudProperties, ioManager, namespacePathResolver,
-                    getCloudGuardian(cloudProperties));
+                    getCloudGuardian(cloudProperties), threadExecutor);
             persistenceIOManager = cloudConfigurator.getCloudIoManager();
             partitionBootstrapper = cloudConfigurator.getPartitionBootstrapper();
             lockNotifier = cloudConfigurator.getLockNotifier();
@@ -247,8 +249,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         }
 
         int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
-        threadExecutor =
-                MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
         ICacheMemoryAllocator bufferAllocator = new HeapBufferAllocator();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(bufferAllocator, pageAllocator,

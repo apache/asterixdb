@@ -23,6 +23,7 @@ import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.clients.ICloudGuardian;
@@ -48,8 +49,9 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public EagerCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
-        super(ioManager, cloudProperties, nsPathResolver, guardian);
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian, ExecutorService executor)
+            throws HyracksDataException {
+        super(ioManager, cloudProperties, nsPathResolver, guardian, executor);
     }
 
     /*

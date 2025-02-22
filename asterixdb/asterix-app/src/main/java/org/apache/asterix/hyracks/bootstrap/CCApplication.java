@@ -191,7 +191,7 @@ public class CCApplication extends BaseCCApplication {
         if (cloudDeployment) {
             cloudProperties = new CloudProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
             ioManager = CloudConfigurator.createIOManager(ioManager, cloudProperties, namespacePathResolver,
-                    getCloudGuardian(cloudProperties));
+                    getCloudGuardian(cloudProperties), controllerService.getExecutor());
         }
         IGlobalTxManager globalTxManager = createGlobalTxManager(ioManager);
         appCtx = createApplicationContext(null, globalRecoveryManager, lifecycleCoordinator, Receptionist::new,

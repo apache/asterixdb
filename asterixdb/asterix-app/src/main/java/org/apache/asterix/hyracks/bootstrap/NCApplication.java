@@ -370,7 +370,7 @@ public class NCApplication extends BaseNCApplication {
         return nodeStatus == NodeStatus.IDLE && (primaryCc == null || primaryCc.equals(registeredCc));
     }
 
-    private SystemState getCurrentSystemState() {
+    private SystemState getCurrentSystemState() throws HyracksDataException {
         final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         SystemState state = recoveryMgr.getSystemState();

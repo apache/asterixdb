@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.clients;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig;
@@ -38,8 +40,8 @@ public class CloudClientProvider {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
-            throws HyracksDataException {
+    public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian,
+            ExecutorService executor) throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
         ICloudClient cloudClient;
         if (S3.equalsIgnoreCase(storageScheme)) {
@@ -47,7 +49,7 @@ public class CloudClientProvider {
             cloudClient = new S3CloudClient(config, guardian);
         } else if (GCS.equalsIgnoreCase(storageScheme)) {
             GCSClientConfig config = GCSClientConfig.of(cloudProperties);
-            cloudClient = new GCSCloudClient(config, guardian);
+            cloudClient = new GCSCloudClient(config, guardian, executor);
         } else if (AZ_BLOB.equalsIgnoreCase(storageScheme)) {
             AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(cloudProperties);
             cloudClient = new AzBlobStorageCloudClient(config, guardian);

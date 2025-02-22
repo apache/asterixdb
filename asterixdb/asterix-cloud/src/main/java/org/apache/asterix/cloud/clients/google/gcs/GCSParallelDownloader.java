@@ -33,6 +33,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 import com.google.api.gax.paging.Page;
@@ -50,7 +51,6 @@ import com.google.cloud.storage.transfermanager.TransferStatus;
 
 public class GCSParallelDownloader implements IParallelDownloader {
 
-    //    private static final Logger LOGGER = LogManager.getLogger();
     private final String bucket;
     private final IOManager ioManager;
     private final Storage gcsClient;
@@ -95,6 +95,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
             downloadJobs.add(transferManager.downloadBlobs(entry.getValue(),
                     downConfig.setDownloadDirectory(entry.getKey()).build()));
         }
+        // MB-65432: DownloadJob.getDownloadResults is interrupt-safe; no need to offload
         downloadJobs.forEach(DownloadJob::getDownloadResults);
     }
 
@@ -121,6 +122,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
         }
         List<DownloadResult> results;
         for (DownloadJob job : downloadJobs) {
+            // MB-65432: DownloadJob.getDownloadResults is interrupt-safe; no need to offload
             results = job.getDownloadResults();
             for (DownloadResult result : results) {
                 if (result.getStatus() != TransferStatus.SUCCESS) {
@@ -134,12 +136,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            transferManager.close();
-            gcsClient.close();
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
-        }
+        InvokeUtil.tryWithCleanupsAsHyracks(transferManager::close, gcsClient::close);
     }
 
     private <K, V> void addToMap(Map<K, List<V>> map, K key, V value) {

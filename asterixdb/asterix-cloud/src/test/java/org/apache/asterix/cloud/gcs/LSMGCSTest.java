@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.gcs;
 
+import java.util.concurrent.Executors;
+
 import org.apache.asterix.cloud.AbstractLSMTest;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
@@ -52,7 +54,8 @@ public class LSMGCSTest extends AbstractLSMTest {
         int writeBufferSize = StorageUtil.getIntSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
         GCSClientConfig config =
                 new GCSClientConfig(MOCK_SERVER_REGION, MOCK_SERVER_HOSTNAME, true, 0, writeBufferSize, "");
-        CLOUD_CLIENT = new GCSCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
+        CLOUD_CLIENT =
+                new GCSCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE, Executors.newCachedThreadPool());
     }
 
     private static void cleanup() {

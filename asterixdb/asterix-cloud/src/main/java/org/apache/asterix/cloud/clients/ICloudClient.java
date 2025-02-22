@@ -65,7 +65,7 @@ public interface ICloudClient {
      * @param filter filter to apply
      * @return file names returned after applying the file name filter
      */
-    Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter);
+    Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) throws HyracksDataException;
 
     /**
      * Performs a range-read from the specified bucket and path starting at the offset. The amount read is equal to the
@@ -107,7 +107,7 @@ public interface ICloudClient {
      * @param path   path
      * @param data   data
      */
-    void write(String bucket, String path, byte[] data);
+    void write(String bucket, String path, byte[] data) throws HyracksDataException;
 
     /**
      * Copies an object from the source path to the destination path
@@ -116,7 +116,7 @@ public interface ICloudClient {
      * @param srcPath  source path
      * @param destPath destination path
      */
-    void copy(String bucket, String srcPath, FileReference destPath);
+    void copy(String bucket, String srcPath, FileReference destPath) throws HyracksDataException;
 
     /**
      * Deletes all objects at the specified bucket and paths
@@ -162,7 +162,7 @@ public interface ICloudClient {
      * @param bucket       bucket name
      * @return {@link JsonNode} with stored objects' information
      */
-    JsonNode listAsJson(ObjectMapper objectMapper, String bucket);
+    JsonNode listAsJson(ObjectMapper objectMapper, String bucket) throws HyracksDataException;
 
     /**
      * Performs any necessary closing and cleaning up

@@ -61,7 +61,7 @@ public interface IRecoveryManager {
      * @return SystemState The state of the system
      * @throws ACIDException
      */
-    SystemState getSystemState() throws ACIDException;
+    SystemState getSystemState() throws ACIDException, HyracksDataException;
 
     /**
      * Rolls back a transaction.

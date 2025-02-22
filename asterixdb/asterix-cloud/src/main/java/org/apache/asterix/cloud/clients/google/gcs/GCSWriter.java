@@ -108,9 +108,10 @@ public class GCSWriter implements ICloudWriter {
         profiler.objectMultipartUpload();
         try {
             writer.close();
-            writer = null;
         } catch (IOException | RuntimeException e) {
             throw HyracksDataException.create(e);
+        } finally {
+            writer = null;
         }
         log("FINISHED");
     }
