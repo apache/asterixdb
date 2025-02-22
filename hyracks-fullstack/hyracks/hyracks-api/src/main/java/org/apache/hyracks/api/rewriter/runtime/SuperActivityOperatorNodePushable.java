@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,12 +52,17 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The runtime of a SuperActivity, which internally executes a DAG of one-to-one
  * connected activities in a single thread.
  */
 public class SuperActivityOperatorNodePushable implements IOperatorNodePushable {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final String CLASS_ABBREVIATION = "SAO";
     private final Map<ActivityId, IOperatorNodePushable> operatorNodePushables = new HashMap<>();
     private final List<IOperatorNodePushable> operatorNodePushablesBFSOrder = new ArrayList<>();
@@ -264,13 +270,37 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     private void cancelTasks(List<Future<Void>> tasks, Semaphore startSemaphore, Semaphore completeSemaphore) {
+        boolean cancelCompleted = false;
         try {
             startSemaphore.acquireUninterruptibly();
-            for (Future<Void> task : tasks) {
-                task.cancel(true);
+            cancelCompleted = cancelTasks(tasks, completeSemaphore);
+        } finally {
+            if (!cancelCompleted) {
+                completeSemaphore.acquireUninterruptibly();
+            }
+        }
+    }
+
+    private static boolean cancelTasks(List<Future<Void>> tasks, Semaphore completeSemaphore) {
+        boolean interrupted = Thread.interrupted();
+        try {
+            while (true) {
+                for (Future<Void> task : tasks) {
+                    task.cancel(true);
+                }
+                try {
+                    if (completeSemaphore.tryAcquire(5, TimeUnit.MINUTES)) {
+                        return true;
+                    }
+                    LOGGER.warn("not all tasks were cancelled within 5 minutes. retrying cancelling...");
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
             }
         } finally {
-            completeSemaphore.acquireUninterruptibly();
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }
