@@ -68,7 +68,7 @@ public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
         protected SSLSocketFactory factory;
 
         public RMITrustedClientSSLSocketFactory(INetworkSecurityConfig config) {
-            this.factory = NetworkSecurityManager.newSSLContext(config).getSocketFactory();
+            this.factory = NetworkSecurityManager.newSSLContext(config, false).getSocketFactory();
         }
 
         public Socket createSocket(InetAddress host, int port) throws IOException {

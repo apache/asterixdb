@@ -31,6 +31,8 @@ import java.util.Optional;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
 
+import io.netty.handler.ssl.ClientAuth;
+
 public class NetworkSecurityConfig implements INetworkSecurityConfig {
 
     private static final long serialVersionUID = 2L;
@@ -68,18 +70,43 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     }
 
     @Override
+    public boolean useMutualAuth() {
+        return false;
+    }
+
+    @Override
+    public ClientAuth getClientAuth() {
+        return ClientAuth.NONE;
+    }
+
+    @Override
     public File getKeyStoreFile() {
         return keyStoreFile;
     }
 
     @Override
-    public String getKeyStorePassword() {
-        return keyStorePassword;
+    public Optional<char[]> getKeyStorePassword() {
+        return keyStorePassword != null ? Optional.of(keyStorePassword.toCharArray()) : Optional.empty();
     }
 
     @Override
-    public KeyStore getKeyStore() {
-        return keyStore;
+    public Optional<KeyStore> getKeyStore() {
+        return Optional.ofNullable(keyStore);
+    }
+
+    @Override
+    public Optional<KeyStore> getClientKeyStore() {
+        return Optional.empty();
+    }
+
+    @Override
+    public File getClientKeyStoreFile() {
+        return null;
+    }
+
+    @Override
+    public Optional<char[]> getClientKeyStorePassword() {
+        return Optional.empty();
     }
 
     @Override

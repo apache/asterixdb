@@ -24,6 +24,8 @@ import java.net.InetAddress;
 import java.security.KeyStore;
 import java.util.Optional;
 
+import io.netty.handler.ssl.ClientAuth;
+
 public interface INetworkSecurityConfig extends Serializable {
 
     /**
@@ -34,25 +36,58 @@ public interface INetworkSecurityConfig extends Serializable {
     boolean isSslEnabled();
 
     /**
-     * Gets the key store to be used for secured connections
+     * Indicates if any authentication being performed should mutual (e.g. mTLS, SCRAM-SHA)
      *
-     * @return the key store to be used
+     * @return true if mutual auth should be used. Otherwise false.
      */
-    KeyStore getKeyStore();
+    boolean useMutualAuth();
 
     /**
-     * Gets a key store file to be used if {@link INetworkSecurityConfig#getKeyStore()} returns null.
+     * Indicates how to handle client authentication when ssl is enabled
+     */
+    ClientAuth getClientAuth();
+
+    /**
+     * Gets the key store to be used for secured connections
+     *
+     * @return the key store to be used, if present
+     */
+    Optional<KeyStore> getKeyStore();
+
+    /**
+     * Gets a key store file, password pair to be used if {@link INetworkSecurityConfig#getKeyStore()} returns empty.
      *
      * @return the key store file
      */
     File getKeyStoreFile();
 
     /**
-     * Gets the password for the key store file.
+     * Gets a password to be used to unlock or check integrity of the key store.
      *
-     * @return the password to the key store file
+     * @return the key store password, or {@link Optional#empty()}
      */
-    String getKeyStorePassword();
+    Optional<char[]> getKeyStorePassword();
+
+    /**
+     * Gets the client key store to be used for client auth, if applicable.
+     *
+     * @return the client key store to be used for client auth, or {@link Optional#empty()}
+     */
+    Optional<KeyStore> getClientKeyStore();
+
+    /**
+     * Gets a client key store file to be used if {@link INetworkSecurityConfig#getClientKeyStore()} returns empty.
+     *
+     * @return the key store file
+     */
+    File getClientKeyStoreFile();
+
+    /**
+     * Gets a password to be used to unlock or check integrity of the client key store.
+     *
+     * @return the client key store password, or {@link Optional#empty()}
+     */
+    Optional<char[]> getClientKeyStorePassword();
 
     /**
      * Gets the trust store to be used for validating certificates of secured connections
