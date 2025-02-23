@@ -52,6 +52,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.api.util.InvokeUtil;
+import org.apache.hyracks.util.Span;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -282,25 +284,27 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     private static boolean cancelTasks(List<Future<Void>> tasks, Semaphore completeSemaphore) {
-        boolean interrupted = Thread.interrupted();
-        try {
-            while (true) {
-                for (Future<Void> task : tasks) {
-                    task.cancel(true);
-                }
-                try {
-                    if (completeSemaphore.tryAcquire(5, TimeUnit.MINUTES)) {
-                        return true;
-                    }
-                    LOGGER.warn("not all tasks were cancelled within 5 minutes. retrying cancelling...");
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                }
+        Span retryWait = Span.init(5, TimeUnit.MINUTES);
+        while (true) {
+            for (Future<Void> task : tasks) {
+                task.cancel(true);
             }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
+            if (acquireUninterruptibly(completeSemaphore, retryWait)) {
+                return true;
             }
+            LOGGER.warn("not all tasks were cancelled within 5 minutes. retrying cancelling...");
         }
+    }
+
+    private static boolean acquireUninterruptibly(Semaphore completeSemaphore, Span s) {
+        s.reset();
+        return InvokeUtil.getUninterruptibly(() -> {
+            while (!s.elapsed()) {
+                if (completeSemaphore.tryAcquire(s.remaining(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS)) {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 }
