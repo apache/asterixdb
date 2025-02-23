@@ -52,7 +52,6 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.util.ExceptionUtils;
-import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.util.Span;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -289,22 +288,11 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             for (Future<Void> task : tasks) {
                 task.cancel(true);
             }
-            if (acquireUninterruptibly(completeSemaphore, retryWait)) {
+            retryWait.reset();
+            if (retryWait.tryAcquireUninterruptibly(completeSemaphore)) {
                 return true;
             }
             LOGGER.warn("not all tasks were cancelled within 5 minutes. retrying cancelling...");
         }
-    }
-
-    private static boolean acquireUninterruptibly(Semaphore completeSemaphore, Span s) {
-        s.reset();
-        return InvokeUtil.getUninterruptibly(() -> {
-            while (!s.elapsed()) {
-                if (completeSemaphore.tryAcquire(s.remaining(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS)) {
-                    return true;
-                }
-            }
-            return false;
-        });
     }
 }

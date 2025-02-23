@@ -21,6 +21,7 @@ package org.apache.hyracks.util;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 public class Span {
 
@@ -157,6 +158,43 @@ public class Span {
 
     public boolean await(CountDownLatch latch) throws InterruptedException {
         return latch.await(remaining(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
+    }
+
+    /**
+     * tryAcquireUninterruptibly will attempt to acquire the semaphore until the span has elapsed or the semaphore is
+     * acquired, disregarding any interruptions. If an interruption occurs, the thread will be re-interrupted upon
+     * method completion.
+     * @param semaphore the semaphore to acquire
+     * @return true if the semaphore was acquired, false if the span elapsed
+     */
+    public boolean tryAcquireUninterruptibly(Semaphore semaphore) {
+        return retryUninterruptibly(semaphore::tryAcquire, v -> v);
+    }
+
+    /**
+     * retryUninterruptibly will attempt to execute the action until the span has elapsed or the action has succeeded
+     * @param action the action to execute
+     * @param test the predicate to determine if the action has succeeded
+     * @return true if the action succeeded, false if the span elapsed
+     */
+    public <V> boolean retryUninterruptibly(InterruptableBiFunction<Long, TimeUnit, V> action, Predicate<V> test) {
+        boolean interrupted = Thread.interrupted();
+        try {
+            while (!elapsed()) {
+                try {
+                    if (test.test(action.process(remaining(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS))) {
+                        return true;
+                    }
+                } catch (InterruptedException e) { // NOSONAR- we will re-interrupt the thread during unwind
+                    interrupted = true;
+                }
+            }
+            return false;
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     public void loopUntilExhausted(ThrowingAction action) throws Exception {
