@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -289,6 +290,10 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     private boolean cancelTasks(List<Future<Void>> tasks, Set<Thread> runningThreads, Semaphore completeSemaphore) {
+        Map<Thread, StackTraceElement[]> preCancelStackTraces = new HashMap<>();
+        for (Thread runningThread : runningThreads) {
+            preCancelStackTraces.put(runningThread, runningThread.getStackTrace());
+        }
         for (Future<Void> task : tasks) {
             task.cancel(true);
         }
@@ -298,8 +303,16 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             if (completionPoll.tryAcquireUninterruptibly(completeSemaphore)) {
                 return true;
             }
-            LOGGER.warn("Tasks of job {} did not complete within {}; interrupting running threads {}",
-                    ctx.getJobletContext().getJobId(), completionPoll, runningThreads);
+            preCancelStackTraces.keySet().removeIf(Predicate.not(runningThreads::contains));
+            preCancelStackTraces.forEach((thread, stack) -> {
+                Throwable t = new Throwable(thread.getName() + "pre-interrupt stack");
+                t.setStackTrace(stack);
+                LOGGER.warn("Task of job {} did not complete within {}: ", ctx.getJobletContext().getJobId(),
+                        completionPoll, t);
+            });
+            for (Thread runningThread : runningThreads) {
+                preCancelStackTraces.put(runningThread, runningThread.getStackTrace());
+            }
             interruptRunningThreads(runningThreads);
         }
     }

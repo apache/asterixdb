@@ -22,6 +22,7 @@ import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
     protected IFrameWriter writer;
@@ -53,7 +54,7 @@ public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
         try {
             fail();
         } catch (Throwable th) {
-            failure.addSuppressed(th);
+            ExceptionUtils.suppress(failure, th);
         }
     }
 }
