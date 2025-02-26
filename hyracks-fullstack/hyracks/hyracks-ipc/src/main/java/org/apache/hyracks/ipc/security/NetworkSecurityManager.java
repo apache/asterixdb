@@ -53,7 +53,8 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     @Override
     public SSLEngine newSSLEngine(boolean clientMode) {
         try {
-            SSLEngine sslEngine = newSSLContext(clientMode).createSSLEngine();
+            boolean useClientCerts = clientMode && config.useMutualAuth();
+            SSLEngine sslEngine = newSSLContext(useClientCerts).createSSLEngine();
             sslEngine.setUseClientMode(clientMode);
             return sslEngine;
         } catch (Exception ex) {
