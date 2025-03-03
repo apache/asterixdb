@@ -305,7 +305,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             }
             preCancelStackTraces.keySet().removeIf(Predicate.not(runningThreads::contains));
             preCancelStackTraces.forEach((thread, stack) -> {
-                Throwable t = new Throwable(thread.getName() + "pre-interrupt stack");
+                Throwable t = new Throwable(thread.getName() + " pre-interrupt stack");
                 t.setStackTrace(stack);
                 LOGGER.warn("Task of job {} did not complete within {}: ", ctx.getJobletContext().getJobId(),
                         completionPoll, t);

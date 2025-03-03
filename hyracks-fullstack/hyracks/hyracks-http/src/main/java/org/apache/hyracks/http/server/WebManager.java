@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hyracks.api.util.ExceptionUtils;
+
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
@@ -102,11 +104,7 @@ public class WebManager {
         if (!stopExceptions.isEmpty()) {
             Exception ex = null;
             for (Exception stopException : stopExceptions) {
-                if (ex == null) {
-                    ex = stopException;
-                } else {
-                    ex.addSuppressed(stopException);
-                }
+                ex = ExceptionUtils.suppress(ex, stopException);
             }
             throw ex;
         }

@@ -65,6 +65,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.Span;
@@ -454,7 +455,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             metadataProvider.getApplicationContext().getHcc().cancelJob(jobId);
         } catch (Throwable th) {
             LOGGER.warn("Failed to cancel active job {}", jobId, th);
-            e.addSuppressed(th);
+            // use ExceptionUtils.suppress() here to ensure we don't lose an interrupt
+            ExceptionUtils.suppress(e, th);
         }
     }
 
