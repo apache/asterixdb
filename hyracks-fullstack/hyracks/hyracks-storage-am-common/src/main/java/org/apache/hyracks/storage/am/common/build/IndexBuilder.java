@@ -109,6 +109,11 @@ public class IndexBuilder implements IIndexBuilder {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-        lcManager.register(resourceRelPath, index);
+        IIndex registeredIndex = lcManager.registerIfAbsent(resourceRelPath, index);
+        if (registeredIndex != index) {
+            // some other thread has registered the index
+            // indicating this is not the first time, the index is being created
+            throw new HyracksDataException("Index with resource ID " + resourceId + " already exists.");
+        }
     }
 }

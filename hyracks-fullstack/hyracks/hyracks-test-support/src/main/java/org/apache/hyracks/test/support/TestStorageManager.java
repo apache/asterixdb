@@ -59,7 +59,7 @@ public class TestStorageManager implements IStorageManager {
 
     @Override
     public IResourceLifecycleManager<IIndex> getLifecycleManager(INCServiceContext ctx) {
-        return TestStorageManagerComponentHolder.getIndexLifecycleManager();
+        return TestStorageManagerComponentHolder.getIndexLifecycleManager(ctx);
     }
 
     @Override

@@ -25,24 +25,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>, ILifeCycleComponent {
     private static final long DEFAULT_MEMORY_BUDGET = 1024 * 1024 * 100; // 100 megabytes
 
     private final Map<String, IndexInfo> indexInfos;
     private final long memoryBudget;
+    private final INCServiceContext appCtx;
+    private final ILocalResourceRepository resourceRepository;
     private long memoryUsed;
 
-    public IndexLifecycleManager() {
-        this(DEFAULT_MEMORY_BUDGET);
+    public IndexLifecycleManager(INCServiceContext appCtx, ILocalResourceRepository resourceRepository) {
+        this(appCtx, resourceRepository, DEFAULT_MEMORY_BUDGET);
     }
 
-    public IndexLifecycleManager(long memoryBudget) {
+    public IndexLifecycleManager(INCServiceContext appCtx, ILocalResourceRepository resourceRepository,
+            long memoryBudget) {
+        this.appCtx = appCtx;
+        this.resourceRepository = resourceRepository;
         this.indexInfos = new HashMap<>();
         this.memoryBudget = memoryBudget;
         this.memoryUsed = 0;
@@ -159,11 +168,34 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
     }
 
     @Override
-    public void register(String resourcePath, IIndex index) throws HyracksDataException {
+    public IIndex registerIfAbsent(String resourcePath, IIndex index) throws HyracksDataException {
         if (indexInfos.containsKey(resourcePath)) {
-            throw new HyracksDataException("Index with resource name " + resourcePath + " already exists.");
+            return indexInfos.get(resourcePath).index;
+        }
+        if (index == null) {
+            index = getOrCreate(resourcePath);
         }
         indexInfos.put(resourcePath, new IndexInfo(index));
+        return index;
+    }
+
+    public IIndex getOrCreate(String resourcePath) throws HyracksDataException {
+        IIndex index = get(resourcePath);
+        if (index == null) {
+            index = readIndex(resourcePath);
+            registerIfAbsent(resourcePath, index);
+        }
+        return index;
+    }
+
+    private IIndex readIndex(String resourcePath) throws HyracksDataException {
+        // Get local resource
+        LocalResource lr = resourceRepository.get(resourcePath);
+        if (lr == null) {
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST, resourcePath);
+        }
+        IResource resource = lr.getResource();
+        return resource.createInstance(appCtx);
     }
 
     @Override
@@ -208,5 +240,25 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
             info.index.deactivate();
         }
         indexInfos.remove(resourcePath);
+    }
+
+    @Override
+    public void destroy(String resourcePath) throws HyracksDataException {
+        IIndex index = get(resourcePath);
+        if (index != null) {
+            unregister(resourcePath);
+        } else {
+            readIndex(resourcePath);
+        }
+
+        if (getResourceId(resourcePath) != -1) {
+            resourceRepository.delete(resourcePath);
+        }
+        index.destroy();
+    }
+
+    private long getResourceId(String resourcePath) throws HyracksDataException {
+        LocalResource lr = resourceRepository.get(resourcePath);
+        return lr == null ? -1 : lr.getId();
     }
 }

@@ -19,10 +19,10 @@
 package org.apache.asterix.common.context;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
@@ -54,9 +54,9 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     public DatasetResource(DatasetInfo datasetInfo) {
         this.datasetInfo = datasetInfo;
-        this.datasetPrimaryOpTrackers = new HashMap<>();
-        this.datasetComponentIdGenerators = new HashMap<>();
-        this.datasetRateLimiters = new HashMap<>();
+        this.datasetPrimaryOpTrackers = new ConcurrentHashMap<>();
+        this.datasetComponentIdGenerators = new ConcurrentHashMap<>();
+        this.datasetRateLimiters = new ConcurrentHashMap<>();
         this.recoveredPartitions = new HashSet<>();
     }
 
