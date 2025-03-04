@@ -23,15 +23,14 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class TruncateDatasetStatement extends AbstractStatement {
-    private final Namespace namespace;
-    private final Identifier datasetName;
+    private Namespace namespace;
+    private String datasetName;
     private final boolean ifExists;
 
-    public TruncateDatasetStatement(Namespace namespace, Identifier datasetName, boolean ifExists) {
+    public TruncateDatasetStatement(Namespace namespace, String datasetName, boolean ifExists) {
         this.namespace = namespace;
         this.datasetName = datasetName;
         this.ifExists = ifExists;
@@ -46,16 +45,28 @@ public class TruncateDatasetStatement extends AbstractStatement {
         return namespace;
     }
 
+    public String getDatabaseName() {
+        return namespace == null ? null : namespace.getDatabaseName();
+    }
+
     public DataverseName getDataverseName() {
         return namespace == null ? null : namespace.getDataverseName();
     }
 
-    public Identifier getDatasetName() {
+    public String getDatasetName() {
         return datasetName;
     }
 
     public boolean getIfExists() {
         return ifExists;
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
+    }
+
+    public void setDatasetName(String datasetName) {
+        this.datasetName = datasetName;
     }
 
     @Override

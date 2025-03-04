@@ -5273,7 +5273,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="upsert-dataset-with-meta">
         <output-dir compare="Text">upsert-dataset-with-meta</output-dir>
-        <expected-error>upsert into dataset is not supported on datasets with meta records</expected-error>
+        <expected-error>Cannot use upsert into with 'DatasetWithMeta'. upsert into is not supported on datasets with meta records</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -5299,13 +5299,13 @@
     <test-case FilePath="dml">
       <compilation-unit name="delete-dataset-with-meta">
         <output-dir compare="Text">delete-dataset-with-meta</output-dir>
-        <expected-error>delete from dataset is not supported on datasets with meta records</expected-error>
+        <expected-error>Cannot use delete from with 'DatasetWithMeta'. delete from is not supported on datasets with meta records</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert-dataset-with-meta">
         <output-dir compare="Text">insert-dataset-with-meta</output-dir>
-        <expected-error>insert into dataset is not supported on datasets with meta records</expected-error>
+        <expected-error>Cannot use insert into with 'DatasetWithMeta'. insert into is not supported on datasets with meta records</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -14154,7 +14154,7 @@
     <test-case FilePath="load">
       <compilation-unit name="dataset-with-meta">
         <output-dir compare="Text">dataset-with-meta</output-dir>
-        <expected-error>ASX1184: Compilation error: DatasetWithMeta: load dataset is not supported on datasets with meta records (in line 27, at column 1)</expected-error>
+        <expected-error>Cannot use load with 'DatasetWithMeta'. load is not supported on datasets with meta records (in line 27, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

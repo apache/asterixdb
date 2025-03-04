@@ -2388,7 +2388,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters) throws Exception {
         TruncateDatasetStatement truncateStmt = (TruncateDatasetStatement) stmt;
         SourceLocation sourceLoc = truncateStmt.getSourceLocation();
-        String datasetName = truncateStmt.getDatasetName().getValue();
+        String datasetName = truncateStmt.getDatasetName();
         metadataProvider.validateDatabaseObjectName(truncateStmt.getNamespace(), datasetName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(truncateStmt.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -2461,8 +2461,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     metadataProvider.isUsingDatabase()));
                 }
             }
+            if (ds.hasMetaPart()) {
+                throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "truncate",
+                        ds.getDatasetFullyQualifiedName());
+            }
+            DatasetType dsType = ds.getDatasetType();
+            if (dsType != DatasetType.INTERNAL) {
+                String dsTypeName = dsType.toString().toLowerCase();
+                throw new CompilationException(ErrorCode.CANNOT_TRUNCATE_DATASET_TYPE, sourceLoc,
+                        dsType == DatasetType.EXTERNAL ? dsTypeName + " collection" : dsTypeName,
+                        ds.getDatasetFullyQualifiedName());
+            }
             validateDatasetState(metadataProvider, ds, sourceLoc);
-
             DatasetUtil.truncate(metadataProvider, ds);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

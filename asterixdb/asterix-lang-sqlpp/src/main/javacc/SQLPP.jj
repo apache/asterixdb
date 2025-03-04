@@ -2388,7 +2388,7 @@ TruncateDatasetStatement TruncateDatasetStatement(Token startStmtToken) throws P
   TruncateDatasetStatement stmt = null;
 }
 {
-  Dataset() stmt = TruncateDatasetSpecification(startStmtToken)
+  DatasetToken() stmt = TruncateDatasetSpecification(startStmtToken)
   {
     return stmt;
   }
@@ -2402,7 +2402,7 @@ TruncateDatasetStatement TruncateDatasetSpecification(Token startStmtToken) thro
 {
   pairId = QualifiedName() ifExists = IfExists()
   {
-    TruncateDatasetStatement stmt = new TruncateDatasetStatement(pairId.first, pairId.second, ifExists);
+    TruncateDatasetStatement stmt = new TruncateDatasetStatement(pairId.first, pairId.second.getValue(), ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
