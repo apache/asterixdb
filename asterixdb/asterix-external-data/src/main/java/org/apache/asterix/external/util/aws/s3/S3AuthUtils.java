@@ -51,6 +51,7 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SECRET_
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SERVICE_END_POINT;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SIMPLE;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORARY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INSTANCE_PROFILE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ROLE_ARN_FIELD_NAME;
@@ -452,7 +453,7 @@ public class S3AuthUtils {
                 jobConf.set(HADOOP_ACCESS_KEY_ID, configuration.get(ACCESS_KEY_ID_FIELD_NAME));
                 jobConf.set(HADOOP_SECRET_ACCESS_KEY, configuration.get(SECRET_ACCESS_KEY_FIELD_NAME));
                 if (configuration.get(SESSION_TOKEN_FIELD_NAME) != null) {
-                    jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_SESSION_TOKEN);
+                    jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_TEMPORARY);
                     jobConf.set(HADOOP_SESSION_TOKEN, configuration.get(SESSION_TOKEN_FIELD_NAME));
                 }
                 break;
