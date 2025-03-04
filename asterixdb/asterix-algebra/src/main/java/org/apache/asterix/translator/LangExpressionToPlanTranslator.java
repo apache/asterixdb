@@ -222,8 +222,8 @@ abstract class LangExpressionToPlanTranslator
                 stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
         List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
-            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, dataset.getDatasetName(),
-                    stmt.getKind() == Statement.Kind.LOAD ? "load" : "copy into");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
+                    stmt.getKind() == Statement.Kind.LOAD ? "load" : "copy into", dataset.getDatasetName());
         }
 
         LoadableDataSource lds;
@@ -615,8 +615,8 @@ abstract class LangExpressionToPlanTranslator
             ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
-            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName(), "delete from");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "delete from",
+                    targetDatasource.getDataset().getDatasetName());
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
@@ -645,8 +645,8 @@ abstract class LangExpressionToPlanTranslator
             IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
-            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName(), "upsert into");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "upsert into",
+                    targetDatasource.getDataset().getDatasetName());
         }
         ProjectOperator project = (ProjectOperator) topOp;
         CompiledUpsertStatement compiledUpsert = (CompiledUpsertStatement) stmt;
@@ -657,8 +657,8 @@ abstract class LangExpressionToPlanTranslator
 
         if (targetDatasource.getDataset().hasMetaPart()) {
             if (returnExpression != null) {
-                throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
-                        targetDatasource.getDataset().getDatasetName(), "return expression");
+                throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "return expression",
+                        targetDatasource.getDataset().getDatasetName());
             }
             List<LogicalVariable> metaAndKeysVars;
             List<Mutable<ILogicalExpression>> metaAndKeysExprs;
@@ -768,8 +768,8 @@ abstract class LangExpressionToPlanTranslator
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
-            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName(), "insert into");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "insert into",
+                    targetDatasource.getDataset().getDatasetName());
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());

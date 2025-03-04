@@ -31,7 +31,6 @@ import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.translator.IRequestParameters;
@@ -128,8 +127,8 @@ public class RetryingQueryTranslator extends QueryTranslator {
                         metadataProvider.getLocks().reset();
                         ex = e;
                         LoadStatement loadStmt = (LoadStatement) stmt;
-                        TruncateDatasetStatement truncateDatasetStatement = new TruncateDatasetStatement(
-                                loadStmt.getNamespace(), new Identifier(loadStmt.getDatasetName()), true);
+                        TruncateDatasetStatement truncateDatasetStatement =
+                                new TruncateDatasetStatement(loadStmt.getNamespace(), loadStmt.getDatasetName(), true);
                         super.handleDatasetTruncateStatement(metadataProvider, truncateDatasetStatement,
                                 requestParameters);
                         metadataProvider.getLocks().reset();

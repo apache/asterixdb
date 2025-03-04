@@ -768,7 +768,9 @@ public class DatasetUtil {
             hcc = metadataProvider.getApplicationContext().getHcc();
             JobUtils.runJobIfActive(hcc, job, true);
         } else {
-            throw new IllegalArgumentException("Cannot truncate a non-internal dataset.");
+            // check should have been done by caller
+            throw new IllegalArgumentException(
+                    "Cannot truncate a non-internal dataset " + ds.getDatasetFullyQualifiedName());
         }
     }
 
