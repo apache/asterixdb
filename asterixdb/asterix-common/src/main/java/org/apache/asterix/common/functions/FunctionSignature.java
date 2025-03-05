@@ -139,7 +139,7 @@ public class FunctionSignature implements Serializable {
         return createFunctionIdentifier(databaseName, dataverseName, name, arity);
     }
 
-    private static FunctionIdentifier createFunctionIdentifier(String databaseName, DataverseName dataverseName,
+    public static FunctionIdentifier createFunctionIdentifier(String databaseName, DataverseName dataverseName,
             String functionName, int arity) {
         return new FunctionIdentifier(databaseName, dataverseName.getCanonicalForm(), functionName, arity);
     }

@@ -3400,8 +3400,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 MetadataManager.INSTANCE.updateFunction(mdTxnCtx, function);
             }
-            beforeTxnCommit(metadataProvider, creator,
-                    EntityDetails.newFunction(databaseName, dataverseName, function.getName(), function.getArity()));
+
+            beforeTxnCommit(metadataProvider, creator, EntityDetails.newFunction(functionSignature));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Installed function: " + functionSignature);

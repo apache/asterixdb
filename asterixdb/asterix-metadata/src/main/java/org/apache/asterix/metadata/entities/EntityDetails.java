@@ -18,7 +18,12 @@
  */
 package org.apache.asterix.metadata.entities;
 
+import java.util.Objects;
+
+import org.apache.asterix.common.functions.FunctionConstants;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 
 /**
  * This class provides static factory methods for creating entity details.
@@ -33,7 +38,8 @@ public class EntityDetails {
         DATABASE,
         DATAVERSE,
         SYNONYM,
-        INDEX
+        INDEX,
+        BUILT_IN_FUNCTION;
     }
 
     private final String databaseName;
@@ -75,9 +81,19 @@ public class EntityDetails {
         return new EntityDetails(databaseName, dataverseName, viewName, EntityType.VIEW);
     }
 
-    public static EntityDetails newFunction(String databaseName, DataverseName dataverseName, String functionName,
-            int functionArity) {
-        return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION, functionArity);
+    public static EntityDetails newFunction(FunctionSignature fs) {
+        boolean isBuiltInFunc = isBuiltinFunctionSignature(fs);
+        String databaseName = fs.getDatabaseName();
+        String functionName = fs.getName();
+        Integer functionArity = fs.getArity();
+        DataverseName dataverseName = fs.getDataverseName();
+        String functionNameWithArity = getFunctionNameWithArity(functionName, functionArity);
+        if (isBuiltInFunc) {
+            return new EntityDetails(databaseName, dataverseName, functionNameWithArity, EntityType.BUILT_IN_FUNCTION,
+                    functionArity);
+        }
+        return new EntityDetails(databaseName, dataverseName, functionNameWithArity, EntityType.FUNCTION,
+                functionArity);
     }
 
     public static EntityDetails newSynonym(String databaseName, DataverseName dataverseName, String synonymName) {
@@ -112,7 +128,24 @@ public class EntityDetails {
         return functionArity;
     }
 
+    public static boolean isBuiltinFunctionSignature(FunctionSignature fs) {
+        return isBuiltinFunctionDataverse(Objects.requireNonNull(fs.getDataverseName()))
+                || BuiltinFunctions.getBuiltinFunctionInfo(fs.createFunctionIdentifier()) != null;
+    }
+
+    private static boolean isBuiltinFunctionDataverse(DataverseName dataverse) {
+        return FunctionConstants.ASTERIX_DV.equals(dataverse) || FunctionConstants.ALGEBRICKS_DV.equals(dataverse);
+    }
+
     public static String getFunctionNameWithArity(String functionName, int functionArity) {
         return functionName + "(" + functionArity + ")";
+    }
+
+    public static String getFunctionNameWithoutArity(String functionNameWithArity) {
+        int index = functionNameWithArity.indexOf('(');
+        if (index != -1) {
+            return functionNameWithArity.substring(0, index);
+        }
+        return functionNameWithArity;
     }
 }

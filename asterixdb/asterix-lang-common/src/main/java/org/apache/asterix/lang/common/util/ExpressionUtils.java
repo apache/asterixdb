@@ -291,16 +291,17 @@ public class ExpressionUtils {
                                             datasetReference.getDatasetName(), null));
                                 }
                             }
+                        } else {
+                            addFunctionAccessedEntity(metadataProvider, signature);
                         }
                     } else {
                         if (seenFunctions.add(signature)) {
-                            String functionName = signature.getName() + "(" + signature.getArity() + ")";
-                            metadataProvider.addAccessedEntity(EntityDetails.newFunction(signature.getDatabaseName(),
-                                    signature.getDataverseName(), functionName, signature.getArity()));
+                            addFunctionAccessedEntity(metadataProvider, signature);
                             outFunctionDependencies.add(new DependencyFullyQualifiedName(signature.getDatabaseName(),
                                     signature.getDataverseName(), signature.getName(),
                                     Integer.toString(signature.getArity())));
                         }
+
                     }
                     break;
                 case WINDOW_EXPRESSION:
@@ -311,6 +312,10 @@ public class ExpressionUtils {
                             functionCall.getSourceLocation(), functionCall.getFunctionSignature().toString(false));
             }
         }
+    }
+
+    private static void addFunctionAccessedEntity(MetadataProvider metadataProvider, FunctionSignature signature) {
+        metadataProvider.addAccessedEntity(EntityDetails.newFunction(signature));
     }
 
     public static boolean hasFunctionOrViewRecursion(Map<FunctionSignature, FunctionDecl> functionDeclMap,

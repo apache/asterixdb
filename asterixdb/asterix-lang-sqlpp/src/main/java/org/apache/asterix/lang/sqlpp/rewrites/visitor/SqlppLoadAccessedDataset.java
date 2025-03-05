@@ -98,9 +98,7 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
             if (declaredFunctions.containsKey(signature)) {
                 return;
             }
-            String functionName = EntityDetails.getFunctionNameWithArity(signature.getName(), signature.getArity());
-            context.getMetadataProvider().addAccessedEntity(EntityDetails.newFunction(signature.getDatabaseName(),
-                    signature.getDataverseName(), functionName, signature.getArity()));
+            context.getMetadataProvider().addAccessedEntity(EntityDetails.newFunction(signature));
         }
     }
 }
