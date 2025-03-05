@@ -171,37 +171,51 @@ public class JoinUtils {
     }
 
     private static boolean isHashJoinCondition(ILogicalExpression e, Collection<LogicalVariable> inLeftAll,
-            Collection<LogicalVariable> inRightAll, Collection<LogicalVariable> outLeftFields,
-            Collection<LogicalVariable> outRightFields) {
+            Collection<LogicalVariable> inRightAll, List<LogicalVariable> outLeftFields,
+            List<LogicalVariable> outRightFields) {
+        return isValidHashJoinExpr(e, inLeftAll, inRightAll, outLeftFields, outRightFields) == Boolean.TRUE;
+    }
+
+    private static Boolean isValidHashJoinExpr(ILogicalExpression e, Collection<LogicalVariable> inLeftAll,
+            Collection<LogicalVariable> inRightAll, List<LogicalVariable> outLeftFields,
+            List<LogicalVariable> outRightFields) {
         switch (e.getExpressionTag()) {
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fi = fexp.getFunctionIdentifier();
                 if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
+                    Boolean foundValidEQ = null;
                     for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
-                        if (!isHashJoinCondition(a.getValue(), inLeftAll, inRightAll, outLeftFields, outRightFields)) {
-                            return false;
+                        Boolean validHashJoinExpr =
+                                isValidHashJoinExpr(a.getValue(), inLeftAll, inRightAll, outLeftFields, outRightFields);
+                        if (validHashJoinExpr == Boolean.FALSE) {
+                            return Boolean.FALSE;
+                        } else if (validHashJoinExpr == Boolean.TRUE) {
+                            foundValidEQ = Boolean.TRUE;
                         }
                     }
-                    return true;
+                    return foundValidEQ;
                 } else {
                     ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
                     if (ck != ComparisonKind.EQ) {
-                        return false;
+                        return null;
                     }
                     ILogicalExpression opLeft = fexp.getArguments().get(0).getValue();
                     ILogicalExpression opRight = fexp.getArguments().get(1).getValue();
                     if (opLeft.getExpressionTag() != LogicalExpressionTag.VARIABLE
                             || opRight.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                        return false;
+                        return null;
                     }
                     LogicalVariable var1 = ((VariableReferenceExpression) opLeft).getVariableReference();
+                    boolean leftAddedVar;
                     if (inLeftAll.contains(var1) && !outLeftFields.contains(var1)) {
                         outLeftFields.add(var1);
+                        leftAddedVar = true;
                     } else if (inRightAll.contains(var1) && !outRightFields.contains(var1)) {
                         outRightFields.add(var1);
+                        leftAddedVar = false;
                     } else {
-                        return false;
+                        return null;
                     }
                     LogicalVariable var2 = ((VariableReferenceExpression) opRight).getVariableReference();
                     if (inLeftAll.contains(var2) && !outLeftFields.contains(var2)) {
@@ -209,13 +223,19 @@ public class JoinUtils {
                     } else if (inRightAll.contains(var2) && !outRightFields.contains(var2)) {
                         outRightFields.add(var2);
                     } else {
-                        return false;
+                        // ensure there is always pairs of keys between left & right by removing the added key above
+                        if (leftAddedVar) {
+                            outLeftFields.removeLast();
+                        } else {
+                            outRightFields.removeLast();
+                        }
+                        return null;
                     }
-                    return true;
+                    return Boolean.TRUE;
                 }
             }
             default:
-                return false;
+                return null;
         }
     }
 
