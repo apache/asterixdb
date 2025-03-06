@@ -23,6 +23,7 @@ import java.io.PrintStream;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
@@ -36,7 +37,7 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return new IPrinter() {
 
             @Override

@@ -31,6 +31,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
@@ -126,7 +127,7 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         final ARecordVisitablePointable rPointable =
                 new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         final AListVisitablePointable olPointable =

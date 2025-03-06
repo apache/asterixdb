@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IResultSerializer;
 import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -42,8 +43,8 @@ public class ResultSerializerFactoryProvider implements Serializable {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IResultSerializer createResultSerializer(final RecordDescriptor recordDesc,
-                    final PrintStream printStream) {
+            public IResultSerializer createResultSerializer(IHyracksTaskContext context,
+                    final RecordDescriptor recordDesc, final PrintStream printStream) {
                 return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;
 

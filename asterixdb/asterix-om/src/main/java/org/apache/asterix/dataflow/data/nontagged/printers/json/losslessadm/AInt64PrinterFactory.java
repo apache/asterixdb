@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 /**
  * Int64 value is printed as JSON number.
@@ -38,7 +39,7 @@ public class AInt64PrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

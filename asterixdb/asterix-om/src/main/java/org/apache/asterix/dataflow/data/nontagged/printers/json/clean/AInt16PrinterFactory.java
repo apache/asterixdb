@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class AInt16PrinterFactory implements IPrinterFactory {
 
@@ -33,7 +34,7 @@ public class AInt16PrinterFactory implements IPrinterFactory {
             (byte[] b, int s, int l, PrintStream ps) -> ps.print(AInt16SerializerDeserializer.getShort(b, s + 1));
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

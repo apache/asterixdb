@@ -181,14 +181,12 @@ public class ExternalWriterProvider {
                         partitionComparatorFactories, inputDesc, writerFactory);
             case ExternalDataConstants.FORMAT_CSV_LOWER_CASE:
                 compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
-                if (sink instanceof IExternalWriteDataSink) {
-                    ARecordType itemType = ((IExternalWriteDataSink) sink).getItemType();
+                if (sink instanceof IExternalWriteDataSink externalSink) {
+                    ARecordType itemType = externalSink.getItemType();
                     if (itemType != null) {
-                        printerFactory =
-                                CSVPrinterFactoryProvider
-                                        .createInstance(itemType, sink.getConfiguration(),
-                                                ((IExternalWriteDataSink) sink).getSourceLoc())
-                                        .getPrinterFactory(sourceType);
+                        printerFactory = CSVPrinterFactoryProvider
+                                .createInstance(itemType, externalSink.getConfiguration(), externalSink.getSourceLoc())
+                                .getPrinterFactory(sourceType);
                         externalPrinterFactory =
                                 new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);
                         writerFactory = new ExternalFileWriterFactory(fileWriterFactory, externalPrinterFactory,

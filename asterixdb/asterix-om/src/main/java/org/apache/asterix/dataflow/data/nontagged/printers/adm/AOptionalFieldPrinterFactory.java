@@ -26,6 +26,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AOptionalFieldPrinterFactory implements IPrinterFactory {
@@ -39,16 +40,17 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return new IPrinter() {
             private IPrinter nullPrinter;
             private IPrinter fieldPrinter;
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL)).createPrinter();
+                nullPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                        .createPrinter(context);
                 fieldPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
-                        .createPrinter();
+                        .createPrinter(context);
             }
 
             @Override

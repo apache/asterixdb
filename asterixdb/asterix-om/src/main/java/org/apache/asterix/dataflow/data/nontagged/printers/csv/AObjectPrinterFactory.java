@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.DEFAULT_VALUES;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_EMPTY_FIELD_AS_NULL;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_FORCE_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_NULL;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.getCharOrDefault;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -38,26 +40,30 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
-    private final IPrinter nullPrinter;
-    private final IPrinter stringPrinter;
-    private ARecordType itemType;
-    private Map<String, String> configuration;
-    private boolean emptyFieldAsNull;
+    private static final String DEFAULT_NULL_STRING = "";
+    private final ARecordType itemType;
+    private final Map<String, String> configuration;
+    private final boolean emptyFieldAsNull;
+    private final String nullString;
+    private final char quote;
+    private final boolean forceQuote;
+    private final char escape;
+    private final char delimiter;
 
     private AObjectPrinterFactory(ARecordType itemType, Map<String, String> configuration) {
         this.itemType = itemType;
         this.configuration = configuration;
-        String emptyFieldAsNullStr = configuration.get(KEY_EMPTY_FIELD_AS_NULL);
-        this.emptyFieldAsNull = emptyFieldAsNullStr != null && Boolean.parseBoolean(emptyFieldAsNullStr);
-        this.nullPrinter = ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter();
-        this.stringPrinter =
-                AStringPrinterFactory.createInstance(configuration.get(KEY_QUOTE), configuration.get(KEY_FORCE_QUOTE),
-                        configuration.get(KEY_ESCAPE), configuration.get(KEY_DELIMITER)).createPrinter();
-
+        this.emptyFieldAsNull = Boolean.parseBoolean(configuration.get(KEY_EMPTY_FIELD_AS_NULL));
+        this.nullString = configuration.get(KEY_NULL) != null ? configuration.get(KEY_NULL) : DEFAULT_NULL_STRING;
+        this.forceQuote = Boolean.parseBoolean(configuration.get(KEY_FORCE_QUOTE));
+        this.quote = getCharOrDefault(configuration.get(KEY_QUOTE), DEFAULT_VALUES.get(KEY_QUOTE));
+        this.escape = getCharOrDefault(configuration.get(KEY_ESCAPE), DEFAULT_VALUES.get(KEY_ESCAPE));
+        this.delimiter = getCharOrDefault(configuration.get(KEY_DELIMITER), DEFAULT_VALUES.get(KEY_DELIMITER));
     }
 
     public static AObjectPrinterFactory createInstance(ARecordType itemType, Map<String, String> configuration) {
@@ -81,7 +87,7 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 return true;
             case MISSING:
             case NULL:
-                nullPrinter.print(b, s, l, ps);
+                printNull(ps);
                 return true;
             case BOOLEAN:
                 ABooleanPrinterFactory.PRINTER.print(b, s, l, ps);
@@ -133,9 +139,9 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 return true;
             case STRING:
                 if (emptyFieldAsNull && CSVUtils.isEmptyString(b, s, l)) {
-                    nullPrinter.print(b, s, l, ps);
+                    printNull(ps);
                 } else {
-                    stringPrinter.print(b, s, l, ps);
+                    printString(b, s, l, ps);
                 }
                 return true;
             case BINARY:
@@ -150,26 +156,32 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         final ARecordVisitablePointable recordVisitablePointable =
                 new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
-        final IPrintVisitor visitor = new APrintVisitor(itemType, configuration);
+        final IPrintVisitor visitor = new APrintVisitor(context, itemType, configuration);
 
         return (byte[] b, int s, int l, PrintStream ps) -> {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
             if (!printFlatValue(typeTag, b, s, l, ps)) {
                 streamTag.first = ps;
                 streamTag.second = typeTag;
-                switch (typeTag) {
-                    case OBJECT:
-                        recordVisitablePointable.set(b, s, l);
-                        visitor.visit(recordVisitablePointable, streamTag);
-                        break;
-                    default:
-                        throw new HyracksDataException("No printer for type " + typeTag);
+                if (typeTag == ATypeTag.OBJECT) {
+                    recordVisitablePointable.set(b, s, l);
+                    visitor.visit(recordVisitablePointable, streamTag);
+                } else {
+                    throw new HyracksDataException("No printer for type " + typeTag);
                 }
             }
         };
+    }
+
+    private void printNull(PrintStream ps) {
+        CSVUtils.printNull(ps, nullString);
+    }
+
+    private void printString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
+        CSVUtils.printString(b, s, l, ps, quote, forceQuote, escape, delimiter);
     }
 }

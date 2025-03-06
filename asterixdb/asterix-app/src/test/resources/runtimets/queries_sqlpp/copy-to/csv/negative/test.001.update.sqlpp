@@ -16,24 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.csv;
-
-import java.io.PrintStream;
-
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.hyracks.algebricks.data.IPrinter;
-import org.apache.hyracks.algebricks.data.IPrinterFactory;
-import org.apache.hyracks.api.context.IEvaluatorContext;
-
-public class AFloatPrinterFactory implements IPrinterFactory {
-
-    private static final long serialVersionUID = 1L;
-    public static final AFloatPrinterFactory INSTANCE = new AFloatPrinterFactory();
-
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printFloat(b, s, ps);
-
-    @Override
-    public IPrinter createPrinter(IEvaluatorContext context) {
-        return PRINTER;
-    }
+COPY (
+   SELECT value x FROM [{"id": 1}] AS x
+) toWriter
+TO S3
+PATH ("copy-to-result", "csv", "null")
+AS (id bigint, name STRING, amount float, accountNumber double)
+WITH {
+    "accessKeyId":"dummyAccessKey",
+    "secretAccessKey":"dummySecretKey",
+    "region":"us-west-2",
+    "serviceEndpoint":"http://127.0.0.1:8001",
+    "container":"playground",
+    "format":"csv",
+    "escape":"||",
+    "header":"true"
 }

@@ -21,6 +21,7 @@ package org.apache.asterix.external.writer.printer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
@@ -57,7 +58,7 @@ public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactor
     }
 
     @Override
-    public IExternalPrinter createPrinter() {
+    public IExternalPrinter createPrinter(IEvaluatorContext context) {
         return new ParquetExternalFilePrinter(compressionCodecName, parquetSchemaString, typeInfo, rowGroupSize,
                 pageSize, writerVersion);
     }

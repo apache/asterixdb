@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -43,8 +44,8 @@ public class SerializedDataWriterFactory implements IAWriterFactory {
     }
 
     @Override
-    public IAWriter createWriter(final int[] fields, final PrintStream ps, IPrinterFactory[] printerFactories,
-            final RecordDescriptor inputRecordDescriptor) {
+    public IAWriter createWriter(IHyracksTaskContext context, final int[] fields, final PrintStream ps,
+            IPrinterFactory[] printerFactories, final RecordDescriptor inputRecordDescriptor) {
         return new IAWriter() {
 
             @Override

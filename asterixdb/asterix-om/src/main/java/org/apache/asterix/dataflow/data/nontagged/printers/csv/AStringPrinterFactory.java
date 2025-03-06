@@ -22,28 +22,27 @@ import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.D
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.getCharOrDefault;
 
-import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AStringPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
-    private static final String NONE = "none";
-    private String quote;
-    private Boolean forceQuote;
-    private String escape;
-    private String delimiter;
+    private final boolean forceQuote;
+    private final char quote;
+    private final char escape;
+    private final char delimiter;
 
-    private AStringPrinterFactory(String quote, Boolean forceQuote, String escape, String delimiter) {
-        this.quote = quote;
+    private AStringPrinterFactory(String quote, boolean forceQuote, String escape, String delimiter) {
         this.forceQuote = forceQuote;
-        this.escape = escape;
-        this.delimiter = delimiter;
+        this.quote = getCharOrDefault(quote, DEFAULT_VALUES.get(KEY_QUOTE));
+        this.escape = getCharOrDefault(escape, DEFAULT_VALUES.get(KEY_ESCAPE));
+        this.delimiter = getCharOrDefault(delimiter, DEFAULT_VALUES.get(KEY_DELIMITER));
     }
 
     public static AStringPrinterFactory createInstance(String quote, String forceQuoteStr, String escape,
@@ -52,32 +51,12 @@ public class AStringPrinterFactory implements IPrinterFactory {
         return new AStringPrinterFactory(quote, forceQuote, escape, delimiter);
     }
 
-    private final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
-        try {
-            char quoteChar =
-                    quote == null ? extractSingleChar(DEFAULT_VALUES.get(KEY_QUOTE)) : extractSingleChar(quote);
-            char escapeChar =
-                    escape == null ? extractSingleChar(DEFAULT_VALUES.get(KEY_ESCAPE)) : extractSingleChar(escape);
-            char delimiterChar = delimiter == null ? extractSingleChar(DEFAULT_VALUES.get(KEY_DELIMITER))
-                    : extractSingleChar(delimiter);
-            PrintTools.writeUTF8StringAsCSV(b, s + 1, l - 1, ps, quoteChar, forceQuote, escapeChar, delimiterChar);
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
-    };
-
-    public char extractSingleChar(String input) throws IOException {
-        if (input != null && input.length() == 1) {
-            return input.charAt(0);
-        } else if (input.equalsIgnoreCase(NONE)) {
-            return CSVUtils.NULL_CHAR; // Replace 'none' with null character
-        } else {
-            throw new IOException("Input string must be a single character");
-        }
+    private void printString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
+        CSVUtils.printString(b, s, l, ps, quote, forceQuote, escape, delimiter);
     }
 
     @Override
-    public IPrinter createPrinter() {
-        return PRINTER;
+    public IPrinter createPrinter(IEvaluatorContext context) {
+        return this::printString;
     }
 }

@@ -27,6 +27,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.locationtech.jts.geom.Geometry;
 
 public class AGeometryPrinterFactory implements IPrinterFactory {
@@ -42,7 +43,7 @@ public class AGeometryPrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

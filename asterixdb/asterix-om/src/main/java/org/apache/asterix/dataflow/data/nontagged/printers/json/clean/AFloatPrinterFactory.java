@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class AFloatPrinterFactory implements IPrinterFactory {
 
@@ -33,7 +34,7 @@ public class AFloatPrinterFactory implements IPrinterFactory {
             (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printFloatForJson(b, s, ps);
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

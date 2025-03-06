@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.losslessadm;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class ATimePrinterFactory implements IPrinterFactory {
 
@@ -37,7 +38,7 @@ public class ATimePrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

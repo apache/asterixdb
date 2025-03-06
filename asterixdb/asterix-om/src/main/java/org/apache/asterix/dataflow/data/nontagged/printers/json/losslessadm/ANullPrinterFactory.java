@@ -22,6 +22,7 @@ import java.io.PrintStream;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 /**
  * Null value is printed as JSON null.
@@ -35,7 +36,7 @@ public class ANullPrinterFactory implements IPrinterFactory {
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps.print("null");
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

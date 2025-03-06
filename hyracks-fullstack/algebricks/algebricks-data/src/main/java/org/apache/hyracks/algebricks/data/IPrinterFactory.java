@@ -20,6 +20,8 @@ package org.apache.hyracks.algebricks.data;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.context.IEvaluatorContext;
+
 public interface IPrinterFactory extends Serializable {
-    public IPrinter createPrinter();
+    IPrinter createPrinter(IEvaluatorContext context);
 }

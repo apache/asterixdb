@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.losslessadm;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class AFloatPrinterFactory implements IPrinterFactory {
 
@@ -33,7 +34,7 @@ public class AFloatPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

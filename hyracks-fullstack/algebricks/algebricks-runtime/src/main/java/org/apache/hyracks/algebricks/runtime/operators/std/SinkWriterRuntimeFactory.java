@@ -70,7 +70,7 @@ public class SinkWriterRuntimeFactory extends AbstractPushRuntimeFactory {
     public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             PrintStream filePrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
-            IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
+            IAWriter w = writerFactory.createWriter(ctx, fields, filePrintStream, printerFactories, inputRecordDesc);
             return new IPushRuntime[] { new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true) };
         } catch (IOException e) {
             throw HyracksDataException.create(e);

@@ -59,7 +59,7 @@ public class WriterValidationUtil {
             throws CompilationException {
         String quote = configuration.get(ExternalDataConstants.KEY_QUOTE);
         if (quote != null && !ExternalDataConstants.WRITER_SUPPORTED_QUOTES.contains(quote.toLowerCase())) {
-            throw CompilationException.create(ErrorCode.INVALID_QUOTE, sourceLocation, quote,
+            throw CompilationException.create(ErrorCode.CSV_INVALID_QUOTE, sourceLocation, quote,
                     ExternalDataConstants.WRITER_SUPPORTED_QUOTES.toString());
         }
     }
@@ -251,22 +251,20 @@ public class WriterValidationUtil {
 
     private static void validateDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        // Will this affect backward compatibility
         String delimiter = configuration.get(ExternalDataConstants.KEY_DELIMITER);
         unitByteCondition(delimiter, sourceLocation, ErrorCode.INVALID_DELIMITER);
     }
 
     private static void validateEscape(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        // Will this affect backward compatibility?
         String escape = configuration.get(ExternalDataConstants.KEY_ESCAPE);
-        unitByteCondition(escape, sourceLocation, ErrorCode.INVALID_ESCAPE);
+        unitByteCondition(escape, sourceLocation, ErrorCode.CSV_INVALID_ESCAPE);
     }
 
     private static void validateRecordDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         String recordDel = configuration.get(ExternalDataConstants.KEY_RECORD_DELIMITER);
-        unitByteCondition(recordDel, sourceLocation, ErrorCode.INVALID_FORCE_QUOTE);
+        unitByteCondition(recordDel, sourceLocation, ErrorCode.CSV_INVALID_FORCE_QUOTE);
     }
 
     private static void unitByteCondition(String param, SourceLocation sourceLocation, ErrorCode errorCode)

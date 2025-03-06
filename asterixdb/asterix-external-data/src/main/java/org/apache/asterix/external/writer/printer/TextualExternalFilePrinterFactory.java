@@ -22,6 +22,7 @@ import org.apache.asterix.external.writer.compressor.IExternalFileCompressStream
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class TextualExternalFilePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 8971234908711234L;
@@ -35,7 +36,7 @@ public class TextualExternalFilePrinterFactory implements IExternalPrinterFactor
     }
 
     @Override
-    public IExternalPrinter createPrinter() {
-        return new TextualExternalFilePrinter(printerFactory.createPrinter(), compressStreamFactory);
+    public IExternalPrinter createPrinter(IEvaluatorContext context) {
+        return new TextualExternalFilePrinter(printerFactory.createPrinter(context), compressStreamFactory);
     }
 }
