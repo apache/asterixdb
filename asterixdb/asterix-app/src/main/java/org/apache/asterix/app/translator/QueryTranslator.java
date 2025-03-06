@@ -1562,7 +1562,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
                                 "Cannot specify exclude/include unknown for untyped keys in the index definition.");
                     }
-                    validateIndexFieldType(indexType, fieldTypePrime, projectPath, indexedElement.getSourceLocation());
+                    validateIndexFieldType(indexType, fieldTypePrime, projectPath, indexedElement.getSourceLocation(),
+                            isHeterogeneousIndex);
 
                     IAType fieldType =
                             KeyFieldTypeUtil.makeUnknownableType(fieldTypePrime, fieldTypeNullable, fieldTypeMissable);
@@ -1988,7 +1989,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateIndexFieldType(IndexType indexType, IAType fieldType, List<String> displayFieldName,
-            SourceLocation sourceLoc) throws AlgebricksException {
+            SourceLocation sourceLoc, boolean isHeterogeneousIndex) throws AlgebricksException {
         ValidateUtil.validateIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
     }
 
