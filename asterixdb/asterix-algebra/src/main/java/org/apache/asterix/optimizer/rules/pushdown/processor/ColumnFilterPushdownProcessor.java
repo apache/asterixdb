@@ -50,7 +50,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
@@ -102,7 +101,6 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
 
     @Override
     protected boolean isNotPushable(AbstractFunctionCallExpression expression) {
-        FunctionIdentifier fid = expression.getFunctionIdentifier();
         return isProhibitedFilterFunction(expression);
     }
 

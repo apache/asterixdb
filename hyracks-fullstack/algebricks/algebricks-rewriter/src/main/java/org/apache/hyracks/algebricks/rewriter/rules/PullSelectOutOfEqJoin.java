@@ -38,7 +38,14 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
 
+/**
+ * NOTE: This rule is not used (and not needed).
+ * The {@link JoinUtils#setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator, boolean, IOptimizationContext)} has
+ * been modified so that a hash-join is used even if other non-equality predicates exist as long as the join condition
+ * contains at least one equality predicate.
+ */
 public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
 
     @Override
