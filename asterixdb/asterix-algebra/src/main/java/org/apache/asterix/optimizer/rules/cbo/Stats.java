@@ -187,17 +187,21 @@ public class Stats {
                 return 0.5; // this may not be accurate obviously!
             } // we can do all relops here and other joins such as interval joins and spatial joins, the compile time might increase a lot
 
+            //If one of the tables is smaller than the target sample size, we can join the samples directly
+            // to get a good estimate of the join selectivity.
             Index.SampleIndexDetails idxDetails1 = (Index.SampleIndexDetails) index1.getIndexDetails();
             Index.SampleIndexDetails idxDetails2 = (Index.SampleIndexDetails) index2.getIndexDetails();
             if ((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
                     || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())) {
                 double sel = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
                         joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
-                if (sel > 0.0) { // if sel is 0.0 we call naiveJoinSelectivity
-                    return sel;
+
+                if (sel == 0.0) {
+                    sel = 1.0 / Math.max(card1, card2); // R.uniq = S.uniq is nicely modelled here. Good heuristic Best we can do so far.
                 }
+                return sel;
             }
-            // Now we can handle only equi joins. We make all the uniform and independence assumptions here.
+            // Now we can handle only equi joins. We make all the uniform and independence assumptions here. Works well for Pk-FK joins.
             double sel = naiveJoinSelectivity(exprUsedVars, card1, card2, idx1, idx2);
             return sel;
         }
