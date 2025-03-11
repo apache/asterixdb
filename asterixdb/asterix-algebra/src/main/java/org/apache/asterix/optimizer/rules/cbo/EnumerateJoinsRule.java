@@ -465,8 +465,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator fakeDs = (DataSourceScanOperator) truncateInput(leafInput);
                 fakeLeafInputsMap.put(fakeDs, true);
                 LogicalVariable var1 = fakeDs.getVariables().get(0);
+                varLeafInputIds.put(var1, j);
                 MutableObject<ILogicalOperator> q = new MutableObject<>(fakeDs);
                 LogicalVariable var2 = modify(q.getValue(), context); // so as to make it fake, remove teh original variables
+                varLeafInputIds.put(var2, j + 1); // this InputId has to be different from j, which is a real leaf input.
+                joinEnum.varLeafInputIds = varLeafInputIds; // this is needed for making new join expressions
                 ILogicalExpression expr = joinEnum.makeNewEQJoinExpr(var1, var2);
                 foj = new LeftOuterJoinOperator(new MutableObject<>(expr), new MutableObject<>(leftChild), q,
                         ConstantExpression.MISSING.getValue());

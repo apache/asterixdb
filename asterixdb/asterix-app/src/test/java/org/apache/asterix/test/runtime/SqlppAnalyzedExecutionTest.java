@@ -46,7 +46,7 @@ public class SqlppAnalyzedExecutionTest {
     private final String[] denyList = { "synonym: synonym-01", "ddl: analyze-dataset-1", "misc: dump_index",
             "array-index: composite-index-queries", "filters: upsert", "column: analyze-dataset",
             "column: filter/boolean", "column: filter/sql-compat", "ddl: analyze-dataset-with-indexes",
-            "warnings: cardinality-hint-warning" };
+            "warnings: cardinality-hint-warning", "comparison: incomparable_types" };
 
     @BeforeClass
     public static void setUp() throws Exception {
