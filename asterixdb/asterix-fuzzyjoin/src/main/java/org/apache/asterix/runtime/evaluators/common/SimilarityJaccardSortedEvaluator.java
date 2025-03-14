@@ -19,8 +19,8 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricJaccard;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 // Assumes that both arguments are sorted by the same ordering.

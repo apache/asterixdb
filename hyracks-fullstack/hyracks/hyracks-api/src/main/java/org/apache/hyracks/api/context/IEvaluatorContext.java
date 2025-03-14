@@ -17,10 +17,9 @@
  * under the License.
  */
 
-package org.apache.hyracks.algebricks.runtime.base;
+package org.apache.hyracks.api.context;
 
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 /**
