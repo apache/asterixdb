@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -48,8 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.logging.log4j.LogManager;
-
-import com.microsoft.azure.storage.core.Logger;
+import org.apache.logging.log4j.Logger;
 
 import io.delta.kernel.expressions.Column;
 import io.delta.kernel.expressions.Expression;
@@ -58,7 +58,7 @@ import io.delta.kernel.expressions.Predicate;
 
 public class DeltaTableFilterBuilder extends AbstractFilterBuilder {
 
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public DeltaTableFilterBuilder(ExternalDatasetProjectionFiltrationInfo projectionFiltrationInfo,
             JobGenContext context, IVariableTypeEnvironment typeEnv) {
@@ -72,7 +72,7 @@ public class DeltaTableFilterBuilder extends AbstractFilterBuilder {
             try {
                 deltaTablePredicate = createExpression(filterExpression);
             } catch (Exception e) {
-                LOGGER.error("Error creating DeltaTable filter expression ", e);
+                LOGGER.error("Error creating DeltaTable filter expression, skipping filter pushdown", e);
             }
         }
         if (deltaTablePredicate != null && !(deltaTablePredicate instanceof Predicate)) {
@@ -138,12 +138,16 @@ public class DeltaTableFilterBuilder extends AbstractFilterBuilder {
     private Expression handleFunction(ILogicalExpression expr) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         IFunctionDescriptor fd = resolveFunction(funcExpr);
-        List<Expression> args = handleArgs(funcExpr);
         FunctionIdentifier fid = fd.getIdentifier();
+        if (funcExpr.getArguments().size() != 2
+                && !(fid.equals(AlgebricksBuiltinFunctions.AND) || fid.equals(AlgebricksBuiltinFunctions.OR))) {
+            throw new RuntimeException("Predicate should only have 2 arguments: " + funcExpr);
+        }
+        List<Expression> args = handleArgs(funcExpr);
         if (fid.equals(AlgebricksBuiltinFunctions.AND)) {
-            return new Predicate("AND", args);
+            return createAndOrPredicate("AND", args, 0);
         } else if (fid.equals(AlgebricksBuiltinFunctions.OR)) {
-            return new Predicate("OR", args);
+            return createAndOrPredicate("OR", args, 0);
         } else if (fid.equals(AlgebricksBuiltinFunctions.EQ)) {
             return new Predicate("=", args);
         } else if (fid.equals(AlgebricksBuiltinFunctions.GE)) {
@@ -173,8 +177,40 @@ public class DeltaTableFilterBuilder extends AbstractFilterBuilder {
     protected Column createColumnExpression(ILogicalExpression expression) {
         ARecordType path = filterPaths.get(expression);
         if (path.getFieldNames().length != 1) {
-            throw new RuntimeException("Unsupported expression: " + expression);
+            throw new RuntimeException("Unsupported column expression: " + expression);
+        } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.OBJECT) {
+            // The field could be a nested field
+            List<String> fieldList = new ArrayList<>();
+            fieldList = createPathExpression(path, fieldList);
+            return new Column(fieldList.toArray(new String[0]));
+        } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
+            return new Column(path.getFieldNames()[0]);
+        } else {
+            throw new RuntimeException("Unsupported column expression: " + expression);
         }
-        return new Column(path.getFieldNames()[0]);
+    }
+
+    private List<String> createPathExpression(ARecordType path, List<String> fieldList) {
+        if (path.getFieldNames().length != 1) {
+            throw new RuntimeException("Error creating column expression");
+        } else {
+            fieldList.add(path.getFieldNames()[0]);
+        }
+        if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.OBJECT) {
+            return createPathExpression((ARecordType) path.getFieldTypes()[0], fieldList);
+        } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
+            return fieldList;
+        } else {
+            throw new RuntimeException("Error creating column expression");
+        }
+    }
+
+    // Converts or(pred1, pred2, pred3) to or(pred1, or(pred2, pred3))
+    private Predicate createAndOrPredicate(String function, List<Expression> args, int index) {
+        if (index == args.size() - 2) {
+            return new Predicate(function, args.get(index), args.get(index + 1));
+        } else {
+            return new Predicate(function, args.get(index), createAndOrPredicate(function, args, index + 1));
+        }
     }
 }
