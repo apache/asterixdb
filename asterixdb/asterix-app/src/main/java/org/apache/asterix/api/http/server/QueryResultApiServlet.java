@@ -146,10 +146,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         }
         SessionConfig.PlanFormat planFormat = SessionConfig.PlanFormat.get(request.getParameter("plan-format"),
                 "plan format", SessionConfig.PlanFormat.STRING, LOGGER);
+        SessionConfig.HyracksJobFormat hyracksJobFormat =
+                SessionConfig.HyracksJobFormat.get(request.getParameter("hyracks-job-format"), "hyracks-job-format",
+                        SessionConfig.HyracksJobFormat.JSON, LOGGER);
 
         SessionOutput.ResultAppender appendHandle = (app, handle) -> app.append("{ \"").append("handle")
                 .append("\":" + " \"").append(handle).append("\" }");
-        SessionConfig sessionConfig = new SessionConfig(format, planFormat);
+        SessionConfig sessionConfig = new SessionConfig(format, planFormat, hyracksJobFormat);
 
         // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
         // "true" for JSON and "false" for ADM. (Not applicable for CSV.)

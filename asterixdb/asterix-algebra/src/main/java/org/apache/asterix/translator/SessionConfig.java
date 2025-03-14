@@ -59,7 +59,8 @@ public class SessionConfig implements Serializable {
 
     public enum PlanFormat {
         JSON,
-        STRING;
+        STRING,
+        DOT;
         public static PlanFormat get(String fmtString, String label, PlanFormat defaultFmt, Logger logger) {
             try {
                 if (fmtString != null) {
@@ -77,6 +78,24 @@ public class SessionConfig implements Serializable {
     public enum ClientType {
         ASTERIX,
         JDBC
+    }
+
+    /**
+     * Used to specify the format for Hyracks Job
+     */
+    public enum HyracksJobFormat {
+        JSON,
+        DOT;
+        public static HyracksJobFormat get(String fmtString, String label, HyracksJobFormat defaultFmt, Logger logger) {
+            try {
+                if (fmtString != null) {
+                    return HyracksJobFormat.valueOf(fmtString.toUpperCase());
+                }
+            } catch (IllegalArgumentException e) {
+                logger.log(Level.INFO, fmtString + ": unsupported " + label + ", using " + defaultFmt + "instead", e);
+            }
+            return defaultFmt;
+        }
     }
 
     /**
@@ -140,6 +159,7 @@ public class SessionConfig implements Serializable {
     // Output format.
     private OutputFormat fmt;
     private PlanFormat planFormat;
+    private HyracksJobFormat hyracksJobFormat;
 
     // Standard execution flags.
     private boolean executeQuery;
@@ -155,7 +175,11 @@ public class SessionConfig implements Serializable {
     }
 
     public SessionConfig(OutputFormat fmt, PlanFormat planFormat) {
-        this(fmt, true, true, true, planFormat);
+        this(fmt, true, true, true, planFormat, HyracksJobFormat.JSON);
+    }
+
+    public SessionConfig(OutputFormat fmt, PlanFormat planFormat, HyracksJobFormat jobFormat) {
+        this(fmt, true, true, true, planFormat, jobFormat);
     }
 
     /**
@@ -173,11 +197,11 @@ public class SessionConfig implements Serializable {
      *            Whether to generate the Hyracks job specification (if
      */
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
-        this(fmt, optimize, executeQuery, generateJobSpec, PlanFormat.STRING);
+        this(fmt, optimize, executeQuery, generateJobSpec, PlanFormat.STRING, HyracksJobFormat.DOT);
     }
 
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec,
-            PlanFormat planFormat) {
+            PlanFormat planFormat, HyracksJobFormat jobFormat) {
         this.fmt = fmt;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
@@ -185,6 +209,7 @@ public class SessionConfig implements Serializable {
         this.flags = new HashMap<>();
         this.planFormat = planFormat;
         this.clientType = ClientType.ASTERIX;
+        this.hyracksJobFormat = jobFormat;
     }
 
     /**
@@ -218,6 +243,17 @@ public class SessionConfig implements Serializable {
 
     public void setPlanFormat(PlanFormat planFormat) {
         this.planFormat = planFormat;
+    }
+
+    /**
+     * Retrieve the HyracksJobFormat for this execution.
+     */
+    public HyracksJobFormat getHyracksJobFormat() {
+        return this.hyracksJobFormat;
+    }
+
+    public void setHyracksJobFormat(HyracksJobFormat hyracksJobFormat) {
+        this.hyracksJobFormat = hyracksJobFormat;
     }
 
     /**

@@ -42,6 +42,7 @@ public class PlansPrinter implements IResponseFieldPrinter {
         pw.print(FIELD_NAME);
         pw.print("\":");
         switch (planFormat) {
+            case DOT:
             case JSON:
             case STRING:
                 pw.print(ExecutionPlansJsonPrintUtil.asJson(executionPlans, planFormat));

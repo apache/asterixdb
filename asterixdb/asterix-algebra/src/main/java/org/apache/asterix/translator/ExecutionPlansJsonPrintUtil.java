@@ -66,6 +66,9 @@ public class ExecutionPlansJsonPrintUtil {
                 case STRING:
                     JSONUtil.quoteAndEscape(builder, value);
                     break;
+                case DOT:
+                    JSONUtil.quoteAndEscape(builder, value);
+                    break;
                 default:
                     throw new IllegalStateException("Unrecognized plan format: " + format);
             }

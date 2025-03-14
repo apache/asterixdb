@@ -98,6 +98,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.algebricks.core.utils.DotFormatGenerator;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
@@ -388,7 +389,7 @@ public class APIFramework {
             }
 
             if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
-                generateJob(spec);
+                generateJob(spec, output.config().getHyracksJobFormat());
             }
             return spec;
 
@@ -580,12 +581,22 @@ public class APIFramework {
 
     private void generateLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format,
             boolean printOptimizerEstimates) throws AlgebricksException {
+        if (format.equals(SessionConfig.PlanFormat.DOT)) {
+            DotFormatGenerator planGenerator = new DotFormatGenerator();
+            executionPlans.setLogicalPlan(planGenerator.generate(plan, true));
+            return;
+        }
         executionPlans
                 .setLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan, printOptimizerEstimates).toString());
     }
 
     private void generateOptimizedLogicalPlan(ILogicalPlan plan, Map<Object, String> log2phys,
             SessionConfig.PlanFormat format, boolean printOptimizerEstimates) throws AlgebricksException {
+        if (format.equals(SessionConfig.PlanFormat.DOT)) {
+            DotFormatGenerator planGenerator = new DotFormatGenerator();
+            executionPlans.setOptimizedLogicalPlan(planGenerator.generate(plan, true));
+            return;
+        }
         executionPlans.setOptimizedLogicalPlan(
                 getPrettyPrintVisitor(format).printPlan(plan, log2phys, printOptimizerEstimates).toString());
     }
@@ -606,11 +617,20 @@ public class APIFramework {
 
     private void generateOptimizedLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format,
             boolean printOptimizerEstimates) throws AlgebricksException {
+        if (format.equals(SessionConfig.PlanFormat.DOT)) {
+            DotFormatGenerator planGenerator = new DotFormatGenerator();
+            executionPlans.setOptimizedLogicalPlan(planGenerator.generate(plan, true));
+            return;
+        }
         executionPlans.setOptimizedLogicalPlan(
                 getPrettyPrintVisitor(format).printPlan(plan, printOptimizerEstimates).toString());
     }
 
-    private void generateJob(JobSpecification spec) {
+    private void generateJob(JobSpecification spec, SessionConfig.HyracksJobFormat format) {
+        if (format.equals(SessionConfig.HyracksJobFormat.DOT)) {
+            executionPlans.setJob(org.apache.hyracks.api.util.DotFormatGenerator.generate(spec));
+            return;
+        }
         final StringWriter stringWriter = new StringWriter();
         try (PrintWriter writer = new PrintWriter(stringWriter)) {
             writer.println(OBJECT_WRITER.writeValueAsString(spec.toJSON()));

@@ -36,6 +36,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType;
 import org.apache.asterix.translator.SessionConfig.ClientType;
+import org.apache.asterix.translator.SessionConfig.HyracksJobFormat;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.commons.lang3.StringUtils;
@@ -70,6 +71,7 @@ public class QueryServiceRequestParameters {
         MODE("mode"),
         TIMEOUT("timeout"),
         PLAN_FORMAT("plan-format"),
+        HYRACKS_JOB_FORMAT("hyracks-job-format"),
         MAX_RESULT_READS("max-result-reads"),
         EXPRESSION_TREE("expression-tree"),
         REWRITTEN_EXPRESSION_TREE("rewritten-expression-tree"),
@@ -114,7 +116,9 @@ public class QueryServiceRequestParameters {
     }
 
     private static final Map<String, PlanFormat> planFormats = ImmutableMap.of(HttpUtil.ContentType.JSON,
-            PlanFormat.JSON, "clean_json", PlanFormat.JSON, "string", PlanFormat.STRING);
+            PlanFormat.JSON, "clean_json", PlanFormat.JSON, "string", PlanFormat.STRING, "dot", PlanFormat.DOT);
+    private static final Map<String, HyracksJobFormat> hyracksJobFormats =
+            ImmutableMap.of(HttpUtil.ContentType.JSON, HyracksJobFormat.JSON, "dot", HyracksJobFormat.DOT);
     private static final Map<String, ClientType> clientTypes =
             ImmutableMap.of("asterix", ClientType.ASTERIX, "jdbc", ClientType.JDBC);
     private static final Map<String, Boolean> booleanValues =
@@ -134,6 +138,7 @@ public class QueryServiceRequestParameters {
     private OutputFormat format = OutputFormat.CLEAN_JSON;
     private ResultDelivery mode = ResultDelivery.IMMEDIATE;
     private PlanFormat planFormat = PlanFormat.JSON;
+    private HyracksJobFormat hyracksJobFormat = HyracksJobFormat.JSON;
     private ProfileType profileType = ProfileType.COUNTS;
     private Map<String, String> optionalParams = null;
     private Map<String, JsonNode> statementParams = null;
@@ -263,6 +268,15 @@ public class QueryServiceRequestParameters {
     public void setPlanFormat(PlanFormat planFormat) {
         Objects.requireNonNull(planFormat);
         this.planFormat = planFormat;
+    }
+
+    public HyracksJobFormat getHyracksJobFormat() {
+        return hyracksJobFormat;
+    }
+
+    public void setHyracksJobFormat(HyracksJobFormat hyracksJobFormat) {
+        Objects.requireNonNull(hyracksJobFormat);
+        this.hyracksJobFormat = hyracksJobFormat;
     }
 
     public Map<String, String> getOptionalParams() {
@@ -489,6 +503,9 @@ public class QueryServiceRequestParameters {
         setFormatIfExists(req, acceptHeader, Parameter.FORMAT.str(), valGetter);
         setMode(parseIfExists(req, Parameter.MODE.str(), valGetter, getMode(), ResultDelivery::fromName));
         setPlanFormat(parseIfExists(req, Parameter.PLAN_FORMAT.str(), valGetter, getPlanFormat(), planFormats::get));
+        setHyracksJobFormat(parseIfExists(req, Parameter.HYRACKS_JOB_FORMAT.str(), valGetter, getHyracksJobFormat(),
+                hyracksJobFormats::get));
+
         setProfileType(parseIfExists(req, Parameter.PROFILE.str(), valGetter, getProfileType(), ProfileType::fromName));
 
         setTimeout(parseTime(req, Parameter.TIMEOUT.str(), valGetter, getTimeout()));

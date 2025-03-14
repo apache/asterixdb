@@ -50,6 +50,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionConfig.HyracksJobFormat;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
@@ -121,7 +122,8 @@ public class ApiServlet extends AbstractServlet {
         }
         PlanFormat planFormat =
                 PlanFormat.get(request.getParameter("plan-format"), "plan format", PlanFormat.STRING, LOGGER);
-
+        HyracksJobFormat hyracksJobFormat = HyracksJobFormat.get(request.getParameter("hyracks-job-format"),
+                "hyracks-job-format", HyracksJobFormat.JSON, LOGGER);
         String query = request.getParameter("query");
         String wrapperArray = request.getParameter("wrapper-array");
         String printExprParam = request.getParameter("print-expr-tree");
@@ -137,7 +139,8 @@ public class ApiServlet extends AbstractServlet {
             IResultSet resultSet = ServletUtil.getResultSet(appCtx, ctx);
             IParser parser = parserFactory.createParser(query);
             List<Statement> statements = parser.parse();
-            SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
+            SessionConfig sessionConfig =
+                    new SessionConfig(format, true, isSet(executeQuery), true, planFormat, hyracksJobFormat);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csvAndHeader);
             sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, isSet(wrapperArray));

@@ -1,0 +1,3 @@
+{
+  "job": "R{(?s).*digraph \"JobSpecification\" \\{.*ResultWriterOperatorDescriptor@[a-f0-9]+-ResultWriterOperatorDescriptor.*RangeDescriptor\\$1@[a-f0-9]+.*GreaterThanDescriptor\\$2@[a-f0-9]+.*}"
+}

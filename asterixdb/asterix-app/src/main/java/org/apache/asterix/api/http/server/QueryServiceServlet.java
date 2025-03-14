@@ -492,9 +492,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionConfig.ClientType clientType = param.getClientType();
         SessionConfig.OutputFormat format = param.getFormat();
         SessionConfig.PlanFormat planFormat = param.getPlanFormat();
+        SessionConfig.HyracksJobFormat hyracksJobFormat = param.getHyracksJobFormat();
         sessionConfig.setClientType(clientType);
         sessionConfig.setFmt(format);
         sessionConfig.setPlanFormat(planFormat);
+        sessionConfig.setHyracksJobFormat(hyracksJobFormat);
         sessionConfig.setMaxWarnings(param.getMaxWarnings());
         sessionConfig.setExecuteQuery(!param.isCompileOnly());
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
