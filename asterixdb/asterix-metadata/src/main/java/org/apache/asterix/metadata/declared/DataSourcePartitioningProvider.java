@@ -97,7 +97,12 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
             IOptimizationContext ctx) throws AlgebricksException {
         switch (ds.getDatasourceType()) {
             case DataSource.Type.INTERNAL_DATASET: {
-                IPartitioningProperty pp = new RandomPartitioningProperty(domain);
+                Set<LogicalVariable> pvars = new ListSet<>();
+                Dataset dataset = ((DatasetDataSource) ds).getDataset();
+                int[][] computeStorageMap = ((MetadataProvider) ctx.getMetadataProvider())
+                        .getPartitioningProperties(dataset).getComputeStorageMap();
+                IPartitioningProperty pp =
+                        getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars, computeStorageMap);
                 List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
                 ds.computeLocalStructuralProperties(propsLocal, scanVariables);
                 return new StructuralPropertiesVector(pp, propsLocal);

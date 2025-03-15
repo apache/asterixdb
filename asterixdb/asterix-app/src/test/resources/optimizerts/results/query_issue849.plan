@@ -19,7 +19,7 @@ distribute result [$$45]
                   empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               project ([$$47])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange

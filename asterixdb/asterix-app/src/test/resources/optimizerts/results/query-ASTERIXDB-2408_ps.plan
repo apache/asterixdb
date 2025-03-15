@@ -46,7 +46,7 @@ distribute result [$$43]
                                       left outer join (eq($$49, $$46))
                                       -- HYBRID_HASH_JOIN [$$46][$$49]  |PARTITIONED|
                                         exchange
-                                        -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           assign [$$51] <- [$$c.getField("name")] project: [$$51, $$46]
                                           -- ASSIGN  |PARTITIONED|
                                             exchange
@@ -111,7 +111,7 @@ distribute result [$$43]
                                                 left outer join (eq($$49, $$46))
                                                 -- HYBRID_HASH_JOIN [$$46][$$49]  |PARTITIONED|
                                                   exchange
-                                                  -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     assign [$$51] <- [$$c.getField("name")] project: [$$51, $$46]
                                                     -- ASSIGN  |PARTITIONED|
                                                       exchange

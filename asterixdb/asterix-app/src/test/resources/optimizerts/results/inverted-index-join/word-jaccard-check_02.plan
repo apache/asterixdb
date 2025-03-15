@@ -11,7 +11,7 @@ distribute result [$$36]
           join (eq($$47, $$37))
           -- HYBRID_HASH_JOIN [$$47][$$37]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan []<-[$$47, $$a] <- test.DBLP
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange

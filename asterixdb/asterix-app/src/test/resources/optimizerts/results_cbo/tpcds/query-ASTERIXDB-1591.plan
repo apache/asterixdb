@@ -125,7 +125,7 @@ distribute result [$$148] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                                                         left outer join (eq($$150, $$167)) [cardinality: 9.223372036854776E16, op-cost: 5.00001E11, total-cost: 1.000009E12]
                                                                                         -- HYBRID_HASH_JOIN [$$150][$$167]  |PARTITIONED|
                                                                                           exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-                                                                                          -- HASH_PARTITION_EXCHANGE [$$150]  |PARTITIONED|
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                             assign [$$161] <- [$$c.getField(4)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                                                             -- ASSIGN  |PARTITIONED|
                                                                                               exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
@@ -165,7 +165,7 @@ distribute result [$$148] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                                                                       replicate
                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                         exchange
-                                                                                                        -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                           select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                                                                           -- STREAM_SELECT  |PARTITIONED|
                                                                                                             exchange
@@ -217,7 +217,7 @@ distribute result [$$148] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                                           replicate
                                                                           -- REPLICATE  |PARTITIONED|
                                                                             exchange
-                                                                            -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                               select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                                 exchange
@@ -261,7 +261,7 @@ distribute result [$$148] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                       replicate
                                                       -- REPLICATE  |PARTITIONED|
                                                         exchange
-                                                        -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                           -- STREAM_SELECT  |PARTITIONED|
                                                             exchange

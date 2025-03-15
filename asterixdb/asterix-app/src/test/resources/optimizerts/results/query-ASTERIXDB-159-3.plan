@@ -23,8 +23,8 @@ distribute result [$$41]
                       left outer join (eq($$47, $$56))
                       -- HYBRID_HASH_JOIN [$$47][$$56]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
-                          assign [$$47] <- [$$48] project: [$$47]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$47] <- [$$56] project: [$$47]
                           -- ASSIGN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -32,18 +32,26 @@ distribute result [$$41]
                               -- REPLICATE  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  project ([$$48])
-                                  -- STREAM_PROJECT  |PARTITIONED|
+                                  assign [$$56] <- [$$48] project: [$$56]
+                                  -- ASSIGN  |PARTITIONED|
                                     exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      data-scan []<-[$$48, $$fu2] <- TinySocial.FacebookUsers
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                      replicate
+                                      -- REPLICATE  |PARTITIONED|
                                         exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          empty-tuple-source
-                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          project ([$$48])
+                                          -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              data-scan []<-[$$48, $$fu2] <- TinySocial.FacebookUsers
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
+                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           select (and(lt($$49, 5), gt($$49, 2))) project: [$$48, $$56]
                           -- STREAM_SELECT  |PARTITIONED|
                             subplan {
@@ -61,24 +69,28 @@ distribute result [$$41]
                                 -- NESTED_LOOP  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    assign [$$56] <- [$$48] project: [$$56]
-                                    -- ASSIGN  |PARTITIONED|
+                                    replicate
+                                    -- REPLICATE  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        replicate
-                                        -- REPLICATE  |PARTITIONED|
+                                        assign [$$56] <- [$$48] project: [$$56]
+                                        -- ASSIGN  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            project ([$$48])
-                                            -- STREAM_PROJECT  |PARTITIONED|
+                                            replicate
+                                            -- REPLICATE  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                data-scan []<-[$$48, $$fu2] <- TinySocial.FacebookUsers
-                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                project ([$$48])
+                                                -- STREAM_PROJECT  |PARTITIONED|
                                                   exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    empty-tuple-source
-                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                    data-scan []<-[$$48, $$fu2] <- TinySocial.FacebookUsers
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
+                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                   exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
                                     replicate

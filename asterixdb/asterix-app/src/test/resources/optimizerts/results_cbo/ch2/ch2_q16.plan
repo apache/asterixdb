@@ -51,7 +51,7 @@ distribute result [$$128] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                 order (ASC, $$133) (ASC, $$134) [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 2.000015E12]
                                 -- STABLE_SORT [$$133(ASC), $$134(ASC)]  |PARTITIONED|
                                   exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 2.000015E12]
-                                  -- HASH_PARTITION_EXCHANGE [$$133, $$134]  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     project ([$$129, $$131, $$132, $$145, $$133, $$134, $$138, $$141]) [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 2.000015E12]
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 2.000015E12]

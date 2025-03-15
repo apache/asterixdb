@@ -82,27 +82,23 @@ distribute result [$$143]
                                                       left outer join (eq($$144, $$194))
                                                       -- HYBRID_HASH_JOIN [$$144][$$194]  |PARTITIONED|
                                                         exchange
-                                                        -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
-                                                          project ([$$144])
-                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          assign [$$144, $$item] <- [$$215, $$212] project: [$$144]
+                                                          -- ASSIGN  |PARTITIONED|
                                                             exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              assign [$$144, $$item] <- [$$215, $$212] project: [$$144, $$item]
-                                                              -- ASSIGN  |PARTITIONED|
+                                                              replicate
+                                                              -- REPLICATE  |PARTITIONED|
                                                                 exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  replicate
-                                                                  -- REPLICATE  |PARTITIONED|
+                                                                  unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
+                                                                  -- BTREE_SEARCH  |PARTITIONED|
                                                                     exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
-                                                                      -- BTREE_SEARCH  |PARTITIONED|
-                                                                        exchange
-                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          assign [$$260, $$261] <- [1, 1]
-                                                                          -- ASSIGN  |PARTITIONED|
-                                                                            empty-tuple-source
-                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                      assign [$$260, $$261] <- [1, 1]
+                                                                      -- ASSIGN  |PARTITIONED|
+                                                                        empty-tuple-source
+                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                         exchange
                                                         -- HASH_PARTITION_EXCHANGE [$$194]  |PARTITIONED|
                                                           assign [$$195, $$137] <- [true, {"$2": $$153}] project: [$$137, $$195, $$194]
@@ -189,19 +185,15 @@ distribute result [$$143]
                                                                                                                       replicate
                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                         exchange
-                                                                                                                        -- HASH_PARTITION_EXCHANGE [$$215]  |PARTITIONED|
-                                                                                                                          replicate
-                                                                                                                          -- REPLICATE  |PARTITIONED|
+                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                          unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
+                                                                                                                          -- BTREE_SEARCH  |PARTITIONED|
                                                                                                                             exchange
                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                              unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
-                                                                                                                              -- BTREE_SEARCH  |PARTITIONED|
-                                                                                                                                exchange
-                                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                  assign [$$260, $$261] <- [1, 1]
-                                                                                                                                  -- ASSIGN  |PARTITIONED|
-                                                                                                                                    empty-tuple-source
-                                                                                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                              assign [$$260, $$261] <- [1, 1]
+                                                                                                                              -- ASSIGN  |PARTITIONED|
+                                                                                                                                empty-tuple-source
+                                                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                     exchange
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                       assign [$$217, $$216] <- [$$222, $$214] project: [$$217, $$216]
@@ -353,19 +345,15 @@ distribute result [$$143]
                                                                                                             replicate
                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                               exchange
-                                                                                                              -- HASH_PARTITION_EXCHANGE [$$215]  |PARTITIONED|
-                                                                                                                replicate
-                                                                                                                -- REPLICATE  |PARTITIONED|
+                                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
+                                                                                                                -- BTREE_SEARCH  |PARTITIONED|
                                                                                                                   exchange
                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                    unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
-                                                                                                                    -- BTREE_SEARCH  |PARTITIONED|
-                                                                                                                      exchange
-                                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                        assign [$$260, $$261] <- [1, 1]
-                                                                                                                        -- ASSIGN  |PARTITIONED|
-                                                                                                                          empty-tuple-source
-                                                                                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                    assign [$$260, $$261] <- [1, 1]
+                                                                                                                    -- ASSIGN  |PARTITIONED|
+                                                                                                                      empty-tuple-source
+                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                       exchange
                                                                                                       -- HASH_PARTITION_EXCHANGE [$$204]  |PARTITIONED|
                                                                                                         assign [$$205] <- [true]
@@ -448,19 +436,15 @@ distribute result [$$143]
                                                                                                                                                                 replicate
                                                                                                                                                                 -- REPLICATE  |PARTITIONED|
                                                                                                                                                                   exchange
-                                                                                                                                                                  -- HASH_PARTITION_EXCHANGE [$$215]  |PARTITIONED|
-                                                                                                                                                                    replicate
-                                                                                                                                                                    -- REPLICATE  |PARTITIONED|
+                                                                                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                                    unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
+                                                                                                                                                                    -- BTREE_SEARCH  |PARTITIONED|
                                                                                                                                                                       exchange
                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                        unnest-map [$$215, $$212] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$260, 1, $$261, true, true, true)
-                                                                                                                                                                        -- BTREE_SEARCH  |PARTITIONED|
-                                                                                                                                                                          exchange
-                                                                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                            assign [$$260, $$261] <- [1, 1]
-                                                                                                                                                                            -- ASSIGN  |PARTITIONED|
-                                                                                                                                                                              empty-tuple-source
-                                                                                                                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                                                                        assign [$$260, $$261] <- [1, 1]
+                                                                                                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                                                                                                          empty-tuple-source
+                                                                                                                                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                               exchange
                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                                                 assign [$$217, $$216] <- [$$222, $$214] project: [$$217, $$216]

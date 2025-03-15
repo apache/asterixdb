@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
@@ -198,5 +199,7 @@ public interface IMetadataProvider<S, I> {
     Map<String, Object> getConfig();
 
     boolean isBlockingOperatorDisabled();
+
+    int[][] getPartitionsMap(INodeDomain nodeDomain);
 
 }

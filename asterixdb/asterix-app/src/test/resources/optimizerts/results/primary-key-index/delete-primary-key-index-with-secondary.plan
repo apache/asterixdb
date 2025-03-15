@@ -23,7 +23,7 @@ commit
                       materialize
                       -- MATERIALIZE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$16]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           assign [$$22, $$16] <- [$$DBLP.getField(2), $$DBLP.getField(0)]
                           -- ASSIGN  |PARTITIONED|
                             project ([$$DBLP])

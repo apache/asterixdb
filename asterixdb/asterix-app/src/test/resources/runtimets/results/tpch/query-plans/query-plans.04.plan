@@ -68,7 +68,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           left outer join (eq($$207, $$200)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- HYBRID_HASH_JOIN [$$200][$$207]  |PARTITIONED|
                                                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- HASH_PARTITION_EXCHANGE [$$200]  |PARTITIONED|
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               select (and(eq($$p.getField(5), 37), like($$p.getField(4), "%COPPER"))) project: [$$244, $$200] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                 assign [$$244] <- [$$p.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -100,7 +100,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             join (eq($$207, $$209)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- HYBRID_HASH_JOIN [$$207][$$209]  |PARTITIONED|
                                                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                              -- HASH_PARTITION_EXCHANGE [$$207]  |PARTITIONED|
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                 project ([$$207]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -144,7 +144,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                             empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                              -- HASH_PARTITION_EXCHANGE [$$211]  |PARTITIONED|
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                 assign [$$223] <- [$$s2.getField(3)] project: [$$223, $$211] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                 -- ASSIGN  |PARTITIONED|
                                                                                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -156,7 +156,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                         empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                      -- HASH_PARTITION_EXCHANGE [$$212]  |PARTITIONED|
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                         assign [$$218] <- [$$n2.getField(2)] project: [$$218, $$212] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                         -- ASSIGN  |PARTITIONED|
                                                                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -176,7 +176,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         -- REPLICATE  |PARTITIONED|
                                                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                          -- HASH_PARTITION_EXCHANGE [$$213]  |PARTITIONED|
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                             select (eq($$r2.getField(1), "EUROPE")) project: [$$213] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- STREAM_SELECT  |PARTITIONED|
                                                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -196,7 +196,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               join (eq($$201, $$204)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- HYBRID_HASH_JOIN [$$201][$$204]  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   assign [$$247, $$246, $$245, $$237, $$239, $$225] <- [$$s.getField(6), $$s.getField(4), $$s.getField(2), $$s.getField(5), $$s.getField(1), $$s.getField(3)] project: [$$237, $$239, $$245, $$246, $$247, $$225, $$201] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -228,7 +228,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   assign [$$238, $$221] <- [$$n.getField(1), $$n.getField(2)] project: [$$238, $$221, $$205] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ASSIGN  |PARTITIONED|
                                     assign [$$205, $$n] <- [$$212, $$n2] project: [$$205, $$n] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -254,7 +254,7 @@ distribute result [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- REPLICATE  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- HASH_PARTITION_EXCHANGE [$$213]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   select (eq($$r2.getField(1), "EUROPE")) project: [$$213] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

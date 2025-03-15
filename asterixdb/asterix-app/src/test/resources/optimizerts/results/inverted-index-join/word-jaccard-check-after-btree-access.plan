@@ -11,7 +11,7 @@ distribute result [$$53]
           join (eq($$69, $$56))
           -- HYBRID_HASH_JOIN [$$69][$$56]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$69]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$60] <- [$$t1.getField(5)] project: [$$60, $$69]
               -- ASSIGN  |PARTITIONED|
                 assign [$$69, $$t1] <- [$$56, $$71] project: [$$69, $$t1]

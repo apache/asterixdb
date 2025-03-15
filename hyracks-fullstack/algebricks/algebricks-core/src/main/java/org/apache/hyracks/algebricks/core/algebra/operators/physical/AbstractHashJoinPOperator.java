@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -99,14 +100,16 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
         // parent's partitioning requirements.
         IPartitioningProperty pp1;
         IPartitioningProperty pp2;
+        INodeDomain nodeDomain = ctx.getComputationNodeDomain();
         switch (partitioningType) {
             case PAIRWISE:
-                pp1 = UnorderedPartitionedProperty.of(new ListSet<>(keysLeftBranch), ctx.getComputationNodeDomain());
-                pp2 = UnorderedPartitionedProperty.of(new ListSet<>(keysRightBranch), ctx.getComputationNodeDomain());
+                int[][] partitionsMap = ctx.getMetadataProvider().getPartitionsMap(nodeDomain);
+                pp1 = OperatorPropertiesUtil.createUnorderedProperty(nodeDomain, partitionsMap, keysLeftBranch);
+                pp2 = OperatorPropertiesUtil.createUnorderedProperty(nodeDomain, partitionsMap, keysRightBranch);
                 break;
             case BROADCAST:
-                pp1 = new RandomPartitioningProperty(ctx.getComputationNodeDomain());
-                pp2 = new BroadcastPartitioningProperty(ctx.getComputationNodeDomain());
+                pp1 = new RandomPartitioningProperty(nodeDomain);
+                pp2 = new BroadcastPartitioningProperty(nodeDomain);
                 break;
             default:
                 throw new IllegalStateException();

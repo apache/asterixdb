@@ -44,12 +44,14 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.core.jobgen.impl.OperatorSchemaImpl;
@@ -108,9 +110,11 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            pv[0] = new StructuralPropertiesVector(
-                    UnorderedPartitionedProperty.of(new ListSet<>(columnList), context.getComputationNodeDomain()),
-                    null);
+            INodeDomain nodeDomain = context.getComputationNodeDomain();
+            int[][] partitionsMap = context.getMetadataProvider().getPartitionsMap(nodeDomain);
+            UnorderedPartitionedProperty pp =
+                    OperatorPropertiesUtil.createUnorderedProperty(nodeDomain, partitionsMap, columnList);
+            pv[0] = new StructuralPropertiesVector(pp, null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();

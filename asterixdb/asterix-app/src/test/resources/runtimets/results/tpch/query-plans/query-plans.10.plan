@@ -39,7 +39,7 @@ distribute result [$$122] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       join (and(eq($$130, $$128), eq($$129, $$125))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- HYBRID_HASH_JOIN [$$130, $$129][$$128, $$125]  |PARTITIONED|
                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- HASH_PARTITION_EXCHANGE [$$130, $$129]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           join (true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- NESTED_LOOP  |PARTITIONED|
                                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -67,7 +67,7 @@ distribute result [$$122] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- HASH_PARTITION_EXCHANGE [$$128, $$125]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$125]  |PARTITIONED|
                                           assign [$$128, $$125] <- [$$l.getField(2), $$l.getField(1)] project: [$$132, $$128, $$125] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- ASSIGN  |PARTITIONED|
                                             project ([$$132, $$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -81,7 +81,7 @@ distribute result [$$122] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- HASH_PARTITION_EXCHANGE [$$135, $$134]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$134]  |PARTITIONED|
                                   project ([$$134, $$135]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -93,7 +93,7 @@ distribute result [$$122] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- HASH_PARTITION_EXCHANGE [$$136]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           project ([$$136]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -105,7 +105,7 @@ distribute result [$$122] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- HASH_PARTITION_EXCHANGE [$$137]  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$137]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

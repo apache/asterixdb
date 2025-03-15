@@ -51,7 +51,7 @@ distribute result [$$203] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                   join (eq($$205, $$233)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
                                                   -- HYBRID_HASH_JOIN [$$205][$$233]  |PARTITIONED|
                                                     exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                                                    -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       assign [$$242] <- [$$s.getField(3)] project: [$$242, $$205] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                       -- ASSIGN  |PARTITIONED|
                                                         exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]

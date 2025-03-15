@@ -75,7 +75,7 @@ distribute result [$$154]
                                                     left outer join (eq($$156, $$163))
                                                     -- HYBRID_HASH_JOIN [$$156][$$163]  |PARTITIONED|
                                                       exchange
-                                                      -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         running-aggregate [$$169] <- [create-query-uid()]
                                                         -- RUNNING_AGGREGATE  |PARTITIONED|
                                                           assign [$$135] <- [{"c_acctbal": $$165, "c_custkey": $$156, "cntrycode": $$phone_substr}]
@@ -191,7 +191,7 @@ distribute result [$$154]
                                                               left outer join (eq($$156, $$163))
                                                               -- HYBRID_HASH_JOIN [$$156][$$163]  |PARTITIONED|
                                                                 exchange
-                                                                -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   running-aggregate [$$169] <- [create-query-uid()]
                                                                   -- RUNNING_AGGREGATE  |PARTITIONED|
                                                                     assign [$$135] <- [{"c_acctbal": $$165, "c_custkey": $$156, "cntrycode": $$phone_substr}]

@@ -33,7 +33,7 @@ distribute result [$$291]
                                 left outer join (eq($$296, $$jid))
                                 -- HYBRID_HASH_JOIN [$$296][$$jid]  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$296]  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     assign [$$304] <- [$$jds.getField("a")] project: [$$296, $$304]
                                     -- ASSIGN  |PARTITIONED|
                                       assign [$$296, $$jds] <- [$$322, $$324] project: [$$296, $$jds]
@@ -119,7 +119,7 @@ distribute result [$$291]
                                       left outer join (eq($$322, $$325))
                                       -- HYBRID_HASH_JOIN [$$322][$$325]  |PARTITIONED|
                                         exchange
-                                        -- HASH_PARTITION_EXCHANGE [$$322]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           project ([$$322])
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             exchange

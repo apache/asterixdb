@@ -70,4 +70,10 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
         return clusterStateManager.getNodeSortedClusterLocations();
     }
+
+    @Override
+    public int[][] getPartitionsMap() {
+        AlgebricksAbsolutePartitionConstraint locations = clusterStateManager.getNodeSortedClusterLocations();
+        return getOneToOnePartitionsMap(getLocationsCount(locations));
+    }
 }

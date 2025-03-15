@@ -17,7 +17,7 @@ distribute result [$$30] [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
                 join (eq($$33, $$34)) [cardinality: 7.0, op-cost: 14.0, total-cost: 42.0]
                 -- HYBRID_HASH_JOIN [$$33][$$34]  |PARTITIONED|
                   exchange [cardinality: 7.0, op-cost: 7.0, total-cost: 14.0]
-                  -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     data-scan []<-[$$33, $$p1] <- test.ColumnDataset1 [cardinality: 7.0, op-cost: 7.0, total-cost: 7.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -25,7 +25,7 @@ distribute result [$$30] [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
                         empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 7.0, op-cost: 7.0, total-cost: 14.0]
-                  -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     project ([$$34]) [cardinality: 7.0, op-cost: 0.0, total-cost: 7.0]
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange [cardinality: 7.0, op-cost: 7.0, total-cost: 14.0]

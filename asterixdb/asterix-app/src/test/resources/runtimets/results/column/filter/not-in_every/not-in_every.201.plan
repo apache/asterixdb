@@ -24,7 +24,7 @@ distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 order (ASC, $$20) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     project ([$$d, $$23, $$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

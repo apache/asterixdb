@@ -57,7 +57,7 @@ distribute result [$$192]
                                           left outer join (eq($$193, $$240))
                                           -- HYBRID_HASH_JOIN [$$193][$$240]  |PARTITIONED|
                                             exchange
-                                            -- HASH_PARTITION_EXCHANGE [$$193]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               assign [$$116] <- [{"x_id": $$T0.getField("x_id")}] project: [$$116, $$193]
                                               -- ASSIGN  |PARTITIONED|
                                                 exchange
@@ -481,7 +481,7 @@ distribute result [$$192]
                                                                                                   replicate
                                                                                                   -- REPLICATE  |PARTITIONED|
                                                                                                     exchange
-                                                                                                    -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       replicate
                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                         exchange
@@ -921,7 +921,7 @@ distribute result [$$192]
                                                                                                                           replicate
                                                                                                                           -- REPLICATE  |PARTITIONED|
                                                                                                                             exchange
-                                                                                                                            -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                               replicate
                                                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                                                 exchange
@@ -1350,7 +1350,7 @@ distribute result [$$192]
                                                                                                                                         replicate
                                                                                                                                         -- REPLICATE  |PARTITIONED|
                                                                                                                                           exchange
-                                                                                                                                          -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                             replicate
                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                               exchange

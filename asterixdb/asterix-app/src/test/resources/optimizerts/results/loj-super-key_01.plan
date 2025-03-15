@@ -30,7 +30,7 @@ distribute result [$$48]
                       left outer join (and(eq($$53, $$54), eq($$49, $$51), eq($$57, $$52)))
                       -- HYBRID_HASH_JOIN [$$53, $$49, $$57][$$54, $$51, $$52]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$53, $$49, $$57]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$49, $$57]  |PARTITIONED|
                           assign [$$57, $$53] <- [$$li.getField(2), $$li.getField(5)]
                           -- ASSIGN  |PARTITIONED|
                             exchange
@@ -42,7 +42,7 @@ distribute result [$$48]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$54, $$51, $$52]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           assign [$$59, $$54] <- [true, $$ps.getField(3)]
                           -- ASSIGN  |PARTITIONED|
                             exchange

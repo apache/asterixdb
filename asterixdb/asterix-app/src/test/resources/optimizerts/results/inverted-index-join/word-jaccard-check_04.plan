@@ -11,7 +11,7 @@ distribute result [$$48]
           join (eq($$61, $$49))
           -- HYBRID_HASH_JOIN [$$61][$$49]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$61]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$55] <- [$$a.getField(2)]
               -- ASSIGN  |PARTITIONED|
                 exchange

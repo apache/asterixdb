@@ -19,7 +19,7 @@ distribute result [$$31] [cardinality: 2.1, op-cost: 0.0, total-cost: 47.25]
                   join (eq($$33, $$34)) [cardinality: 2.1, op-cost: 15.0, total-cost: 45.0]
                   -- HYBRID_HASH_JOIN [$$34][$$33]  |PARTITIONED|
                     exchange [cardinality: 8.0, op-cost: 8.0, total-cost: 16.0]
-                    -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       assign [$$39] <- [$$p2.getField("name")] project: [$$39, $$34] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 8.0, op-cost: 8.0, total-cost: 16.0]
@@ -31,7 +31,7 @@ distribute result [$$31] [cardinality: 2.1, op-cost: 0.0, total-cost: 47.25]
                               empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange [cardinality: 7.0, op-cost: 7.0, total-cost: 14.0]
-                    -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       assign [$$38] <- [$$p1.getField("age")] project: [$$38, $$33] [cardinality: 7.0, op-cost: 0.0, total-cost: 7.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 7.0, op-cost: 7.0, total-cost: 14.0]

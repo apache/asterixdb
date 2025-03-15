@@ -11,7 +11,7 @@ distribute result [$$35]
           join (eq($$36, $$37))
           -- HYBRID_HASH_JOIN [$$36][$$37]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan []<-[$$36, $$first] <- Facebook.Friendship
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange
@@ -19,7 +19,7 @@ distribute result [$$35]
                   empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan []<-[$$37, $$second] <- Facebook.Friendship
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange

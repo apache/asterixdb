@@ -11,7 +11,7 @@ distribute result [$$31]
           join (eq($$32, $$33))
           -- HYBRID_HASH_JOIN [$$32][$$33]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$36] <- [$$user.getField(1)] project: [$$36, $$32]
               -- ASSIGN  |PARTITIONED|
                 exchange
@@ -23,7 +23,7 @@ distribute result [$$31]
                       empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$37] <- [$$visitor.getField(1)] project: [$$37, $$33]
               -- ASSIGN  |PARTITIONED|
                 exchange

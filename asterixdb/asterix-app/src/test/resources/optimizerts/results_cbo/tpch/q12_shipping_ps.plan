@@ -67,7 +67,7 @@ distribute result [$$116]
                                                         empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                           exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                                          -- HASH_PARTITION_EXCHANGE [$$122]  |PARTITIONED|
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             assign [$$123] <- [$$o.getField("o_orderpriority")] project: [$$123, $$122] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                             -- ASSIGN  |PARTITIONED|
                                               exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
@@ -149,7 +149,7 @@ distribute result [$$116]
                                                                   empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                     exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                                                    -- HASH_PARTITION_EXCHANGE [$$122]  |PARTITIONED|
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       assign [$$123] <- [$$o.getField("o_orderpriority")] project: [$$123, $$122] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                       -- ASSIGN  |PARTITIONED|
                                                         exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]

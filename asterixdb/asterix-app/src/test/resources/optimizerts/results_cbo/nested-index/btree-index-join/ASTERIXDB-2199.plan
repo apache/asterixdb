@@ -11,7 +11,7 @@ distribute result [$$35] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000
           join (eq($$36, $$37)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
           -- HYBRID_HASH_JOIN [$$36][$$37]  |PARTITIONED|
             exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-            -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan []<-[$$36, $$first] <- Facebook.Friendship [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange
@@ -19,7 +19,7 @@ distribute result [$$35] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000
                   empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-            -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan []<-[$$37, $$second] <- Facebook.Friendship [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange

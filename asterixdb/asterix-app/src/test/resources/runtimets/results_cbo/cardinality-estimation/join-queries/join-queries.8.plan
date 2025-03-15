@@ -69,7 +69,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 6972.1]
                                                           empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$128]  |PARTITIONED|
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   assign [$$120] <- [$$n.getField(1)] project: [$$120, $$128] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

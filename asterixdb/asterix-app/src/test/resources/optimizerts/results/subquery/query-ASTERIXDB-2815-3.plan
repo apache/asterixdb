@@ -36,7 +36,7 @@ distribute result [$$86]
                             left outer join (eq($$89, $$100))
                             -- HYBRID_HASH_JOIN [$$89][$$100]  |PARTITIONED|
                               exchange
-                              -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 assign [$$89, $$93] <- [$$100, $$98] project: [$$89, $$93]
                                 -- ASSIGN  |PARTITIONED|
                                   exchange

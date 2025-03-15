@@ -195,7 +195,7 @@ distribute result [$$227]
                                                                                                                                 empty-tuple-source
                                                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                 exchange
-                                                                                                -- HASH_PARTITION_EXCHANGE [$$235]  |PARTITIONED|
+                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   assign [$$265, $$244] <- [true, $$u.getField(0)]
                                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                                     exchange
@@ -281,7 +281,7 @@ distribute result [$$227]
                                                                                                                           empty-tuple-source
                                                                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                           exchange
-                                                                                          -- HASH_PARTITION_EXCHANGE [$$235]  |PARTITIONED|
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                             assign [$$265, $$244] <- [true, $$u.getField(0)]
                                                                                             -- ASSIGN  |PARTITIONED|
                                                                                               exchange
@@ -315,7 +315,7 @@ distribute result [$$227]
                                                                 empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                       exchange
-                                                      -- HASH_PARTITION_EXCHANGE [$$239, $$240]  |PARTITIONED|
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         assign [$$253] <- [$$b.getField("BrokerEndPoint")] project: [$$253, $$239, $$240]
                                                         -- ASSIGN  |PARTITIONED|
                                                           exchange
