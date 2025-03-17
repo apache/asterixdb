@@ -79,6 +79,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
     private String scanState;
     protected final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
     protected ConfFactory confFactory;
+    private String filterExpressionStr;
 
     public List<PartitionWorkLoadBasedOnSize> getPartitionWorkLoadsBasedOnSize() {
         return partitionWorkLoadsBasedOnSize;
@@ -133,8 +134,14 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         if (filterExpression != null) {
             scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema)
                     .withFilter(engine, (Predicate) filterExpression).build();
+            if (scan.getRemainingFilter().isPresent()) {
+                filterExpressionStr = PredicateSerDe.serializeExpressionToJson(scan.getRemainingFilter().get());
+            } else {
+                filterExpressionStr = null;
+            }
         } else {
             scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            filterExpressionStr = null;
         }
         scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
         List<Row> scanFiles;
@@ -145,6 +152,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             // We need to fall back to skip applying the filter and return all files.
             LOGGER.info("Exception encountered while getting delta table files to scan {}", e.getMessage());
             scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            filterExpressionStr = null;
             scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
             scanFiles = getScanFiles(scan, engine);
         }
@@ -206,7 +214,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         try {
             int partition = context.getPartition();
             return new DeltaFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getScanFiles(), scanState,
-                    confFactory);
+                    confFactory, filterExpressionStr);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
