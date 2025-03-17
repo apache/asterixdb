@@ -70,12 +70,11 @@ public final class CloudConfigurator {
     private final long diskCacheMonitoringInterval;
 
     private CloudConfigurator(CloudProperties cloudProperties, IIOManager ioManager,
-            INamespacePathResolver nsPathResolver, ICloudGuardian guardian, ExecutorService executor)
-            throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         this.cloudProperties = cloudProperties;
         localIoManager = (IOManager) ioManager;
         diskCacheManagerRequired = cloudProperties.getCloudCachePolicy() == CloudCachePolicy.SELECTIVE;
-        cloudIOManager = createIOManager(ioManager, cloudProperties, nsPathResolver, guardian, executor);
+        cloudIOManager = createIOManager(ioManager, cloudProperties, nsPathResolver, guardian);
         physicalDrive = createPhysicalDrive(diskCacheManagerRequired, cloudProperties, ioManager);
         lockNotifier = createLockNotifier(diskCacheManagerRequired);
         pageAllocator = createPageAllocator(diskCacheManagerRequired);
@@ -132,22 +131,20 @@ public final class CloudConfigurator {
     }
 
     public static CloudConfigurator of(CloudProperties cloudProperties, IIOManager ioManager,
-            INamespacePathResolver nsPathResolver, ICloudGuardian cloudGuardian, ExecutorService executor)
-            throws HyracksDataException {
-        return new CloudConfigurator(cloudProperties, ioManager, nsPathResolver, cloudGuardian, executor);
+            INamespacePathResolver nsPathResolver, ICloudGuardian cloudGuardian) throws HyracksDataException {
+        return new CloudConfigurator(cloudProperties, ioManager, nsPathResolver, cloudGuardian);
     }
 
     public static AbstractCloudIOManager createIOManager(IIOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver, ICloudGuardian guardian, ExecutorService executor)
-            throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         IOManager localIoManager = (IOManager) ioManager;
         CloudCachePolicy policy = cloudProperties.getCloudCachePolicy();
         if (policy == CloudCachePolicy.EAGER) {
-            return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver, guardian, executor);
+            return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver, guardian);
         }
 
         boolean selective = policy == CloudCachePolicy.SELECTIVE;
-        return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver, selective, guardian, executor);
+        return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver, selective, guardian);
     }
 
     private static IPhysicalDrive createPhysicalDrive(boolean diskCacheManagerRequired, CloudProperties cloudProperties,

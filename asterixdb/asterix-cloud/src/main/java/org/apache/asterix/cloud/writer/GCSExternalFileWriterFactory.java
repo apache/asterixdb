@@ -67,8 +67,7 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         GCSClientConfig config = GCSClientConfig.of(configuration, writeBufferSize);
         return new GCSCloudClient(config, GCSUtils.buildClient(configuration),
-                ICloudGuardian.NoOpCloudGuardian.INSTANCE,
-                appCtx.getServiceContext().getControllerService().getExecutor());
+                ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override

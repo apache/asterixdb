@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
@@ -71,9 +70,9 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     private ILazyAccessor accessor;
 
     public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver, boolean selective, ICloudGuardian guardian, ExecutorService executor)
+            INamespacePathResolver nsPathResolver, boolean selective, ICloudGuardian guardian)
             throws HyracksDataException {
-        super(ioManager, cloudProperties, nsPathResolver, guardian, executor);
+        super(ioManager, cloudProperties, nsPathResolver, guardian);
         accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager);
         puncher = HolePuncherProvider.get(this, cloudProperties, writeBufferProvider);
         if (selective) {

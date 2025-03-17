@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
+import static org.apache.asterix.external.util.google.gcs.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -64,6 +66,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
         this.ioManager = ioManager;
         this.profiler = profiler;
         StorageOptions.Builder builder = StorageOptions.newBuilder();
+        builder.setStorageRetryStrategy(DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY);
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.setHost(config.getEndpoint());
         }
@@ -95,7 +98,6 @@ public class GCSParallelDownloader implements IParallelDownloader {
             downloadJobs.add(transferManager.downloadBlobs(entry.getValue(),
                     downConfig.setDownloadDirectory(entry.getKey()).build()));
         }
-        // MB-65432: DownloadJob.getDownloadResults is interrupt-safe; no need to offload
         downloadJobs.forEach(DownloadJob::getDownloadResults);
     }
 
@@ -122,7 +124,6 @@ public class GCSParallelDownloader implements IParallelDownloader {
         }
         List<DownloadResult> results;
         for (DownloadJob job : downloadJobs) {
-            // MB-65432: DownloadJob.getDownloadResults is interrupt-safe; no need to offload
             results = job.getDownloadResults();
             for (DownloadResult result : results) {
                 if (result.getStatus() != TransferStatus.SUCCESS) {

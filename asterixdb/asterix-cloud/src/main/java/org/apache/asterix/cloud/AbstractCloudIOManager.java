@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
@@ -85,13 +84,12 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     private final List<FileStore> drivePaths;
 
     public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver, ICloudGuardian guardian, ExecutorService executor)
-            throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         super(ioManager.getIODevices(), ioManager.getDeviceComputer(), ioManager.getIOParallelism(),
                 ioManager.getQueueSize());
         this.nsPathResolver = nsPathResolver;
         this.bucket = cloudProperties.getStorageBucket();
-        cloudClient = CloudClientProvider.getClient(cloudProperties, guardian, executor);
+        cloudClient = CloudClientProvider.getClient(cloudProperties, guardian);
         this.guardian = guardian;
         int numOfThreads = getIODevices().size() * getIOParallelism();
         writeBufferProvider = new WriteBufferProvider(numOfThreads, cloudClient.getWriteBufferSize());

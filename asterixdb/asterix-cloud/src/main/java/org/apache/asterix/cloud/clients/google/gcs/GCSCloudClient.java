@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.clients.google.gcs;
 
 import static org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig.DELETE_BATCH_SIZE;
+import static org.apache.asterix.external.util.google.gcs.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
 
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -31,11 +32,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.CloudFile;
@@ -71,7 +67,6 @@ import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.Storage.CopyRequest;
 import com.google.cloud.storage.StorageBatch;
 import com.google.cloud.storage.StorageBatchResult;
-import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 
 public class GCSCloudClient implements ICloudClient {
@@ -81,15 +76,12 @@ public class GCSCloudClient implements ICloudClient {
     private final ICloudGuardian guardian;
     private final IRequestProfilerLimiter profilerLimiter;
     private final int writeBufferSize;
-    private final ExecutorService executor;
 
-    public GCSCloudClient(GCSClientConfig config, Storage gcsClient, ICloudGuardian guardian,
-            ExecutorService executor) {
+    public GCSCloudClient(GCSClientConfig config, Storage gcsClient, ICloudGuardian guardian) {
         this.gcsClient = gcsClient;
         this.config = config;
         this.guardian = guardian;
         this.writeBufferSize = config.getWriteBufferSize();
-        this.executor = executor;
         long profilerInterval = config.getProfilerLogInterval();
         GCSRequestRateLimiter limiter = new GCSRequestRateLimiter(config);
         if (profilerInterval > 0) {
@@ -100,9 +92,8 @@ public class GCSCloudClient implements ICloudClient {
         guardian.setCloudClient(this);
     }
 
-    public GCSCloudClient(GCSClientConfig config, ICloudGuardian guardian, ExecutorService executor)
-            throws HyracksDataException {
-        this(config, buildClient(config), guardian, executor);
+    public GCSCloudClient(GCSClientConfig config, ICloudGuardian guardian) throws HyracksDataException {
+        this(config, buildClient(config), guardian);
     }
 
     @Override
@@ -121,12 +112,11 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) throws HyracksDataException {
+    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectsList();
-        // MB-65432: Storage.list is not interrupt-safe; we need to offload onto another thread
-        Page<Blob> blobs = runOpInterruptibly(() -> gcsClient.list(bucket,
-                BlobListOption.prefix(config.getPrefix() + path), BlobListOption.fields(Storage.BlobField.SIZE)));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path),
+                BlobListOption.fields(Storage.BlobField.SIZE));
         Set<CloudFile> files = new HashSet<>();
         for (Blob blob : blobs.iterateAll()) {
             if (filter.accept(null, IoUtil.getFileNameFromPath(blob.getName()))) {
@@ -148,7 +138,7 @@ public class GCSCloudClient implements ICloudClient {
                 from.seek(offset + totalRead);
                 totalRead += from.read(buffer);
             }
-        } catch (IOException | StorageException ex) {
+        } catch (IOException | BaseServiceException ex) {
             throw HyracksDataException.create(ex);
         }
 
@@ -163,17 +153,14 @@ public class GCSCloudClient implements ICloudClient {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
         BlobId blobId = BlobId.of(bucket, config.getPrefix() + path);
-        // MB-65432: Storage.readAllBytes is not interrupt-safe; we need to offload onto another thread
-        return runOpInterruptibly(() -> {
-            try {
-                return gcsClient.readAllBytes(blobId);
-            } catch (StorageException e) {
-                if (e.getCode() == 404) {
-                    return null;
-                }
-                throw e;
+        try {
+            return gcsClient.readAllBytes(blobId);
+        } catch (BaseServiceException ex) {
+            if (ex.getCode() == 404) {
+                return null;
             }
-        });
+            throw HyracksDataException.create(ex);
+        }
     }
 
     @Override
@@ -185,38 +172,33 @@ public class GCSCloudClient implements ICloudClient {
             reader = gcsClient.reader(bucket, config.getPrefix() + path).limit(offset + length);
             reader.seek(offset);
             return Channels.newInputStream(reader);
-        } catch (StorageException | IOException ex) {
+        } catch (BaseServiceException | IOException ex) {
             throw new RuntimeException(CleanupUtils.close(reader, ex));
         }
     }
 
     @Override
-    public void write(String bucket, String path, byte[] data) throws HyracksDataException {
+    public void write(String bucket, String path, byte[] data) {
         guardian.checkWriteAccess(bucket, path);
         profilerLimiter.objectWrite();
         BlobInfo blobInfo = BlobInfo.newBuilder(bucket, config.getPrefix() + path).build();
-        // MB-65432: Storage.create is not interrupt-safe; we need to offload onto another thread
-        runOpInterruptibly(() -> gcsClient.create(blobInfo, data));
+        gcsClient.create(blobInfo, data);
     }
 
     @Override
-    public void copy(String bucket, String srcPath, FileReference destPath) throws HyracksDataException {
+    public void copy(String bucket, String srcPath, FileReference destPath) {
         guardian.checkReadAccess(bucket, srcPath);
         profilerLimiter.objectsList();
-        // MB-65432: Storage.list & copy are not interrupt-safe; we need to offload onto another thread
-        runOpInterruptibly(() -> {
-            Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + srcPath));
-            for (Blob blob : blobs.iterateAll()) {
-                profilerLimiter.objectCopy();
-                BlobId source = blob.getBlobId();
-                String targetName = destPath.getChildPath(IoUtil.getFileNameFromPath(source.getName()));
-                BlobId target = BlobId.of(bucket, targetName);
-                guardian.checkWriteAccess(bucket, targetName);
-                CopyRequest copyReq = CopyRequest.newBuilder().setSource(source).setTarget(target).build();
-                gcsClient.copy(copyReq);
-            }
-            return null;
-        });
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + srcPath));
+        for (Blob blob : blobs.iterateAll()) {
+            profilerLimiter.objectCopy();
+            BlobId source = blob.getBlobId();
+            String targetName = destPath.getChildPath(IoUtil.getFileNameFromPath(source.getName()));
+            BlobId target = BlobId.of(bucket, targetName);
+            guardian.checkWriteAccess(bucket, targetName);
+            CopyRequest copyReq = CopyRequest.newBuilder().setSource(source).setTarget(target).build();
+            gcsClient.copy(copyReq);
+        }
     }
 
     @Override
@@ -234,8 +216,7 @@ public class GCSCloudClient implements ICloudClient {
                 guardian.checkWriteAccess(bucket, blobId.getName());
                 deleteResponses.add(batchRequest.delete(blobId));
             }
-            // MB-65432: StorageBatch.submit may not be interrupt-safe; we need to offload onto another thread
-            runOpInterruptibly(batchRequest::submit);
+            batchRequest.submit();
             Iterator<String> deletePathIter = paths.iterator();
             for (StorageBatchResult<Boolean> deleteResponse : deleteResponses) {
                 String deletedPath = deletePathIter.next();
@@ -250,7 +231,7 @@ public class GCSCloudClient implements ICloudClient {
                     }
                 } catch (BaseServiceException e) {
                     LOGGER.warn("Failed to delete object {} while deleting {}", deletedPath, paths, e);
-                    throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath,
+                    throw RuntimeDataException.create(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath,
                             paths.toString());
                 }
             }
@@ -259,12 +240,11 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public long getObjectSize(String bucket, String path) throws HyracksDataException {
+    public long getObjectSize(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        // MB-65432: Storage.get is not interrupt-safe; we need to offload onto another thread
-        Blob blob = runOpInterruptibly(() -> gcsClient.get(bucket, config.getPrefix() + path,
-                Storage.BlobGetOption.fields(Storage.BlobField.SIZE)));
+        Blob blob =
+                gcsClient.get(bucket, config.getPrefix() + path, Storage.BlobGetOption.fields(Storage.BlobField.SIZE));
         if (blob == null) {
             return 0;
         }
@@ -272,22 +252,19 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public boolean exists(String bucket, String path) throws HyracksDataException {
+    public boolean exists(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        // MB-65432: Storage.get is not interrupt-safe; we need to offload onto another thread
-        Blob blob = runOpInterruptibly(() -> gcsClient.get(bucket, config.getPrefix() + path,
-                Storage.BlobGetOption.fields(Storage.BlobField.values())));
+        Blob blob = gcsClient.get(bucket, config.getPrefix() + path,
+                Storage.BlobGetOption.fields(Storage.BlobField.values()));
         return blob != null && blob.exists();
     }
 
     @Override
-    public boolean isEmptyPrefix(String bucket, String path) throws HyracksDataException {
+    public boolean isEmptyPrefix(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectsList();
-        // MB-65432: Storage.list is not interrupt-safe; we need to offload onto another thread
-        Page<Blob> blobs =
-                runOpInterruptibly(() -> gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path)));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path));
         return !blobs.iterateAll().iterator().hasNext();
     }
 
@@ -298,12 +275,10 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) throws HyracksDataException {
+    public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) {
         guardian.checkReadAccess(bucket, "/");
         profilerLimiter.objectsList();
-        // MB-65432: Storage.list is not interrupt-safe; we need to offload onto another thread
-        Page<Blob> blobs =
-                runOpInterruptibly(() -> gcsClient.list(bucket, BlobListOption.fields(Storage.BlobField.SIZE)));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.fields(Storage.BlobField.SIZE));
         ArrayNode objectsInfo = objectMapper.createArrayNode();
 
         List<Blob> objects = new ArrayList<>();
@@ -328,6 +303,7 @@ public class GCSCloudClient implements ICloudClient {
 
     private static Storage buildClient(GCSClientConfig config) throws HyracksDataException {
         StorageOptions.Builder builder = StorageOptions.newBuilder().setCredentials(config.createCredentialsProvider());
+        builder.setStorageRetryStrategy(DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY);
 
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.setHost(config.getEndpoint());
@@ -337,43 +313,5 @@ public class GCSCloudClient implements ICloudClient {
 
     private String stripCloudPrefix(String objectName) {
         return objectName.substring(config.getPrefix().length());
-    }
-
-    private void runOpInterruptibly(Runnable operation) throws HyracksDataException {
-        try {
-            executor.submit(operation).get();
-        } catch (InterruptedException e) {
-            throw HyracksDataException.create(e);
-        } catch (ExecutionException e) {
-            throw HyracksDataException.create(e.getCause());
-        }
-    }
-
-    private <T> T runOpInterruptibly(Supplier<T> operation) throws HyracksDataException {
-        Future<T> opTask = executor.submit(operation::get);
-        try {
-            return opTask.get();
-        } catch (InterruptedException e) {
-            cancelAndUnwind(opTask);
-            throw HyracksDataException.create(e);
-        } catch (ExecutionException e) {
-            throw HyracksDataException.create(e.getCause());
-        }
-    }
-
-    private static <T> void cancelAndUnwind(Future<T> opTask) {
-        opTask.cancel(true);
-        while (true) {
-            try {
-                opTask.get();
-            } catch (InterruptedException e1) {
-                continue;
-            } catch (CancellationException e1) {
-                LOGGER.debug("ignoring exception after cancel of op", e1);
-            } catch (ExecutionException e1) {
-                LOGGER.debug("ignoring exception after cancel of op", e1.getCause());
-            }
-            return;
-        }
     }
 }

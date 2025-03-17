@@ -233,7 +233,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         IBufferCacheReadContext defaultContext;
         if (isCloudDeployment()) {
             cloudConfigurator = CloudConfigurator.of(cloudProperties, ioManager, namespacePathResolver,
-                    getCloudGuardian(cloudProperties), threadExecutor);
+                    getCloudGuardian(cloudProperties));
             persistenceIOManager = cloudConfigurator.getCloudIoManager();
             partitionBootstrapper = cloudConfigurator.getPartitionBootstrapper();
             lockNotifier = cloudConfigurator.getLockNotifier();

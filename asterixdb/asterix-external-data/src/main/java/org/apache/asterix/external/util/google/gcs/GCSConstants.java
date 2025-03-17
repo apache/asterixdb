@@ -18,7 +18,23 @@
  */
 package org.apache.asterix.external.util.google.gcs;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
+
+import java.util.concurrent.CancellationException;
+
+import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.api.gax.retrying.ResultRetryAlgorithm;
+import com.google.api.gax.retrying.TimedAttemptSettings;
+import com.google.cloud.ExceptionHandler;
+import com.google.cloud.storage.StorageRetryStrategy;
+
 public class GCSConstants {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private GCSConstants() {
         throw new AssertionError("do not instantiate");
     }
@@ -36,25 +52,87 @@ public class GCSConstants {
     // hadoop credentials
     public static final String HADOOP_AUTH_TYPE = "fs.gs.auth.type";
     public static final String HADOOP_AUTH_UNAUTHENTICATED = "UNAUTHENTICATED";
-    public static final String HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE = "SERVICE_ACCOUNT_JSON_KEYFILE";
-    public static final String HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH =
-            "google.cloud.auth.service.account.json.keyfile";
 
     // gs hadoop parameters
     public static final String HADOOP_SUPPORT_COMPRESSED = "fs.gs.inputstream.support.gzip.encoding.enable";
     public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
-    public static final String HADOOP_MAX_REQUESTS_PER_BATCH = "fs.gs.max.requests.per.batch";
-    public static final String HADOOP_BATCH_THREADS = "fs.gs.batch.threads";
 
-    public static class JSON_CREDENTIALS_FIELDS {
+    public static class JsonCredentials {
         public static final String PRIVATE_KEY_ID = "private_key_id";
         public static final String PRIVATE_KEY = "private_key";
         public static final String CLIENT_EMAIL = "client_email";
     }
 
-    public static class HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS {
+    public static class HadoopAuthServiceAccount {
         public static final String PRIVATE_KEY_ID = "fs.gs.auth.service.account.private.key.id";
         public static final String PRIVATE_KEY = "fs.gs.auth.service.account.private.key";
         public static final String CLIENT_EMAIL = "fs.gs.auth.service.account.email";
+    }
+
+    public static final StorageRetryStrategy DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
+    static {
+        StorageRetryStrategy defaultStrategy = StorageRetryStrategy.getDefaultStorageRetryStrategy();
+        ExceptionHandler defaultIdempotentHandler = (ExceptionHandler) defaultStrategy.getIdempotentHandler();
+        ExceptionHandler defaultNonIdempotentHandler = (ExceptionHandler) defaultStrategy.getNonidempotentHandler();
+
+        ResultRetryAlgorithm<Object> noRetryOnThreadInterruptIdempotentHandler = new ResultRetryAlgorithm<>() {
+            @Override
+            public TimedAttemptSettings createNextAttempt(Throwable prevThrowable, Object prevResponse,
+                    TimedAttemptSettings prevSettings) {
+                return defaultIdempotentHandler.createNextAttempt(prevThrowable, prevResponse, prevSettings);
+            }
+
+            @Override
+            public boolean shouldRetry(Throwable prevThrowable, Object prevResponse) throws CancellationException {
+                if (ExceptionUtils.causedByInterrupt(prevThrowable) || Thread.currentThread().isInterrupted()) {
+                    interruptRequest(prevThrowable);
+                }
+                return defaultIdempotentHandler.shouldRetry(prevThrowable, prevResponse);
+            }
+        };
+
+        ResultRetryAlgorithm<Object> noRetryOnThreadInterruptNonIdempotentHandler = new ResultRetryAlgorithm<>() {
+            @Override
+            public TimedAttemptSettings createNextAttempt(Throwable prevThrowable, Object prevResponse,
+                    TimedAttemptSettings prevSettings) {
+                return defaultNonIdempotentHandler.createNextAttempt(prevThrowable, prevResponse, prevSettings);
+            }
+
+            @Override
+            public boolean shouldRetry(Throwable prevThrowable, Object prevResponse) throws CancellationException {
+                if (ExceptionUtils.causedByInterrupt(prevThrowable) || Thread.currentThread().isInterrupted()) {
+                    interruptRequest(prevThrowable);
+                }
+                return defaultNonIdempotentHandler.shouldRetry(prevThrowable, prevResponse);
+            }
+        };
+
+        DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY = new StorageRetryStrategy() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ResultRetryAlgorithm<?> getIdempotentHandler() {
+                return noRetryOnThreadInterruptIdempotentHandler;
+            }
+
+            @Override
+            public ResultRetryAlgorithm<?> getNonidempotentHandler() {
+                return noRetryOnThreadInterruptNonIdempotentHandler;
+            }
+        };
+    }
+
+    /**
+     * Throwing a CancellationException will cause the GCS client to abort the whole operation, not only stop retrying
+     */
+    private static void interruptRequest(Throwable th) {
+        Thread.currentThread().interrupt();
+        CancellationException ex = new CancellationException("Request was interrupted, aborting retries and request");
+        if (th != null) {
+            ex.initCause(th);
+        }
+        String stackTrace = getStackTrace(ex);
+        LOGGER.debug("Request was interrupted, aborting retries and request\n{}", stackTrace);
+        throw ex;
     }
 }

@@ -61,6 +61,10 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         this.sourceLoc = sourceLoc;
         this.nodeId = nodeId;
         this.params = params;
+
+        if (cause instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**

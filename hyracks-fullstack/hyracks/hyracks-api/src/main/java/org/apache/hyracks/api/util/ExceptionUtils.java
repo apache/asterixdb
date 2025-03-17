@@ -128,6 +128,9 @@ public class ExceptionUtils {
     }
 
     public static Throwable getRootCause(Throwable e) {
+        if (e == null) {
+            return null;
+        }
         Throwable current = e;
         Throwable cause = e.getCause();
         while (cause != null && cause != current) {
