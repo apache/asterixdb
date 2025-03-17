@@ -1,0 +1,18 @@
+distribute result [$$18]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$18] <- [{"f_1": array-slice($$19, 0, 1), "f_2": array-slice($$19, 0, 2)}] project: [$$18]
+    -- ASSIGN  |PARTITIONED|
+      assign [$$19] <- [$$collection1.getField("array1")] project: [$$19]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$collection1])
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            data-scan []<-[$$20, $$collection1] <- test.collection1
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

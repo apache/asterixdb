@@ -2028,6 +2028,7 @@ abstract class LangExpressionToPlanTranslator
             case IF_EXPRESSION:
             case CASE_EXPRESSION:
             case WINDOW_EXPRESSION:
+            case LIST_SLICE_EXPRESSION:
                 return true;
             case QUANTIFIED_EXPRESSION:
                 return ((QuantifiedExpression) expr).getQuantifier() == Quantifier.SOME_AND_EVERY;
