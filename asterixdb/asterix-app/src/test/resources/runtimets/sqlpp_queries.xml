@@ -16536,6 +16536,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/ASTERIXDB-3582">
+        <output-dir compare="Text">filter/ASTERIXDB-3582</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="filter/ASTERIXDB-3582-2">
         <output-dir compare="Text">filter/ASTERIXDB-3582-2</output-dir>
       </compilation-unit>
