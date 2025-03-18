@@ -46,19 +46,27 @@ public class ArrayPathCheckerVisitor implements IATypeVisitor<Boolean, AbstractC
         seenCollections = new HashSet<>();
     }
 
+    public void beforeVisit() {
+        seenCollections.clear();
+        firstPath = true;
+    }
+
     public boolean containsMultipleArrayPaths(Collection<ARecordType> paths) throws AlgebricksException {
         ARecordType mergedPaths = EMPTY_TYPE;
         for (ARecordType path : paths) {
             mergedPaths = (ARecordType) RecordMergeTypeComputer.merge(mergedPaths, path);
         }
-        firstPath = true;
-        return !mergedPaths.accept(this, null);
+        boolean multiplePaths = !mergedPaths.accept(this, null);
+        if (multiplePaths) {
+            seenCollections.removeAll(paths);
+        }
+        return multiplePaths;
     }
 
     @Override
     public Boolean visit(ARecordType recordType, AbstractCollectionType arg) {
         for (IAType child : recordType.getFieldTypes()) {
-            if (!child.accept(this, null)) {
+            if (!child.accept(this, arg)) {
                 return Boolean.FALSE;
             }
         }

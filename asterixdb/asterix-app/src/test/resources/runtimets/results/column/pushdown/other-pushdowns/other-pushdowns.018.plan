@@ -48,7 +48,7 @@ distribute result [$$65] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$66, $$c] <- test.ColumnDataset project ({val2:[{y:any}],val1:[{x:any}]}) filter on: or(eq(scan-collection($$c.getField("val1")).getField("x"), 1), eq(scan-collection($$c.getField("val2")).getField("y"), 2)) range-filter on: or(eq(scan-collection($$c.getField("val1")).getField("x"), 1), eq(scan-collection($$c.getField("val2")).getField("y"), 2)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            data-scan []<-[$$66, $$c] <- test.ColumnDataset project ({val2:[{y:any}],val1:[{x:any}]}) range-filter on: or(eq(scan-collection($$c.getField("val1")).getField("x"), 1), eq(scan-collection($$c.getField("val2")).getField("y"), 2)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

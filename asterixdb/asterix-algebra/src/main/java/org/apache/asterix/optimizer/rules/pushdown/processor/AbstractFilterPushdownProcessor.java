@@ -207,7 +207,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         }
     }
 
-    private boolean pushdownFilter(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
+    protected boolean pushdownFilter(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
         boolean changed = false;
         for (UseDescriptor candidate : scanCandidateFilters) {
             changed |= inlineAndPushdownFilter(candidate, scanDescriptor);
