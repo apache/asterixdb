@@ -65,10 +65,12 @@ public class ExpectedSchemaBuilder {
         AbstractComplexExpectedSchemaNode parent = (AbstractComplexExpectedSchemaNode) buildNestedNode(expr, typeEnv);
         if (parent != null) {
             IExpectedSchemaNode leaf = new AnyExpectedSchemaNode(parent, expr);
+            IExpectedSchemaNode oldChildNode = parent.getChildNode(expr);
             IExpectedSchemaNode actualNode = addOrReplaceChild(expr, typeEnv, parent, leaf);
             if (producedVar != null) {
                 //Register the node if a variable is produced
                 varToNode.put(producedVar, actualNode);
+                updateVarToNodeRef(oldChildNode, actualNode);
             }
         }
 
@@ -93,8 +95,42 @@ public class ExpectedSchemaBuilder {
                     (AnyExpectedSchemaNode) node.replaceIfNeeded(ExpectedSchemaNodeType.ANY, null, null);
             // make the leaf node irreplaceable
             leafNode.preventReplacing();
+            // if the node has been replaced by the leafNode,
+            // check for the variable that is associated with the node to be replaced.
             varToNode.put(variable, leafNode);
+            updateVarToNodeRef(node, leafNode);
         }
+    }
+
+    /**
+     * Updates variable references when schema paths point to the same field access.
+     *
+     * Example Query:
+     * SELECT i
+     * ... FROM orders AS o, o.items AS i
+     * ... WHERE (SOME li IN o.items SATISFIES li.qty < 3)
+     * ... AND i.qty >= 100;
+     *
+     * In this query, both 'i' and 'li' reference the same field access (o.items).
+     * The schema paths evolve as follows:
+     * 1. i.qty creates path: {"items": [{qty: any}]}
+     * 2. li.qty references the same qty node
+     * 3. When processing 'i', we replace i.qty with a broader path: {"items": [any]}
+     *
+     * Since both variables reference the same field, we need to update all references
+     * to the old node (qty-specific) with the new node (array-level) in varToNode cache.
+     *
+     * @param oldNode The original node being replaced (e.g., qty-specific node)
+     * @param newNode The new node replacing it (e.g., array-level node)
+     */
+    private void updateVarToNodeRef(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
+        // Skip if nodes are null, identical, or oldNode is a root node
+        if (oldNode == null || oldNode == newNode || RootExpectedSchemaNode.isPreDefinedRootNode(oldNode)) {
+            return;
+        }
+
+        // Update all variable references from oldNode to newNode
+        varToNode.replaceAll((var, node) -> node == oldNode ? newNode : node);
     }
 
     public boolean isVariableRegistered(LogicalVariable variable) {
@@ -231,6 +267,7 @@ public class ExpectedSchemaBuilder {
         IExpectedSchemaNode newNode = oldNode.replaceIfNeeded(varExpectedType, parentExpression, expression);
         //Map the sourceVar to the node
         varToNode.put(sourceVar, newNode);
+        updateVarToNodeRef(oldNode, newNode);
         return newNode;
     }
 

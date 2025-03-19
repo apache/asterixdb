@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.metadata.utils.PushdownUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -88,12 +89,20 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
 
     public String getChildFieldName(IExpectedSchemaNode requestedChild) {
         AbstractFunctionCallExpression expr = requestedChild.getParentExpression();
-        int fieldNameId = PushdownUtil.getFieldNameId(requestedChild.getParentExpression());
+        return getChildFieldName(expr);
+    }
 
+    public String getChildFieldName(AbstractFunctionCallExpression parentExpr) {
+        int fieldNameId = PushdownUtil.getFieldNameId(parentExpr);
         if (fieldNameId > -1) {
             return fieldIdToFieldName.get(fieldNameId);
         }
+        return PushdownUtil.getFieldName(parentExpr);
+    }
 
-        return PushdownUtil.getFieldName(expr);
+    @Override
+    public IExpectedSchemaNode getChildNode(AbstractFunctionCallExpression parentExpr) throws AlgebricksException {
+        String fieldName = getChildFieldName(parentExpr);
+        return children.get(fieldName);
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
@@ -59,5 +60,10 @@ public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
 
         // This should never happen, but safeguard against unexpected behavior
         throw new IllegalStateException("Cannot replace " + child.getType() + " with " + newNode.getType());
+    }
+
+    @Override
+    protected IExpectedSchemaNode getChildNode(AbstractFunctionCallExpression parentExpr) throws AlgebricksException {
+        return child;
     }
 }

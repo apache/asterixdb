@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
+import static org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder.getExpectedNestedNodeType;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
@@ -90,5 +93,12 @@ public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
             return super.replaceIfNeeded(expectedNodeType, parentExpression, expression);
         }
         return this;
+    }
+
+    @Override
+    protected IExpectedSchemaNode getChildNode(AbstractFunctionCallExpression parentExpr) throws AlgebricksException {
+        ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
+        AbstractComplexExpectedSchemaNode actualParent = getChild(parentType);
+        return actualParent.getChildNode(parentExpr);
     }
 }
