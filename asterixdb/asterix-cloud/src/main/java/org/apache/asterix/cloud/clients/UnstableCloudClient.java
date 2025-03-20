@@ -170,11 +170,6 @@ public class UnstableCloudClient implements ICloudClient {
         }
 
         @Override
-        public int write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
-            return write(header) + write(page);
-        }
-
-        @Override
         public int write(ByteBuffer page) throws HyracksDataException {
             if (position() == 0) {
                 fail();

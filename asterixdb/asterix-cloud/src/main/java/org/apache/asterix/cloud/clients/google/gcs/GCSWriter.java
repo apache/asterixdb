@@ -58,11 +58,6 @@ public class GCSWriter implements ICloudWriter {
     }
 
     @Override
-    public int write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
-        return write(header) + write(page);
-    }
-
-    @Override
     public int write(ByteBuffer page) throws HyracksDataException {
         guardian.checkIsolatedWriteAccess(bucket, path);
         // The GCS library triggers a new upload when its internal buffer is full, not on each call to writer.write().

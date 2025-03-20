@@ -71,11 +71,6 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
      */
 
     @Override
-    public int write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
-        return write(header) + write(page);
-    }
-
-    @Override
     public int write(ByteBuffer page) throws HyracksDataException {
         open();
         return write(page.array(), page.position(), page.remaining());

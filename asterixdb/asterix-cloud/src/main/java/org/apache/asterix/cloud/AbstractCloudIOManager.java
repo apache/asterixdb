@@ -87,6 +87,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     protected final IOManager localIoManager;
     protected final INamespacePathResolver nsPathResolver;
     private final List<FileStore> drivePaths;
+    private final String storageScheme;
 
     public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
             INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
@@ -102,6 +103,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         partitionPaths = new ArrayList<>();
         this.localIoManager = ioManager;
         drivePaths = PhysicalDrive.getDrivePaths(ioDevices);
+        storageScheme = cloudProperties.getStorageScheme();
     }
 
     /*
@@ -141,6 +143,11 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         for (Integer partition : activePartitions) {
             String partitionDir = PARTITION_DIR_PREFIX + partition;
             partitionPaths.add(resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir));
+        }
+
+        if (CloudClientProvider.NONE.equals(storageScheme)) {
+            LOGGER.info("Cloud storage scheme is '{}', nothing to reconcile / download", storageScheme);
+            return;
         }
 
         LOGGER.info("Initializing cloud manager with ({}) storage partitions: {}", partitions.size(), partitions);

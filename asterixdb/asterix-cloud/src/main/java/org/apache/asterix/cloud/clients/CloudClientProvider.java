@@ -33,6 +33,7 @@ public class CloudClientProvider {
     public static final String S3 = "s3";
     public static final String GCS = "gs";
     public static final String AZ_BLOB = "azblob";
+    public static final String NONE = "none";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
@@ -41,19 +42,13 @@ public class CloudClientProvider {
     public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
             throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
-        ICloudClient cloudClient;
-        if (S3.equalsIgnoreCase(storageScheme)) {
-            S3ClientConfig config = S3ClientConfig.of(cloudProperties);
-            cloudClient = new S3CloudClient(config, guardian);
-        } else if (GCS.equalsIgnoreCase(storageScheme)) {
-            GCSClientConfig config = GCSClientConfig.of(cloudProperties);
-            cloudClient = new GCSCloudClient(config, guardian);
-        } else if (AZ_BLOB.equalsIgnoreCase(storageScheme)) {
-            AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(cloudProperties);
-            cloudClient = new AzBlobStorageCloudClient(config, guardian);
-        } else {
-            throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
-        }
+        ICloudClient cloudClient = switch (storageScheme.toLowerCase()) {
+            case S3 -> new S3CloudClient(S3ClientConfig.of(cloudProperties), guardian);
+            case GCS -> new GCSCloudClient(GCSClientConfig.of(cloudProperties), guardian);
+            case AZ_BLOB -> new AzBlobStorageCloudClient(AzBlobStorageClientConfig.of(cloudProperties), guardian);
+            case NONE -> NoopCloudClient.INSTANCE;
+            default -> throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
+        };
 
         return UNSTABLE ? new UnstableCloudClient(cloudClient) : cloudClient;
     }
