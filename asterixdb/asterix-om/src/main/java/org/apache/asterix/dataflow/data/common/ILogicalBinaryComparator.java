@@ -38,23 +38,11 @@ public interface ILogicalBinaryComparator {
     }
 
     static boolean inequalityUndefined(ATypeTag tag) {
-        switch (tag) {
-            case OBJECT:
-            case MULTISET:
-            case DURATION:
-            case INTERVAL:
-            case LINE:
-            case POINT:
-            case POINT3D:
-            case POLYGON:
-            case CIRCLE:
-            case RECTANGLE:
-                return true;
-            case UNION:
-                throw new IllegalArgumentException();
-            default:
-                return false;
-        }
+        return switch (tag) {
+            case OBJECT, ARRAY, MULTISET, DURATION, INTERVAL, LINE, POINT, POINT3D, POLYGON, CIRCLE, RECTANGLE -> true;
+            case UNION -> throw new IllegalArgumentException();
+            default -> false;
+        };
     }
 
     Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException;

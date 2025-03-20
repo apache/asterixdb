@@ -36,7 +36,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 public abstract class AbstractValueComparisonEvaluator extends AbstractComparisonEvaluator {
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ABoolean> serde =
+    protected final ISerializerDeserializer<ABoolean> serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractValueComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
@@ -58,7 +58,7 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
             case INCOMPARABLE:
                 ExceptionUtil.warnIncomparableTypes(ctx, sourceLoc, VALUE_TYPE_MAPPING[argLeft.getTag()],
                         VALUE_TYPE_MAPPING[argRight.getTag()]);
-                writeNull(result);
+                handleIncomparable(result);
                 break;
             default:
                 resultStorage.reset();
@@ -69,4 +69,7 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
     }
 
     protected abstract boolean getComparisonResult(Result r);
+
+    protected abstract void handleIncomparable(IPointable result) throws HyracksDataException;
+
 }

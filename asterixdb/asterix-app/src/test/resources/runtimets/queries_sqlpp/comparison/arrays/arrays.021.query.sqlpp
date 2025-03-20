@@ -19,65 +19,66 @@
 
 // nulls and missings
 
-use test;
+USE test;
+FROM
+[
+{"c":"[9,2] = null", "r":[9,2] = null},
+{"c":"[9,2] = missing", "r":[9,2] = missing},
 
-{
-"t1": {"c":"[9,2] = null", "r":[9,2] = null},
-"t2": {"c":"[9,2] = missing", "r":[9,2] = missing},
+{"c":"[9,2] > null", "r":[9,2] > null},
+{"c":"[9,2] > missing", "r":[9,2] > missing},
 
-"t3": {"c":"[9,2] > null", "r":[9,2] > null},
-"t4": {"c":"[9,2] > missing", "r":[9,2] > missing},
+{"c":"['red', null] < ['red', null]", "r":['red', null] < ['red', null]},
+{"c":"[missing,2] < [null,3]", "r":[missing,2] < [null,3]},
+{"c":"[1,2] < [1,2,missing]", "r":[1,2] < [1,2,missing]},
+{"c":"[1,2] < [1,2,null]", "r":[1,2] < [1,2,null]},
+{"c":"[null,5] >= [null,5]", "r":[null,5] >= [null,5]},
+{"c":"[null,8] < [4, 9]", "r":[null,8] < [4, 9]},
+{"c":"[1,2,missing] != [1,2,missing]", "r":[1,2,missing] != [1,2,missing]},
 
-"t5": {"c":"['red', null] < ['red', null]", "r":['red', null] < ['red', null]},
-"t6": {"c":"[missing,2] < [null,3]", "r":[missing,2] < [null,3]},
-"t7": {"c":"[1,2] < [1,2,missing]", "r":[1,2] < [1,2,missing]},
-"t8": {"c":"[1,2] < [1,2,null]", "r":[1,2] < [1,2,null]},
-"t9": {"c":"[null,5] >= [null,5]", "r":[null,5] >= [null,5]},
-"t10": {"c":"[null,8] < [4, 9]", "r":[null,8] < [4, 9]},
-"t11": {"c":"[1,2,missing] != [1,2,missing]", "r":[1,2,missing] != [1,2,missing]},
+{"c":"[null,1] = [1,1,3]", "r":[null,1] = [1,1,3]},
+{"c":"[null,1] != [1,1,3]", "r":[null,1] != [1,1,3]},
+{"c":"[null,1] > [1,1,3]", "r":[null,1] > [1,1,3]},
 
-"t12": {"c":"[null,1] = [1,1,3]", "r":[null,1] = [1,1,3]},
-"t13": {"c":"[null,1] != [1,1,3]", "r":[null,1] != [1,1,3]},
-"t14": {"c":"[null,1] > [1,1,3]", "r":[null,1] > [1,1,3]},
+{"c":"[null, null, null] = [null, null, null]", "r": [null, null, null] = [null, null, null]},
+{"c":"[missing, missing] = [missing, missing]", "r": [missing, missing] = [missing, missing]},
 
-"t15": {"c":"[null, null, null] = [null, null, null]", "r": [null, null, null] = [null, null, null]},
-"t16": {"c":"[missing, missing] = [missing, missing]", "r": [missing, missing] = [missing, missing]},
+{"c":"[99, null, 3] = [1, 2, 3]", "r":[99, null, 3] = [1, 2, 3]},
+{"c":"[1, null, 3] = [1, 2, 3]", "r":[1, null, 3] = [1, 2, 3]},
+{"c":"[1, missing, 3] = [1, 2, 3]", "r":[1, missing, 3] = [1, 2, 3]},
+{"c":"[1, null, missing, 4] = [1, 2, 3, 4]", "r":[1, null, missing, 4] = [1, 2, 3, 4]},
+{"c":"[1, null, missing, null, 5] = [1, 2, 3, 4, 5]", "r":[1, null, missing, null, 5] = [1, 2, 3, 4, 5]},
+{"c":"[1, missing, null, missing, 5] = [1, 2, 3, 4, 5]", "r":[1, missing, null, missing, 5] = [1, 2, 3, 4, 5]},
 
-"t17": {"c":"[99, null, 3] = [1, 2, 3]", "r":[99, null, 3] = [1, 2, 3]},
-"t18": {"c":"[1, null, 3] = [1, 2, 3]", "r":[1, null, 3] = [1, 2, 3]},
-"t19": {"c":"[1, missing, 3] = [1, 2, 3]", "r":[1, missing, 3] = [1, 2, 3]},
-"t20": {"c":"[1, null, missing, 4] = [1, 2, 3, 4]", "r":[1, null, missing, 4] = [1, 2, 3, 4]},
-"t21": {"c":"[1, null, missing, null, 5] = [1, 2, 3, 4, 5]", "r":[1, null, missing, null, 5] = [1, 2, 3, 4, 5]},
-"t22": {"c":"[1, missing, null, missing, 5] = [1, 2, 3, 4, 5]", "r":[1, missing, null, missing, 5] = [1, 2, 3, 4, 5]},
+{"c":"[1, null, 3] = [1, 2, 99]", "r":[1, null, 3] = [1, 2, 99]},
+{"c":"[1, missing, 3] = [1, 2, 99]", "r":[1, missing, 3] = [1, 2, 99]},
+{"c":"[1, null, missing, 4] = [1, 2, 3, 99]", "r":[1, null, missing, 4] = [1, 2, 3, 99]},
+{"c":"[1, null, missing, null, 5] = [1, 2, 3, 4, 99]", "r":[1, null, missing, null, 5] = [1, 2, 3, 4, 99]},
+{"c":"[1, missing, null, missing, 5] = [1, 2, 3, 4, 99]", "r":[1, missing, null, missing, 5] = [1, 2, 3, 4, 99]},
 
-"t23": {"c":"[1, null, 3] = [1, 2, 99]", "r":[1, null, 3] = [1, 2, 99]},
-"t24": {"c":"[1, missing, 3] = [1, 2, 99]", "r":[1, missing, 3] = [1, 2, 99]},
-"t25": {"c":"[1, null, missing, 4] = [1, 2, 3, 99]", "r":[1, null, missing, 4] = [1, 2, 3, 99]},
-"t26": {"c":"[1, null, missing, null, 5] = [1, 2, 3, 4, 99]", "r":[1, null, missing, null, 5] = [1, 2, 3, 4, 99]},
-"t27": {"c":"[1, missing, null, missing, 5] = [1, 2, 3, 4, 99]", "r":[1, missing, null, missing, 5] = [1, 2, 3, 4, 99]},
+{"c":"[1, null, 3] != [1, 2, 3]", "r":[1, null, 3] != [1, 2, 3]},
+{"c":"[1, missing, 3] != [1, 2, 3]", "r":[1, missing, 3] != [1, 2, 3]},
+{"c":"[1, null, missing, 4] != [1, 2, 3, 4]", "r":[1, null, missing, 4] != [1, 2, 3, 4]},
 
-"t28": {"c":"[1, null, 3] != [1, 2, 3]", "r":[1, null, 3] != [1, 2, 3]},
-"t29": {"c":"[1, missing, 3] != [1, 2, 3]", "r":[1, missing, 3] != [1, 2, 3]},
-"t30": {"c":"[1, null, missing, 4] != [1, 2, 3, 4]", "r":[1, null, missing, 4] != [1, 2, 3, 4]},
+{"c":"[1, null, 3] != [1, 2, 99]", "r":[1, null, 3] != [1, 2, 99]},
+{"c":"[1, missing, 3] != [1, 2, 99]", "r":[1, missing, 3] != [1, 2, 99]},
+{"c":"[1, null, missing, 4] != [1, 2, 3, 99]", "r":[1, null, missing, 4] != [1, 2, 3, 99]},
 
-"t31": {"c":"[1, null, 3] != [1, 2, 99]", "r":[1, null, 3] != [1, 2, 99]},
-"t32": {"c":"[1, missing, 3] != [1, 2, 99]", "r":[1, missing, 3] != [1, 2, 99]},
-"t33": {"c":"[1, null, missing, 4] != [1, 2, 3, 99]", "r":[1, null, missing, 4] != [1, 2, 3, 99]},
+{"c":"[1, null, 3] < [1, 2, 3]", "r":[1, null, 3] < [1, 2, 3]},
+{"c":"[1, missing, 3] < [1, 2, 3]", "r":[1, missing, 3] < [1, 2, 3]},
+{"c":"[1, null, missing, 4] < [1, 2, 3, 4]", "r":[1, null, missing, 4] < [1, 2, 3, 4]},
+{"c":"[1, missing, null, 4] < [1, 2, 3, 4]", "r":[1, missing, null, 4] < [1, 2, 3, 4]},
 
-"t34": {"c":"[1, null, 3] < [1, 2, 3]", "r":[1, null, 3] < [1, 2, 3]},
-"t35": {"c":"[1, missing, 3] < [1, 2, 3]", "r":[1, missing, 3] < [1, 2, 3]},
-"t36": {"c":"[1, null, missing, 4] < [1, 2, 3, 4]", "r":[1, null, missing, 4] < [1, 2, 3, 4]},
-"t37": {"c":"[1, missing, null, 4] < [1, 2, 3, 4]", "r":[1, missing, null, 4] < [1, 2, 3, 4]},
+{"c":"[1, null, 3] < [1, 2, 99]", "r":[1, null, 3] < [1, 2, 99]},
+{"c":"[1, missing, 3] < [1, 2, 99]", "r":[1, missing, 3] < [1, 2, 99]},
 
-"t38": {"c":"[1, null, 3] < [1, 2, 99]", "r":[1, null, 3] < [1, 2, 99]},
-"t39": {"c":"[1, missing, 3] < [1, 2, 99]", "r":[1, missing, 3] < [1, 2, 99]},
+{"c":"[1, null, 99] < [1, 2, 3]", "r":[1, null, 99] < [1, 2, 3]},
+{"c":"[1, missing, 99] < [1, 2, 3]", "r":[1, missing, 99] < [1, 2, 3]},
 
-"t40": {"c":"[1, null, 99] < [1, 2, 3]", "r":[1, null, 99] < [1, 2, 3]},
-"t41": {"c":"[1, missing, 99] < [1, 2, 3]", "r":[1, missing, 99] < [1, 2, 3]},
+{"c":"[99, null, 3] < [1, 2, 3]", "r":[99, null, 3] < [1, 2, 3]},
+{"c":"[-99, null, 3] < [1, 2, 3]", "r":[-99, null, 3] < [1, 2, 3]},
 
-"t42": {"c":"[99, null, 3] < [1, 2, 3]", "r":[99, null, 3] < [1, 2, 3]},
-"t43": {"c":"[-99, null, 3] < [1, 2, 3]", "r":[-99, null, 3] < [1, 2, 3]},
-
-"t44": {"c":"[99, null, 3] >= [1, 2, 3]", "r":[99, null, 3] >= [1, 2, 3]},
-"t45": {"c":"[-99, null, 3] >= [1, 2, 3]", "r":[-99, null, 3] >= [1, 2, 3]}
-};
+{"c":"[99, null, 3] >= [1, 2, 3]", "r":[99, null, 3] >= [1, 2, 3]},
+{"c":"[-99, null, 3] >= [1, 2, 3]", "r":[-99, null, 3] >= [1, 2, 3]}
+] AS t
+SELECT VALUE t;

@@ -68,7 +68,7 @@ public class ComparatorUtil {
         }
     }
 
-    static Result returnMissingOrNullOrMismatch(ATypeTag leftTag, ATypeTag rightTag) {
+    static Result returnMissingOrNullOrIncomparable(ATypeTag leftTag, ATypeTag rightTag) {
         if (leftTag == MISSING || rightTag == MISSING) {
             return Result.MISSING;
         }

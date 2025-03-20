@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 @MissingNullInOutFunction
 public class GreaterThanDescriptor extends AbstractComparisonDescriptor {
@@ -66,6 +67,11 @@ public class GreaterThanDescriptor extends AbstractComparisonDescriptor {
                     @Override
                     protected boolean getComparisonResult(Result r) {
                         return r == Result.GT;
+                    }
+
+                    @Override
+                    protected void handleIncomparable(IPointable result) throws HyracksDataException {
+                        writeNull(result);
                     }
                 };
             }
