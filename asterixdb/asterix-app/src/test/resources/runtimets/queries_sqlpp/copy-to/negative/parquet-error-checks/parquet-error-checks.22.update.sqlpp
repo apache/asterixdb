@@ -22,17 +22,18 @@ USE test;
 
 
 
+insert into TestCollection5({"id":10, "names": [ 18,  { "first":"Virat"} ] });
+
+
 COPY (
-select id,name from TestCollection c
+select * from TestCollection5 c
     ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-error-checks17")
-TYPE ( { id:int, rect: rectangle })
+PATH (%pathprefix% "copy-to-result", "parquet-error-checks22")
 WITH {
     %template_colons%,
     %additionalProperties%
-    "format":"parquet",
-    "max-schemas" : "2"
+    "format":"parquet"
     }
 
 

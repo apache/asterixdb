@@ -21,20 +21,10 @@ USE test;
 
 
 
-
-COPY (
-select id,name from TestCollection c
-    ) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-error-checks17")
-TYPE ( { id:int, rect: rectangle })
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"parquet",
-    "max-schemas" : "2"
-    }
-
+CREATE COLLECTION TestCollection2(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection3(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection4(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection5(ColumnType1) PRIMARY KEY id;
 
 
 

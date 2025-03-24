@@ -221,6 +221,10 @@
         <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
         <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
         <expected-error>ASX1204: 'rectangle' type not supported in parquet format</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
