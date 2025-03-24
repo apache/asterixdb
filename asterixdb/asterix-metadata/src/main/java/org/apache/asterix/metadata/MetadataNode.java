@@ -541,7 +541,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             insertFullTextConfigMetadataEntityToCatalog(txnId, config);
         } catch (AlgebricksException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PROCESSING_TUPLE);
+            throw AlgebricksException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e);
         }
     }
 

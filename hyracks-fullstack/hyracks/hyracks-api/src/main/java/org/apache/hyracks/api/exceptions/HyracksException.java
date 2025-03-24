@@ -79,6 +79,10 @@ public class HyracksException extends IOException implements IFormattedException
         this.errorCode = intCode;
         this.nodeId = nodeId;
         this.params = params;
+
+        if (cause instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     protected HyracksException(IError errorCode, Throwable cause, SourceLocation sourceLoc, String nodeId,

@@ -81,7 +81,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
      *
      * @return true
      */
-    private boolean doGetInputStream(GetObjectRequest request) throws RuntimeDataException {
+    private boolean doGetInputStream(GetObjectRequest request) throws HyracksDataException {
         int retries = 0;
         while (retries < MAX_RETRIES) {
             try {
@@ -94,7 +94,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 return false;
             } catch (S3Exception ex) {
                 if (!shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "S3 retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
 
@@ -102,10 +102,10 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 3 ? 1 : 2));
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
             } catch (SdkException ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         }
         return true;
