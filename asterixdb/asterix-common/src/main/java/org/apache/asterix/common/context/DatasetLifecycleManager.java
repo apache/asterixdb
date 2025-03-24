@@ -639,7 +639,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     @Override
     public ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition, String path) {
-        DatasetResource dataset = datasets.get(datasetId);
+        DatasetResource dataset = getDatasetLifecycle(datasetId);
         ILSMComponentIdGenerator generator = dataset.getComponentIdGenerator(partition);
         if (generator != null) {
             return generator;
