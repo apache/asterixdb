@@ -120,6 +120,7 @@ import org.apache.logging.log4j.Logger;
 
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
+import io.delta.kernel.exceptions.KernelEngineException;
 import io.delta.kernel.exceptions.KernelException;
 
 public class ExternalDataUtils {
@@ -540,7 +541,7 @@ public class ExternalDataUtils {
         io.delta.kernel.Table table = io.delta.kernel.Table.forPath(engine, tableMetadataPath);
         try {
             table.getLatestSnapshot(engine);
-        } catch (KernelException e) {
+        } catch (KernelException | KernelEngineException e) {
             LOGGER.info("Failed to get latest snapshot for table: {}", tableMetadataPath, e);
             throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }

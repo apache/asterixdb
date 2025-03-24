@@ -225,6 +225,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             IConfigValidatorFactory configValidatorFactory, IReplicationStrategyFactory replicationStrategyFactory,
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
+        threadExecutor =
+                MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
         CloudConfigurator cloudConfigurator;
         IDiskResourceCacheLockNotifier lockNotifier;
         IDiskCachedPageAllocator pageAllocator;
@@ -247,8 +249,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         }
 
         int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
-        threadExecutor =
-                MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
         ICacheMemoryAllocator bufferAllocator = new HeapBufferAllocator();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(bufferAllocator, pageAllocator,
@@ -286,8 +286,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         // Must start vbc now instead of by life cycle component manager (lccm) because lccm happens after
         // the metadata bootstrap task
         ((ILifeCycleComponent) virtualBufferCache).start();
-        datasetLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
-                txnSubsystem.getLogManager(), virtualBufferCache, indexCheckpointManagerProvider, lockNotifier);
+        datasetLifecycleManager =
+                new DatasetLifecycleManager(ncServiceContext, storageProperties, localResourceRepository, recoveryMgr,
+                        txnSubsystem.getLogManager(), virtualBufferCache, indexCheckpointManagerProvider, lockNotifier);
         localResourceRepository.setDatasetLifecycleManager(datasetLifecycleManager);
         final String nodeId = getServiceContext().getNodeId();
         final Set<Integer> nodePartitions = metadataProperties.getNodePartitions(nodeId);

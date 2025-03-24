@@ -119,7 +119,7 @@ public class RecordWithMetaTest {
             IPrinter[] printers = new IPrinter[printerFactories.length];
 
             for (int i = 0; i < printerFactories.length; i++) {
-                printers[i] = printerFactories[i].createPrinter();
+                printers[i] = printerFactories[i].createPrinter(null);
             }
 
             ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);

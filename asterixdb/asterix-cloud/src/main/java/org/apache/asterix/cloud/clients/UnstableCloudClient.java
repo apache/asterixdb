@@ -73,7 +73,7 @@ public class UnstableCloudClient implements ICloudClient {
     }
 
     @Override
-    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
+    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) throws HyracksDataException {
         return cloudClient.listObjects(bucket, path, filter);
     }
 
@@ -95,12 +95,12 @@ public class UnstableCloudClient implements ICloudClient {
     }
 
     @Override
-    public void write(String bucket, String path, byte[] data) {
+    public void write(String bucket, String path, byte[] data) throws HyracksDataException {
         cloudClient.write(bucket, path, data);
     }
 
     @Override
-    public void copy(String bucket, String srcPath, FileReference destPath) {
+    public void copy(String bucket, String srcPath, FileReference destPath) throws HyracksDataException {
         cloudClient.copy(bucket, srcPath, destPath);
     }
 
@@ -134,7 +134,7 @@ public class UnstableCloudClient implements ICloudClient {
     }
 
     @Override
-    public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) {
+    public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) throws HyracksDataException {
         return cloudClient.listAsJson(objectMapper, bucket);
     }
 

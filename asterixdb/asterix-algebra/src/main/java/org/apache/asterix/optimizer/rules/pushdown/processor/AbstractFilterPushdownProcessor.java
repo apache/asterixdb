@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.apache.asterix.om.base.IAObject;
@@ -55,6 +57,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
     private final Map<ILogicalOperator, List<UseDescriptor>> subplanSelects;
     private final List<UseDescriptor> scanCandidateFilters;
     private final Set<LogicalVariable> subplanProducedVariables;
+    private final Queue<ILogicalOperator> subplanOpsQueue;
 
     public AbstractFilterPushdownProcessor(PushdownContext pushdownContext, IOptimizationContext context) {
         super(pushdownContext, context);
@@ -62,6 +65,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         subplanSelects = new HashMap<>();
         scanCandidateFilters = new ArrayList<>();
         subplanProducedVariables = new HashSet<>();
+        subplanOpsQueue = new LinkedList<>();
     }
 
     @Override
@@ -191,8 +195,10 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
      * @param scanDescriptor data-scan descriptor
      */
     private void putPotentialSelects(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
-        for (Map.Entry<ILogicalOperator, List<UseDescriptor>> selects : subplanSelects.entrySet()) {
-            ILogicalOperator subplan = selects.getKey();
+        subplanOpsQueue.clear();
+        subplanOpsQueue.addAll(subplanSelects.keySet());
+        while (!subplanOpsQueue.isEmpty()) {
+            ILogicalOperator subplan = subplanOpsQueue.poll();
             subplanProducedVariables.clear();
             VariableUtilities.getProducedVariables(subplan, subplanProducedVariables);
             for (LogicalVariable producedVar : subplanProducedVariables) {
@@ -207,7 +213,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         }
     }
 
-    private boolean pushdownFilter(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
+    protected boolean pushdownFilter(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
         boolean changed = false;
         for (UseDescriptor candidate : scanCandidateFilters) {
             changed |= inlineAndPushdownFilter(candidate, scanDescriptor);
@@ -236,8 +242,13 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         boolean inSubplan = useDescriptor.inSubplan();
         if (inSubplan && useOperator.getOperatorTag() == LogicalOperatorTag.SELECT) {
             ILogicalOperator subplanOp = useDescriptor.getSubplanOperator();
-            List<UseDescriptor> selects = subplanSelects.computeIfAbsent(subplanOp, k -> new ArrayList<>());
-            selects.add(useDescriptor);
+            List<UseDescriptor> selects = subplanSelects.get(subplanOp);
+            if (selects == null) {
+                subplanOpsQueue.add(subplanOp);
+                subplanSelects.computeIfAbsent(subplanOp, k -> new ArrayList<>()).add(useDescriptor);
+            } else {
+                selects.add(useDescriptor);
+            }
         }
 
         // Finally, push down if not in subplan

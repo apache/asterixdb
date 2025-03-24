@@ -19,9 +19,12 @@
 package org.apache.hyracks.storage.common;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 
 public class TransientLocalResourceRepository implements ILocalResourceRepository {
 
@@ -52,6 +55,12 @@ public class TransientLocalResourceRepository implements ILocalResourceRepositor
         }
         id2ResourceMap.remove(resource.getId());
         name2ResourceMap.remove(path);
+    }
+
+    @Override
+    public Map<Long, LocalResource> getResources(Predicate<LocalResource> filter, List<FileReference> roots)
+            throws HyracksDataException {
+        return Map.of();
     }
 
     @Override

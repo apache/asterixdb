@@ -18,7 +18,12 @@
  */
 package org.apache.hyracks.storage.common;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 
 public interface ILocalResourceRepository {
 
@@ -27,6 +32,9 @@ public interface ILocalResourceRepository {
     void insert(LocalResource resource) throws HyracksDataException;
 
     void delete(String name) throws HyracksDataException;
+
+    Map<Long, LocalResource> getResources(Predicate<LocalResource> filter, List<FileReference> resourceFolderRoot)
+            throws HyracksDataException;
 
     long maxId() throws HyracksDataException;
 }

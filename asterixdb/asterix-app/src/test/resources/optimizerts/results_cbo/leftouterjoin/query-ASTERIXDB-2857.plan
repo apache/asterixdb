@@ -25,7 +25,7 @@ distribute result [$$133] [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, to
                         join (eq($$136, $$137)) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 2000000.0, total-cost: 6000000.0]
                         -- HYBRID_HASH_JOIN [$$136][$$137]  |PARTITIONED|
                           exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                          -- HASH_PARTITION_EXCHANGE [$$136]  |PARTITIONED|
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             assign [$$145] <- [$$tenk.getField(0)] project: [$$145, $$136] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- ASSIGN  |PARTITIONED|
                               select (and(lt($$136, 4), lt($$136, 2))) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
@@ -39,7 +39,7 @@ distribute result [$$133] [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, to
                                       empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                          -- HASH_PARTITION_EXCHANGE [$$137]  |PARTITIONED|
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             assign [$$146] <- [$$tenk.getField(0)] project: [$$146, $$137] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- ASSIGN  |PARTITIONED|
                               select (and(lt($$137, 2), lt($$137, 4))) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]

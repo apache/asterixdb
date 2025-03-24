@@ -27,6 +27,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AUnionPrinterFactory implements IPrinterFactory {
@@ -40,7 +41,7 @@ public class AUnionPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return new IPrinter() {
 
             private IPrinter[] printers;
@@ -53,7 +54,7 @@ public class AUnionPrinterFactory implements IPrinterFactory {
                 for (int i = 0; i < printers.length; i++) {
                     printers[i] =
                             (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList().get(i)))
-                                    .createPrinter();
+                                    .createPrinter(context);
                     printers[i].init();
                 }
             }

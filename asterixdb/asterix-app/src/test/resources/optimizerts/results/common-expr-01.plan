@@ -56,7 +56,7 @@ distribute result [$$176]
                                     order (ASC, $$181)
                                     -- STABLE_SORT [$$181(ASC)]  |PARTITIONED|
                                       exchange
-                                      -- HASH_PARTITION_EXCHANGE [$$181]  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         project ([$$179, $$180, $$190, $$181])
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           exchange

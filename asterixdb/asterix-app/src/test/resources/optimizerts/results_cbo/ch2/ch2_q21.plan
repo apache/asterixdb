@@ -85,9 +85,9 @@ distribute result [$$339] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                                 exchange [cardinality: 1000000.0, op-cost: 500000.0, total-cost: 1500000.0]
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   left outer join (and(eq($$383, $$378), gt($$384, $$353), eq($$381, $$377), eq($$382, $$352))) [cardinality: 500000.0, op-cost: 1.0E12, total-cost: 1.000006E12]
-                                                                  -- NESTED_LOOP  |PARTITIONED|
+                                                                  -- HYBRID_HASH_JOIN [$$378, $$377, $$352][$$383, $$381, $$382]  |PARTITIONED|
                                                                     exchange [cardinality: 1000000.0, op-cost: 500000.0, total-cost: 1500000.0]
-                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    -- HASH_PARTITION_EXCHANGE [$$378, $$377, $$352]  |PARTITIONED|
                                                                       select (gt($$353, string(numeric-add(date($$349), duration: {P150D })))) project: [$$352, $$378, $$377, $$362, $$353] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                         assign [$$362, $$353] <- [$$ol1.getField("ol_i_id"), $$ol1.getField("ol_delivery_d")] project: [$$378, $$377, $$352, $$349, $$362, $$353] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
@@ -117,7 +117,7 @@ distribute result [$$339] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                                                                 empty-tuple-source
                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                     exchange
-                                                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                    -- HASH_PARTITION_EXCHANGE [$$383, $$381, $$382]  |PARTITIONED|
                                                                       assign [$$326] <- [{"o_id": $$381, "o_w_id": $$382, "o_d_id": $$383, "ol_delivery_d": $$384}.getField("o_id")]
                                                                       -- ASSIGN  |PARTITIONED|
                                                                         assign [$$384] <- [$$ol2.getField("ol_delivery_d")] project: [$$383, $$382, $$381, $$384]

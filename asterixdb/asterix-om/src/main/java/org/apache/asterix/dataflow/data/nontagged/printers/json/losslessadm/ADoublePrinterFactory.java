@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class ADoublePrinterFactory implements IPrinterFactory {
 
@@ -35,7 +36,7 @@ public class ADoublePrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

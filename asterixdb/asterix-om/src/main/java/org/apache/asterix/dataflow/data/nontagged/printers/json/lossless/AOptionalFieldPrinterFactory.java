@@ -26,6 +26,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AOptionalFieldPrinterFactory implements IPrinterFactory {
@@ -38,7 +39,7 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return new IPrinter() {
             private IPrinter nullPrinter;
             private IPrinter fieldPrinter;
@@ -46,10 +47,10 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
             @Override
             public void init() throws HyracksDataException {
                 nullPrinter = (LosslessJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
-                        .createPrinter();
+                        .createPrinter(context);
                 fieldPrinter =
                         (LosslessJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
-                                .createPrinter();
+                                .createPrinter(context);
             }
 
             @Override

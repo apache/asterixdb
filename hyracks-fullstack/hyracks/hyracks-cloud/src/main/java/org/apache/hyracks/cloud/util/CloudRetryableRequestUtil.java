@@ -85,7 +85,9 @@ public class CloudRetryableRequestUtil {
                 } catch (Throwable e) {
                     // First, clear the interrupted flag
                     interrupted |= Thread.interrupted();
-                    if (!ExceptionUtils.causedByInterrupt(e)) {
+                    if (ExceptionUtils.causedByInterrupt(e)) {
+                        interrupted = true;
+                    } else {
                         // The cause isn't an interruption, rethrow
                         throw e;
                     }
@@ -130,7 +132,9 @@ public class CloudRetryableRequestUtil {
                 } catch (Throwable e) {
                     // First, clear the interrupted flag
                     interrupted |= Thread.interrupted();
-                    if (!ExceptionUtils.causedByInterrupt(e)) {
+                    if (ExceptionUtils.causedByInterrupt(e)) {
+                        interrupted = true;
+                    } else {
                         // The cause isn't an interruption, rethrow
                         throw e;
                     }
@@ -179,7 +183,11 @@ public class CloudRetryableRequestUtil {
                 if (retryPolicy == null) {
                     retryPolicy = new ExponentialRetryPolicy(NUMBER_OF_RETRIES, MAX_DELAY_BETWEEN_RETRIES);
                 }
-                if (!retryPolicy.retry(e)) {
+                if (ExceptionUtils.causedByInterrupt(e) && !Thread.currentThread().isInterrupted()) {
+                    LOGGER.warn("Lost suppressed interrupt during ICloudReturnableRequest", e);
+                    Thread.currentThread().interrupt();
+                }
+                if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
                     throw HyracksDataException.create(e);
                 }
                 attempt++;

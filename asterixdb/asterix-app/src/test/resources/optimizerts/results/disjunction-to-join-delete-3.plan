@@ -19,7 +19,7 @@ commit
                   materialize
                   -- MATERIALIZE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$19]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       assign [$$24, $$19] <- [$$TestSet.getField(1), $$TestSet.getField(0)]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$TestSet])

@@ -50,7 +50,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
@@ -97,12 +96,10 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
         ILogicalOperator useOp = useDescriptor.getOperator();
         ILogicalOperator scanOp = scanDescriptor.getOperator();
         exprToNodeVisitor.setTypeEnv(PushdownUtil.getTypeEnv(useOp, scanOp, context));
-        paths.clear();
     }
 
     @Override
     protected boolean isNotPushable(AbstractFunctionCallExpression expression) {
-        FunctionIdentifier fid = expression.getFunctionIdentifier();
         return isProhibitedFilterFunction(expression);
     }
 
@@ -130,21 +127,28 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
+    protected boolean pushdownFilter(ScanDefineDescriptor scanDescriptor) throws AlgebricksException {
+        paths.clear();
+        checkerVisitor.beforeVisit();
+        return super.pushdownFilter(scanDescriptor);
+    }
+
+    @Override
     protected void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr)
             throws AlgebricksException {
+        if (checkerVisitor.containsMultipleArrayPaths(paths.values())) {
+            // Cannot pushdown a filter with multiple unnest
+            // TODO allow rewindable column readers for filters
+            // TODO this is a bit conservative (maybe too conservative) as we can push part of expression down
+            return;
+        }
+
         ILogicalExpression filterExpr = scanDefineDescriptor.getFilterExpression();
         if (filterExpr != null) {
             filterExpr = andExpression(filterExpr, inlinedExpr);
             scanDefineDescriptor.setFilterExpression(filterExpr);
         } else {
             scanDefineDescriptor.setFilterExpression(inlinedExpr);
-        }
-
-        if (checkerVisitor.containsMultipleArrayPaths(paths.values())) {
-            // Cannot pushdown a filter with multiple unnest
-            // TODO allow rewindable column readers for filters
-            // TODO this is a bit conservative (maybe too conservative) as we can push part of expression down
-            return;
         }
 
         scanDefineDescriptor.getFilterPaths().putAll(paths);

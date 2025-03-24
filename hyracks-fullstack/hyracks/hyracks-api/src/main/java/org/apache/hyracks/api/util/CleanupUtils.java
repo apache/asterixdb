@@ -96,9 +96,7 @@ public class CleanupUtils {
             } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                 // NOSONAR ignore logging failure
             }
-            if (root != null) {
-                root.addSuppressed(th);
-            }
+            ExceptionUtils.suppress(root, th);
         }
     }
 

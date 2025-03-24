@@ -16,3 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+ USE test;
+
+ UPSERT INTO CustomersDs SELECT VALUE v FROM Customers v;
+ UPSERT INTO OrdersDs SELECT VALUE v FROM Orders v;

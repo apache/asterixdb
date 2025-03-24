@@ -44,7 +44,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 
 public class OperatorPropertiesUtil {
 
@@ -348,5 +350,14 @@ public class OperatorPropertiesUtil {
     public static FunctionIdentifier getIsMissingNullFunction(IAlgebricksConstantValue value) {
         return value.isMissing() ? AlgebricksBuiltinFunctions.IS_MISSING
                 : value.isNull() ? AlgebricksBuiltinFunctions.IS_NULL : null;
+    }
+
+    public static UnorderedPartitionedProperty createUnorderedProperty(INodeDomain nodeDomain, int[][] partitionsMap,
+            List<LogicalVariable> vars) {
+        if (partitionsMap == null) {
+            return UnorderedPartitionedProperty.of(new ListSet<>(vars), nodeDomain);
+        } else {
+            return UnorderedPartitionedProperty.ofPartitionsMap(new ListSet<>(vars), nodeDomain, partitionsMap);
+        }
     }
 }

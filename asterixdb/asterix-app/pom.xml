@@ -420,6 +420,14 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -502,14 +510,35 @@
         </itest.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-asterix-app-sql-rqg</id>
       <properties>
         <test.includes>**/*RQGTest.java, **/*RQJTest.java</test.includes>
         <itest.includes>**/SqlppRQG*IT.java</itest.includes>
-        <failIfNoTests>false</failIfNoTests>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-ssl-compression</id>
@@ -518,8 +547,18 @@
           **/SqlppExecutionColumnTest.java,**/*Ssl*Test.java
         </test.includes>
         <itest.excludes>**/*.java</itest.excludes>
-        <failIfNoTests>false</failIfNoTests>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-verify-asterix-app</id>
@@ -530,14 +569,42 @@
         <itest.excludes>**/External*IT.java,**/SqlppExecution*IT.java,**/RebalanceWithCancellationIT.java,**/SqlppRQG*IT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-rebalance-cancellation</id>
       <properties>
         <test.excludes>**/*.java</test.excludes>
         <itest.includes>**/RebalanceWithCancellationIT.java</itest.includes>
-        <failIfNoTests>false</failIfNoTests>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <failIfNoTests>false</failIfNoTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-cloud-tests</id>

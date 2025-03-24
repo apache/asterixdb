@@ -24,4 +24,5 @@ public interface IDataPartitioningProvider {
 
     AlgebricksAbsolutePartitionConstraint getClusterLocations();
 
+    int[][] getPartitionsMap();
 }

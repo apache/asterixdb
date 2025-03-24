@@ -42,7 +42,7 @@ distribute result [$$59]
                                 join (eq($$78, $$62))
                                 -- HYBRID_HASH_JOIN [$$78][$$62]  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     assign [$$78, $$t1] <- [$$62, $$79] project: [$$78]
                                     -- ASSIGN  |PARTITIONED|
                                       exchange
@@ -191,7 +191,7 @@ distribute result [$$59]
                                           join (eq($$78, $$62))
                                           -- HYBRID_HASH_JOIN [$$78][$$62]  |PARTITIONED|
                                             exchange
-                                            -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               assign [$$78, $$t1] <- [$$62, $$79] project: [$$78]
                                               -- ASSIGN  |PARTITIONED|
                                                 exchange

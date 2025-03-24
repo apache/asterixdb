@@ -34,7 +34,7 @@ distribute result [$$75]
                       left outer join (eq($$76, $$92))
                       -- HYBRID_HASH_JOIN [$$76][$$92]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$76]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           project ([$$76])
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange
@@ -46,7 +46,7 @@ distribute result [$$75]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$92]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           assign [$$93] <- [true]
                           -- ASSIGN  |PARTITIONED|
                             unnest $$82 <- scan-collection($$83) project: [$$92]

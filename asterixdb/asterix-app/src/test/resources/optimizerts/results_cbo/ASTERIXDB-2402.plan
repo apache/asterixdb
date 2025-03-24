@@ -157,9 +157,9 @@ distribute result [$$227]
                                                                                             exchange
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               left outer join (and(spatial-intersect($$243, $$244), eq($$235, $$242)))
-                                                                                              -- NESTED_LOOP  |PARTITIONED|
+                                                                                              -- HYBRID_HASH_JOIN [$$242][$$235]  |PARTITIONED|
                                                                                                 exchange
-                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                -- HASH_PARTITION_EXCHANGE [$$242]  |PARTITIONED|
                                                                                                   left outer join (true)
                                                                                                   -- NESTED_LOOP  |PARTITIONED|
                                                                                                     exchange
@@ -191,7 +191,7 @@ distribute result [$$227]
                                                                                                                   empty-tuple-source
                                                                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                 exchange
-                                                                                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   assign [$$265, $$244] <- [true, $$u.getField(0)]
                                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                                     exchange
@@ -229,9 +229,9 @@ distribute result [$$227]
                                                                                       exchange
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                         left outer join (and(spatial-intersect($$243, $$244), eq($$235, $$242)))
-                                                                                        -- NESTED_LOOP  |PARTITIONED|
+                                                                                        -- HYBRID_HASH_JOIN [$$242][$$235]  |PARTITIONED|
                                                                                           exchange
-                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                          -- HASH_PARTITION_EXCHANGE [$$242]  |PARTITIONED|
                                                                                             left outer join (true)
                                                                                             -- NESTED_LOOP  |PARTITIONED|
                                                                                               exchange
@@ -263,7 +263,7 @@ distribute result [$$227]
                                                                                                             empty-tuple-source
                                                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                           exchange
-                                                                                          -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                             assign [$$265, $$244] <- [true, $$u.getField(0)]
                                                                                             -- ASSIGN  |PARTITIONED|
                                                                                               exchange
@@ -297,7 +297,7 @@ distribute result [$$227]
                                                                 empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                       exchange
-                                                      -- HASH_PARTITION_EXCHANGE [$$239, $$240]  |PARTITIONED|
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         assign [$$253] <- [$$b.getField("BrokerEndPoint")] project: [$$253, $$239, $$240]
                                                         -- ASSIGN  |PARTITIONED|
                                                           exchange

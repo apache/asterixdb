@@ -24,7 +24,10 @@ import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IEvaluatorContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -38,11 +41,12 @@ public class PrinterBasedWriterFactory implements IAWriterFactory {
     }
 
     @Override
-    public IAWriter createWriter(final int[] fields, final PrintStream printStream,
+    public IAWriter createWriter(IHyracksTaskContext context, final int[] fields, final PrintStream printStream,
             final IPrinterFactory[] printerFactories, RecordDescriptor inputRecordDescriptor) {
         final IPrinter[] printers = new IPrinter[printerFactories.length];
+        IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
         for (int i = 0; i < printerFactories.length; i++) {
-            printers[i] = printerFactories[i].createPrinter();
+            printers[i] = printerFactories[i].createPrinter(evaluatorContext);
         }
 
         return new IAWriter() {

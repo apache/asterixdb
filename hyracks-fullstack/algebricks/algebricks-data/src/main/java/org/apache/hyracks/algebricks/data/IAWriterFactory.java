@@ -21,9 +21,10 @@ package org.apache.hyracks.algebricks.data;
 import java.io.PrintStream;
 import java.io.Serializable;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IAWriterFactory extends Serializable {
-    public IAWriter createWriter(int[] fields, PrintStream ps, IPrinterFactory[] printerFactories,
+    IAWriter createWriter(IHyracksTaskContext context, int[] fields, PrintStream ps, IPrinterFactory[] printerFactories,
             RecordDescriptor inputRecordDescriptor);
 }

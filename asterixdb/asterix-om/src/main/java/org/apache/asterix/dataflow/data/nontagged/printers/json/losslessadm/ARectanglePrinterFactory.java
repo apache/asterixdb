@@ -25,6 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class ARectanglePrinterFactory implements IPrinterFactory {
 
@@ -50,7 +51,7 @@ public class ARectanglePrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

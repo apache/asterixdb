@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IResultSerializer;
 import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -46,9 +47,10 @@ public class ResultSerializerFactoryProvider implements IResultSerializerFactory
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IResultSerializer createResultSerializer(RecordDescriptor inputRecordDesc, PrintStream printStream) {
+            public IResultSerializer createResultSerializer(IHyracksTaskContext context,
+                    RecordDescriptor inputRecordDesc, PrintStream printStream) {
                 final IAWriter writer =
-                        writerFactory.createWriter(fields, printStream, printerFactories, inputRecordDesc);
+                        writerFactory.createWriter(context, fields, printStream, printerFactories, inputRecordDesc);
 
                 return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;

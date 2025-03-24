@@ -1,0 +1,67 @@
+distribute result [$$55]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$55] <- [{"$1": $$58}] project: [$$55]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$58] <- [agg-sql-sum($$62)]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$62] <- [agg-sql-count(1)]
+          -- AGGREGATE  |PARTITIONED|
+            select ($$47)
+            -- STREAM_SELECT  |PARTITIONED|
+              project ([$$47])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  group by ([$$61 := $$56]) decor ([]) {
+                            aggregate [$$47] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (not(is-missing($$60))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                project ([$$60]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         }
+                  -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$56)
+                      -- STABLE_SORT [$$56(ASC)]  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$56, $$60])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              left outer join (not(if-missing-or-null(neq($$59, $$43), false)))
+                              -- NESTED_LOOP  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$59] <- [$$c1.getField("x")] project: [$$56, $$59]
+                                  -- ASSIGN  |PARTITIONED|
+                                    exchange
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      data-scan []<-[$$56, $$c1] <- Default.c1
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
+                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  assign [$$60, $$43] <- [true, $$c2.getField("x")] project: [$$60, $$43]
+                                  -- ASSIGN  |PARTITIONED|
+                                    project ([$$c2])
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        data-scan []<-[$$57, $$c2] <- Default.c2
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
+                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

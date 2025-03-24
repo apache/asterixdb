@@ -40,7 +40,7 @@ distribute result [$$50]
                                 left outer join (eq($$52, $$51))
                                 -- HYBRID_HASH_JOIN [$$52][$$51]  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     select (eq($$c.getField("c_nationkey"), 5)) project: [$$52]
                                     -- STREAM_SELECT  |PARTITIONED|
                                       exchange
@@ -101,7 +101,7 @@ distribute result [$$50]
                                         left outer join (eq($$52, $$51))
                                         -- HYBRID_HASH_JOIN [$$52][$$51]  |PARTITIONED|
                                           exchange
-                                          -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             select (eq($$c.getField("c_nationkey"), 5)) project: [$$52]
                                             -- STREAM_SELECT  |PARTITIONED|
                                               exchange

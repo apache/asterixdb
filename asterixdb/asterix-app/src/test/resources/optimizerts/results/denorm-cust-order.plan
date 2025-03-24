@@ -26,7 +26,7 @@ distribute result [$$96]
                     join (eq($$99, $$101))
                     -- HYBRID_HASH_JOIN [$$99][$$101]  |PARTITIONED|
                       exchange
-                      -- HASH_PARTITION_EXCHANGE [$$99]  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         data-scan []<-[$$99, $$c] <- custorder.Customers
                         -- DATASOURCE_SCAN  |PARTITIONED|
                           exchange

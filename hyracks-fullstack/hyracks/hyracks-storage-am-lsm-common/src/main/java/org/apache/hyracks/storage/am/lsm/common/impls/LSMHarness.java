@@ -220,8 +220,9 @@ public class LSMHarness implements ILSMHarness {
                     LOGGER.warn("Failure exiting components", e);
                     throw e;
                 } finally {
-                    if (failedOperation && (opType == LSMOperationType.MODIFICATION
-                            || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                    if (failedOperation
+                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION
+                                    || opType == LSMOperationType.BUDGET_FREE_MODIFICATION)) {
                         //When the operation failed, completeOperation() method must be called
                         //in order to decrement active operation count which was incremented
                         // in beforeOperation() method.
@@ -331,8 +332,9 @@ public class LSMHarness implements ILSMHarness {
             boolean needsCleanup = c.threadExit(opType, failedOperation, isMutableComponent);
             if (c.getType() == LSMComponentType.MEMORY) {
                 if (c.getState() == ComponentState.READABLE_UNWRITABLE) {
-                    if (isMutableComponent && (opType == LSMOperationType.MODIFICATION
-                            || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                    if (isMutableComponent
+                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION
+                                    || opType == LSMOperationType.BUDGET_FREE_MODIFICATION)) {
                         lsmIndex.changeFlushStatusForCurrentMutableCompoent(true);
                     }
                 }

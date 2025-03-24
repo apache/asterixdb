@@ -113,7 +113,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      */
 
     @Override
-    public SystemState getSystemStateOnMissingCheckpoint() {
+    public SystemState getSystemStateOnMissingCheckpoint() throws HyracksDataException {
         Set<CloudFile> existingMetadataFiles = getCloudMetadataPartitionFiles();
         CloudFile bootstrapMarkerPath = CloudFile.of(StoragePathUtil.getBootstrapMarkerRelativePath(nsPathResolver));
         if (existingMetadataFiles.isEmpty() || existingMetadataFiles.contains(bootstrapMarkerPath)) {
@@ -466,7 +466,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      * @param key   the key where the bytes will be written
      * @param bytes the bytes to write
      */
-    public final void put(String key, byte[] bytes) {
+    public final void put(String key, byte[] bytes) throws HyracksDataException {
         cloudClient.write(bucket, key, bytes);
     }
 
@@ -474,7 +474,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         return cloudClient;
     }
 
-    private Set<CloudFile> getCloudMetadataPartitionFiles() {
+    private Set<CloudFile> getCloudMetadataPartitionFiles() throws HyracksDataException {
         String metadataNamespacePath = StoragePathUtil.getNamespacePath(nsPathResolver,
                 MetadataConstants.METADATA_NAMESPACE, METADATA_PARTITION);
         return cloudClient.listObjects(bucket, metadataNamespacePath, IoUtil.NO_OP_FILTER);

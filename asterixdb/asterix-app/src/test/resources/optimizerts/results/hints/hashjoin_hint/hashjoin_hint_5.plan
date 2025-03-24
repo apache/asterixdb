@@ -39,7 +39,7 @@ distribute result [$$78]
                                       empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange
-                          -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             data-scan []<-[$$81, $$n] <- tpch.nation
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange

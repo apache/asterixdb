@@ -49,7 +49,7 @@ distribute result [$$122] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                       join (eq($$128, $$136)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- HYBRID_HASH_JOIN [$$128][$$136]  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- HASH_PARTITION_EXCHANGE [$$128]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           select (eq($$c.getField(6), "BUILDING")) project: [$$128] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- STREAM_SELECT  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

@@ -1,0 +1,1 @@
+{ "o": { "orderno": 1005, "custid": "C37", "order_date": "2020-08-30", "items": [ { "itemno": 460, "qty": 2, "price": 29.99 }, { "itemno": 347, "qty": 120, "price": 22.0 }, { "itemno": 780, "qty": 1, "price": 1500.0 }, { "itemno": 375, "qty": 2, "price": 149.98 } ] }, "i": { "itemno": 347, "qty": 120, "price": 22.0 } }

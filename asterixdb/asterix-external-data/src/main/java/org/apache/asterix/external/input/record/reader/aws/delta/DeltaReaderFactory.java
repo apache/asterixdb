@@ -62,6 +62,7 @@ import io.delta.kernel.data.FilteredColumnarBatch;
 import io.delta.kernel.data.Row;
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
+import io.delta.kernel.exceptions.KernelEngineException;
 import io.delta.kernel.exceptions.KernelException;
 import io.delta.kernel.expressions.Expression;
 import io.delta.kernel.expressions.Predicate;
@@ -78,6 +79,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
     private String scanState;
     protected final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
     protected ConfFactory confFactory;
+    private String filterExpressionStr;
 
     public List<PartitionWorkLoadBasedOnSize> getPartitionWorkLoadsBasedOnSize() {
         return partitionWorkLoadsBasedOnSize;
@@ -107,7 +109,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         Snapshot snapshot;
         try {
             snapshot = table.getLatestSnapshot(engine);
-        } catch (KernelException e) {
+        } catch (KernelException | KernelEngineException e) {
             LOGGER.info("Failed to get latest snapshot for table: {}", tableMetadataPath, e);
             throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }
@@ -132,34 +134,47 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         if (filterExpression != null) {
             scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema)
                     .withFilter(engine, (Predicate) filterExpression).build();
+            if (scan.getRemainingFilter().isPresent()) {
+                filterExpressionStr = PredicateSerDe.serializeExpressionToJson(scan.getRemainingFilter().get());
+            } else {
+                filterExpressionStr = null;
+            }
         } else {
             scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            filterExpressionStr = null;
         }
         scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
-        CloseableIterator<FilteredColumnarBatch> iter = scan.getScanFiles(engine);
+        List<Row> scanFiles;
+        try {
+            scanFiles = getScanFiles(scan, engine);
+        } catch (UnsupportedOperationException | IllegalStateException e) {
+            // Delta kernel API failed to apply expression due to type mismatch.
+            // We need to fall back to skip applying the filter and return all files.
+            LOGGER.info("Exception encountered while getting delta table files to scan {}", e.getMessage());
+            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            filterExpressionStr = null;
+            scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
+            scanFiles = getScanFiles(scan, engine);
+        }
+        LOGGER.info("Number of delta table parquet data files to scan: {}", scanFiles.size());
+        locationConstraints = getPartitions(appCtx);
+        configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
+        distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
+        issueWarnings(warnings, warningCollector);
+    }
 
+    private List<Row> getScanFiles(Scan scan, Engine engine) {
         List<Row> scanFiles = new ArrayList<>();
+        CloseableIterator<FilteredColumnarBatch> iter = scan.getScanFiles(engine);
         while (iter.hasNext()) {
-            FilteredColumnarBatch batch = null;
-            try {
-                batch = iter.next();
-            } catch (UnsupportedOperationException e) {
-                // Failed to apply expression due to type mismatch. We can skip the files where partitioned column
-                // type is different from the type of value provided in the predicate
-                LOGGER.info("Unsupported operation {}", e.getMessage());
-                continue;
-            }
+            FilteredColumnarBatch batch = iter.next();
             CloseableIterator<Row> rowIter = batch.getRows();
             while (rowIter.hasNext()) {
                 Row row = rowIter.next();
                 scanFiles.add(row);
             }
         }
-        LOGGER.info("Number of files to scan: {}", scanFiles.size());
-        locationConstraints = getPartitions(appCtx);
-        configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
-        distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
-        issueWarnings(warnings, warningCollector);
+        return scanFiles;
     }
 
     private void issueWarnings(List<Warning> warnings, IWarningCollector warningCollector) {
@@ -199,7 +214,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         try {
             int partition = context.getPartition();
             return new DeltaFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getScanFiles(), scanState,
-                    confFactory);
+                    confFactory, filterExpressionStr);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

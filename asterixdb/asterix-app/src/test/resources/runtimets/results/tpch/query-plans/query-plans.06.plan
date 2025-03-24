@@ -63,7 +63,7 @@ distribute result [$$74] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                       left outer join (eq($$79, $$77)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- HYBRID_HASH_JOIN [$$77][$$79]  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- HASH_PARTITION_EXCHANGE [$$77]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           select (and(ge($$76, "1996-05-01"), lt($$76, "1996-08-01"))) project: [$$75, $$77] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- STREAM_SELECT  |PARTITIONED|
                                             assign [$$75, $$76] <- [$$o.getField(5), $$o.getField(4)] project: [$$77, $$75, $$76] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

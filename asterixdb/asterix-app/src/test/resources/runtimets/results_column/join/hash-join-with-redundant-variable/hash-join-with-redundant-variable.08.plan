@@ -17,7 +17,7 @@ distribute result [$$38] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                 left outer join (and(eq($$43, $$44), eq($$56, $$47))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- HYBRID_HASH_JOIN [$$43, $$56][$$44, $$47]  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$43, $$56]  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     assign [$$56] <- [$$43] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$43]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -31,7 +31,7 @@ distribute result [$$38] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                               empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$44, $$47]  |PARTITIONED|
+                  -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
                     assign [$$47] <- [$$l.getField(2)] project: [$$44, $$47] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$44, $$l]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

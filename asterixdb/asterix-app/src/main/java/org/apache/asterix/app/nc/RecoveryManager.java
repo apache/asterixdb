@@ -131,7 +131,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
      * not supported, yet.
      */
     @Override
-    public SystemState getSystemState() throws ACIDException {
+    public SystemState getSystemState() throws ACIDException, HyracksDataException {
         //read checkpoint file
         Checkpoint checkpointObject = checkpointManager.getLatest();
         if (checkpointObject == null) {
@@ -284,7 +284,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         long lsn = -1;
         ILSMIndex index = null;
         LocalResource localResource = null;
-        DatasetLocalResource localResourceMetadata = null;
         boolean foundWinner = false;
         JobEntityCommits jobEntityWinners = null;
 
@@ -354,12 +353,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             //if index is not registered into IndexLifeCycleManager,
                             //create the index using LocalMetadata stored in LocalResourceRepository
                             //get partition path in this node
-                            localResourceMetadata = (DatasetLocalResource) localResource.getResource();
                             index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
                             if (index == null) {
                                 //#. create index instance and register to indexLifeCycleManager
-                                index = (ILSMIndex) localResourceMetadata.createInstance(serviceCtx);
-                                datasetLifecycleManager.register(localResource.getPath(), index);
+                                index = (ILSMIndex) datasetLifecycleManager.registerIfAbsent(localResource.getPath(),
+                                        null);
                                 datasetLifecycleManager.open(localResource.getPath());
                                 try {
                                     maxDiskLastLsn = getResourceLowWaterMark(localResource, datasetLifecycleManager,
@@ -899,6 +897,16 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             throw e;
         }
         return maxDiskLastLsn;
+    }
+
+    @Override
+    public boolean isLazyRecoveryEnabled() {
+        return false;
+    }
+
+    @Override
+    public void recoverIndexes(List<ILSMIndex> datasetPartitionIndexes) throws HyracksDataException {
+        // do-nothing
     }
 
     private class JobEntityCommits {

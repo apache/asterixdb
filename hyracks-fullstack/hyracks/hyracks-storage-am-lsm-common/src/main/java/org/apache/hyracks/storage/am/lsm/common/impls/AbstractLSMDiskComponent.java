@@ -79,6 +79,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         switch (opType) {
             case FORCE_MODIFICATION:
             case MODIFICATION:
+            case BUDGET_FREE_MODIFICATION:
             case REPLICATE:
             case SEARCH:
             case DISK_COMPONENT_SCAN:
@@ -107,6 +108,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
                 break;
             case FORCE_MODIFICATION:
             case MODIFICATION:
+            case BUDGET_FREE_MODIFICATION:
             case REPLICATE:
             case SEARCH:
             case DISK_COMPONENT_SCAN:

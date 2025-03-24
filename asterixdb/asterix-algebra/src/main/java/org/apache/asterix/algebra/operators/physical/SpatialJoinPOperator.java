@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.asterix.runtime.operators.joins.spatial.PlaneSweepJoinOperatorDescriptor;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -37,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSch
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -44,7 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -121,19 +121,19 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         keysLeftBranchTileId.add(keysLeftBranch.get(0));
         List<LogicalVariable> keysRightBranchTileId = new ArrayList<>();
         keysRightBranchTileId.add(keysRightBranch.get(0));
-        IPartitioningProperty pp1 = UnorderedPartitionedProperty.of(new ListSet<>(keysLeftBranchTileId),
-                context.getComputationNodeDomain());
-        IPartitioningProperty pp2 = UnorderedPartitionedProperty.of(new ListSet<>(keysRightBranchTileId),
-                context.getComputationNodeDomain());
+        INodeDomain nd = context.getComputationNodeDomain();
+        int[][] pm = context.getMetadataProvider().getPartitionsMap(nd);
+        IPartitioningProperty pp1 = OperatorPropertiesUtil.createUnorderedProperty(nd, pm, keysLeftBranchTileId);
+        IPartitioningProperty pp2 = OperatorPropertiesUtil.createUnorderedProperty(nd, pm, keysRightBranchTileId);
 
         List<ILocalStructuralProperty> localProperties1 = new ArrayList<>();
-        List<OrderColumn> orderColumns1 = new ArrayList<OrderColumn>();
+        List<OrderColumn> orderColumns1 = new ArrayList<>();
         orderColumns1.add(new OrderColumn(keysLeftBranch.get(0), OrderOperator.IOrder.OrderKind.ASC));
         orderColumns1.add(new OrderColumn(keysLeftBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
         localProperties1.add(new LocalOrderProperty(orderColumns1));
 
         List<ILocalStructuralProperty> localProperties2 = new ArrayList<>();
-        List<OrderColumn> orderColumns2 = new ArrayList<OrderColumn>();
+        List<OrderColumn> orderColumns2 = new ArrayList<>();
         orderColumns2.add(new OrderColumn(keysRightBranch.get(0), OrderOperator.IOrder.OrderKind.ASC));
         orderColumns2.add(new OrderColumn(keysRightBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
         localProperties2.add(new LocalOrderProperty(orderColumns2));

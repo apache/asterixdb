@@ -134,4 +134,10 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
         SplitComputeLocations locations = getSplits(MetadataConstants.DEFAULT_DATABASE);
         return (AlgebricksAbsolutePartitionConstraint) locations.getConstraints();
     }
+
+    @Override
+    public int[][] getPartitionsMap() {
+        StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
+        return partitionMap.getComputeToStorageMap(false);
+    }
 }

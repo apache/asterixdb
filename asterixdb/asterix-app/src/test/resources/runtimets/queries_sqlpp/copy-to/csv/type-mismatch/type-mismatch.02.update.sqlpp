@@ -16,14 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+// param max-warnings:json=100
+
 USE test;
 
 COPY (
-   SELECT "123" as id
-) toWriter
+    SELECT VALUE x
+    FROM [
+        {"id": 123, "name": missing},
+        {"id": 123},
+        {"id": "123", "name": "foo"},
+        {"id": 123, "lastName": "foo"},
+        {"id": 123, "name": null}] AS x
+    ) AS toWrite
 TO %adapter%
 PATH (%pathprefix% "copy-to-result", "csv", "type-mismatch")
-AS (id bigint)
+AS (id bigint, name string NOT UNKNOWN)
 WITH {
     %template_colons%,
     %additionalProperties%

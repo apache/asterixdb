@@ -265,7 +265,7 @@ public class LosslessADMJSONDataParserTest {
 
         ByteArrayAccessibleOutputStream baosPrint = new ByteArrayAccessibleOutputStream();
         IPrinter printer =
-                LosslessADMJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(inValue.getType()).createPrinter();
+                LosslessADMJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(inValue.getType()).createPrinter(null);
         printer.print(baosInSer.getByteArray(), 0, baosInSer.getLength(),
                 new PrintStream(baosPrint, true, StandardCharsets.UTF_8));
 

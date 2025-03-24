@@ -21,6 +21,8 @@ package org.apache.hyracks.api.dataflow.value;
 import java.io.PrintStream;
 import java.io.Serializable;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+
 public interface IResultSerializerFactory extends Serializable {
     /**
      * Creates a result serialized appender
@@ -29,5 +31,6 @@ public interface IResultSerializerFactory extends Serializable {
      *            - A print stream object to which the serialized results will be written.
      * @return A new instance of result serialized appender.
      */
-    public IResultSerializer createResultSerializer(RecordDescriptor recordDesc, PrintStream printStream);
+    public IResultSerializer createResultSerializer(IHyracksTaskContext context, RecordDescriptor recordDesc,
+            PrintStream printStream);
 }

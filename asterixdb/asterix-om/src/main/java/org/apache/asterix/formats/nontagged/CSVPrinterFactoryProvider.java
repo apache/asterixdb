@@ -64,15 +64,15 @@ import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
-    private ARecordType itemType;
-    private Map<String, String> configuration;
-    private SourceLocation sourceLocation;
+    private final ARecordType itemType;
+    private final Map<String, String> configuration;
+    private final SourceLocation sourceLocation;
 
     public static final CSVPrinterFactoryProvider INSTANCE =
             new CSVPrinterFactoryProvider(null, Collections.emptyMap(), null);
 
-    public static final CSVPrinterFactoryProvider createInstance(ARecordType itemType,
-            Map<String, String> configuration, SourceLocation sourceLocation) {
+    public static CSVPrinterFactoryProvider createInstance(ARecordType itemType, Map<String, String> configuration,
+            SourceLocation sourceLocation) {
         return new CSVPrinterFactoryProvider(itemType, configuration, sourceLocation);
     }
 
@@ -99,7 +99,7 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return AInt64PrinterFactory.INSTANCE;
                 case MISSING:
                 case NULL:
-                    ANullPrinterFactory.createInstance(configuration.get(KEY_NULL));
+                    return ANullPrinterFactory.createInstance(configuration.get(KEY_NULL));
                 case BOOLEAN:
                     return ABooleanPrinterFactory.INSTANCE;
                 case FLOAT:

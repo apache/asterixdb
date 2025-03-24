@@ -21,6 +21,7 @@ package org.apache.asterix.external.writer.printer;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class TextualExternalDatabasePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 9155959967258587588L;
@@ -31,7 +32,7 @@ public class TextualExternalDatabasePrinterFactory implements IExternalPrinterFa
     }
 
     @Override
-    public IExternalPrinter createPrinter() {
-        return new TextualExternalDatabasePrinter(printerFactory.createPrinter());
+    public IExternalPrinter createPrinter(IEvaluatorContext context) {
+        return new TextualExternalDatabasePrinter(printerFactory.createPrinter(context));
     }
 }

@@ -44,6 +44,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -112,8 +114,9 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
     @Override
     public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
+        IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
         buildFileSystem();
-        IExternalPrinter printer = printerFactory.createPrinter();
+        IExternalPrinter printer = printerFactory.createPrinter(evaluatorContext);
         return new HDFSExternalFileWriter(printer, fs, staticPath == null, pathSourceLocation);
     }
 

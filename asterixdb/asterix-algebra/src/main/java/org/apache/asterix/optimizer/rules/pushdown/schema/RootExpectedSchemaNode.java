@@ -77,4 +77,8 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     public boolean isAllFields() {
         return rootType == ALL_FIELDS_ROOT || rootType == ALL_FIELDS_ROOT_IRREPLACEABLE;
     }
+
+    public static boolean isPreDefinedRootNode(IExpectedSchemaNode node) {
+        return node == ALL_FIELDS_ROOT_NODE || node == ALL_FIELDS_ROOT_IRREPLACEABLE_NODE || node == EMPTY_ROOT_NODE;
+    }
 }

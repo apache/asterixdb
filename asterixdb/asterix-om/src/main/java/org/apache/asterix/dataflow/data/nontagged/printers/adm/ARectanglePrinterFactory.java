@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class ARectanglePrinterFactory implements IPrinterFactory {
 
@@ -42,7 +43,7 @@ public class ARectanglePrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

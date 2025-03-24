@@ -61,7 +61,7 @@ distribute result [$$192] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                           left outer join (eq($$193, $$240)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- HYBRID_HASH_JOIN [$$193][$$240]  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- HASH_PARTITION_EXCHANGE [$$193]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               assign [$$116] <- [{"x_id": $$T0.getField("x_id")}] project: [$$116, $$193] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ASSIGN  |PARTITIONED|
                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -493,7 +493,7 @@ distribute result [$$192] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                                                   replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                   -- REPLICATE  |PARTITIONED|
                                                                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                    -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -947,7 +947,7 @@ distribute result [$$192] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                                                                           replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                                           -- REPLICATE  |PARTITIONED|
                                                                                                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                                            -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                               replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -1378,7 +1378,7 @@ distribute result [$$192] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                                                                                         replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                                                         -- REPLICATE  |PARTITIONED|
                                                                                                                                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                                                          -- HASH_PARTITION_EXCHANGE [$$399]  |PARTITIONED|
+                                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                             replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

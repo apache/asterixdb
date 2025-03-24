@@ -1,0 +1,67 @@
+distribute result [$$55] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$55] <- [{"$1": $$58}] project: [$$55] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$58] <- [agg-sql-sum($$62)] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$62] <- [agg-sql-count(1)] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+          -- AGGREGATE  |PARTITIONED|
+            select ($$47) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              project ([$$47]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  group by ([$$61 := $$56]) decor ([]) {
+                            aggregate [$$47] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (not(is-missing($$60))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                project ([$$60]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         } [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                  -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$56) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                      -- STABLE_SORT [$$56(ASC)]  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$56, $$60]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              left outer join (not(if-missing-or-null(neq($$59, $$43), false))) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 1.0E12, total-cost: 1.000006E12]
+                              -- NESTED_LOOP  |PARTITIONED|
+                                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$59] <- [$$c1.getField("x")] project: [$$56, $$59] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                  -- ASSIGN  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      data-scan []<-[$$56, $$c1] <- Default.c1 [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  assign [$$60, $$43] <- [true, $$c2.getField("x")] project: [$$60, $$43] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ASSIGN  |PARTITIONED|
+                                    project ([$$c2]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        data-scan []<-[$$57, $$c2] <- Default.c2 [cardinality: 1000000.0, doc-size: -1.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

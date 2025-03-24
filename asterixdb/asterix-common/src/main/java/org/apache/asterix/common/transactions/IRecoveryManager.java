@@ -20,10 +20,12 @@ package org.apache.asterix.common.transactions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
  * Provides API for failure recovery. Failure could be at application level and
@@ -61,7 +63,7 @@ public interface IRecoveryManager {
      * @return SystemState The state of the system
      * @throws ACIDException
      */
-    SystemState getSystemState() throws ACIDException;
+    SystemState getSystemState() throws ACIDException, HyracksDataException;
 
     /**
      * Rolls back a transaction.
@@ -128,4 +130,19 @@ public interface IRecoveryManager {
      */
     void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException;
 
+    /**
+     * Ensures that {@code datasetPartitionIndexes} are consistent by performing component id level recovery
+     *
+     * @param datasetPartitionIndexes A list of indexes associated with a specific
+     *                                dataset partition that require recovery.
+     * @throws HyracksDataException If an error occurs during the recovery or rollback
+     *                              process, indicating a failure to achieve consistency.
+     */
+    void recoverIndexes(List<ILSMIndex> datasetPartitionIndexes) throws HyracksDataException;
+
+    /**
+     * determines if the indexes need to be recovered lazily at the time of their first access
+     * @return
+     */
+    boolean isLazyRecoveryEnabled();
 }

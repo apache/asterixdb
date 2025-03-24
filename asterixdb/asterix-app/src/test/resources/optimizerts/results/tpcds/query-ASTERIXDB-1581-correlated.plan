@@ -88,27 +88,23 @@ distribute result [$$143]
                                                       left outer join (eq($$154, $$144))
                                                       -- HYBRID_HASH_JOIN [$$144][$$154]  |PARTITIONED|
                                                         exchange
-                                                        -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
-                                                          project ([$$144])
-                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          assign [$$144, $$item] <- [$$206, $$202] project: [$$144]
+                                                          -- ASSIGN  |PARTITIONED|
                                                             exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              assign [$$144, $$item] <- [$$206, $$202] project: [$$144, $$item]
-                                                              -- ASSIGN  |PARTITIONED|
+                                                              replicate
+                                                              -- REPLICATE  |PARTITIONED|
                                                                 exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  replicate
-                                                                  -- REPLICATE  |PARTITIONED|
+                                                                  unnest-map [$$206, $$202] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$247, 1, $$248, true, true, true)
+                                                                  -- BTREE_SEARCH  |PARTITIONED|
                                                                     exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      unnest-map [$$206, $$202] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$247, 1, $$248, true, true, true)
-                                                                      -- BTREE_SEARCH  |PARTITIONED|
-                                                                        exchange
-                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          assign [$$247, $$248] <- [1, 1]
-                                                                          -- ASSIGN  |PARTITIONED|
-                                                                            empty-tuple-source
-                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                      assign [$$247, $$248] <- [1, 1]
+                                                                      -- ASSIGN  |PARTITIONED|
+                                                                        empty-tuple-source
+                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           assign [$$163, $$154] <- [$$213, $$205] project: [$$163, $$154]
@@ -227,7 +223,7 @@ distribute result [$$143]
                                                                                                     left outer join (eq($$207, $$206))
                                                                                                     -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
                                                                                                       exchange
-                                                                                                      -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                         replicate
                                                                                                         -- REPLICATE  |PARTITIONED|
                                                                                                           exchange
@@ -399,7 +395,7 @@ distribute result [$$143]
                                                                                                   left outer join (eq($$207, $$206))
                                                                                                   -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
                                                                                                     exchange
-                                                                                                    -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       replicate
                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                         exchange
@@ -526,7 +522,7 @@ distribute result [$$143]
                                                                                                                                     left outer join (eq($$207, $$206))
                                                                                                                                     -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
                                                                                                                                       exchange
-                                                                                                                                      -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                         replicate
                                                                                                                                         -- REPLICATE  |PARTITIONED|
                                                                                                                                           exchange

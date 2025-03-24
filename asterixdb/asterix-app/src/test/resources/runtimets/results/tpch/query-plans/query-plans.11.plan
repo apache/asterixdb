@@ -57,7 +57,7 @@ distribute result [$$185] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                               join (eq($$195, $$206)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- HYBRID_HASH_JOIN [$$195][$$206]  |PARTITIONED|
                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$195]  |PARTITIONED|
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project: [$$195, $$187, $$188, $$189, $$191, $$192, $$201] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -99,7 +99,7 @@ distribute result [$$185] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                       empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- HASH_PARTITION_EXCHANGE [$$199]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   assign [$$190] <- [$$n.getField(1)] project: [$$190, $$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ASSIGN  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

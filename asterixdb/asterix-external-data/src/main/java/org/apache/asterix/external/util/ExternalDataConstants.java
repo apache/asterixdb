@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.LongSupplier;
@@ -385,8 +386,8 @@ public class ExternalDataConstants {
     public static final Set<String> PARQUET_WRITER_SUPPORTED_VERSION;
     public static final int PARQUET_DICTIONARY_PAGE_SIZE = 1048576;
     public static final List<String> WRITER_SUPPORTED_QUOTES;
-    public static final List<ATypeTag> CSV_WRITER_SUPPORTED_DATA_TYPES =
-            List.of(ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.UINT8,
+    public static final EnumSet<ATypeTag> CSV_WRITER_SUPPORTED_DATA_TYPES =
+            EnumSet.of(ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.UINT8,
                     ATypeTag.UINT16, ATypeTag.UINT64, ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING,
                     ATypeTag.BOOLEAN, ATypeTag.DATETIME, ATypeTag.UINT32, ATypeTag.DATE, ATypeTag.TIME);
     public static final String PARQUET_MAX_SCHEMAS_KEY = "max-schemas";

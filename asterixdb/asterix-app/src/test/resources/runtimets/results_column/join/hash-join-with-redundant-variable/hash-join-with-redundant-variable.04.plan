@@ -17,7 +17,7 @@ distribute result [$$51] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                 join (eq($$56, $$58)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- HYBRID_HASH_JOIN [$$58][$$56]  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     project ([$$58]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

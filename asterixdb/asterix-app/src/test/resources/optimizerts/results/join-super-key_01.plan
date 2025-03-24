@@ -11,7 +11,7 @@ distribute result [$$37]
           join (and(eq($$39, $$41), eq($$44, $$45), eq($$46, $$42)))
           -- HYBRID_HASH_JOIN [$$39, $$44, $$46][$$41, $$45, $$42]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$39, $$44, $$46]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$39, $$46]  |PARTITIONED|
               assign [$$46, $$44] <- [$$li.getField(2), $$li.getField(5)] project: [$$39, $$44, $$46]
               -- ASSIGN  |PARTITIONED|
                 project ([$$39, $$li])
@@ -25,7 +25,7 @@ distribute result [$$37]
                         empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$41, $$45, $$42]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$45] <- [$$ps.getField(3)] project: [$$41, $$45, $$42]
               -- ASSIGN  |PARTITIONED|
                 exchange

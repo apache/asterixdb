@@ -19,6 +19,7 @@
 
 package org.apache.asterix.om.pointables.printer.csv;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.COPY_TO_SCHEMA_MISMATCH;
 import static org.apache.asterix.om.types.hierachy.ATypeHierarchy.isCompatible;
 
 import java.io.PrintStream;
@@ -37,30 +38,42 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ACSVRecordPrinter extends ARecordPrinter {
-    private ARecordType schema;
-    private boolean firstRecord;
-    private boolean header;
-    private final String recordDelimiter;
     private static final List<ATypeTag> supportedTypes = List.of(ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
             ATypeTag.BIGINT, ATypeTag.UINT8, ATypeTag.UINT16, ATypeTag.UINT64, ATypeTag.FLOAT, ATypeTag.DOUBLE,
             ATypeTag.STRING, ATypeTag.BOOLEAN, ATypeTag.DATETIME, ATypeTag.UINT32, ATypeTag.DATE, ATypeTag.TIME);
 
-    public ACSVRecordPrinter(final String startRecord, final String endRecord, final String fieldSeparator,
-            final String fieldNameSeparator, String recordDelimiter, ARecordType schema, String headerStr) {
-        super(startRecord, endRecord, fieldSeparator, fieldNameSeparator);
+    private final IWarningCollector warningCollector;
+    private final ARecordType schema;
+    private final boolean header;
+    private final String recordDelimiter;
+    private final Map<String, ATypeTag> recordSchemaDetails = new HashMap<>();
+    private boolean firstRecord;
+    private List<String> expectedFieldNames;
+    private List<IAType> expectedFieldTypes;
+
+    public ACSVRecordPrinter(IWarningCollector warningCollector, boolean header, String fieldSeparator,
+            String recordDelimiter, ARecordType schema) {
+        super("", "", fieldSeparator, null);
+        this.warningCollector = warningCollector;
+        this.header = header;
         this.schema = schema;
-        this.header = headerStr != null && Boolean.parseBoolean(headerStr);
         this.firstRecord = true;
         this.recordDelimiter = recordDelimiter;
+        if (schema != null) {
+            this.expectedFieldNames = Arrays.asList(schema.getFieldNames());
+            this.expectedFieldTypes = Arrays.asList(schema.getFieldTypes());
+        }
     }
 
     @Override
     public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
             throws HyracksDataException {
-        // backward compatibility -- No Schema print it as it is from recordAccessor
+        // backward compatibility - no schema provided, print it as is from recordAccessor
         if (schema == null) {
             super.printRecord(recordAccessor, ps, visitor);
         } else {
@@ -72,13 +85,14 @@ public class ACSVRecordPrinter extends ARecordPrinter {
             throws HyracksDataException {
         // check the schema for the record
         // try producing the record into the record of expected schema
-        Map<String, ATypeTag> schemaDetails = new HashMap<>();
-        if (checkCSVSchema(recordAccessor, schemaDetails)) {
+        if (isValidSchema(recordAccessor)) {
             nameVisitorArg.first = ps;
             itemVisitorArg.first = ps;
-            if (header) {
-                addHeader(recordAccessor, ps, visitor);
+            if (header && firstRecord) {
+                printHeader(recordAccessor, ps, visitor);
+                firstRecord = false;
             }
+
             // add record delimiter
             // by default the separator between the header and the records is "\n"
             if (firstRecord) {
@@ -95,12 +109,7 @@ public class ACSVRecordPrinter extends ARecordPrinter {
                 String fieldName = UTF8StringUtil.toString(fieldNamePointable.getByteArray(),
                         fieldNamePointable.getStartOffset() + 1);
                 final IVisitablePointable fieldValue = fieldValues.get(i);
-                final ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]);
-                ATypeTag expectedTypeTag = schemaDetails.get(fieldName);
-                if (!isCompatible(typeTag, expectedTypeTag)) {
-                    expectedTypeTag = ATypeTag.NULL;
-                }
+                ATypeTag expectedTypeTag = recordSchemaDetails.get(fieldName);
                 if (first) {
                     first = false;
                 } else {
@@ -111,72 +120,88 @@ public class ACSVRecordPrinter extends ARecordPrinter {
         }
     }
 
-    private boolean checkCSVSchema(ARecordVisitablePointable recordAccessor, Map<String, ATypeTag> schemaDetails) {
-        final List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-        final List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
-        final List<String> expectedFieldNames = Arrays.asList(schema.getFieldNames());
-        final List<IAType> expectedFieldTypes = Arrays.asList(schema.getFieldTypes());
-        if (fieldNames.size() != expectedFieldNames.size()) {
-            // todo: raise warning about schema mismatch
+    private boolean isValidSchema(ARecordVisitablePointable recordAccessor) {
+        recordSchemaDetails.clear();
+        final List<IVisitablePointable> actualFieldNamePointables = recordAccessor.getFieldNames();
+        final List<IVisitablePointable> actualFieldValuePointables = recordAccessor.getFieldValues();
+        if (actualFieldNamePointables.size() != expectedFieldNames.size()) {
+            warnMismatchType("expected schema has '" + expectedFieldNames.size() + "' fields but actual record has '"
+                    + actualFieldNamePointables.size() + "' fields");
             return false;
         }
-        for (int i = 0; i < fieldNames.size(); ++i) {
-            final IVisitablePointable fieldName = fieldNames.get(i);
-            String fieldColumnName = UTF8StringUtil.toString(fieldName.getByteArray(), fieldName.getStartOffset() + 1);
-            final IVisitablePointable fieldValue = fieldValues.get(i);
-            final ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                    .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]);
-            ATypeTag expectedType;
-            boolean canNull = false;
-            if (expectedFieldNames.contains(fieldColumnName)) {
-                IAType expectedIAType = expectedFieldTypes.get(expectedFieldNames.indexOf(fieldColumnName));
-                if (!supportedTypes.contains(expectedIAType.getTypeTag())) {
-                    if (expectedIAType.getTypeTag().equals(ATypeTag.UNION)) {
-                        AUnionType unionType = (AUnionType) expectedIAType;
-                        expectedType = unionType.getActualType().getTypeTag();
-                        canNull = unionType.isNullableType();
-                        if (!supportedTypes.contains(expectedType)) {
-                            // unsupported DataType
-                            return false;
-                        }
-                    } else {
-                        // todo: unexpected type
-                        return false;
-                    }
-                } else {
-                    expectedType = expectedIAType.getTypeTag();
-                }
-                schemaDetails.put(fieldColumnName, expectedType);
-            } else {
-                // todo: raise warning about schema mismatch
+
+        for (int i = 0; i < actualFieldNamePointables.size(); i++) {
+            String actualFieldName = getFieldName(actualFieldNamePointables.get(i));
+            ATypeTag actualValueType = getValueType(actualFieldValuePointables.get(i));
+            if (!expectedFieldNames.contains(actualFieldName)) {
+                warnMismatchType("field '" + actualFieldName + "' does not exist in the expected schema");
                 return false;
             }
-            if (typeTag.equals(ATypeTag.MISSING) || (typeTag.equals(ATypeTag.NULL) && !canNull)) {
-                // todo: raise warning about schema mismatch
+
+            boolean isNullable = false;
+            IAType expectedIAType = expectedFieldTypes.get(expectedFieldNames.indexOf(actualFieldName));
+            ATypeTag expectedType = expectedIAType.getTypeTag();
+            if (expectedType.equals(ATypeTag.UNION)) {
+                AUnionType unionType = (AUnionType) expectedIAType;
+                expectedType = unionType.getActualType().getTypeTag();
+                isNullable = unionType.isNullableType();
+            }
+
+            if (actualValueType.equals(ATypeTag.MISSING)) {
+                warnMismatchType("field '" + actualFieldName + "' cannot be missing");
                 return false;
             }
-            if (!isCompatible(typeTag, expectedType) && !canNull) {
+
+            if ((actualValueType.equals(ATypeTag.NULL) && !isNullable)) {
+                warnMismatchType("field '" + actualFieldName + "' is required, found 'null'");
                 return false;
             }
+
+            if (actualValueType.equals(ATypeTag.NULL)) {
+                recordSchemaDetails.put(actualFieldName, ATypeTag.NULL);
+                continue;
+            }
+
+            if (!supportedTypes.contains(actualValueType)) {
+                warnMismatchType("type '" + actualValueType + "' for field '" + actualFieldName
+                        + "' is not supported in CSV format");
+                return false;
+            }
+
+            if (!isCompatible(actualValueType, expectedType)) {
+                warnMismatchType("incompatible type for field '" + actualFieldName + "', expected '" + expectedType
+                        + "' but got '" + actualValueType + "'");
+                return false;
+            }
+            recordSchemaDetails.put(actualFieldName, expectedType);
         }
         return true;
     }
 
-    private void addHeader(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
+    private void printHeader(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
             throws HyracksDataException {
-        //check if it is a first record
-        if (firstRecord) {
-            final List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-            boolean first = true;
-            for (int i = 0; i < fieldNames.size(); ++i) {
-                if (first) {
-                    first = false;
-                } else {
-                    ps.print(fieldSeparator);
-                }
-                printFieldName(ps, visitor, fieldNames.get(i));
+        boolean first = true;
+        for (IVisitablePointable fieldName : recordAccessor.getFieldNames()) {
+            if (first) {
+                first = false;
+            } else {
+                ps.print(fieldSeparator);
             }
-            firstRecord = false;
+            printFieldName(ps, visitor, fieldName);
+        }
+    }
+
+    private String getFieldName(IVisitablePointable pointable) {
+        return UTF8StringUtil.toString(pointable.getByteArray(), pointable.getStartOffset() + 1);
+    }
+
+    private ATypeTag getValueType(IVisitablePointable pointable) {
+        return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pointable.getByteArray()[pointable.getStartOffset()]);
+    }
+
+    private void warnMismatchType(String warningMessage) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(null, COPY_TO_SCHEMA_MISMATCH, warningMessage));
         }
     }
 }

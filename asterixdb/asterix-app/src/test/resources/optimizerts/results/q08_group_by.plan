@@ -11,7 +11,7 @@ distribute result [$$203]
           join (eq($$205, $$233))
           -- HYBRID_HASH_JOIN [$$205][$$233]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$242] <- [$$s.getField(3)] project: [$$242, $$205]
               -- ASSIGN  |PARTITIONED|
                 exchange
@@ -115,7 +115,7 @@ distribute result [$$203]
                                                               empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                     exchange
-                                                    -- HASH_PARTITION_EXCHANGE [$$211]  |PARTITIONED|
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       select (eq($$r1.getField(1), "AMERICA")) project: [$$211]
                                                       -- STREAM_SELECT  |PARTITIONED|
                                                         exchange
@@ -127,7 +127,7 @@ distribute result [$$203]
                                                               empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$212]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       select (eq($$p.getField(4), "ECONOMY ANODIZED STEEL")) project: [$$212]
                       -- STREAM_SELECT  |PARTITIONED|
                         exchange

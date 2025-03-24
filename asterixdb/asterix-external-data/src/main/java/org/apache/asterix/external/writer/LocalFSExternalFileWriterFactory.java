@@ -30,6 +30,8 @@ import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -72,7 +74,9 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
             }
             validator = NO_OP_VALIDATOR;
         }
-        return new LocalFSExternalFileWriter(printerFactory.createPrinter(), validator, pathSourceLocation);
+        IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
+        return new LocalFSExternalFileWriter(printerFactory.createPrinter(evaluatorContext), validator,
+                pathSourceLocation);
     }
 
     @Override

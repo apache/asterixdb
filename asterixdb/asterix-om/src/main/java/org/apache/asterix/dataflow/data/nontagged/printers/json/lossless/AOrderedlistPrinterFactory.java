@@ -30,6 +30,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AOrderedlistPrinterFactory implements IPrinterFactory {
@@ -42,7 +43,7 @@ public class AOrderedlistPrinterFactory implements IPrinterFactory {
     }
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         PointableAllocator allocator = new PointableAllocator();
         final IAType inputType = orderedlistType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.ARRAY)
                 : orderedlistType;

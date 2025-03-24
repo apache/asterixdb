@@ -1,0 +1,413 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+INSERT INTO websales.customers
+([
+    {
+        "custid": "C13",
+        "name": "T. Cody",
+        "address": {
+            "street": "201 Main St.",
+            "city": "St. Louis, MO",
+            "zipcode": "63101"
+        },
+        "rating": 750
+    },
+    {
+        "custid": "C25",
+        "name": "M. Sinclair",
+        "address": {
+            "street": "690 River St.",
+            "city": "Hanover, MA",
+            "zipcode": "02340"
+        },
+        "rating": 690
+    },
+    {
+        "custid": "C31",
+        "name": "B. Pruitt",
+        "address": {
+            "street": "360 Mountain Ave.",
+            "city": "St. Louis, MO",
+            "zipcode": "63101"
+        }
+    },
+    {
+        "custid": "C35",
+        "name": "J. Roberts",
+        "address": {
+            "street": "420 Green St.",
+            "city": "Boston, MA",
+            "zipcode": "02115"
+        },
+        "rating": 565
+    },
+    {
+        "custid": "C37",
+        "name": "T. Henry",
+        "address": {
+            "street": "120 Harbor Blvd.",
+            "city": "Boston, MA",
+            "zipcode": "02115"
+        },
+        "rating": 750
+    },
+    {
+        "custid": "C41",
+        "name": "R. Dodge",
+        "address": {
+            "street": "150 Market St.",
+            "city": "St. Louis, MO",
+            "zipcode": "63101"
+        },
+        "rating": 640
+    },
+    {
+        "custid": "C47",
+        "name": "S. Logan",
+        "address": {
+            "street": "Via del Corso",
+            "city": "Rome, Italy"
+        },
+        "rating": 625
+    }
+]);
+INSERT INTO websales.orders
+([
+    {
+        "orderno": 1001,
+        "custid": "C41",
+        "order_date": "2020-04-29",
+        "ship_date": "2020-05-03",
+        "items": [
+            {
+                "itemno": 347,
+                "qty": 5,
+                "price": 19.99
+            },
+            {
+                "itemno": 193,
+                "qty": 2,
+                "price": 28.89
+            }
+        ]
+    },
+    {
+        "orderno": 1002,
+        "custid": "C13",
+        "order_date": "2020-05-01",
+        "ship_date": "2020-05-03",
+        "items": [
+            {
+                "itemno": 460,
+                "qty": 95,
+                "price": 29.99
+            },
+            {
+                "itemno": 680,
+                "qty": 150,
+                "price": 22.99
+            }
+        ]
+    },
+    {
+        "orderno": 1003,
+        "custid": "C31",
+        "order_date": "2020-06-15",
+        "ship_date": "2020-06-16",
+        "items": [
+            {
+                "itemno": 120,
+                "qty": 2,
+                "price": 88.99
+            },
+            {
+                "itemno": 460,
+                "qty": 3,
+                "price": 29.99
+            }
+        ]
+    },
+    {
+        "orderno": 1004,
+        "custid": "C35",
+        "order_date": "2020-07-10",
+        "ship_date": "2020-07-15",
+        "items": [
+            {
+                "itemno": 680,
+                "qty": 6,
+                "price": 29.99
+            },
+            {
+                "itemno": 195,
+                "qty": 4,
+                "price": 35.00
+            }
+        ]
+    },
+    {
+        "orderno": 1005,
+        "custid": "C37",
+        "order_date": "2020-08-30",
+        "items": [
+            {
+                "itemno": 460,
+                "qty": 2,
+                "price": 29.99
+            },
+            {
+                "itemno": 347,
+                "qty": 120,
+                "price": 22.00
+            },
+            {
+                "itemno": 780,
+                "qty": 1,
+                "price": 1500.00
+            },
+            {
+                "itemno": 375,
+                "qty": 2,
+                "price": 149.98
+            }
+        ]
+    },
+    {
+        "orderno": 1006,
+        "custid": "C41",
+        "order_date": "2020-09-02",
+        "ship_date": "2020-09-04",
+        "items": [
+            {
+                "itemno": 680,
+                "qty": 51,
+                "price": 25.98
+            },
+            {
+                "itemno": 120,
+                "qty": 65,
+                "price": 85.00
+            },
+            {
+                "itemno": 460,
+                "qty": 120,
+                "price": 29.98
+            }
+        ]
+    },
+    {
+        "orderno": 1007,
+        "custid": "C13",
+        "order_date": "2020-09-13",
+        "ship_date": "2020-09-20",
+        "items": [
+            {
+                "itemno": 185,
+                "qty": 5,
+                "price": 21.99
+            },
+            {
+                "itemno": 680,
+                "qty": 1,
+                "price": 20.50
+            }
+        ]
+    },
+    {
+        "orderno": 1008,
+        "custid": "C13",
+        "order_date": "2020-10-13",
+        "items": [
+            {
+                "itemno": 460,
+                "qty": 20,
+                "price": 29.99
+            }
+        ]
+    },
+    {
+        "orderno": 1009,
+        "custid": "C13",
+        "order_date": "2020-10-13",
+        "items": []
+    }
+]);
+
+INSERT INTO inventory.products
+([
+  {
+    "itemno": 120,
+    "category": ["computer"],
+    "name": "16TB External SDD",
+    "descrip": "16TB storage add-on for Pacbook laptops",
+    "manuf": "El Cheapo",
+    "listprice": 99.00,
+    "kind": "electric",
+    "power": "USB"
+  },
+  {
+    "itemno": 185,
+    "category": ["office", "essentials"],
+    "name": "Stapler",
+    "descrip": "Manual stapler for up to 25 sheets of paper",
+    "manuf": "Office Min",
+    "listprice": 21.99
+  },
+  {
+    "itemno": 193,
+    "category": ["office"],
+    "name": "Super Stapler",
+    "descrip": "Electric stapler for up to 250 sheets of paper",
+    "manuf": "Office Min",
+    "listprice": 28.89,
+    "kind": "electric",
+    "power": "115V"
+  },
+  {
+    "itemno": 195,
+    "category": ["computer", "office"],
+    "name": "Computer Stand",
+    "manuf": "ISeeYa",
+    "listprice": 49.00
+  },
+  {
+    "itemno": 347,
+    "category": ["essentials"],
+    "name": "Beer Cooler Backpack",
+    "manuf": "Robo Brew",
+    "listprice": 25.95,
+    "kind": "electric",
+    "power": "D batteries"
+  },
+  {
+    "itemno": 375,
+    "category": ["music"],
+    "name": "Stratuscaster Guitar",
+    "manuf": "Fender Bender",
+    "listprice": 149.99
+  },
+  {
+    "itemno": 460,
+    "category": ["music", "clothing"],
+    "name": "Fender Bender T-Shirt",
+    "descrip": "Extra Large T-Shirt for Fender Bender fans",
+    "manuf": "Fender Bender",
+    "listprice": 34.99,
+    "kind": "clothing",
+    "size": "XL"
+  },
+  {
+    "itemno": 680,
+    "category": ["music", "clothing"],
+    "name": "Fender Bender Tank Top",
+    "descrip": "Medium Tank Top for Fender Bender fans",
+    "manuf": "Fender Bender",
+    "listprice": 29.99,
+    "kind": "clothing",
+    "size": "M"
+  },
+  {
+    "itemno": 780,
+    "category": ["essentials", "kitchen"],
+    "name": "Automatic Beer Opener",
+    "descrip": "Robotic beer bottle opener",
+    "manuf": "Robo Brew",
+    "listprice": 29.95,
+    "kind": "electric",
+    "power": "AA batteries"
+  }
+]);
+
+INSERT INTO marketing.reviews
+([
+  {
+    "itemno": 193,
+    "name": "Super Stapler",
+    "rating": 5,
+    "comment": "This electric stapler is the bomb",
+    "custid": "C41",
+    "rev_date": "2020-05-13"
+  },
+  {
+    "itemno": 347,
+    "name": "Beer Cooler Backpack",
+    "rating": 5,
+    "comment": "Every camper needs one of these for sure",
+    "custid": "C41",
+    "rev_date": "2020-05-13"
+  },
+  {
+    "itemno": 375,
+    "name": "Stratuscaster Guitar",
+    "rating": 4,
+    "comment": "Anxiously awaiting its arrival!",
+    "custid": "C37",
+    "rev_date": "2020-09-07"
+  },
+  {
+    "itemno": 460,
+    "name": "Fender Bender T-Shirt",
+    "rating": 2,
+    "comment": "Had to return it 'cause it shrunk when washed",
+    "custid": "C13",
+    "rev_date": "2020-10-20"
+  },
+  {
+    "itemno": 460,
+    "name": "Fender Bender T-Shirt",
+    "rating": 2,
+    "comment": "Order one size up, it shrinks when you wash it",
+    "custid": "C41",
+    "rev_date": "2020-09-11"
+  },
+  {
+    "itemno": 680,
+    "name": "Fender Bender Tank Top",
+    "rating": 3,
+    "comment": "Like it, but had to reorder in a bigger size",
+    "custid": "C35",
+    "rev_date": "2020-07-25"
+  },
+  {
+    "itemno": 680,
+    "name": "Fender Bender Tank Top",
+    "rating": 2,
+    "comment": "Size seems to be smaller than expected",
+    "custid": "C13",
+    "rev_date": "2020-05-04"
+  },
+  {
+    "itemno": 780,
+    "name": "Automatic Beer Opener",
+    "rating": 1,
+    "comment": "Still waiting for mine to actually arrive...",
+    "custid": "C37",
+    "rev_date": "2020-09-30"
+  }
+]);
+
+INSERT INTO marketing.inventory(
+{
+ "id": "1",
+ "bought": [{ "qty": 2 }, { "qty": 100 }],
+ "sold": [{"lqty": 10}, {"lqty": 40}]
+}
+);

@@ -235,8 +235,6 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         try {
             INcApplicationContext appCtx =
                     (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
-            writer.open();
-            writerOpen = true;
             for (int i = 0; i < partitions.length; i++) {
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
                 indexHelpersOpen[i] = true;
@@ -282,6 +280,8 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                         appCtx.getTransactionSubsystem().getLogManager());
             }
+            writer.open();
+            writerOpen = true;
             createTupleProcessors(sourceLoc);
             keySearchCmp =
                     BTreeUtils.getSearchMultiComparator(((ITreeIndex) indexes[0]).getComparatorFactories(), frameTuple);

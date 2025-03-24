@@ -26,5 +26,6 @@ public enum LSMOperationType {
     FLUSH,
     MERGE,
     REPLICATE,
-    DISK_COMPONENT_SCAN
+    DISK_COMPONENT_SCAN,
+    BUDGET_FREE_MODIFICATION
 }

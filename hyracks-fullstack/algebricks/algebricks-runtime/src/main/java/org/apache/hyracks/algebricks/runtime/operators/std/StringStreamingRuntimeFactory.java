@@ -27,8 +27,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.ITupleParser;
@@ -59,8 +61,9 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
         final IPrinter[] printers = new IPrinter[printerFactories.length];
+        IEvaluatorContext evaluatorContext = new EvaluatorContext(ctx);
         for (int i = 0; i < printerFactories.length; i++) {
-            printers[i] = printerFactories[i].createPrinter();
+            printers[i] = printerFactories[i].createPrinter(evaluatorContext);
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {

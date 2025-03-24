@@ -12,7 +12,7 @@ distribute result [$$32]
           -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$35, $$ds2, $$37, $$ds1])
+              project ([$$ds2, $$35, $$37, $$ds1])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -23,8 +23,8 @@ distribute result [$$32]
                       order (ASC, $$35)
                       -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
-                          project ([$$35, $$ds2])
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$ds2, $$35])
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

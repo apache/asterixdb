@@ -19,7 +19,7 @@ distribute result [$$149]
                   left outer join (eq($$152, $$151))
                   -- HYBRID_HASH_JOIN [$$151][$$152]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$151]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       assign [$$160] <- [$$tenk.getField(0)] project: [$$160, $$151]
                       -- ASSIGN  |PARTITIONED|
                         exchange
@@ -45,7 +45,7 @@ distribute result [$$149]
                               left outer join (eq($$153, $$152))
                               -- HYBRID_HASH_JOIN [$$152][$$153]  |PARTITIONED|
                                 exchange
-                                -- HASH_PARTITION_EXCHANGE [$$152]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   assign [$$116] <- [{"unique1": $$tenk.getField(0), "unique2": $$152}] project: [$$152, $$116]
                                   -- ASSIGN  |PARTITIONED|
                                     exchange
@@ -59,7 +59,7 @@ distribute result [$$149]
                                             empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange
-                                -- HASH_PARTITION_EXCHANGE [$$153]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   assign [$$124] <- [{"unique1": $$tenk.getField(0), "unique2": $$153}] project: [$$124, $$153]
                                   -- ASSIGN  |PARTITIONED|
                                     exchange

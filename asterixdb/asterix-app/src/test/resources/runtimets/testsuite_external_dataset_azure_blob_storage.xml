@@ -278,10 +278,10 @@
         <output-dir compare="Text">csv-error-checks</output-dir>
         <expected-error>ASX1079: Compilation error: TYPE/AS Expression is required for csv format</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name wrongDataType (in line 27, at column 4)</expected-error>
-        <expected-error>ASX3124: 'ABCD' is not a valid quote. The length of a quote should be 1</expected-error>
+        <expected-error>ASX1217: 'ABCD' is not a valid quote. The length of a quote should be 1</expected-error>
         <expected-error>ASX3049: 'wrongDelimiter' is not a valid delimiter. The length of a delimiter should be 1</expected-error>
-        <expected-error>ASX3126: 'wrongEscape' is not a valid escape. The length of a escape should be 1</expected-error>
-        <expected-error>ASX3125: 'ABCD' is not a valid force-quote input. The length of a force-quote input should be 1 character</expected-error>
+        <expected-error>ASX1219: 'wrongEscape' is not a valid escape. The length of a escape should be 1</expected-error>
+        <expected-error>ASX1218: 'ABCD' is not a valid force-quote input. The length of a force-quote input should be 1 character</expected-error>
         <expected-error>ASX1207: 'object' type not supported in csv format</expected-error>
         <expected-error>ASX1207: 'array' type not supported in csv format</expected-error>
         <expected-error>Syntax error: Both 'TYPE()' and 'AS()' are provided. Please use either 'TYPE()' or 'AS()'.</expected-error>

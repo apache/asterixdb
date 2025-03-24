@@ -24,6 +24,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class APolygonPrinterFactory implements IPrinterFactory {
 
@@ -49,7 +50,7 @@ public class APolygonPrinterFactory implements IPrinterFactory {
     };
 
     @Override
-    public IPrinter createPrinter() {
+    public IPrinter createPrinter(IEvaluatorContext context) {
         return PRINTER;
     }
 }

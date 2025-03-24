@@ -31,10 +31,13 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,13 +54,20 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.util.Span;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The runtime of a SuperActivity, which internally executes a DAG of one-to-one
  * connected activities in a single thread.
  */
 public class SuperActivityOperatorNodePushable implements IOperatorNodePushable {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final String CLASS_ABBREVIATION = "SAO";
+    private static final long TASKS_COMPLETION_POLL_SECONDS = TimeUnit.MINUTES.toSeconds(2);
     private final Map<ActivityId, IOperatorNodePushable> operatorNodePushables = new HashMap<>();
     private final List<IOperatorNodePushable> operatorNodePushablesBFSOrder = new ArrayList<>();
     private final Map<ActivityId, IActivity> startActivities;
@@ -219,6 +229,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     private void runInParallel(OperatorNodePushableAction action) throws HyracksDataException {
         List<Future<Void>> tasks = new ArrayList<>(operatorNodePushablesBFSOrder.size());
+        Set<Thread> runningThreads = ConcurrentHashMap.newKeySet();
         Queue<Throwable> failures = new ArrayBlockingQueue<>(operatorNodePushablesBFSOrder.size());
         final Semaphore startSemaphore = new Semaphore(1 - operatorNodePushablesBFSOrder.size());
         final Semaphore completeSemaphore = new Semaphore(1 - operatorNodePushablesBFSOrder.size());
@@ -226,6 +237,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         try {
             for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
                 tasks.add(ctx.getExecutorService().submit(() -> {
+                    runningThreads.add(Thread.currentThread());
                     startSemaphore.release();
                     try {
                         Thread.currentThread().setName(CLASS_ABBREVIATION + ":" + ctx.getJobletContext().getJobId()
@@ -236,6 +248,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                         throw th;
                     } finally {
                         ctx.unsubscribeThreadFromStats();
+                        runningThreads.remove(Thread.currentThread());
                         completeSemaphore.release();
                     }
                     return null;
@@ -257,20 +270,60 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         }
         if (root != null) {
             final Throwable failure = root;
-            cancelTasks(tasks, startSemaphore, completeSemaphore);
+            cancelTasks(tasks, runningThreads, startSemaphore, completeSemaphore);
             failures.forEach(t -> ExceptionUtils.suppress(failure, t));
             throw HyracksDataException.create(failure);
         }
     }
 
-    private void cancelTasks(List<Future<Void>> tasks, Semaphore startSemaphore, Semaphore completeSemaphore) {
+    private void cancelTasks(List<Future<Void>> tasks, Set<Thread> runningThreads, Semaphore startSemaphore,
+            Semaphore completeSemaphore) {
+        boolean cancelCompleted = false;
         try {
             startSemaphore.acquireUninterruptibly();
-            for (Future<Void> task : tasks) {
-                task.cancel(true);
-            }
+            cancelCompleted = cancelTasks(tasks, runningThreads, completeSemaphore);
         } finally {
-            completeSemaphore.acquireUninterruptibly();
+            if (!cancelCompleted) {
+                completeSemaphore.acquireUninterruptibly();
+            }
+        }
+    }
+
+    private boolean cancelTasks(List<Future<Void>> tasks, Set<Thread> runningThreads, Semaphore completeSemaphore) {
+        Map<Thread, StackTraceElement[]> preCancelStackTraces = new HashMap<>();
+        for (Thread runningThread : runningThreads) {
+            preCancelStackTraces.put(runningThread, runningThread.getStackTrace());
+        }
+        for (Future<Void> task : tasks) {
+            task.cancel(true);
+        }
+        Span completionPoll = Span.init(TASKS_COMPLETION_POLL_SECONDS, TimeUnit.SECONDS);
+        while (true) {
+            completionPoll.reset();
+            if (completionPoll.tryAcquireUninterruptibly(completeSemaphore)) {
+                return true;
+            }
+            preCancelStackTraces.keySet().removeIf(Predicate.not(runningThreads::contains));
+            preCancelStackTraces.forEach((thread, stack) -> {
+                Throwable t = new Throwable(thread.getName() + "pre-interrupt stack");
+                t.setStackTrace(stack);
+                LOGGER.warn("Task of job {} did not complete within {}: ", ctx.getJobletContext().getJobId(),
+                        completionPoll, t);
+            });
+            for (Thread runningThread : runningThreads) {
+                preCancelStackTraces.put(runningThread, runningThread.getStackTrace());
+            }
+            interruptRunningThreads(runningThreads);
+        }
+    }
+
+    private static void interruptRunningThreads(Set<Thread> threads) {
+        for (Thread thread : threads) {
+            try {
+                thread.interrupt();
+            } catch (Throwable t) {
+                LOGGER.debug("failed to interrupt thread {}", thread, t);
+            }
         }
     }
 }

@@ -27,7 +27,7 @@ distribute result [$$50]
                           left outer join (and(eq($$54, $$56), eq($$53, $$55)))
                           -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
                             exchange
-                            -- HASH_PARTITION_EXCHANGE [$$54, $$53]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               data-scan []<-[$$53, $$54, $$cs1] <- tpcds.catalog_sales
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
@@ -35,7 +35,7 @@ distribute result [$$50]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             exchange
-                            -- HASH_PARTITION_EXCHANGE [$$56, $$55]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               data-scan []<-[$$55, $$56, $$cr1] <- tpcds.catalog_returns
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
@@ -43,7 +43,7 @@ distribute result [$$50]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       data-scan []<-[$$57, $$i1] <- tpcds.item
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange

@@ -21,8 +21,8 @@ package org.apache.hyracks.algebricks.runtime.evaluators;
 
 import java.util.Objects;
 
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 

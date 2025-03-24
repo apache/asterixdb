@@ -35,7 +35,7 @@ distribute result [$$145] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                   join (and(eq($$148, $$169), eq($$149, $$154))) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                                   -- HYBRID_HASH_JOIN [$$148, $$149][$$169, $$154]  |PARTITIONED|
                                     exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                                    -- HASH_PARTITION_EXCHANGE [$$148, $$149]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       assign [$$177] <- [$$ps.getField(3)] project: [$$177, $$148, $$149] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                       -- ASSIGN  |PARTITIONED|
                                         exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
@@ -61,7 +61,7 @@ distribute result [$$145] [cardinality: 9.223372036854776E16, op-cost: 0.0, tota
                                                 empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                            -- HASH_PARTITION_EXCHANGE [$$147]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               select (contains($$p.getField(1), "green")) project: [$$147] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                               -- STREAM_SELECT  |PARTITIONED|
                                 exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]

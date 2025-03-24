@@ -11,7 +11,7 @@ distribute result [$$145]
           join (eq($$147, $$169))
           -- HYBRID_HASH_JOIN [$$147][$$169]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$147]  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               select (contains($$p.getField(1), "green")) project: [$$147]
               -- STREAM_SELECT  |PARTITIONED|
                 exchange
@@ -31,7 +31,7 @@ distribute result [$$145]
                   join (and(eq($$148, $$169), eq($$149, $$154)))
                   -- HYBRID_HASH_JOIN [$$148, $$149][$$169, $$154]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$148, $$149]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       assign [$$177] <- [$$ps.getField(3)] project: [$$177, $$148, $$149]
                       -- ASSIGN  |PARTITIONED|
                         exchange
@@ -71,7 +71,7 @@ distribute result [$$145]
                                               empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                     exchange
-                                    -- HASH_PARTITION_EXCHANGE [$$151]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       assign [$$165] <- [$$n.getField(1)] project: [$$165, $$151]
                                       -- ASSIGN  |PARTITIONED|
                                         exchange

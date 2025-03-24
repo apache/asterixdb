@@ -23,6 +23,7 @@ import org.apache.asterix.external.writer.compressor.IExternalFileCompressStream
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 
 public class CsvExternalFilePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 8971234908711234L;
@@ -36,7 +37,7 @@ public class CsvExternalFilePrinterFactory implements IExternalPrinterFactory {
     }
 
     @Override
-    public IExternalPrinter createPrinter() {
-        return new CsvExternalFilePrinter(printerFactory.createPrinter(), compressStreamFactory);
+    public IExternalPrinter createPrinter(IEvaluatorContext context) {
+        return new CsvExternalFilePrinter(printerFactory.createPrinter(context), compressStreamFactory);
     }
 }

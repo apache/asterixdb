@@ -69,7 +69,7 @@ distribute result [$$125]
                                                           join (eq($$127, $$140))
                                                           -- HYBRID_HASH_JOIN [$$127][$$140]  |PARTITIONED|
                                                             exchange
-                                                            -- HASH_PARTITION_EXCHANGE [$$127]  |PARTITIONED|
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               assign [$$126] <- [$$a.getField(8)]
                                                               -- ASSIGN  |PARTITIONED|
                                                                 exchange
@@ -107,7 +107,7 @@ distribute result [$$125]
                                                                 empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                             exchange
-                                            -- HASH_PARTITION_EXCHANGE [$$131]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               project ([$$131])
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 exchange
@@ -119,7 +119,7 @@ distribute result [$$125]
                                                       empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                     exchange
-                                    -- HASH_PARTITION_EXCHANGE [$$132]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       project ([$$132])
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         exchange

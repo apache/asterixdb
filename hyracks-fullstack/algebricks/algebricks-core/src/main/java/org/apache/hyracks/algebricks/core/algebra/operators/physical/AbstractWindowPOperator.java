@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSch
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -49,7 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -79,8 +80,9 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
         IPartitioningProperty pp;
         switch (op.getExecutionMode()) {
             case PARTITIONED:
-                pp = UnorderedPartitionedProperty.of(new ListSet<>(partitionColumns),
-                        context.getComputationNodeDomain());
+                INodeDomain nodeDomain = context.getComputationNodeDomain();
+                int[][] partitionsMap = context.getMetadataProvider().getPartitionsMap(nodeDomain);
+                pp = OperatorPropertiesUtil.createUnorderedProperty(nodeDomain, partitionsMap, partitionColumns);
                 break;
             case UNPARTITIONED:
                 pp = IPartitioningProperty.UNPARTITIONED;

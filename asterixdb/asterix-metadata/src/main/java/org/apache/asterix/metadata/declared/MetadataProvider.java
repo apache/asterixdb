@@ -25,6 +25,7 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -130,6 +131,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
@@ -1872,6 +1874,20 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IScalarEvaluatorFactory filterEvalFactory =
                 expressionRuntimeProvider.createEvaluatorFactory(filterExpr, typeEnv, inputSchemas, context);
         return new AsterixTupleFilterFactory(filterEvalFactory, context.getBinaryBooleanInspectorFactory());
+    }
+
+    @Override
+    public int[][] getPartitionsMap(INodeDomain nodeDomain) {
+        if (!(nodeDomain instanceof DefaultNodeGroupDomain inputDomain)) {
+            return null;
+        }
+        String[] inputLocations = inputDomain.getNodes();
+        AlgebricksAbsolutePartitionConstraint locations = dataPartitioningProvider.getClusterLocations();
+        String[] clusterLocations = locations.getLocations();
+        if (!Arrays.equals(inputLocations, clusterLocations)) {
+            return null;
+        }
+        return dataPartitioningProvider.getPartitionsMap();
     }
 
     private void validateRecordType(IAType itemType) throws AlgebricksException {

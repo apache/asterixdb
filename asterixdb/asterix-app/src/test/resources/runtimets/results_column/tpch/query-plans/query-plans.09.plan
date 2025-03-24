@@ -73,7 +73,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                               join (and(eq($$202, $$221), eq($$203, $$223))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- HYBRID_HASH_JOIN [$$202, $$203][$$221, $$223]  |PARTITIONED|
                                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- HASH_PARTITION_EXCHANGE [$$202, $$203]  |PARTITIONED|
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   join (true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- NESTED_LOOP  |PARTITIONED|
                                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -101,7 +101,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                               empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- HASH_PARTITION_EXCHANGE [$$221, $$223]  |PARTITIONED|
+                                                                -- HASH_PARTITION_EXCHANGE [$$221]  |PARTITIONED|
                                                                   assign [$$231, $$230, $$223, $$221] <- [$$l.getField(6), $$l.getField(5), $$l.getField(2), $$l.getField(1)] project: [$$230, $$231, $$205, $$221, $$223] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     project ([$$205, $$l]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -115,7 +115,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                             empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           select (and(ge($$201, "1995-01-01"), le($$201, "1996-12-31"))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- STREAM_SELECT  |PARTITIONED|
                                                             assign [$$226, $$201] <- [$$o.getField(1), $$o.getField(4)] project: [$$206, $$226, $$201] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -129,7 +129,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                                     empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$207]  |PARTITIONED|
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   assign [$$218] <- [$$c.getField(3)] project: [$$218, $$207] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -141,7 +141,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- HASH_PARTITION_EXCHANGE [$$208]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           assign [$$212] <- [$$n1.getField(2)] project: [$$212, $$208] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- ASSIGN  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -157,7 +157,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                       empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- HASH_PARTITION_EXCHANGE [$$209]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   assign [$$232] <- [$$n2.getField(1)] project: [$$232, $$209] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ASSIGN  |PARTITIONED|
                                     assign [$$209, $$n2] <- [$$208, $$n1] project: [$$209, $$n2] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -175,7 +175,7 @@ distribute result [$$199] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                 empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- HASH_PARTITION_EXCHANGE [$$210]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           select (eq($$r.getField(1), "AMERICA")) project: [$$210] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_SELECT  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

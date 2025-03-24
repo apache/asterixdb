@@ -34,7 +34,7 @@ public interface IPartitionBootstrapper {
      * @return the systems state in case the checkpoint upon calling {@link IRecoveryManager#getSystemState()}
      * is missing the checkpoint file
      */
-    IRecoveryManager.SystemState getSystemStateOnMissingCheckpoint();
+    IRecoveryManager.SystemState getSystemStateOnMissingCheckpoint() throws HyracksDataException;
 
     /**
      * Bootstraps the node's partitions directory by doing the following:

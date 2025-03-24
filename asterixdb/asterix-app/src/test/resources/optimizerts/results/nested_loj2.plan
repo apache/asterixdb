@@ -45,7 +45,7 @@ distribute result [$$70]
                           left outer join (eq($$75, $$71))
                           -- HYBRID_HASH_JOIN [$$71][$$75]  |PARTITIONED|
                             exchange
-                            -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               data-scan []<-[$$71, $$c] <- tpch.Customers
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange

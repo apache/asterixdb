@@ -37,7 +37,7 @@ distribute result [$$186] [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, tot
                           join (and(eq($$201, $$199), eq($$197, $$210))) [cardinality: 552.41, doc-size: 68.16, op-cost: 28797.6, total-cost: 980731.73]
                           -- HYBRID_HASH_JOIN [$$199, $$210][$$201, $$197]  |PARTITIONED|
                             exchange [cardinality: 150141.11, doc-size: 10.0, op-cost: 0.0, total-cost: 150000.0]
-                            -- HASH_PARTITION_EXCHANGE [$$199, $$210]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$210]  |PARTITIONED|
                               assign [$$210] <- [$$o.getField(1)] project: [$$191, $$192, $$211, $$212, $$190, $$199, $$210] [cardinality: 150141.11, doc-size: 10.0, op-cost: 0.0, total-cost: 150000.0]
                               -- ASSIGN  |PARTITIONED|
                                 project ([$$212, $$211, $$190, $$191, $$192, $$199, $$o]) [cardinality: 150141.11, doc-size: 10.0, op-cost: 0.0, total-cost: 150000.0]
@@ -135,7 +135,7 @@ distribute result [$$186] [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, tot
                                                                             empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             exchange [cardinality: 15000.0, doc-size: 10.0, op-cost: 0.0, total-cost: 15000.0]
-                            -- HASH_PARTITION_EXCHANGE [$$201, $$197]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               assign [$$201] <- [$$c.getField(3)] project: [$$201, $$197] [cardinality: 15000.0, doc-size: 10.0, op-cost: 0.0, total-cost: 15000.0]
                               -- ASSIGN  |PARTITIONED|
                                 exchange [cardinality: 15000.0, doc-size: 10.0, op-cost: 0.0, total-cost: 15000.0]

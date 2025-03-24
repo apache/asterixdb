@@ -48,7 +48,7 @@ distribute result [$$96]
                                       order (ASC, $$100) (ASC, $$i1) (ASC, $$103) (ASC, $$99)
                                       -- STABLE_SORT [$$100(ASC), $$i1(ASC), $$103(ASC), $$99(ASC)]  |PARTITIONED|
                                         exchange
-                                        -- HASH_PARTITION_EXCHANGE [$$100, $$i1, $$103, $$99]  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           assign [$$99, $$103] <- [$$i1.getField("ts"), $$i1.getField("pid")]
                                           -- ASSIGN  |PARTITIONED|
                                             unnest $$i1 <- scan-collection($$104) project: [$$100, $$107, $$i1]

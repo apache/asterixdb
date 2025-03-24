@@ -44,7 +44,7 @@ distribute result [$$69]
                                   join (eq($$95, $$74))
                                   -- HYBRID_HASH_JOIN [$$95][$$74]  |PARTITIONED|
                                     exchange
-                                    -- HASH_PARTITION_EXCHANGE [$$95]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       assign [$$80] <- [$$t1.getField(0).getField(0)] project: [$$80, $$95]
                                       -- ASSIGN  |PARTITIONED|
                                         assign [$$95, $$t1] <- [$$74, $$98] project: [$$95, $$t1]
@@ -207,7 +207,7 @@ distribute result [$$69]
                                             join (eq($$95, $$74))
                                             -- HYBRID_HASH_JOIN [$$95][$$74]  |PARTITIONED|
                                               exchange
-                                              -- HASH_PARTITION_EXCHANGE [$$95]  |PARTITIONED|
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 assign [$$80] <- [$$t1.getField(0).getField(0)] project: [$$80, $$95]
                                                 -- ASSIGN  |PARTITIONED|
                                                   assign [$$95, $$t1] <- [$$74, $$98] project: [$$95, $$t1]

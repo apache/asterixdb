@@ -19,7 +19,7 @@ distribute result [$$29]
                   join (eq($$31, $$36))
                   -- HYBRID_HASH_JOIN [$$31][$$36]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$31]  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       project ([$$ds2, $$31])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange

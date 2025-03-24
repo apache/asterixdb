@@ -89,7 +89,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         super.beforeOperation(index, opType, searchCallback, modificationCallback);
-        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION
+                || opType == LSMOperationType.BUDGET_FREE_MODIFICATION) {
             incrementNumActiveOperations(modificationCallback);
         }
     }
@@ -99,7 +100,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
             throws HyracksDataException {
         super.completeOperation(index, opType, searchCallback, modificationCallback);
-        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION
+                || opType == LSMOperationType.BUDGET_FREE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             flushIfNeeded();
         }

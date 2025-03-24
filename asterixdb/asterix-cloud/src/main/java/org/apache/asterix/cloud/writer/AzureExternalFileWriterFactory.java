@@ -35,6 +35,8 @@ import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -93,9 +95,10 @@ public final class AzureExternalFileWriterFactory extends AbstractCloudExternalF
     @Override
     public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
+        IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
         buildClient(((IApplicationContext) context.getJobletContext().getServiceContext().getApplicationContext()));
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        IExternalPrinter printer = printerFactory.createPrinter();
+        IExternalPrinter printer = printerFactory.createPrinter(evaluatorContext);
         IWarningCollector warningCollector = context.getWarningCollector();
         return new AzureExternalFileWriter(printer, cloudClient, bucket, staticPath == null, warningCollector,
                 pathSourceLocation);

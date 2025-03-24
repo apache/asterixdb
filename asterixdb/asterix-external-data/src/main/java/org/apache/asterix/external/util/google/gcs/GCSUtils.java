@@ -26,6 +26,7 @@ import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
+import static org.apache.asterix.external.util.google.gcs.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_TYPE;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_UNAUTHENTICATED;
@@ -94,6 +95,7 @@ public class GCSUtils {
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
         StorageOptions.Builder builder = StorageOptions.newBuilder();
+        builder.setStorageRetryStrategy(DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY);
 
         // default credentials provider
         if (applicationDefaultCredentials != null) {
@@ -259,12 +261,12 @@ public class GCSUtils {
                 // Setting these values instead of HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH is supported
                 // in com.google.cloud.bigdataoss:util-hadoop only up to version hadoop3-2.2.x and is removed in
                 // version 3.x.y, which also removed support for hadoop-2
-                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.PRIVATE_KEY_ID,
-                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.PRIVATE_KEY_ID).asText());
-                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.PRIVATE_KEY,
-                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.PRIVATE_KEY).asText());
-                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.CLIENT_EMAIL,
-                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.CLIENT_EMAIL).asText());
+                conf.set(GCSConstants.HadoopAuthServiceAccount.PRIVATE_KEY_ID,
+                        jsonCreds.get(GCSConstants.JsonCredentials.PRIVATE_KEY_ID).asText());
+                conf.set(GCSConstants.HadoopAuthServiceAccount.PRIVATE_KEY,
+                        jsonCreds.get(GCSConstants.JsonCredentials.PRIVATE_KEY).asText());
+                conf.set(GCSConstants.HadoopAuthServiceAccount.CLIENT_EMAIL,
+                        jsonCreds.get(GCSConstants.JsonCredentials.CLIENT_EMAIL).asText());
             } catch (JsonProcessingException e) {
                 throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "Unable to parse Json Credentials",
                         getMessageOrToString(e));

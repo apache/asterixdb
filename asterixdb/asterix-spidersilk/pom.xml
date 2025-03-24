@@ -27,6 +27,18 @@
     <version>0.9.10-SNAPSHOT</version>
   </parent>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <failIfNoTests>false</failIfNoTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>

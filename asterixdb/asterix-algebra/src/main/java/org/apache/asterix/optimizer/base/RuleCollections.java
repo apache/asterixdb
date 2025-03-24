@@ -137,7 +137,6 @@ import org.apache.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerRu
 import org.apache.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PopulateResultMetadataRule;
-import org.apache.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
 import org.apache.hyracks.algebricks.rewriter.rules.PushGroupByIntoSortRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushMapOperatorDownThroughProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushNestedOrderByUnderPreSortedGroupByRule;
@@ -395,7 +394,6 @@ public final class RuleCollections {
     public static List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection(
             SetAsterixPhysicalOperatorsRule.CostMethodsFactory cmf) {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
-        physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
         physicalRewritesAllLevels.add(new ExtractBatchableExternalFunctionCallsRule());
         //Turned off the following rule for now not to change OptimizerTest results.
         physicalRewritesAllLevels.add(new SetupCommitExtensionOpRule());

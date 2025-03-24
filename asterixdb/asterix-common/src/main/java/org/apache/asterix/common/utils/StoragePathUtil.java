@@ -139,6 +139,11 @@ public class StoragePathUtil {
         return ResourceReference.of(fileAbsolutePath).getFileRelativePath().toString();
     }
 
+    public static String getDatasetPartitionPath(String relativePath) {
+        int separatorIndex = relativePath.lastIndexOf(File.separatorChar);
+        return relativePath.substring(0, separatorIndex);
+    }
+
     /**
      * Create a file
      * Note: this method is not thread safe. It is the responsibility of the caller to ensure no path conflict when
@@ -229,7 +234,17 @@ public class StoragePathUtil {
     }
 
     public static boolean isRelativeParent(FileReference parent, FileReference child) {
-        return child.getRelativePath().startsWith(parent.getRelativePath());
+        String childPath = child.getRelativePath();
+        String parentPath = parent.getRelativePath();
+        boolean isMatch = childPath.startsWith(parentPath);
+        if (isMatch) {
+            int parentPathLength = parentPath.length();
+            if (childPath.length() == parentPathLength) {
+                return true;
+            }
+            return childPath.charAt(parentPathLength) == File.separatorChar;
+        }
+        return false;
     }
 
     public static String getNamespacePath(INamespacePathResolver nsPathResolver, Namespace namespace, int partition) {

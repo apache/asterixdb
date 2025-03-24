@@ -110,6 +110,24 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                     }
                 }
                 break;
+            case BUDGET_FREE_MODIFICATION:
+                if (isMutableComponent) {
+                    if (state == ComponentState.READABLE_WRITABLE) {
+                        // Even when the memory component has the writable state, vbc may be temporarily full
+                        // or this memory component may be full.
+                        writerCount++;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (state == ComponentState.READABLE_UNWRITABLE
+                            || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                        readerCount++;
+                    } else {
+                        return false;
+                    }
+                }
+                break;
             case MODIFICATION:
                 if (isMutableComponent) {
                     if (state == ComponentState.READABLE_WRITABLE && !vbc.isFull(this) && !vbc.isFull()) {
@@ -161,6 +179,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         boolean cleanup = false;
         switch (opType) {
             case FORCE_MODIFICATION:
+            case BUDGET_FREE_MODIFICATION:
             case MODIFICATION:
                 if (isMutableComponent) {
                     writerCount--;

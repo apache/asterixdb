@@ -55,7 +55,7 @@ distribute result [$$116]
                                             empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                               exchange
-                              -- HASH_PARTITION_EXCHANGE [$$122]  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 assign [$$123] <- [$$o.getField("o_orderpriority")] project: [$$123, $$122]
                                 -- ASSIGN  |PARTITIONED|
                                   exchange

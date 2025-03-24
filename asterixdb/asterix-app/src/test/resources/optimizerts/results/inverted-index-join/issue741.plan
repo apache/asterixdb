@@ -30,7 +30,7 @@ distribute result [$$58]
                     join (eq($$71, $$60))
                     -- HYBRID_HASH_JOIN [$$71][$$60]  |PARTITIONED|
                       exchange
-                      -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         select (and(ge($$59, datetime: { 2011-06-18T14:10:17.000 }), lt($$59, datetime: { 2011-06-18T15:10:17.000 }))) project: [$$71]
                         -- STREAM_SELECT  |PARTITIONED|
                           assign [$$59] <- [$$t.getField(3)] project: [$$71, $$59]

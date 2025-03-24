@@ -105,9 +105,10 @@ public class GCSWriter implements ICloudWriter {
             setUploadId();
 
             writer.close();
-            writer = null;
         } catch (IOException | RuntimeException e) {
             throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
+        } finally {
+            writer = null;
         }
         log("FINISHED");
     }

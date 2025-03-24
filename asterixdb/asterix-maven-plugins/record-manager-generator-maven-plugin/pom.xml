@@ -28,6 +28,18 @@
   <packaging>maven-plugin</packaging>
   <name>record-manager-generator-maven-plugin</name>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <failIfNoTests>false</failIfNoTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <properties>
     <root.dir>${basedir}/../..</root.dir>
   </properties>

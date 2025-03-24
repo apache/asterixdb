@@ -2,35 +2,17 @@ distribute result [$$18] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-c
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$18] <- [{"f_1": $$15, "f_2": $$17}] project: [$$18] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
+    assign [$$18] <- [{"f_1": array-slice($$19, 0, 1), "f_2": array-slice($$19, 0, 2)}] project: [$$18] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
     -- ASSIGN  |PARTITIONED|
-      project ([$$15, $$17]) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-      -- STREAM_PROJECT  |PARTITIONED|
-        subplan {
-                  assign [$$17] <- [array-slice($$20, 0, 2)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- ASSIGN  |LOCAL|
-                    project ([$$20]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- STREAM_PROJECT  |LOCAL|
-                      nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-        -- SUBPLAN  |PARTITIONED|
-          subplan {
-                    assign [$$15] <- [array-slice($$20, 0, 1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- ASSIGN  |LOCAL|
-                      nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-          -- SUBPLAN  |PARTITIONED|
-            assign [$$20] <- [$$collection1.getField("array1")] project: [$$20] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-            -- ASSIGN  |PARTITIONED|
-              project ([$$collection1]) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-              -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$19, $$collection1] <- test.collection1 [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
-                  -- DATASOURCE_SCAN  |PARTITIONED|
-                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+      assign [$$19] <- [$$collection1.getField("array1")] project: [$$19] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$collection1]) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            data-scan []<-[$$20, $$collection1] <- test.collection1 [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1.0]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

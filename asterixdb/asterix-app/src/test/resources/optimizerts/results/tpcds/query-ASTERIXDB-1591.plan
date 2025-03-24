@@ -143,7 +143,7 @@ distribute result [$$148]
                                                                                                     empty-tuple-source
                                                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                           exchange
-                                                                                          -- HASH_PARTITION_EXCHANGE [$$151]  |PARTITIONED|
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                             data-scan []<-[$$151, $$ca] <- tpcds.customer_address
                                                                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                               exchange
@@ -179,7 +179,7 @@ distribute result [$$148]
                                                                                               replicate
                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                 exchange
-                                                                                                -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900)))
                                                                                                   -- STREAM_SELECT  |PARTITIONED|
                                                                                                     exchange
@@ -223,7 +223,7 @@ distribute result [$$148]
                                                                           replicate
                                                                           -- REPLICATE  |PARTITIONED|
                                                                             exchange
-                                                                            -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                               select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900)))
                                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                                 exchange
@@ -267,7 +267,7 @@ distribute result [$$148]
                                                       replicate
                                                       -- REPLICATE  |PARTITIONED|
                                                         exchange
-                                                        -- HASH_PARTITION_EXCHANGE [$$154]  |PARTITIONED|
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           select (and(lt($$dd1.getField(10), 4), eq($$dd1.getField(6), 1900)))
                                                           -- STREAM_SELECT  |PARTITIONED|
                                                             exchange

@@ -34,7 +34,7 @@ commit
                         order (ASC, $$40)
                         -- STABLE_SORT [$$40(ASC)]  |PARTITIONED|
                           exchange
-                          -- HASH_PARTITION_EXCHANGE [$$40]  |PARTITIONED|
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             project ([$$x, $$33, $$44, $$40])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange

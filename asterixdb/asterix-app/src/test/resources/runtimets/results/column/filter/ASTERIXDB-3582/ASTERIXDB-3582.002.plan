@@ -1,0 +1,133 @@
+distribute result [$$163] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$163] <- [{"$1": $$162}] project: [$$163] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$162]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_PROJECT  |PARTITIONED|
+        subplan {
+                  aggregate [$$162] <- [listify($$161)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- AGGREGATE  |LOCAL|
+                    assign [$$161] <- [{"$2": switch-case(true, and($$140, $$146), "positive", and($$153, $$159), "negative", "neutral")}] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |LOCAL|
+                      project ([$$140, $$146, $$153, $$159]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STREAM_PROJECT  |LOCAL|
+                        subplan {
+                                  aggregate [$$159] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- AGGREGATE  |LOCAL|
+                                    select (not(if-missing-or-null($$158, false))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_SELECT  |LOCAL|
+                                      project ([$$158]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        subplan {
+                                                  aggregate [$$158] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- AGGREGATE  |LOCAL|
+                                                    select (not(if-missing-or-null(neq($$w, $#6), false))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- STREAM_SELECT  |LOCAL|
+                                                      unnest $#6 <- scan-collection(split($$166, " ")) project: [$$w, $#6] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- UNNEST  |LOCAL|
+                                                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- SUBPLAN  |LOCAL|
+                                          unnest $$w <- scan-collection(array: [ "bomb", "needs" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- UNNEST  |LOCAL|
+                                            project ([$$166]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- SUBPLAN  |LOCAL|
+                          subplan {
+                                    aggregate [$$153] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- AGGREGATE  |LOCAL|
+                                      select ($$152) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_SELECT  |LOCAL|
+                                        project ([$$152]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_PROJECT  |LOCAL|
+                                          subplan {
+                                                    aggregate [$$152] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- AGGREGATE  |LOCAL|
+                                                      select (eq($$w, $#5)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- STREAM_SELECT  |LOCAL|
+                                                        unnest $#5 <- scan-collection(split($$166, " ")) project: [$$w, $#5] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- UNNEST  |LOCAL|
+                                                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- SUBPLAN  |LOCAL|
+                                            unnest $$w <- scan-collection(array: [ "shrinks", "shrunk", "smaller" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- UNNEST  |LOCAL|
+                                              project ([$$166]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- STREAM_PROJECT  |LOCAL|
+                                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- SUBPLAN  |LOCAL|
+                            subplan {
+                                      aggregate [$$146] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- AGGREGATE  |LOCAL|
+                                        select (not(if-missing-or-null($$145, false))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_SELECT  |LOCAL|
+                                          project ([$$145]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            subplan {
+                                                      aggregate [$$145] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- AGGREGATE  |LOCAL|
+                                                        select (not(if-missing-or-null(neq($$w, $#4), false))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- STREAM_SELECT  |LOCAL|
+                                                          unnest $#4 <- scan-collection(split($$166, " ")) project: [$$w, $#4] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- UNNEST  |LOCAL|
+                                                            nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                   } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- SUBPLAN  |LOCAL|
+                                              unnest $$w <- scan-collection(array: [ "shrinks", "shrunk", "smaller" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- UNNEST  |LOCAL|
+                                                project ([$$166]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- STREAM_PROJECT  |LOCAL|
+                                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                   } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- SUBPLAN  |LOCAL|
+                              subplan {
+                                        aggregate [$$140] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- AGGREGATE  |LOCAL|
+                                          select ($$139) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- STREAM_SELECT  |LOCAL|
+                                            project ([$$139]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              subplan {
+                                                        aggregate [$$139] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- AGGREGATE  |LOCAL|
+                                                          select (eq($$w, $#3)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- STREAM_SELECT  |LOCAL|
+                                                            unnest $#3 <- scan-collection(split($$166, " ")) project: [$$w, $#3] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- UNNEST  |LOCAL|
+                                                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                     } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- SUBPLAN  |LOCAL|
+                                                unnest $$w <- scan-collection(array: [ "bomb", "needs" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- UNNEST  |LOCAL|
+                                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                     } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- SUBPLAN  |LOCAL|
+                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- SUBPLAN  |PARTITIONED|
+          assign [$$166] <- [$$r.getField("text")] project: [$$166] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$r]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$164, $$165, $$r] <- test.reviews project ({text:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

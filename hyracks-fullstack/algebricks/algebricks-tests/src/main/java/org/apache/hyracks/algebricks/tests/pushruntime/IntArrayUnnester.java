@@ -20,9 +20,9 @@ package org.apache.hyracks.algebricks.tests.pushruntime;
 
 import java.io.IOException;
 
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -54,8 +54,7 @@ public class IntArrayUnnester implements IUnnestingEvaluatorFactory {
             public boolean step(IPointable result) throws HyracksDataException {
                 try {
                     if (pos < x.length) {
-                        // Writes one byte to distinguish between null
-                        // values and end of sequence.
+                        // Writes one byte to distinguish between null values and end of sequence.
                         abvs.reset();
                         abvs.getDataOutput().writeInt(x[pos]);
                         result.set(abvs);

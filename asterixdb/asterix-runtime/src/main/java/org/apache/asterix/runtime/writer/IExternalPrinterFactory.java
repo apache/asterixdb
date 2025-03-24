@@ -20,6 +20,8 @@ package org.apache.asterix.runtime.writer;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.context.IEvaluatorContext;
+
 /**
  * {@link IExternalFileWriter} printer factory
  */
@@ -27,5 +29,5 @@ public interface IExternalPrinterFactory extends Serializable {
     /**
      * @return a new external printer
      */
-    IExternalPrinter createPrinter();
+    IExternalPrinter createPrinter(IEvaluatorContext context);
 }
