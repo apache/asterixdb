@@ -1554,10 +1554,10 @@ public class BuiltinFunctions {
         addPrivateFunction(TREAT_AS_INTEGER, TreatAsTypeComputer.INSTANCE_INTEGER, true);
         addPrivateFunction(IS_NUMERIC_ADD_COMPATIBLE, BooleanOnlyTypeComputer.INSTANCE, true);
 
-        addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
         addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);
         addFunction(IF_MISSING_OR_NULL, IfMissingOrNullTypeComputer.INSTANCE, true);
         addFunction(IF_NULL, IfNullTypeComputer.INSTANCE, true);
+        addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
         addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
         addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
         addPrivateFunction(IF_SYSTEM_NULL, IfNullTypeComputer.INSTANCE, true);

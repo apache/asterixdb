@@ -19,7 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -36,7 +35,6 @@ import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-@MissingNullInOutFunction
 public class NegInfIfEqualsDescriptor extends AbstractComparisonDescriptor {
     private static final long serialVersionUID = 1L;
 

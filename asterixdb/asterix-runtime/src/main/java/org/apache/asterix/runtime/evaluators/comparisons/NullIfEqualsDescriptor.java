@@ -19,7 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -32,7 +31,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-@MissingNullInOutFunction
 public class NullIfEqualsDescriptor extends AbstractComparisonDescriptor {
     private static final long serialVersionUID = 1L;
 
