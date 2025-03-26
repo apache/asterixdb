@@ -115,9 +115,7 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
 
         ParquetSchemaTree.FlatType flatType = (ParquetSchemaTree.FlatType) schemaNode.getType();
 
-        if (flatType.getPrimitiveTypeName() != AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.get(pointable.getTypeTag())
-                || !(flatType.getLogicalTypeAnnotation() == AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP
-                        .get(pointable.getTypeTag()))) {
+        if (!flatType.isCompatibleWith(pointable.getTypeTag())) {
             return ISchemaChecker.SchemaComparisonType.CONFLICTING;
         }
 

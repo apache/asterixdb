@@ -110,21 +110,20 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             if (!AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.containsKey(pointable.getTypeTag())) {
                 throw RuntimeDataException.create(TYPE_UNSUPPORTED_PARQUET_WRITE, pointable.getTypeTag());
             }
-            schemaNode.setType(new ParquetSchemaTree.FlatType(
-                    AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.get(pointable.getTypeTag()),
-                    AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP.get(pointable.getTypeTag())));
+            schemaNode.setType(new ParquetSchemaTree.FlatType(pointable.getTypeTag()));
             return null;
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.FlatType)) {
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.FlatType flatType = (ParquetSchemaTree.FlatType) schemaNode.getType();
-        if (!(flatType.getPrimitiveTypeName() == AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP
-                .get(pointable.getTypeTag()))
-                || !(flatType.getLogicalTypeAnnotation() == AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP
-                        .get(pointable.getTypeTag()))) {
+
+        if (!flatType.isCompatibleWith(pointable.getTypeTag())) {
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
+
+        flatType.coalesce(pointable.getTypeTag());
+
         return null;
     }
 
