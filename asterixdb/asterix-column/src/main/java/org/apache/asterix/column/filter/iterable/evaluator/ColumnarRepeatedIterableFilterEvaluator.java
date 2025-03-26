@@ -46,11 +46,6 @@ public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFil
             // TODO we need a way to 'rewind' y for each x
             result = evaluateRepeated();
         }
-        if (!result) {
-            // Last tuple does not satisfy the condition
-            tupleIndex++;
-            valueIndex++;
-        }
         return result;
     }
 

@@ -39,6 +39,10 @@ public class ColumnarValueException extends IllegalStateException {
         node = OBJECT_MAPPER.createObjectNode();
     }
 
+    public ObjectNode getNode() {
+        return node;
+    }
+
     public ObjectNode createNode(String fieldName) {
         return node.putObject(fieldName);
     }

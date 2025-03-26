@@ -31,6 +31,7 @@ import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.parquet.bytes.BytesUtils;
@@ -93,10 +94,12 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
             numberOfEncounteredMissing += isMissing() ? 1 : 0;
             numberOfEncounteredNull += isNull() ? 1 : 0;
         } catch (Exception e) {
-            ObjectNode infoNode = OBJECT_MAPPER.createObjectNode();
-            appendReaderInformation(infoNode);
-            LOGGER.error("error reading nextLevel, collected info: {}", infoNode);
-            throw HyracksDataException.create(e);
+            ColumnarValueException ex = new ColumnarValueException();
+            ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
+            appendReaderInformation(readerNode);
+            LOGGER.error("error reading nextLevel, collected info: {}", ex.getNode());
+            ex.addSuppressed(e);
+            throw ex;
         }
     }
 

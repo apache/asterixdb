@@ -20,6 +20,7 @@ package org.apache.asterix.column.filter;
 
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 /**
  * This evaluator is also used to indicate a NoOp filter
@@ -36,7 +37,7 @@ public class TrueColumnFilterEvaluator implements IColumnIterableFilterEvaluator
     }
 
     @Override
-    public void reset() {
+    public void reset(int tupleCount) {
         // NoOp
     }
 
@@ -52,6 +53,11 @@ public class TrueColumnFilterEvaluator implements IColumnIterableFilterEvaluator
 
     @Override
     public void setAt(int index) {
+        // NoOp
+    }
+
+    @Override
+    public void appendInformation(ColumnarValueException e) {
         // NoOp
     }
 }

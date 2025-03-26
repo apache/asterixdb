@@ -117,8 +117,8 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
 
     @Override
     public int reset(int startIndex, int skipCount) throws HyracksDataException {
-        ((IColumnKeyValueReader) valueReader).reset(startIndex, skipCount);
         // first item
+        ((IColumnKeyValueReader) valueReader).reset(startIndex, skipCount);
         nextLevel();
         int numberOfAntiMatters = level < maxLevel ? 1 : 0;
         for (int i = 0; i < skipCount; i++) {
