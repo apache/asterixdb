@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -31,6 +32,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 @MissingNullInOutFunction
 public class NotEqualsDescriptor extends AbstractComparisonDescriptor {
@@ -66,6 +68,13 @@ public class NotEqualsDescriptor extends AbstractComparisonDescriptor {
                     @Override
                     protected boolean getComparisonResult(Result r) {
                         return r != Result.EQ;
+                    }
+
+                    @Override
+                    protected void handleIncomparable(IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        serde.serialize(ABoolean.TRUE, out);
+                        result.set(resultStorage);
                     }
                 };
             }

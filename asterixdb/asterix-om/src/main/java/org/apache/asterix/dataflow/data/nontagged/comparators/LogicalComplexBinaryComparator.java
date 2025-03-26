@@ -59,7 +59,7 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
     public Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException {
         ATypeTag leftRuntimeTag = left.getTag();
         ATypeTag rightRuntimeTag = right.getTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftRuntimeTag, rightRuntimeTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftRuntimeTag, rightRuntimeTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -75,7 +75,7 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         // TODO(ali): not defined currently for constant complex types
         ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -102,7 +102,7 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         // TODO(ali): not defined currently for constant complex types
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -117,24 +117,27 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         }
         IAType leftCompileType = TypeComputeUtils.getActualTypeOrOpen(leftType, leftRuntimeTag);
         IAType rightCompileType = TypeComputeUtils.getActualTypeOrOpen(rightType, rightRuntimeTag);
-        switch (leftRuntimeTag) {
-            case MULTISET:
-                return compareMultisets(leftCompileType, leftRuntimeTag, left, rightCompileType, rightRuntimeTag,
-                        right);
-            case ARRAY:
-                return compareArrays(leftCompileType, left, rightCompileType, right);
-            case OBJECT:
-                return compareRecords(leftCompileType, left, rightCompileType, right);
-            default:
-                return Result.NULL;
-        }
+        return switch (leftRuntimeTag) {
+            case ARRAY -> compareArrays(leftCompileType, left, rightCompileType, right);
+            case MULTISET -> compareMultisets(leftCompileType, left, rightCompileType, right);
+            case OBJECT -> compareRecords(leftCompileType, left, rightCompileType, right);
+            default -> Result.NULL;
+        };
     }
 
     private Result compareArrays(IAType leftType, TaggedValueReference leftArray, IAType rightType,
             TaggedValueReference rightArray) throws HyracksDataException {
+        // equality is the only operation defined for arrays
+        if (!isEquality) {
+            return Result.INCOMPARABLE;
+        }
         // reaching here, both leftArray and rightArray have to be arrays (should be enforced)
         int leftNumItems = SerializerDeserializerUtil.getNumberOfItemsNonTagged(leftArray);
         int rightNumItems = SerializerDeserializerUtil.getNumberOfItemsNonTagged(rightArray);
+        int c = Integer.compare(leftNumItems, rightNumItems);
+        if (c != 0) {
+            return ILogicalBinaryComparator.asResult(c);
+        }
         IAType leftItemCompileType = ((AbstractCollectionType) leftType).getItemType();
         IAType rightItemCompileType = ((AbstractCollectionType) rightType).getItemType();
         ATypeTag leftArrayItemTag = leftItemCompileType.getTypeTag();
@@ -143,15 +146,15 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         boolean rightItemHasTag = rightArrayItemTag == ATypeTag.ANY;
         TaggedValueReference leftItem = taggedValuePool.allocate(null);
         TaggedValueReference rightItem = taggedValuePool.allocate(null);
-        Result determiningResult = null;
-        Result tempResult;
         try {
-            for (int i = 0; i < leftNumItems && i < rightNumItems; i++) {
+            Result determiningResult = null;
+            for (int i = 0; i < leftNumItems; i++) {
                 ListAccessorUtil.getItemFromList(leftArray, i, leftItem, leftArrayItemTag, leftItemHasTag);
                 ListAccessorUtil.getItemFromList(rightArray, i, rightItem, rightArrayItemTag, rightItemHasTag);
                 // if both tags are derived, get item type or default to open item if array is open, then call complex
                 ATypeTag leftItemRuntimeTag = leftItem.getTag();
                 ATypeTag rightItemRuntimeTag = rightItem.getTag();
+                Result tempResult;
                 if (leftItemRuntimeTag.isDerivedType() && rightItemRuntimeTag.isDerivedType()) {
                     tempResult = compareComplex(leftItemCompileType, leftItemRuntimeTag, leftItem, rightItemCompileType,
                             rightItemRuntimeTag, rightItem);
@@ -159,20 +162,20 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
                     tempResult = scalarComparator.compare(leftItem, rightItem);
                 }
 
-                if (tempResult == Result.INCOMPARABLE || tempResult == Result.MISSING || tempResult == Result.NULL) {
-                    return Result.INCOMPARABLE;
-                }
-
-                // skip to next pair if current one is equal or the result of the comparison has already been decided
-                if (determiningResult == null && tempResult != Result.EQ) {
-                    determiningResult = tempResult;
+                if (tempResult == Result.NULL || tempResult == Result.MISSING) {
+                    if (determiningResult == null) {
+                        determiningResult = tempResult;
+                    }
+                } else if (tempResult != Result.EQ) {
+                    // break early if not equal
+                    return tempResult;
                 }
             }
 
             if (determiningResult != null) {
                 return determiningResult;
             }
-            return ILogicalBinaryComparator.asResult(Integer.compare(leftNumItems, rightNumItems));
+            return Result.EQ;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         } finally {
@@ -181,9 +184,8 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         }
     }
 
-    private Result compareMultisets(IAType leftType, ATypeTag leftListTag, TaggedValueReference left, IAType rightType,
-            ATypeTag rightListTag, TaggedValueReference right) throws HyracksDataException {
-        // TODO(ali): multiset comparison logic here
+    private Result compareMultisets(IAType leftType, TaggedValueReference left, IAType rightType,
+            TaggedValueReference right) throws HyracksDataException {
         // equality is the only operation defined for multiset
         if (!isEquality) {
             return Result.INCOMPARABLE;
@@ -206,53 +208,48 @@ public final class LogicalComplexBinaryComparator implements ILogicalBinaryCompa
         try {
             leftRecord.resetNonTagged(left.getByteArray(), left.getStartOffset());
             rightRecord.resetNonTagged(right.getByteArray(), right.getStartOffset());
-            boolean notEqual = false;
-            RecordField leftField = null, rightField = null;
-            int previousNamesComparisonResult = 0;
-            while (!leftRecord.isEmpty() && !rightRecord.isEmpty()) {
-                if (previousNamesComparisonResult == 0) {
-                    // previous field names were equal or first time to enter the loop
-                    leftField = leftRecord.poll();
-                    rightField = rightRecord.poll();
-                } else if (previousNamesComparisonResult > 0) {
-                    // right field name was less than left field name. get next field from right
-                    rightField = rightRecord.poll();
-                } else {
-                    leftField = leftRecord.poll();
+            int c = Integer.compare(leftRecord.size(), rightRecord.size());
+            if (c != 0) {
+                return ILogicalBinaryComparator.asResult(c);
+            }
+
+            RecordField leftField, rightField;
+            Result determiningResult = null;
+            while (!leftRecord.isEmpty()) {
+                leftField = leftRecord.poll();
+                rightField = rightRecord.poll();
+                int comp = RecordField.FIELD_NAME_COMP.compare(leftField, rightField);
+                if (comp != 0) {
+                    return ILogicalBinaryComparator.asResult(comp);
                 }
                 Result tempCompResult;
-                previousNamesComparisonResult = RecordField.FIELD_NAME_COMP.compare(leftField, rightField);
-                if (previousNamesComparisonResult == 0) {
-                    // filed names are equal
-                    leftRecord.getFieldValue(leftField, leftFieldValue);
-                    rightRecord.getFieldValue(rightField, rightFieldValue);
-                    ATypeTag leftFTag = leftFieldValue.getTag();
-                    ATypeTag rightFTag = rightFieldValue.getTag();
-                    if (leftFTag == ATypeTag.NULL || rightFTag == ATypeTag.NULL) {
-                        tempCompResult = Result.NULL;
-                    } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
-                        IAType leftFieldType = RecordUtil.getType(leftRecordType, leftField.getIndex(), leftFTag);
-                        IAType rightFieldType = RecordUtil.getType(rightRecordType, rightField.getIndex(), rightFTag);
-                        tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue, rightFieldType,
-                                rightFTag, rightFieldValue);
-                    } else {
-                        tempCompResult = scalarComparator.compare(leftFieldValue, rightFieldValue);
-                    }
-
-                    if (tempCompResult == Result.INCOMPARABLE || tempCompResult == Result.MISSING
-                            || tempCompResult == Result.NULL) {
-                        return Result.INCOMPARABLE;
-                    }
-                    if (tempCompResult != Result.EQ) {
-                        notEqual = true;
-                    }
+                leftRecord.getFieldValue(leftField, leftFieldValue);
+                rightRecord.getFieldValue(rightField, rightFieldValue);
+                ATypeTag leftFTag = leftFieldValue.getTag();
+                ATypeTag rightFTag = rightFieldValue.getTag();
+                if (leftFTag == ATypeTag.NULL || rightFTag == ATypeTag.NULL) {
+                    tempCompResult = Result.NULL;
+                } else if (leftFTag.isDerivedType() && rightFTag.isDerivedType()) {
+                    IAType leftFieldType = RecordUtil.getType(leftRecordType, leftField.getIndex(), leftFTag);
+                    IAType rightFieldType = RecordUtil.getType(rightRecordType, rightField.getIndex(), rightFTag);
+                    tempCompResult = compareComplex(leftFieldType, leftFTag, leftFieldValue, rightFieldType, rightFTag,
+                            rightFieldValue);
                 } else {
-                    notEqual = true;
+                    tempCompResult = scalarComparator.compare(leftFieldValue, rightFieldValue);
+                }
+
+                if (tempCompResult == Result.NULL || tempCompResult == Result.MISSING) {
+                    if (determiningResult == null) {
+                        determiningResult = tempCompResult;
+                    }
+                } else if (tempCompResult != Result.EQ) {
+                    // break early if not equal
+                    return tempCompResult;
                 }
             }
-            if (notEqual || leftRecord.size() != rightRecord.size()) {
-                // LT or GT does not make a difference since this is an answer to equality
-                return Result.LT;
+
+            if (determiningResult != null) {
+                return determiningResult;
             }
             // reaching here means every field in the left record exists in the right and vice versa
             return Result.EQ;

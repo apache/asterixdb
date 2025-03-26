@@ -16,22 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-USE TinySocial;
-FROM
-[
-  (select array_contains(t.`referred-topics`, "speed") from TweetMessages t order by t.tweetid),
-  (select array_contains([3,8,98,40], 8)),
-  (select array_contains([3,8,98,40], 40.0)),
-  (select array_contains([3,8,98,40], -3)),
-  (select array_contains([3,"sth",98,40], 98)),
-  (select array_contains([3,8,98,40], null)),
-  (select array_contains([3,8,98,40], missing)),
-  (select array_contains(missing, 6)),
-  (select array_contains(null, 6)),
-  (select array_contains(5, "sth")),
-  (select array_contains([5, {"id":77}, "sth"], "sth")),
-  (select array_contains([1, 2, null], 3)),
-  (select not array_contains([1, 2, null], 3))
-] AS t
-SELECT VALUE t;
+// IN as a boolean expression should be fixed to return NULL all the time for cases like below
+// today, NULL is correctly returned when the IN expression is rewritten as ORs
+// today, false is incorrectly returned when the IN expression is not rewritten as ORs
+SET `rewrite_in_as_or` "false";
+SELECT 3 IN [1, 2, null];

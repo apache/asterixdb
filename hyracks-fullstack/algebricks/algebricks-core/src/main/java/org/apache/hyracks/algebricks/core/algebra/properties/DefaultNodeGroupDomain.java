@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections4.MultiSet;
@@ -28,14 +29,10 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 
 public class DefaultNodeGroupDomain implements INodeDomain {
 
-    private MultiSet<String> nodes = new HashMultiSet<>();
+    private final MultiSet<String> nodes = new HashMultiSet<>();
 
     public DefaultNodeGroupDomain(List<String> nodes) {
         this.nodes.addAll(nodes);
-    }
-
-    public DefaultNodeGroupDomain(DefaultNodeGroupDomain domain) {
-        this.nodes.addAll(domain.nodes);
     }
 
     public DefaultNodeGroupDomain(AlgebricksPartitionConstraint clusterLocations) {
@@ -52,10 +49,10 @@ public class DefaultNodeGroupDomain implements INodeDomain {
 
     @Override
     public boolean sameAs(INodeDomain domain) {
-        if (!(domain instanceof DefaultNodeGroupDomain)) {
+        if (!(domain instanceof DefaultNodeGroupDomain nodeDomain)) {
             return false;
         }
-        DefaultNodeGroupDomain nodeDomain = (DefaultNodeGroupDomain) domain;
+        // TODO(ali): this should be revisited. it does not check for order of the nodes.
         return nodes.equals(nodeDomain.nodes);
     }
 
@@ -69,7 +66,17 @@ public class DefaultNodeGroupDomain implements INodeDomain {
         return nodes.size();
     }
 
+    /**
+     * Returns the nodes in the domain. The order of the nodes is arbitrary on each invocation.
+     * @return returns the nodes in the domain.
+     */
     public String[] getNodes() {
         return nodes.toArray(new String[0]);
+    }
+
+    public String[] getSortedNodes() {
+        String[] sortedNodes = nodes.toArray(new String[0]);
+        Arrays.sort(sortedNodes);
+        return sortedNodes;
     }
 }

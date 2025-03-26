@@ -53,7 +53,7 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
     public Result compare(TaggedValueReference left, TaggedValueReference right) throws HyracksDataException {
         ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = right.getTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -160,7 +160,7 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
         // TODO(ali): currently defined for numbers only
         ATypeTag leftTag = left.getTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }
@@ -190,7 +190,7 @@ public final class LogicalScalarBinaryComparator implements ILogicalBinaryCompar
         // TODO(ali): currently defined for numbers only
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
-        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrMismatch(leftTag, rightTag);
+        Result comparisonResult = ComparatorUtil.returnMissingOrNullOrIncomparable(leftTag, rightTag);
         if (comparisonResult != null) {
             return comparisonResult;
         }

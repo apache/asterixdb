@@ -536,7 +536,9 @@ public class APIFramework {
                 locations.add(nodeId);
             }
         });
-        return new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[0]));
+        String[] sortedLocations = locations.toArray(new String[0]);
+        Arrays.sort(sortedLocations);
+        return new AlgebricksAbsolutePartitionConstraint(sortedLocations);
     }
 
     // Gets the total number of available cores in the cluster.

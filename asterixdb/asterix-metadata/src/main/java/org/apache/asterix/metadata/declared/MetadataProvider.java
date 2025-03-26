@@ -1881,7 +1881,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (!(nodeDomain instanceof DefaultNodeGroupDomain inputDomain)) {
             return null;
         }
-        String[] inputLocations = inputDomain.getNodes();
+        String[] inputLocations = inputDomain.getSortedNodes();
         AlgebricksAbsolutePartitionConstraint locations = dataPartitioningProvider.getClusterLocations();
         String[] clusterLocations = locations.getLocations();
         if (!Arrays.equals(inputLocations, clusterLocations)) {
