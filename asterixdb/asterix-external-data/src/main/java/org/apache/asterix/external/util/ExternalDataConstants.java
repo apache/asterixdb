@@ -73,10 +73,8 @@ public class ExternalDataConstants {
     //Base64 encoded function call information
     public static final String KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION = "org.apache.asterix.function.info";
     public static final String KEY_SOURCE_DATATYPE = "type-name";
-    public static final String KEY_DELIMITER = "delimiter";
     public static final String KEY_PARSER_FACTORY = "parser-factory";
     public static final String KEY_DATA_PARSER = "parser";
-    public static final String KEY_HEADER = "header";
     public static final String KEY_READER = "reader";
     public static final String KEY_READER_STREAM = "stream";
     public static final String KEY_TYPE_NAME = "type-name";
@@ -92,11 +90,6 @@ public class ExternalDataConstants {
     public static final String PARQUET_DEFAULT_PAGE_SIZE = "8KB";
     public static final String KEY_INCLUDE = "include";
     public static final String KEY_EXCLUDE = "exclude";
-    public static final String KEY_QUOTE = "quote";
-    public static final String KEY_FORCE_QUOTE = "force-quote";
-    public static final String KEY_EMPTY_FIELD_AS_NULL = "empty_field_as_null";
-    public static final String KEY_RECORD_DELIMITER = "record-delimiter";
-    public static final String KEY_ESCAPE = "escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
     public static final String KEY_RSS_URL = "url";
@@ -140,8 +133,6 @@ public class ExternalDataConstants {
     public static final String KEY_HTTP_PROXY_PORT = "http-proxy-port";
     public static final String KEY_HTTP_PROXY_USER = "http-proxy-user";
     public static final String KEY_HTTP_PROXY_PASSWORD = "http-proxy-password";
-    // a string representing the NULL value
-    public static final String KEY_NULL_STR = "null";
     public static final String KEY_REDACT_WARNINGS = "redact-warnings";
     public static final String KEY_REQUESTED_FIELDS = "requested-fields";
     public static final String KEY_EXTERNAL_SCAN_BUFFER_SIZE = "external-scan-buffer-size";

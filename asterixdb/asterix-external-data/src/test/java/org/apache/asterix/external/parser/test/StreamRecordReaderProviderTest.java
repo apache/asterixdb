@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.parser.test;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +48,7 @@ public class StreamRecordReaderProviderTest {
         }
         config.clear();
         config.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_CSV);
-        config.put(ExternalDataConstants.KEY_QUOTE, "\u0000");
+        config.put(KEY_QUOTE, "\u0000");
         Assert.assertTrue(StreamRecordReaderProvider.getRecordReaderClazz(config) != null);
     }
 }

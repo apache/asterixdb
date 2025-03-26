@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_FORCE_QUOTE;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_NULL;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_FORCE_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_NULL_STR;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 
 import java.util.Collections;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return AInt64PrinterFactory.INSTANCE;
                 case MISSING:
                 case NULL:
-                    return ANullPrinterFactory.createInstance(configuration.get(KEY_NULL));
+                    return ANullPrinterFactory.createInstance(configuration.get(KEY_NULL_STR));
                 case BOOLEAN:
                     return ABooleanPrinterFactory.INSTANCE;
                 case FLOAT:

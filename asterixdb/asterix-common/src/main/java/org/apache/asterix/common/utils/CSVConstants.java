@@ -16,29 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.utils;
 
-/*
- * This test handles the case with all the CSV knobs. Schema type is JSON style.
- * Check for the case when putting missing as null values.
- */
+public class CSVConstants {
 
-USE test;
+    private CSVConstants() {
+    }
 
-COPY (
-   SELECT id, name, amount, accountNumber FROM TestCollection
-) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "csv", "simple-csv", "2")
-TYPE ( {id: bigint, name: string?, amount: float, accountNumber: double} )
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"csv",
-    "delimiter":"|",
-    "header":"true",
-    "null":"IamNull",
-    "quote":"'",
-    "force-quote":"false",
-    "escape":"\\",
-    "empty-string-as-null":"true"
+    public static final String KEY_HEADER = "header";
+    public static final String KEY_DELIMITER = "delimiter";
+    public static final String KEY_RECORD_DELIMITER = "record-delimiter";
+    public static final String KEY_QUOTE = "quote";
+    public static final String KEY_FORCE_QUOTE = "force-quote";
+    public static final String KEY_EMPTY_STRING_AS_NULL = "empty-string-as-null";
+    public static final String KEY_ESCAPE = "escape";
+
+    // a string representing the NULL value
+    public static final String KEY_NULL_STR = "null";
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.converter;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+
 import java.util.Arrays;
 import java.util.Map;
 
@@ -56,10 +58,9 @@ public class CSVWithRecordConverterFactory implements IRecordConverterFactory<ch
                     "Unspecified " + ExternalDataConstants.KEY_RECORD_INDEX + " for csv to csv with record converter");
         }
         recordIndex = Integer.parseInt(property);
-        property = configuration.get(ExternalDataConstants.KEY_DELIMITER);
+        property = configuration.get(KEY_DELIMITER);
         if (property == null) {
-            throw new AsterixException(
-                    "Unspecified " + ExternalDataConstants.KEY_DELIMITER + " for csv to csv with record converter");
+            throw new AsterixException("Unspecified " + KEY_DELIMITER + " for csv to csv with record converter");
         }
         if (property.trim().length() > 1) {
             throw new AsterixException("Large delimiter. The maximum delimiter size = 1");

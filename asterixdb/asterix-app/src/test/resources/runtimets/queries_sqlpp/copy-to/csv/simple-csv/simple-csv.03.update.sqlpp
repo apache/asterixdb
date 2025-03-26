@@ -39,5 +39,5 @@ WITH {
     "quote":"'",
     "force-quote":"false",
     "escape":"\\",
-    "empty_field_as_null":"true"
+    "empty-string-as-null":"true"
 }

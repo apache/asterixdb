@@ -22,6 +22,10 @@ import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_V
 import static org.apache.asterix.common.exceptions.ErrorCode.MAXIMUM_VALUE_ALLOWED_FOR_PARAM;
 import static org.apache.asterix.common.exceptions.ErrorCode.MINIMUM_VALUE_ALLOWED_FOR_PARAM;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_RECORD_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_CSV;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_JSON_LOWER_CASE;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQUET;
@@ -57,7 +61,7 @@ public class WriterValidationUtil {
 
     private static void validateQuote(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        String quote = configuration.get(ExternalDataConstants.KEY_QUOTE);
+        String quote = configuration.get(KEY_QUOTE);
         if (quote != null && !ExternalDataConstants.WRITER_SUPPORTED_QUOTES.contains(quote.toLowerCase())) {
             throw CompilationException.create(ErrorCode.CSV_INVALID_QUOTE, sourceLocation, quote,
                     ExternalDataConstants.WRITER_SUPPORTED_QUOTES.toString());
@@ -251,19 +255,19 @@ public class WriterValidationUtil {
 
     private static void validateDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        String delimiter = configuration.get(ExternalDataConstants.KEY_DELIMITER);
+        String delimiter = configuration.get(KEY_DELIMITER);
         unitByteCondition(delimiter, sourceLocation, ErrorCode.INVALID_DELIMITER);
     }
 
     private static void validateEscape(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        String escape = configuration.get(ExternalDataConstants.KEY_ESCAPE);
+        String escape = configuration.get(KEY_ESCAPE);
         unitByteCondition(escape, sourceLocation, ErrorCode.CSV_INVALID_ESCAPE);
     }
 
     private static void validateRecordDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        String recordDel = configuration.get(ExternalDataConstants.KEY_RECORD_DELIMITER);
+        String recordDel = configuration.get(KEY_RECORD_DELIMITER);
         unitByteCondition(recordDel, sourceLocation, ErrorCode.CSV_INVALID_FORCE_QUOTE);
     }
 
