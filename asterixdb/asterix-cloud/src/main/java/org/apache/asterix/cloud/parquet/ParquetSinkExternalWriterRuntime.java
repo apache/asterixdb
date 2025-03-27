@@ -91,9 +91,11 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
             tupleRef.reset(tupleAccessor, i);
             setValue(tupleRef, sourceColumn, sourceValue);
             if (partitioner.isNewPartition(tupleAccessor, i)) {
-                poolWriter.initNewPartition(tupleRef);
+                // When there is a new partition, we need to close the existing writers.
+                poolWriter.closeAll();
             }
-            poolWriter.write(sourceValue);
+            // New files are created on the fly.
+            poolWriter.write(sourceValue, tupleRef);
         }
     }
 
