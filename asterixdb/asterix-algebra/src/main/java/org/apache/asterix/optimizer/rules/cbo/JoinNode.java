@@ -570,36 +570,35 @@ public class JoinNode {
         double redundantSel = 1.0;
         List<JoinCondition> joinConditions = joinEnum.getJoinConditions();
         JoinCondition jc1, jc2, jc3;
-        int[] vertices = new int[6];
-        int[] verticesCopy = new int[6];
+        String[] vars = new String[6];
+        String[] varsCopy = new String[6];
         for (int i = 0; i <= applicablePredicatesInCurrentJn.size() - 3; i++) {
             jc1 = joinConditions.get(applicablePredicatesInCurrentJn.get(i));
-            if (jc1.partOfComposite || jc1.deleted) {
+            if (jc1.deleted || jc1.usedVars == null) {
                 continue; // must ignore these or the same triangles will be found more than once.
             }
-            vertices[0] = jc1.leftSideBits;
-            vertices[1] = jc1.rightSideBits;
+            vars[0] = jc1.usedVars.get(0).toString();
+            vars[1] = jc1.usedVars.get(1).toString();
             for (int j = i + 1; j <= applicablePredicatesInCurrentJn.size() - 2; j++) {
                 jc2 = joinConditions.get(applicablePredicatesInCurrentJn.get(j));
-                if (jc2.partOfComposite || jc2.deleted) {
+                if (jc2.deleted || jc2.usedVars == null) {
                     continue;
                 }
-                vertices[2] = jc2.leftSideBits;
-                vertices[3] = jc2.rightSideBits;
+                vars[2] = jc2.usedVars.get(0).toString();
+                vars[3] = jc2.usedVars.get(1).toString();
                 for (int k = j + 1; k <= applicablePredicatesInCurrentJn.size() - 1; k++) {
                     jc3 = joinConditions.get(applicablePredicatesInCurrentJn.get(k));
-                    if (jc3.partOfComposite || jc3.deleted) {
+                    if (jc3.deleted || jc3.usedVars == null) {
                         continue;
                     }
-                    vertices[4] = jc3.leftSideBits;
-                    vertices[5] = jc3.rightSideBits;
+                    vars[4] = jc3.usedVars.get(0).toString();
+                    vars[5] = jc3.usedVars.get(1).toString();
 
-                    System.arraycopy(vertices, 0, verticesCopy, 0, 6);
-                    Arrays.sort(verticesCopy);
-                    if (verticesCopy[0] == verticesCopy[1] && verticesCopy[2] == verticesCopy[3]
-                            && verticesCopy[4] == verticesCopy[5]) {
+                    System.arraycopy(vars, 0, varsCopy, 0, 6);
+                    Arrays.sort(varsCopy);
+                    if (varsCopy[0] == varsCopy[1] && varsCopy[2] == varsCopy[3] && varsCopy[4] == varsCopy[5]) {
                         // redundant edge found
-                        if (!(jc1.deleted || jc2.deleted || jc3.deleted)) {
+                        if (!(jc1.deleted || jc2.deleted)) {
                             redundantSel *= adjustSelectivities(jc1, jc2, jc3);
                         }
                     }

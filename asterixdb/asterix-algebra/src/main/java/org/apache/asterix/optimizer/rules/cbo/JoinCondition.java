@@ -38,8 +38,11 @@ public class JoinCondition {
     protected int datasetBits;
     // used for triangle detection; we strictly do not mean left and right here.
     // first and second sides would be more appropriate
+    protected int leftSide;
+    protected int rightSide;
     protected int leftSideBits;
     protected int rightSideBits;
+    protected int numLeafInputs;
     protected double selectivity;
     protected comparisonOp comparisonType;
     protected JoinOperator joinOp = null;

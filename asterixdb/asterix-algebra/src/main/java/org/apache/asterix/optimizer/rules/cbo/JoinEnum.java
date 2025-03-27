@@ -529,18 +529,25 @@ public class JoinEnum {
             }
             jc.numberOfVars = usedVars.size();
 
+            List<Integer> leafInputNumbers = new ArrayList<>(jc.numberOfVars);
             for (int i = 0; i < jc.numberOfVars; i++) {
-                int bits = 1 << (varLeafInputIds.get(usedVars.get(i)) - 1);
-                if (bits != JoinCondition.NO_JC) {
-                    if (i == 0) {
-                        jc.leftSideBits = bits;
-                    } else if (i == 1) {
-                        jc.rightSideBits = bits;
-                    } else {
-                        // have to deal with preds such as r.a + s.a = 5 OR r.a + s.a = t.a
-                    }
-                    jc.datasetBits |= bits;
+                int idx = varLeafInputIds.get(usedVars.get(i));
+                if (!leafInputNumbers.contains(idx)) {
+                    leafInputNumbers.add(idx);
                 }
+            }
+            jc.numLeafInputs = leafInputNumbers.size();
+            for (int i = 0; i < jc.numLeafInputs; i++) {
+                int side = leafInputNumbers.get(i);
+                int bits = 1 << (side - 1);
+                if (i == 0) {
+                    jc.leftSide = side;
+                    jc.leftSideBits = bits;
+                } else if (i == 1) {
+                    jc.rightSide = side;
+                    jc.rightSideBits = bits;
+                }
+                jc.datasetBits |= bits;
             }
         }
     }
@@ -1208,7 +1215,7 @@ public class JoinEnum {
         if (this.singleDatasetPreds.size() > 0) {
             for (JoinCondition jc : joinConditions) {
                 // we may be repeating some work here, but that is ok. This will rarely happen (happens in q7 tpch)
-                double sel = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false, true, null);
+                double sel = stats.getSelectivityFromAnnotationMain(jc, null, false, true, null);
                 if (sel != -1) {
                     jc.selectivity = sel;
                 }
@@ -1236,7 +1243,7 @@ public class JoinEnum {
         }
 
         for (JoinCondition jc : joinConditions) {
-            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true, false, jc.joinOp);
+            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
         }
 
         findSelectionPredsInsideJoins(); // This was added to make TPCH Q7 work.

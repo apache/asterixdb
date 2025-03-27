@@ -114,24 +114,18 @@ public class Stats {
         return mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
     }
 
-    private double findJoinSelectivity(JoinProductivityAnnotation anno, AbstractFunctionCallExpression joinExpr,
-            JoinOperator jOp) throws AlgebricksException {
+    private double findJoinSelectivity(JoinCondition jc, JoinProductivityAnnotation anno,
+            AbstractFunctionCallExpression joinExpr, JoinOperator jOp) throws AlgebricksException {
         List<LogicalVariable> exprUsedVars = new ArrayList<>();
         joinExpr.getUsedVariables(exprUsedVars);
-        if (exprUsedVars.size() != 2) {
-            // Since there is a left and right dataset here, expecting only two variables.
+
+        if (jc.numLeafInputs != 2) {
+            // we can only deal with binary joins. More checks should be in place as well such as R.a op S.a
             return 1.0;
         }
 
-        int idx1, idx2;
-        if (joinEnum.varLeafInputIds.containsKey(exprUsedVars.get(0))) {
-            idx1 = joinEnum.varLeafInputIds.get(exprUsedVars.get(0));
-        } else
-            return 1.0;
-        if (joinEnum.varLeafInputIds.containsKey(exprUsedVars.get(1))) {
-            idx2 = joinEnum.varLeafInputIds.get(exprUsedVars.get(1));
-        } else
-            return 1.0;
+        int idx1 = jc.leftSide;
+        int idx2 = jc.rightSide;
 
         if (joinEnum.jnArray[idx1].getFake()) {
             return 1.0;
@@ -187,21 +181,19 @@ public class Stats {
                 return 0.5; // this may not be accurate obviously!
             } // we can do all relops here and other joins such as interval joins and spatial joins, the compile time might increase a lot
 
-            //If one of the tables is smaller than the target sample size, we can join the samples directly
-            // to get a good estimate of the join selectivity.
             Index.SampleIndexDetails idxDetails1 = (Index.SampleIndexDetails) index1.getIndexDetails();
             Index.SampleIndexDetails idxDetails2 = (Index.SampleIndexDetails) index2.getIndexDetails();
             if ((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
-                    || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())) {
+                    || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())
+                    || exprUsedVars.size() > 2) { //* if there are more than 2 variables, it is not a simple join like r.a op s.a
                 double sel = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
                         joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
-
                 if (sel == 0.0) {
-                    sel = 1.0 / Math.max(card1, card2); // R.uniq = S.uniq is nicely modelled here. Good heuristic Best we can do so far.
+                    sel = 1.0 / Math.max(card1, card2);
                 }
                 return sel;
             }
-            // Now we can handle only equi joins. We make all the uniform and independence assumptions here. Works well for Pk-FK joins.
+            // Now we can handle only equi joins. We make all the uniform and independence assumptions here.
             double sel = naiveJoinSelectivity(exprUsedVars, card1, card2, idx1, idx2);
             return sel;
         }
@@ -290,7 +282,7 @@ public class Stats {
 
     // The expression we get may not be a base condition. It could be comprised of ors and ands and nots. So have to
     //recursively find the overall selectivity.
-    private double getSelectivityFromAnnotation(AbstractFunctionCallExpression afcExpr, boolean join,
+    private double getSelectivityFromAnnotation(JoinCondition jc, AbstractFunctionCallExpression afcExpr, boolean join,
             boolean singleDatasetPreds, JoinOperator jOp) throws AlgebricksException {
         double sel = 1.0;
         if (afcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
@@ -298,7 +290,7 @@ public class Stats {
             for (int i = 0; i < afcExpr.getArguments().size(); i++) {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
-                    sel = getSelectivityFromAnnotation(
+                    sel = getSelectivityFromAnnotation(jc,
                             (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
                             singleDatasetPreds, jOp);
                     orSel = orSel + sel - orSel * sel;
@@ -310,7 +302,7 @@ public class Stats {
             for (int i = 0; i < afcExpr.getArguments().size(); i++) {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
-                    sel = getSelectivityFromAnnotation(
+                    sel = getSelectivityFromAnnotation(jc,
                             (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
                             singleDatasetPreds, jOp);
                     andSel *= sel;
@@ -320,7 +312,7 @@ public class Stats {
         } else if (afcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
             ILogicalExpression lexpr = afcExpr.getArguments().get(0).getValue();
             if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
-                sel = getSelectivityFromAnnotation(
+                sel = getSelectivityFromAnnotation(jc,
                         (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join,
                         singleDatasetPreds, jOp);
                 // We want to return 1.0 and not 0.0 if there was no annotation
@@ -351,7 +343,7 @@ public class Stats {
             }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
-            s = findJoinSelectivity(jpa, afcExpr, jOp);
+            s = findJoinSelectivity(jc, jpa, afcExpr, jOp);
             sel *= s;
         }
 
@@ -365,13 +357,20 @@ public class Stats {
         return sel;
     }
 
-    protected double getSelectivityFromAnnotationMain(ILogicalExpression leExpr, boolean join,
+    protected double getSelectivityFromAnnotationMain(JoinCondition jc, ILogicalExpression expr, boolean join,
             boolean singleDatasetPreds, JoinOperator jOp) throws AlgebricksException {
         double sel = 1.0;
 
+        ILogicalExpression leExpr;
+
+        if (jc != null)
+            leExpr = jc.joinCondition;
+        else
+            leExpr = expr;
+
         if (leExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) leExpr;
-            sel = getSelectivityFromAnnotation(afcExpr, join, singleDatasetPreds, jOp);
+            sel = getSelectivityFromAnnotation(jc, afcExpr, join, singleDatasetPreds, jOp);
         }
 
         return sel;
@@ -389,7 +388,7 @@ public class Stats {
         while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), join, false, null);
+                sel *= getSelectivityFromAnnotationMain(null, selOper.getCondition().getValue(), join, false, null);
             }
             if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 sel *= getSelectivity((SubplanOperator) op);
@@ -406,7 +405,7 @@ public class Stats {
         while (true) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), false, false, null);
+                sel *= getSelectivityFromAnnotationMain(null, selOper.getCondition().getValue(), false, false, null);
             }
             if (op.getInputs().size() > 0) {
                 op = op.getInputs().get(0).getValue();
