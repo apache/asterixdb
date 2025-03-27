@@ -2460,10 +2460,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     metadataProvider.isUsingDatabase()));
                 }
             }
-            if (ds.hasMetaPart()) {
-                throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, "truncate",
-                        ds.getDatasetFullyQualifiedName());
-            }
             DatasetType dsType = ds.getDatasetType();
             if (dsType != DatasetType.INTERNAL) {
                 String dsTypeName = dsType.toString().toLowerCase();
