@@ -4,7 +4,7 @@
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
+ * "License", you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
@@ -17,20 +17,18 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.declared;
-
-import java.util.Map;
-
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
-import org.apache.hyracks.api.exceptions.SourceLocation;
-
-public interface IExternalWriteDataSink extends IWriteDataSink {
-    ARecordType getItemType();
-
-    ARecordType getParquetSchema();
-
-    Map<String, String> getFormatConfigs();
-
-    SourceLocation getSourceLoc();
+COPY (
+   select value x FROM [
+   {"id":1, "name":"", "amount":123.2, "accountNumber":345.34, "joinDatetime": datetime("2025-04-25T14:53:54.398")}
+   ] as x
+) toWrite
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "csv", "simple-csv", "datetime-formatted-with-comma")
+TYPE ( {id: bigint, name: string?, amount: float, accountNumber: double, joinDatetime: datetime} )
+DATETIME "DD/MMM/YYYY, ss:mm:hh a"
+WITH {
+    %template_colons%,
+    %additionalProperties%
+    "format":"csv",
+    "header":"true"
 }

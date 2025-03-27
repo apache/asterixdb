@@ -49,7 +49,7 @@ public class PrintTools {
     private static final long CHRONON_OF_DAY = TimeUnit.DAYS.toMillis(1);
 
     public static void printDateString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
-        long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
+        long chrononTime = getDateChronon(b, s + 1);
 
         try {
             gCalInstance.getExtendStringRepUntilField(chrononTime, ps, GregorianCalendarSystem.Fields.YEAR,
@@ -59,8 +59,12 @@ public class PrintTools {
         }
     }
 
+    public static long getDateChronon(byte[] b, int s) {
+        return AInt32SerializerDeserializer.getInt(b, s) * CHRONON_OF_DAY;
+    }
+
     public static void printDateTimeString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
-        long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
+        long chrononTime = getDateTimeChronon(b, s + 1);
 
         try {
             gCalInstance.getExtendStringRepUntilField(chrononTime, ps, GregorianCalendarSystem.Fields.YEAR,
@@ -70,9 +74,13 @@ public class PrintTools {
         }
     }
 
+    public static long getDateTimeChronon(byte[] b, int s) {
+        return AInt64SerializerDeserializer.getLong(b, s);
+    }
+
     public static void printDayTimeDurationString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         boolean positive = true;
-        long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 1);
+        long milliseconds = getDateTimeChronon(b, s + 1);
 
         // set the negative flag. "||" is necessary in case that months field is not there (so it is 0)
         if (milliseconds < 0) {
@@ -218,7 +226,7 @@ public class PrintTools {
     }
 
     public static void printTimeString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
-        int time = AInt32SerializerDeserializer.getInt(b, s + 1);
+        int time = getTimeChronon(b, s + 1);
 
         try {
             gCalInstance.getExtendStringRepUntilField(time, ps, GregorianCalendarSystem.Fields.HOUR,
@@ -226,6 +234,10 @@ public class PrintTools {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    public static int getTimeChronon(byte[] b, int s) {
+        return AInt32SerializerDeserializer.getInt(b, s);
     }
 
     public static void printDoubleForJson(byte[] b, int s, PrintStream ps) {

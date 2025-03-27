@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
-import java.io.PrintStream;
-
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
@@ -30,11 +28,7 @@ public class ADatePrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ADatePrinterFactory INSTANCE = new ADatePrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
-        ps.print("\"");
-        PrintTools.printDateString(b, s, l, ps);
-        ps.print("\"");
-    };
+    public static final IPrinter PRINTER = PrintTools::printDateString;
 
     @Override
     public IPrinter createPrinter(IEvaluatorContext context) {

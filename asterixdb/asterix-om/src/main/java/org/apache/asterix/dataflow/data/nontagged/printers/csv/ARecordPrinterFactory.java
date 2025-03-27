@@ -39,11 +39,14 @@ public class ARecordPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     private final ARecordType recType;
     private final ARecordType itemType;
+    private final Map<String, String> formatConfigs;
     private final Map<String, String> configuration;
 
-    public ARecordPrinterFactory(ARecordType recType, ARecordType itemType, Map<String, String> configuration) {
+    public ARecordPrinterFactory(ARecordType recType, ARecordType itemType, Map<String, String> formatConfigs,
+            Map<String, String> configuration) {
         this.recType = recType;
         this.itemType = itemType;
+        this.formatConfigs = formatConfigs;
         this.configuration = configuration;
     }
 
@@ -54,7 +57,7 @@ public class ARecordPrinterFactory implements IPrinterFactory {
         final IAType inputType =
                 recType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.OBJECT) : recType;
         final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
-        final APrintVisitor printVisitor = new APrintVisitor(context, itemType, configuration);
+        final APrintVisitor printVisitor = new APrintVisitor(context, itemType, formatConfigs, configuration);
         final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);
 
         return new IPrinter() {

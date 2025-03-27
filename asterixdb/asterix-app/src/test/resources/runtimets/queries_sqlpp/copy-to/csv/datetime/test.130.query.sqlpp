@@ -17,20 +17,10 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.declared;
+USE test;
 
-import java.util.Map;
-
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
-import org.apache.hyracks.api.exceptions.SourceLocation;
-
-public interface IExternalWriteDataSink extends IWriteDataSink {
-    ARecordType getItemType();
-
-    ARecordType getParquetSchema();
-
-    Map<String, String> getFormatConfigs();
-
-    SourceLocation getSourceLoc();
-}
+SELECT 
+joinDateTime as joinDateTime, get_type(joinDateTime) as joinDateTimeType, datetime(joinDateTime) as joinDateTimeCasted,  get_type(datetime(joinDateTime)) as joinDateTimeCastedType,
+joinDate as joinDate, get_type(joinDate) as joinDateType, date(joinDate) as joinDateCasted,  get_type(date(joinDate)) as joinDateCastedType,
+joinTime as joinTime, get_type(joinTime) as joinTimeType, time(joinTime) as joinTimeCasted,  get_type(time(joinTime)) as joinTimeCastedType
+FROM datetimeNotFormattedDataset;

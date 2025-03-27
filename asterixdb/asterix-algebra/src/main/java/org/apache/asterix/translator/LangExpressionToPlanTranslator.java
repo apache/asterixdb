@@ -467,7 +467,7 @@ abstract class LangExpressionToPlanTranslator
 
         // Write adapter configuration
         WriteDataSink writeDataSink = new WriteDataSink(copyTo.getAdapter(), copyTo.getProperties(),
-                copyTo.getItemType(), copyTo.getParquetSchema(), expr.getSourceLocation());
+                copyTo.getItemType(), copyTo.getParquetSchema(), copyTo.getFormatConfigs(), expr.getSourceLocation());
 
         // writeOperator
         WriteOperator writeOperator = new WriteOperator(sourceExprRef, new MutableObject<>(fullPathExpr),

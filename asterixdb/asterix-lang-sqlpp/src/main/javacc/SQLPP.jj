@@ -2978,6 +2978,8 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   RecordTypeDefinition recordTypeDefinition = null;
   TypeExpression typeExpr = null;
   Boolean isRecordTypeDefinition = false;
+  Map<String, String> formatConfigs = null;
+  String propertyName = null, propertyValue = null;
 
   List<Expression> partitionExprs = new ArrayList<Expression>();
   Map<Integer, VariableExpr> partitionVarExprs = new HashMap<Integer, VariableExpr>();
@@ -2994,7 +2996,8 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
       recordTypeDefinition = RecordTypeDef();
       isRecordTypeDefinition = true;
     }
-    <RIGHTPAREN>) ?
+    <RIGHTPAREN>
+  )?
   (<AS>
     {
       if (isRecordTypeDefinition == false) {
@@ -3004,6 +3007,14 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
       }
     }
   )?
+  (LOOKAHEAD(2) <IDENTIFIER> { propertyName = token.image.toLowerCase(); } propertyValue = StringLiteral()
+    {
+      if (formatConfigs == null) {
+        formatConfigs = new HashMap<String, String>();
+      }
+      formatConfigs.put(propertyName, propertyValue);
+    }
+  )*
   <WITH> withRecord = RecordConstructor()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();
@@ -3018,7 +3029,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
           usedAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(datasetName));
        }
 
-       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs, partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter(), typeExpr, recordTypeDefinition);
+       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs, partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter(), typeExpr, recordTypeDefinition, formatConfigs);
        return addSourceLocation(stmt, startToken);
     }
 }
