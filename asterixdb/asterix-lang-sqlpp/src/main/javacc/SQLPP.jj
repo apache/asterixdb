@@ -5858,6 +5858,7 @@ LimitClause LimitClause() throws ParseException:
     |
     (
       <OFFSET> { startToken = token; pushForbiddenScope(getCurrentScope()); } offsetExpr = Expression()
+      ( <LIMIT> limitExpr = Expression() )?
       { popForbiddenScope(); }
     )
   )

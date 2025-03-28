@@ -7452,6 +7452,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="limit_after_offset">
+        <output-dir compare="Text">limit_after_offset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="jobs">
         <output-dir compare="Text">jobs</output-dir>
       </compilation-unit>
