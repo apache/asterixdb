@@ -188,6 +188,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
+      <compilation-unit name="bucket-does-not-exist">
+        <output-dir compare="Text">bucket-does-not-exist</output-dir>
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"i-do-not-exist",' />
+        <placeholder name="additional_Properties" value='("container"="i-do-not-exist")' />
+        <expected-error>External sink error. software.amazon.awssdk.services.s3.model.NoSuchBucketException: The specified bucket does not exist</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
       <compilation-unit name="non-empty-folder">
         <output-dir compare="Text">non-empty-folder</output-dir>
         <placeholder name="adapter" value="S3" />

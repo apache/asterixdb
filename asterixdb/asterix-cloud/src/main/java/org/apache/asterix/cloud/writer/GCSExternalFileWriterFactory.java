@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud.writer;
 
-import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
@@ -39,11 +39,11 @@ import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 import com.google.cloud.BaseServiceException;
-import com.google.cloud.storage.StorageException;
 
-public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory {
+public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory<BaseServiceException> {
     private static final long serialVersionUID = 1L;
     static final char SEPARATOR = '/';
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
@@ -71,13 +71,8 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     }
 
     @Override
-    boolean isNoContainerFoundException(IOException e) {
-        return e.getCause() instanceof StorageException;
-    }
-
-    @Override
-    boolean isSdkException(Throwable e) {
-        return e instanceof BaseServiceException;
+    Optional<BaseServiceException> getSdkException(Throwable ex) {
+        return ExceptionUtils.getCauseOfType(ex, BaseServiceException.class);
     }
 
     @Override

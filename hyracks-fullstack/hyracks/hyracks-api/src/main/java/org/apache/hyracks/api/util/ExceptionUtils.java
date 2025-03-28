@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -221,5 +222,30 @@ public class ExceptionUtils {
      */
     public static boolean isErrorCode(HyracksDataException throwable, ErrorCode code) {
         return throwable.getError().isPresent() && throwable.getError().get() == code;
+    }
+
+    /**
+     * Checks if the specific type T exception is in the causes of the current throwable, and if so returns it,
+     * otherwise returns null
+     *
+     * @param throwable throwable
+     * @param targetType exception being targeted
+     * @return targetType exception if found, null otherwise
+     * @param <T> type of exception being targeted
+     */
+    public static <T extends Throwable> Optional<T> getCauseOfType(Throwable throwable, Class<T> targetType) {
+        if (throwable == null || targetType == null) {
+            return Optional.empty();
+        }
+
+        Throwable cause = throwable;
+        while (cause != null) {
+            if (targetType.isInstance(cause)) {
+                return Optional.of(targetType.cast(cause));
+            }
+            cause = cause.getCause();
+        }
+
+        return Optional.empty();
     }
 }
