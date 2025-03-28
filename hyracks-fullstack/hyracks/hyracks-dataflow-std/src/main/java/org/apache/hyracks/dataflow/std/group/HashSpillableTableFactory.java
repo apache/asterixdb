@@ -131,9 +131,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
         final int numPartitions = getNumOfPartitions(inputDataBytesSize / ctx.getInitialFrameSize(), memoryBudget);
         final int entriesPerPartition = (int) Math.ceil(1.0 * tableSize / numPartitions);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("created hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize
-                    + "  #partitions:" + numPartitions);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("created hashtable, table size:{} file size:{}  #partitions:{}", tableSize, inputDataBytesSize,
+                    numPartitions);
         }
 
         final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
@@ -185,9 +185,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 if (force || hashTableForTuplePointer.isGarbageCollectionNeeded()) {
                     int numberOfFramesReclaimed =
                             hashTableForTuplePointer.collectGarbage(bufferAccessor, tpcIntermediate);
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Garbage Collection on Hash table is done. Deallocated frames:"
-                                + numberOfFramesReclaimed);
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Garbage Collection on Hash table is done. Deallocated frames:{}",
+                                numberOfFramesReclaimed);
                     }
                     return numberOfFramesReclaimed != -1;
                 }

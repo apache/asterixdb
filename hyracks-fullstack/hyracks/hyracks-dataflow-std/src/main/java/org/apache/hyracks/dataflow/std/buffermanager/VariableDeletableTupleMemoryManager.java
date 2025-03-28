@@ -161,8 +161,8 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
         policy.close();
         frames.clear();
         numTuples = 0;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("VariableTupleMemoryManager has reorganized " + statsReOrg + " times");
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("VariableTupleMemoryManager has reorganized {} times", statsReOrg);
         }
         statsReOrg = 0;
     }

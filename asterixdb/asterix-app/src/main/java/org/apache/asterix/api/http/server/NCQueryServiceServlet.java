@@ -97,13 +97,15 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), e, false);
+                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), e, false,
+                        "interrupt");
                 throw e;
             } catch (TimeoutException exception) {
                 RuntimeDataException hde = new RuntimeDataException(ErrorCode.REQUEST_TIMEOUT);
                 hde.addSuppressed(exception);
                 // cancel query
-                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), hde, true);
+                cancelQuery(ncMb, ncCtx.getNodeId(), requestReference.getUuid(), param.getClientContextID(), hde, true,
+                        "timeout");
                 throw hde;
             }
             executionState.end();
@@ -156,7 +158,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,
-            Exception exception, boolean wait) {
+            Exception exception, boolean wait, String reason) {
         if (uuid == null && clientContextID == null) {
             return;
         }
@@ -165,8 +167,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), uuid, clientContextID);
             // TODO(mblow): multicc -- need to send cancellation to the correct cc
-            LOGGER.info("Cancelling query with uuid:{}, clientContextID:{} due to {}", uuid, clientContextID,
-                    exception.getClass().getSimpleName());
+            LOGGER.info("Cancelling query with uuid:{}, clientContextID:{} due to {}", uuid, clientContextID, reason);
             messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);
             if (wait) {
                 cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,
