@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -389,10 +390,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         IParser parser = factory.createParser(statementsText);
         List<Statement> stmts = parser.parse();
         QueryTranslator.validateStatements(stmts, true, RequestParameters.NO_CATEGORY_RESTRICTION_MASK);
-        Query query = (Query) stmts.get(stmts.size() - 1);
-        Set<VariableExpr> extVars =
-                compilationProvider.getRewriterFactory().createQueryRewriter().getExternalVariables(query.getBody());
-        return new ResultUtil.ParseOnlyResult(extVars);
+
+        Set<VariableExpr> allExtVars = new HashSet<>();
+        for (Statement stmt : stmts) {
+            Query query = (Query) stmt;
+            Set<VariableExpr> stmtExtVars = compilationProvider.getRewriterFactory().createQueryRewriter()
+                    .getExternalVariables(query.getBody());
+            allExtVars.addAll(stmtExtVars);
+        }
+        return new ResultUtil.ParseOnlyResult(allExtVars);
     }
 
     protected void executeStatement(IServletRequest request, IRequestReference requestReference, String statementsText,
