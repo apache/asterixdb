@@ -19,6 +19,8 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.getBuiltinFunctionInfo;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -264,8 +266,8 @@ public class JoinEnum {
             JoinCondition jc = joinConditions.get(newJoinConditions.get(0));
             return jc.joinCondition;
         }
-        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        ScalarFunctionCallExpression andExpr =
+                new ScalarFunctionCallExpression(getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
 
         for (int joinNum : newJoinConditions) {
             // Need to AND all the expressions.
@@ -284,8 +286,8 @@ public class JoinEnum {
             JoinCondition jc = joinConditions.get(newJoinConditions.get(0));
             return jc.joinCondition;
         }
-        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        ScalarFunctionCallExpression andExpr =
+                new ScalarFunctionCallExpression(getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
         for (int joinNum : newJoinConditions) {
             // need to AND all the expressions. skip derived exprs for now.
             JoinCondition jc = joinConditions.get(joinNum);
@@ -315,8 +317,8 @@ public class JoinEnum {
             }
             return null;
         }
-        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        ScalarFunctionCallExpression andExpr =
+                new ScalarFunctionCallExpression(getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
 
         // at least one equality predicate needs to be present for a hash join to be possible.
         boolean eqPredFound = false;
@@ -496,16 +498,43 @@ public class JoinEnum {
         List<LogicalVariable> usedVars = new ArrayList<>();
         List<AssignOperator> erase = new ArrayList<>();
         for (JoinCondition jc : joinConditions) {
-            usedVars.clear();
             ILogicalExpression expr = jc.joinCondition;
+            AbstractFunctionCallExpression aexpr = (AbstractFunctionCallExpression) expr;
+            usedVars.clear();
             expr.getUsedVariables(usedVars);
-            for (AssignOperator aOp : assignOps) {
+            boolean fixed = false;
+            for (AssignOperator aOp : assignOps) { // These assignOps are internal assignOps (found between join nodes)
                 for (int i = 0; i < aOp.getVariables().size(); i++) {
                     if (usedVars.contains(aOp.getVariables().get(i))) {
                         OperatorManipulationUtil.replaceVarWithExpr((AbstractFunctionCallExpression) expr,
                                 aOp.getVariables().get(i), aOp.getExpressions().get(i).getValue());
                         jc.joinCondition = expr;
                         erase.add(aOp);
+                        fixed = true;
+                    }
+                }
+            }
+            if (!fixed) {
+                // now comes the hard part. Need to look thru all the assigns in the leafInputs
+                for (ILogicalOperator op : leafInputs) {
+                    while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                            AssignOperator aOp = (AssignOperator) op;
+                            ILogicalExpression a = aOp.getExpressions().get(0).getValue();
+                            usedVars.clear();
+                            a.getUsedVariables(usedVars);
+                            if (usedVars.size() > 1) {
+                                for (int i = 0; i < aOp.getVariables().size(); i++) {
+                                    if (usedVars.contains(aOp.getVariables().get(i))) {
+                                        OperatorManipulationUtil.replaceVarWithExpr(
+                                                (AbstractFunctionCallExpression) expr, aOp.getVariables().get(i),
+                                                aOp.getExpressions().get(i).getValue());
+                                        jc.joinCondition = expr;
+                                    }
+                                }
+                            }
+                        }
+                        op = op.getInputs().get(0).getValue();
                     }
                 }
             }

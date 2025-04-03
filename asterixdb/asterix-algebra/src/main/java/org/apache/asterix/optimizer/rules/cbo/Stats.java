@@ -119,7 +119,7 @@ public class Stats {
         List<LogicalVariable> exprUsedVars = new ArrayList<>();
         joinExpr.getUsedVariables(exprUsedVars);
 
-        if (jc.numLeafInputs != 2) {
+        if ((jc.numLeafInputs != 2) || (exprUsedVars.size() <= 1)) {
             // we can only deal with binary joins. More checks should be in place as well such as R.a op S.a
             return 1.0;
         }
