@@ -24,6 +24,7 @@ public interface IRetryPolicy {
      * @param failure
      *            the cause of the failure (this cannot be null)
      * @return true if one more attempt should be done
+     * @throws InterruptedException if the retry policy can be interrupted
      */
-    boolean retry(Throwable failure);
+    boolean retry(Throwable failure) throws InterruptedException;
 }

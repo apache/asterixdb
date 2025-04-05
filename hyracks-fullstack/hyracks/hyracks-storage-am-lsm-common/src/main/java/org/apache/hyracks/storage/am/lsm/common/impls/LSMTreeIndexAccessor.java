@@ -127,12 +127,17 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
         if (operation.getStatus() == ILSMIOOperation.LSMIOOperationStatus.FAILURE) {
             IRetryPolicy policy = new ExponentialRetryPolicy();
             while (operation.getStatus() == ILSMIOOperation.LSMIOOperationStatus.FAILURE) {
-                if (policy.retry(operation.getFailure())) {
-                    operation.setFailure(null);
-                    operation.setStatus(ILSMIOOperation.LSMIOOperationStatus.SUCCESS);
-                    lsmHarness.flush(operation);
-                } else {
-                    break;
+                try {
+                    if (policy.retry(operation.getFailure())) {
+                        operation.setFailure(null);
+                        operation.setStatus(ILSMIOOperation.LSMIOOperationStatus.SUCCESS);
+                        lsmHarness.flush(operation);
+                    } else {
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    // in reality, this thread won't be interrupted
+                    throw HyracksDataException.create(e);
                 }
             }
         }

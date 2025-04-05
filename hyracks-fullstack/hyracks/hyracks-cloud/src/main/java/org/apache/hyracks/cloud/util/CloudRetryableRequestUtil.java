@@ -166,8 +166,12 @@ public class CloudRetryableRequestUtil {
                     LOGGER.warn("Lost suppressed interrupt during ICloudReturnableRequest", e);
                     Thread.currentThread().interrupt();
                 }
-                if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
-                    throw HyracksDataException.create(e);
+                try {
+                    if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
+                        throw HyracksDataException.create(e);
+                    }
+                } catch (InterruptedException interruptedEx) {
+                    throw HyracksDataException.create(interruptedEx);
                 }
                 attempt++;
                 retry.beforeRetry();
