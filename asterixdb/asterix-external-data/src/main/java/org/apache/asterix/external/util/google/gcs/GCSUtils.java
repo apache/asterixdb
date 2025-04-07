@@ -100,15 +100,15 @@ public class GCSUtils {
             try {
                 builder.setCredentials(GoogleCredentials.getApplicationDefault());
             } catch (Exception ex) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         } else if (jsonCredentials != null) {
             try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
                 builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
             } catch (IOException ex) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             } catch (Exception ex) {
-                throw new CompilationException(EXTERNAL_SOURCE_ERROR,
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex,
                         "Encountered an issue while processing the JSON credentials. Please ensure the provided credentials are valid.");
             }
         } else {

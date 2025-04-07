@@ -31,6 +31,10 @@ public class RuntimeDataException extends HyracksDataException {
         return new RuntimeDataException(error, params);
     }
 
+    public static RuntimeDataException create(ErrorCode error, Throwable cause, Serializable... params) {
+        return new RuntimeDataException(error, cause, params);
+    }
+
     public RuntimeDataException(ErrorCode errorCode, Throwable cause, SourceLocation sourceLoc,
             Serializable... params) {
         super(errorCode, cause, sourceLoc, params);
