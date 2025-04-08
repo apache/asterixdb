@@ -143,6 +143,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void afterFailure(ILSMIOOperation operation) {
+        dsInfo.incrementFailedIoOp(operation.getIOOperationType());
         if (isMerge(operation)) {
             try {
                 ioManager.delete(getOperationMaskFilePath(operation));

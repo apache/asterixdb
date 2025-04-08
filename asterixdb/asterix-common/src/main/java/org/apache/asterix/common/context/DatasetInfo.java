@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.api.IIOBlockingOperation;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -47,6 +48,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private final int datasetID;
     private final ILogManager logManager;
     private final LogRecord waitLog = new LogRecord();
+    private final AtomicInteger failedFlushes = new AtomicInteger();
+    private final AtomicInteger failedMerges = new AtomicInteger();
     private int numActiveIOOps;
     private int pendingFlushes;
     private int pendingMerges;
@@ -316,5 +319,26 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public synchronized int getPendingReplications() {
         return pendingReplications;
+    }
+
+    public int getFailedFlushes() {
+        return failedFlushes.get();
+    }
+
+    public int getFailedMerges() {
+        return failedMerges.get();
+    }
+
+    public void incrementFailedIoOp(ILSMIOOperation.LSMIOOperationType operation) {
+        switch (operation) {
+            case FLUSH:
+                failedFlushes.incrementAndGet();
+                break;
+            case MERGE:
+                failedMerges.incrementAndGet();
+                break;
+            default:
+                break;
+        }
     }
 }
