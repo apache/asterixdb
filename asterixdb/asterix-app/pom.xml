@@ -38,6 +38,7 @@
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
     <pip.path>${project.build.directory}/bin/pip3</pip.path>
+    <pypip.path>${project.build.directory}/bin/python</pypip.path>
     <shiv.path>${project.build.directory}/bin/shiv</shiv.path>
     <asterix-test-datagenerator-maven-plugin.version>${project.version}</asterix-test-datagenerator-maven-plugin.version>
   </properties>
@@ -335,6 +336,72 @@
                 <argument>${project.build.directory}/fake-gcs-server/storage</argument>
               </arguments>
               <async>true</async>
+            </configuration>
+          </execution>
+          <execution>
+            <id>clone-ch2</id>
+            <phase>${prepare-env.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>git</executable>
+              <arguments>
+                <argument>clone</argument>
+                <argument>https://github.com/couchbaselabs/ch2.git</argument>
+                <argument>${project.build.directory}/ch2</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>numpy-install</id>
+            <phase>${prepare-env.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${pip.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>install</argument>
+                <argument>-r </argument>
+                <argument>ch2/requirements.txt</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ch2-datagen</id>
+            <phase>${prepare-env.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${pypip.path}</executable>
+              <workingDirectory>${project.build.directory}/ch2/ch2driver/pytpcc</workingDirectory>
+              <arguments>
+                <argument>tpcc.py</argument>
+                <argument>nestcollectionsdocgen</argument>
+                <argument>--warehouses</argument>
+                <argument>1</argument>
+                <argument>--tclients</argument>
+                <argument>1</argument>
+                <argument>--no-execute</argument>
+                <argument>--bulkload-batch-size</argument>
+                <argument>100000000</argument>
+                <argument>--docgen-load</argument>
+                <argument>--datagenSeed</argument>
+                <argument>12345</argument>
+                <argument>--config</argument>
+                <argument>${project.basedir}/src/test/resources/ch2_docgen.conf</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
             </configuration>
           </execution>
         </executions>

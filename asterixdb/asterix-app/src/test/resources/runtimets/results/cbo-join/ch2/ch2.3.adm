@@ -1,0 +1,15 @@
+{ "avg_qty": 25.550356306373647, "avg_amount": 494.32922758758156, "COUNT_order": 20067, "ol_number": 0, "sum_qty": 512719, "sum_amount": 9919704.61 }
+{ "avg_qty": 25.416147209893783, "avg_amount": 498.70511943350124, "COUNT_order": 20053, "ol_number": 1, "sum_qty": 509670, "sum_amount": 1.000053376E7 }
+{ "avg_qty": 25.562154076290202, "avg_amount": 496.7387574171028, "COUNT_order": 20055, "ol_number": 2, "sum_qty": 512649, "sum_amount": 9962095.779999997 }
+{ "avg_qty": 25.584070354269723, "avg_amount": 504.99520661569983, "COUNT_order": 20013, "ol_number": 3, "sum_qty": 512014, "sum_amount": 1.010646907E7 }
+{ "avg_qty": 25.512225548902194, "avg_amount": 499.89355439121755, "COUNT_order": 20040, "ol_number": 4, "sum_qty": 511265, "sum_amount": 1.001786683E7 }
+{ "avg_qty": 25.487558107738582, "avg_amount": 497.55933552091875, "COUNT_order": 18285, "ol_number": 5, "sum_qty": 466040, "sum_amount": 9097872.45 }
+{ "avg_qty": 25.646245661043785, "avg_amount": 505.4765994762804, "COUNT_order": 16421, "ol_number": 6, "sum_qty": 421137, "sum_amount": 8300431.24 }
+{ "avg_qty": 25.459164031348823, "avg_amount": 496.40666231266323, "COUNT_order": 14546, "ol_number": 7, "sum_qty": 370329, "sum_amount": 7220731.31 }
+{ "avg_qty": 25.257673540059816, "avg_amount": 499.69933968204, "COUNT_order": 12706, "ol_number": 8, "sum_qty": 320924, "sum_amount": 6349179.81 }
+{ "avg_qty": 25.40641907381935, "avg_amount": 500.69681613938553, "COUNT_order": 10905, "ol_number": 9, "sum_qty": 277057, "sum_amount": 5460098.779999999 }
+{ "avg_qty": 25.759796887073627, "avg_amount": 517.3336405784303, "COUNT_order": 9059, "ol_number": 10, "sum_qty": 233358, "sum_amount": 4686525.45 }
+{ "avg_qty": 25.982667775929006, "avg_amount": 492.8491528008874, "COUNT_order": 7212, "ol_number": 11, "sum_qty": 187387, "sum_amount": 3554428.09 }
+{ "avg_qty": 25.41370937616735, "avg_amount": 509.99584422861403, "COUNT_order": 5354, "ol_number": 12, "sum_qty": 136065, "sum_amount": 2730517.7499999995 }
+{ "avg_qty": 25.27172374752335, "avg_amount": 533.910868949901, "COUNT_order": 3533, "ol_number": 13, "sum_qty": 89285, "sum_amount": 1886307.1 }
+{ "avg_qty": 25.81267846944603, "avg_amount": 521.5469274700171, "COUNT_order": 1751, "ol_number": 14, "sum_qty": 45198, "sum_amount": 913228.6699999999 }
