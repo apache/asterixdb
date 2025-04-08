@@ -64,7 +64,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_WRITE_BUFFER_SIZE(
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
-        CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50);
+        CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
+        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -96,6 +97,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_MAX_READ_REQUESTS_PER_SECOND:
                 case CLOUD_WRITE_BUFFER_SIZE:
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
+                case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -163,6 +165,8 @@ public class CloudProperties extends AbstractProperties {
                     return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                     return "The number of cloud reads for re-evaluating an eviction plan. (default: 50)";
+                case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
+                    return "The maximum number of HTTP connections to use for cloud requests per node. (default: 1000)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -257,5 +261,9 @@ public class CloudProperties extends AbstractProperties {
 
     public int getEvictionPlanReevaluationThreshold() {
         return accessor.getInt(Option.CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD);
+    }
+
+    public int getRequestsMaxHttpConnections() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS);
     }
 }
