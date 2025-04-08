@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -288,10 +289,14 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
 
     protected void closeCursors() throws HyracksDataException {
         if (btreeCursors != null) {
+            Throwable failure = null;
             for (int i = 0; i < numBTrees; ++i) {
                 if (btreeCursors[i] != null) {
-                    btreeCursors[i].close();
+                    failure = ResourceReleaseUtils.close(btreeCursors[i], failure);
                 }
+            }
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
             }
         }
     }
