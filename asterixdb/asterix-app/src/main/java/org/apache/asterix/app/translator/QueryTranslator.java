@@ -5631,7 +5631,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (atomic && jobId != null) {
                 globalTxManager.abortTransaction(jobId);
             }
-            if (ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+            if (ExceptionUtils.causedByInterrupt(e)) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
             }

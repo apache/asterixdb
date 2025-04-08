@@ -102,17 +102,17 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 } else if (shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
                     LOGGER.debug(() -> "S3 retryable error: " + userData(ex.getMessage()));
                 } else {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+                    throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
 
                 // Backoff for 1 sec for the first 2 retries, and 2 seconds from there onward
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 3 ? 1 : 2));
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
             } catch (SdkException ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         }
         return true;

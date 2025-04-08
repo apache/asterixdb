@@ -59,20 +59,20 @@ public class MetadataException extends CompilationException {
         super(message, cause);
     }
 
-    public MetadataException(ErrorCode errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(errorCode, cause, sourceLoc, params);
-    }
-
-    public MetadataException(ErrorCode errorCode, SourceLocation sourceLoc, Serializable... params) {
-        this(errorCode, null, sourceLoc, params);
+    public MetadataException(ErrorCode errorCode, Serializable... params) {
+        this(errorCode, null, null, params);
     }
 
     public MetadataException(ErrorCode errorCode, Throwable cause, Serializable... params) {
         this(errorCode, cause, null, params);
     }
 
-    public MetadataException(ErrorCode errorCode, Serializable... params) {
-        this(errorCode, null, null, params);
+    public MetadataException(ErrorCode errorCode, SourceLocation sourceLoc, Serializable... params) {
+        this(errorCode, null, sourceLoc, params);
+    }
+
+    public MetadataException(ErrorCode errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(errorCode, cause, sourceLoc, params);
     }
 
     public static MetadataException create(Throwable cause) {

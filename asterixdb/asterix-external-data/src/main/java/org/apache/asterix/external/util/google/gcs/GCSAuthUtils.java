@@ -190,7 +190,7 @@ public class GCSAuthUtils {
         } catch (IOException ex) {
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } catch (Exception ex) {
-            throw new CompilationException(EXTERNAL_SOURCE_ERROR,
+            throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex,
                     "Encountered an issue while processing the JSON credentials. Please ensure the provided credentials are valid.");
         }
     }
