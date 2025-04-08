@@ -43,7 +43,7 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
     protected final ARecordType projectedType;
     protected final ILogicalExpression filterExpression;
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
-    private final boolean embedFilterValues;
+    protected final boolean embedFilterValues;
     protected final Map<ILogicalExpression, ARecordType> filterPaths;
 
     public ExternalDatasetProjectionFiltrationInfo(ARecordType projectedType,

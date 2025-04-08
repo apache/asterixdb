@@ -61,7 +61,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     protected final ExpressionToExpectedSchemaNodeVisitor exprToNodeVisitor;
     protected final ColumnFilterPathBuilderVisitor pathBuilderVisitor;
     protected final Map<ILogicalExpression, ARecordType> paths;
-    private final ArrayPathCheckerVisitor checkerVisitor;
+    protected final ArrayPathCheckerVisitor checkerVisitor;
 
     public ColumnFilterPushdownProcessor(PushdownContext pushdownContext, IOptimizationContext context) {
         super(pushdownContext, context);

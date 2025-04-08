@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
+import static org.apache.asterix.external.util.ExternalDataUtils.isParquetFormat;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
@@ -43,6 +44,7 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.filter.NoOpDeltaTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -53,6 +55,7 @@ import org.apache.asterix.metadata.utils.filter.ColumnFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ColumnRangeFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.DeltaTableFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ExternalFilterBuilder;
+import org.apache.asterix.metadata.utils.filter.ParquetFilterBuilder;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
@@ -61,6 +64,7 @@ import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.asterix.runtime.projection.ParquetExternalDatasetProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -345,6 +349,25 @@ public class IndexUtil {
                 DeltaTableFilterBuilder builder = new DeltaTableFilterBuilder(
                         (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
                 return builder.build();
+            }
+        } else if (isParquetFormat(properties)) {
+            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+                return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
+            } else {
+                ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
+                ExternalDatasetProjectionFiltrationInfo pfi =
+                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
+                IExternalFilterEvaluatorFactory externalFilterEvaluatorFactory =
+                        NoOpExternalFilterEvaluatorFactory.INSTANCE;
+                if (!prefix.getPaths().isEmpty()) {
+                    ExternalFilterBuilder externalFilterBuilder =
+                            new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
+                    externalFilterEvaluatorFactory = externalFilterBuilder.build();
+                }
+                ParquetFilterBuilder builder = new ParquetFilterBuilder(
+                        (ParquetExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+                return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory,
+                        builder.buildFilterPredicate());
             }
         } else {
             if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {

@@ -35,6 +35,7 @@ import org.apache.asterix.optimizer.rules.pushdown.processor.ConsolidateProjecti
 import org.apache.asterix.optimizer.rules.pushdown.processor.DeltaTableFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ExternalDatasetFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.InlineAndNormalizeFilterExpressionsProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ParquetFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -120,6 +121,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         // Performs prefix pushdowns
         pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
         pushdownProcessorsExecutor.add(new DeltaTableFilterPushdownProcessor(pushdownContext, context));
+        pushdownProcessorsExecutor.add(new ParquetFilterPushdownProcessor(pushdownContext, context));
         pushdownProcessorsExecutor
                 .add(new ConsolidateProjectionAndFilterExpressionsProcessor(pushdownContext, context));
         // Inlines AND/OR expression (must be last to run)

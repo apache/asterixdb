@@ -26,7 +26,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.DefineDescriptor;
+import org.apache.asterix.optimizer.rules.pushdown.descriptor.ParquetDatasetScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.UseDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.FilterExpressionInlineVisitor;
@@ -84,8 +86,15 @@ public class PushdownContext {
 
     public void registerScan(Dataset dataset, List<LogicalVariable> pkList, LogicalVariable recordVariable,
             LogicalVariable metaVariable, AbstractScanOperator scanOperator) {
-        ScanDefineDescriptor scanDefDesc =
-                new ScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable, metaVariable, scanOperator);
+        ScanDefineDescriptor scanDefDesc;
+        if (DatasetUtil.isParquetFormat(dataset)) {
+            scanDefDesc = new ParquetDatasetScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable,
+                    metaVariable, scanOperator);
+        } else {
+            scanDefDesc = new ScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable, metaVariable,
+                    scanOperator);
+        }
+        new ScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable, metaVariable, scanOperator);
         defineChain.put(recordVariable, scanDefDesc);
         useChain.put(recordVariable, new ArrayList<>());
         if (metaVariable != null) {
