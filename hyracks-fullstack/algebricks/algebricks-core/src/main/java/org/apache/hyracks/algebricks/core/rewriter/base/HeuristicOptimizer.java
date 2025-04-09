@@ -129,7 +129,7 @@ public class HeuristicOptimizer {
                     context.getPlanStructureVerifier().verifyPlanStructure(opRef);
                 }
             } catch (AlgebricksException e) {
-                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE,
+                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, e,
                         String.format("Initial plan contains illegal %s", e.getMessage()));
             }
         }

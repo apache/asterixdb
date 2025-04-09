@@ -30,6 +30,8 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.util.ThrowingFunction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -37,6 +39,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
  * @author yingyib
  */
 public class ExceptionUtils {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private ExceptionUtils() {
     }
@@ -142,7 +145,18 @@ public class ExceptionUtils {
     }
 
     public static boolean causedByInterrupt(Throwable th) {
-        return getRootCause(th) instanceof InterruptedException;
+        return causedByInterrupt(th, false);
+    }
+
+    public static boolean causedByInterrupt(Throwable th, boolean skipInterruptedCheck) {
+        if (th instanceof InterruptedException) {
+            return true;
+        }
+        boolean isCausedByInterrupt = getRootCause(th) instanceof InterruptedException;
+        if (!skipInterruptedCheck && isCausedByInterrupt && !Thread.currentThread().isInterrupted()) {
+            LOGGER.warn("InterruptedException suppressed and !Thread.currentThread().isInterrupted()", th);
+        }
+        return isCausedByInterrupt;
     }
 
     /**

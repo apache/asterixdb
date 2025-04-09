@@ -54,10 +54,9 @@ public class ExpressionTypeComputer implements IExpressionTypeComputer {
                 try {
                     return env.getVarType(((VariableReferenceExpression) expr).getVariableReference());
                 } catch (Exception e) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
-                            "Could not resolve type for " + expr.toString() + ","
-                                    + "please check whether the used variable has been defined!",
-                            e);
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, expr.getSourceLocation(),
+                            "Could not resolve type for " + expr + ","
+                                    + "please check whether the used variable has been defined!");
                 }
             default:
                 throw new IllegalStateException();
