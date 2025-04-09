@@ -32,7 +32,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ParquetFilterPushdownProcessor extends ColumnFilterPushdownProcessor {
 
@@ -47,14 +46,13 @@ public class ParquetFilterPushdownProcessor extends ColumnFilterPushdownProcesso
 
     @Override
     protected boolean isNotPushable(AbstractFunctionCallExpression expression) {
-        FunctionIdentifier fid = expression.getFunctionIdentifier();
         return !RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(expression.getFunctionIdentifier());
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException {
-        IExpectedSchemaNode node = expression.accept(exprToNodeVisitor, null);
-        if (node == null || node.getType() != ExpectedSchemaNodeType.ANY) {
+    protected boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+            throws AlgebricksException {
+        if (node.getType() != ExpectedSchemaNodeType.ANY) {
             return false;
         }
 

@@ -1,0 +1,38 @@
+distribute result [$$36]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- SORT_MERGE_EXCHANGE [$$36(ASC) ]  |PARTITIONED|
+    order (ASC, $$36)
+    -- STABLE_SORT [$$36(ASC)]  |PARTITIONED|
+      exchange
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$36])
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (and(eq($$36, $$37), or($$39, $$40)))
+            -- HYBRID_HASH_JOIN [$$36][$$37]  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$39] <- [$$r1.getField("sensitive")] project: [$$36, $$39]
+                -- ASSIGN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$36, $$r1] <- test.Res1 project ({sensitive:any})
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$40] <- [$$r2.getField("sensitive")] project: [$$37, $$40]
+                -- ASSIGN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$37, $$r2] <- test.Res2 project ({sensitive:any})
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

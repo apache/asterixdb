@@ -117,9 +117,9 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException {
-        IExpectedSchemaNode node = expression.accept(exprToNodeVisitor, null);
-        if (node == null || node.getType() != ExpectedSchemaNodeType.ANY) {
+    protected boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+            throws AlgebricksException {
+        if (node.getType() != ExpectedSchemaNodeType.ANY) {
             return false;
         }
         paths.put(expression, pathBuilderVisitor.buildPath((AnyExpectedSchemaNode) node));
@@ -152,6 +152,11 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
         }
 
         scanDefineDescriptor.getFilterPaths().putAll(paths);
+    }
+
+    @Override
+    protected IExpectedSchemaNode getPathNode(AbstractFunctionCallExpression expression) throws AlgebricksException {
+        return expression.accept(exprToNodeVisitor, null);
     }
 
     protected final AbstractFunctionCallExpression andExpression(ILogicalExpression filterExpr,
