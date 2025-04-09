@@ -1,0 +1,86 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:0", 'c_double':double(-3.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:1", 'c_double':double(-3.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:2", 'c_double':double(-3.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:3", 'c_double':double(-3.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:4", 'c_double':double(-3.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:5", 'c_double':double(-2.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:6", 'c_double':double(-2.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:7", 'c_double':double(-2.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:8", 'c_double':null} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:9", 'c_double':double(-2.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:10", 'c_double':double(-2.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:11", 'c_double':double(-2.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:12", 'c_double':double(-2.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:13", 'c_double':double(-2.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:14", 'c_double':double(-1.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:15", 'c_double':double(-1.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:16", 'c_double':double('INF')} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:17", 'c_double':double(-1.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:18", 'c_double':double(-1.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:19", 'c_double':double(-1.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:20", 'c_double':double(-1.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:21", 'c_double':double(-1.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:22", 'c_double':double(-1.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:23", 'c_double':double(-0.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:24", 'c_double':double('-INF')} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:25", 'c_double':double(-0.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:26", 'c_double':double(-0.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:27", 'c_double':double(-0.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:28", 'c_double':double(-0.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:29", 'c_double':double(-0.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:30", 'c_double':double(-0.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:31", 'c_double':double(0.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:32", 'c_double':null} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:33", 'c_double':double(0.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:34", 'c_double':double(0.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:35", 'c_double':double(0.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:36", 'c_double':double(0.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:37", 'c_double':double(0.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:38", 'c_double':double(0.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:39", 'c_double':double(0.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:40", 'c_double':double('INF')} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:41", 'c_double':double(1.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:42", 'c_double':double(1.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:43", 'c_double':double(1.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:44", 'c_double':double(1.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:45", 'c_double':double(1.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:46", 'c_double':double(1.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:47", 'c_double':double(1.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:48", 'c_double':double('-INF')} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:49", 'c_double':double(1.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:50", 'c_double':double(2.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:51", 'c_double':double(2.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:52", 'c_double':double(2.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:53", 'c_double':double(2.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:54", 'c_double':double(2.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:55", 'c_double':double(2.625)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:56", 'c_double':null} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:57", 'c_double':double(2.75)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:58", 'c_double':double(2.875)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:59", 'c_double':double(3.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:60", 'c_double':double(3.125)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:61", 'c_double':double(3.25)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:62", 'c_double':double(3.375)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:63", 'c_double':double(3.5)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:64", 'c_double':double('INF')} );

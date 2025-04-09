@@ -16557,6 +16557,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/double">
+        <output-dir compare="Text">filter/double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/double-precision">
+        <output-dir compare="Text">filter/double-precision</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="delete/001">
         <output-dir compare="Text">delete/001</output-dir>
       </compilation-unit>

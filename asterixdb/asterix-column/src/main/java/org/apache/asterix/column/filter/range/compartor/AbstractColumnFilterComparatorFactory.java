@@ -49,11 +49,16 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnRangeFilt
 
         ATypeTag leftTypeTag = leftAccessor.getTypeTag();
         ATypeTag rightTypeTag = rightAccessor.getTypeTag();
+        // We should not skip different types if they are compatible.
+        // However, we avoid applying range filters on incompatible types as normalization logic
+        // differs between types.
+        // Example: For queries on DOUBLE, we should not skip BIGINT.
         if (isNoOp(leftAccessor, rightAccessor)
                 || leftTypeTag != rightTypeTag && ATypeHierarchy.isCompatible(leftTypeTag, rightTypeTag)) {
             // Cannot compare comparable values with different types. Bail out.
             return TrueColumnFilterEvaluator.INSTANCE;
         } else if (cannotCompare(leftTypeTag, rightTypeTag)) {
+            // Columns with non-comparable types (e.g., DOUBLE and STRING) can be safely skipped.
             return FalseColumnFilterEvaluator.INSTANCE;
         }
         return createComparator(leftAccessor, rightAccessor);

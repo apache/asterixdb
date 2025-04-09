@@ -21,6 +21,7 @@ package org.apache.asterix.column.filter.range.compartor;
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
+import org.apache.asterix.om.types.ATypeTag;
 
 public class LTColumnFilterEvaluatorFactory extends AbstractColumnFilterComparatorFactory {
     private static final long serialVersionUID = -4066709771630858677L;
@@ -36,6 +37,10 @@ public class LTColumnFilterEvaluatorFactory extends AbstractColumnFilterComparat
         return new AbstractComparator(left, right) {
             @Override
             public boolean evaluate() {
+                if (left.getTypeTag() == ATypeTag.DOUBLE) {
+                    return Double.longBitsToDouble(left.getNormalizedValue()) < Double
+                            .longBitsToDouble(right.getNormalizedValue());
+                }
                 return left.getNormalizedValue() < right.getNormalizedValue();
             }
         };

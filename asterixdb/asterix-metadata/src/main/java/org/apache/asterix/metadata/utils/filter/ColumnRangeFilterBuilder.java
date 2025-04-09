@@ -194,6 +194,14 @@ public class ColumnRangeFilterBuilder {
     private static IColumnRangeFilterEvaluatorFactory createEvaluator(ComparisonKind comparisonKind,
             IColumnRangeFilterValueAccessorFactory min, IColumnRangeFilterValueAccessorFactory constVal,
             IColumnRangeFilterValueAccessorFactory max) {
+
+        /*
+        * For a filter condition of the form col < const, the page will be read only if const >= min(col).
+        *  Similarly, for col <= const, the page will be read only if const > min(col).
+        *  for col > const, the page will be read only if const < max(col).
+        *  for col >= const, the page will be read only if const <= max(col).
+        * */
+
         if (comparisonKind == ComparisonKind.LT) {
             return new GTColumnFilterEvaluatorFactory(constVal, min);
         } else if (comparisonKind == ComparisonKind.LE) {
