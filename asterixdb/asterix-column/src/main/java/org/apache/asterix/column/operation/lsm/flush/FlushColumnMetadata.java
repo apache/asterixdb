@@ -563,7 +563,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
                 addColumn(columnIndex, writer);
                 return new PrimitiveSchemaNode(columnIndex, normalizedTypeTag, primaryKey);
             default:
-                throw new IllegalStateException("Unsupported type " + childTypeTag);
+                throw new IllegalArgumentException("Unsupported type " + childTypeTag);
 
         }
     }

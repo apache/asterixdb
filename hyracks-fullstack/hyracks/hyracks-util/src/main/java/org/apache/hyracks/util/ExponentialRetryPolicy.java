@@ -85,6 +85,9 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
 
     @Override
     public boolean retry(Throwable failure) throws InterruptedException {
+        if (failure instanceof IllegalArgumentException) {
+            return false;
+        }
         if (attempt < maxRetries) {
             long sleepTime = ThreadLocalRandom.current().nextLong(1 + delay);
             if (printDebugLines) {
