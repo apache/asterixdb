@@ -42,15 +42,18 @@ public final class S3ClientConfig {
     private final int readMaxRequestsPerSeconds;
     private final int writeMaxRequestsPerSeconds;
     private final int requestsMaxHttpConnections;
+    private final boolean forcePathStyle;
+    private final boolean disableSslVerify;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize) {
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0);
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int requestsMaxHttpConnections) {
+            int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
+            boolean disableSslVerify) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -61,6 +64,8 @@ public final class S3ClientConfig {
         this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.requestsMaxHttpConnections = requestsMaxHttpConnections;
+        this.forcePathStyle = forcePathStyle;
+        this.disableSslVerify = disableSslVerify;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
@@ -68,7 +73,8 @@ public final class S3ClientConfig {
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
-                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getRequestsMaxHttpConnections());
+                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getRequestsMaxHttpConnections(),
+                cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify());
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -128,6 +134,14 @@ public final class S3ClientConfig {
 
     public int getRequestsMaxHttpConnections() {
         return requestsMaxHttpConnections;
+    }
+
+    public boolean isDisableSslVerify() {
+        return disableSslVerify;
+    }
+
+    public boolean isForcePathStyle() {
+        return forcePathStyle;
     }
 
     private boolean isS3Mock() {

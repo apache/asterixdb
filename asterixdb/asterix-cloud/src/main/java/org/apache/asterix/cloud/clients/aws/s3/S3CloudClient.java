@@ -26,7 +26,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +62,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.http.SdkHttpConfigurationOption;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -79,6 +80,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Error;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.utils.AttributeMap;
 
 @ThreadSafe
 public final class S3CloudClient implements ICloudClient {
@@ -326,19 +328,21 @@ public final class S3CloudClient implements ICloudClient {
         S3ClientBuilder builder = S3Client.builder();
         builder.credentialsProvider(config.createCredentialsProvider());
         builder.region(Region.of(config.getRegion()));
+        builder.forcePathStyle(config.isForcePathStyle());
+
+        AttributeMap.Builder customHttpConfigBuilder = AttributeMap.builder();
         if (config.getRequestsMaxHttpConnections() > 0) {
-            builder.httpClientBuilder(
-                    ApacheHttpClient.builder().maxConnections(config.getRequestsMaxHttpConnections()));
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.MAX_CONNECTIONS,
+                    config.getRequestsMaxHttpConnections());
         }
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
-            URI uri;
-            try {
-                uri = new URI(config.getEndpoint());
-            } catch (URISyntaxException ex) {
-                throw new IllegalArgumentException(ex);
-            }
-            builder.endpointOverride(uri);
+            builder.endpointOverride(URI.create(config.getEndpoint()));
         }
+        if (config.isDisableSslVerify()) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
+        }
+        SdkHttpClient httpClient = ApacheHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());
+        builder.httpClient(httpClient);
         return builder.build();
     }
 

@@ -37,6 +37,9 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
+import software.amazon.awssdk.http.SdkHttpConfigurationOption;
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
@@ -50,6 +53,7 @@ import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
 import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
 import software.amazon.awssdk.transfer.s3.model.FailedFileDownload;
 import software.amazon.awssdk.transfer.s3.model.FileDownload;
+import software.amazon.awssdk.utils.AttributeMap;
 
 @ThreadSafe
 class S3ParallelDownloader implements IParallelDownloader {
@@ -170,24 +174,28 @@ class S3ParallelDownloader implements IParallelDownloader {
     }
 
     private static S3AsyncClient createAsyncClient(S3ClientConfig config) {
-        if (config.isLocalS3Provider()) {
-            // CRT client is not supported by S3Mock
-            return createS3AsyncClient(config);
-        } else {
-            // CRT could provide a better performance when used with an actual S3
+        // CRT client is not supported by all local S3 providers, but provides a better performance with AWS S3
+        if (!config.isLocalS3Provider()) {
             return createS3CrtAsyncClient(config);
         }
+        return createS3AsyncClient(config);
     }
 
     private static S3AsyncClient createS3AsyncClient(S3ClientConfig config) {
         S3AsyncClientBuilder builder = S3AsyncClient.builder();
         builder.credentialsProvider(config.createCredentialsProvider());
         builder.region(Region.of(config.getRegion()));
-
+        builder.forcePathStyle(config.isForcePathStyle());
+        AttributeMap.Builder customHttpConfigBuilder = AttributeMap.builder();
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));
         }
-
+        if (config.isDisableSslVerify()) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
+        }
+        SdkAsyncHttpClient nettyHttpClient =
+                NettyNioAsyncHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());
+        builder.httpClient(nettyHttpClient);
         return builder.build();
     }
 
@@ -195,11 +203,10 @@ class S3ParallelDownloader implements IParallelDownloader {
         S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder();
         builder.credentialsProvider(config.createCredentialsProvider());
         builder.region(Region.of(config.getRegion()));
-
+        builder.forcePathStyle(config.isForcePathStyle());
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));
         }
-
         return builder.build();
     }
 

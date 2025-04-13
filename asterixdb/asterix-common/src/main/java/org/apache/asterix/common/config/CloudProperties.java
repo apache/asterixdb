@@ -65,7 +65,9 @@ public class CloudProperties extends AbstractProperties {
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
-        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000);
+        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000),
+        CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
+        CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -98,6 +100,8 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_WRITE_BUFFER_SIZE:
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
+                case CLOUD_STORAGE_FORCE_PATH_STYLE:
+                case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -167,6 +171,12 @@ public class CloudProperties extends AbstractProperties {
                     return "The number of cloud reads for re-evaluating an eviction plan. (default: 50)";
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
                     return "The maximum number of HTTP connections to use for cloud requests per node. (default: 1000)";
+                case CLOUD_STORAGE_FORCE_PATH_STYLE:
+                    return "Indicates whether or not to force path style when accessing the cloud storage. (default:"
+                            + " false)";
+                case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
+                    return "Indicates whether or not to disable SSL certificate verification on the cloud storage. "
+                            + "(default: false)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -265,5 +275,13 @@ public class CloudProperties extends AbstractProperties {
 
     public int getRequestsMaxHttpConnections() {
         return accessor.getInt(Option.CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS);
+    }
+
+    public boolean isStorageForcePathStyle() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_FORCE_PATH_STYLE);
+    }
+
+    public boolean isStorageDisableSSLVerify() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_DISABLE_SSL_VERIFY);
     }
 }
