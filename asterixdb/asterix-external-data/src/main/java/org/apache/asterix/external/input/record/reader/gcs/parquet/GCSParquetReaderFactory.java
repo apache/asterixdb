@@ -23,13 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
+import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.google.gcs.GCSAuthUtils;
 import org.apache.asterix.external.util.google.gcs.GCSConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
 import org.apache.hadoop.mapred.JobConf;
@@ -37,6 +40,8 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.parquet.hadoop.ParquetInputFormat;
 
 import com.google.cloud.storage.Blob;
 
@@ -59,7 +64,8 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        List<Blob> filesOnly = GCSUtils.listItems(configuration, includeExcludeMatcher, warningCollector,
+        IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
+        List<Blob> filesOnly = GCSUtils.listItems(appCtx, configuration, includeExcludeMatcher, warningCollector,
                 externalDataPrefix, evaluator);
 
         // get path
@@ -71,8 +77,15 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
         // configure hadoop input splits
         JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         int numberOfPartitions = getPartitionConstraint().getLocations().length;
-        GCSUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
+        GCSAuthUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
         configureHdfsConf(conf, configuration);
+        if (filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory) {
+            FilterPredicate parquetFilterPredicate =
+                    ((ParquetFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
+            if (parquetFilterPredicate != null) {
+                ParquetInputFormat.setFilterPredicate(conf, parquetFilterPredicate);
+            }
+        }
     }
 
     @Override

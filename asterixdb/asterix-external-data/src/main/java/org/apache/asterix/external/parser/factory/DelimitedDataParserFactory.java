@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_NULL_STR;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +55,7 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
         char escape =
                 ExternalDataUtils.validateGetEscape(configuration, configuration.get(ExternalDataConstants.KEY_FORMAT));
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
-        String nullString = configuration.get(ExternalDataConstants.KEY_NULL_STR);
+        String nullString = configuration.get(KEY_NULL_STR);
         return new DelimitedDataParser(context, valueParserFactories, delimiter, quote, escape, hasHeader, recordType,
                 ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM), nullString);
     }

@@ -7452,6 +7452,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="limit_after_offset">
+        <output-dir compare="Text">limit_after_offset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="jobs">
         <output-dir compare="Text">jobs</output-dir>
       </compilation-unit>
@@ -16549,6 +16554,16 @@
     <test-case FilePath="column">
       <compilation-unit name="filter/ASTERIXDB-3582-2">
         <output-dir compare="Text">filter/ASTERIXDB-3582-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/double">
+        <output-dir compare="Text">filter/double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/double-precision">
+        <output-dir compare="Text">filter/double-precision</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">

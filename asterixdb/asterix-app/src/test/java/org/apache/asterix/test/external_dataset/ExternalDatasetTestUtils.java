@@ -357,6 +357,7 @@ public class ExternalDatasetTestUtils {
 
         // Load external filter directories and files
         loadDirectory(dataBasePath, "external-filter", CSV_FILTER);
+        loadDirectory(dataBasePath, "csv-params", CSV_FILTER);
     }
 
     private static void loadTsvFiles() {

@@ -24,6 +24,7 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -39,12 +40,11 @@ import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWriterFactory {
+abstract class AbstractCloudExternalFileWriterFactory<T extends Throwable> implements IExternalFileWriterFactory {
     private static final long serialVersionUID = -6204498482419719403L;
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -67,9 +67,15 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
 
     abstract int getPathMaxLengthInBytes();
 
-    abstract boolean isNoContainerFoundException(IOException e);
-
-    abstract boolean isSdkException(Throwable e);
+    /**
+     * Certain failures are wrapped in our exceptions as IO failures, this method checks if the original failure
+     * is reported from the external SDK, and if so, returns it. This is to ensure that the failure
+     * reported by the external SDK is the one reported back as the issue.
+     *
+     * @param ex failure thrown
+     * @return the throwable if it is an SDK exception, null otherwise
+     */
+    abstract Optional<T> getSdkException(Throwable ex);
 
     final void buildClient(IApplicationContext appCtx) throws HyracksDataException {
         try {
@@ -95,18 +101,17 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
 
         try {
             doValidate(testClient, bucket);
-        } catch (IOException e) {
-            if (isNoContainerFoundException(e)) {
-                throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, bucket);
-            } else {
-                throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR,
-                        ExceptionUtils.getMessageOrToString(e));
-            }
         } catch (Throwable e) {
-            if (isSdkException(e)) {
-                throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
+            Optional<T> sdkException = getSdkException(e);
+            if (sdkException.isPresent()) {
+                Throwable actualException = sdkException.get();
+                throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, actualException,
+                        getMessageOrToString(actualException));
             }
-            throw e;
+            if (e instanceof AlgebricksException algebricksException) {
+                throw algebricksException;
+            }
+            throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
         }
     }
 
@@ -148,6 +153,7 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
         } catch (HyracksDataException e) {
             writer.abort();
             aborted = true;
+            throw e;
         } finally {
             if (writer != null && !aborted) {
                 writer.finish();

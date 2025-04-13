@@ -19,20 +19,48 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import java.util.List;
+
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class DoubleIfTypeComputer extends AbstractResultTypeComputer {
+public class DoubleIfTypeComputer implements IResultTypeComputer {
 
     public static final DoubleIfTypeComputer INSTANCE = new DoubleIfTypeComputer();
 
     @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        IAType inputType = strippedInputTypes[0];
-        return inputType.getTypeTag() == ATypeTag.DOUBLE ? inputType : BuiltinType.ANY;
+    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
+            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
+        List<Mutable<ILogicalExpression>> arguments = fce.getArguments();
+        if (arguments.size() != 2) {
+            String functionName = fce.getFunctionIdentifier().getName();
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, fce.getSourceLocation(),
+                    functionName);
+        }
+        Mutable<ILogicalExpression> firstArg = arguments.get(0);
+        IAType firstArgType = (IAType) env.getType(firstArg.getValue());
+        if (firstArgType.getTypeTag() == ATypeTag.DOUBLE) {
+            return firstArgType;
+        } else if (firstArgType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) firstArgType;
+            IAType actualType = unionType.getActualType();
+            if (actualType.getTypeTag() == ATypeTag.DOUBLE && unionType.isUnknownableType()) {
+                return unionType;
+            }
+        }
+
+        return BuiltinType.ANY;
     }
 }

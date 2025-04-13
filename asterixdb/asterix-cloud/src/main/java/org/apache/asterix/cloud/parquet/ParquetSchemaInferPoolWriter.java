@@ -33,7 +33,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 // Maintains a pool of Parquet writers holding a file, each with its own schema , and writes values to the appropriate writer based on schema.
 public class ParquetSchemaInferPoolWriter {
     private final ParquetExternalWriterFactory writerFactory;
-
     private List<ParquetSchemaTree.SchemaNode> schemaNodes;
     private List<IExternalWriter> writerList;
     private final int maxSchemas;
@@ -72,45 +71,38 @@ public class ParquetSchemaInferPoolWriter {
         writerList.add(null);
     }
 
-    public void initNewPartition(IFrameTupleReference tuple) throws HyracksDataException {
-        for (int i = 0; i < writerList.size(); i++) {
-            createOrInitPartition(i, tuple);
-        }
-    }
-
-    public void write(IValueReference value) throws HyracksDataException {
+    public void write(IValueReference value, IFrameTupleReference tupleRef) throws HyracksDataException {
         for (int i = 0; i < schemaNodes.size(); i++) {
             if (schemaChecker.checkSchema(schemaNodes.get(i), value)
                     .equals(ISchemaChecker.SchemaComparisonType.EQUIVALENT)) {
-                createOrWrite(i, value);
+                createOrWrite(i, value, tupleRef);
                 return;
             }
         }
     }
 
     public void close() throws HyracksDataException {
-        for (int i = 0; i < writerList.size(); i++) {
-            closeWriter(i);
-        }
+        closeAll();
     }
 
-    private void createOrInitPartition(int index, IFrameTupleReference tupleReference) throws HyracksDataException {
+    private void createOrWrite(int index, IValueReference value, IFrameTupleReference tupleRef)
+            throws HyracksDataException {
         if (writerList.get(index) == null) {
-            createWriter(index);
-        }
-        writerList.get(index).initNewPartition(tupleReference);
-    }
-
-    private void createOrWrite(int index, IValueReference value) throws HyracksDataException {
-        if (writerList.get(index) == null) {
-            createWriter(index);
+            createWriter(index, tupleRef);
         }
         writerList.get(index).write(value);
     }
 
-    private void createWriter(int index) throws HyracksDataException {
+    private void createWriter(int index, IFrameTupleReference tupleRef) throws HyracksDataException {
         writerList.set(index, writerFactory.createWriter(schemaNodes.get(index)));
         writerList.get(index).open();
+        writerList.get(index).initNewPartition(tupleRef);
+    }
+
+    public void closeAll() throws HyracksDataException {
+        for (int i = 0; i < writerList.size(); i++) {
+            closeWriter(i);
+        }
     }
 
     private void closeWriter(int index) throws HyracksDataException {

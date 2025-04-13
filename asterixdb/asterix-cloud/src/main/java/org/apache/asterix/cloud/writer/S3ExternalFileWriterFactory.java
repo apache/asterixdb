@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud.writer;
 
-import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
@@ -40,11 +40,11 @@ import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
-public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory {
+public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory<SdkException> {
     private static final long serialVersionUID = 4551318140901866805L;
     static final char SEPARATOR = '/';
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
@@ -82,13 +82,8 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
     }
 
     @Override
-    boolean isNoContainerFoundException(IOException e) {
-        return e.getCause() instanceof NoSuchBucketException;
-    }
-
-    @Override
-    boolean isSdkException(Throwable e) {
-        return e instanceof SdkException;
+    Optional<SdkException> getSdkException(Throwable ex) {
+        return ExceptionUtils.getCauseOfType(ex, SdkException.class);
     }
 
     @Override

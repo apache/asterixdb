@@ -28,6 +28,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
@@ -127,8 +128,12 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
             }
 
             if (rangeCursors != null) {
+                Throwable failure = null;
                 for (int i = 0; i < rangeCursors.length; i++) {
-                    rangeCursors[i].close();
+                    failure = ResourceReleaseUtils.close(rangeCursors[i], failure);
+                }
+                if (failure != null) {
+                    throw HyracksDataException.create(failure);
                 }
             }
         } finally {

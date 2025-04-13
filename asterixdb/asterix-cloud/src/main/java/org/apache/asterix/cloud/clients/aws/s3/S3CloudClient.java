@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
@@ -325,6 +326,10 @@ public final class S3CloudClient implements ICloudClient {
         S3ClientBuilder builder = S3Client.builder();
         builder.credentialsProvider(config.createCredentialsProvider());
         builder.region(Region.of(config.getRegion()));
+        if (config.getRequestsMaxHttpConnections() > 0) {
+            builder.httpClientBuilder(
+                    ApacheHttpClient.builder().maxConnections(config.getRequestsMaxHttpConnections()));
+        }
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             URI uri;
             try {

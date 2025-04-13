@@ -33,6 +33,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
+import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
@@ -44,6 +45,8 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.parquet.hadoop.ParquetInputFormat;
 
 import com.amazonaws.SdkBaseException;
 
@@ -91,6 +94,13 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
             IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
             configureAwsS3HdfsJobConf(appCtx, conf, configuration, numberOfPartitions);
             configureHdfsConf(conf, configuration);
+            if (filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory) {
+                FilterPredicate parquetFilterPredicate =
+                        ((ParquetFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
+                if (parquetFilterPredicate != null) {
+                    ParquetInputFormat.setFilterPredicate(conf, parquetFilterPredicate);
+                }
+            }
         } catch (SdkException | SdkBaseException ex) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } catch (AlgebricksException ex) {

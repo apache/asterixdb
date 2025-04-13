@@ -49,7 +49,7 @@ public class IfNanDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new IfNanOrInfDescriptor.AbstractIfInfOrNanEval(ctx, args, true) {
+                return new IfNanOrInfDescriptor.AbstractIfInfOrNanEval(ctx, args) {
                     @Override
                     protected boolean skipDouble(double d) {
                         return Double.isNaN(d);

@@ -26,6 +26,10 @@ import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterEvaluator {
     protected final IScalarEvaluator evaluator;
@@ -34,19 +38,21 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
     private final VoidPointable booleanResult;
     protected int tupleIndex;
     protected int valueIndex;
+    private int tupleCount;
 
     AbstractIterableFilterEvaluator(IScalarEvaluator evaluator, List<IColumnValuesReader> readers) {
         this.evaluator = evaluator;
         this.primaryKeyReader = readers.get(0);
         this.readers = readers;
         this.booleanResult = new VoidPointable();
-        reset();
+        reset(-1);
     }
 
     @Override
-    public final void reset() {
+    public final void reset(int tupleCount) {
         tupleIndex = -1;
         valueIndex = -1;
+        this.tupleCount = tupleCount;
     }
 
     @Override
@@ -68,6 +74,9 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
         // 0(skip) --> 1(skip) --> 2nd tuple
         // so the gap between index and tupleIndex is count.
         // and after increasing by (count - 1), evaluate() for the Xth tuple.
+        if (index > tupleCount) {
+            index = tupleCount;
+        }
         int count = index - this.tupleIndex;
         if (count > 0) {
             tupleIndex += count - 1;
@@ -101,7 +110,7 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
         int nonAntiMatterCount = 0;
         for (int i = 0; i < count; i++) {
             primaryKeyReader.next();
-            nonAntiMatterCount += primaryKeyReader.isValue() ? 0 : 1;
+            nonAntiMatterCount += primaryKeyReader.isValue() ? 1 : 0;
         }
         for (int i = 1; nonAntiMatterCount > 0 && i < readers.size(); i++) {
             readers.get(i).skip(nonAntiMatterCount);
@@ -113,5 +122,18 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
         evaluator.evaluate(null, booleanResult);
         return BinaryBooleanInspector.getBooleanValue(booleanResult.getByteArray(), booleanResult.getStartOffset(),
                 booleanResult.getLength());
+    }
+
+    @Override
+    public void appendInformation(ColumnarValueException e) {
+        ObjectNode filterIteratorNode = e.createNode(getClass().getSimpleName());
+        filterIteratorNode.put("filterTupleIndex", tupleIndex);
+        filterIteratorNode.put("filterValueIndex", valueIndex);
+        ArrayNode pkNodes = filterIteratorNode.putArray("filterPrimaryKeyReaders");
+        primaryKeyReader.appendReaderInformation(pkNodes.addObject());
+        ArrayNode valueNodes = filterIteratorNode.putArray("filterValueReaders");
+        for (int i = 1; i < readers.size(); i++) {
+            readers.get(i).appendReaderInformation(valueNodes.addObject());
+        }
     }
 }

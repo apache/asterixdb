@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.DEFAULT_VALUES;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.getCharOrDefault;
 
 import java.io.PrintStream;

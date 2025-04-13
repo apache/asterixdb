@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.test;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -91,8 +94,8 @@ public class RecordWithMetaTest {
             LocalFSInputStream inputStream = new LocalFSInputStream(watcher);
             // create reader record reader
             Map<String, String> config = new HashMap<>();
-            config.put(ExternalDataConstants.KEY_HEADER, "true");
-            config.put(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
+            config.put(KEY_HEADER, "true");
+            config.put(KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
             LineRecordReader lineReader = new LineRecordReader();
             lineReader.configure(ctx, inputStream, config);
             // create csv with json record reader

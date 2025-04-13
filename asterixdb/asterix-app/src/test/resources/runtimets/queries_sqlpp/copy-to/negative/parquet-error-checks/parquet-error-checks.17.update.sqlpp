@@ -26,7 +26,7 @@ COPY (
 select id,name from TestCollection c
     ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-error-checks16")
+PATH (%pathprefix% "copy-to-result", "parquet-error-checks17")
 TYPE ( { id:int, rect: rectangle })
 WITH {
     %template_colons%,

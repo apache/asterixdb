@@ -57,16 +57,16 @@ public class CloudStorageTest {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final TestCaseContext tcCtx;
-    private static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
-    private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
-    private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
-    private static final String DELTA_RESULT_PATH = "results_cloud";
-    private static final String EXCLUDED_TESTS = "MP";
+    public static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
+    public static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
+    public static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
+    public static final String DELTA_RESULT_PATH = "results_cloud";
+    public static final String EXCLUDED_TESTS = "MP";
 
-    private static final String PLAYGROUND_CONTAINER = "playground";
-    private static final String MOCK_SERVER_REGION = "us-west-2";
-    private static final int MOCK_SERVER_PORT = 8001;
-    private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
+    public static final String PLAYGROUND_CONTAINER = "playground";
+    public static final String MOCK_SERVER_REGION = "us-west-2";
+    public static final int MOCK_SERVER_PORT = 8001;
+    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
 
     public CloudStorageTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -74,8 +74,12 @@ public class CloudStorageTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
+        setupEnv(testExecutor);
+    }
+
+    public static void setupEnv(TestExecutor testExecutor) throws Exception {
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
         LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);

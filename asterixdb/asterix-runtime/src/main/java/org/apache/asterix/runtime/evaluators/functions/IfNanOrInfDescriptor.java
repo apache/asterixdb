@@ -58,7 +58,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractIfInfOrNanEval(ctx, args, true) {
+                return new AbstractIfInfOrNanEval(ctx, args) {
                     @Override
                     protected boolean skipDouble(double d) {
                         return Double.isInfinite(d) || Double.isNaN(d);
@@ -88,16 +88,13 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
         private final IScalarEvaluator[] argEvals;
 
         private final IPointable argPtr;
-        private final boolean skipMissing;
 
-        AbstractIfInfOrNanEval(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, boolean skipMissing)
-                throws HyracksDataException {
+        AbstractIfInfOrNanEval(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args) throws HyracksDataException {
             argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < argEvals.length; i++) {
                 argEvals[i] = args[i].createScalarEvaluator(ctx);
             }
             argPtr = new VoidPointable();
-            this.skipMissing = skipMissing;
         }
 
         @Override
@@ -124,9 +121,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
                         result.set(argPtr);
                         return;
                     case MISSING:
-                        if (skipMissing) {
-                            continue;
-                        }
+                        continue;
                     case BIGINT:
                     case INTEGER:
                     case SMALLINT:

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud.writer;
 
-import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
@@ -27,8 +27,8 @@ import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.google.gcs.GCSAuthUtils;
 import org.apache.asterix.external.util.google.gcs.GCSConstants;
-import org.apache.asterix.external.util.google.gcs.GCSUtils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -40,11 +40,11 @@ import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 import com.google.cloud.BaseServiceException;
-import com.google.cloud.storage.StorageException;
 
-public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory {
+public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory<BaseServiceException> {
     private static final long serialVersionUID = 1L;
     static final char SEPARATOR = '/';
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
@@ -67,7 +67,7 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     @Override
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         GCSClientConfig config = GCSClientConfig.of(configuration, writeBufferSize);
-        return new GCSCloudClient(config, GCSUtils.buildClient(configuration),
+        return new GCSCloudClient(config, GCSAuthUtils.buildClient(appCtx, configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
@@ -82,13 +82,8 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     }
 
     @Override
-    boolean isNoContainerFoundException(IOException e) {
-        return e.getCause() instanceof StorageException;
-    }
-
-    @Override
-    boolean isSdkException(Throwable e) {
-        return e instanceof BaseServiceException;
+    Optional<BaseServiceException> getSdkException(Throwable ex) {
+        return ExceptionUtils.getCauseOfType(ex, BaseServiceException.class);
     }
 
     @Override

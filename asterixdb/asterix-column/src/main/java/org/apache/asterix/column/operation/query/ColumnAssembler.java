@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public final class ColumnAssembler {
@@ -132,6 +133,15 @@ public final class ColumnAssembler {
     }
 
     public void setAt(int index) throws HyracksDataException {
+        int skipCount = index - tupleIndex;
+        if (skipCount < 0) {
+            // should never happen as tupleIndex progress forward.
+            ColumnarValueException e = new ColumnarValueException();
+            e.getNode().put("message",
+                    "skipCount is negative, currentTupleIndex: " + tupleIndex + ", finalTupleIndex: " + index);
+            appendInformation(e);
+            throw e;
+        }
         skip(index - tupleIndex);
     }
 
@@ -140,6 +150,10 @@ public final class ColumnAssembler {
         assemblerNode.put("tupleIndex", tupleIndex);
         assemblerNode.put("numberOfTuples", numberOfTuples);
         assemblerNode.put("numberOfSkips", numberOfSkips);
+        ArrayNode assemblerReaders = assemblerNode.putArray("assemblerReaders");
+        for (int i = 0; i < assemblers.length; i++) {
+            assemblers[i].getReader().appendReaderInformation(assemblerReaders.addObject());
+        }
         state.appendStateInfo(e);
     }
 }

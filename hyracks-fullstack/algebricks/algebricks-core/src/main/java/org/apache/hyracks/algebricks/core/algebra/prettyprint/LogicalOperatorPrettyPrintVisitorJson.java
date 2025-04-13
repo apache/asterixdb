@@ -507,7 +507,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeString(expression.accept(exprVisitor, null));
             return this;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw new AlgebricksException(ErrorCode.ERROR_PRINTING_PLAN, e);
         }
     }
 

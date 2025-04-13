@@ -35,4 +35,9 @@ public class MissingIfTypeComputer extends AbstractResultTypeComputer {
         IAType inputType = strippedInputTypes[0];
         return inputType.getTypeTag() == ATypeTag.ANY ? inputType : AUnionType.createMissableType(inputType);
     }
+
+    @Override
+    protected boolean propagateNullAndMissing() {
+        return false;
+    }
 }

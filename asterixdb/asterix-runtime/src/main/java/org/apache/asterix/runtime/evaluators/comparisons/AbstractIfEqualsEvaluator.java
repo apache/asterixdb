@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -31,26 +32,17 @@ public abstract class AbstractIfEqualsEvaluator extends AbstractComparisonEvalua
     AbstractIfEqualsEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
             IScalarEvaluatorFactory evalRightFactory, IAType rightType, IEvaluatorContext ctx, SourceLocation sourceLoc)
             throws HyracksDataException {
-        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, true);
+        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, true, false);
     }
 
     @Override
     protected void evaluateImpl(IPointable result) throws HyracksDataException {
-        // TODO(ali): revisit this for the cases of MISSING/NULL/INCOMPARABLE
-        switch (compare()) {
-            case MISSING:
-                writeMissing(result);
-                break;
-            case NULL:
-                writeNull(result);
-                break;
-            case EQ:
-                resultStorage.reset();
-                writeEqualsResult();
-                result.set(resultStorage);
-                break;
-            default:
-                result.set(argLeft);
+        if (compare() == ILogicalBinaryComparator.Result.EQ) {
+            resultStorage.reset();
+            writeEqualsResult();
+            result.set(resultStorage);
+        } else {
+            result.set(argLeft);
         }
     }
 

@@ -112,7 +112,7 @@ public abstract class AbstractLangTranslator {
             try {
                 clusterStateManager.waitForState(ClusterState.ACTIVE, maxWaitCycles, TimeUnit.SECONDS);
             } catch (HyracksDataException e) {
-                throw new AlgebricksException(e, TIMEOUT);
+                throw new AlgebricksException(TIMEOUT, e);
             } catch (InterruptedException e) {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.warn("Thread interrupted while waiting for cluster to be " + ClusterState.ACTIVE);

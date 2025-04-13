@@ -18,6 +18,15 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_EMPTY_STRING_AS_NULL;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_FORCE_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_NULL_STR;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_RECORD_DELIMITER;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.EnumSet;
@@ -37,14 +46,6 @@ public class CSVUtils {
 
     // Constants for the supported CSV parameters
     public static final String NONE = "none";
-    public static final String KEY_NULL = "null";
-    public static final String KEY_ESCAPE = "escape";
-    public static final String KEY_HEADER = "header";
-    public static final String KEY_DELIMITER = "delimiter";
-    public static final String KEY_RECORD_DELIMITER = "recordDelimiter";
-    public static final String KEY_FORCE_QUOTE = "forceQuote";
-    public static final String KEY_QUOTE = "quote";
-    public static final String KEY_EMPTY_FIELD_AS_NULL = "empty_field_as_null";
     public static final char DEFAULT_QUOTE = '"';
     private static final String DEFAULT_DELIMITER_VALUE = ",";
     private static final String DEFAULT_NULL_VALUE = "";
@@ -58,14 +59,14 @@ public class CSVUtils {
 
     static {
         DEFAULT_VALUES = new HashMap<>();
-        DEFAULT_VALUES.put(KEY_NULL, DEFAULT_NULL_VALUE);
+        DEFAULT_VALUES.put(KEY_NULL_STR, DEFAULT_NULL_VALUE);
         DEFAULT_VALUES.put(KEY_ESCAPE, DOUBLE_QUOTES);
         DEFAULT_VALUES.put(KEY_HEADER, FALSE);
         DEFAULT_VALUES.put(KEY_DELIMITER, DEFAULT_DELIMITER_VALUE);
         DEFAULT_VALUES.put(KEY_RECORD_DELIMITER, DEFAULT_RECORD_DELIMITER);
         DEFAULT_VALUES.put(KEY_FORCE_QUOTE, FALSE);
         DEFAULT_VALUES.put(KEY_QUOTE, DOUBLE_QUOTES);
-        DEFAULT_VALUES.put(KEY_EMPTY_FIELD_AS_NULL, FALSE);
+        DEFAULT_VALUES.put(KEY_EMPTY_STRING_AS_NULL, FALSE);
     }
 
     public static boolean isEmptyString(byte[] b, int s, int l) {

@@ -19,20 +19,23 @@
 package org.apache.asterix.external.util;
 
 import static org.apache.asterix.common.metadata.MetadataConstants.DEFAULT_DATABASE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_EMPTY_STRING_AS_NULL;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_FORCE_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.aws.s3.S3AuthUtils.configureAwsS3HdfsJobConf;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureBlobProperties;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureDataLakeProperties;
-import static org.apache.asterix.external.util.google.gcs.GCSUtils.configureHdfsJobConf;
+import static org.apache.asterix.external.util.google.gcs.GCSAuthUtils.configureHdfsJobConf;
 import static org.apache.asterix.external.util.google.gcs.GCSUtils.validateProperties;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
@@ -281,7 +284,7 @@ public class ExternalDataUtils {
     }
 
     public static boolean hasHeader(Map<String, String> configuration) {
-        return isTrue(configuration, ExternalDataConstants.KEY_HEADER);
+        return isTrue(configuration, KEY_HEADER);
     }
 
     public static boolean isTrue(Map<String, String> configuration, String key) {
@@ -628,7 +631,7 @@ public class ExternalDataUtils {
             }
         }
         // normalize "header" parameter
-        putToLowerIfExists(configuration, ExternalDataConstants.KEY_HEADER);
+        putToLowerIfExists(configuration, KEY_HEADER);
         // normalize "redact-warnings" parameter
         putToLowerIfExists(configuration, ExternalDataConstants.KEY_REDACT_WARNINGS);
     }
@@ -641,22 +644,20 @@ public class ExternalDataUtils {
      */
     public static void validate(Map<String, String> configuration) throws HyracksDataException {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
-        String header = configuration.get(ExternalDataConstants.KEY_HEADER);
-        String forceQuote = configuration.get(ExternalDataConstants.KEY_FORCE_QUOTE);
-        String emptyFieldAsNull = configuration.get(ExternalDataConstants.KEY_EMPTY_FIELD_AS_NULL);
+        String header = configuration.get(KEY_HEADER);
+        String forceQuote = configuration.get(KEY_FORCE_QUOTE);
+        String emptyFieldAsNull = configuration.get(KEY_EMPTY_STRING_AS_NULL);
         if (format != null && isHeaderRequiredFor(format) && header == null) {
-            throw new RuntimeDataException(ErrorCode.PARAMETERS_REQUIRED, ExternalDataConstants.KEY_HEADER);
+            throw new RuntimeDataException(ErrorCode.PARAMETERS_REQUIRED, KEY_HEADER);
         }
         if (header != null && !isBoolean(header)) {
-            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_HEADER, header);
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_HEADER, header);
         }
         if (forceQuote != null && !isBoolean(forceQuote)) {
-            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_FORCE_QUOTE,
-                    forceQuote);
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_FORCE_QUOTE, forceQuote);
         }
         if (emptyFieldAsNull != null && !isBoolean(emptyFieldAsNull)) {
-            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL,
-                    ExternalDataConstants.KEY_EMPTY_FIELD_AS_NULL, emptyFieldAsNull);
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_EMPTY_STRING_AS_NULL, emptyFieldAsNull);
         }
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
@@ -726,7 +727,7 @@ public class ExternalDataUtils {
                 validateAzureDataLakeProperties(configuration, srcLoc, collector, appCtx);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
-                validateProperties(configuration, srcLoc, collector);
+                validateProperties(appCtx, configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
                 HDFSUtils.validateProperties(configuration, srcLoc, collector);

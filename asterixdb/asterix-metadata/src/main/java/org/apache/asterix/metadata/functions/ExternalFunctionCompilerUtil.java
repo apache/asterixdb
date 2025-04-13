@@ -150,7 +150,7 @@ public class ExternalFunctionCompilerUtil {
         try {
             return ExternalFunctionLanguage.valueOf(language);
         } catch (IllegalArgumentException e) {
-            throw new AsterixException(ErrorCode.METADATA_ERROR, language);
+            throw new AsterixException(ErrorCode.METADATA_ERROR, e, language);
         }
     }
 

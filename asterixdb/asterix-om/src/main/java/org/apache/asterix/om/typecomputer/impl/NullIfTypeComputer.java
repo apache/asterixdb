@@ -35,4 +35,9 @@ public class NullIfTypeComputer extends AbstractResultTypeComputer {
         IAType inputType = strippedInputTypes[0];
         return inputType.getTypeTag() == ATypeTag.ANY ? inputType : AUnionType.createNullableType(inputType);
     }
+
+    @Override
+    protected boolean propagateNullAndMissing() {
+        return false;
+    }
 }

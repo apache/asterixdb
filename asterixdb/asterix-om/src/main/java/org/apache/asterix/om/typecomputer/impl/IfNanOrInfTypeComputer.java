@@ -31,13 +31,9 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 
 public class IfNanOrInfTypeComputer extends AbstractResultTypeComputer {
 
-    public static final IfNanOrInfTypeComputer INSTANCE = new IfNanOrInfTypeComputer(false);
-    public static final IfNanOrInfTypeComputer INSTANCE_SKIP_MISSING = new IfNanOrInfTypeComputer(true);
+    public static final IfNanOrInfTypeComputer INSTANCE_SKIP_MISSING = new IfNanOrInfTypeComputer();
 
-    private final boolean skipMissing;
-
-    private IfNanOrInfTypeComputer(boolean skipMissing) {
-        this.skipMissing = skipMissing;
+    private IfNanOrInfTypeComputer() {
     }
 
     @Override
@@ -63,10 +59,8 @@ public class IfNanOrInfTypeComputer extends AbstractResultTypeComputer {
 
         switch (currentType.getTypeTag()) {
             case MISSING:
-                if (skipMissing) {
-                    // i.e. all args have been inspected and couldn't find a candidate value, so return null
-                    return BuiltinType.ANULL;
-                }
+                // i.e. all args have been inspected and couldn't find a candidate value, so return null
+                return BuiltinType.ANULL;
             case ANY:
             case BIGINT:
             case INTEGER:

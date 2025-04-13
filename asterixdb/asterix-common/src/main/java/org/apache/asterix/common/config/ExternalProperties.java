@@ -64,7 +64,12 @@ public class ExternalProperties extends AbstractProperties {
                 75,
                 "Percentage of duration passed before assume role credentials need to be refreshed, the value ranges "
                         + "from 25 to 90, default is 75. For example, if the value is set to 65, this means the "
-                        + "credentials need to be refreshed if 65% of the total expiration duration is already passed");
+                        + "credentials need to be refreshed if 65% of the total expiration duration is already passed"),
+        GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION(
+                getRangedIntegerType(60, 3600),
+                900,
+                "GCS impersonating service account duration in seconds. "
+                        + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -94,6 +99,7 @@ public class ExternalProperties extends AbstractProperties {
                 case AZURE_REQUEST_TIMEOUT:
                 case AWS_ASSUME_ROLE_DURATION:
                 case AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE:
+                case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -181,5 +187,9 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getAwsRefreshAssumeRoleThresholdPercentage() {
         return accessor.getInt(Option.AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE);
+    }
+
+    public int getGcpImpersonateServiceAccountDuration() {
+        return accessor.getInt(Option.GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION);
     }
 }

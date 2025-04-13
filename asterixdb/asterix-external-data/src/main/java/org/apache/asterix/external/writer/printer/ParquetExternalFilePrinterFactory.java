@@ -31,9 +31,9 @@ import org.apache.parquet.schema.MessageType;
 
 public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 8971234908711235L;
-    // parquetInferredSchema is for the case when the schema is inferred from the data, not provided by the user
+    // parquetInferSchema is for the case when the schema is inferred from the data, not provided by the user
     // set During the runtime
-    private transient MessageType parquetInferredSchema;
+    private transient MessageType parquetInferSchema;
     // parquetProvidedSchema is for the case when the schema is provided by the user
     private ARecordType parquetProvidedSchema;
     private final IAType typeInfo;
@@ -62,14 +62,14 @@ public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactor
         this.writerVersion = writerVersion;
     }
 
-    public void setParquetSchema(MessageType parquetInferredSchema) {
-        this.parquetInferredSchema = parquetInferredSchema;
+    public void setParquetSchema(MessageType parquetInferSchema) {
+        this.parquetInferSchema = parquetInferSchema;
     }
 
     @Override
     public IExternalPrinter createPrinter(IEvaluatorContext context) {
-        if (parquetInferredSchema != null) {
-            return new ParquetExternalFilePrinter(compressionCodecName, parquetInferredSchema, typeInfo, rowGroupSize,
+        if (parquetInferSchema != null) {
+            return new ParquetExternalFilePrinter(compressionCodecName, parquetInferSchema, typeInfo, rowGroupSize,
                     pageSize, writerVersion);
         }
 
@@ -80,7 +80,6 @@ public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactor
             // This should not happen, Compilation Exception should be caught at the query-compile time
             throw new RuntimeException(e);
         }
-        //TODO(ian): shouldn't this printer use the context to warn if there's a schema mismatch?
         return new ParquetExternalFilePrinter(compressionCodecName, schema, typeInfo, rowGroupSize, pageSize,
                 writerVersion);
     }

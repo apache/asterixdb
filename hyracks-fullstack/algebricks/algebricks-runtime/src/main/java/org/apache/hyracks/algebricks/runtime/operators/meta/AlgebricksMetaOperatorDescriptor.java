@@ -38,6 +38,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputIntrospectingOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
@@ -170,25 +171,21 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             PipelineAssembler pa =
                     new PipelineAssembler(pipeline, inputArity, outputArity, null, pipelineOutputRecordDescriptor);
             startOfPipeline = pa.assemblePipeline(writer, ctx, new HashMap<>());
-            HyracksDataException exception = null;
+            Exception exception = null;
             try {
                 startOfPipeline.open();
             } catch (Exception e) {
-                startOfPipeline.fail();
-                exception = HyracksDataException.create(e);
+                exception = e;
             } finally {
-                try {
-                    startOfPipeline.close();
-                } catch (Exception e) {
-                    if (exception == null) {
-                        exception = HyracksDataException.create(e);
-                    } else {
-                        exception.addSuppressed(e);
-                    }
+                if (exception != null) {
+                    exception = InvokeUtil.tryUninterruptibleWithCleanups(exception, startOfPipeline::fail,
+                            startOfPipeline::close);
+                } else {
+                    exception = InvokeUtil.runUninterruptible(exception, startOfPipeline::close);
                 }
             }
             if (exception != null) {
-                throw exception;
+                throw HyracksDataException.create(exception);
             }
         }
 

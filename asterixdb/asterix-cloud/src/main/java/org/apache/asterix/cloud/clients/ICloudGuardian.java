@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.clients;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Interface containing methods to perform IO operation on the Cloud Storage
  */
@@ -41,7 +43,21 @@ public interface ICloudGuardian {
      */
     void checkReadAccess(String bucket, String path);
 
+    /**
+     * Set the cloud client to be used for cloud operations.
+     *
+     * @param cloudClient the cloud client
+     */
     void setCloudClient(ICloudClient cloudClient);
+
+    /**
+     * Get the time-to-live (TTL) the guardian can assume we retain cloud access after a
+     * successful check before needing to refreshing the authorization.
+     *
+     * @param timeUnit the time unit for the TTL
+     * @return the TTL for cloud access
+     */
+    long getCloudAccessTtl(TimeUnit timeUnit);
 
     class NoOpCloudGuardian implements ICloudGuardian {
 
@@ -67,6 +83,11 @@ public interface ICloudGuardian {
 
         @Override
         public void setCloudClient(ICloudClient cloudClient) {
+        }
+
+        @Override
+        public long getCloudAccessTtl(TimeUnit timeUnit) {
+            return 0L;
         }
     }
 }

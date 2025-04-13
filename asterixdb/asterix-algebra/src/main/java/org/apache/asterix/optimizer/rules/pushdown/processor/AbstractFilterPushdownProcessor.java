@@ -40,6 +40,7 @@ import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.DefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.UseDescriptor;
+import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.FilterExpressionInlineVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -133,7 +134,26 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
      * @param expression path expression
      * @return true if the pushdown should continue, false otherwise
      */
-    protected abstract boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException;
+    protected final boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException {
+        IExpectedSchemaNode node = getPathNode(expression);
+        if (node == null) {
+            return false;
+        }
+        return handlePath(expression, node);
+    }
+
+    /**
+     * Handle a value access path expression
+     *
+     * @param expression path expression
+     * @param node       expected schema node (never null)
+     * @return true if the pushdown should continue, false otherwise
+     */
+    protected abstract boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+            throws AlgebricksException;
+
+    protected abstract IExpectedSchemaNode getPathNode(AbstractFunctionCallExpression expression)
+            throws AlgebricksException;
 
     /**
      * Put the filter expression to data-scan

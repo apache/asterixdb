@@ -50,9 +50,9 @@ public class DeltaTableFilterPushdownProcessor extends ColumnFilterPushdownProce
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException {
-        IExpectedSchemaNode node = expression.accept(exprToNodeVisitor, null);
-        if (node == null || node.getType() != ExpectedSchemaNodeType.ANY) {
+    protected boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+            throws AlgebricksException {
+        if (node.getType() != ExpectedSchemaNodeType.ANY) {
             return false;
         }
 

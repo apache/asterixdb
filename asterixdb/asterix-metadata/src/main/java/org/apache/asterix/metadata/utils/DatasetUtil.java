@@ -854,4 +854,9 @@ public class DatasetUtil {
         return dataset.getDatasetType() == DatasetType.EXTERNAL && ExternalDataUtils
                 .isDeltaTable(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
     }
+
+    public static boolean isParquetFormat(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL && ExternalDataUtils
+                .isParquetFormat(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
+    }
 }

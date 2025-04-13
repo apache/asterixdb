@@ -42,7 +42,7 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
     public AbstractValueComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory, IAType leftType,
             IScalarEvaluatorFactory evalRightFactory, IAType rightType, IEvaluatorContext ctx, SourceLocation sourceLoc,
             boolean isEquality) throws HyracksDataException {
-        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, isEquality);
+        super(evalLeftFactory, leftType, evalRightFactory, rightType, ctx, sourceLoc, isEquality, true);
     }
 
     @Override

@@ -49,6 +49,14 @@ public class CancellationTestExecutor extends TestExecutor {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    public CancellationTestExecutor() {
+        super();
+    }
+
+    public CancellationTestExecutor(String deltaPath) {
+        super(deltaPath);
+    }
+
     @Override
     public InputStream executeQueryService(String str, TestCaseContext.OutputFormat fmt, URI uri,
             List<TestCase.CompilationUnit.Parameter> params, List<TestCase.CompilationUnit.Placeholder> placeholders,

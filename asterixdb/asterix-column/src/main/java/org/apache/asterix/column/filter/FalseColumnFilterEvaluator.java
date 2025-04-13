@@ -19,6 +19,7 @@
 package org.apache.asterix.column.filter;
 
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 public class FalseColumnFilterEvaluator implements IColumnIterableFilterEvaluator {
     public static final IColumnIterableFilterEvaluator INSTANCE = new FalseColumnFilterEvaluator();
@@ -27,7 +28,7 @@ public class FalseColumnFilterEvaluator implements IColumnIterableFilterEvaluato
     }
 
     @Override
-    public void reset() {
+    public void reset(int tupleCount) {
 
     }
 
@@ -48,6 +49,11 @@ public class FalseColumnFilterEvaluator implements IColumnIterableFilterEvaluato
 
     @Override
     public void setAt(int index) {
+        // NoOp
+    }
+
+    @Override
+    public void appendInformation(ColumnarValueException e) {
         // NoOp
     }
 }

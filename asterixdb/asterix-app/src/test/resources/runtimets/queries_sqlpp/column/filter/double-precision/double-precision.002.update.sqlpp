@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+-- Closest possible values to zero that can be represented in double-precision
+
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:0", 'c_double':double(0.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:1", 'c_double':double(-0.0)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:2", 'c_double':double(-4.9e-324)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:3", 'c_double':double(-9.9e-324)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:4", 'c_double':double(-1.5e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:5", 'c_double':double(-2.0e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:6", 'c_double':double(-2.5e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:7", 'c_double':double(-3.0e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:8", 'c_double':double(-4.0e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:9", 'c_double':double(4.9e-324)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:10", 'c_double':double(9.9e-324)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:11", 'c_double':double(1.5e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:12", 'c_double':double(2.0e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:13", 'c_double':double(2.5e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:14", 'c_double':double(3.0e-323)} );
+INSERT INTO dsUntyped ( { 'id': "dsUntyped:15", 'c_double':double(4.0e-323)} );

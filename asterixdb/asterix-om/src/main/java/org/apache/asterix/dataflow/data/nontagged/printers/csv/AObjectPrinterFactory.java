@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_EMPTY_STRING_AS_NULL;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_ESCAPE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_FORCE_QUOTE;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_NULL_STR;
+import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.DEFAULT_VALUES;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_EMPTY_FIELD_AS_NULL;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_FORCE_QUOTE;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_NULL;
-import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.getCharOrDefault;
 
 import java.io.PrintStream;
@@ -58,8 +58,9 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     private AObjectPrinterFactory(ARecordType itemType, Map<String, String> configuration) {
         this.itemType = itemType;
         this.configuration = configuration;
-        this.emptyFieldAsNull = Boolean.parseBoolean(configuration.get(KEY_EMPTY_FIELD_AS_NULL));
-        this.nullString = configuration.get(KEY_NULL) != null ? configuration.get(KEY_NULL) : DEFAULT_NULL_STRING;
+        this.emptyFieldAsNull = Boolean.parseBoolean(configuration.get(KEY_EMPTY_STRING_AS_NULL));
+        this.nullString =
+                configuration.get(KEY_NULL_STR) != null ? configuration.get(KEY_NULL_STR) : DEFAULT_NULL_STRING;
         this.forceQuote = Boolean.parseBoolean(configuration.get(KEY_FORCE_QUOTE));
         this.quote = getCharOrDefault(configuration.get(KEY_QUOTE), DEFAULT_VALUES.get(KEY_QUOTE));
         this.escape = getCharOrDefault(configuration.get(KEY_ESCAPE), DEFAULT_VALUES.get(KEY_ESCAPE));

@@ -23,6 +23,8 @@ public class StorageIOStats {
     private int pendingFlushes;
     private int pendingMerges;
     private int pendingReplications;
+    private int failedFlushes;
+    private int failedMerges;
 
     public void addPendingFlushes(int pending) {
         pendingFlushes += pending;
@@ -34,6 +36,22 @@ public class StorageIOStats {
 
     public void addPendingReplications(int pending) {
         pendingReplications += pending;
+    }
+
+    public void addFailedFlushes(int failed) {
+        failedFlushes += failed;
+    }
+
+    public void addFailedMerges(int failed) {
+        failedMerges += failed;
+    }
+
+    public int getFailedFlushes() {
+        return failedFlushes;
+    }
+
+    public int getFailedMerges() {
+        return failedMerges;
     }
 
     public int getPendingFlushes() {

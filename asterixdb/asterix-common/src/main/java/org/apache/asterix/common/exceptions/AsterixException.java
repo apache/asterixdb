@@ -26,20 +26,37 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
-    public AsterixException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(error, cause, sourceLoc, params);
+    public static AsterixException create(ErrorCode error, Serializable... params) {
+        return new AsterixException(error, params);
+    }
+
+    public static AsterixException create(ErrorCode error, Throwable th, Serializable... params) {
+        return new AsterixException(error, th, params);
+    }
+
+    public static AsterixException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        return new AsterixException(error, sourceLoc, params);
+    }
+
+    public static AsterixException create(ErrorCode error, Throwable th, SourceLocation sourceLoc,
+            Serializable... params) {
+        return new AsterixException(error, th, sourceLoc, params);
+    }
+
+    public AsterixException(ErrorCode error, Serializable... params) {
+        this(error, null, null, params);
+    }
+
+    public AsterixException(ErrorCode error, Throwable cause, Serializable... params) {
+        this(error, cause, null, params);
     }
 
     public AsterixException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
         this(error, null, sourceLoc, params);
     }
 
-    public AsterixException(ErrorCode error, Serializable... params) {
-        super(error, null, null, params);
-    }
-
-    public AsterixException(ErrorCode error, Throwable cause, Serializable... params) {
-        super(error, cause, null, params);
+    public AsterixException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(error, cause, sourceLoc, params);
     }
 
     /**
@@ -64,13 +81,5 @@ public class AsterixException extends AlgebricksException {
     @Deprecated
     public AsterixException(String message, Throwable cause) {
         super(message, cause);
-    }
-
-    public static AsterixException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
-        return new AsterixException(error, sourceLoc, params);
-    }
-
-    public static AsterixException create(ErrorCode error, Serializable... params) {
-        return new AsterixException(error, params);
     }
 }

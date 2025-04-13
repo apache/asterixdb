@@ -20,13 +20,16 @@ package org.apache.asterix.column.filter.iterable;
 
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 public interface IColumnIterableFilterEvaluator extends IColumnFilterEvaluator {
-    void reset();
+    void reset(int tupleCount);
 
     int getTupleIndex();
 
     int getValueIndex();
 
     void setAt(int index) throws HyracksDataException;
+
+    void appendInformation(ColumnarValueException e);
 }

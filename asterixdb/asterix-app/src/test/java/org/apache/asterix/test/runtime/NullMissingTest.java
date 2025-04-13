@@ -210,10 +210,5 @@ public class NullMissingTest {
         functionsRequiringTypes.add(BuiltinFunctions.GE);
         functionsRequiringTypes.add(BuiltinFunctions.LE);
         functionsRequiringTypes.add(BuiltinFunctions.NEQ);
-        functionsRequiringTypes.add(BuiltinFunctions.MISSING_IF);
-        functionsRequiringTypes.add(BuiltinFunctions.NAN_IF);
-        functionsRequiringTypes.add(BuiltinFunctions.NEGINF_IF);
-        functionsRequiringTypes.add(BuiltinFunctions.NULL_IF);
-        functionsRequiringTypes.add(BuiltinFunctions.POSINF_IF);
     }
 }

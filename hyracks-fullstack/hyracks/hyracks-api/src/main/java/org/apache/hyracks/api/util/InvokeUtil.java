@@ -285,6 +285,57 @@ public class InvokeUtil {
         }
     }
 
+    @SuppressWarnings({ "squid:S1181", "squid:S1193", "ConstantConditions", "UnreachableCode" })
+    // catching Throwable, instanceofs, false-positive unreachable code
+    public static Exception tryUninterruptibleWithCleanups(Exception root, ThrowingAction action,
+            ThrowingAction... cleanups) {
+        try {
+            tryUninterruptibleWithCleanups(action, cleanups);
+        } catch (Exception e) {
+            root = ExceptionUtils.suppress(root, e);
+        }
+        return root;
+    }
+
+    @SuppressWarnings({ "squid:S1181", "squid:S1193", "ConstantConditions", "UnreachableCode" })
+    // catching Throwable, instanceofs, false-positive unreachable code
+    public static void tryUninterruptibleWithCleanups(ThrowingAction action, ThrowingAction... cleanups)
+            throws Exception {
+        Throwable savedT = null;
+        boolean suppressedInterrupted = false;
+        try {
+            runUninterruptible(action);
+        } catch (Throwable t) {
+            savedT = t;
+        } finally {
+            for (ThrowingAction cleanup : cleanups) {
+                try {
+                    runUninterruptible(cleanup);
+                } catch (Throwable t) {
+                    if (savedT != null) {
+                        savedT.addSuppressed(t);
+                        suppressedInterrupted = suppressedInterrupted || t instanceof InterruptedException;
+                    } else {
+                        savedT = t;
+                    }
+                }
+            }
+        }
+        if (savedT == null) {
+            return;
+        }
+        if (suppressedInterrupted) {
+            Thread.currentThread().interrupt();
+        }
+        if (savedT instanceof Error) {
+            throw (Error) savedT;
+        } else if (savedT instanceof Exception) {
+            throw (Exception) savedT;
+        } else {
+            throw HyracksDataException.create(savedT);
+        }
+    }
+
     // catching Throwable, instanceofs, false-positive unreachable code
     public static void tryWithCleanups(ThrowingAction action, ThrowingConsumer<Throwable>... cleanups)
             throws Exception {
@@ -420,6 +471,19 @@ public class InvokeUtil {
         } else if (savedT != null) {
             throw new UncheckedExecutionException(savedT);
         }
+    }
+
+    /**
+     * Runs the supplied action, after suspending any pending interruption. An error will be logged if
+     * the action is itself interrupted.
+     */
+    public static Exception runUninterruptible(Exception root, ThrowingAction action) {
+        try {
+            runUninterruptible(action);
+        } catch (Exception e) {
+            root = ExceptionUtils.suppress(root, e);
+        }
+        return root;
     }
 
     /**

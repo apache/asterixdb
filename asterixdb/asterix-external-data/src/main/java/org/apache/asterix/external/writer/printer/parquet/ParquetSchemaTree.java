@@ -25,6 +25,7 @@ import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaBu
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
@@ -73,21 +74,35 @@ public class ParquetSchemaTree {
     }
 
     static class FlatType extends AbstractType {
-        private final PrimitiveType.PrimitiveTypeName primitiveTypeName;
-        private final LogicalTypeAnnotation logicalTypeAnnotation;
+        private ATypeTag typeTag;
+        private boolean isHierarchical;
 
-        public FlatType(PrimitiveType.PrimitiveTypeName primitiveTypeName,
-                LogicalTypeAnnotation logicalTypeAnnotation) {
-            this.primitiveTypeName = primitiveTypeName;
-            this.logicalTypeAnnotation = logicalTypeAnnotation;
+        public FlatType(ATypeTag typeTag) {
+            this.typeTag = typeTag;
+            isHierarchical = AsterixParquetTypeMap.HIERARCHIAL_TYPES.containsKey(typeTag);
+        }
+
+        public boolean isCompatibleWith(ATypeTag typeTag) {
+            if (isHierarchical) {
+                return AsterixParquetTypeMap.HIERARCHIAL_TYPES.containsKey(typeTag);
+            } else {
+                return this.typeTag == typeTag;
+            }
+        }
+
+        public void coalesce(ATypeTag typeTag) {
+            if (!isCompatibleWith(typeTag) || !isHierarchical) {
+                return;
+            }
+            this.typeTag = AsterixParquetTypeMap.maxHierarchicalType(this.typeTag, typeTag);
         }
 
         public LogicalTypeAnnotation getLogicalTypeAnnotation() {
-            return logicalTypeAnnotation;
+            return AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP.get(typeTag);
         }
 
         public PrimitiveType.PrimitiveTypeName getPrimitiveTypeName() {
-            return primitiveTypeName;
+            return AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.get(typeTag);
         }
     }
 

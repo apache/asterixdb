@@ -33,13 +33,12 @@ public class ColumnIterableFilterEvaluator extends AbstractIterableFilterEvaluat
     @Override
     public boolean evaluate() throws HyracksDataException {
         boolean result = false;
+        // If next() returns false, it means there are no more matching tuples left.
+        // Inside the next() function, tupleIndex and valueIndex are incremented.
+        // This causes tupleIndex to eventually reach tupleCount,
+        // indicating that all tuples have been processed.
         while (!result && next()) {
             result = inspect();
-        }
-        if (!result) {
-            // Last tuple does not satisfy the condition
-            tupleIndex++;
-            valueIndex++;
         }
         return result;
     }

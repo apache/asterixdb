@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.cloud.util;
 
+import static org.apache.hyracks.cloud.io.request.ICloudRequest.asReturnableRequest;
+
 import java.io.IOException;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -76,30 +78,7 @@ public class CloudRetryableRequestUtil {
      * @param retry   a pre-retry routine to make the operation idempotent
      */
     public static void run(ICloudRequest request, ICloudBeforeRetryRequest retry) throws HyracksDataException {
-        boolean interrupted = Thread.interrupted();
-        try {
-            while (true) {
-                try {
-                    doRun(request, retry);
-                    break;
-                } catch (Throwable e) {
-                    // First, clear the interrupted flag
-                    interrupted |= Thread.interrupted();
-                    if (ExceptionUtils.causedByInterrupt(e)) {
-                        interrupted = true;
-                    } else {
-                        // The cause isn't an interruption, rethrow
-                        throw e;
-                    }
-                    retry.beforeRetry();
-                    LOGGER.warn("Ignored interrupting ICloudReturnableRequest", e);
-                }
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        run(asReturnableRequest(request), retry);
     }
 
     /**
@@ -187,8 +166,12 @@ public class CloudRetryableRequestUtil {
                     LOGGER.warn("Lost suppressed interrupt during ICloudReturnableRequest", e);
                     Thread.currentThread().interrupt();
                 }
-                if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
-                    throw HyracksDataException.create(e);
+                try {
+                    if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
+                        throw HyracksDataException.create(e);
+                    }
+                } catch (InterruptedException interruptedEx) {
+                    throw HyracksDataException.create(interruptedEx);
                 }
                 attempt++;
                 retry.beforeRetry();
@@ -199,24 +182,7 @@ public class CloudRetryableRequestUtil {
     }
 
     private static void doRun(ICloudRequest request, ICloudBeforeRetryRequest retry) throws HyracksDataException {
-        int attempt = 1;
-        IRetryPolicy retryPolicy = null;
-        while (true) {
-            try {
-                request.call();
-                break;
-            } catch (IOException | BaseServiceException | SdkException e) {
-                if (retryPolicy == null) {
-                    retryPolicy = new ExponentialRetryPolicy(NUMBER_OF_RETRIES, MAX_DELAY_BETWEEN_RETRIES);
-                }
-                if (!retryPolicy.retry(e)) {
-                    throw HyracksDataException.create(e);
-                }
-                attempt++;
-                retry.beforeRetry();
-                LOGGER.warn("Failed to perform ICloudRequest, performing {}/{}", attempt, NUMBER_OF_RETRIES, e);
-            }
-        }
+        doRun(asReturnableRequest(request), retry);
     }
 
     private static int getNumberOfRetries() {

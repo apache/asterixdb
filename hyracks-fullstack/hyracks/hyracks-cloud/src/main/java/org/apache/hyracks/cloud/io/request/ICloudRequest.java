@@ -29,4 +29,11 @@ public interface ICloudRequest {
      * Run the cloud request
      */
     void call() throws IOException;
+
+    static ICloudReturnableRequest<Void> asReturnableRequest(ICloudRequest request) {
+        return () -> {
+            request.call();
+            return null;
+        };
+    }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY;
 import static org.apache.asterix.common.exceptions.ErrorCode.TYPE_UNSUPPORTED_PARQUET_WRITE;
 import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaTree.buildParquetSchema;
 
@@ -33,7 +34,6 @@ import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.schema.MessageType;
@@ -63,7 +63,7 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             schemaNode.setType(new ParquetSchemaTree.RecordType());
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.RecordType)) {
-            throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA);
+            throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.RecordType recordType = (ParquetSchemaTree.RecordType) schemaNode.getType();
         for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
@@ -89,7 +89,7 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             schemaNode.setType(new ParquetSchemaTree.ListType());
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.ListType)) {
-            throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA);
+            throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.ListType listType = (ParquetSchemaTree.ListType) schemaNode.getType();
         for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
@@ -110,21 +110,20 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             if (!AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.containsKey(pointable.getTypeTag())) {
                 throw RuntimeDataException.create(TYPE_UNSUPPORTED_PARQUET_WRITE, pointable.getTypeTag());
             }
-            schemaNode.setType(new ParquetSchemaTree.FlatType(
-                    AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.get(pointable.getTypeTag()),
-                    AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP.get(pointable.getTypeTag())));
+            schemaNode.setType(new ParquetSchemaTree.FlatType(pointable.getTypeTag()));
             return null;
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.FlatType)) {
-            throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA);
+            throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.FlatType flatType = (ParquetSchemaTree.FlatType) schemaNode.getType();
-        if (!(flatType.getPrimitiveTypeName() == AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP
-                .get(pointable.getTypeTag()))
-                || !(flatType.getLogicalTypeAnnotation() == AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP
-                        .get(pointable.getTypeTag()))) {
-            throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA);
+
+        if (!flatType.isCompatibleWith(pointable.getTypeTag())) {
+            throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
+
+        flatType.coalesce(pointable.getTypeTag());
+
         return null;
     }
 

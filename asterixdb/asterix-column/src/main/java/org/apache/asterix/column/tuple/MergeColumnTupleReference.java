@@ -101,7 +101,16 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
-    public void skip(int count) throws HyracksDataException {
+    public void initSkip(int tupleIndex, int count) throws HyracksDataException {
+        skip(count);
+    }
+
+    @Override
+    public void skipCurrentTuple() throws HyracksDataException {
+        skip(1);
+    }
+
+    private void skip(int count) throws HyracksDataException {
         skipCount += count;
     }
 

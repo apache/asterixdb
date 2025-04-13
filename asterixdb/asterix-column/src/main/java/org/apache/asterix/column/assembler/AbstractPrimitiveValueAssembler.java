@@ -81,6 +81,10 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
         reader.skip(count);
     }
 
+    public IColumnValuesReader getReader() {
+        return reader;
+    }
+
     /**
      * Reset the assembler
      *
