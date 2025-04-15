@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.btree.impls;
 
+import static org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame.CHILD_PTR_SIZE;
+
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -149,7 +151,7 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
 
         ITupleReference tuple = splitKey.getTuple();
         int tupleBytes = tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
-        int spaceNeeded = tupleBytes + slotSize + 4;
+        int spaceNeeded = tupleBytes + interiorSlotSize + CHILD_PTR_SIZE;
         if (tupleBytes > interiorFrame.getMaxTupleSize(bufferCache.getPageSize())) {
             throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, tupleBytes,
                     interiorFrame.getMaxTupleSize(bufferCache.getPageSize()));

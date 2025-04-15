@@ -48,6 +48,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
     protected final int fileId;
     protected final MultiComparator cmp;
     protected final int slotSize;
+    protected final int interiorSlotSize;
     protected final int leafMaxBytes;
     protected final int interiorMaxBytes;
     protected final ArrayList<NodeFrontier> nodeFrontiers = new ArrayList<>();
@@ -103,6 +104,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
         leafFrame.initBuffer((byte) 0);
         leafMaxBytes = (int) (leafFrame.getBuffer().capacity() * fillFactor);
         slotSize = leafFrame.getSlotSize();
+        interiorSlotSize = interiorFrame.getSlotSize();
 
         nodeFrontiers.add(leafFrontier);
         pagesToWrite = new ArrayList<>();
