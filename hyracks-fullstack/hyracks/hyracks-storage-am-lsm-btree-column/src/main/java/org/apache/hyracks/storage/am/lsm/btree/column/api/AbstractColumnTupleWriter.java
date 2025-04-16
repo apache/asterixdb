@@ -62,8 +62,8 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return the size needed to store columns' offsets
      */
-    public final int getColumnOffsetsSize() {
-        return Integer.BYTES * getNumberOfColumns(true);
+    public final int getColumnOffsetsSize(boolean includeCurrentTupleColumns) {
+        return Integer.BYTES * getNumberOfColumns(includeCurrentTupleColumns);
     }
 
     /**
