@@ -99,7 +99,6 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
             ICloudGuardian guardian) {
         this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getBucket());
-        this.blobContainerClient.createIfNotExists();
         this.config = config;
         this.guardian = guardian;
         long profilerInterval = config.getProfilerLogInterval();
