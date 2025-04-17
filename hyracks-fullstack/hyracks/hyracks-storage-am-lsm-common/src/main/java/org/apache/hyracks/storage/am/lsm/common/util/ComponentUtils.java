@@ -93,7 +93,7 @@ public class ComponentUtils {
                     // was not found in all in-memory components, search in the disk components
                     fromDiskComponents(index, key, value);
                     if (value.getLength() == 0) {
-                        LOGGER.debug("{} was NOT found", key);
+                        LOGGER.debug("{} was NOT found for index {}", key, index);
                     }
                 }
             } else {

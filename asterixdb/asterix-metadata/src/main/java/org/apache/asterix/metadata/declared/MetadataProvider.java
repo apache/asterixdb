@@ -169,7 +169,6 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeBatchPointSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
@@ -598,11 +597,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBtreePartitionSearchRuntime(
             JobSpecification jobSpec, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
-            Dataset dataset, ITupleFilterFactory tupleFilterFactory, long outputLimit, int partitionNum)
-            throws AlgebricksException {
+            Dataset dataset, ITupleFilterFactory tupleFilterFactory, ITupleProjectorFactory tupleProjectorFactory,
+            long outputLimit, int partitionNum) throws AlgebricksException {
         return getBtreeSearchRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, dataset,
                 dataset.getDatasetName(), null, null, true, true, false, null, null, null, tupleFilterFactory,
-                outputLimit, false, false, DefaultTupleProjectorFactory.INSTANCE, false, partitionNum);
+                outputLimit, false, false, tupleProjectorFactory, false, partitionNum);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBtreeSearchRuntime(JobSpecification jobSpec,

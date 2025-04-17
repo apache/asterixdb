@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -50,6 +51,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 public class QueryPartitionDatasource extends FunctionDataSource {
 
@@ -111,8 +113,15 @@ public class QueryPartitionDatasource extends FunctionDataSource {
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionFiltrationInfo projectionInfo) throws AlgebricksException {
+        ARecordType metaItemType = null;
+        if (ds.hasMetaPart()) {
+            metaItemType = (ARecordType) schemaTypes[2];
+        }
+        ARecordType datasetType = (ARecordType) schemaTypes[1];
+        ITupleProjectorFactory tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(context, typeEnv,
+                ds.getDatasetFormatInfo(), projectionInfo, datasetType, metaItemType, ds.getPrimaryKeys().size());
         return metadataProvider.getBtreePartitionSearchRuntime(jobSpec, opSchema, typeEnv, context, ds,
-                tupleFilterFactory, outputLimit, partitionNum);
+                tupleFilterFactory, tupleProjectorFactory, outputLimit, partitionNum);
     }
 
     @Override
