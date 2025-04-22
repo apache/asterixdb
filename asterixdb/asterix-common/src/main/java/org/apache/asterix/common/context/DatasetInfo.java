@@ -19,10 +19,10 @@
 package org.apache.asterix.common.context;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.api.IIOBlockingOperation;
@@ -60,8 +60,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private boolean durable;
 
     public DatasetInfo(int datasetID, ILogManager logManager) {
-        this.partitionIndexes = new ConcurrentHashMap<>();
-        this.indexes = new ConcurrentHashMap<>();
+        this.partitionIndexes = new HashMap<>();
+        this.indexes = new HashMap<>();
         this.partitionPendingIO = new Int2IntOpenHashMap();
         this.setLastAccess(-1);
         this.datasetID = datasetID;
@@ -203,13 +203,13 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         return Collections.unmodifiableMap(indexes);
     }
 
-    public void addIndex(long resourceID, IndexInfo indexInfo) {
+    public synchronized void addIndex(long resourceID, IndexInfo indexInfo) {
         indexes.put(resourceID, indexInfo);
         partitionIndexes.computeIfAbsent(indexInfo.getPartition(), partition -> new HashSet<>()).add(indexInfo);
         LOGGER.debug("registered reference to index {}", indexInfo);
     }
 
-    public void removeIndex(long resourceID) {
+    public synchronized void removeIndex(long resourceID) {
         IndexInfo info = indexes.remove(resourceID);
         if (info != null) {
             partitionIndexes.get(info.getPartition()).remove(info);

@@ -284,6 +284,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         long lsn = -1;
         ILSMIndex index = null;
         LocalResource localResource = null;
+        DatasetLocalResource localResourceMetadata = null;
         boolean foundWinner = false;
         JobEntityCommits jobEntityWinners = null;
 
@@ -353,11 +354,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             //if index is not registered into IndexLifeCycleManager,
                             //create the index using LocalMetadata stored in LocalResourceRepository
                             //get partition path in this node
+                            localResourceMetadata = (DatasetLocalResource) localResource.getResource();
                             index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
                             if (index == null) {
                                 //#. create index instance and register to indexLifeCycleManager
-                                index = (ILSMIndex) datasetLifecycleManager.registerIfAbsent(localResource.getPath(),
-                                        null);
+                                index = (ILSMIndex) localResourceMetadata.createInstance(serviceCtx);
+                                datasetLifecycleManager.register(localResource.getPath(), index);
                                 datasetLifecycleManager.open(localResource.getPath());
                                 try {
                                     maxDiskLastLsn = getResourceLowWaterMark(localResource, datasetLifecycleManager,

@@ -41,8 +41,10 @@ public interface IResourceLifecycleManager<R> {
      *
      * @param resourceId
      * @param resource
+     * @throws HyracksDataException
+     *             if a resource is already registered with this resourceId
      */
-    public R registerIfAbsent(String resourceId, R resource) throws HyracksDataException;
+    public void register(String resourceId, R resource) throws HyracksDataException;
 
     /**
      * Opens a resource. The resource is moved to the open state
@@ -73,15 +75,8 @@ public interface IResourceLifecycleManager<R> {
     /**
      * unregister a resource removing its resources in memory and on disk
      *
-     * @param resourcePath
+     * @param resourceId
      * @throws HyracksDataException
      */
-    public void unregister(String resourcePath) throws HyracksDataException;
-
-    /**
-     * delete the resource
-     * @param resourcePath
-     * @throws HyracksDataException
-     */
-    public void destroy(String resourcePath) throws HyracksDataException;
+    public void unregister(String resourceId) throws HyracksDataException;
 }
