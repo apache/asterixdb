@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -132,7 +133,8 @@ public final class S3CloudClient implements ICloudClient {
         guardian.checkReadAccess(bucket, path);
         profiler.objectsList();
         path = config.isLocalS3Provider() ? encodeURI(path) : path;
-        return filterAndGet(listS3Objects(s3Client, bucket, config.getPrefix() + path), filter);
+        return ensureListConsistent(filterAndGet(listS3Objects(s3Client, bucket, config.getPrefix() + path), filter),
+                bucket, CloudFile::getPath);
     }
 
     @Override
@@ -221,7 +223,15 @@ public final class S3CloudClient implements ICloudClient {
             String destKey = destPath.getChildPath(IoUtil.getFileNameFromPath(srcKey));
             CopyObjectRequest copyReq = CopyObjectRequest.builder().sourceBucket(bucket).sourceKey(srcKey)
                     .destinationBucket(bucket).destinationKey(config.getPrefix() + destKey).build();
-            s3Client.copyObject(copyReq);
+            try {
+                s3Client.copyObject(copyReq);
+            } catch (NoSuchKeyException ex) {
+                if (config.isStorageListEventuallyConsistent()) {
+                    LOGGER.warn("ignoring 404 on copy of {} since list is configured as eventually consistent", srcKey);
+                } else {
+                    throw ex;
+                }
+            }
         }
     }
 
@@ -300,7 +310,8 @@ public final class S3CloudClient implements ICloudClient {
 
     @Override
     public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) {
-        List<S3Object> objects = listS3Objects(s3Client, bucket, config.getPrefix());
+        List<S3Object> objects =
+                ensureListConsistent(listS3Objects(s3Client, bucket, config.getPrefix()), bucket, S3Object::key);
         ArrayNode objectsInfo = objectMapper.createArrayNode();
 
         objects.sort((x, y) -> String.CASE_INSENSITIVE_ORDER.compare(x.key(), y.key()));
@@ -356,5 +367,25 @@ public final class S3CloudClient implements ICloudClient {
             }
         }
         return files;
+    }
+
+    private <T, C extends Collection<T>> C ensureListConsistent(C cloudFiles, String bucket,
+            Function<T, String> pathExtractor) {
+        if (config.isStorageListEventuallyConsistent()) {
+            return cloudFiles;
+        }
+        Iterator<T> iterator = cloudFiles.iterator();
+        while (iterator.hasNext()) {
+            String path = pathExtractor.apply(iterator.next());
+            try {
+                if (!exists(bucket, path)) {
+                    LOGGER.warn("Removing non-existent file from list result: {}", path);
+                    iterator.remove();
+                }
+            } catch (HyracksDataException e) {
+                LOGGER.warn("Ignoring exception on exists check on {}", path, e);
+            }
+        }
+        return cloudFiles;
     }
 }

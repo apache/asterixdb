@@ -44,16 +44,18 @@ public final class S3ClientConfig {
     private final int requestsMaxHttpConnections;
     private final boolean forcePathStyle;
     private final boolean disableSslVerify;
+    private final boolean storageListEventuallyConsistent;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize) {
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false);
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false,
+                false);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
             int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
-            boolean disableSslVerify) {
+            boolean disableSslVerify, boolean storageListEventuallyConsistent) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -66,6 +68,7 @@ public final class S3ClientConfig {
         this.requestsMaxHttpConnections = requestsMaxHttpConnections;
         this.forcePathStyle = forcePathStyle;
         this.disableSslVerify = disableSslVerify;
+        this.storageListEventuallyConsistent = storageListEventuallyConsistent;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
@@ -74,7 +77,8 @@ public final class S3ClientConfig {
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getRequestsMaxHttpConnections(),
-                cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify());
+                cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify(),
+                cloudProperties.isStorageListEventuallyConsistent());
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -142,6 +146,10 @@ public final class S3ClientConfig {
 
     public boolean isForcePathStyle() {
         return forcePathStyle;
+    }
+
+    public boolean isStorageListEventuallyConsistent() {
+        return storageListEventuallyConsistent;
     }
 
     private boolean isS3Mock() {

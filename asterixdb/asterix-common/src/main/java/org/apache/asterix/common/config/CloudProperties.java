@@ -67,7 +67,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
         CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
-        CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false);
+        CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
+        CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -102,6 +103,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
+                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -177,6 +179,9 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                     return "Indicates whether or not to disable SSL certificate verification on the cloud storage. "
                             + "(default: false)";
+                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
+                    return "Indicates whether or not deleted objects may be contained in list operations for some time"
+                            + "after they are deleted. (default: false)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -283,5 +288,9 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean isStorageDisableSSLVerify() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_DISABLE_SSL_VERIFY);
+    }
+
+    public boolean isStorageListEventuallyConsistent() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT);
     }
 }

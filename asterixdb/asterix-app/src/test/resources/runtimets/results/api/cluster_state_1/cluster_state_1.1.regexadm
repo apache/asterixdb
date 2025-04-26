@@ -29,6 +29,7 @@
     "cloud.storage.endpoint" : "",
     "cloud.storage.force.path.style" : false,
     "cloud.storage.index.inactive.duration.threshold" : 360,
+    "cloud.storage.list.eventually.consistent" : false,
     "cloud.storage.prefix" : "",
     "cloud.storage.region" : "",
     "cloud.storage.scheme" : "",
