@@ -24,6 +24,11 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Installation
 
+Navigate to the project directory:
+```
+cd /asterixdb/asterixdb/asterix-dashboard/src/node
+```
+
 Install node and npm, any of the latest versions will do.
 
 Run `npm install` to download all the dependency packages an recreate the node_modules directory.
@@ -36,12 +41,30 @@ The development version uses the webpack proxy to avoid CORS problems in Angular
 
 Please check `proxy.config.js` to see how it's configured.
 
-Run `ng serve` or `npm start` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Running the Application
 
-A technical document describing the internals and architecture exist, here:
+1. Start the development server with proxy configuration:
+   ```
+   ng serve --proxy-config proxy.config.js
+   ```
+   This will start a dev server at port 4200. Navigate to `http://localhost:4200/` in your web browser to access the application.
 
-`https://github.com/EmilioMobile/asterixdb-dashboard/blob/master/documents/AsterixDB%20Architecture%20v1.0.pdf?raw=true`
+2. Ensure the backend server is running to get results on the proxy server.
+   The backend server can be started using `AsterixServerIntegrationUtil` or `AsterixHyracksIntegrationUtil`.
 
-A brief user guide document describing how to use it, here:
+## Troubleshooting
 
-`https://github.com/EmilioMobile/asterixdb-dashboard/blob/master/documents/AsterixDB%20User%20Guide%20v1.0.pptx?raw=true`
+If you encounter the following error:
+```
+Error: error:0308010C:digital envelope routines::unsupported
+```
+
+Run the following command before starting the server:
+```
+export NODE_OPTIONS=--openssl-legacy-provider
+```
+
+Then try running the server again:
+```
+ng serve --proxy-config proxy.config.js
+```
