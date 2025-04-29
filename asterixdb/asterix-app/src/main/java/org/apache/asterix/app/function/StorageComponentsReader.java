@@ -33,15 +33,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
+import org.apache.hyracks.util.JSONUtil;
 
 public class StorageComponentsReader extends FunctionReader {
 
-    private final List<String> components;
     private final Iterator<String> it;
     private final CharArrayRecord record;
 
     public StorageComponentsReader(String nodeId, DatasetResource dsr) throws HyracksDataException {
-        components = new ArrayList<>();
+        List<String> components = new ArrayList<>();
         if (dsr != null && dsr.isOpen()) {
             Map<Long, IndexInfo> indexes = dsr.getIndexes();
             StringBuilder strBuilder = new StringBuilder();
@@ -56,7 +56,7 @@ public class StorageComponentsReader extends FunctionReader {
                 strBuilder.append("\", \"path\":\"");
                 strBuilder.append(path);
                 strBuilder.append("\", \"components\":[");
-                // syncronize over the opTracker
+                // synchronize over the opTracker
                 synchronized (index.getOperationTracker()) {
                     List<ILSMDiskComponent> diskComponents = index.getDiskComponents();
                     for (int i = diskComponents.size() - 1; i >= 0; i--) {
@@ -70,6 +70,10 @@ public class StorageComponentsReader extends FunctionReader {
                         strBuilder.append(id.getMinId());
                         strBuilder.append(",\"max\":");
                         strBuilder.append(id.getMaxId());
+                        strBuilder.append(",\"size\":");
+                        strBuilder.append(c.getComponentSize());
+                        strBuilder.append(",\"component\":");
+                        JSONUtil.quoteAndEscape(strBuilder, String.valueOf(c));
                         strBuilder.append('}');
                     }
                 }

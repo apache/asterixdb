@@ -78,9 +78,9 @@ public class TestStorageManagerComponentHolder {
         lcManager = null;
     }
 
-    public synchronized static IResourceLifecycleManager<IIndex> getIndexLifecycleManager(INCServiceContext ctx) {
+    public synchronized static IResourceLifecycleManager<IIndex> getIndexLifecycleManager() {
         if (lcManager == null) {
-            lcManager = new IndexLifecycleManager(ctx, getLocalResourceRepository());
+            lcManager = new IndexLifecycleManager();
         }
         return lcManager;
     }

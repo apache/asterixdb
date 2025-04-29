@@ -261,6 +261,7 @@ public final class ParallelCacher implements IParallelCacher {
             IoUtil.create(fileReference);
             try (RandomAccessFile raf = new RandomAccessFile(fileReference.getAbsolutePath(), "rw")) {
                 raf.setLength(((UncachedFileReference) fileReference).getSize());
+                raf.getChannel().force(true);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }

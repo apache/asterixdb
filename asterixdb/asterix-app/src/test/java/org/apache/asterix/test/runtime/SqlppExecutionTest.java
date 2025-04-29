@@ -67,6 +67,7 @@ public class SqlppExecutionTest {
 
     @Test
     public void test() throws Exception {
+
         LangExecutionUtil.test(tcCtx);
     }
 

@@ -105,6 +105,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="io/flush/ASTERIXDB-3597">
+        <output-dir compare="Text">io/flush/ASTERIXDB-3597</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="io/merge/ASTERIXDB-3597">
+        <output-dir compare="Text">io/merge/ASTERIXDB-3597</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="delete/001">
         <output-dir compare="Text">delete/001</output-dir>
       </compilation-unit>

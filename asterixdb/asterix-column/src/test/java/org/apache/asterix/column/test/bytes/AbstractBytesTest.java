@@ -209,7 +209,7 @@ public abstract class AbstractBytesTest extends TestBase {
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getColumnOffsetsSize();
+        requiredFreeSpace += columnWriter.getColumnOffsetsSize(true);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getOccupiedSpace();
         //New tuple required space

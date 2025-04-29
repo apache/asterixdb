@@ -139,9 +139,11 @@ public class StoragePathUtil {
         return ResourceReference.of(fileAbsolutePath).getFileRelativePath().toString();
     }
 
-    public static String getDatasetPartitionPath(String relativePath) {
+    public static FileReference getIndexRootPath(IIOManager ioManager, String relativePath)
+            throws HyracksDataException {
         int separatorIndex = relativePath.lastIndexOf(File.separatorChar);
-        return relativePath.substring(0, separatorIndex);
+        String parentDirectory = relativePath.substring(0, separatorIndex);
+        return ioManager.resolve(parentDirectory);
     }
 
     /**

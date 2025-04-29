@@ -138,13 +138,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     @Override
     public LocalResource get(String relativePath) throws HyracksDataException {
-        LocalResource resource = getLocalResourceFromCache(relativePath);
-        if (resource != null) {
-            return resource;
-        }
         beforeReadAccess();
         try {
-            resource = resourceCache.getIfPresent(relativePath);
+            LocalResource resource = resourceCache.getIfPresent(relativePath);
             if (resource == null) {
                 FileReference resourceFile = getLocalResourceFileByName(ioManager, relativePath);
                 resource = readLocalResource(resourceFile);
@@ -156,20 +152,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         } finally {
             afterReadAccess();
         }
-    }
-
-    private LocalResource getLocalResourceFromCache(String relativePath) {
-        LocalResource resource;
-        beforeWriteAccess();
-        try {
-            resource = resourceCache.getIfPresent(relativePath);
-            if (resource != null) {
-                return resource;
-            }
-        } finally {
-            afterWriteAccess();
-        }
-        return null;
     }
 
     @SuppressWarnings("squid:S1181")

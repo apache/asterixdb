@@ -658,6 +658,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-timestamp-partitioned-file-read">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-timestamp-partitioned-file-read</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
       <compilation-unit name="common/avro/avro-types/avro-map">
         <placeholder name="adapter" value="S3" />
         <placeholder name="path_prefix" value="" />
