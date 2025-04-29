@@ -53,6 +53,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_DEFAULT = "Default";
     public static final String FIELD_NAME_DEFINITION = "Definition";
     public static final String FIELD_NAME_DEPENDENCIES = "Dependencies";
+    public static final String FIELD_NAME_IS_TRANSFORM = "IsTransform";
     public static final String FIELD_NAME_DERIVED = "Derived";
     public static final String FIELD_NAME_DESCRIPTION = "Description";
     public static final String FIELD_NAME_EXTERNAL_DETAILS = "ExternalDetails";

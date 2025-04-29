@@ -63,9 +63,11 @@ public class CreateFunctionStatement extends AbstractStatement {
 
     private final boolean replaceIfExists;
     private final boolean ifNotExists;
+    private final boolean transform;
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
-            String functionBody, Expression functionBodyExpression, boolean replaceIfExists, boolean ifNotExists) {
+            String functionBody, Expression functionBodyExpression, boolean replaceIfExists, boolean ifNotExists,
+            boolean transform) {
         this.signature = signature;
         this.functionBody = functionBody;
         this.functionBodyExpression = functionBodyExpression;
@@ -77,6 +79,7 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.options = null;
         this.replaceIfExists = replaceIfExists;
         this.ifNotExists = ifNotExists;
+        this.transform = transform;
     }
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
@@ -93,6 +96,7 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.functionBodyExpression = null;
         this.replaceIfExists = replaceIfExists;
         this.ifNotExists = ifNotExists;
+        this.transform = false;
     }
 
     public boolean getReplaceIfExists() {
@@ -194,6 +198,10 @@ public class CreateFunctionStatement extends AbstractStatement {
     @Override
     public byte getCategory() {
         return Category.DDL;
+    }
+
+    public boolean isTransform() {
+        return transform;
     }
 
     private IAdmNode getOption(String optionName) {

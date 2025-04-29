@@ -206,9 +206,14 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         FunctionSignature signature = new FunctionSignature(databaseName, dataverseName, functionName, arity);
         Creator creator = Creator.createOrDefault(functionRecord);
 
+        int isTransformIndex = functionRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_IS_TRANSFORM);
+        boolean transform = false;
+        if (isTransformIndex >= 0) {
+            transform = ((ABoolean) functionRecord.getValueByPos(isTransformIndex)).getBoolean();
+        }
         return new Function(signature, paramNames, paramTypes, returnType, definition, functionKind, language,
                 libraryDatabaseName, libraryDataverseName, libraryName, externalIdentifier, nullCall, deterministic,
-                resources, dependencies, creator);
+                resources, dependencies, creator, transform);
     }
 
     private List<TypeSignature> getParamTypes(ARecord functionRecord, String functionDatabaseName,
@@ -435,6 +440,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         writeNullCall(function);
         writeDeterministic(function);
         writeFunctionCreator(function);
+        writeIsTransform(function);
     }
 
     protected void writeResources(Function function) throws HyracksDataException {
@@ -719,6 +725,17 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             creatorObject.write(fieldValue.getDataOutput(), true);
+            recordBuilder.addField(fieldName, fieldValue);
+        }
+    }
+
+    private void writeIsTransform(Function function) throws HyracksDataException {
+        if (function.isTransform()) {
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_IS_TRANSFORM);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
     }

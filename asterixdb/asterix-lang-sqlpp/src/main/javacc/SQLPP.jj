@@ -1868,13 +1868,18 @@ CreateFunctionStatement CreateFunctionStatement(Token startStmtToken, boolean or
   CreateFunctionStatement stmt = null;
 }
 {
-  <FUNCTION> stmt = FunctionSpecification(startStmtToken, orReplace)
+  <TRANSFORM> <FUNCTION> stmt = FunctionSpecification(startStmtToken, orReplace, true)
+  {
+    return stmt;
+  }
+  |
+  <FUNCTION> stmt = FunctionSpecification(startStmtToken, orReplace, false)
   {
     return stmt;
   }
 }
 
-CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orReplace) throws ParseException:
+CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orReplace, boolean transform) throws ParseException:
 {
   FunctionSignature signature = null;
   FunctionName fctName = null;
@@ -1929,7 +1934,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
         getCurrentScope().addFunctionDescriptor(signature, false);
         removeCurrentScope();
         ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
-        stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, orReplace, ifNotExists);
+        stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, orReplace, ifNotExists, transform);
       }
     )
   |
@@ -6106,6 +6111,7 @@ TOKEN [IGNORE_CASE]:
   | <WITH : "with">
   | <WRITE : "write">
   | <COPY : "copy">
+  | <TRANSFORM : "transform">
 }
 
 <DEFAULT,IN_DBL_BRACE>

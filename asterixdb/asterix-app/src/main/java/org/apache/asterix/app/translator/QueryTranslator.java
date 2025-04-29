@@ -3340,7 +3340,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 function = new Function(functionSignature, paramNames, paramTypes, returnTypeSignature, null,
                         FunctionKind.SCALAR.toString(), library.getLanguage(), libraryDatabaseName,
                         libraryDataverseName, libraryName, externalIdentifier, cfs.getNullCall(),
-                        cfs.getDeterministic(), cfs.getResources(), dependencies, creator);
+                        cfs.getDeterministic(), cfs.getResources(), dependencies, creator, false);
             } else {
                 List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
                 int paramCount = paramList.size();
@@ -3359,7 +3359,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // Check whether the function is usable:
                 // create a function declaration for this function,
                 // and a query body calls this function with each argument set to 'missing'
-                FunctionDecl fd = new FunctionDecl(functionSignature, paramVars, cfs.getFunctionBodyExpression(), true);
+                FunctionDecl fd = new FunctionDecl(functionSignature, paramVars, cfs.getFunctionBodyExpression(), true,
+                        cfs.isTransform());
                 fd.setSourceLocation(sourceLoc);
 
                 Query wrappedQuery = queryRewriter.createFunctionAccessorQuery(fd);
@@ -3379,7 +3380,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
                         FunctionKind.SCALAR.toString(), compilationProvider.getParserFactory().getLanguage(), null,
-                        null, null, null, null, null, null, dependencies, creator);
+                        null, null, null, null, null, null, dependencies, creator, cfs.isTransform());
             }
 
             if (existingFunction == null) {
