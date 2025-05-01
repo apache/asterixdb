@@ -48,6 +48,8 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.NoRetryPolicyFactory;
+import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
+import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
@@ -223,6 +225,7 @@ import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.optimizer.rules.visitor.FunctionCardinalityInferenceVisitor;
 import org.apache.asterix.runtime.fulltext.AbstractFullTextFilterDescriptor;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 import org.apache.asterix.runtime.fulltext.StopwordsFullTextFilterDescriptor;
@@ -258,6 +261,9 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -3344,6 +3350,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } else {
                 List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
                 int paramCount = paramList.size();
+                if (cfs.isTransform() && paramCount != 1) {
+                    throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                            "Transform function should have exactly one parameter");
+                }
                 List<VarIdentifier> paramVars = new ArrayList<>(paramCount);
                 List<String> paramNames = new ArrayList<>(paramCount);
                 for (Pair<VarIdentifier, TypeExpression> paramPair : paramList) {
@@ -3370,11 +3380,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.setDefaultNamespace(ns);
                 LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, fdList, null,
                         null, warningCollector, wrappedQuery.getVarCounter());
-                apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
-                        Collections.emptyList());
+                List<VarIdentifier> externalVars = new ArrayList<>();
+                Pair<IReturningStatement, Integer> rewrittenQuery = apiFramework.reWriteQuery(langRewritingContext,
+                        wrappedQuery, sessionOutput, false, true, externalVars);
 
                 List<List<DependencyFullyQualifiedName>> dependencies =
                         FunctionUtil.getFunctionDependencies(metadataProvider, fd, queryRewriter);
+                if (cfs.isTransform()) {
+                    if (!dependencies.get(0).isEmpty()) {
+                        throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                                "Transform function definition can not use collections/views");
+                    }
+                    validateTransformFunction(metadataProvider, rewrittenQuery, sourceLoc);
+                }
                 appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
 
                 newInlineTypes = Collections.emptyMap();
@@ -3416,6 +3434,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
+        }
+    }
+
+    private void validateTransformFunction(MetadataProvider metadataProvider,
+            Pair<IReturningStatement, Integer> rewrittenResult, SourceLocation sourceLoc) throws AlgebricksException {
+        ILangExpressionToPlanTranslatorFactory translatorFactory =
+                compilationProvider.getExpressionToPlanTranslatorFactory();
+        ILangExpressionToPlanTranslator t =
+                translatorFactory.createExpressionToPlanTranslator(metadataProvider, rewrittenResult.second, null);
+        org.apache.asterix.translator.ResultMetadata resultMetadata =
+                new org.apache.asterix.translator.ResultMetadata(sessionOutput.config().fmt());
+        ILogicalPlan plan = t.translate((Query) rewrittenResult.first, null, null, resultMetadata);
+        if (plan.getRoots().size() != 1) {
+            throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                    "Transform function cannot have more than one root");
+        }
+        ILogicalOperator op = plan.getRoots().get(0).getValue().getInputs().get(0).getValue();
+        if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+            if (!FunctionCardinalityInferenceVisitor.isCardinalityZeroOrOne(op.getInputs().get(0).getValue())) {
+                throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                        "Transform function cannot return more than one row");
+            }
+        } else {
+            throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                    "Transform function should always contain a query");
         }
     }
 

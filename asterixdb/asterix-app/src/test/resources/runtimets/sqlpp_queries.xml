@@ -14229,6 +14229,21 @@
         <output-dir compare="Text">drop_if_exists</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="function/transform">
+      <compilation-unit name="negative">
+        <output-dir compare="Text">negative</output-dir>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function should have exactly one parameter'</expected-error>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function should have exactly one parameter'</expected-error>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function definition can not use collections/views'</expected-error>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function definition can not use collections/views'</expected-error>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function cannot return more than one row'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="function/transform">
+      <compilation-unit name="positive">
+        <output-dir compare="Text">positive</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
