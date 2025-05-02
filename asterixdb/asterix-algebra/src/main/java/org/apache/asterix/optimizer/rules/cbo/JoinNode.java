@@ -19,6 +19,8 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -513,9 +515,17 @@ public class JoinNode {
 
     private static double adjustSelectivities(JoinCondition jc1, JoinCondition jc2, JoinCondition jc3) {
         double sel;
+
         if (jc1.comparisonType == JoinCondition.comparisonOp.OP_EQ
                 && jc2.comparisonType == JoinCondition.comparisonOp.OP_EQ
                 && jc3.comparisonType == JoinCondition.comparisonOp.OP_EQ) {
+            if (!jc1.partOfComposite)
+                return jc1.selectivity;
+            if (!jc2.partOfComposite)
+                return jc2.selectivity;
+            if (!jc3.partOfComposite)
+                return jc3.selectivity;
+            // one of the above must be true.
             sel = findRedundantSel(jc1, jc2, jc3);
         } else {
             // at least one of the predicates in not an equality predicate
@@ -1591,6 +1601,8 @@ public class JoinNode {
 
     @Override
     public String toString() {
+        NumberFormat scientificFormat = new DecimalFormat("0.###E0");
+        DecimalFormat formatter = new DecimalFormat("#,###.00");
         List<PlanNode> allPlans = joinEnum.getAllPlans();
         StringBuilder sb = new StringBuilder(128);
         if (IsBaseLevelJoinNode()) {
@@ -1615,9 +1627,16 @@ public class JoinNode {
         sb.append("level ").append(level).append('\n');
         sb.append("highestDatasetId ").append(highestDatasetId).append('\n');
         if (IsBaseLevelJoinNode()) {
-            sb.append("orig cardinality ").append(dumpDouble(origCardinality));
+            //sb.append("orig cardinality ").append(dumpDouble(origCardinality));
+            //sb.append("orig cardinality ").append(dumpDouble(Double.parseDouble(scientificFormat.format(origCardinality))));
+            sb.append("orig cardinality2 ")
+                    .append(formatter.format(Double.parseDouble(String.valueOf(origCardinality))));
+            sb.append("\n    cardinality \n").append(formatter.format(Double.parseDouble(String.valueOf(cardinality))));
+        } else {
+            //sb.append("cardinality ").append(dumpDouble(cardinality));
+            //sb.append("cardinality ").append(dumpDouble(Double.parseDouble(scientificFormat.format(cardinality))));
+            sb.append("cardinality \n").append(formatter.format(Double.parseDouble(String.valueOf(cardinality))));
         }
-        sb.append("cardinality ").append(dumpDouble(cardinality));
         sb.append("size ").append(dumpDouble(size));
         sb.append("outputSize(sizeVarsAfterScan) ").append(dumpDouble(sizeVarsAfterScan));
         if (planIndexesArray.size() == 0) {

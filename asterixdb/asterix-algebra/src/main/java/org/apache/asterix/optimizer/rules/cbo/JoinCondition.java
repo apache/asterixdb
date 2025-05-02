@@ -43,7 +43,7 @@ public class JoinCondition {
     protected int leftSideBits;
     protected int rightSideBits;
     protected int numLeafInputs;
-    protected double selectivity;
+    protected double selectivity = -1.0; // This must be changed obviously
     protected comparisonOp comparisonType;
     protected JoinOperator joinOp = null;
     protected List<LogicalVariable> usedVars = null;

@@ -1,22 +1,22 @@
-distribute result [$$31] [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+distribute result [$$31] [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+  exchange [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$31] <- [{"age": $$38, "name": $$39}] project: [$$31] [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+    assign [$$31] <- [{"age": $$38, "name": $$39}] project: [$$31] [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
     -- ASSIGN  |PARTITIONED|
-      project ([$$38, $$39]) [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+      project ([$$38, $$39]) [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+        exchange [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
         -- SORT_MERGE_EXCHANGE [$$34(ASC) ]  |PARTITIONED|
-          order (ASC, $$34) [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 47.25]
+          order (ASC, $$34) [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 64.65]
           -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
-            exchange [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
+            exchange [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$38, $$39, $$34]) [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
+              project ([$$38, $$39, $$34]) [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 2.1, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
+                exchange [cardinality: 7.0, doc-size: 33.5, op-cost: 0.0, total-cost: 45.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$33, $$34)) [cardinality: 2.1, doc-size: 33.5, op-cost: 15.0, total-cost: 45.0]
+                  join (eq($$33, $$34)) [cardinality: 7.0, doc-size: 33.5, op-cost: 15.0, total-cost: 45.0]
                   -- HYBRID_HASH_JOIN [$$34][$$33]  |PARTITIONED|
                     exchange [cardinality: 8.0, doc-size: 15.5, op-cost: 0.0, total-cost: 8.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

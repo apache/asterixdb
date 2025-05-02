@@ -107,6 +107,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private List<Triple<ILogicalOperator, ILogicalOperator, List<ILogicalOperator>>> modifyUnnestInfo;
     private final Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap = new HashMap();
+    ILogicalOperator newRootAfterUnnest = null;
 
     public EnumerateJoinsRule(JoinEnum joinEnum) {
         this.joinEnum = joinEnum;
@@ -307,7 +308,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 modifyUnnestInfo = new ArrayList<>();
                 collectUnnestModificationInfo(null, root, cheapestPlanNode);
                 for (int k = 0; k < modifyUnnestInfo.size(); k++) {
-                    root = modifyTree(null, root, k);
+                    modifyTree(null, root, k);
+                    if (newRootAfterUnnest != null) {
+                        root = newRootAfterUnnest;
+                    }
                 }
                 Mutable<ILogicalOperator> rootRef = new MutableObject<>(root);
                 if (LOGGER.isTraceEnabled()) {
@@ -367,7 +371,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private boolean everyLeafInputDoesNotHaveADataScanOperator(List<ILogicalOperator> leafInputs) {
         for (ILogicalOperator leafInput : leafInputs) {
-            DataSourceScanOperator scanOp = (DataSourceScanOperator) findDataSourceScanOperator(leafInput);
+            DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(leafInput);
             if (scanOp == null) {
                 return true;
             }
@@ -380,35 +384,31 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private ILogicalOperator modifyTree(ILogicalOperator parent, ILogicalOperator op, int k) {
-
+    private void modifyTree(ILogicalOperator parent, ILogicalOperator op, int k) {
         if (modifyUnnestInfo.get(k).second == op) { // found the one to get rid off; this should be an OJ
             int size = modifyUnnestInfo.get(k).third.size();
-            modifyUnnestInfo.get(k).third.get(size - 1).getInputs().get(0).setValue(op.getInputs().get(0).getValue()); //The unnestOp is at the lowest position and points to the op below it.
-            if (parent == null) {
-                ILogicalOperator root = modifyUnnestInfo.get(k).third.get(0); // the first assign that belongs to this unnestOp. Or an only one UnnestOp with no assigns
-                ILogicalOperator q = root;
+            UnnestOperator uOp = (UnnestOperator) modifyUnnestInfo.get(k).third.get(size - 1); // UnnestOp is always at the end
+            uOp.getInputs().get(0).setValue(op.getInputs().get(0).getValue()); //The unnestOp is at the lowest position and points to the op below it.
+            if (parent == null) { // change is happening at the very top, so the root will change
+                newRootAfterUnnest = modifyUnnestInfo.get(k).third.get(0); // the first assign that belongs to this unnestOp. Or an only one UnnestOp with no assigns
+                ILogicalOperator q = newRootAfterUnnest;
                 if (modifyUnnestInfo.get(k).third.size() > 1) {
                     for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
                         q.getInputs().get(0).setValue(p);
                         q = p;
                     }
                 }
-                return root;
             } else {
                 ILogicalOperator q = parent;
                 for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
                     q.getInputs().get(0).setValue(p);
                     q = p;
                 }
-                return parent;
             }
-
         }
         for (Mutable<ILogicalOperator> input : op.getInputs()) {
-            return modifyTree(op, input.getValue(), k);
+            modifyTree(op, input.getValue(), k);
         }
-        return null;
     }
 
     // This is a complicated routine. Removes unnestOperations from leafInputs. They will be added back at the right places.
@@ -502,7 +502,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     private ILogicalOperator truncateInput(ILogicalOperator op) throws AlgebricksException {
-        ILogicalOperator dsOp = findDataSourceScanOperator(op);
+        ILogicalOperator dsOp = joinEnum.findDataSourceScanOperator(op);
         ILogicalOperator ds = OperatorManipulationUtil.bottomUpCopyOperators(dsOp);
         return ds;
     }
@@ -1171,6 +1171,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     /**
      * Finds the DataSourceScanOperator given a leafInput
      */
+    /*
     private ILogicalOperator findDataSourceScanOperator(ILogicalOperator op) {
         ILogicalOperator origOp = op;
         while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
@@ -1181,6 +1182,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
         return null;
     }
+    
+     */
 
     private void removeJoinAnnotations(AbstractFunctionCallExpression afcExpr) {
         afcExpr.removeAnnotation(BroadcastExpressionAnnotation.class);
@@ -1262,7 +1265,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (selOp != null) {
             addCardCostAnnotations(selOp, plan);
         }
-        addCardCostAnnotations(findDataSourceScanOperator(leftInput), plan);
+        addCardCostAnnotations(joinEnum.findDataSourceScanOperator(leftInput), plan);
     }
 
     private void getJoinNode(PlanNode plan, List<JoinOperator> allJoinOps) throws AlgebricksException {
@@ -1374,7 +1377,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             joinOp.getInputs().get(0).setValue(leftInput);
             ILogicalOperator op = joinOp.getInputs().get(0).getValue();
             context.computeAndSetTypeEnvironmentForOperator(op);
-            addCardCostAnnotations(findDataSourceScanOperator(leftInput), leftPlan);
+            addCardCostAnnotations(joinEnum.findDataSourceScanOperator(leftInput), leftPlan);
         } else {
             // join
             totalNumberOfJoins.increment();
@@ -1394,7 +1397,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             }
             joinOp.getInputs().get(1).setValue(rightInput);
             context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(1).getValue());
-            addCardCostAnnotations(findDataSourceScanOperator(rightInput), rightPlan);
+            addCardCostAnnotations(joinEnum.findDataSourceScanOperator(rightInput), rightPlan);
         } else {
             // join
             totalNumberOfJoins.increment();
@@ -1484,7 +1487,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         int n = 0;
         for (ILogicalOperator li : leafInputs) {
-            DataSourceScanOperator scanOp = (DataSourceScanOperator) findDataSourceScanOperator(li);
+            DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(li);
             if (scanOp == null) {
                 continue;
             }

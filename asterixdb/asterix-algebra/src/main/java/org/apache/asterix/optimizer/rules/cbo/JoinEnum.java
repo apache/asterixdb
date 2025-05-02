@@ -677,24 +677,98 @@ public class JoinEnum {
         return null;
     }
 
-    // in case we have l.partkey = ps.partkey and l.suppkey = ps.suppkey, we will only use the first one for cardinality computations.
-    // treat it like a Pk-Fk join; simplifies cardinality computation
-    private void markCompositeJoinPredicates() {
-        // can use dataSetBits??? This will be simpler.
-        for (int i = 0; i < joinConditions.size() - 1; i++) {
+    // This is basically a heuristic routine. Not guaranteed to be 100% accurate.
+    // Use only when primary keys are not defined (shadow data sets)
+    // Examples l.partkey = ps.partkey and l.suppkey = ps.suppkey TPCH
+    // c.c_d_id = o.o_d_id and c.c_w_id = o.o_w_id and c.c_id = o.o_c_id in CH2
+    //for (JoinCondition jc : joinConditions) {
+    //jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
+    //}
+    private void markCompositeJoinPredicates() throws AlgebricksException {
+        List<JoinCondition> JCs = new ArrayList<>();
+        for (int i = 0; i < joinConditions.size(); i++) {
             JoinCondition jcI = joinConditions.get(i);
-            if (jcI.comparisonType == JoinCondition.comparisonOp.OP_EQ && !jcI.partOfComposite) {
+            if (jcI.usedVars == null || jcI.usedVars.size() != 2 || jcI.numLeafInputs != 2 || jcI.partOfComposite) {
+                continue;
+            }
+            JCs.clear();
+            JCs.add(jcI);
+            if (jcI.comparisonType == JoinCondition.comparisonOp.OP_EQ) {
                 for (int j = i + 1; j < joinConditions.size(); j++) {
                     JoinCondition jcJ = joinConditions.get(j);
-                    if (jcJ.comparisonType == JoinCondition.comparisonOp.OP_EQ && jcI.datasetBits == jcJ.datasetBits) {
-                        jcI.selectivity = 1.0 / smallerDatasetSize(jcI.datasetBits);
-                        // 1/P will be the selectivity of the composite clause
-                        jcJ.partOfComposite = true;
-                        jcJ.selectivity = 1.0;
+                    if (jcJ.usedVars == null) {
+                        continue;
                     }
+                    if (jcJ.comparisonType == JoinCondition.comparisonOp.OP_EQ && (jcJ.usedVars.size() == 2)
+                            && (jcJ.numLeafInputs == 2) && (jcI.datasetBits == jcJ.datasetBits)) {
+                        JCs.add(jcJ);
+                    }
+                }
+                double sel = checkForPrimaryKey(JCs);
+                //if (JCs.size() > 1) { // need at least two to form a composite join key
+                // Now check if selectivities have to be adjusted for this composite key
+                if (JCs.size() > 1) {
+                    for (JoinCondition jc : JCs) {
+                        jc.partOfComposite = true;
+                    }
+                }
+                if (sel == -1.0) {
+                    for (JoinCondition jc : JCs) {
+                        jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
+                    }
+
+                } else {
+                    for (JoinCondition jc : JCs) {
+                        jc.selectivity = 1.0;
+                    }
+                    JCs.get(0).selectivity = sel; // store this in the first condition. Does not matter which one it is!
                 }
             }
         }
+    }
+
+    // at this point the join is binary. Not sure if all the predicates may not be in the same order?? Appears to be the case
+    private double checkForPrimaryKey(List<JoinCondition> jCs) {
+        List<LogicalVariable> leftVars = new ArrayList<>();
+        List<LogicalVariable> rightVars = new ArrayList<>();
+        for (JoinCondition jc : jCs) {
+            leftVars.add(jc.usedVars.get(0));
+            rightVars.add(jc.usedVars.get(1));
+        }
+        double sel = -1.0;
+        ILogicalOperator leftLeafInput = leafInputs.get(jCs.get(0).leftSide - 1);
+        DataSourceScanOperator leftScanOp = findDataSourceScanOperator(leftLeafInput);
+        boolean leftPrimary = false;
+        if (leftScanOp.getVariables().containsAll(leftVars)
+                && leftScanOp.getVariables().size() == leftVars.size() + 1) {
+            // this is the primary side
+            leftPrimary = true;
+            sel = 1.0 / jnArray[jCs.get(0).leftSide].getOrigCardinality();
+        }
+        boolean rightPrimary = false;
+        ILogicalOperator rightLeafInput = leafInputs.get(jCs.get(0).rightSide - 1);
+        DataSourceScanOperator rightScanOp = findDataSourceScanOperator(rightLeafInput);
+        if (rightScanOp.getVariables().containsAll(rightVars)
+                && rightScanOp.getVariables().size() == rightVars.size() + 1) {
+            // this is the primary side
+            rightPrimary = true;
+            sel = 1.0 / jnArray[jCs.get(0).rightSide].getOrigCardinality();
+        }
+
+        if (leftPrimary && rightPrimary) {
+            // this is the subset case. The join cardinality will be the smaller side. So selectvity will be 1/biggerCard
+            sel = 1.0 / Math.max(jnArray[jCs.get(0).leftSide].getOrigCardinality(),
+                    jnArray[jCs.get(0).rightSide].getOrigCardinality());
+        }
+        return sel;
+    }
+
+    private boolean close(double size1, double size2) {
+        double ratio = size1 / size2;
+        if (ratio > 0.8 && ratio < 1.2) {
+            return true;
+        }
+        return false;
     }
 
     private double smallerDatasetSize(int datasetBits) {
@@ -899,16 +973,15 @@ public class JoinEnum {
                     jn.datasetIndexes = new ArrayList<>();
                     jn.datasetIndexes.addAll(jnI.datasetIndexes);
                     jn.datasetIndexes.addAll(jnJ.datasetIndexes);
-                    Collections.sort(jn.datasetIndexes);
 
                     jn.datasetNames = new ArrayList<>();
                     jn.datasetNames.addAll(jnI.datasetNames);
                     jn.datasetNames.addAll(jnJ.datasetNames);
-                    Collections.sort(jn.datasetNames);
+
                     jn.aliases = new ArrayList<>();
                     jn.aliases.addAll(jnI.aliases);
                     jn.aliases.addAll(jnJ.aliases);
-                    Collections.sort(jn.aliases);
+
                     jn.size = jnI.size + jnJ.size; // These are the original document sizes
                     jn.setCardinality(jn.computeJoinCardinality(), true);
                     jn.setSizeVarsAfterScan(jnI.getSizeVarsAfterScan() + jnJ.getSizeVarsAfterScan());
@@ -1272,10 +1345,13 @@ public class JoinEnum {
         }
 
         for (JoinCondition jc : joinConditions) {
-            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
+            if (!((AbstractFunctionCallExpression) jc.joinCondition).getFunctionIdentifier()
+                    .equals(AlgebricksBuiltinFunctions.EQ)) {
+                jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
+            }
         }
 
-        findSelectionPredsInsideJoins(); // This was added to make TPCH Q7 work.
+        findSelectionPredsInsideJoins(); // This was added to make TPCH Q7 work. cleanup/redo. difficult to debug currently
         findIfJoinGraphIsConnected();
 
         if (LOGGER.isTraceEnabled()) {
@@ -1283,14 +1359,19 @@ public class JoinEnum {
         }
 
         markCompositeJoinPredicates();
+        for (JoinCondition jc : joinConditions) {
+            if (jc.selectivity == -1) {// just in case we missed computing some selectivities perhaps because there were no keys found
+                jc.selectivity = stats.getSelectivityFromAnnotationMain(jc, null, true, false, jc.joinOp);
+            }
+        }
         int lastJnNum = enumerateHigherLevelJoinNodes();
         JoinNode lastJn = jnArray[allTabsJnNum];
+        // return the cheapest plan
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN END");
             LOGGER.trace(dumpJoinNodes(lastJnNum));
         }
 
-        // return the cheapest plan
         return lastJn.cheapestPlanIndex;
     }
 

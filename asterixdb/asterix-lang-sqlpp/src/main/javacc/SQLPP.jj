@@ -774,6 +774,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
                  Matcher numMat = number.matcher(matchedGroup);
                  if (numMat.find()) {
                    productivity = Double.parseDouble (numMat.group());
+                   if (productivity == 0.0) {
+                     throw new SqlppParseException(getSourceLocation(hintToken), "Productivity has to be a decimal value greater than 0");
+                   }
                  }
                  else {
                    throw new SqlppParseException(getSourceLocation(hintToken), "Productivity has to be a decimal value greater than 0");

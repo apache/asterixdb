@@ -1,20 +1,20 @@
-distribute result [$$36] [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 98061.73]
+distribute result [$$36] [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22537.15]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 98061.73]
+  exchange [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22537.15]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 98061.73]
+    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22537.15]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 98061.73]
+      exchange [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22537.15]
       -- SORT_MERGE_EXCHANGE [$$43(ASC), $$44(ASC), $$42(ASC) ]  |PARTITIONED|
-        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 98061.73]
+        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22537.15]
         -- STABLE_SORT [$$43(ASC), $$44(ASC), $$42(ASC)]  |PARTITIONED|
-          exchange [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
+          exchange [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$43, $$44, $$42]) [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
+            project ([$$43, $$44, $$42]) [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 6016.3, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
+              exchange [cardinality: 4.01, doc-size: 15.0, op-cost: 0.0, total-cost: 22529.12]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (and(eq($$43, $$44), eq($$49, $$42))) [cardinality: 6016.3, doc-size: 15.0, op-cost: 7512.06, total-cost: 22529.12]
+                join (and(eq($$43, $$44), eq($$49, $$42))) [cardinality: 4.01, doc-size: 15.0, op-cost: 7512.06, total-cost: 22529.12]
                 -- HYBRID_HASH_JOIN [$$44, $$42][$$43, $$49]  |PARTITIONED|
                   exchange [cardinality: 6005.0, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
                   -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
