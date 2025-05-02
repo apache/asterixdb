@@ -371,7 +371,7 @@ public final class S3CloudClient implements ICloudClient {
 
     private <T, C extends Collection<T>> C ensureListConsistent(C cloudFiles, String bucket,
             Function<T, String> pathExtractor) {
-        if (config.isStorageListEventuallyConsistent()) {
+        if (!config.isStorageListEventuallyConsistent()) {
             return cloudFiles;
         }
         Iterator<T> iterator = cloudFiles.iterator();
