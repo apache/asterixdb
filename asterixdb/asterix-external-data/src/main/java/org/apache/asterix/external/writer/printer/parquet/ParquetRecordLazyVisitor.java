@@ -35,13 +35,16 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 
 public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<Void, Type> {
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private final MessageType schema;
     private final RecordLazyVisitablePointable rec;
     //     The Record Consumer is responsible for traversing the record tree,
@@ -72,6 +75,7 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
     public Void visit(RecordLazyVisitablePointable pointable, Type type) throws HyracksDataException {
 
         if (type.isPrimitive()) {
+            LOGGER.info("Expected primitive type: {} but got record type", LogRedactionUtil.userData(type.toString()));
             throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA, GROUP_TYPE_ERROR_FIELD,
                     PRIMITIVE_TYPE_ERROR_FIELD, type.getName());
         }
@@ -84,6 +88,8 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
             String columnName = fieldNamesDictionary.getOrCreateFieldNameIndex(pointable.getFieldName());
 
             if (!groupType.containsField(columnName)) {
+                LOGGER.info("Group type: {} does not contain field in record type: {}",
+                        LogRedactionUtil.userData(groupType.getName()), LogRedactionUtil.userData(columnName));
                 throw new HyracksDataException(ErrorCode.EXTRA_FIELD_IN_RESULT_NOT_FOUND_IN_SCHEMA, columnName,
                         groupType.getName());
             }
@@ -99,17 +105,22 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
     public Void visit(AbstractListLazyVisitablePointable pointable, Type type) throws HyracksDataException {
 
         if (type.isPrimitive()) {
+            LOGGER.info("Expected primitive type: {} but got list type", LogRedactionUtil.userData(type.toString()));
             throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA, GROUP_TYPE_ERROR_FIELD,
                     PRIMITIVE_TYPE_ERROR_FIELD, type.getName());
         }
         GroupType groupType = type.asGroupType();
 
         if (!groupType.containsField(LIST_FIELD)) {
+            LOGGER.info("Group type: {} does not contain field in list type: {}",
+                    LogRedactionUtil.userData(groupType.getName()), LIST_FIELD);
             throw new HyracksDataException(ErrorCode.EXTRA_FIELD_IN_RESULT_NOT_FOUND_IN_SCHEMA, LIST_FIELD,
                     groupType.getName());
         }
 
         if (groupType.getType(LIST_FIELD).isPrimitive()) {
+            LOGGER.info("Expected group type: {} but got primitive type",
+                    LogRedactionUtil.userData(groupType.getType(LIST_FIELD).toString()));
             throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA, GROUP_TYPE_ERROR_FIELD,
                     PRIMITIVE_TYPE_ERROR_FIELD, LIST_FIELD);
         }
@@ -117,6 +128,8 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
         GroupType listType = groupType.getType(LIST_FIELD).asGroupType();
 
         if (!listType.containsField(ELEMENT_FIELD)) {
+            LOGGER.info("Group type: {} does not contain field: {}", LogRedactionUtil.userData(listType.toString()),
+                    ELEMENT_FIELD);
             throw new HyracksDataException(ErrorCode.EXTRA_FIELD_IN_RESULT_NOT_FOUND_IN_SCHEMA, ELEMENT_FIELD,
                     listType.getName());
         }
@@ -147,8 +160,9 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
 
     @Override
     public Void visit(FlatLazyVisitablePointable pointable, Type type) throws HyracksDataException {
-
         if (!type.isPrimitive()) {
+            LOGGER.info("Expected non primitive type: {} but got: {}", LogRedactionUtil.userData(type.toString()),
+                    pointable.getTypeTag());
             throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA, PRIMITIVE_TYPE_ERROR_FIELD,
                     GROUP_TYPE_ERROR_FIELD, type.getName());
         }
@@ -168,6 +182,8 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
             AbstractLazyVisitablePointable child = rec.getChildVisitablePointable();
 
             if (!schema.containsField(columnName)) {
+                LOGGER.info("Schema: {} does not contain field: {}", LogRedactionUtil.userData(schema.toString()),
+                        LogRedactionUtil.userData(columnName));
                 throw new HyracksDataException(ErrorCode.EXTRA_FIELD_IN_RESULT_NOT_FOUND_IN_SCHEMA, columnName,
                         schema.getName());
             }

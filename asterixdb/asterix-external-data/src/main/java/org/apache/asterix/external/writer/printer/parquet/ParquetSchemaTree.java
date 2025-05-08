@@ -28,11 +28,15 @@ import java.util.Map;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Types;
 
 public class ParquetSchemaTree {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static class SchemaNode {
         private AbstractType type;
@@ -47,6 +51,11 @@ public class ParquetSchemaTree {
 
         public AbstractType getType() {
             return type;
+        }
+
+        @Override
+        public String toString() {
+            return type == null ? "NULL" : type.toString();
         }
     }
 
@@ -68,6 +77,17 @@ public class ParquetSchemaTree {
         Map<String, SchemaNode> getChildren() {
             return children;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{ ");
+            for (Map.Entry<String, SchemaNode> entry : children.entrySet()) {
+                sb.append(entry.getKey()).append(" : ").append(entry.getValue()).append(", ");
+            }
+            sb.append(" }");
+            return sb.toString();
+        }
     }
 
     abstract static class AbstractType {
@@ -80,6 +100,11 @@ public class ParquetSchemaTree {
         public FlatType(ATypeTag typeTag) {
             this.typeTag = typeTag;
             isHierarchical = AsterixParquetTypeMap.HIERARCHIAL_TYPES.containsKey(typeTag);
+        }
+
+        @Override
+        public String toString() {
+            return typeTag.toString();
         }
 
         public boolean isCompatibleWith(ATypeTag typeTag) {
@@ -113,6 +138,11 @@ public class ParquetSchemaTree {
             child = null;
         }
 
+        @Override
+        public String toString() {
+            return "[ " + child + " ]";
+        }
+
         void setChild(SchemaNode child) {
             this.child = child;
         }
@@ -129,6 +159,8 @@ public class ParquetSchemaTree {
     public static void buildParquetSchema(Types.Builder builder, SchemaNode schemaNode, String columnName)
             throws HyracksDataException {
         if (schemaNode.getType() == null) {
+            LOGGER.info(
+                    "Child type not set for record value with column name: " + LogRedactionUtil.userData(columnName));
             throw new HyracksDataException(ErrorCode.EMPTY_TYPE_INFERRED);
         }
         AbstractType typeClass = schemaNode.getType();
@@ -154,6 +186,7 @@ public class ParquetSchemaTree {
         Types.BaseListBuilder<?, ?> childBuilder = getListChild(builder);
         SchemaNode child = type.child;
         if (child == null) {
+            LOGGER.info("Child type not set for list with column name: " + LogRedactionUtil.userData(columnName));
             throw new HyracksDataException(ErrorCode.EMPTY_TYPE_INFERRED);
         }
         buildParquetSchema(childBuilder, child, columnName);
@@ -161,6 +194,8 @@ public class ParquetSchemaTree {
 
     private static void buildFlat(Types.Builder builder, FlatType type, String columnName) throws HyracksDataException {
         if (type.getPrimitiveTypeName() == null) {
+            LOGGER.info("Child primitive type not set for flat value with column name: "
+                    + LogRedactionUtil.userData(columnName));
             // Not sure if this is the right thing to do here
             throw new HyracksDataException(ErrorCode.EMPTY_TYPE_INFERRED);
         }
