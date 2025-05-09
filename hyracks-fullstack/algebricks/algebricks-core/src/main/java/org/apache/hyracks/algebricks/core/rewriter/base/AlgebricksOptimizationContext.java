@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IndexAdvisor;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
@@ -81,6 +82,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private int varCounter;
     private IMetadataProvider metadataProvider;
     private Object compilerFactory;
+    private IndexAdvisor indexAdvisor;
 
     public AlgebricksOptimizationContext(IOptimizationContextFactory optContextFactory, int varCounter,
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
@@ -88,7 +90,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
             AlgebricksPartitionConstraint clusterLocations, IPlanPrettyPrinter prettyPrinter,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IndexAdvisor indexAdvisor) {
         this.optContextFactory = optContextFactory;
         this.varCounter = varCounter;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
@@ -103,6 +105,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         boolean isSanityCheckEnabled = physicalOptimizationConfig.isSanityCheckEnabled();
         this.planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(prettyPrinter, this) : null;
         this.planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(prettyPrinter) : null;
+        this.indexAdvisor = indexAdvisor;
     }
 
     public AlgebricksOptimizationContext(AlgebricksOptimizationContext from) {
@@ -122,6 +125,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(from.prettyPrinter) : null;
         metadataProvider = from.metadataProvider;
         compilerFactory = from.compilerFactory;
+        indexAdvisor = from.indexAdvisor;
 
         varEvalSizeEnv.varSizeMap.putAll(from.varEvalSizeEnv.varSizeMap);
         typeEnvMap.putAll(from.typeEnvMap);
@@ -403,4 +407,10 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
             return varSizeMap.get(var);
         }
     }
+
+    @Override
+    public IndexAdvisor getIndexAdvisor() {
+        return indexAdvisor;
+    }
+
 }

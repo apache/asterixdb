@@ -276,6 +276,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String RETURNS = "RETURNS";
     private static final String CONFIG = "CONFIG";
     private static final String STATISTICS = "STATISTICS";
+    private static final String ADVISE = "ADVISE";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -973,7 +974,7 @@ List<Statement> Statement() throws ParseException:
 }
 {
   (
-    (stmt = ExplainStatement()
+    (stmt = ExplainOrAdviseStatement()
       {
         decls.add(stmt);
       }
@@ -986,21 +987,34 @@ List<Statement> Statement() throws ParseException:
   }
 }
 
-Statement ExplainStatement() throws ParseException:
+Statement ExplainOrAdviseStatement() throws ParseException:
 {
   Statement stmt = null;
   Token explainToken = null;
+  boolean adviseToken = false;
 }
 {
-   ( <EXPLAIN> { explainToken = token; } )?
+( <EXPLAIN> { explainToken = token; } | LOOKAHEAD({ laIdentifier(ADVISE) }) <IDENTIFIER> { adviseToken = true; } )?
    stmt = SingleStatement()
    {
-      if (explainToken != null) {
+        if (explainToken != null && adviseToken ) {
+            throw new SqlppParseException(getSourceLocation(explainToken),
+            "EXPLAIN and ADVISE cannot be used together");
+        }
+      if (explainToken != null ) {
         if (stmt.getKind() == Statement.Kind.QUERY) {
           ((Query)stmt).setExplain(true);
         } else {
           throw new SqlppParseException(getSourceLocation(explainToken),
             "EXPLAIN is not supported for this kind of statement");
+        }
+      }
+      if (adviseToken ) {
+        if (stmt.getKind() == Statement.Kind.QUERY) {
+          ((Query)stmt).setAdvise(true);
+        } else {
+          throw new SqlppParseException(getSourceLocation(token),
+            "ADVISE is not supported for statement kind: "+ stmt.getKind());
         }
       }
       return stmt;

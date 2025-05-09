@@ -37,6 +37,7 @@ import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.IAObject;
@@ -916,7 +917,8 @@ public class JoinNode {
         return changes;
     }
 
-    protected void addIndexAccessPlans(ILogicalOperator leafInput) throws AlgebricksException {
+    protected void addIndexAccessPlans(ILogicalOperator leafInput, IIndexProvider indexProvider)
+            throws AlgebricksException {
         IntroduceSelectAccessMethodRule tmp = new IntroduceSelectAccessMethodRule();
         List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
@@ -927,8 +929,8 @@ public class JoinNode {
         SelectOperator firstSelop = copySelExprsAndSetTrue(selExprs, selOpers, leafInput);
         if (firstSelop != null) { // if there are no selects, then there is no question of index selections either.
             firstSelop.getCondition().setValue(andAlltheExprs(selExprs));
-            boolean index_access_possible =
-                    tmp.checkApplicable(new MutableObject<>(leafInput), joinEnum.optCtx, chosenIndexes, analyzedAMs);
+            boolean index_access_possible = tmp.checkApplicable(new MutableObject<>(leafInput), joinEnum.optCtx,
+                    chosenIndexes, analyzedAMs, indexProvider);
             restoreSelExprs(selExprs, selOpers);
             if (index_access_possible) {
                 costAndChooseIndexPlans(leafInput, analyzedAMs);
@@ -980,8 +982,8 @@ public class JoinNode {
     }
 
     private boolean nestedLoopsApplicable(ILogicalExpression joinExpr, boolean outerJoin,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
-            throws AlgebricksException {
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            IIndexProvider indexProvider) throws AlgebricksException {
 
         if (joinExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
@@ -1037,14 +1039,15 @@ public class JoinNode {
         // Now call the rewritePre code
         IntroduceJoinAccessMethodRule tmp = new IntroduceJoinAccessMethodRule();
         boolean retVal = tmp.checkApplicable(new MutableObject<>(joinEnum.localJoinOp), joinEnum.optCtx, chosenIndexes,
-                analyzedAMs);
+                analyzedAMs, indexProvider);
 
         return retVal;
     }
 
     private boolean NLJoinApplicable(JoinNode leftJn, JoinNode rightJn, boolean outerJoin,
             ILogicalExpression nestedLoopJoinExpr, List<Pair<IAccessMethod, Index>> chosenIndexes,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IIndexProvider indexProvider)
+            throws AlgebricksException {
 
         if (leftJn.fake || rightJn.fake) {
             return false;
@@ -1058,8 +1061,8 @@ public class JoinNode {
             return false; // nested loop plan not possible.
         }
 
-        if (nestedLoopJoinExpr == null
-                || !rightJn.nestedLoopsApplicable(nestedLoopJoinExpr, outerJoin, chosenIndexes, analyzedAMs)) {
+        if (nestedLoopJoinExpr == null || !rightJn.nestedLoopsApplicable(nestedLoopJoinExpr, outerJoin, chosenIndexes,
+                analyzedAMs, indexProvider)) {
             return false;
         }
 
@@ -1167,7 +1170,8 @@ public class JoinNode {
     }
 
     private int buildNLJoinPlan(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression nestedLoopJoinExpr,
-            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin) throws AlgebricksException {
+            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin, IIndexProvider indexProvider)
+            throws AlgebricksException {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
@@ -1186,7 +1190,8 @@ public class JoinNode {
 
         List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
-        if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr, chosenIndexes, analyzedAMs)) {
+        if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr, chosenIndexes, analyzedAMs,
+                indexProvider)) {
             return PlanNode.NO_PLAN;
         }
         if (chosenIndexes.isEmpty()) {
@@ -1295,7 +1300,8 @@ public class JoinNode {
         return PlanNode.NO_PLAN;
     }
 
-    protected void addMultiDatasetPlans(JoinNode leftJn, JoinNode rightJn) throws AlgebricksException {
+    protected void addMultiDatasetPlans(JoinNode leftJn, JoinNode rightJn, IIndexProvider indexProvider)
+            throws AlgebricksException {
         PlanNode leftPlan, rightPlan;
 
         if (level > joinEnum.cboFullEnumLevel) {
@@ -1307,7 +1313,7 @@ public class JoinNode {
             leftPlan = joinEnum.allPlans.get(leftJn.cheapestPlanIndex);
             rightPlan = joinEnum.allPlans.get(rightJn.cheapestPlanIndex);
 
-            addMultiDatasetPlans(leftPlan, rightPlan);
+            addMultiDatasetPlans(leftPlan, rightPlan, indexProvider);
         } else {
             // FOR JOIN NODE LEVELS LESS THAN OR EQUAL TO THE LEVEL SPECIFIED FOR FULL ENUMERATION,
             // DO FULL ENUMERATION => DO NOT PRUNE
@@ -1315,13 +1321,14 @@ public class JoinNode {
                 leftPlan = joinEnum.allPlans.get(leftPlanIndex);
                 for (int rightPlanIndex : rightJn.planIndexesArray) {
                     rightPlan = joinEnum.allPlans.get(rightPlanIndex);
-                    addMultiDatasetPlans(leftPlan, rightPlan);
+                    addMultiDatasetPlans(leftPlan, rightPlan, indexProvider);
                 }
             }
         }
     }
 
-    protected void addMultiDatasetPlans(PlanNode leftPlan, PlanNode rightPlan) throws AlgebricksException {
+    protected void addMultiDatasetPlans(PlanNode leftPlan, PlanNode rightPlan, IIndexProvider indexProvider)
+            throws AlgebricksException {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
@@ -1388,12 +1395,12 @@ public class JoinNode {
                     newJoinConditions);
         } else if (hintNLJoin != null) {
             validPlan = buildHintedNLJPlans(leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin,
-                    newJoinConditions);
+                    newJoinConditions, indexProvider);
         }
 
         if (!validPlan) {
             // No join hints or inapplicable hinted plans, try all non hinted plans.
-            buildAllNonHintedPlans(leftPlan, rightPlan, hashJoinExpr, nestedLoopJoinExpr, outerJoin);
+            buildAllNonHintedPlans(leftPlan, rightPlan, hashJoinExpr, nestedLoopJoinExpr, outerJoin, indexProvider);
         }
 
         //Reset as these might have changed when we tried the commutative joins.
@@ -1468,11 +1475,11 @@ public class JoinNode {
     }
 
     private boolean buildHintedNLJPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression nestedLoopJoinExpr,
-            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin, List<Integer> newJoinConditions)
-            throws AlgebricksException {
+            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin, List<Integer> newJoinConditions,
+            IIndexProvider indexProvider) throws AlgebricksException {
         int nljPlan, commutativeNljPlan;
         nljPlan = commutativeNljPlan = PlanNode.NO_PLAN;
-        nljPlan = buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
+        nljPlan = buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin, indexProvider);
 
         // The indexnl hint may have been removed during applicability checking
         // and is no longer available for a hintedNL plan.
@@ -1480,7 +1487,8 @@ public class JoinNode {
             return false;
         }
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
-            commutativeNljPlan = buildNLJoinPlan(rightPlan, leftPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
+            commutativeNljPlan =
+                    buildNLJoinPlan(rightPlan, leftPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin, indexProvider);
             // The indexnl hint may have been removed during applicability checking
             // and is no longer available for a hintedNL plan.
             if (joinEnum.findNLJoinHint(newJoinConditions) == null) {
@@ -1511,7 +1519,8 @@ public class JoinNode {
     }
 
     private void buildAllNonHintedPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            ILogicalExpression nestedLoopJoinExpr, boolean outerJoin) throws AlgebricksException {
+            ILogicalExpression nestedLoopJoinExpr, boolean outerJoin, IIndexProvider indexProvider)
+            throws AlgebricksException {
 
         buildHashJoinPlan(leftPlan, rightPlan, hashJoinExpr, null, outerJoin);
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
@@ -1521,9 +1530,9 @@ public class JoinNode {
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
             buildBroadcastHashJoinPlan(rightPlan, leftPlan, hashJoinExpr, null, outerJoin);
         }
-        buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, null, outerJoin);
+        buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, null, outerJoin, indexProvider);
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
-            buildNLJoinPlan(rightPlan, leftPlan, nestedLoopJoinExpr, null, outerJoin);
+            buildNLJoinPlan(rightPlan, leftPlan, nestedLoopJoinExpr, null, outerJoin, indexProvider);
         }
         buildCPJoinPlan(leftPlan, rightPlan, hashJoinExpr, nestedLoopJoinExpr, outerJoin);
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.am.array.IIntroduceAccessMethodRuleLocalRewrite;
@@ -121,7 +122,12 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         clear();
-        setMetadataDeclarations(context);
+        boolean adviseIndex = context.getIndexAdvisor().getAdvise();
+        if (adviseIndex) {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getIndexAdvisor().getFakeIndexProvider());
+        } else {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());
+        }
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -160,10 +166,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
-            throws AlgebricksException {
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            IIndexProvider indexProvider) throws AlgebricksException {
         clear();
-        setMetadataDeclarations(context);
+        setMetadataIndexDeclarations(context, indexProvider);
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -332,7 +338,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             }
 
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
-                    && JoinFromSubplanRewrite.isApplicableForRewriteCursory(metadataProvider, joinOp)) {
+                    && JoinFromSubplanRewrite.isApplicableForRewriteCursory(indexProvider, joinOp)) {
                 // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
                 // this subplan to allow an array-index AM to be introduced. If successful, this rewrite will transform
                 // into an index-nested-loop-join. This rewrite is to be used for pushing the UNNESTs and ASSIGNs from

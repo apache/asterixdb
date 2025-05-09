@@ -264,7 +264,7 @@ public class CloneAndSubstituteVariablesVisitor extends
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Query q, VariableSubstitutionEnvironment env)
             throws CompilationException {
-        Query newQ = new Query(q.isExplain());
+        Query newQ = new Query(q.isExplain(), q.isAdvise());
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = q.getBody().accept(this, env);
         newQ.setBody((Expression) p1.first);
         newQ.setSourceLocation(q.getSourceLocation());

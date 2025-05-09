@@ -57,6 +57,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected Supplier<List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> logicalRewrites;
     protected Function<IRuleSetKind, List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> logicalRewritesByKind;
     protected Supplier<List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> physicalRewrites;
+    protected Function<IRuleSetKind, List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> physicalRewritesByKind;
     protected ITypeTraitProvider typeTraitProvider;
     protected ISerializerDeserializerProvider serializerDeserializerProvider;
     protected IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
@@ -99,6 +100,11 @@ public abstract class AbstractCompilerFactoryBuilder {
     public void setPhysicalRewrites(
             Supplier<List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> physicalRewrites) {
         this.physicalRewrites = physicalRewrites;
+    }
+
+    public void setPhysicalRewritesByKind(
+            Function<IRuleSetKind, List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>> physicalRewritesByKind) {
+        this.physicalRewritesByKind = physicalRewritesByKind;
     }
 
     public void setTypeTraitProvider(ITypeTraitProvider typeTraitProvider) {

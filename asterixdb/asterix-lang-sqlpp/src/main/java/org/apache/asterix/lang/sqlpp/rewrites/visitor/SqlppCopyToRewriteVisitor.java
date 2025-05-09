@@ -82,7 +82,7 @@ public class SqlppCopyToRewriteVisitor extends AbstractSqlppAstVisitor<Void, Met
         selectSetOperation.setSourceLocation(var.getSourceLocation());
         SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
         selectExpression.setSourceLocation(var.getSourceLocation());
-        Query query = new Query(false, false, selectExpression, 0);
+        Query query = new Query(false, false, false, selectExpression, 0);
         query.setBody(selectExpression);
         query.setSourceLocation(stmtCopy.getSourceLocation());
 

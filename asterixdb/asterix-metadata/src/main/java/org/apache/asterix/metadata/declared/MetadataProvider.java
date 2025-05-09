@@ -177,7 +177,7 @@ import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescripto
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
-public class MetadataProvider implements IMetadataProvider<DataSourceId, String> {
+public class MetadataProvider implements IMetadataProvider<DataSourceId, String>, IIndexProvider {
 
     private final ICcApplicationContext appCtx;
     private final IStorageComponentProvider storageComponentProvider;
@@ -463,11 +463,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return index != null ? new DataSourceIndex(index, database, dataverseName, datasetName, this) : null;
     }
 
+    @Override
     public Index getIndex(String database, DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException {
         return MetadataManager.INSTANCE.getIndex(mdTxnCtx, database, dataverseName, datasetName, indexName);
     }
 
+    @Override
     public List<Index> getDatasetIndexes(String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException {
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, database, dataverseName, datasetName);

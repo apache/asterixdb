@@ -30,6 +30,7 @@ import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.am.array.IIntroduceAccessMethodRuleLocalRewrite;
@@ -155,7 +156,13 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         clear();
-        setMetadataDeclarations(context);
+
+        boolean adviseIndex = context.getIndexAdvisor().getAdvise();
+        if (adviseIndex) {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getIndexAdvisor().getFakeIndexProvider());
+        } else {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());
+        }
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -200,10 +207,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     }
 
     public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
-            throws AlgebricksException {
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            IIndexProvider indexProvider) throws AlgebricksException {
         clear();
-        setMetadataDeclarations(context);
+        setMetadataIndexDeclarations(context, indexProvider);
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -507,7 +514,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             }
 
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
-                    && SelectFromSubplanRewrite.isApplicableForRewriteCursory(metadataProvider, selectOp)) {
+                    && SelectFromSubplanRewrite.isApplicableForRewriteCursory(indexProvider, selectOp)) {
                 // If there exists a composite atomic-array index, our conjuncts will be split across multiple
                 // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
                 // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.

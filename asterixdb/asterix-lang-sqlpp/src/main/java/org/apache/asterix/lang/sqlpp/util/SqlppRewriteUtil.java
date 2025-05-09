@@ -89,7 +89,7 @@ public class SqlppRewriteUtil {
         }
         // Creates a wrapper query for the expression so that if the expression itself
         // is the key, it can also be replaced.
-        Query wrapper = new Query(false);
+        Query wrapper = new Query(false, false);
         wrapper.setSourceLocation(expression.getSourceLocation());
         wrapper.setBody(expression);
         // Creates a substitution visitor.

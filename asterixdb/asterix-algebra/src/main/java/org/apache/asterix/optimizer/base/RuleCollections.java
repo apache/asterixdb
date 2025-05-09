@@ -106,6 +106,7 @@ import org.apache.asterix.optimizer.rules.am.IntroducePrimaryIndexForAggregation
 import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import org.apache.asterix.optimizer.rules.cbo.EnumerateJoinsRule;
 import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
+import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdviseIndexRule;
 import org.apache.asterix.optimizer.rules.subplan.AsterixMoveFreeVariableOperatorOutOfSubplanRule;
 import org.apache.asterix.optimizer.rules.subplan.InlineSubplanInputForNestedTupleSourceRule;
 import org.apache.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRule;
@@ -336,6 +337,7 @@ public final class RuleCollections {
         accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
         accessMethod.add(new PushSimilarityFunctionsBelowJoin());
         accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
+        accessMethod.add(new AdviseIndexRule());
         return accessMethod;
     }
 

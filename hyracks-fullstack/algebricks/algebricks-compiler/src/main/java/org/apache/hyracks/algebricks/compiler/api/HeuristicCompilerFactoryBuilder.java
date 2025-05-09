@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IndexAdvisor;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
@@ -66,12 +67,13 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
                 IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
-                AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector) {
+                AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector,
+                IndexAdvisor indexAdvisor) {
             IPlanPrettyPrinter prettyPrinter = PlanPrettyPrinter.createStringPlanPrettyPrinter();
             return new AlgebricksOptimizationContext(this, varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrinter,
-                    warningCollector);
+                    warningCollector, indexAdvisor);
         }
 
         @Override
@@ -97,15 +99,16 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
 
     private class CompilerFactoryImpl implements ICompilerFactory {
         @Override
-        public ICompiler createCompiler(ILogicalPlan plan, IMetadataProvider<?, ?> metadata, int varCounter) {
-            IOptimizationContext optContext =
-                    optCtxFactory.createOptimizationContext(varCounter, expressionEvalSizeComputer,
-                            mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
-                            conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, warningCollector);
+        public ICompiler createCompiler(ILogicalPlan plan, IMetadataProvider<?, ?> metadata, int varCounter,
+                IRuleSetKind ruleSetKind, IndexAdvisor indexAdvisor) {
+            IOptimizationContext optContext = optCtxFactory.createOptimizationContext(varCounter,
+                    expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
+                    missableTypeComputer, conflictingTypeResolver, physicalOptimizationConfig, clusterLocations,
+                    warningCollector, indexAdvisor);
             optContext.setMetadataDeclarations(metadata);
             optContext.setCompilerFactory(this);
-            return new CompilerImpl(this, plan, optContext, logicalRewrites.get(), physicalRewrites.get(),
-                    writerFactory);
+            return new CompilerImpl(this, plan, optContext, logicalRewritesByKind.apply(ruleSetKind),
+                    physicalRewritesByKind.apply(ruleSetKind), writerFactory);
         }
 
         @Override

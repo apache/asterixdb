@@ -5503,7 +5503,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 stats.setCompileTime(System.nanoTime() - compileStart);
                 bActiveTxn = false;
-                return query.isExplain() || isCompileOnly() ? null : jobSpec;
+                return query.isExplain() || query.isAdvise() || isCompileOnly() ? null : jobSpec;
             } catch (Exception e) {
                 LOGGER.log(Level.INFO, e.getMessage(), e);
                 if (bActiveTxn) {

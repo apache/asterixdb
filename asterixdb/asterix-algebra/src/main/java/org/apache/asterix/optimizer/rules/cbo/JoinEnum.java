@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
@@ -144,6 +145,7 @@ public class JoinEnum {
     protected ICostMethods costMethods;
     List<LogicalVariable> resultAndJoinVars;
     Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap;
+    IIndexProvider indexProvider;
 
     public JoinEnum() {
     }
@@ -155,8 +157,8 @@ public class JoinEnum {
             List<List<List<ILogicalOperator>>> unnestOpsInfo,
             HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps,
             ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, List<LogicalVariable> resultAndJoinVars,
-            Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap, IOptimizationContext context)
-            throws AsterixException {
+            Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap, IOptimizationContext context,
+            IIndexProvider indexProvider) throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -187,6 +189,7 @@ public class JoinEnum {
         initCostHandleAndJoinNodes(context);
         this.allTabsJnNum = 1; // keeps track of where the final join Node will be. In case of bushy plans, this may not always be the last join nod     e.
         this.maxBits = 1;
+        this.indexProvider = indexProvider;
     }
 
     protected void initCostHandleAndJoinNodes(IOptimizationContext context) {
@@ -992,7 +995,7 @@ public class JoinEnum {
                 JoinNode jnIJ = jnArray[addPlansToThisJn];
                 jnIJ.jnArrayIndex = addPlansToThisJn;
 
-                jnIJ.addMultiDatasetPlans(jnI, jnJ);
+                jnIJ.addMultiDatasetPlans(jnI, jnJ, indexProvider);
                 if (forceJoinOrderMode && level > cboFullEnumLevel) {
                     break;
                 }
@@ -1187,7 +1190,7 @@ public class JoinEnum {
                 return PlanNode.NO_PLAN;
             }
             // We may not add any index plans, so need to check for NO_PLAN
-            jn.addIndexAccessPlans(EnumerateJoinsRule.removeTrue(leafInput));
+            jn.addIndexAccessPlans(EnumerateJoinsRule.removeTrue(leafInput), indexProvider);
         }
         return this.numberOfTerms;
     }

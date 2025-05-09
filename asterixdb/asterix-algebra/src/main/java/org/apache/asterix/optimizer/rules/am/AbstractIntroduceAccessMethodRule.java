@@ -39,6 +39,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -87,6 +88,7 @@ import com.google.common.base.Strings;
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
     protected MetadataProvider metadataProvider;
+    protected IIndexProvider indexProvider;
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
 
@@ -109,8 +111,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return false;
     }
 
-    protected void setMetadataDeclarations(IOptimizationContext context) {
+    protected void setMetadataIndexDeclarations(IOptimizationContext context, IIndexProvider indexProvider) {
         metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        this.indexProvider = indexProvider;
     }
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
@@ -882,7 +885,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         LogicalVariable datasetMetaVar = null;
         if (subTree.getDataSourceType() != DataSourceType.COLLECTION_SCAN
                 && subTree.getDataSourceType() != DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP) {
-            datasetIndexes = metadataProvider.getDatasetIndexes(subTree.getDataset().getDatabaseName(),
+            datasetIndexes = indexProvider.getDatasetIndexes(subTree.getDataset().getDatabaseName(),
                     subTree.getDataset().getDataverseName(), subTree.getDataset().getDatasetName());
             List<LogicalVariable> datasetVars = subTree.getDataSourceVariables();
             if (subTree.getDataset().hasMetaPart()) {
@@ -1200,6 +1203,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         String database = srcId.getDatabaseName();
         DataverseName dataverseName = srcId.getDataverseName();
         String datasourceName = srcId.getDatasourceName();
-        return metadataProvider.getIndex(database, dataverseName, datasourceName, datasourceName);
+        return indexProvider.getIndex(database, dataverseName, datasourceName, datasourceName);
     }
 }

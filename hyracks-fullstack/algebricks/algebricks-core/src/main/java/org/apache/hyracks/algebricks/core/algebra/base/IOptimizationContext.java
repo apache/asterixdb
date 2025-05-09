@@ -104,4 +104,7 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
     default boolean skipJobCapacityAssignment() {
         return false;
     }
+
+    IndexAdvisor getIndexAdvisor();
+
 }

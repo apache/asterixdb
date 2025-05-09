@@ -369,7 +369,7 @@ public class ExpressionUtils {
     }
 
     public static Query createWrappedQuery(Expression expr, SourceLocation sourceLoc) {
-        Query wrappedQuery = new Query(false);
+        Query wrappedQuery = new Query(false, false);
         wrappedQuery.setSourceLocation(sourceLoc);
         wrappedQuery.setBody(expr);
         wrappedQuery.setTopLevel(false);

@@ -29,6 +29,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 public interface IRuleSetFactory {
 
     enum RuleSetKind implements IRuleSetKind {
+        QUERY,
+        LOGICAL_ADVISOR,
         SAMPLING
     }
 
@@ -47,4 +49,11 @@ public interface IRuleSetFactory {
      * @return the physical rewrites
      */
     List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(ICcApplicationContext appCtx);
+
+    /**
+     * @return the physical rewrites of the specified kind
+     */
+    List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(IRuleSetKind ruleSetKind,
+            ICcApplicationContext appCtx);
+
 }

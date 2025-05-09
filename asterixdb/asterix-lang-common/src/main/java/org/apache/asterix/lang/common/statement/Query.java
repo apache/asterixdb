@@ -31,20 +31,23 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class Query extends AbstractStatement implements IReturningStatement {
     private boolean explain;
+    private boolean advise;
     private boolean topLevel = true;
     private Expression body;
     private int varCounter;
 
     public Query() {
-        this(false);
+        this(false, false);
     }
 
-    public Query(boolean explain) {
+    public Query(boolean explain, boolean advise) {
         this.explain = explain;
+        this.advise = advise;
     }
 
-    public Query(boolean explain, boolean topLevel, Expression body, int varCounter) {
+    public Query(boolean explain, boolean advise, boolean topLevel, Expression body, int varCounter) {
         this.explain = explain;
+        this.advise = advise;
         this.topLevel = topLevel;
         this.body = body;
         this.varCounter = varCounter;
@@ -88,8 +91,16 @@ public class Query extends AbstractStatement implements IReturningStatement {
         this.explain = explain;
     }
 
+    public void setAdvise(boolean advise) {
+        this.advise = advise;
+    }
+
     public boolean isExplain() {
         return explain;
+    }
+
+    public boolean isAdvise() {
+        return advise;
     }
 
     @Override
@@ -104,7 +115,7 @@ public class Query extends AbstractStatement implements IReturningStatement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(body, topLevel, explain, varCounter);
+        return Objects.hash(body, topLevel, explain, advise, varCounter);
     }
 
     @Override
@@ -117,7 +128,7 @@ public class Query extends AbstractStatement implements IReturningStatement {
         }
         Query target = (Query) object;
         return explain == target.explain && Objects.equals(body, target.body) && topLevel == target.topLevel
-                && varCounter == target.varCounter;
+                && varCounter == target.varCounter && advise == target.advise;
     }
 
     @Override

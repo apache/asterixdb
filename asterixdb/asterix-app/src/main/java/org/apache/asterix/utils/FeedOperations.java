@@ -213,7 +213,7 @@ public class FeedOperations {
                 whereClause != null ? Collections.singletonList(whereClause) : null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         SelectExpression body = new SelectExpression(null, selectSetOperation, null, null, true);
-        Query query = new Query(false, true, body, 0);
+        Query query = new Query(false, false, true, body, 0);
         return query;
     }
 

@@ -28,7 +28,11 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
+import org.apache.asterix.optimizer.rules.cbo.indexadvisor.CBOPlanStateTree;
+import org.apache.asterix.optimizer.rules.cbo.indexadvisor.FakeIndexProvider;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -107,13 +111,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private List<Triple<ILogicalOperator, ILogicalOperator, List<ILogicalOperator>>> modifyUnnestInfo;
     private final Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap = new HashMap();
-    ILogicalOperator newRootAfterUnnest = null;
+    private ILogicalOperator newRootAfterUnnest = null;
+
+    private IIndexProvider indexProvider;
 
     public EnumerateJoinsRule(JoinEnum joinEnum) {
         this.joinEnum = joinEnum;
         dataScanAndGroupByDistinctOps = new HashMap<>(); // initialized only once at the beginning of the rule
         rootGroupByDistinctOp = null;
         rootOrderByOp = null;
+    }
+
+    private void setIndexProvider(IIndexProvider indexProvider) {
+        this.indexProvider = indexProvider;
     }
 
     @Override
@@ -170,8 +180,17 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        IPlanPrettyPrinter pp = context.getPrettyPrinter();
+        boolean adviseIndex = context.getIndexAdvisor().getAdvise();
+        if (adviseIndex) {
+            CBOPlanStateTree cboPlanStateTree = AdvisorPlanParser.getCBOPlanState(opRef, context);
+            FakeIndexProvider fakeIndexProvider = new FakeIndexProvider(cboPlanStateTree);
+            context.getIndexAdvisor().setFakeIndexProvider(fakeIndexProvider);
+            setIndexProvider(fakeIndexProvider);
+        } else {
+            setIndexProvider((IIndexProvider) context.getMetadataProvider());
+        }
 
+        IPlanPrettyPrinter pp = context.getPrettyPrinter();
         String viewInPlan;
         if (LOGGER.isTraceEnabled()) {
             viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
@@ -256,8 +275,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         joinEnum.initEnum((AbstractLogicalOperator) op, cboMode, cboTestMode, numberOfFromTerms, leafInputs, allJoinOps,
                 assignOps, outerJoinsDependencyList, buildSets, varLeafInputIds, unnestOpsInfo,
                 dataScanAndGroupByDistinctOps, rootGroupByDistinctOp, rootOrderByOp, resultAndJoinVars,
-                fakeLeafInputsMap, context);
-
+                fakeLeafInputsMap, context, indexProvider);
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
                 return cleanUp();
@@ -729,7 +747,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private boolean joinClause(ILogicalOperator op) {
+    public static boolean joinClause(ILogicalOperator op) {
         if (op.getOperatorTag() == LogicalOperatorTag.INNERJOIN)
             return true;
         if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN)
@@ -764,7 +782,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
      * Should not see any kind of joins here. store the emptyTupeSourceOp and DataSource operators.
      * Each leaf input will normally have both, but sometimes only emptyTupeSourceOp will be present (in lists)
      */
-    private Pair<EmptyTupleSourceOperator, DataSourceScanOperator> containsLeafInputOnly(ILogicalOperator op) {
+    public static Pair<EmptyTupleSourceOperator, DataSourceScanOperator> containsLeafInputOnly(ILogicalOperator op) {
         DataSourceScanOperator dataSourceOp = null;
         ILogicalOperator currentOp = op;
         while (currentOp.getInputs().size() == 1) {
@@ -797,7 +815,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     // An internal edge must contain only assigns followed by an inner join. Not sure if there will be other ops between joins
-    private int numVarRefExprs(AssignOperator aOp) {
+    public static int numVarRefExprs(AssignOperator aOp) {
         List<Mutable<ILogicalExpression>> exprs = aOp.getExpressions();
         int count = 0;
         for (Mutable<ILogicalExpression> exp : exprs) {
@@ -828,7 +846,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return (joinClause(op));
     }
 
-    private ILogicalOperator skipPastAssigns(ILogicalOperator nextOp) {
+    public static ILogicalOperator skipPastAssigns(ILogicalOperator nextOp) {
         while (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             nextOp = nextOp.getInputs().get(0).getValue();
         }

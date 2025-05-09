@@ -21,5 +21,29 @@
             <output-dir compare="Text">ch2</output-dir>
         </compilation-unit>
     </test-case>
- ! Unless required by applicable la
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="simple-advise">
+            <output-dir compare="Text">simple-advise</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="simple-advise1">
+            <output-dir compare="Text">simple-advise1</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="simple-advise2">
+            <output-dir compare="Text">simple-advise2</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="nested-fields">
+            <output-dir compare="Text">nested-fields</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="join-advise">
+            <output-dir compare="Text">join-advise</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>

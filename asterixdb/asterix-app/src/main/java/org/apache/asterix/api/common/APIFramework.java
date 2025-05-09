@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.api.common;
 
+import static org.apache.asterix.compiler.provider.IRuleSetFactory.RuleSetKind.LOGICAL_ADVISOR;
+import static org.apache.asterix.compiler.provider.IRuleSetFactory.RuleSetKind.QUERY;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -36,6 +39,7 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.result.fields.ExplainOnlyResultsPrinter;
+import org.apache.asterix.app.result.fields.IndexAdviseResultsPrinter;
 import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
@@ -87,6 +91,7 @@ import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.IndexAdvisor;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
@@ -97,6 +102,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBu
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
+import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.core.utils.DotFormatGenerator;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
@@ -180,12 +186,13 @@ public class APIFramework {
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
                 IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
-                AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector) {
+                AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector,
+                IndexAdvisor indexAdvisor) {
             IPlanPrettyPrinter prettyPrinter = PlanPrettyPrinter.createStringPlanPrettyPrinter();
             return new AsterixOptimizationContext(this, varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrinter,
-                    warningCollector);
+                    warningCollector, indexAdvisor);
         }
 
         @Override
@@ -228,6 +235,7 @@ public class APIFramework {
             final SourceLocation sourceLoc = query != null ? query.getSourceLocation()
                     : statement != null ? statement.getSourceLocation() : null;
             final boolean isExplainOnly = isQuery && query.isExplain();
+            final boolean isAdviceOnly = isQuery && query.isAdvise();
 
             SessionConfig conf = output.config();
             if (isQuery && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
@@ -261,6 +269,7 @@ public class APIFramework {
             builder.setLogicalRewrites(() -> ruleSetFactory.getLogicalRewrites(ccAppContext));
             builder.setLogicalRewritesByKind(kind -> ruleSetFactory.getLogicalRewrites(kind, ccAppContext));
             builder.setPhysicalRewrites(() -> ruleSetFactory.getPhysicalRewrites(ccAppContext));
+            builder.setPhysicalRewritesByKind(kind -> ruleSetFactory.getPhysicalRewrites(kind, ccAppContext));
             IDataFormat format = metadataProvider.getDataFormat();
             ICompilerFactory compilerFactory = builder.create();
             builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
@@ -302,7 +311,10 @@ public class APIFramework {
             builder.setTypeTraitProvider(format.getTypeTraitProvider());
             builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-            ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
+            IndexAdvisor indexAdvisor = new IndexAdvisor(isAdviceOnly);
+            IRuleSetKind ruleSetKind = isAdviceOnly ? LOGICAL_ADVISOR : QUERY;
+            ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter(), ruleSetKind,
+                    indexAdvisor);
             if (conf.isOptimize()) {
                 compiler.optimize();
                 if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
@@ -313,7 +325,7 @@ public class APIFramework {
                         PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
                         output.out().write(buf.toString());
                     } else {
-                        if (isQuery || isLoad || isCopy) {
+                        if ((isQuery || isLoad || isCopy) && !isAdviceOnly) {
                             generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
                         }
                     }
@@ -350,6 +362,12 @@ public class APIFramework {
 
             JobEventListenerFactory jobEventListenerFactory =
                     new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
+
+            if (isAdviceOnly) {
+                printAdviseAsResult(metadataProvider, output, printer, indexAdvisor);
+                return null;
+            }
+
             JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory, runtimeFlags);
 
             if (isQuery || isCopy) {
@@ -396,6 +414,18 @@ public class APIFramework {
         } catch (StackOverflowError error) {
             LOGGER.info("Stack Overflow", error);
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");
+        }
+    }
+
+    private void printAdviseAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
+            IndexAdvisor advisor) throws AlgebricksException {
+
+        try {
+            printer.addResultPrinter(
+                    new IndexAdviseResultsPrinter(metadataProvider.getApplicationContext(), advisor, output));
+            printer.printResults();
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
         }
     }
 

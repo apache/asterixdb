@@ -27,6 +27,7 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.core.algebra.base.IndexAdvisor;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
@@ -51,10 +52,10 @@ public final class AsterixOptimizationContext extends AlgebricksOptimizationCont
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
             AlgebricksPartitionConstraint clusterLocations, IPlanPrettyPrinter prettyPrinter,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IndexAdvisor indexAdvisor) {
         super(optContextFactory, varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory,
                 expressionTypeComputer, nullableTypeComputer, conflictingTypeResovler, physicalOptimizationConfig,
-                clusterLocations, prettyPrinter, warningCollector);
+                clusterLocations, prettyPrinter, warningCollector, indexAdvisor);
         dataSourceMap = new Int2ObjectOpenHashMap<>();
     }
 

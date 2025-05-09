@@ -28,7 +28,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSourceId;
-import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -73,7 +73,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
     private IOptimizationContext context;
     private SourceLocation sourceLocation;
 
-    public static boolean isApplicableForRewriteCursory(MetadataProvider metadataProvider, ILogicalOperator workingOp)
+    public static boolean isApplicableForRewriteCursory(IIndexProvider indexProvider, ILogicalOperator workingOp)
             throws AlgebricksException {
         boolean isApplicableForRewrite = false;
         if (workingOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
@@ -82,14 +82,14 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             DataverseName dataverseName = srcId.getDataverseName();
             String database = srcId.getDatabaseName();
             String datasetName = srcId.getDatasourceName();
-            if (metadataProvider.getDatasetIndexes(database, dataverseName, datasetName).stream()
+            if (indexProvider.getDatasetIndexes(database, dataverseName, datasetName).stream()
                     .anyMatch(i -> i.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                 return true;
             }
         }
 
         for (Mutable<ILogicalOperator> inputOp : workingOp.getInputs()) {
-            isApplicableForRewrite |= isApplicableForRewriteCursory(metadataProvider, inputOp.getValue());
+            isApplicableForRewrite |= isApplicableForRewriteCursory(indexProvider, inputOp.getValue());
         }
         return isApplicableForRewrite;
     }

@@ -19,6 +19,7 @@
 package org.apache.asterix.compiler.provider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -46,6 +47,10 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
             ICcApplicationContext appCtx) {
         if (ruleSetKind == RuleSetKind.SAMPLING) {
             return buildLogicalSampling();
+        } else if (ruleSetKind == RuleSetKind.QUERY) {
+            return getLogicalRewrites(appCtx);
+        } else if (ruleSetKind == RuleSetKind.LOGICAL_ADVISOR) {
+            return getLogicalRewrites(appCtx);
         } else {
             throw new IllegalArgumentException(String.valueOf(ruleSetKind));
         }
@@ -55,6 +60,18 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(
             ICcApplicationContext appCtx) {
         return buildPhysical(appCtx, CostMethods::new);
+    }
+
+    @Override
+    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(IRuleSetKind ruleSetKind,
+            ICcApplicationContext appCtx) {
+        if (ruleSetKind == RuleSetKind.QUERY) {
+            return buildPhysical(appCtx, CostMethods::new);
+        } else if (ruleSetKind == RuleSetKind.SAMPLING) {
+            return buildPhysical(appCtx, CostMethods::new);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogical(
