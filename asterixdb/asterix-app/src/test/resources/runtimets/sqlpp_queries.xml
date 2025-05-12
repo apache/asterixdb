@@ -7291,6 +7291,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="handle_error_fun">
+        <output-dir compare="Text">handle_error_fun</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-3334">
         <output-dir compare="Text">query-ASTERIXDB-3334</output-dir>
       </compilation-unit>

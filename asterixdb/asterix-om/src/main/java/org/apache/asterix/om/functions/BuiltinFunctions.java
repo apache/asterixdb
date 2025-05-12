@@ -1716,6 +1716,8 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier SERIALIZED_SIZE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "serialized-size", 1);
+    public static final FunctionIdentifier IF_ERROR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-error", 2);
 
     static {
         // first, take care of Algebricks builtin functions
@@ -2556,6 +2558,7 @@ public class BuiltinFunctions {
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(IF_ERROR, AnyTypeComputer.INSTANCE, true);
 
         // external lookup
         addPrivateFunction(EXTERNAL_LOOKUP, AnyTypeComputer.INSTANCE, false);
