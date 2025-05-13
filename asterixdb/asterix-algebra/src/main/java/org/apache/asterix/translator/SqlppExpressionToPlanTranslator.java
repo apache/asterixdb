@@ -586,6 +586,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                             outerUnnestMissingValue)
                     : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first));
         }
+        unnestOp.getAnnotations().put(ARRAY_ACCESS, rightExpr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION);
         ExternalSubpathAnnotation hint = ((AbstractExpression) rightExpr).findHint(ExternalSubpathAnnotation.class);
         if (hint != null) {
             unnestOp.getAnnotations().put(SUBPATH, hint.getSubPath());
