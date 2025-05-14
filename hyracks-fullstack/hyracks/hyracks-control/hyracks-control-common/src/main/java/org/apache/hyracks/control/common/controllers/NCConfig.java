@@ -24,6 +24,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 
@@ -102,6 +103,9 @@ public class NCConfig extends ControllerConfig {
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
         PYTHON_ENV(STRING_ARRAY, (String[]) null),
         PYTHON_DS_PATH(STRING, (String) null),
+        LIBRARY_MAX_FILE_SIZE(POSITIVE_LONG_BYTE_UNIT, 250L * 1024 * 1024), //250MB
+        LIBRARY_MAX_EXTRACTED_SIZE(POSITIVE_LONG_BYTE_UNIT, 1000L * 1024 * 1024), //1GB
+        LIBRARY_MAX_ARCHIVE_ENTRIES(INTEGER, 4096),
         CREDENTIAL_FILE(
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
@@ -253,6 +257,12 @@ public class NCConfig extends ControllerConfig {
                     return "List of environment variables to set when invoking the Python interpreter for Python UDFs. E.g. FOO=1";
                 case PYTHON_DS_PATH:
                     return "Path to systemd socket for fenced Python UDFs. Requires JDK17+, *nix operating system, and ";
+                case LIBRARY_MAX_FILE_SIZE:
+                    return "Maximum file size for any one given file in a zip archive";
+                case LIBRARY_MAX_EXTRACTED_SIZE:
+                    return "Maximum overall extracted size for a library";
+                case LIBRARY_MAX_ARCHIVE_ENTRIES:
+                    return "Maximum number of files and directories allowed within a library";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
                 case ABORT_TASKS_TIMEOUT:
@@ -634,6 +644,18 @@ public class NCConfig extends ControllerConfig {
 
     public int getAbortedTasksTimeout() {
         return appConfig.getInt(Option.ABORT_TASKS_TIMEOUT);
+    }
+
+    public long getLibraryMaxFileSize() {
+        return appConfig.getLong(Option.LIBRARY_MAX_FILE_SIZE);
+    }
+
+    public long getLibraryMaxExtractedSize() {
+        return appConfig.getLong(Option.LIBRARY_MAX_EXTRACTED_SIZE);
+    }
+
+    public int getLibraryMaxArchiveEntries() {
+        return appConfig.getInt(Option.LIBRARY_MAX_ARCHIVE_ENTRIES);
     }
 
 }

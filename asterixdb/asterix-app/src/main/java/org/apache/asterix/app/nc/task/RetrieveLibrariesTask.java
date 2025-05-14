@@ -91,7 +91,9 @@ public class RetrieveLibrariesTask implements INCLifecycleTask {
             libraryManager.download(targetFileRef, authToken, libraryURI);
             Path outputDirPath = libraryManager.getStorageDir().getFile().toPath().toAbsolutePath().normalize();
             FileReference outPath = appContext.getIoManager().resolveAbsolutePath(outputDirPath.toString());
-            libraryManager.unzip(targetFileRef, outPath);
+            //we have to bypass limits here on the unzip, because this archive is all libraries, so potentially limit*N
+            //and knowing N here would be difficult since metadata is not available.
+            libraryManager.unzip(targetFileRef, outPath, false);
         } catch (IOException e) {
             LOGGER.error("Unable to retrieve UDFs from " + libraryURI.toString() + " before timeout");
             throw HyracksDataException.create(e);

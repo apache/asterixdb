@@ -111,6 +111,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.io.ByteStreams;
 
 public class ExternalLibraryManager implements ILibraryManager, ILifeCycleComponent {
 
@@ -152,6 +153,9 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     private final INamespacePathResolver namespacePathResolver;
     private final boolean sslEnabled;
     private final boolean cloudMode;
+    private final long maxFileSize;
+    private final long maxTotalSize;
+    private final int maxEntries;
     private Function<ILibraryManager, CloseableHttpClient> uploadClientSupp;
 
     public ExternalLibraryManager(NodeControllerService ncs, IPersistedResourceRegistry reg, FileReference appDir,
@@ -171,6 +175,9 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
         this.ioManager = ioManager;
         uploadClientSupp = ExternalLibraryManager::defaultHttpClient;
         cloudMode = ncs.getConfiguration().isCloudDeployment();
+        maxFileSize = ncs.getConfiguration().getLibraryMaxFileSize();
+        maxTotalSize = ncs.getConfiguration().getLibraryMaxExtractedSize();
+        maxEntries = ncs.getConfiguration().getLibraryMaxArchiveEntries();
     }
 
     public void initialize(boolean resetStorageData) throws HyracksDataException {
@@ -655,6 +662,11 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
 
     @Override
     public void unzip(FileReference sourceFile, FileReference outputDir) throws IOException {
+        unzip(sourceFile, outputDir, true);
+    }
+
+    @Override
+    public void unzip(FileReference sourceFile, FileReference outputDir, boolean limited) throws IOException {
         boolean logTraceEnabled = LOGGER.isTraceEnabled();
         IIOManager localIoManager = ioManager;
         if (ncs.getConfiguration().isCloudDeployment()) {
@@ -665,7 +677,18 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
         try (ZipFile zipFile = new ZipFile(sourceFile.getFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             byte[] writeBuf = new byte[4096];
+            int numEntries = 0;
+            long totalSize = 0;
             while (entries.hasMoreElements()) {
+                if (limited && numEntries >= maxEntries) {
+                    throw new IOException(
+                            "Library archive contains more files and directories than configuration permits");
+                }
+                //may exceed the total allowable size by the maximum size of one file, because we can't know how
+                //big the file is until we actually attempt to write it.
+                if (limited && totalSize > maxTotalSize) {
+                    throw new IOException("Library archive extracted size exceeds maximum configured allowable size");
+                }
                 ZipEntry entry = entries.nextElement();
                 if (entry.isDirectory()) {
                     continue;
@@ -685,8 +708,9 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                     if (logTraceEnabled) {
                         LOGGER.trace("Extracting file {}", entryOutputFileRef);
                     }
-                    writeAndForce(entryOutputFileRef, in, writeBuf, localIoManager);
+                    totalSize += writeAndForce(entryOutputFileRef, in, writeBuf, localIoManager, limited);
                 }
+                numEntries++;
             }
         }
         for (Path newDir : newDirs) {
@@ -695,16 +719,23 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     @Override
-    public void writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuffer,
-            IIOManager localIoManager) throws IOException {
+    public long writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuffer,
+            IIOManager localIoManager, boolean limited) throws IOException {
+        long written;
         outputFile.getFile().createNewFile();
         IFileHandle fHandle = localIoManager.open(outputFile, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         WritableByteChannel outChannel = localIoManager.newWritableChannel(fHandle);
         try (OutputStream outputStream = Channels.newOutputStream(outChannel)) {
-            IOUtils.copyLarge(dataStream, outputStream, copyBuffer);
+            InputStream limitedStream = ByteStreams.limit(dataStream, maxFileSize);
+            written = ByteStreams.copy(limitedStream, outputStream);
+            //Check if after writing the limited stream, there's still data to be written from the entry
+            if (limited && dataStream.available() > 0) {
+                throw new IOException("Library contains file exceeding maximum configured allowable size");
+            }
             outputStream.flush();
             localIoManager.sync(fHandle, true);
+            return written;
         } finally {
             localIoManager.close(fHandle);
         }
@@ -750,9 +781,9 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
         }
         try {
             if (ncs.getConfiguration().isCloudDeployment()) {
-                writeAndForce(outputFile, is, copyBuf, ((ICloudIOManager) ioManager).getLocalIOManager());
+                writeAndForce(outputFile, is, copyBuf, ((ICloudIOManager) ioManager).getLocalIOManager(), true);
             } else {
-                writeAndForce(outputFile, is, copyBuf, ioManager);
+                writeAndForce(outputFile, is, copyBuf, ioManager, true);
             }
         } finally {
             is.close();
@@ -768,7 +799,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
             boolean cloud, byte[] copyBuf) throws IOException {
         byte[] bytes = libraryManager.serializeLibraryDescriptor(desc);
         libraryManager.writeAndForce(descFile, new ByteArrayInputStream(bytes), copyBuf,
-                libraryManager.getCloudIOManager());
+                libraryManager.getCloudIOManager(), true);
     }
 
 }

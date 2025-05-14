@@ -73,8 +73,10 @@ public interface ILibraryManager {
 
     void unzip(FileReference sourceFile, FileReference outputDir) throws IOException;
 
-    void writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuffer, IIOManager localIoManager)
-            throws IOException;
+    void unzip(FileReference sourceFile, FileReference outputDir, boolean limited) throws IOException;
+
+    long writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuffer, IIOManager localIoManager,
+            boolean limited) throws IOException;
 
     void setUploadClient(Function<ILibraryManager, CloseableHttpClient> f);
 
