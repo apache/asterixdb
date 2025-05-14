@@ -19,16 +19,23 @@
 
 USE test;
 
+
+
+
+insert into TestCollection7({"id":10, "ranks": [ 1 , missing, 2 ] });
+
+
 COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
+select * from TestCollection7 c
+    ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
+PATH (%pathprefix% "copy-to-result", "parquet-error-checks25")
 WITH {
     %template_colons%,
     %additionalProperties%
     "format":"parquet"
-};
+    }
+
 
 
 

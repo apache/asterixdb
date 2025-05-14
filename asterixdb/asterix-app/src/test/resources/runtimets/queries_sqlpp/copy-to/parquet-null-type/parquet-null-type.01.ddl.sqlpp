@@ -17,18 +17,14 @@
  * under the License.
  */
 
+DROP DATAVERSE test if exists;
+CREATE DATAVERSE test;
 USE test;
 
-COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"parquet"
-};
 
+CREATE TYPE ColumnType1 AS {
+    id: integer
+    ,a : {b: int?, missing_test: int?}?
+    };
 
-
+CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;

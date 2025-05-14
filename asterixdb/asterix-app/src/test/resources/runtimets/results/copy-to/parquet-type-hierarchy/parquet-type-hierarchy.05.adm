@@ -1,11 +1,11 @@
-{ "id": 2 }
+{ "ratings": [  ], "id": 2 }
 { "ratings": [  ], "rating": 1.0, "id": 5 }
-{ "ratings": [ 1 ], "rating": 2, "id": 8 }
-{ "ratings": [ 1, 2, 3 ], "rating": 3, "id": 10 }
+{ "ratings": [ 1 ], "rating": 2.0, "id": 8 }
+{ "ratings": [ 1, 2, 3 ], "rating": 3.0, "id": 10 }
 { "ratings": [ 1.0, 2.0, 3.0, 4.0, 5.0 ], "rating": 4.3, "id": 12 }
 { "ratings": [ 1.0, 2.0, 3.0, 4.0, 5.0 ], "rating": 4.7, "id": 15 }
 { "ratings": [ 1.1111, 2.222222, 3.3333, 4.44444, 5.555555 ], "rating": 4.22222, "id": 17 }
 { "ratings": [ 1.0, 2.0, 3.0, 4.0, 5.0 ], "rating": 5.455555555, "id": 20 }
 { "ratings": [ 0.0, 6.7 ], "rating": 1.0, "id": 21 }
 { "ratings": [ 1.0 ], "rating": 8.0, "id": 27 }
-{ "ratings": [  ], "rating": 3, "id": 28 }
+{ "ratings": [  ], "rating": 3.0, "id": 28 }

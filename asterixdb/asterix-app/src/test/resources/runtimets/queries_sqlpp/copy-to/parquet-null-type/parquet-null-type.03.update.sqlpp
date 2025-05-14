@@ -20,15 +20,36 @@
 USE test;
 
 COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
+select c.* from TestCollection c
+    ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
+PATH (%pathprefix% "copy-to-result", "parquet-null-type")
+TYPE (
+    {
+      id : int,
+      name : string,
+      nested : {
+       List : [ int ],
+         A : string,
+       randomK : string
+      },
+        obj_array : [ { first : string } ],
+        a : {
+            b : int
+        },
+        c : {
+            d : int,
+            e : int
+        },
+        f : [ float ],
+        arr : [[int]]
+    }
+)
 WITH {
     %template_colons%,
     %additionalProperties%
     "format":"parquet"
-};
+    };
 
 
 

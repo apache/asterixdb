@@ -19,16 +19,10 @@
 
 USE test;
 
-COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"parquet"
-};
+
+
+CREATE COLLECTION TestCollection6(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection7(ColumnType1) PRIMARY KEY id;
 
 
 

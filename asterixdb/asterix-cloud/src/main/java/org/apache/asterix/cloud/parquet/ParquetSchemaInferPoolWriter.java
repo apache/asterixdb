@@ -37,11 +37,11 @@ import org.apache.logging.log4j.Logger;
 public class ParquetSchemaInferPoolWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ParquetExternalWriterFactory writerFactory;
-    private List<ParquetSchemaTree.SchemaNode> schemaNodes;
-    private List<IExternalWriter> writerList;
+    private final List<ParquetSchemaTree.SchemaNode> schemaNodes;
+    private final List<IExternalWriter> writerList;
     private final int maxSchemas;
-    private ISchemaChecker schemaChecker;
-    private ParquetSchemaLazyVisitor schemaLazyVisitor;
+    private final ISchemaChecker schemaChecker;
+    private final ParquetSchemaLazyVisitor schemaLazyVisitor;
 
     public ParquetSchemaInferPoolWriter(ParquetExternalWriterFactory writerFactory, ISchemaChecker schemaChecker,
             ParquetSchemaLazyVisitor parquetSchemaLazyVisitor, int maxSchemas) {
@@ -57,12 +57,11 @@ public class ParquetSchemaInferPoolWriter {
         for (int i = 0; i < schemaNodes.size(); i++) {
             ISchemaChecker.SchemaComparisonType schemaComparisonType =
                     schemaChecker.checkSchema(schemaNodes.get(i), value);
-
             if (schemaComparisonType.equals(ISchemaChecker.SchemaComparisonType.EQUIVALENT)) {
                 return;
             } else if (schemaComparisonType.equals(ISchemaChecker.SchemaComparisonType.GROWING)) {
                 // If the schema is growing, close the existing writer and create a new one with the new schema.
-                schemaNodes.set(i, schemaLazyVisitor.inferSchema(value));
+                schemaLazyVisitor.updateSchema(value, schemaNodes.get(i));
                 closeWriter(i);
                 return;
             }

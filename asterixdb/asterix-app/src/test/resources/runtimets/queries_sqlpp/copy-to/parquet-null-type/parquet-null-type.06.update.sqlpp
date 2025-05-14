@@ -20,15 +20,15 @@
 USE test;
 
 COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
+select c.* from TestCollection c
+    ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
+PATH (%pathprefix% "copy-to-result", "parquet-null-type-schemaless")
 WITH {
     %template_colons%,
     %additionalProperties%
     "format":"parquet"
-};
+    };
 
 
 

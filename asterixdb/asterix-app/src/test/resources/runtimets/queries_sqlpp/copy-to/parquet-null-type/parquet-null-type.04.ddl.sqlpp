@@ -19,16 +19,18 @@
 
 USE test;
 
-COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"parquet"
-};
+
+CREATE TYPE ColumnType2 AS {
+    };
 
 
 
+CREATE EXTERNAL DATASET TestDataset(ColumnType2) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/parquet-null-type/"),
+  ("include"="*.parquet"),
+  ("requireVersionChangeDetection"="false"),
+  ("format" = "parquet")
+);

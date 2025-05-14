@@ -19,16 +19,9 @@
 
 USE test;
 
-COPY (
-   SELECT c.* FROM DummyTweetDataset c
-) toWriter
-TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-tweet")
-WITH {
-    %template_colons%,
-    %additionalProperties%
-    "format":"parquet"
-};
 
+SELECT c.*
+FROM TestDataset c
+ORDER BY c.id;
 
 
