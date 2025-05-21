@@ -143,7 +143,7 @@
             <configuration>
               <includeClassifiers>testlib</includeClassifiers>
               <outputDirectory>target/data/externallib</outputDirectory>
-              <overwrite>true</overwrite>
+              <overWriteIfNewer>true</overWriteIfNewer>
               <stripVersion>true</stripVersion>
             </configuration>
           </execution>
