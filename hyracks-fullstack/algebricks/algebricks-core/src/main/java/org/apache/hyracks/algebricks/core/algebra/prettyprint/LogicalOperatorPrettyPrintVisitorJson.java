@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -116,6 +117,18 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String MAX_CARDINALITY = "max-cardinality";
 
     private static final String TOTAL_CARDINALITY = "total-cardinality";
+
+    private static final String MIN_TUPLE_SIZE = "min-tuple-size";
+
+    private static final String MAX_TUPLE_SIZE = "max-tuple-size";
+
+    private static final String AVG_TUPLE_SIZE = "avg-tuple-size";
+
+    private static final String FRAME_COUNT = "frame-count";
+
+    private static final String TUPLE_BYTES = "tuple-bytes";
+
+    private static final String AVG_TUPLES_PER_FRAME = "avg-tuples-per-frame";
     private static final String NAME = "name";
     private static final String ID = "id";
     private static final String RUNTIME_ID = "runtime-id";
@@ -266,18 +279,53 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     }
 
+    private static class WeightedAvg {
+        private long totalCard = 0;
+        private double weightedSum = 0.0;
+        private double avg = 0.0;
+
+        public void update(double val, long card) {
+            weightedSum += val * card;
+            totalCard += card;
+            avg = totalCard > 0 ? weightedSum / totalCard : 0.0;
+        }
+
+    }
+
     private class OperatorProfile {
 
         Map<String, String> activityNames;
         Map<String, MinMax<Double>> activityTimes;
         Map<String, MinMax<Long>> activityCards;
         Map<String, Long> activityCardTotal;
+        Map<String, MinMax<Long>> activityTupleSizes;
+        Map<String, WeightedAvg> activityAvgTupleSizes;
+        Map<String, Long> activityFrameCountTotal;
+        Map<String, WeightedAvg> activityAvgTuplesPerFrame;
+        Map<String, Long> activityTupleBytes;
 
         OperatorProfile() {
             activityNames = new HashMap<>();
             activityTimes = new HashMap<>();
             activityCards = new HashMap<>();
             activityCardTotal = new HashMap<>();
+            activityTupleSizes = new HashMap<>();
+            activityAvgTupleSizes = new HashMap<>();
+            activityFrameCountTotal = new HashMap<>();
+            activityAvgTuplesPerFrame = new HashMap<>();
+            activityTupleBytes = new HashMap<>();
+        }
+
+        void updateOperator(String extendedOpId, String name, double time, long cardinality, long minSize, long maxSize,
+                double avgSize, long frameCount, double avgTuples, long tupleBytes) {
+            updateOperator(extendedOpId, name, time, cardinality);
+            updateMinMax(minSize, extendedOpId, activityTupleSizes);
+            updateMinMax(maxSize, extendedOpId, activityTupleSizes);
+            updateAverage(avgSize, cardinality, extendedOpId, activityAvgTupleSizes);
+            activityFrameCountTotal.compute(extendedOpId,
+                    (id, calls) -> calls == null ? frameCount : calls + frameCount);
+            updateAverage(avgTuples, cardinality, extendedOpId, activityAvgTuplesPerFrame);
+            activityTupleBytes.compute(extendedOpId, (id, bytes) -> bytes == null ? tupleBytes : bytes + tupleBytes);
         }
 
         void updateOperator(String extendedOpId, String name, double time, long cardinality) {
@@ -294,6 +342,11 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         private <T extends Comparable<T>> void updateMinMax(T comp, String id, Map<String, MinMax<T>> opMap) {
             MinMax<T> stat = opMap.computeIfAbsent(id, i -> new MinMax<>(comp));
             stat.update(comp);
+        }
+
+        private void updateAverage(double avg, long card, String id, Map<String, WeightedAvg> opMap) {
+            WeightedAvg stat = opMap.computeIfAbsent(id, i -> new WeightedAvg());
+            stat.update(avg, card);
         }
     }
 
@@ -314,9 +367,18 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                             profiledOps.computeIfAbsent(counters.get(RUNTIME_ID).asText(), i -> new OperatorProfile());
                     Pair<ExtendedActivityId, String> identities = splitAcId(counters.get(NAME).asText());
                     JsonNode card = counters.get("cardinality-out");
-                    if (card != null) {
+                    JsonNode minTupleSz = counters.get("min-tuple-size");
+                    JsonNode maxTupleSz = counters.get("max-tuple-size");
+                    JsonNode avgTupleSz = counters.get("avg-tuple-size");
+                    JsonNode tupleBytes = counters.get("tuple-bytes");
+                    JsonNode framesProcessedNode = counters.get("frames-processed");
+                    JsonNode avgTuplesPerFrameNode = counters.get("avg-tuples-per-frame");
+                    if (card != null && minTupleSz != null && maxTupleSz != null && avgTupleSz != null
+                            && framesProcessedNode != null && avgTuplesPerFrameNode != null && tupleBytes != null) {
                         info.updateOperator(identities.first.getActivityAndLocalId(), identities.second,
-                                counters.get("run-time").asDouble(), card.asLong(0));
+                                counters.get("run-time").asDouble(), card.asLong(), minTupleSz.asLong(),
+                                maxTupleSz.asLong(), avgTupleSz.asDouble(), framesProcessedNode.asLong(),
+                                avgTuplesPerFrameNode.asDouble(), tupleBytes.asLong());
                     } else {
                         info.updateOperator(identities.first.getActivityAndLocalId(), identities.second,
                                 counters.get("run-time").asDouble());
@@ -394,7 +456,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     private void printActivityStats(Optional<MinMax<Double>> time, Optional<MinMax<Long>> card,
-            Optional<Long> totalCard) throws IOException {
+            Optional<Long> totalCard, Optional<MinMax<Long>> tupleSize, Optional<WeightedAvg> avgTupleSize,
+            Optional<Long> frameCount, Optional<WeightedAvg> avgTuplesPerFrame, Optional<Long> tupleBytes)
+            throws IOException {
         if (time.isPresent()) {
             jsonGenerator.writeNumberField(MIN_TIME, time.get().min);
             jsonGenerator.writeNumberField(MAX_TIME, time.get().max);
@@ -406,6 +470,22 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         if (totalCard.isPresent()) {
             jsonGenerator.writeNumberField(TOTAL_CARDINALITY, totalCard.get());
         }
+        if (tupleSize.isPresent()) {
+            jsonGenerator.writeNumberField(MIN_TUPLE_SIZE, tupleSize.get().min);
+            jsonGenerator.writeNumberField(MAX_TUPLE_SIZE, tupleSize.get().max);
+        }
+        if (avgTupleSize.isPresent()) {
+            jsonGenerator.writeNumberField(AVG_TUPLE_SIZE, avgTupleSize.get().avg);
+        }
+        if (frameCount.isPresent()) {
+            jsonGenerator.writeNumberField(FRAME_COUNT, frameCount.get());
+        }
+        if (avgTuplesPerFrame.isPresent()) {
+            jsonGenerator.writeNumberField(AVG_TUPLES_PER_FRAME, avgTuplesPerFrame.get().avg);
+        }
+        if (tupleBytes.isPresent()) {
+            jsonGenerator.writeStringField(TUPLE_BYTES, FileUtils.byteCountToDisplaySize(tupleBytes.get()));
+        }
     }
 
     private void printOperatorStats(OperatorProfile info) throws IOException {
@@ -413,7 +493,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             Optional<MinMax<Double>> times = info.activityTimes.values().stream().findFirst();
             Optional<MinMax<Long>> cards = info.activityCards.values().stream().findFirst();
             Optional<Long> total = info.activityCardTotal.values().stream().findFirst();
-            printActivityStats(times, cards, total);
+            Optional<MinMax<Long>> tupleSizes = info.activityTupleSizes.values().stream().findFirst();
+            Optional<WeightedAvg> avgTupleSize = info.activityAvgTupleSizes.values().stream().findFirst();
+            Optional<Long> frameCount = info.activityFrameCountTotal.values().stream().findFirst();
+            Optional<WeightedAvg> avgTuplesPerFrame = info.activityAvgTuplesPerFrame.values().stream().findFirst();
+            Optional<Long> tupleBytes = info.activityTupleBytes.values().stream().findFirst();
+            printActivityStats(times, cards, total, tupleSizes, avgTupleSize, frameCount, avgTuplesPerFrame,
+                    tupleBytes);
         } else if (info.activityTimes.size() > 1) {
             jsonGenerator.writeArrayFieldStart("activity-stats");
             for (String acId : info.activityTimes.keySet()) {
@@ -425,7 +511,12 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStringField("id", acId);
                 printActivityStats(Optional.ofNullable(info.activityTimes.get(acId)),
                         Optional.ofNullable(info.activityCards.get(acId)),
-                        Optional.ofNullable(info.activityCardTotal.get(acId)));
+                        Optional.ofNullable(info.activityCardTotal.get(acId)),
+                        Optional.ofNullable(info.activityTupleSizes.get(acId)),
+                        Optional.ofNullable(info.activityAvgTupleSizes.get(acId)),
+                        Optional.ofNullable(info.activityFrameCountTotal.get(acId)),
+                        Optional.ofNullable(info.activityAvgTuplesPerFrame.get(acId)),
+                        Optional.ofNullable(info.activityTupleBytes.get(acId)));
                 jsonGenerator.writeEndObject();
             }
             jsonGenerator.writeEndArray();
