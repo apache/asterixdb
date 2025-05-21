@@ -61,6 +61,7 @@ public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewrite
         addFunctionAndArgChecker(BuiltinFunctions.IF_NULL, null);
         addFunctionAndArgChecker(BuiltinFunctions.IF_MISSING_OR_NULL, null);
         addFunctionAndArgChecker(BuiltinFunctions.IF_SYSTEM_NULL, null);
+        addFunctionAndArgChecker(BuiltinFunctions.IF_ERROR, null);
     }
 
     // allows the rule to check other functions in addition to the ones specified here
