@@ -110,11 +110,8 @@ public final class ColumnRanges {
 
         // Get the number of columns in a page
         int numberOfColumns = leafFrame.getNumberOfColumns();
-        for (int i = 0; i < numberOfColumns; i++) {
-            int offset = leafFrame.getColumnOffset(i);
-            // Set the first 32-bits to the offset and the second 32-bits to columnIndex
-            offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
-        }
+        // Set the first 32-bits to the offset and the second 32-bits to columnIndex
+        leafFrame.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
 
         // Set artificial offset to determine the last column's length
         int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
@@ -131,6 +128,8 @@ public final class ColumnRanges {
 
             // Compute the column's length in bytes (set 0 for PKs)
             int length = columnIndex < numberOfPrimaryKeys ? 0 : nextOffset - offset;
+            // In case of sparse columns, few columnIndexes can be greater than the total sparse column count.
+            ensureCapacity(columnIndex);
             lengths[columnIndex] = length;
 
             // Get start page ID (given the computed length above)
@@ -275,6 +274,12 @@ public final class ColumnRanges {
                     evictablePages.set(j);
                 }
             }
+        }
+    }
+
+    private void ensureCapacity(int columnIndex) {
+        if (columnIndex >= lengths.length) {
+            lengths = IntArrays.grow(lengths, columnIndex + 1);
         }
     }
 

@@ -27,17 +27,26 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+
 public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame {
     private final AbstractColumnTupleReader columnarTupleReader;
     private final ITreeIndexTupleReference leftMostTuple;
     private final ITreeIndexTupleReference rightMostTuple;
+    private IColumnPageZeroReader columnPageZeroReader;
 
     public ColumnBTreeReadLeafFrame(ITreeIndexTupleWriter rowTupleWriter,
             AbstractColumnTupleReader columnarTupleReader) {
-        super(rowTupleWriter);
+        super(rowTupleWriter, columnarTupleReader.getPageZeroWriterFlavorSelector());
         this.columnarTupleReader = columnarTupleReader;
         leftMostTuple = rowTupleWriter.createTupleReference();
         rightMostTuple = rowTupleWriter.createTupleReference();
+    }
+
+    @Override
+    protected void resetPageZeroReader() {
+        columnPageZeroReader = pageZeroWriterFlavorSelector.createPageZeroReader(getFlagByte());
+        columnPageZeroReader.reset(buf);
     }
 
     @Override
@@ -47,7 +56,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         }
 
         leftMostTuple.setFieldCount(cmp.getKeyFieldCount());
-        leftMostTuple.resetByTupleOffset(buf.array(), buf.getInt(LEFT_MOST_KEY_OFFSET));
+        leftMostTuple.resetByTupleOffset(buf.array(), columnPageZeroReader.getLeftMostKeyOffset());
         return leftMostTuple;
     }
 
@@ -58,8 +67,12 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         }
 
         rightMostTuple.setFieldCount(cmp.getKeyFieldCount());
-        rightMostTuple.resetByTupleOffset(buf.array(), buf.getInt(RIGHT_MOST_KEY_OFFSET));
+        rightMostTuple.resetByTupleOffset(buf.array(), columnPageZeroReader.getRightMostKeyOffset());
         return rightMostTuple;
+    }
+
+    public void getAllColumns(IntOpenHashSet presentColumns) {
+        columnPageZeroReader.getAllColumns(presentColumns);
     }
 
     public IColumnTupleIterator createTupleReference(int index, IColumnReadMultiPageOp multiPageOp) {
@@ -68,7 +81,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
 
     @Override
     public int getTupleCount() {
-        return buf.getInt(Constants.TUPLE_COUNT_OFFSET);
+        return columnPageZeroReader.getTupleCount();
     }
 
     public int getPageId() {
@@ -76,26 +89,51 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     }
 
     public int getNumberOfColumns() {
-        return buf.getInt(NUMBER_OF_COLUMNS_OFFSET);
+        return columnPageZeroReader.getNumberOfPresentColumns();
     }
 
     public int getColumnOffset(int columnIndex) {
-        if (columnIndex >= getNumberOfColumns()) {
+        // update the exception message.
+        if (!columnPageZeroReader.isValidColumn(columnIndex)) {
             throw new IndexOutOfBoundsException(columnIndex + " >= " + getNumberOfColumns());
         }
-        return columnarTupleReader.getColumnOffset(buf, columnIndex);
+        return columnPageZeroReader.getColumnOffset(columnIndex);
+    }
+
+    public boolean isValidColumn(int columnIndex) {
+        return columnPageZeroReader.isValidColumn(columnIndex);
     }
 
     public int getNextLeaf() {
-        return buf.getInt(NEXT_LEAF_OFFSET);
+        return columnPageZeroReader.getNextLeaf();
     }
 
     public int getMegaLeafNodeLengthInBytes() {
-        return buf.getInt(MEGA_LEAF_NODE_LENGTH);
+        return columnPageZeroReader.getMegaLeafNodeLengthInBytes();
+    }
+
+    // flag needs to be directly accessed from the buffer, as this will be used to choose the pageReader
+    public byte getFlagByte() {
+        return buf.get(FLAG_OFFSET);
+    }
+
+    public void skipFilters() {
+        columnPageZeroReader.skipFilters();
+    }
+
+    public void skipColumnOffsets() {
+        columnPageZeroReader.skipColumnOffsets();
+    }
+
+    public IColumnPageZeroReader getColumnPageZeroReader() {
+        return columnPageZeroReader;
     }
 
     public int getMegaLeafNodeNumberOfPages() {
-        return (int) Math.ceil((double) getMegaLeafNodeLengthInBytes() / buf.capacity());
+        // the denominator should ideally be the bufferCache pageSize, but
+        // in the current way, the pageZeroCapacity = bufferCache's pageSize.
+        // May be, needs to be changed in the future, to point to the bufferCache's pageSize.
+        return (int) Math.ceil((double) getMegaLeafNodeLengthInBytes() / columnPageZeroReader.getPageZeroCapacity());
     }
 
     public ColumnBTreeReadLeafFrame createCopy() {
@@ -105,5 +143,9 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     @Override
     public ITreeIndexTupleReference createTupleReference() {
         throw new IllegalArgumentException("Use createTupleReference(int)");
+    }
+
+    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+        columnPageZeroReader.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
     }
 }

@@ -20,12 +20,15 @@ package org.apache.asterix.column.operation.lsm.flush;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.ColumnBatchWriter;
 import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
-import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
+import org.apache.asterix.column.zero.PageZeroWriterFlavorSelector;
+import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
+import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -35,9 +38,14 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriterFlavorSelector;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final FlushColumnMetadata columnMetadata;
     protected final NoWriteFlushColumnMetadata columnMetadataWithCurrentTuple;
 
@@ -50,13 +58,17 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     private final int maxNumberOfTuples;
     private final IColumnValuesWriter[] primaryKeyWriters;
     private final int maxLeafNodeSize;
+    protected final BitSet presentColumnsIndexes;
 
     protected int primaryKeysEstimatedSize;
+    protected final IColumnPageZeroWriterFlavorSelector pageZeroWriterFlavorSelector;
 
     public FlushColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
             double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
         this.columnMetadata = columnMetadata;
-        transformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot());
+        this.pageZeroWriterFlavorSelector = new PageZeroWriterFlavorSelector();
+        this.presentColumnsIndexes = new BitSet();
+        transformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot(), presentColumnsIndexes);
         finalizer = new BatchFinalizerVisitor(columnMetadata);
         writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance, writeContext);
         this.maxNumberOfTuples = maxNumberOfTuples;
@@ -79,8 +91,8 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        transformerForCurrentTuple =
-                new NoWriteColumnTransformer(columnMetadataWithCurrentTuple, columnMetadataWithCurrentTuple.getRoot());
+        transformerForCurrentTuple = new NoWriteColumnTransformer(columnMetadataWithCurrentTuple,
+                columnMetadataWithCurrentTuple.getRoot(), columnMetadataWithCurrentTuple.getMetaRoot());
     }
 
     @Override
@@ -89,7 +101,12 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public final int getNumberOfColumns(boolean includeCurrentTupleColumns) {
+    public IColumnPageZeroWriterFlavorSelector getColumnPageZeroWriterFlavorSelector() {
+        return pageZeroWriterFlavorSelector;
+    }
+
+    @Override
+    public final int getAbsoluteNumberOfColumns(boolean includeCurrentTupleColumns) {
         if (includeCurrentTupleColumns) {
             return columnMetadataWithCurrentTuple.getNumberOfColumns();
         } else {
@@ -109,10 +126,8 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public final int getOccupiedSpace() {
-        int numberOfColumns = getNumberOfColumns(true);
-        int filterSize = numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE;
-        return primaryKeysEstimatedSize + filterSize;
+    public final int getPrimaryKeysEstimatedSize() {
+        return primaryKeysEstimatedSize;
     }
 
     /**
@@ -126,6 +141,21 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
             return 0;
         }
         return maxNumberOfTuples;
+    }
+
+    @Override
+    public int getColumnOccupiedSpace(boolean includeCurrentTupleColumns) {
+        int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+        int totalNumberOfColumns = getAbsoluteNumberOfColumns(includeCurrentTupleColumns);
+
+        // space occupied by the sparse writer
+        int spaceOccupiedBySparseWriter = presentColumns
+                * (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        int spaceOccupiedByDefaultWriter = totalNumberOfColumns
+                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
+                spaceOccupiedBySparseWriter);
+        return Math.min(spaceOccupiedBySparseWriter, spaceOccupiedByDefaultWriter);
     }
 
     @Override
@@ -163,10 +193,37 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public final int flush(ByteBuffer pageZero) throws HyracksDataException {
-        writer.setPageZeroBuffer(pageZero, getNumberOfColumns(false), columnMetadata.getNumberOfPrimaryKeys());
+    public final int flush(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter) throws HyracksDataException {
+        int numberOfColumns = getAbsoluteNumberOfColumns(false);
+        finalizer.finalizeBatchColumns(columnMetadata, presentColumnsIndexes, pageZeroWriter);
+        writer.setPageZeroWriter(pageZero, pageZeroWriter, toIndexArray(presentColumnsIndexes), numberOfColumns);
+
+        //assertion logging
+        int presentColumnsCount = presentColumnsIndexes.cardinality();
+        int beforeTransformColumnCount = transformerForCurrentTuple.getBeforeTransformColumnsCount();
+        int currentTupleColumnsCount = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+        if (beforeTransformColumnCount != presentColumnsCount || currentTupleColumnsCount != presentColumnsCount) {
+            LOGGER.debug("mismatch in column counts: beforeTransform={}, currentTuple={}, expected={}",
+                    beforeTransformColumnCount, currentTupleColumnsCount, presentColumnsCount);
+        }
+
+        return finalizer.finalizeBatch(writer);
+    }
+
+    @Override
+    public void reset() {
         transformer.resetStringLengths();
-        return finalizer.finalizeBatch(writer, columnMetadata);
+        transformerForCurrentTuple.reset();
+        presentColumnsIndexes.clear();
+    }
+
+    public static int[] toIndexArray(BitSet bitSet) {
+        int[] result = new int[bitSet.cardinality()];
+        int idx = 0;
+        for (int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1)) {
+            result[idx++] = i;
+        }
+        return result;
     }
 
     protected void writeRecord(ITupleReference tuple) throws HyracksDataException {

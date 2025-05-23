@@ -42,6 +42,11 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
     public UnionSchemaNode(AbstractSchemaNode child1, AbstractSchemaNode child2) {
         children = new EnumMap<>(ATypeTag.class);
         originalType = child1;
+        // this is a new node, update the number of columns
+        numberOfColumns = child1.getNumberOfColumns();
+        previousNumberOfColumns = numberOfColumns; // this is an older node
+        child2.getDeltaColumnsChanged();
+        numberOfColumns += child2.getNumberOfColumns();
         putChild(child1);
         putChild(child2);
     }
@@ -54,15 +59,28 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
         ATypeTag originalTypeTag = ATypeTag.VALUE_TYPE_MAPPING[input.readByte()];
         int numberOfChildren = input.readInt();
         children = new EnumMap<>(ATypeTag.class);
+        int columnsCount = 0;
         for (int i = 0; i < numberOfChildren; i++) {
             AbstractSchemaNode child = AbstractSchemaNode.deserialize(input, definitionLevels);
+            columnsCount += child.getNumberOfColumns();
             children.put(child.getTypeTag(), child);
         }
+        numberOfColumns = columnsCount;
+        previousNumberOfColumns = numberOfColumns;
         originalType = children.get(originalTypeTag);
     }
 
     private void putChild(AbstractSchemaNode child) {
         children.put(child.getTypeTag(), child);
+    }
+
+    private void putChild(AbstractSchemaNode newChild, AbstractSchemaNode currentChild) {
+        if (currentChild != null && newChild.getTypeTag() == currentChild.getTypeTag()) {
+            numberOfColumns -= currentChild.getNumberOfColumns();
+        }
+        newChild.getDeltaColumnsChanged();
+        numberOfColumns += newChild.getNumberOfColumns();
+        children.put(newChild.getTypeTag(), newChild);
     }
 
     public AbstractSchemaNode getOriginalType() {
@@ -76,7 +94,9 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
         //The parent of a union child should be the actual parent
         AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, normalizedTypeTag);
         if (currentChild != newChild) {
-            putChild(newChild);
+            putChild(newChild, currentChild);
+        } else {
+            numberOfColumns += newChild.getDeltaColumnsChanged();
         }
         return newChild;
     }

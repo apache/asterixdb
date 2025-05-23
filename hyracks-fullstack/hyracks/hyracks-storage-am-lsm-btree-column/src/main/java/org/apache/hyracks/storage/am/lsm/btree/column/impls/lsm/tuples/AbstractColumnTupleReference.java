@@ -39,7 +39,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String UNSUPPORTED_OPERATION_MSG = "Operation is not supported for column tuples";
     private final int componentIndex;
-    private final ColumnBTreeReadLeafFrame frame;
+    protected final ColumnBTreeReadLeafFrame frame;
     private final IColumnBufferProvider[] primaryKeyBufferProviders;
     private final IColumnBufferProvider[] filterBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
@@ -100,7 +100,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     }
 
     @Override
-    public final void newPage() throws HyracksDataException {
+    public void newPage() throws HyracksDataException {
         tupleIndex = 0;
         ByteBuffer pageZero = frame.getBuffer();
         pageZero.clear();
@@ -120,10 +120,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     public final void reset(int startIndex, int endIndex) throws HyracksDataException {
         tupleIndex = startIndex;
         this.endIndex = endIndex;
-        ByteBuffer pageZero = frame.getBuffer();
         int numberOfTuples = frame.getTupleCount();
         //Start new page and check whether we should skip reading non-key columns or not
-        boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
+        boolean readColumnPages = startNewPage(numberOfTuples);
         //Release previous pinned pages if any
         unpinColumnsPages();
         /*
@@ -196,8 +195,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     protected abstract int setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException;
 
-    protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples)
-            throws HyracksDataException;
+    protected abstract boolean startNewPage(int numberOfTuples) throws HyracksDataException;
 
     protected abstract void startPrimaryKey(IColumnBufferProvider bufferProvider, int ordinal, int numberOfTuples)
             throws HyracksDataException;

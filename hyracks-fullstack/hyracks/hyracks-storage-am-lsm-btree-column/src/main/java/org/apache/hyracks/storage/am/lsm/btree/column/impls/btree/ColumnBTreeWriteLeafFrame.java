@@ -30,7 +30,7 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
 
     public ColumnBTreeWriteLeafFrame(ITreeIndexTupleWriter rowTupleWriter,
             AbstractColumnTupleWriter columnTupleWriter) {
-        super(rowTupleWriter);
+        super(rowTupleWriter, columnTupleWriter.getColumnPageZeroWriterFlavorSelector());
         this.columnTupleWriter = columnTupleWriter;
     }
 
@@ -49,11 +49,16 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
 
     void flush(AbstractColumnTupleWriter columnWriter, int numberOfTuples, ITupleReference minKey,
             ITupleReference maxKey) throws HyracksDataException {
+        IColumnPageZeroWriter pageZeroWriter = pageZeroWriterFlavorSelector.getPageZeroWriter();
+
+        // TODO(zero): Ideally, all these fields should be specific to the writer.
+        // However, some of the position constants are accessed directly elsewhere,
+        // so refactoring will require careful consideration to avoid breaking existing usage.
+
         // Prepare the space for writing the columns' information such as the primary keys
         buf.position(HEADER_SIZE);
         // Flush the columns to persistence pages and write the length of the mega leaf node in pageZero
-        buf.putInt(MEGA_LEAF_NODE_LENGTH, columnWriter.flush(buf));
-
+        buf.putInt(MEGA_LEAF_NODE_LENGTH, columnWriter.flush(buf, pageZeroWriter));
         // Write min and max keys
         int offset = buf.position();
         buf.putInt(LEFT_MOST_KEY_OFFSET, offset);
@@ -62,10 +67,14 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
         rowTupleWriter.writeTuple(maxKey, buf.array(), offset);
 
         // Write page information
-        int numberOfColumns = columnWriter.getNumberOfColumns(false);
         buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
-        buf.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumns);
-        buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, columnWriter.getColumnOffsetsSize(false));
+        buf.put(FLAG_OFFSET, pageZeroWriter.flagCode());
+        buf.putInt(NUMBER_OF_COLUMNS_OFFSET, pageZeroWriter.getNumberOfColumns());
+        // correct the offset's, this all should be deferred to writer
+        buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, pageZeroWriter.getColumnOffsetsSize());
+
+        // reset the collected meta info
+        columnWriter.reset();
     }
 
     public AbstractColumnTupleWriter getColumnTupleWriter() {

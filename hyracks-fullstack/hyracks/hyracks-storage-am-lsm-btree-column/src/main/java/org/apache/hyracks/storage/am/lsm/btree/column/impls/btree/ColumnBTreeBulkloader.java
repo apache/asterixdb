@@ -93,6 +93,10 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             writeFullLeafPage();
             confiscateNewLeafPage();
         }
+        if (tupleCount == 0) {
+            //Since we are writing the first tuple, we need to estimate the number of columns.
+            columnWriter.updateColumnMetadataForCurrentTuple(tuple);
+        }
         //Save the key of the last inserted tuple
         setMinMaxKeys(tuple);
         columnWriter.writeTuple(tuple);
@@ -106,17 +110,18 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
     private boolean isFull(ITupleReference tuple) throws HyracksDataException {
         if (tupleCount == 0) {
+            columnWriter.updateColumnMetadataForCurrentTuple(tuple);
             return false;
         } else if (tupleCount >= columnWriter.getMaxNumberOfTuples()) {
             //We reached the maximum number of tuples
             return true;
         }
+        columnWriter.updateColumnMetadataForCurrentTuple(tuple);
         int requiredFreeSpace = AbstractColumnBTreeLeafFrame.HEADER_SIZE;
         //Columns' Offsets
-        columnWriter.updateColumnMetadataForCurrentTuple(tuple);
-        requiredFreeSpace += columnWriter.getColumnOffsetsSize(true);
+        requiredFreeSpace += columnWriter.getColumnOccupiedSpace(true);
         //Occupied space from previous writes
-        requiredFreeSpace += columnWriter.getOccupiedSpace();
+        requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //min and max tuples' sizes
         requiredFreeSpace += lowKey.getTuple().getTupleSize() + getSplitKeySize(tuple);
         //New tuple required space
@@ -308,9 +313,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             // number of tuples processed for the current leaf
             state.put("currentLeafTupleCount", tupleCount);
             // number of columns
-            state.put("currentLeafColumnCount", columnWriter.getNumberOfColumns(false));
+            state.put("currentLeafColumnCount", columnWriter.getAbsoluteNumberOfColumns(false));
             // number of columns including current tuple
-            state.put("currentColumnCount", columnWriter.getNumberOfColumns(true));
+            state.put("currentColumnCount", columnWriter.getAbsoluteNumberOfColumns(true));
             state.put("lastRequiredFreeSpace", lastRequiredFreeSpace);
             state.put("splitKeyTupleSize", splitKey.getTuple().getTupleSize());
             state.put("splitKeyTupleSizeByTupleWriter", tupleWriter.bytesRequired(splitKey.getTuple()));

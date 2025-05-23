@@ -22,7 +22,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public abstract class AbstractColumnFilterWriter {
-    public static final int FILTER_SIZE = Long.BYTES * 2;
 
     public void addLong(long value) {
         throw new UnsupportedOperationException(getClass().getName());

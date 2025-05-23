@@ -18,33 +18,29 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.api;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriterFlavorSelector;
 
 /**
  * Provided for columnar read tuple reference
  */
 public abstract class AbstractColumnTupleReader extends AbstractTupleWriterDisabledMethods {
+    protected final IColumnPageZeroWriterFlavorSelector pageZeroWriterFlavorSelector;
+
+    protected AbstractColumnTupleReader(IColumnPageZeroWriterFlavorSelector pageZeroWriterFlavorSelector) {
+        this.pageZeroWriterFlavorSelector = pageZeroWriterFlavorSelector;
+    }
+
     public abstract IColumnTupleIterator createTupleIterator(ColumnBTreeReadLeafFrame frame, int componentIndex,
             IColumnReadMultiPageOp multiPageOp);
-
-    /**
-     * Currently fixed to 4-byte per offset
-     *
-     * @param buf         buffer of Page0
-     * @param columnIndex column index
-     * @return column offset
-     * @see AbstractColumnTupleWriter#getColumnOffsetsSize()
-     */
-    public final int getColumnOffset(ByteBuffer buf, int columnIndex) {
-        return buf.getInt(AbstractColumnBTreeLeafFrame.HEADER_SIZE + columnIndex * Integer.BYTES);
-    }
 
     @Override
     public final int bytesRequired(ITupleReference tuple) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
+    }
+
+    public IColumnPageZeroWriterFlavorSelector getPageZeroWriterFlavorSelector() {
+        return pageZeroWriterFlavorSelector;
     }
 }

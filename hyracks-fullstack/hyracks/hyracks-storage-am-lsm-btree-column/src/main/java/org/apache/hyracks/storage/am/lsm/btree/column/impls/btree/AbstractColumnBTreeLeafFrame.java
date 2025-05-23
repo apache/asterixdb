@@ -67,13 +67,16 @@ public abstract class AbstractColumnBTreeLeafFrame implements ITreeIndexFrame {
     public static final int HEADER_SIZE = NEXT_LEAF_OFFSET + 4;
 
     protected final ITreeIndexTupleWriter rowTupleWriter;
+    protected final IColumnPageZeroWriterFlavorSelector pageZeroWriterFlavorSelector;
 
     protected MultiComparator cmp;
     protected ICachedPage page;
     protected ByteBuffer buf;
 
-    AbstractColumnBTreeLeafFrame(ITreeIndexTupleWriter rowTupleWriter) {
+    AbstractColumnBTreeLeafFrame(ITreeIndexTupleWriter rowTupleWriter,
+            IColumnPageZeroWriterFlavorSelector columnPageZeroWriterFlavorSelector) {
         this.rowTupleWriter = rowTupleWriter;
+        this.pageZeroWriterFlavorSelector = columnPageZeroWriterFlavorSelector;
     }
 
     /* ****************************************************************************
@@ -98,7 +101,12 @@ public abstract class AbstractColumnBTreeLeafFrame implements ITreeIndexFrame {
         this.buf = page.getBuffer().duplicate();
         buf.clear();
         buf.position(HEADER_SIZE);
+        resetPageZeroReader();
     }
+
+    protected void resetPageZeroReader() {
+
+    };
 
     @Override
     public final ICachedPage getPage() {

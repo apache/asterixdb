@@ -54,7 +54,7 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
 
     @Override
     public void reset(ColumnBTreeReadLeafFrame frame) throws HyracksDataException {
-        if (columnIndex >= frame.getNumberOfColumns()) {
+        if (!frame.isValidColumn(columnIndex)) {
             numberOfRemainingPages = 0;
             length = 0;
             return;

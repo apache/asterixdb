@@ -37,12 +37,16 @@ public class PrimitiveSchemaNode extends AbstractSchemaNode {
         this.columnIndex = columnIndex;
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;
+        this.previousNumberOfColumns = 0;
+        this.numberOfColumns = 1;
     }
 
     public PrimitiveSchemaNode(ATypeTag typeTag, DataInput input) throws IOException {
         this.typeTag = typeTag;
         columnIndex = input.readInt();
         primaryKey = input.readBoolean();
+        this.previousNumberOfColumns = 1;
+        this.numberOfColumns = 1;
     }
 
     public final int getColumnIndex() {

@@ -19,6 +19,7 @@
 package org.apache.asterix.column.operation.lsm.merge;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -28,7 +29,9 @@ import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.writer.ColumnBatchWriter;
-import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
+import org.apache.asterix.column.zero.PageZeroWriterFlavorSelector;
+import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
+import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
@@ -36,8 +39,12 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriterFlavorSelector;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private final MergeColumnWriteMetadata columnMetadata;
@@ -48,14 +55,19 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private final IColumnValuesWriter[] primaryKeyWriters;
     private final PriorityQueue<IColumnValuesWriter> orderedColumns;
     private final ColumnBatchWriter writer;
+    private final IColumnPageZeroWriterFlavorSelector pageZeroWriterFlavorSelector;
+    protected final IntOpenHashSet presentColumnsIndexes;
     private final int maxNumberOfTuples;
     private int primaryKeysEstimatedSize;
     private int numberOfAntiMatter;
+    private int numberOfTuples;
 
     public MergeColumnTupleWriter(MergeColumnWriteMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
             double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
         this.columnMetadata = columnMetadata;
+        this.pageZeroWriterFlavorSelector = new PageZeroWriterFlavorSelector();
         this.maxLeafNodeSize = maxLeafNodeSize;
+        this.presentColumnsIndexes = new IntOpenHashSet();
         List<IColumnTupleIterator> componentsTuplesList = columnMetadata.getComponentsTuples();
         this.componentsTuples = new MergeColumnTupleReference[componentsTuplesList.size()];
         int totalLength = 0;
@@ -64,6 +76,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             MergeColumnTupleReference mergeTuple = (MergeColumnTupleReference) componentsTuplesList.get(i);
             this.componentsTuples[i] = mergeTuple;
             mergeTuple.registerEndOfPageCallBack(this::writeAllColumns);
+            mergeTuple.setColumnIndexes(presentColumnsIndexes);
             totalNumberOfTuples += mergeTuple.getTupleCount();
             totalLength += mergeTuple.getMergingLength();
         }
@@ -95,7 +108,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int getNumberOfColumns(boolean includeCurrentTupleColumns) {
+    public int getAbsoluteNumberOfColumns(boolean includeCurrentTupleColumns) {
         return columnMetadata.getNumberOfColumns();
     }
 
@@ -105,15 +118,20 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int getOccupiedSpace() {
-        int numberOfColumns = getNumberOfColumns(true);
-        int filterSize = numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE;
-        return primaryKeysEstimatedSize + filterSize;
+    public int getPrimaryKeysEstimatedSize() {
+        return primaryKeysEstimatedSize;
     }
 
     @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
         MergeColumnTupleReference columnTuple = (MergeColumnTupleReference) tuple;
+        if (numberOfTuples == 0) {
+            // fill with the columnIndexes
+            for (MergeColumnTupleReference componentsTuple : componentsTuples) {
+                componentsTuple.fillColumnIndexes();
+            }
+        }
+        numberOfTuples++;
         int componentIndex = columnTuple.getComponentIndex();
         int skipCount = columnTuple.getAndResetSkipCount();
         if (skipCount > 0) {
@@ -132,17 +150,46 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int flush(ByteBuffer pageZero) throws HyracksDataException {
+    public IColumnPageZeroWriterFlavorSelector getColumnPageZeroWriterFlavorSelector() {
+        return pageZeroWriterFlavorSelector;
+    }
+
+    @Override
+    public int getColumnOccupiedSpace(boolean includeCurrentTupleColumns) {
+        int presentColumns = presentColumnsIndexes.size();
+        int totalNumberOfColumns = getAbsoluteNumberOfColumns(includeCurrentTupleColumns);
+
+        // space occupied by the sparse writer
+        int spaceOccupiedBySparseWriter = presentColumns
+                * (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        int spaceOccupiedByDefaultWriter = totalNumberOfColumns
+                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
+                spaceOccupiedBySparseWriter);
+        return Math.min(spaceOccupiedBySparseWriter, spaceOccupiedByDefaultWriter);
+    }
+
+    @Override
+    public int flush(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter) throws HyracksDataException {
+        // here the numberOfColumns is the total number of columns present in the LSM Index (across all disk components)
+        // Hence, a merge will fail if union(NumberOfColumns(D1) + NumberOfColumns(D2) + ... + NumberOfColumns(DN)) >
+        // pageZero space, and since the merged page contains this many number of columns, the first flush will fail.
         int numberOfColumns = columnMetadata.getNumberOfColumns();
         int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
         if (writtenComponents.getSize() > 0) {
             writeNonKeyColumns();
             writtenComponents.reset();
         }
-        for (int i = numberOfPrimaryKeys; i < numberOfColumns; i++) {
-            orderedColumns.add(columnMetadata.getWriter(i));
+
+        for (int columnIndex : presentColumnsIndexes) {
+            if (columnIndex < numberOfPrimaryKeys) {
+                continue;
+            }
+            orderedColumns.add(columnMetadata.getWriter(columnIndex));
         }
-        writer.setPageZeroBuffer(pageZero, numberOfColumns, numberOfPrimaryKeys);
+
+        // reset pageZeroWriter based on the writer
+        writer.setPageZeroWriter(pageZero, pageZeroWriter, getPresentColumnsIndexesArray(), numberOfColumns);
         writer.writePrimaryKeyColumns(primaryKeyWriters);
         int totalLength = writer.writeColumns(orderedColumns);
 
@@ -150,10 +197,22 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
         return totalLength;
     }
 
+    public int[] getPresentColumnsIndexesArray() {
+        int[] sortedIndexes = presentColumnsIndexes.toIntArray();
+        Arrays.sort(sortedIndexes);
+        return sortedIndexes;
+    }
+
     @Override
     public void close() {
         columnMetadata.close();
         writer.close();
+    }
+
+    @Override
+    public void reset() {
+        presentColumnsIndexes.clear();
+        numberOfTuples = 0;
     }
 
     private void writePrimaryKeys(MergeColumnTupleReference columnTuple) throws HyracksDataException {
@@ -178,9 +237,12 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             }
             MergeColumnTupleReference componentTuple = componentsTuples[componentIndex];
             int count = writtenComponents.getBlockSize(i);
-            for (int j = columnMetadata.getNumberOfPrimaryKeys(); j < columnMetadata.getNumberOfColumns(); j++) {
-                IColumnValuesReader columnReader = componentTuple.getReader(j);
-                IColumnValuesWriter columnWriter = columnMetadata.getWriter(j);
+            for (int columnIndex : presentColumnsIndexes) {
+                if (columnIndex < columnMetadata.getNumberOfPrimaryKeys()) {
+                    continue;
+                }
+                IColumnValuesReader columnReader = componentTuple.getReader(columnIndex);
+                IColumnValuesWriter columnWriter = columnMetadata.getWriter(columnIndex);
                 writeColumn(i, componentIndex, columnReader, columnWriter, count);
             }
         }
@@ -201,8 +263,11 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private void skipReaders(int componentIndex, int count) throws HyracksDataException {
         MergeColumnTupleReference componentTuple = componentsTuples[componentIndex];
         try {
-            for (int j = columnMetadata.getNumberOfPrimaryKeys(); j < columnMetadata.getNumberOfColumns(); j++) {
-                IColumnValuesReader columnReader = componentTuple.getReader(j);
+            for (int columnIndex : presentColumnsIndexes) {
+                if (columnIndex < columnMetadata.getNumberOfPrimaryKeys()) {
+                    continue;
+                }
+                IColumnValuesReader columnReader = componentTuple.getReader(columnIndex);
                 columnReader.skip(count);
             }
         } catch (ColumnarValueException e) {

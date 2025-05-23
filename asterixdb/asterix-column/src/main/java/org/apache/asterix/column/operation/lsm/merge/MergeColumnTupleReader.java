@@ -20,6 +20,7 @@ package org.apache.asterix.column.operation.lsm.merge;
 
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
 import org.apache.asterix.column.tuple.MergeColumnTupleReference;
+import org.apache.asterix.column.zero.PageZeroWriterFlavorSelector;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
@@ -29,6 +30,7 @@ public class MergeColumnTupleReader extends AbstractColumnTupleReader {
     private final MergeColumnReadMetadata columnMetadata;
 
     public MergeColumnTupleReader(AbstractColumnImmutableReadMetadata columnMetadata) {
+        super(new PageZeroWriterFlavorSelector());
         this.columnMetadata = (MergeColumnReadMetadata) columnMetadata;
     }
 

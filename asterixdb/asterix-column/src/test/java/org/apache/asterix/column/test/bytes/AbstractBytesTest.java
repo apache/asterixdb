@@ -48,6 +48,7 @@ import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.test.bytes.components.TestColumnBufferProvider;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
+import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
@@ -191,9 +192,9 @@ public abstract class AbstractBytesTest extends TestBase {
         pageZero.clear();
         //Reserve the header space
         pageZero.position(HEADER_SIZE);
-        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(pageZero));
+        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(pageZero, new DefaultColumnPageZeroWriter()));
         //Write page header
-        int numberOfColumn = writer.getNumberOfColumns(false);
+        int numberOfColumn = writer.getAbsoluteNumberOfColumns(false);
         pageZero.putInt(TUPLE_COUNT_OFFSET, tupleCount);
         pageZero.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumn);
 
@@ -209,9 +210,9 @@ public abstract class AbstractBytesTest extends TestBase {
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getColumnOffsetsSize(true);
+        requiredFreeSpace += columnWriter.getColumnOccupiedSpace(true);
         //Occupied space from previous writes
-        requiredFreeSpace += columnWriter.getOccupiedSpace();
+        requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //New tuple required space
         requiredFreeSpace += columnWriter.bytesRequired(tuple);
         return PAGE_SIZE <= requiredFreeSpace;

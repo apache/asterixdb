@@ -22,6 +22,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriterFlavorSelector;
 
 /**
  * Columnar Tuple Writer:
@@ -35,7 +37,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * - Initially, the writer has to set multiPageOp by calling {@link #init(IColumnWriteMultiPageOp)}
  * - For each write, the caller should check if adding a tuple does not exceed the {@link #getMaxNumberOfTuples()} or
  * the on-disk page size (called stopping condition)
- * - If the stopping condition is reached, then {@link #flush(ByteBuffer)} needed to be called
+ * - If the stopping condition is reached, then {@link #flush(ByteBuffer, IColumnPageZeroWriter)} needed to be called
  * <p>
  * Hyracks visibility:
  * - Columns are written as blobs (i.e., not interpretable by Hyracks)
@@ -54,7 +56,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
     /**
      * @return The current number of columns including the current tuple
      */
-    public abstract int getNumberOfColumns(boolean includeCurrentTupleColumns);
+    public abstract int getAbsoluteNumberOfColumns(boolean includeCurrentTupleColumns);
 
     /**
      * Currently, a column offset takes 4-byte (fixed). But in the future, we can reformat the offsets. For example,
@@ -62,9 +64,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return the size needed to store columns' offsets
      */
-    public final int getColumnOffsetsSize(boolean includeCurrentTupleColumns) {
-        return Integer.BYTES * getNumberOfColumns(includeCurrentTupleColumns);
-    }
+    public abstract int getColumnOccupiedSpace(boolean includeCurrentTupleColumns);
 
     /**
      * @return maximum number of tuples to be stored per page (i.e., page0)
@@ -74,7 +74,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
     /**
      * @return page0 occupied space
      */
-    public abstract int getOccupiedSpace();
+    public abstract int getPrimaryKeysEstimatedSize();
 
     /**
      * Writes the tuple into a temporary internal buffers
@@ -88,10 +88,22 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return total flushed length (including page zero)
      */
-    public abstract int flush(ByteBuffer pageZero) throws HyracksDataException;
+    public abstract int flush(ByteBuffer pageZero, IColumnPageZeroWriter columnPageZeroWriter)
+            throws HyracksDataException;
 
     /**
      * Close the current writer and release all allocated temporary buffers
      */
     public abstract void close();
+
+    /**
+     * reset the state after flush
+     */
+    public abstract void reset();
+
+    /**
+     * get the pageZero writer selector
+     * @return
+     */
+    public abstract IColumnPageZeroWriterFlavorSelector getColumnPageZeroWriterFlavorSelector();
 }
