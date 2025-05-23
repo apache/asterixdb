@@ -160,8 +160,8 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-all</artifactId>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.slf4j</groupId>

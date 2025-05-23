@@ -1305,6 +1305,8 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier ACCESS_NESTED_FIELD = FunctionConstants.newAsterix("access-nested-field", 2);
 
+    public static final FunctionIdentifier IF_ERROR = FunctionConstants.newAsterix("if-error", 2);
+
     static {
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
@@ -2161,6 +2163,7 @@ public class BuiltinFunctions {
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
         addFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
         // used by CBO's internal sampling queries for determining projection sizes
+        addPrivateFunction(IF_ERROR, AnyTypeComputer.INSTANCE, true);
 
         // external lookup
         addPrivateFunction(EXTERNAL_LOOKUP, AnyTypeComputer.INSTANCE, false);

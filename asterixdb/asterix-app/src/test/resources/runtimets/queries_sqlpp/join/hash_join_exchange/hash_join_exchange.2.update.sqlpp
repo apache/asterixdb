@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+INSERT INTO customer ({"c_id":2,"c_d_id":1,"c_w_id":1,"c_discount":0.3413,"c_credit":"GC","c_first":"jqmoaqly","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":4228533.790000002,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"ingngcunkfzoku","c_street_2":"sihqvjfhhphyd","c_city":"jtflodpnsmtn","c_state":"ps","c_zip":"640711111","c_phone":"8709221552477813","c_since":"2016-04-28 05:24:17","key":"1.1.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":2,"c_w_id":1,"c_discount":0.4472,"c_credit":"GC","c_first":"yupforh","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":2637344.5900000003,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"kfmblhsbdf","c_street_2":"ldmnvpzyzqpjgdldcxd","c_city":"jakerbxcuwmnfvqntd","c_state":"ft","c_zip":"377611111","c_phone":"2594721341099812","c_since":"2019-07-23 11:35:08","key":"1.2.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":3,"c_w_id":1,"c_discount":0.4549,"c_credit":"GC","c_first":"cdchdqts","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":2275392.5500000003,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"emwtajlhjyzigbxtll","c_street_2":"bsxxckrjkxvnx","c_city":"vuthjjchaubyurhxu","c_state":"ae","c_zip":"207611111","c_phone":"2223483665383895","c_since":"2015-01-10 09:13:11","key":"1.3.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":4,"c_w_id":1,"c_discount":0.2902,"c_credit":"BC","c_first":"dbxdynrsxq","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":-10.0,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"cdnrcokhecssszdxy","c_street_2":"owkrknkjxxeh","c_city":"dizrkudapnhlur","c_state":"ne","c_zip":"214211111","c_phone":"9527105621833116","c_since":"2019-09-30 04:41:34","key":"1.4.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":5,"c_w_id":1,"c_discount":0.1233,"c_credit":"GC","c_first":"xvaijyn","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":8318309.3500000015,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"tbjodrhupcwdyhiul","c_street_2":"fvbhntiihftymwkabbr","c_city":"cjlfuvcqvkg","c_state":"ng","c_zip":"417111111","c_phone":"5673180500149103","c_since":"2014-10-20 20:06:32","key":"1.5.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":6,"c_w_id":1,"c_discount":0.4838,"c_credit":"GC","c_first":"ikjojneh","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":6788632.1400000015,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"djtnknodfrkny","c_street_2":"iwarlwscxj","c_city":"eaixkpruvqiuhbqnpasf","c_state":"nl","c_zip":"461611111","c_phone":"7068147293579806","c_since":"2018-08-29 23:19:39","key":"1.6.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":7,"c_w_id":1,"c_discount":0.3469,"c_credit":"GC","c_first":"mqvlqra","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":-10.0,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"rcnecgnkrtpgkzrjap","c_street_2":"voabsdpbfuxusyiqs","c_city":"udtfebydicf","c_state":"am","c_zip":"528111111","c_phone":"3972476735934659","c_since":"2020-02-17 05:48:03","key":"1.7.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":8,"c_w_id":1,"c_discount":0.319,"c_credit":"GC","c_first":"hcmxoxvr","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":3253865.68,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"jrkgfusmekbbjygma","c_street_2":"ljkmhxyzyctxyrtlo","c_city":"uxceeygbpgjh","c_state":"he","c_zip":"111611111","c_phone":"3276574132758646","c_since":"2019-08-03 09:05:23","key":"1.8.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":9,"c_w_id":1,"c_discount":0.1118,"c_credit":"BC","c_first":"horovuvbi","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":-10.0,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"ikznzllcvcejsvsf","c_street_2":"lmaferykvzvnlck","c_city":"xzqhxyxkfwgd","c_state":"eu","c_zip":"130211111","c_phone":"3913647178718934","c_since":"2018-07-13 11:47:36","key":"1.9.2"});
+INSERT INTO customer ({"c_id":2,"c_d_id":10,"c_w_id":1,"c_discount":0.4349,"c_credit":"GC","c_first":"ghoevrth","c_middle":"OE","c_last":"BARBAROUGHT","c_credit_lim":50000.0,"c_balance":-10.0,"c_ytd_payment":10.0,"c_payment_cnt":1,"c_delivery_cnt":0,"c_street_1":"qvyasidzgzxzkf","c_street_2":"yyqlehcjsyoaf","c_city":"svnmulhzkp","c_state":"ni","c_zip":"302111111","c_phone":"0212917484161389","c_since":"2017-04-29 18:46:22","key":"1.10.2"});

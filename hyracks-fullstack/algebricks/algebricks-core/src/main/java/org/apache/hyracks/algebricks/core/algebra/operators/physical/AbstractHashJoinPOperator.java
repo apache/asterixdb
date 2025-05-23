@@ -143,21 +143,20 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     Set<LogicalVariable> firstDeliveredVars = unorderedFirstDelivered.getColumnSet();
                                     UnorderedPartitionedProperty unorderedRequired =
                                             (UnorderedPartitionedProperty) requirements;
-                                    Set<LogicalVariable> originalRequiredVars = unorderedRequired.getColumnSet();
                                     Set<LogicalVariable> modifiedRequiredVars = new ListSet<>();
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
                                     Set<LogicalVariable> coveredVars = new ListSet<>();
-                                    List<LogicalVariable> keysFirst =
-                                            (keysRightBranch.containsAll(originalRequiredVars)) ? keysRightBranch
-                                                    : keysLeftBranch;
+                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(firstDeliveredVars))
+                                            ? keysRightBranch : keysLeftBranch;
                                     List<LogicalVariable> keysSecond =
                                             keysFirst == keysRightBranch ? keysLeftBranch : keysRightBranch;
-                                    for (LogicalVariable r : originalRequiredVars) {
-                                        EquivalenceClass ecSnd = eqmap.get(r);
+                                    for (LogicalVariable r : firstDeliveredVars) {
+                                        EquivalenceClass ecFirst = eqmap.get(r);
                                         boolean found = false;
                                         int j = 0;
                                         for (LogicalVariable rvar : keysFirst) {
-                                            if (rvar == r || ecSnd != null && eqmap.get(rvar) == ecSnd) {
+                                            if (!modifiedRequiredVars.contains(keysSecond.get(j))
+                                                    && (rvar == r || (ecFirst != null && ecFirst == eqmap.get(rvar)))) {
                                                 found = true;
                                                 break;
                                             }
@@ -168,16 +167,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                                     + " among " + keysFirst);
                                         }
                                         LogicalVariable v2 = keysSecond.get(j);
-                                        EquivalenceClass ecFst = eqmap.get(v2);
-                                        for (LogicalVariable vset1 : firstDeliveredVars) {
-                                            if (vset1 == v2 || ecFst != null && eqmap.get(vset1) == ecFst) {
-                                                if (!coveredVars.add(vset1)) {
-                                                    continue;
-                                                }
-                                                modifiedRequiredVars.add(r);
-                                                break;
-                                            }
-                                        }
+                                        coveredVars.add(r);
+                                        modifiedRequiredVars.add(v2);
                                         if (coveredVars.equals(firstDeliveredVars)) {
                                             break;
                                         }

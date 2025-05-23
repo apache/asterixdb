@@ -1,0 +1,37 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+INSERT INTO orders ({"o_id":881,"o_c_id":2,"o_d_id":1,"o_w_id":1,"o_carrier_id":6,"o_ol_cnt":11});
+INSERT INTO orders ({"o_id":525,"o_c_id":2,"o_d_id":2,"o_w_id":1,"o_carrier_id":1,"o_ol_cnt":15});
+INSERT INTO orders ({"o_id":466,"o_c_id":2,"o_d_id":3,"o_w_id":1,"o_carrier_id":10,"o_ol_cnt":14});
+INSERT INTO orders ({"o_id":2449,"o_c_id":2,"o_d_id":4,"o_w_id":1,"o_carrier_id":0,"o_ol_cnt":15});
+INSERT INTO orders ({"o_id":1652,"o_c_id":2,"o_d_id":5,"o_w_id":1,"o_carrier_id":10,"o_ol_cnt":7});
+INSERT INTO orders ({"o_id":1350,"o_c_id":2,"o_d_id":6,"o_w_id":1,"o_carrier_id":8,"o_ol_cnt":9});
+INSERT INTO orders ({"o_id":2822,"o_c_id":2,"o_d_id":7,"o_w_id":1,"o_carrier_id":0,"o_ol_cnt":12});
+INSERT INTO orders ({"o_id":677,"o_c_id":2,"o_d_id":8,"o_w_id":1,"o_carrier_id":6,"o_ol_cnt":6});
+INSERT INTO orders ({"o_id":2851,"o_c_id":2,"o_d_id":9,"o_w_id":1,"o_carrier_id":0,"o_ol_cnt":12});
+INSERT INTO orders ({"o_id":2841,"o_c_id":2,"o_d_id":10,"o_w_id":1,"o_carrier_id":0,"o_ol_cnt":9});
+
+
+
+
+
+
+
