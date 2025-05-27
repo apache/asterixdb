@@ -94,8 +94,8 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
 
     @Override
     public void releaseAll() throws HyracksDataException {
-        while (!pages.isEmpty()) {
-            ICachedPage page = pages.poll();
+        ICachedPage page;
+        while ((page = pages.poll()) != null) {
             multiPageOp.unpin(page);
         }
     }

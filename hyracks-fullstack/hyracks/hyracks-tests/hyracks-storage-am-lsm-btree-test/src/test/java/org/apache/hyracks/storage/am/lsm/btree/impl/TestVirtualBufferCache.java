@@ -111,12 +111,12 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
         unpin(page, DEFAULT);
     }
 
     @Override
-    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) {
         vbc.unpin(page, context);
     }
 

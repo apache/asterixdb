@@ -105,7 +105,7 @@ public interface IBufferCache {
      *
      * @param page the page
      */
-    void unpin(ICachedPage page) throws HyracksDataException;
+    void unpin(ICachedPage page);
 
     /**
      * Unpin a page to indicate can be evicted
@@ -114,7 +114,7 @@ public interface IBufferCache {
      * @param page    the page
      * @param context read context
      */
-    void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException;
+    void unpin(ICachedPage page, IBufferCacheReadContext context);
 
     /**
      * Flush the page if it is dirty
