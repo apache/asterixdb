@@ -23,11 +23,13 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.io.request.ICloudRetryPredicate;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -168,4 +170,10 @@ public interface ICloudClient {
      * Performs any necessary closing and cleaning up
      */
     void close() throws HyracksDataException;
+
+    Predicate<Exception> getObjectNotFoundExceptionPredicate();
+
+    default ICloudRetryPredicate getRetryUnlessNotFound() {
+        return ex -> Predicate.not(getObjectNotFoundExceptionPredicate()).test(ex);
+    }
 }

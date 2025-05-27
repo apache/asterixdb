@@ -26,6 +26,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
 import org.apache.hyracks.cloud.io.request.ICloudRequest;
+import org.apache.hyracks.cloud.io.request.ICloudRetryPredicate;
 import org.apache.hyracks.cloud.io.request.ICloudReturnableRequest;
 import org.apache.hyracks.util.ExponentialRetryPolicy;
 import org.apache.hyracks.util.IRetryPolicy;
@@ -55,7 +56,8 @@ public class CloudRetryableRequestUtil {
     private static final int NUMBER_OF_RETRIES = getNumberOfRetries();
     private static final long MAX_DELAY_BETWEEN_RETRIES = getMaxDelayBetweenRetries();
 
-    private static final ICloudBeforeRetryRequest NO_OP_RETRY = () -> {
+    private static final ICloudRetryPredicate RETRY_ALWAYS_PREDICATE = e -> true;
+    private static final ICloudBeforeRetryRequest NO_OP_BEFORE_RETRY = () -> {
     };
 
     private CloudRetryableRequestUtil() {
@@ -67,7 +69,7 @@ public class CloudRetryableRequestUtil {
      * @param request request to run
      */
     public static void run(ICloudRequest request) throws HyracksDataException {
-        run(request, NO_OP_RETRY);
+        run(request, NO_OP_BEFORE_RETRY);
     }
 
     /**
@@ -89,7 +91,7 @@ public class CloudRetryableRequestUtil {
      * @return a value of return type
      */
     public static <T> T run(ICloudReturnableRequest<T> request) throws HyracksDataException {
-        return run(request, NO_OP_RETRY);
+        return run(request, NO_OP_BEFORE_RETRY);
     }
 
     /**
@@ -107,7 +109,7 @@ public class CloudRetryableRequestUtil {
         try {
             while (true) {
                 try {
-                    return doRun(request, retry);
+                    return doRun(request, retry, RETRY_ALWAYS_PREDICATE);
                 } catch (Throwable e) {
                     // First, clear the interrupted flag
                     interrupted |= Thread.interrupted();
@@ -135,7 +137,7 @@ public class CloudRetryableRequestUtil {
      * @param request request to run
      */
     public static void runWithNoRetryOnInterruption(ICloudRequest request) throws HyracksDataException {
-        doRun(request, NO_OP_RETRY);
+        runWithNoRetryOnInterruption(request, RETRY_ALWAYS_PREDICATE);
     }
 
     /**
@@ -151,14 +153,41 @@ public class CloudRetryableRequestUtil {
         doRun(request, retry);
     }
 
-    private static <T> T doRun(ICloudReturnableRequest<T> request, ICloudBeforeRetryRequest retry)
+    public static void runWithNoRetryOnInterruption(ICloudRequest request, ICloudRetryPredicate shouldRetry)
             throws HyracksDataException {
+        doRun(request, NO_OP_BEFORE_RETRY, shouldRetry);
+    }
+
+    public static <T> T runWithNoRetryOnInterruption(ICloudReturnableRequest<T> request) throws HyracksDataException {
+        return runWithNoRetryOnInterruption(request, NO_OP_BEFORE_RETRY, RETRY_ALWAYS_PREDICATE);
+    }
+
+    public static <T> T runWithNoRetryOnInterruption(ICloudReturnableRequest<T> request, ICloudBeforeRetryRequest retry)
+            throws HyracksDataException {
+        return runWithNoRetryOnInterruption(request, retry, RETRY_ALWAYS_PREDICATE);
+    }
+
+    public static <T> T runWithNoRetryOnInterruption(ICloudReturnableRequest<T> request,
+            ICloudRetryPredicate shouldRetry) throws HyracksDataException {
+        return runWithNoRetryOnInterruption(request, NO_OP_BEFORE_RETRY, shouldRetry);
+    }
+
+    public static <T> T runWithNoRetryOnInterruption(ICloudReturnableRequest<T> request, ICloudBeforeRetryRequest retry,
+            ICloudRetryPredicate shouldRetry) throws HyracksDataException {
+        return doRun(request, retry, shouldRetry);
+    }
+
+    private static <T> T doRun(ICloudReturnableRequest<T> request, ICloudBeforeRetryRequest retry,
+            ICloudRetryPredicate shouldRetry) throws HyracksDataException {
         int attempt = 1;
         IRetryPolicy retryPolicy = null;
         while (true) {
             try {
                 return request.call();
             } catch (IOException | BaseServiceException | SdkException e) {
+                if (!shouldRetry.test(e)) {
+                    throw HyracksDataException.create(e);
+                }
                 if (retryPolicy == null) {
                     retryPolicy = new ExponentialRetryPolicy(NUMBER_OF_RETRIES, MAX_DELAY_BETWEEN_RETRIES);
                 }
@@ -182,7 +211,12 @@ public class CloudRetryableRequestUtil {
     }
 
     private static void doRun(ICloudRequest request, ICloudBeforeRetryRequest retry) throws HyracksDataException {
-        doRun(asReturnableRequest(request), retry);
+        doRun(request, retry, RETRY_ALWAYS_PREDICATE);
+    }
+
+    private static void doRun(ICloudRequest request, ICloudBeforeRetryRequest retry, ICloudRetryPredicate shouldRetry)
+            throws HyracksDataException {
+        doRun(asReturnableRequest(request), retry, shouldRetry);
     }
 
     private static int getNumberOfRetries() {

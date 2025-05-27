@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.writer;
 
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+import static org.apache.hyracks.cloud.util.CloudRetryableRequestUtil.runWithNoRetryOnInterruption;
 
 import org.apache.asterix.cloud.CloudOutputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -33,6 +34,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.cloud.io.request.ICloudRequest;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 import com.google.common.base.Utf8;
@@ -60,7 +62,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public final void open() throws HyracksDataException {
-        printer.open();
+        runWithRetryIfSdkException(printer::open);
     }
 
     @Override
@@ -69,7 +71,8 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             return;
         }
 
-        if (partitionedPath && !cloudClient.isEmptyPrefix(bucket, directory)) {
+        boolean emptyPrefix = runWithNoRetryOnInterruption(() -> cloudClient.isEmptyPrefix(bucket, directory));
+        if (partitionedPath && !emptyPrefix) {
             throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, directory);
         }
     }
@@ -91,7 +94,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     @Override
     public final void write(IValueReference value) throws HyracksDataException {
         try {
-            printer.print(value);
+            runWithRetryIfSdkException(() -> printer.print(value));
         } catch (HyracksDataException e) {
             throw e;
         } catch (Exception e) {
@@ -106,9 +109,9 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     public final void abort() throws HyracksDataException {
         try {
             if (cloudWriter != null) {
-                cloudWriter.abort();
+                runWithRetryIfSdkException(cloudWriter::abort);
             }
-            printer.close();
+            runWithRetryIfSdkException(printer::close);
         } catch (HyracksDataException e) {
             throw e;
         } catch (Exception e) {
@@ -122,7 +125,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     @Override
     public final void close() throws HyracksDataException {
         try {
-            printer.close();
+            runWithRetryIfSdkException(printer::close);
         } catch (HyracksDataException e) {
             throw e;
         } catch (Exception e) {
@@ -138,6 +141,10 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     abstract int getPathMaxLengthInBytes();
 
     abstract boolean isSdkException(Exception e);
+
+    private void runWithRetryIfSdkException(ICloudRequest request) throws HyracksDataException {
+        runWithNoRetryOnInterruption(request, this::isSdkException);
+    }
 
     private boolean checkAndWarnExceedingMaxLength(String fullPath) {
         boolean exceeding = isExceedingMaxLength(fullPath, getPathMaxLengthInBytes());

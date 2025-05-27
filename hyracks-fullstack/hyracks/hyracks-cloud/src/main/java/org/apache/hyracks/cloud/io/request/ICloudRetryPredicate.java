@@ -18,18 +18,12 @@
  */
 package org.apache.hyracks.cloud.io.request;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
+import java.util.function.Predicate;
 
 /**
- * Certain cloud requests require some cleanup (or restoring a state) before a retry is performed.
- * An implementation of This interface should be provided if such clean is required when
- * reattempting a request using {@link CloudRetryableRequestUtil}
+ * An interface for a condition that determines whether a cloud operation should stop or not.
+ * If met, the encountered exception is re-thrown as root cause in HyracksDataException
  */
 @FunctionalInterface
-public interface ICloudBeforeRetryRequest {
-    /**
-     * Run pre-retry routine before reattempting {@link ICloudRequest} or {@link ICloudReturnableRequest}
-     */
-    void beforeRetry() throws HyracksDataException;
+public interface ICloudRetryPredicate extends Predicate<Exception> {
 }
