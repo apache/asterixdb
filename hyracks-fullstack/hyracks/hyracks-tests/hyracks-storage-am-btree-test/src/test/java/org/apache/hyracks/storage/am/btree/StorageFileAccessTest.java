@@ -143,31 +143,27 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
 
         private void unpinRandomPage() {
             int index = Math.abs(rnd.nextInt() % pinnedPages.size());
-            try {
-                PinnedLatchedPage plPage = pinnedPages.get(index);
+            PinnedLatchedPage plPage = pinnedPages.get(index);
 
-                if (plPage.latch != null) {
-                    if (plPage.latch == LatchType.LATCH_S) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(workerId + " S UNLATCHING: " + plPage.pageId);
-                        }
-                        plPage.page.releaseReadLatch();
-                    } else {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
-                        }
-                        plPage.page.releaseWriteLatch(true);
+            if (plPage.latch != null) {
+                if (plPage.latch == LatchType.LATCH_S) {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(workerId + " S UNLATCHING: " + plPage.pageId);
                     }
+                    plPage.page.releaseReadLatch();
+                } else {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
+                    }
+                    plPage.page.releaseWriteLatch(true);
                 }
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(workerId + " UNPINNING PAGE: " + plPage.pageId);
-                }
-
-                bufferCache.unpin(plPage.page);
-                pinnedPages.remove(index);
-            } catch (HyracksDataException e) {
-                e.printStackTrace();
             }
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(workerId + " UNPINNING PAGE: " + plPage.pageId);
+            }
+
+            bufferCache.unpin(plPage.page);
+            pinnedPages.remove(index);
         }
 
         private void openFile() {

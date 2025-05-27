@@ -70,7 +70,7 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
         vbc.unpin(page);
     }
 

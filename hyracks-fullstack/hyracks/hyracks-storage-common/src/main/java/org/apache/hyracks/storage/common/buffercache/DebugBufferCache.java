@@ -84,7 +84,7 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
         bufferCache.unpin(page);
         unpinCount.addAndGet(1);
     }

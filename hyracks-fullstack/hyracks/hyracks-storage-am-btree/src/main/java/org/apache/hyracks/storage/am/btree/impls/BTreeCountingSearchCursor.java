@@ -108,13 +108,14 @@ public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements IT
         stopTupleIndex = getHighKeyIndex();
     }
 
-    private void releasePage() throws HyracksDataException {
+    private void releasePage() {
         if (exclusiveLatchNodes) {
             page.releaseWriteLatch(isPageDirty);
         } else {
             page.releaseReadLatch();
         }
         bufferCache.unpin(page);
+        page = null;
     }
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
@@ -218,7 +219,6 @@ public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements IT
         }
         tupleBuilder.reset();
         tupleIndex = 0;
-        page = null;
         isPageDirty = false;
         pred = null;
         count = -1;

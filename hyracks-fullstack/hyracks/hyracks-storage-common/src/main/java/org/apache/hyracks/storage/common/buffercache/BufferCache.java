@@ -573,9 +573,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
         if (closed) {
-            throw new HyracksDataException("unpin called on a closed cache");
+            throw new IllegalStateException("unpin called on a closed cache");
         }
         int pinCount = ((CachedPage) page).decrementAndGetPinCount();
         if (DEBUG && pinCount == 0) {

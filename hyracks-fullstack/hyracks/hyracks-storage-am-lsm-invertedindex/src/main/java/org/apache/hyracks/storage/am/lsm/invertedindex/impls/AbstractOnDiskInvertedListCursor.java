@@ -219,6 +219,7 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
 
             currentBufferIdx++;
             bufferCache.unpin(page);
+            page = null;
             bufferEndPageId = i;
 
             // Buffer full?

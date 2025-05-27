@@ -317,7 +317,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
     }
 
     @Override

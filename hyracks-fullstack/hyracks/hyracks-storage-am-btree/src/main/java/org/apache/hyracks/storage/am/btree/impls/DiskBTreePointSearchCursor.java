@@ -69,7 +69,6 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
         originalKeyCmp = initialState.getOriginalKeyComparator();
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
         page = initialState.getPage();
-        isPageDirty = false;
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
