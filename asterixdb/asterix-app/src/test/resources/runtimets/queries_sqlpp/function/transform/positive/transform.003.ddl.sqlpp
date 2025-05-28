@@ -18,8 +18,6 @@
  */
 use test;
 
--- Fail: Using a collection in the definition
-
 CREATE TRANSFORM FUNCTION transformTest3(doc) {
     SELECT * FROM [doc] t UNNEST t.a LIMIT 1
 };

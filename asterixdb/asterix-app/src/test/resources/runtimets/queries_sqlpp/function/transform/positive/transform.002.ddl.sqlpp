@@ -18,8 +18,6 @@
  */
 use test;
 
--- Fail: Less than one argument
-
 CREATE TRANSFORM FUNCTION transformTest2(doc) {
     SELECT (SELECT * FROM [doc] t UNNEST t.a) as tt
 };

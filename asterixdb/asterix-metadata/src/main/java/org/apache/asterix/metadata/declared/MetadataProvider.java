@@ -2033,4 +2033,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             off += Character.charCount(codePointChar);
         }
     }
+
+    public List<Dataset> getAllDatasets() throws AlgebricksException {
+        return MetadataManager.INSTANCE.getAllDatasets(mdTxnCtx);
+    }
 }

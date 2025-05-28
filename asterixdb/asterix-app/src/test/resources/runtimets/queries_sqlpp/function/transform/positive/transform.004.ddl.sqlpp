@@ -18,8 +18,6 @@
  */
 use test;
 
--- Fail: Using a view in the definition
-
 CREATE TRANSFORM FUNCTION transformTest4(cust) {
     SELECT VALUE c
       FROM [cust] AS c

@@ -18,8 +18,6 @@
  */
 use test;
 
--- Fail: More than one argument
-
 CREATE TRANSFORM FUNCTION transformTest1(doc) {
     SELECT count(*) as count FROM [doc] t UNNEST t.a
 };

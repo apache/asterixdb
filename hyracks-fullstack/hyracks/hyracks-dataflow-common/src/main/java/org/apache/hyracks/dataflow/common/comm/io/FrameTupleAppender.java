@@ -299,5 +299,4 @@ public class FrameTupleAppender extends AbstractFrameAppender implements IFrameT
         }
         return false;
     }
-
 }

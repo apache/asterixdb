@@ -488,6 +488,16 @@ abstract class LangExpressionToPlanTranslator
         return isFileStore ? String.valueOf(ExternalWriterProvider.getSeparator(adapter)) : "";
     }
 
+    private LogicalVariable getUnnestVar(ILogicalOperator op) {
+        while (op.getOperatorTag() != LogicalOperatorTag.UNNEST && !op.getInputs().isEmpty()) {
+            op = op.getInputs().get(0).getValue();
+        }
+        if (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            return ((UnnestOperator) op).getVariable();
+        }
+        return null;
+    }
+
     public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,
             ILogicalOperator baseOp, IResultMetadata resultMetadata) throws AlgebricksException {
         MutableObject<ILogicalOperator> base = new MutableObject<>(new EmptyTupleSourceOperator());
@@ -500,8 +510,11 @@ abstract class LangExpressionToPlanTranslator
         ILogicalOperator topOp = p.first;
         List<LogicalVariable> liveVars = new ArrayList<>();
         VariableUtilities.getLiveVariables(topOp, liveVars);
-        LogicalVariable unnestVar = liveVars.get(0);
-        LogicalVariable resVar = unnestVar;
+        LogicalVariable unnestVar = getUnnestVar(topOp);
+        if (unnestVar == null) {
+            unnestVar = liveVars.get(0);
+        }
+        LogicalVariable resVar = liveVars.get(0);
 
         if (outputDatasetName == null) {
             FileSplit outputFileSplit = metadataProvider.getOutputFile();

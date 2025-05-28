@@ -48,6 +48,7 @@ public class AbstractFrameAppender implements IFrameAppender {
 
     protected int tupleCount;
     protected int tupleDataEndOffset;
+    protected boolean ignoreFailures = false;
 
     @Override
     public void reset(IFrame frame, boolean clear) throws HyracksDataException {
@@ -91,10 +92,21 @@ public class AbstractFrameAppender implements IFrameAppender {
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         failIfInterrupted();
         getBuffer().clear();
-        outWriter.nextFrame(getBuffer());
-        if (clearFrame) {
-            frame.reset();
-            reset(getBuffer(), true);
+        if (!ignoreFailures) {
+            outWriter.nextFrame(getBuffer());
+            if (clearFrame) {
+                frame.reset();
+                reset(getBuffer(), true);
+            }
+        } else {
+            try {
+                outWriter.nextFrame(getBuffer());
+            } finally {
+                if (clearFrame) {
+                    frame.reset();
+                    reset(getBuffer(), true);
+                }
+            }
         }
     }
 
@@ -124,5 +136,13 @@ public class AbstractFrameAppender implements IFrameAppender {
         if (Thread.currentThread().isInterrupted()) {
             throw HyracksDataException.create(new InterruptedException());
         }
+    }
+
+    public void setIgnoreFailures(boolean ignoreFailures) {
+        this.ignoreFailures = ignoreFailures;
+    }
+
+    public boolean isIgnoreFailures() {
+        return ignoreFailures;
     }
 }
