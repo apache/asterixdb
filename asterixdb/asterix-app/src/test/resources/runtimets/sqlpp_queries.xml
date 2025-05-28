@@ -11711,6 +11711,16 @@
         <expected-warn>Function 'position1' failed to evaluate because: Decoding error - got a low surrogate without a leading high surrogate</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="pad/lpad">
+        <output-dir compare="Text">pad/lpad</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="pad/rpad">
+        <output-dir compare="Text">pad/rpad</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subquery">
     <test-case FilePath="subquery">

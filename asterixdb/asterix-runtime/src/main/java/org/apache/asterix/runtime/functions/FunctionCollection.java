@@ -483,6 +483,7 @@ import org.apache.asterix.runtime.evaluators.functions.StringLTrimDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringLengthDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringLikeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringLowerCaseDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringLpadDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringPositionOffset1Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRTrim2Descriptor;
@@ -503,6 +504,7 @@ import org.apache.asterix.runtime.evaluators.functions.StringRepeatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceWithLimitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReverseDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringRpadDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringSplitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringStartsWithDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
@@ -1146,6 +1148,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(StringReplaceWithLimitDescriptor.FACTORY);
         fc.add(StringReverseDescriptor.FACTORY);
         fc.add(StringSplitDescriptor.FACTORY);
+        fc.add(StringLpadDescriptor.FACTORY);
+        fc.add(StringRpadDescriptor.FACTORY);
 
         // Constructors
         fc.add(ABooleanConstructorDescriptor.FACTORY);

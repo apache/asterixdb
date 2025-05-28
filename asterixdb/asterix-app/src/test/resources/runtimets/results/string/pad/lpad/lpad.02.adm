@@ -1,0 +1,1 @@
+{ "padded_to_11_codepoints": "$&^$asterix", "truncated_to_2_codepoints": "👩‍", "padded_to_10_codepoints": "👩‍👩‍👩‍👩‍👧‍", "padded_to_null_is_null": null, "padded_non_str": null, "negative_length": null }

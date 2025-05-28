@@ -398,6 +398,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier STRING_REPEAT = FunctionConstants.newAsterix("repeat", 2);
     public static final FunctionIdentifier STRING_SPLIT = FunctionConstants.newAsterix("split", 2);
     public static final FunctionIdentifier STRING_PARSE_JSON = FunctionConstants.newAsterix("parse-json", 1);
+    public static final FunctionIdentifier STRING_LPAD = FunctionConstants.newAsterix("lpad", 3);
+    public static final FunctionIdentifier STRING_RPAD = FunctionConstants.newAsterix("rpad", 3);
 
     public static final FunctionIdentifier DATASET =
             FunctionConstants.newAsterix("dataset", FunctionIdentifier.VARARGS); // 1, 2 or 3
@@ -1343,7 +1345,6 @@ public class BuiltinFunctions {
         addFunction(NOT, ABooleanTypeComputer.INSTANCE, true);
 
         addFunction(GET_TYPE, AStringTypeComputer.INSTANCE, true);
-
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(LE, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(GE, BooleanFunctionTypeComputer.INSTANCE, true);
@@ -1540,6 +1541,8 @@ public class BuiltinFunctions {
         addFunction(STRING_REPEAT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_SPLIT, UniformInputTypeComputer.STRING_STRING_LIST_INSTANCE, true);
         addFunction(STRING_PARSE_JSON, AnyTypeComputer.INSTANCE, true);
+        addFunction(STRING_LPAD, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(STRING_RPAD, AStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(POINT_CONSTRUCTOR, APointTypeComputer.INSTANCE, true);

@@ -474,6 +474,25 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return true;
     }
 
+    /*
+     * Appends {@code numCodePoints} code points from the given source string {@code src} to the {@code builder}.
+     * {@code src} is shorter than {@code numCodePoints}, it repeats from the beginning of {@code src} as needed
+     * until the required number of code points have been appended.
+     */
+    public static void append(UTF8StringPointable src, int numCodePoints, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        int utfLen = src.getUTF8Length();
+        int byteIdx = 0;
+        while (numCodePoints > 0) {
+            if (byteIdx == utfLen) {
+                byteIdx = 0;
+            }
+            builder.appendCodePoint(src.codePointAt(src.getMetaDataLength() + byteIdx));
+            numCodePoints--;
+            byteIdx += src.codePointSize(src.getMetaDataLength() + byteIdx);
+        }
+    }
+
     public void substrBefore(UTF8StringPointable match, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
         substrBefore(this, match, builder, out);
