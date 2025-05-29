@@ -4019,6 +4019,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="crypto">
+    <test-case FilePath="crypto">
+      <compilation-unit name="sha1">
+        <output-dir compare="Text">sha1</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="custord">
     <!--
     <test-case FilePath="custord">
@@ -9655,6 +9662,11 @@
     <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="from_base">
+        <output-dir compare="Text">from_base</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

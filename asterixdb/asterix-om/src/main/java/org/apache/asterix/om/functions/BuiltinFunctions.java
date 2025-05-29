@@ -1307,6 +1307,12 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier IF_ERROR = FunctionConstants.newAsterix("if-error", 2);
 
+    // crypto
+    public static final FunctionIdentifier SHA1_HEX = FunctionConstants.newAsterix("sha1-hex", 1);
+    public static final FunctionIdentifier SHA1_BASE64 = FunctionConstants.newAsterix("sha1-base64", 1);
+
+    public static final FunctionIdentifier FROM_BASE = FunctionConstants.newAsterix("from-base", 2);
+
     static {
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
@@ -2180,6 +2186,11 @@ public class BuiltinFunctions {
         addPrivateFunction(ACCESS_FIELD, FieldAccessByNameResultType.INSTANCE, false);
         addPrivateFunction(ACCESS_NESTED_FIELD, FieldAccessNestedResultType.INSTANCE, false);
 
+        // crypto
+        addFunction(SHA1_HEX, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(SHA1_BASE64, AStringTypeComputer.INSTANCE_NULLABLE, true);
+
+        addFunction(FROM_BASE, AInt64TypeComputer.INSTANCE_NULLABLE, true);
     }
 
     static {

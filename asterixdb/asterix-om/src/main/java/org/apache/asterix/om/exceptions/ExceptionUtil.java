@@ -93,6 +93,15 @@ public final class ExceptionUtil {
         }
     }
 
+    public static void warnValueOutOfRange(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
+            int inputPosition, int lowerBound, int upperBound, int actual) {
+        IWarningCollector warningCollector = ctx.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(srcLoc, ErrorCode.VALUE_OUT_OF_RANGE, fid,
+                    ExceptionUtil.indexToPosition(inputPosition), lowerBound, upperBound, actual));
+        }
+    }
+
     public static void warnTypeMismatch(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
             byte actualType, int argIdx, ATypeTag expectedType) {
         warnTypeMismatch(ctx, srcLoc, fid, actualType, argIdx, expectedType::toString);

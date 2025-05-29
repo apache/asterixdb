@@ -382,6 +382,7 @@ import org.apache.asterix.runtime.evaluators.functions.CreateRectangleDescriptor
 import org.apache.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DecodeDataverseNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DeepEqualityDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FromBaseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetIntersectionDescriptor;
@@ -464,6 +465,8 @@ import org.apache.asterix.runtime.evaluators.functions.RandomDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomWithSeedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ReferenceTileDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SerializedSizeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.Sha1Base64Descriptor;
+import org.apache.asterix.runtime.evaluators.functions.Sha1HexDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
@@ -1056,6 +1059,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(NumericSignDescriptor.FACTORY);
         fc.add(NumericTruncDescriptor.FACTORY);
         fc.add(NumericATan2Descriptor.FACTORY);
+        fc.add(FromBaseDescriptor.FACTORY);
 
         // Comparisons.
         fc.add(EqualsDescriptor.FACTORY);
@@ -1356,6 +1360,10 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // Record function
         fc.add(RecordPairsDescriptor.FACTORY);
+
+        // Crypto functions
+        fc.add(Sha1HexDescriptor.FACTORY);
+        fc.add(Sha1Base64Descriptor.FACTORY);
 
         // Other functions
         fc.add(DecodeDataverseNameDescriptor.FACTORY);
