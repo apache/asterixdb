@@ -1017,4 +1017,6 @@ public interface IMetadataNode extends Remote, Serializable {
 
     List<FeedConnection> getFeedConnections(TxnId txnId, String database, DataverseName dataverseName, String feedName)
             throws AlgebricksException, RemoteException;
+
+    List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException, RemoteException;
 }

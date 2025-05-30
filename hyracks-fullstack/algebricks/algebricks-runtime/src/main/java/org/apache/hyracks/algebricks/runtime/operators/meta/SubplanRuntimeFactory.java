@@ -90,6 +90,22 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         return pipelines;
     }
 
+    public RecordDescriptor getInputRecordDesc() {
+        return inputRecordDesc;
+    }
+
+    public RecordDescriptor getOutputRecordDesc() {
+        return outputRecordDesc;
+    }
+
+    public IMissingWriterFactory[] getMissingWriterFactories() {
+        return missingWriterFactories;
+    }
+
+    public Map<IPushRuntimeFactory, IOperatorStats> getStats() {
+        return stats;
+    }
+
     public void setStats(Map<IPushRuntimeFactory, IOperatorStats> stats) {
         this.stats.putAll(stats);
     }
@@ -97,20 +113,20 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
-        return new SubplanPushRuntime(ctx);
+        return new SubplanPushRuntime(ctx, false);
     }
 
-    private class SubplanPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
+    public class SubplanPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
-        final IHyracksTaskContext ctx;
+        protected final IHyracksTaskContext ctx;
 
-        final NestedTupleSourceRuntime[] startOfPipelines;
+        protected final NestedTupleSourceRuntime[] startOfPipelines;
 
         boolean first;
 
         boolean profile;
 
-        SubplanPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+        protected SubplanPushRuntime(IHyracksTaskContext ctx, boolean ignoreFailures) throws HyracksDataException {
             this.ctx = ctx;
             this.profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
             this.first = true;
@@ -150,7 +166,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     outputRecordDescriptor = pipelineLastRecordDescriptor;
                 }
 
-                PipelineAssembler pa = new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, outputRecordDescriptor);
+                PipelineAssembler pa =
+                        new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, outputRecordDescriptor, ignoreFailures);
                 IFrameWriter head = pa.assemblePipeline(outputWriter, ctx, stats);
                 startOfPipelines[i] = (NestedTupleSourceRuntime) head;
                 pipelineAssemblers[i] = pa;

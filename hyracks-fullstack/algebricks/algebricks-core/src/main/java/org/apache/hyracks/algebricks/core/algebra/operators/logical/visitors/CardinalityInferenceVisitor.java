@@ -84,15 +84,15 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * 5. the cardinality is some unknown value.
  */
 public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long, Void> {
-    private static final long ZERO_OR_ONE = 0L;
-    private static final long ONE = 1L;
-    private static final long ZERO_OR_ONE_GROUP = 2L;
-    private static final long ONE_GROUP = 3L;
-    private static final long UNKNOWN = 100L; // so it fits into the auto-boxing cache
+    protected static final long ZERO_OR_ONE = 0L;
+    protected static final long ONE = 1L;
+    protected static final long ZERO_OR_ONE_GROUP = 2L;
+    protected static final long ONE_GROUP = 3L;
+    protected static final long UNKNOWN = 100L; // so it fits into the auto-boxing cache
 
     private final Set<LogicalVariable> keyVariables = new HashSet<>();
 
-    private CardinalityInferenceVisitor() {
+    public CardinalityInferenceVisitor() {
     }
 
     @Override
@@ -379,7 +379,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
     }
 
     // For operators including SELECT and LIMIT.
-    private long adjustCardinalityForTupleReductionOperator(long inputCardinality) {
+    protected long adjustCardinalityForTupleReductionOperator(long inputCardinality) {
         if (inputCardinality == ONE) {
             return ZERO_OR_ONE;
         }

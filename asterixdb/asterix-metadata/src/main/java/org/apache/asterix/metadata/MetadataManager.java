@@ -689,12 +689,6 @@ public abstract class MetadataManager implements IMetadataManager {
             // in the cache.
             return null;
         }
-        //TODO(DB): review this and other similar ones
-        if (ctx.getDataverse(functionSignature.getDatabaseName(), functionSignature.getDataverseName()) != null) {
-            // This transaction has dropped and subsequently created the same
-            // dataverse.
-            return null;
-        }
         function = cache.getFunction(functionSignature);
         if (function != null) {
             // Function is already in the cache, don't add it again.
@@ -1346,6 +1340,15 @@ public abstract class MetadataManager implements IMetadataManager {
 
     public static void initialize(Collection<IAsterixStateProxy> proxies, MetadataNode metadataNode) {
         INSTANCE = new NCMetadataManagerImpl(proxies, metadataNode);
+    }
+
+    @Override
+    public List<Dataset> getAllDatasets(MetadataTransactionContext ctx) throws AlgebricksException {
+        try {
+            return metadataNode.getAllDatasets(ctx.getTxnId());
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
     }
 
     private static class CCMetadataManagerImpl extends MetadataManager {

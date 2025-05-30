@@ -52,8 +52,8 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     private static final long serialVersionUID = 1L;
 
-    private final int outCol;
-    private final int positionalCol;
+    protected final int outCol;
+    protected final int positionalCol;
     private final IUnnestingEvaluatorFactory unnestingFactory;
     private final IUnnestingPositionWriterFactory positionWriterFactory;
     private final boolean leftOuter;
@@ -76,6 +76,26 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         this.missingWriterFactory = missingWriterFactory;
     }
 
+    public int[] getProjectionList() {
+        return projectionList;
+    }
+
+    public int getOutCol() {
+        return outCol;
+    }
+
+    public int getPositionalCol() {
+        return positionalCol;
+    }
+
+    public IUnnestingEvaluatorFactory getUnnestingFactory() {
+        return unnestingFactory;
+    }
+
+    public IUnnestingPositionWriterFactory getPositionWriterFactory() {
+        return positionWriterFactory;
+    }
+
     @Override
     public String toString() {
         return "unnest " + outCol + (positionalCol >= 0 ? " at " + positionalCol : "") + " <- " + unnestingFactory
@@ -85,89 +105,99 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
-        ByteArrayAccessibleOutputStream missingBytes = leftOuter ? writeMissingBytes() : null;
-        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
-        return new AbstractOneInputOneOutputOneFramePushRuntime() {
-            private IPointable p = VoidPointable.FACTORY.createPointable();
-            private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
-            private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(evalCtx);
-            private final IUnnestingPositionWriter positionWriter =
-                    positionWriterFactory != null ? positionWriterFactory.createUnnestingPositionWriter() : null;
-
-            @Override
-            public void open() throws HyracksDataException {
-                super.open();
-                if (tRef == null) {
-                    initAccessAppendRef(ctx);
-                }
-            }
-
-            @Override
-            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                tAccess.reset(buffer);
-                int nTuple = tAccess.getTupleCount();
-                for (int t = 0; t < nTuple; t++) {
-                    tRef.reset(tAccess, t);
-                    try {
-                        unnest.init(tRef);
-                        unnesting(t);
-                    } catch (IOException ae) {
-                        throw HyracksDataException.create(ae);
-                    }
-                }
-            }
-
-            private void unnesting(int t) throws IOException {
-                // Assumes that when unnesting the tuple, each step() call for each element
-                // in the tuple will increase the positionIndex, and the positionIndex will
-                // be reset when a new tuple is to be processed.
-                int positionIndex = 1;
-                boolean emitted = false;
-                do {
-                    if (!unnest.step(p)) {
-                        break;
-                    }
-                    writeOutput(t, positionIndex++, false);
-                    emitted = true;
-                } while (true);
-                if (leftOuter && !emitted) {
-                    writeOutput(t, -1, true);
-                }
-            }
-
-            private void writeOutput(int t, int positionIndex, boolean missing)
-                    throws HyracksDataException, IOException {
-                tupleBuilder.reset();
-                for (int f = 0; f < projectionList.length; f++) {
-                    int col = projectionList[f];
-                    if (col == outCol) {
-                        if (missing) {
-                            tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
-                        } else {
-                            tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
-                        }
-                    } else if (col == positionalCol) {
-                        if (missing) {
-                            tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
-                        } else {
-                            positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
-                            tupleBuilder.addFieldEndOffset();
-                        }
-                    } else {
-                        tupleBuilder.addField(tAccess, t, projectionList[f]);
-                    }
-                }
-                appendToFrameFromTupleBuilder(tupleBuilder);
-            }
-
-            @Override
-            public void flush() throws HyracksDataException {
-                appender.flush(writer);
-            }
-        };
+        return new UnnestPushRuntime(ctx);
     }
 
-    private ByteArrayAccessibleOutputStream writeMissingBytes() throws HyracksDataException {
+    public class UnnestPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
+        private IPointable p = VoidPointable.FACTORY.createPointable();
+        protected ArrayTupleBuilder tupleBuilder;
+        protected IUnnestingEvaluator unnest;
+        private final IUnnestingPositionWriter positionWriter;
+        private final IHyracksTaskContext ctx;
+        protected ByteArrayAccessibleOutputStream missingBytes;
+
+        public UnnestPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+            this.ctx = ctx;
+            IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
+            unnest = unnestingFactory.createUnnestingEvaluator(evalCtx);
+            tupleBuilder = new ArrayTupleBuilder(projectionList.length);
+            positionWriter =
+                    positionWriterFactory != null ? positionWriterFactory.createUnnestingPositionWriter() : null;
+            missingBytes = leftOuter ? writeMissingBytes() : null;
+        }
+
+        @Override
+        public void open() throws HyracksDataException {
+            super.open();
+            if (tRef == null) {
+                initAccessAppendRef(ctx);
+            }
+        }
+
+        @Override
+        public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+            tAccess.reset(buffer);
+            int nTuple = tAccess.getTupleCount();
+            for (int t = 0; t < nTuple; t++) {
+                tRef.reset(tAccess, t);
+                try {
+                    unnest.init(tRef);
+                    unnesting(t);
+                } catch (IOException ae) {
+                    throw HyracksDataException.create(ae);
+                }
+            }
+        }
+
+        protected void unnesting(int t) throws IOException {
+            // Assumes that when unnesting the tuple, each step() call for each element
+            // in the tuple will increase the positionIndex, and the positionIndex will
+            // be reset when a new tuple is to be processed.
+            int positionIndex = 1;
+            boolean emitted = false;
+            do {
+                if (!unnest.step(p)) {
+                    break;
+                }
+                writeOutput(t, positionIndex++, false);
+                emitted = true;
+            } while (true);
+            if (leftOuter && !emitted) {
+                writeOutput(t, -1, true);
+            }
+        }
+
+        private void writeOutput(int t, int positionIndex, boolean missing) throws HyracksDataException, IOException {
+            tupleBuilder.reset();
+            for (int f = 0; f < projectionList.length; f++) {
+                int col = projectionList[f];
+                if (col == outCol) {
+                    if (missing) {
+                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
+                    } else {
+                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
+                    }
+                } else if (col == positionalCol) {
+                    if (missing) {
+                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
+                    } else {
+                        positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
+                        tupleBuilder.addFieldEndOffset();
+                    }
+                } else {
+                    tupleBuilder.addField(tAccess, t, projectionList[f]);
+                }
+            }
+            appendToFrameFromTupleBuilder(tupleBuilder);
+        }
+
+        @Override
+        public void flush() throws HyracksDataException {
+            appender.flush(writer);
+        }
+    };
+
+    protected ByteArrayAccessibleOutputStream writeMissingBytes() throws HyracksDataException {
         ByteArrayAccessibleOutputStream baos = new ByteArrayAccessibleOutputStream();
         IMissingWriter missingWriter = missingWriterFactory.createMissingWriter();
         missingWriter.writeMissing(new DataOutputStream(baos));

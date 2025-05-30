@@ -34,13 +34,20 @@ public class FunctionDecl extends AbstractStatement {
     private Expression funcBody;
     private Expression funcBodyNormalized;
     private final boolean isStored;
+    private final boolean transform;
 
     public FunctionDecl(FunctionSignature signature, List<VarIdentifier> paramList, Expression funcBody,
-            boolean isStored) {
+            boolean isStored, boolean transform) {
         this.signature = signature;
         this.paramList = paramList;
         this.funcBody = funcBody;
         this.isStored = isStored;
+        this.transform = transform;
+    }
+
+    public FunctionDecl(FunctionSignature signature, List<VarIdentifier> paramList, Expression funcBody,
+            boolean isStored) {
+        this(signature, paramList, funcBody, isStored, false);
     }
 
     public FunctionSignature getSignature() {
@@ -70,6 +77,10 @@ public class FunctionDecl extends AbstractStatement {
 
     public boolean isStored() {
         return isStored;
+    }
+
+    public boolean isTransform() {
+        return transform;
     }
 
     @Override

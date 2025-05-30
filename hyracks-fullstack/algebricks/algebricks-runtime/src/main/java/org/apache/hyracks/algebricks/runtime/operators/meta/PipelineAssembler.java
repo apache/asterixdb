@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.ProfiledPushRuntime;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -46,15 +47,23 @@ public class PipelineAssembler {
     private final int outputArity;
     private final AlgebricksPipeline pipeline;
     private final Map<IPushRuntimeFactory, IPushRuntime[]> runtimeMap;
+    private final boolean ignoreFailures;
 
     public PipelineAssembler(AlgebricksPipeline pipeline, int inputArity, int outputArity,
             RecordDescriptor pipelineInputRecordDescriptor, RecordDescriptor pipelineOutputRecordDescriptor) {
+        this(pipeline, inputArity, outputArity, pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor, false);
+    }
+
+    public PipelineAssembler(AlgebricksPipeline pipeline, int inputArity, int outputArity,
+            RecordDescriptor pipelineInputRecordDescriptor, RecordDescriptor pipelineOutputRecordDescriptor,
+            boolean ignoreFailures) {
         this.pipeline = pipeline;
         this.pipelineInputRecordDescriptor = pipelineInputRecordDescriptor;
         this.pipelineOutputRecordDescriptor = pipelineOutputRecordDescriptor;
         this.inputArity = inputArity;
         this.outputArity = outputArity;
         this.runtimeMap = new HashMap<>();
+        this.ignoreFailures = ignoreFailures;
     }
 
     public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws HyracksDataException {
@@ -98,6 +107,9 @@ public class PipelineAssembler {
                     }
                 } else {
                     newRuntimes[j].setOutputFrameWriter(0, start, recordDescriptors[i]);
+                }
+                if (newRuntimes[j] instanceof AbstractOneInputOneOutputOneFramePushRuntime) {
+                    ((AbstractOneInputOneOutputOneFramePushRuntime) newRuntimes[j]).setIgnoreFailures(ignoreFailures);
                 }
             }
             runtimeMap.put(runtimeFactory, newRuntimes);

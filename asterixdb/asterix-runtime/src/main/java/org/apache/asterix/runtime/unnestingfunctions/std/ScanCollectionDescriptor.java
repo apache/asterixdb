@@ -69,6 +69,18 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
             this.funID = funID;
         }
 
+        public IScalarEvaluatorFactory getListEvalFactory() {
+            return listEvalFactory;
+        }
+
+        public SourceLocation getSourceLoc() {
+            return sourceLoc;
+        }
+
+        public FunctionIdentifier getFunID() {
+            return funID;
+        }
+
         @Override
         public IUnnestingEvaluator createUnnestingEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
             return new IUnnestingEvaluator() {
