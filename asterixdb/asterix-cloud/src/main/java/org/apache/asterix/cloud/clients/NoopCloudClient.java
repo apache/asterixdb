@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
@@ -114,6 +115,11 @@ public class NoopCloudClient implements ICloudClient {
     public IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager)
             throws HyracksDataException {
         return NoOpParallelDownloader.INSTANCE;
+    }
+
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return e -> true;
     }
 
     @Override

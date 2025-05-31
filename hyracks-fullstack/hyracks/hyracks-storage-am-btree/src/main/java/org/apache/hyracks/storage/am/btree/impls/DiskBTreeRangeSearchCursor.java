@@ -66,8 +66,9 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
     }
 
     @Override
-    protected void releasePage() throws HyracksDataException {
+    protected void releasePage() {
         bufferCache.unpin(page);
+        page = null;
     }
 
     @Override

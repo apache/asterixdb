@@ -1,0 +1,1 @@
+{ "joinDateTime": "25-04-2025", "joinDateTimeType": "string", "joinDateTimeCasted": datetime("2025-04-25T00:00:00.000"), "joinDateTimeCastedType": "datetime", "joinDate": "25-04-2025", "joinDateType": "string", "joinDateCasted": date("2025-04-25"), "joinDateCastedType": "date" }

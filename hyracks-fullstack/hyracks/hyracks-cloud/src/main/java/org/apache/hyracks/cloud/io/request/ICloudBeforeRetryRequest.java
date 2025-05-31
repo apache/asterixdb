@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.cloud.io.request;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 
 /**
@@ -30,5 +31,5 @@ public interface ICloudBeforeRetryRequest {
     /**
      * Run pre-retry routine before reattempting {@link ICloudRequest} or {@link ICloudReturnableRequest}
      */
-    void beforeRetry();
+    void beforeRetry() throws HyracksDataException;
 }

@@ -29,9 +29,13 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // Maintains a pool of Parquet writers holding a file, each with its own schema , and writes values to the appropriate writer based on schema.
 public class ParquetSchemaInferPoolWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ParquetExternalWriterFactory writerFactory;
     private List<ParquetSchemaTree.SchemaNode> schemaNodes;
     private List<IExternalWriter> writerList;
@@ -65,6 +69,10 @@ public class ParquetSchemaInferPoolWriter {
         }
 
         if (schemaNodes.size() == maxSchemas) {
+            LOGGER.info("Schema limit exceeded, max schemas allowed: {}", maxSchemas);
+            schemaNodes.forEach(schemaNode -> {
+                LOGGER.info("Inferred schema: {}", LogRedactionUtil.userData(schemaNode.toString()));
+            });
             throw new HyracksDataException(ErrorCode.SCHEMA_LIMIT_EXCEEDED, maxSchemas);
         }
         schemaNodes.add(schemaLazyVisitor.inferSchema(value));

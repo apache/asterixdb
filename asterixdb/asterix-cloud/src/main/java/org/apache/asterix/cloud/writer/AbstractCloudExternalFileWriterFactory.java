@@ -20,6 +20,7 @@ package org.apache.asterix.cloud.writer;
 
 import static org.apache.asterix.cloud.writer.AbstractCloudExternalFileWriter.isExceedingMaxLength;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+import static org.apache.hyracks.cloud.util.CloudRetryableRequestUtil.runWithNoRetryOnInterruption;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.cloud.io.request.ICloudReturnableRequest;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -122,7 +124,7 @@ abstract class AbstractCloudExternalFileWriterFactory<T extends Throwable> imple
                         staticPath, getPathMaxLengthInBytes(), getAdapterName());
             }
 
-            if (!testClient.isEmptyPrefix(bucket, staticPath)) {
+            if (!runWithNoRetryOnInterruption(() -> testClient.isEmptyPrefix(bucket, staticPath))) {
                 // Ensure that the static path is empty
                 throw new CompilationException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
             }
@@ -138,10 +140,16 @@ abstract class AbstractCloudExternalFileWriterFactory<T extends Throwable> imple
         Random random = new Random();
         String pathPrefix = "testFile";
         String path = pathPrefix + random.nextInt();
-        while (testClient.exists(bucket, path)) {
+
+        String existsFinalPath = path;
+        ICloudReturnableRequest<Boolean> existsRequest = () -> testClient.exists(bucket, existsFinalPath);
+        while (runWithNoRetryOnInterruption(existsRequest, testClient.getRetryUnlessNotFound())) {
             path = pathPrefix + random.nextInt();
+            String existsFinalPathUpdated = path;
+            existsRequest = () -> testClient.exists(bucket, existsFinalPathUpdated);
         }
 
+        final String finalPath = path;
         long writeValue = random.nextLong();
         byte[] data = new byte[Long.BYTES];
         LongPointable.setLong(data, 0, writeValue);
@@ -149,28 +157,29 @@ abstract class AbstractCloudExternalFileWriterFactory<T extends Throwable> imple
         ICloudWriter writer = testClient.createWriter(bucket, path, bufferProvider);
         boolean aborted = false;
         try {
-            writer.write(data, 0, data.length);
+            runWithNoRetryOnInterruption(() -> writer.write(data, 0, data.length));
         } catch (HyracksDataException e) {
-            writer.abort();
+            runWithNoRetryOnInterruption(writer::abort);
             aborted = true;
             throw e;
         } finally {
             if (writer != null && !aborted) {
-                writer.finish();
+                runWithNoRetryOnInterruption(writer::finish);
             }
         }
 
         try {
-            long readValue = LongPointable.getLong(testClient.readAllBytes(bucket, path), 0);
+            byte[] bytes = runWithNoRetryOnInterruption(() -> testClient.readAllBytes(bucket, finalPath));
+            long readValue = LongPointable.getLong(bytes, 0);
             if (writeValue != readValue) {
-                // This should never happen unless S3 is messed up. But log for sanity check
+                // This should never happen unless cloud storage is messed up. But log for sanity check
                 LOGGER.warn(
                         "The writer can write but the written values wasn't successfully read back (wrote: {}, read:{})",
                         writeValue, readValue);
             }
         } finally {
             // Delete the written file
-            testClient.deleteObjects(bucket, Collections.singleton(path));
+            runWithNoRetryOnInterruption(() -> testClient.deleteObjects(bucket, Collections.singleton(finalPath)));
         }
     }
 }

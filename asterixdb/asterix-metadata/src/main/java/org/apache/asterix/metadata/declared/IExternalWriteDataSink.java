@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.declared;
 
+import java.util.Map;
+
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -27,6 +29,8 @@ public interface IExternalWriteDataSink extends IWriteDataSink {
     ARecordType getItemType();
 
     ARecordType getParquetSchema();
+
+    Map<String, String> getFormatConfigs();
 
     SourceLocation getSourceLoc();
 }

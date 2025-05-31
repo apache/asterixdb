@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -326,6 +327,11 @@ public final class S3CloudClient implements ICloudClient {
     @Override
     public void close() {
         s3Client.close();
+    }
+
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return ex -> ex instanceof NoSuchKeyException;
     }
 
     /**

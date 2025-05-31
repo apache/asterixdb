@@ -30,6 +30,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
@@ -39,7 +40,7 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 
 /**
  * Default context for {@link BufferCache#pin(long, IBufferCacheReadContext)}
- * and {@link BufferCache#unpin(ICachedPage, IBufferCacheReadContext)} in a cloud deployment.
+ * and {@link IBufferCache#unpin(ICachedPage, IBufferCacheReadContext)} in a cloud deployment.
  * <p>
  * The default behavior of this context is persisting the pages read from cloud if {@link IPhysicalDrive}
  * reports that the local drive(s) are not pressured.

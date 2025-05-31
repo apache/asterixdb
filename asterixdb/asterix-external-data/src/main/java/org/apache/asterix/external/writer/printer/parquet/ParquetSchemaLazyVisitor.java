@@ -36,11 +36,15 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 
 // This class is used to infer the schema of a record into SchemaNode, which is an internal tree representation of the schema.
 public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<Void, ParquetSchemaTree.SchemaNode> {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final RecordLazyVisitablePointable rec;
     private final FieldNamesDictionary fieldNamesDictionary;
     private final static String SCHEMA_NAME = "asterix_schema";
@@ -63,6 +67,8 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             schemaNode.setType(new ParquetSchemaTree.RecordType());
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.RecordType)) {
+            LOGGER.info("Incompatible type found in record: {} and {}",
+                    LogRedactionUtil.userData(schemaNode.toString()), pointable.getTypeTag());
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.RecordType recordType = (ParquetSchemaTree.RecordType) schemaNode.getType();
@@ -88,11 +94,12 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
         if (schemaNode.getType() == null) {
             schemaNode.setType(new ParquetSchemaTree.ListType());
         }
-        if (!(schemaNode.getType() instanceof ParquetSchemaTree.ListType)) {
+        if (!(schemaNode.getType() instanceof ParquetSchemaTree.ListType listType)) {
+            LOGGER.info("Incompatible type found in list: {} and {}" ,LogRedactionUtil.userData(schemaNode.toString()) ,pointable.getTypeTag());
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
-        ParquetSchemaTree.ListType listType = (ParquetSchemaTree.ListType) schemaNode.getType();
-        for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
+        int numChildren = pointable.getNumberOfChildren();
+        for (int i = 0; i < numChildren; i++) {
             pointable.nextChild();
             AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
             if (listType.isEmpty()) {
@@ -114,11 +121,14 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             return null;
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.FlatType)) {
+            LOGGER.info("Incompatible type found: {} and {}", LogRedactionUtil.userData(schemaNode.toString()),
+                    pointable.getTypeTag());
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         ParquetSchemaTree.FlatType flatType = (ParquetSchemaTree.FlatType) schemaNode.getType();
 
         if (!flatType.isCompatibleWith(pointable.getTypeTag())) {
+            LOGGER.info("Incompatible type found: {} and {}", flatType, pointable.getTypeTag());
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
 
@@ -136,6 +146,7 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
 
     public static MessageType generateSchema(ParquetSchemaTree.SchemaNode schemaRoot) throws HyracksDataException {
         Types.MessageTypeBuilder builder = Types.buildMessage();
+        LOGGER.info("Building parquet schema: {}", LogRedactionUtil.userData(schemaRoot.toString()));
         if (schemaRoot.getType() == null)
             return builder.named(SCHEMA_NAME);
         for (Map.Entry<String, ParquetSchemaTree.SchemaNode> entry : ((ParquetSchemaTree.RecordType) schemaRoot

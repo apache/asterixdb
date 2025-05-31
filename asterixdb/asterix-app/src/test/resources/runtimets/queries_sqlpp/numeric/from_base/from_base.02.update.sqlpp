@@ -1,0 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+// testing base 16
+USE test;
+
+UPSERT INTO ds1 ([
+{"id": 1, "f": "1", "f2": "1"}, // 1
+{"id": 2, "f": "A", "f2": "A"}, // 10
+{"id": 3, "f": "10", "f2": "10"}, // 16
+{"id": 4, "f": null, "f2": null},
+{"id": 5},
+{"id": 6, "f": "35BC6C28BCA27FB", "f2": "35BC6C28BCA27FB"}, // 242005543865690107
+{"id": 7, "f": "35BC6C28BCA27FBECC144761D32D09986876438F", "f2": "35BC6C28BCA27FBECC144761D32D09986876438F"}, // does not fit in a 64-bit integer
+{"id": 8, "f2": 1} // should return null for non-string inputs
+]);

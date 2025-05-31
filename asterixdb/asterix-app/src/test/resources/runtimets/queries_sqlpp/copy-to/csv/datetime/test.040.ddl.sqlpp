@@ -1,0 +1,107 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+drop dataset datetimeNotFormattedDataset if exists;
+drop dataset datetimeFormattedDataset if exists;
+drop dataset datetimeDateFormattedDataset if exists;
+drop dataset datatimeTimeFormattedDataset if exists;
+drop dataset datetimeFormattedDataset2 if exists;
+drop dataset datetimeFormattedWithCommaDataset if exists;
+drop dataset datetimeDateTimeFormattedWithCommaDataset if exists;
+
+drop type datetimeNotFormattedType if exists;
+drop type datetimeFormattedType if exists;
+drop type datetimeDateFormattedType if exists;
+drop type datatimeTimeFormattedType if exists;
+drop type datetimeFormattedType2 if exists;
+drop type datetimeFormattedWithCommaType if exists;
+drop type datetimeDateTimeFormattedWithCommaType if exists;
+
+CREATE TYPE datetimeNotFormattedType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string, joinDate: string, joinTime: string };
+CREATE TYPE datetimeFormattedType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string };
+CREATE TYPE datetimeDateFormattedType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string, joinDate: string };
+CREATE TYPE datatimeTimeFormattedType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string, joinTime: string };
+CREATE TYPE datetimeFormattedType2 AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string };
+CREATE TYPE datetimeFormattedWithCommaType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string };
+CREATE TYPE datetimeDateTimeFormattedWithCommaType AS { id: bigint, name: string?, amount: float, accountNumber: double, joinDateTime: string, joinDate: string, joinTime: string };
+
+CREATE EXTERNAL DATASET datetimeNotFormattedDataset(datetimeNotFormattedType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-not-formatted"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datetimeFormattedDataset(datetimeFormattedType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datetimeDateFormattedDataset(datetimeDateFormattedType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-date-formatted"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datatimeTimeFormattedDataset(datatimeTimeFormattedType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-time-formatted"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datetimeFormattedDataset2(datetimeFormattedType2) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted-2"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datetimeFormattedWithCommaDataset(datetimeFormattedWithCommaType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted-with-comma"),
+  ("format" = "csv")
+);
+
+CREATE EXTERNAL DATASET datetimeDateTimeFormattedWithCommaDataset(datetimeDateTimeFormattedWithCommaType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("header"="true"),
+  ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-date-time-formatted-with-comma"),
+  ("format" = "csv")
+);

@@ -1,0 +1,10 @@
+{ "o_d_id": 1, "o_w_id": 1, "o_id": 881, "o_carrier_id": 6, "o_ol_cnt": 11 }
+{ "o_d_id": 2, "o_w_id": 1, "o_id": 525, "o_carrier_id": 1, "o_ol_cnt": 15 }
+{ "c_w_id": 1, "c_d_id": 3, "c_id": 2, "c_discount": 0.4549, "c_credit": "GC", "c_first": "cdchdqts", "c_middle": "OE", "c_last": "BARBAROUGHT", "c_credit_lim": 50000.0, "c_balance": 2275392.5500000003, "c_ytd_payment": 10.0, "c_payment_cnt": 1, "c_delivery_cnt": 0, "c_street_1": "emwtajlhjyzigbxtll", "c_street_2": "bsxxckrjkxvnx", "c_city": "vuthjjchaubyurhxu", "c_state": "ae", "c_zip": "207611111", "c_phone": "2223483665383895", "c_since": "2015-01-10 09:13:11", "key": "1.3.2", "o_d_id": 3, "o_w_id": 1, "o_id": 466, "o_carrier_id": 10, "o_ol_cnt": 14 }
+{ "o_d_id": 4, "o_w_id": 1, "o_id": 2449, "o_carrier_id": 0, "o_ol_cnt": 15 }
+{ "c_w_id": 1, "c_d_id": 5, "c_id": 2, "c_discount": 0.1233, "c_credit": "GC", "c_first": "xvaijyn", "c_middle": "OE", "c_last": "BARBAROUGHT", "c_credit_lim": 50000.0, "c_balance": 8318309.3500000015, "c_ytd_payment": 10.0, "c_payment_cnt": 1, "c_delivery_cnt": 0, "c_street_1": "tbjodrhupcwdyhiul", "c_street_2": "fvbhntiihftymwkabbr", "c_city": "cjlfuvcqvkg", "c_state": "ng", "c_zip": "417111111", "c_phone": "5673180500149103", "c_since": "2014-10-20 20:06:32", "key": "1.5.2", "o_d_id": 5, "o_w_id": 1, "o_id": 1652, "o_carrier_id": 10, "o_ol_cnt": 7 }
+{ "o_d_id": 6, "o_w_id": 1, "o_id": 1350, "o_carrier_id": 8, "o_ol_cnt": 9 }
+{ "o_d_id": 7, "o_w_id": 1, "o_id": 2822, "o_carrier_id": 0, "o_ol_cnt": 12 }
+{ "o_d_id": 8, "o_w_id": 1, "o_id": 677, "o_carrier_id": 6, "o_ol_cnt": 6 }
+{ "o_d_id": 9, "o_w_id": 1, "o_id": 2851, "o_carrier_id": 0, "o_ol_cnt": 12 }
+{ "o_d_id": 10, "o_w_id": 1, "o_id": 2841, "o_carrier_id": 0, "o_ol_cnt": 9 }

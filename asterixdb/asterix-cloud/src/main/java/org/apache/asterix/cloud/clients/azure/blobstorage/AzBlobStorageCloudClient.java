@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -389,6 +390,11 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         // handles the same for the apps.
         // Ref: https://github.com/Azure/azure-sdk-for-java/issues/17903
         // Hence this implementation is a no op.
+    }
+
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return ex -> (ex instanceof BlobStorageException bse) && bse.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND);
     }
 
     private static BlobServiceClient buildClient(AzBlobStorageClientConfig config) {

@@ -4019,6 +4019,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="crypto">
+    <test-case FilePath="crypto">
+      <compilation-unit name="sha1">
+        <output-dir compare="Text">sha1</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="custord">
     <!--
     <test-case FilePath="custord">
@@ -6884,6 +6891,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash_join_exchange">
+        <output-dir compare="Text">hash_join_exchange</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="hash_join_exchange_1">
+        <output-dir compare="Text">hash_join_exchange_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="ASTERIXDB-3502">
         <output-dir compare="Text">ASTERIXDB-3502</output-dir>
       </compilation-unit>
@@ -7527,6 +7544,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="serialized_size_fun">
         <output-dir compare="Text">serialized_size_fun</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="handle_error_fun">
+        <output-dir compare="Text">handle_error_fun</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -9642,6 +9664,11 @@
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="from_base">
+        <output-dir compare="Text">from_base</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--
@@ -11682,6 +11709,16 @@
         <expected-warn>Function 'reverse' failed to evaluate because: Decoding error - got a low surrogate without a leading high surrogate</expected-warn>
         <expected-warn>Function 'position' failed to evaluate because: Decoding error - got a low surrogate without a leading high surrogate</expected-warn>
         <expected-warn>Function 'position1' failed to evaluate because: Decoding error - got a low surrogate without a leading high surrogate</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="pad/lpad">
+        <output-dir compare="Text">pad/lpad</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="pad/rpad">
+        <output-dir compare="Text">pad/rpad</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

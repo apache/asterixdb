@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -141,6 +142,11 @@ public class UnstableCloudClient implements ICloudClient {
     @Override
     public void close() throws HyracksDataException {
         cloudClient.close();
+    }
+
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return cloudClient.getObjectNotFoundExceptionPredicate();
     }
 
     private static void fail() throws HyracksDataException {

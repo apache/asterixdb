@@ -1,0 +1,40 @@
+distribute result [$$43]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$43] <- [object-concat-strict({"c_id": $$46}, to-object-var-str($$o))] project: [$$43]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$46, $$o])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          left outer join (and(eq($$46, $$51), eq($$44, $$47), eq($$45, $$48)))
+          -- HYBRID_HASH_JOIN [$$46, $$44, $$45][$$51, $$47, $$48]  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$46, $$44, $$45])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$44, $$45, $$46, $$c] <- test.customer
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
+            -- BROADCAST_EXCHANGE  |PARTITIONED|
+              select (gt($$o.getField("o_carrier_id"), 8))
+              -- STREAM_SELECT  |PARTITIONED|
+                assign [$$51] <- [$$o.getField("o_c_id")]
+                -- ASSIGN  |PARTITIONED|
+                  project ([$$47, $$48, $$o])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$47, $$48, $$49, $$o] <- test.orders
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

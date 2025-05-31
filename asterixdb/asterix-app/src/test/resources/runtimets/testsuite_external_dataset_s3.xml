@@ -384,6 +384,16 @@
         <expected-error>'||' is not a valid escape. The length of a escape should be 1</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="datetime">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <output-dir compare="Text">datetime</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aws-s3-external-dataset">
     <test-case FilePath="external-dataset">

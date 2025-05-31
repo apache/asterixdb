@@ -42,13 +42,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class APrintVisitor extends AbstractPrintVisitor {
     private final IEvaluatorContext context;
     private final ARecordType itemType;
+    private final Map<String, String> formatConfigs;
     private final Map<String, String> configuration;
     private AObjectPrinterFactory objectPrinterFactory;
 
-    public APrintVisitor(IEvaluatorContext context, ARecordType itemType, Map<String, String> configuration) {
+    public APrintVisitor(IEvaluatorContext context, ARecordType itemType, Map<String, String> formatConfigs,
+            Map<String, String> configuration) {
         super();
         this.context = context;
         this.itemType = itemType;
+        this.formatConfigs = formatConfigs;
         this.configuration = configuration;
     }
 
@@ -69,7 +72,7 @@ public class APrintVisitor extends AbstractPrintVisitor {
     protected boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
             throws HyracksDataException {
         if (objectPrinterFactory == null) {
-            objectPrinterFactory = AObjectPrinterFactory.createInstance(itemType, configuration);
+            objectPrinterFactory = AObjectPrinterFactory.createInstance(itemType, formatConfigs, configuration);
         }
         return objectPrinterFactory.printFlatValue(typeTag, b, s, l, ps);
     }

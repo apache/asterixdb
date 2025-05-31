@@ -26,10 +26,15 @@ import static org.apache.asterix.common.utils.CSVConstants.KEY_NULL_STR;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.DEFAULT_VALUES;
 import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.getCharOrDefault;
+import static org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode.DATETIME;
+import static org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode.DATE_ONLY;
+import static org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode.TIME_ONLY;
 
 import java.io.PrintStream;
 import java.util.Map;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
+import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.IPrintVisitor;
@@ -42,12 +47,17 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
+    private static final String DATE_FORMAT_PROPERTY_NAME = "date";
+    private static final String TIME_FORMAT_PROPERTY_NAME = "time";
+    private static final String DATETIME_FORMAT_PROPERTY_NAME = "datetime";
     private static final String DEFAULT_NULL_STRING = "";
     private final ARecordType itemType;
     private final Map<String, String> configuration;
+    private final Map<String, String> formatConfigs;
     private final boolean emptyFieldAsNull;
     private final String nullString;
     private final char quote;
@@ -55,9 +65,28 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     private final char escape;
     private final char delimiter;
 
-    private AObjectPrinterFactory(ARecordType itemType, Map<String, String> configuration) {
+    private DateTimeFormatUtils dateTimeFormatUtils;
+    private String timeFormat;
+    private String dateFormat;
+    private String datetimeFormat;
+    private byte[] timeFormatBytes;
+    private byte[] dateFormatBytes;
+    private byte[] datetimeFormatBytes;
+    private int timeFormatOffset;
+    private int dateFormatOffset;
+    private int datetimeFormatOffset;
+    private int timeFormatLength;
+    private int dateFormatLength;
+    private int datetimeFormatLength;
+    private boolean quoteTime;
+    private boolean quoteDate;
+    private boolean quoteDatetime;
+
+    private AObjectPrinterFactory(ARecordType itemType, Map<String, String> formatConfigs,
+            Map<String, String> configuration) {
         this.itemType = itemType;
         this.configuration = configuration;
+        this.formatConfigs = formatConfigs;
         this.emptyFieldAsNull = Boolean.parseBoolean(configuration.get(KEY_EMPTY_STRING_AS_NULL));
         this.nullString =
                 configuration.get(KEY_NULL_STR) != null ? configuration.get(KEY_NULL_STR) : DEFAULT_NULL_STRING;
@@ -65,10 +94,12 @@ public class AObjectPrinterFactory implements IPrinterFactory {
         this.quote = getCharOrDefault(configuration.get(KEY_QUOTE), DEFAULT_VALUES.get(KEY_QUOTE));
         this.escape = getCharOrDefault(configuration.get(KEY_ESCAPE), DEFAULT_VALUES.get(KEY_ESCAPE));
         this.delimiter = getCharOrDefault(configuration.get(KEY_DELIMITER), DEFAULT_VALUES.get(KEY_DELIMITER));
+        extractDateTimeFormats(formatConfigs);
     }
 
-    public static AObjectPrinterFactory createInstance(ARecordType itemType, Map<String, String> configuration) {
-        return new AObjectPrinterFactory(itemType, configuration);
+    public static AObjectPrinterFactory createInstance(ARecordType itemType, Map<String, String> formatConfigs,
+            Map<String, String> configuration) {
+        return new AObjectPrinterFactory(itemType, formatConfigs, configuration);
     }
 
     public boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
@@ -100,13 +131,31 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 ADoublePrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
             case DATE:
-                ADatePrinterFactory.PRINTER.print(b, s, l, ps);
+                if (dateFormat == null) {
+                    ADatePrinterFactory.PRINTER.print(b, s, l, ps);
+                } else {
+                    long chronon = PrintTools.getDateChronon(b, s + 1);
+                    printFormattedDatetime(dateFormatBytes, dateFormatOffset, dateFormatLength, ps, chronon, DATE_ONLY,
+                            quoteDate);
+                }
                 return true;
             case TIME:
-                ATimePrinterFactory.PRINTER.print(b, s, l, ps);
+                if (timeFormat == null) {
+                    ATimePrinterFactory.PRINTER.print(b, s, l, ps);
+                } else {
+                    long chronon = PrintTools.getTimeChronon(b, s + 1);
+                    printFormattedDatetime(timeFormatBytes, timeFormatOffset, timeFormatLength, ps, chronon, TIME_ONLY,
+                            quoteTime);
+                }
                 return true;
             case DATETIME:
-                ADateTimePrinterFactory.PRINTER.print(b, s, l, ps);
+                if (datetimeFormat == null) {
+                    ADateTimePrinterFactory.PRINTER.print(b, s, l, ps);
+                } else {
+                    long chronon = PrintTools.getDateTimeChronon(b, s + 1);
+                    printFormattedDatetime(datetimeFormatBytes, datetimeFormatOffset, datetimeFormatLength, ps, chronon,
+                            DATETIME, quoteDatetime);
+                }
                 return true;
             case DURATION:
                 ADurationPrinterFactory.PRINTER.print(b, s, l, ps);
@@ -161,7 +210,7 @@ public class AObjectPrinterFactory implements IPrinterFactory {
         final ARecordVisitablePointable recordVisitablePointable =
                 new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
-        final IPrintVisitor visitor = new APrintVisitor(context, itemType, configuration);
+        final IPrintVisitor visitor = new APrintVisitor(context, itemType, formatConfigs, configuration);
 
         return (byte[] b, int s, int l, PrintStream ps) -> {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
@@ -184,5 +233,51 @@ public class AObjectPrinterFactory implements IPrinterFactory {
 
     private void printString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         CSVUtils.printString(b, s, l, ps, quote, forceQuote, escape, delimiter);
+    }
+
+    private void printFormattedDatetime(byte[] formatBytes, int formatOffset, int formatLength, PrintStream ps,
+            long chronon, DateTimeFormatUtils.DateTimeParseMode dateTimeParseMode, boolean shouldQuote)
+            throws HyracksDataException {
+        if (shouldQuote) {
+            ps.print("\"");
+        }
+        dateTimeFormatUtils.printDateTime(chronon, formatBytes, formatOffset, formatLength, ps, dateTimeParseMode);
+        if (shouldQuote) {
+            ps.print("\"");
+        }
+    }
+
+    private void extractDateTimeFormats(Map<String, String> formatConfigs) {
+        if (formatConfigs != null && !formatConfigs.isEmpty()) {
+            timeFormat = formatConfigs.get(TIME_FORMAT_PROPERTY_NAME);
+            dateFormat = formatConfigs.get(DATE_FORMAT_PROPERTY_NAME);
+            datetimeFormat = formatConfigs.get(DATETIME_FORMAT_PROPERTY_NAME);
+            dateTimeFormatUtils = DateTimeFormatUtils.getInstance();
+
+            UTF8StringPointable pointable;
+            if (timeFormat != null) {
+                pointable = UTF8StringPointable.generateUTF8Pointable(timeFormat);
+                timeFormatBytes = pointable.getByteArray();
+                timeFormatOffset = pointable.getStartOffset() + 1;
+                timeFormatLength = pointable.getLength() - 1;
+                quoteTime = timeFormat.indexOf(this.delimiter) != -1;
+            }
+
+            if (dateFormat != null) {
+                pointable = UTF8StringPointable.generateUTF8Pointable(dateFormat);
+                dateFormatBytes = pointable.getByteArray();
+                dateFormatOffset = pointable.getStartOffset() + 1;
+                dateFormatLength = pointable.getLength() - 1;
+                quoteDate = dateFormat.indexOf(this.delimiter) != -1;
+            }
+
+            if (datetimeFormat != null) {
+                pointable = UTF8StringPointable.generateUTF8Pointable(datetimeFormat);
+                datetimeFormatBytes = pointable.getByteArray();
+                datetimeFormatOffset = pointable.getStartOffset() + 1;
+                datetimeFormatLength = pointable.getLength() - 1;
+                quoteDatetime = datetimeFormat.indexOf(this.delimiter) != -1;
+            }
+        }
     }
 }

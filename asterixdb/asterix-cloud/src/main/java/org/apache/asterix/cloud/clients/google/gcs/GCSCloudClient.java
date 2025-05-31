@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.CloudFile;
@@ -299,6 +300,11 @@ public class GCSCloudClient implements ICloudClient {
         } catch (Exception ex) {
             throw HyracksDataException.create(ex);
         }
+    }
+
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return ex -> (ex instanceof BaseServiceException bse)&& bse.getCode() == 404;
     }
 
     private static Storage buildClient(GCSClientConfig config) throws HyracksDataException {

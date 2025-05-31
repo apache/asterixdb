@@ -185,9 +185,10 @@ public class ExternalWriterProvider {
                 compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
                 if (sink instanceof IExternalWriteDataSink externalSink) {
                     ARecordType itemType = externalSink.getItemType();
+                    Map<String, String> formatConfigs = externalSink.getFormatConfigs();
                     if (itemType != null) {
                         printerFactory = CSVPrinterFactoryProvider
-                                .createInstance(itemType, externalSink.getConfiguration(), externalSink.getSourceLoc())
+                                .createInstance(itemType, externalSink.getConfiguration(), formatConfigs, externalSink.getSourceLoc())
                                 .getPrinterFactory(sourceType);
                         externalPrinterFactory =
                                 new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);

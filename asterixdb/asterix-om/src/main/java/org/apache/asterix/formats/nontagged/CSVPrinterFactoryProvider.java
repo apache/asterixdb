@@ -66,20 +66,22 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
     private final ARecordType itemType;
     private final Map<String, String> configuration;
+    private final Map<String, String> formatConfigs;
     private final SourceLocation sourceLocation;
 
     public static final CSVPrinterFactoryProvider INSTANCE =
-            new CSVPrinterFactoryProvider(null, Collections.emptyMap(), null);
+            new CSVPrinterFactoryProvider(null, Collections.emptyMap(), null, null);
 
     public static CSVPrinterFactoryProvider createInstance(ARecordType itemType, Map<String, String> configuration,
-            SourceLocation sourceLocation) {
-        return new CSVPrinterFactoryProvider(itemType, configuration, sourceLocation);
+            Map<String, String> formatConfigs, SourceLocation sourceLocation) {
+        return new CSVPrinterFactoryProvider(itemType, configuration, formatConfigs, sourceLocation);
     }
 
     private CSVPrinterFactoryProvider(ARecordType itemType, Map<String, String> configuration,
-            SourceLocation sourceLocation) {
+            Map<String, String> formatConfigs, SourceLocation sourceLocation) {
         this.itemType = itemType;
         this.configuration = configuration;
+        this.formatConfigs = formatConfigs;
         this.sourceLocation = sourceLocation;
     }
 
@@ -137,7 +139,7 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                             configuration.get(KEY_FORCE_QUOTE), configuration.get(KEY_ESCAPE),
                             configuration.get(KEY_DELIMITER));
                 case OBJECT:
-                    return new ARecordPrinterFactory((ARecordType) type, itemType, configuration);
+                    return new ARecordPrinterFactory((ARecordType) type, itemType, formatConfigs, configuration);
                 case ARRAY:
                     throw new NotImplementedException("'OrderedList' type unsupported for CSV output");
                 case MULTISET:
@@ -167,7 +169,7 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     break;
             }
         }
-        return AObjectPrinterFactory.createInstance(itemType, configuration);
+        return AObjectPrinterFactory.createInstance(itemType, formatConfigs, configuration);
 
     }
 }

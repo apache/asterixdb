@@ -398,6 +398,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier STRING_REPEAT = FunctionConstants.newAsterix("repeat", 2);
     public static final FunctionIdentifier STRING_SPLIT = FunctionConstants.newAsterix("split", 2);
     public static final FunctionIdentifier STRING_PARSE_JSON = FunctionConstants.newAsterix("parse-json", 1);
+    public static final FunctionIdentifier STRING_LPAD = FunctionConstants.newAsterix("lpad", 3);
+    public static final FunctionIdentifier STRING_RPAD = FunctionConstants.newAsterix("rpad", 3);
 
     public static final FunctionIdentifier DATASET =
             FunctionConstants.newAsterix("dataset", FunctionIdentifier.VARARGS); // 1, 2 or 3
@@ -1305,6 +1307,14 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier ACCESS_NESTED_FIELD = FunctionConstants.newAsterix("access-nested-field", 2);
 
+    public static final FunctionIdentifier IF_ERROR = FunctionConstants.newAsterix("if-error", 2);
+
+    // crypto
+    public static final FunctionIdentifier SHA1_HEX = FunctionConstants.newAsterix("sha1-hex", 1);
+    public static final FunctionIdentifier SHA1_BASE64 = FunctionConstants.newAsterix("sha1-base64", 1);
+
+    public static final FunctionIdentifier FROM_BASE = FunctionConstants.newAsterix("from-base", 2);
+
     static {
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
@@ -1335,7 +1345,6 @@ public class BuiltinFunctions {
         addFunction(NOT, ABooleanTypeComputer.INSTANCE, true);
 
         addFunction(GET_TYPE, AStringTypeComputer.INSTANCE, true);
-
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(LE, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(GE, BooleanFunctionTypeComputer.INSTANCE, true);
@@ -1532,6 +1541,8 @@ public class BuiltinFunctions {
         addFunction(STRING_REPEAT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_SPLIT, UniformInputTypeComputer.STRING_STRING_LIST_INSTANCE, true);
         addFunction(STRING_PARSE_JSON, AnyTypeComputer.INSTANCE, true);
+        addFunction(STRING_LPAD, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(STRING_RPAD, AStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(POINT_CONSTRUCTOR, APointTypeComputer.INSTANCE, true);
@@ -2161,6 +2172,7 @@ public class BuiltinFunctions {
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
         addFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
         // used by CBO's internal sampling queries for determining projection sizes
+        addPrivateFunction(IF_ERROR, AnyTypeComputer.INSTANCE, true);
 
         // external lookup
         addPrivateFunction(EXTERNAL_LOOKUP, AnyTypeComputer.INSTANCE, false);
@@ -2177,6 +2189,11 @@ public class BuiltinFunctions {
         addPrivateFunction(ACCESS_FIELD, FieldAccessByNameResultType.INSTANCE, false);
         addPrivateFunction(ACCESS_NESTED_FIELD, FieldAccessNestedResultType.INSTANCE, false);
 
+        // crypto
+        addFunction(SHA1_HEX, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(SHA1_BASE64, AStringTypeComputer.INSTANCE_NULLABLE, true);
+
+        addFunction(FROM_BASE, AInt64TypeComputer.INSTANCE_NULLABLE, true);
     }
 
     static {
