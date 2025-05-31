@@ -483,13 +483,15 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             throws IOException {
         int utfLen = src.getUTF8Length();
         int byteIdx = 0;
-        while (numCodePoints > 0) {
-            if (byteIdx == utfLen) {
-                byteIdx = 0;
+        if (utfLen > 0) {
+            while (numCodePoints > 0) {
+                if (byteIdx == utfLen) {
+                    byteIdx = 0;
+                }
+                builder.appendCodePoint(src.codePointAt(src.getMetaDataLength() + byteIdx));
+                numCodePoints--;
+                byteIdx += src.codePointSize(src.getMetaDataLength() + byteIdx);
             }
-            builder.appendCodePoint(src.codePointAt(src.getMetaDataLength() + byteIdx));
-            numCodePoints--;
-            byteIdx += src.codePointSize(src.getMetaDataLength() + byteIdx);
         }
     }
 

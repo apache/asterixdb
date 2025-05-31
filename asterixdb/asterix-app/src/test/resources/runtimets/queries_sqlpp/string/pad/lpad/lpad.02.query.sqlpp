@@ -23,5 +23,8 @@ SELECT
     lpad('👩‍👩‍👧‍', 10, '👩‍👩‍👧‍👦') AS padded_to_10_codepoints,
     lpad(null, 4, '%%') AS padded_to_null_is_null,
     lpad(22, 11, 'y') AS padded_non_str,
-    lpad('abcd', -2, 'y') AS negative_length;
-
+    lpad('abcd', -2, 'y') AS negative_length,
+    lpad('abcd', 56, '') AS padding_with_empty_string,
+    lpad("abcd", 10, ' ') as padded_with_space,
+    lpad('', 3, 'a') as empty_string_padded,
+    lpad('', 3, '') as empty_string_padded_with_empty_string;

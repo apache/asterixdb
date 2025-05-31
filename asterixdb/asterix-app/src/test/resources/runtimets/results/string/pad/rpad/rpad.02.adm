@@ -1,1 +1,1 @@
-{ "padded_to_11_codepoints": "asterix$&^$", "truncated_to_2_codepoints": "👩‍", "padded_to_10_codepoints": "👩‍👩‍👧‍👩‍👩‍", "padded_to_null_is_null": null, "padded_non_str": null }
+{ "padded_to_11_codepoints": "asterix$&^$", "truncated_to_2_codepoints": "👩‍", "padded_to_10_codepoints": "👩‍👩‍👧‍👩‍👩‍", "padded_to_null_is_null": null, "padded_non_str": null, "negative_length": null, "padding_with_empty_string": "abcd", "padded_with_space": "abcd      ", "empty_string_padded": "aaa", "empty_string_padded_with_empty_string": "" }

@@ -22,5 +22,9 @@ SELECT
     rpad('👩‍👩‍👧‍', 2, '$') AS truncated_to_2_codepoints,
     rpad('👩‍👩‍👧‍', 10, '👩‍👩‍👧‍👦') AS padded_to_10_codepoints,
     rpad(null, 4, '%%') AS padded_to_null_is_null,
-    rpad(22, 11, 'y') AS padded_non_str;
-
+    rpad(22, 11, 'y') AS padded_non_str,
+    rpad('abcd', -2, 'y') AS negative_length,
+    rpad('abcd', 56, '') AS padding_with_empty_string,
+    rpad("abcd", 10, ' ') as padded_with_space,
+    rpad('', 3, 'a') as empty_string_padded,
+    rpad('', 3, '') as empty_string_padded_with_empty_string;
