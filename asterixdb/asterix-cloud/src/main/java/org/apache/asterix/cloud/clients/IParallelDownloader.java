@@ -23,7 +23,7 @@ import java.util.Collection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
-public interface IParallelDownloader {
+public interface IParallelDownloader extends AutoCloseable {
 
     /**
      * Downloads files in all partitions
