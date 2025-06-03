@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
+import org.apache.asterix.external.input.record.reader.stream.AvailableInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.commons.lang3.StringUtils;
@@ -70,7 +71,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
         }
         // Use gzip stream if needed
         if (StringUtils.endsWithIgnoreCase(fileName, ".gz") || StringUtils.endsWithIgnoreCase(fileName, ".gzip")) {
-            in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+            in = new GZIPInputStream(new AvailableInputStream(in), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         }
         return true;
     }
