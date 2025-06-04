@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -351,6 +352,14 @@ public final class S3CloudClient implements ICloudClient {
         if (config.getRequestsMaxHttpConnections() > 0) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.MAX_CONNECTIONS,
                     config.getRequestsMaxHttpConnections());
+        }
+        if (config.getRequestsMaxPendingHttpConnections() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.MAX_PENDING_CONNECTION_ACQUIRES,
+                    config.getRequestsMaxPendingHttpConnections());
+        }
+        if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.CONNECTION_ACQUIRE_TIMEOUT,
+                    Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
         }
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));

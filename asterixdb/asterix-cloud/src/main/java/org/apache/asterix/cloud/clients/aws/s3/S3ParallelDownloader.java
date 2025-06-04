@@ -20,6 +20,7 @@ package org.apache.asterix.cloud.clients.aws.s3;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -192,6 +193,18 @@ class S3ParallelDownloader implements IParallelDownloader {
         }
         if (config.isDisableSslVerify()) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
+        }
+        if (config.getRequestsMaxHttpConnections() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.MAX_CONNECTIONS,
+                    config.getRequestsMaxHttpConnections());
+        }
+        if (config.getRequestsMaxPendingHttpConnections() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.MAX_PENDING_CONNECTION_ACQUIRES,
+                    config.getRequestsMaxPendingHttpConnections());
+        }
+        if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.CONNECTION_ACQUIRE_TIMEOUT,
+                    Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
         }
         SdkAsyncHttpClient nettyHttpClient =
                 NettyNioAsyncHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());

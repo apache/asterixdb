@@ -66,6 +66,8 @@ public class CloudProperties extends AbstractProperties {
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
         CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000),
+        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, 10000),
+        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, 120),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
         CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false);
@@ -101,6 +103,8 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_WRITE_BUFFER_SIZE:
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
+                case CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS:
+                case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                 case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
@@ -131,7 +135,7 @@ public class CloudProperties extends AbstractProperties {
                             + " request to open it. 'selective' caching will act as the 'lazy' policy; however, "
                             + " it allows to use the local disk(s) as a cache, where pages and indexes can be "
                             + " cached or evicted according to the pressure imposed on the local disks."
-                            + " (default: 'lazy')";
+                            + " (default: 'selective')";
                 case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
                     return "The percentage of the total disk space that should be allocated for data storage when the"
                             + " 'selective' caching policy is used. The remaining will act as a buffer for "
@@ -157,9 +161,8 @@ public class CloudProperties extends AbstractProperties {
                             + " CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE."
                             + " (default: 0. I.e., CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE will be used by default)";
                 case CLOUD_PROFILER_LOG_INTERVAL:
-                    return "The waiting time (in minutes) to log cloud request statistics (default: 0, which means"
-                            + " the profiler is disabled by default). The minimum is 1 minute."
-                            + " NOTE: Enabling the profiler could perturb the performance of cloud requests";
+                    return "The waiting time (in minutes) to log cloud request statistics. The minimum is 1 minute."
+                            + " Note: by default, the logging is disabled. Enabling it could perturb the performance of cloud requests";
                 case CLOUD_ACQUIRE_TOKEN_TIMEOUT:
                     return "The waiting time (in milliseconds) if a requesting thread failed to acquire a token if the"
                             + " rate limit of cloud requests exceeded (default: 100, min: 1, and max: 5000)";
@@ -172,7 +175,12 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                     return "The number of cloud reads for re-evaluating an eviction plan. (default: 50)";
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
-                    return "The maximum number of HTTP connections to use for cloud requests per node. (default: 1000)";
+                    return "The maximum number of HTTP connections to use concurrently for cloud requests per node. (default: 1000)";
+                case CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS:
+                    return "The maximum number of HTTP connections allowed to wait for a connection per node. (default: 10000)";
+                case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
+                    return "The waiting time (in seconds) to acquire an HTTP connection before failing the request."
+                            + " (default: 120 seconds)";
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                     return "Indicates whether or not to force path style when accessing the cloud storage. (default:"
                             + " false)";
@@ -280,6 +288,14 @@ public class CloudProperties extends AbstractProperties {
 
     public int getRequestsMaxHttpConnections() {
         return accessor.getInt(Option.CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS);
+    }
+
+    public int getRequestsMaxPendingHttpConnections() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS);
+    }
+
+    public int getRequestsHttpConnectionAcquireTimeout() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT);
     }
 
     public boolean isStorageForcePathStyle() {
