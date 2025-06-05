@@ -1,0 +1,4 @@
+{ "id": "2489669963", "payload": { "issue": { "milestone": { "creator": [ "a", "b", "c" ] } } } }
+{ "id": "2489669966", "payload": { "issue": null } }
+{ "id": "2489669970", "payload": { "issue": null } }
+{ "id": "2489669984", "payload": { "issue": { "milestone": null } } }
