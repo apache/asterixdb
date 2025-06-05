@@ -117,19 +117,14 @@ public abstract class AbstractExternalSortRunMerger {
 
                     if (currentGenerationRunAvailable.isEmpty()) {
                         numberOfPasses++;
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("generated runs:" + stop);
-                        }
+                        LOGGER.trace("generated runs: {}", stop);
                         runs.subList(0, stop).clear();
                         currentGenerationRunAvailable.clear();
                         currentGenerationRunAvailable.set(0, runs.size());
                         stop = runs.size();
                     }
                 } else {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("final runs: {}", stop);
-                        LOGGER.debug("number of passes: " + numberOfPasses);
-                    }
+                    LOGGER.trace("final runs: {}, number of passes: {}", stop, numberOfPasses);
                     merge(finalWriter, partialRuns);
                     break;
                 }
@@ -206,9 +201,7 @@ public abstract class AbstractExternalSortRunMerger {
             }
         } finally {
             merger.close();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Output " + io + " frames");
-            }
+            LOGGER.trace("Output {} frames", io);
         }
     }
 
