@@ -1,6 +1,12 @@
+distribute result [$$53]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    aggregate [$$53] <- [agg-sql-sum($$54)]
     -- AGGREGATE  |LOCAL|
+      aggregate [$$54] <- [agg-sql-count(1)]
       -- AGGREGATE  |LOCAL|
+        unnest $$x <- range(1, 10)
         -- UNNEST  |UNPARTITIONED|
+          empty-tuple-source
           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

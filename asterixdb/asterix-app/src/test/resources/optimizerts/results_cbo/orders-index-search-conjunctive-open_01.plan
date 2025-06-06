@@ -1,25 +1,24 @@
--- SINK  |PARTITIONED|
-  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BULKLOAD  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
-                -- ASSIGN  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+distribute result [$$20]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$20])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$20] <- [{"o_orderkey": $$23, "o_custkey": $$22}]
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+          project ([$$23, $$22])
           -- STREAM_PROJECT  |PARTITIONED|
+            select (and(gt($$o.getField(3), 150000.0), eq($$22, 40)))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$22] <- [$$o.getField(1)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                  data-scan []<-[$$23, $$o] <- tpch.Orders
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

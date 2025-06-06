@@ -1,32 +1,64 @@
+distribute result [$$66]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$66])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$66] <- [{"$1": $$71}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$71] <- [agg-sql-sum($$76)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$76] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (tpcds.customer_address.customer_address)  |PARTITIONED|
+                unnest-map [$$69, $$ca] <- index-search("customer_address", 0, "tpcds", "customer_address", true, true, 1, $$74, 1, $$74, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$78(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                    order (ASC, $$74)
+                    -- STABLE_SORT [$$74(ASC)]  |PARTITIONED|
+                      exchange
+                      -- HASH_PARTITION_EXCHANGE [$$74]  |PARTITIONED|
+                        project ([$$74])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (tpcds.customer_demographics.customer_demographics)  |PARTITIONED|
+                            unnest-map [$$68, $$cd2] <- index-search("customer_demographics", 0, "tpcds", "customer_demographics", true, true, 1, $$72, 1, $$72, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
-                                  -- HASH_PARTITION_EXCHANGE [$$76]  |PARTITIONED|
+                                order (ASC, $$72)
+                                -- STABLE_SORT [$$72(ASC)]  |PARTITIONED|
+                                  exchange
+                                  -- HASH_PARTITION_EXCHANGE [$$72]  |PARTITIONED|
+                                    project ([$$74, $$72])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- HYBRID_HASH_JOIN [$$61][$$74]  |PARTITIONED|
+                                        join (eq($$70, $$57))
+                                        -- HYBRID_HASH_JOIN [$$57][$$70]  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$74, $$57, $$72])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$74, $$57, $$72] <- [$$c.getField(4), $$c.getField(12), $$c.getField(2)]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$c])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (tpcds.customer)  |PARTITIONED|
+                                                    data-scan []<-[$$67, $$c] <- tpcds.customer
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          exchange
                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                            unnest $$70 <- scan-collection(array: [ 4, 5 ])
                                             -- UNNEST  |UNPARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

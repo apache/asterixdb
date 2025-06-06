@@ -1,18 +1,36 @@
+distribute result [$$48]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$48])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$48] <- [{"D": $$D, "DOI": $$DOI, "DII": $$DII}]
       -- ASSIGN  |PARTITIONED|
+        select (and(eq($$DII.getField("field2"), 2), eq($$DII.getField("field3"), 3), eq($$DII.getField("field3_notindexed"), 3)))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$D, $$DOI, $$DII])
           -- STREAM_PROJECT  |PARTITIONED|
+            unnest $$DII <- scan-collection($$54)
             -- UNNEST  |PARTITIONED|
+              select (eq($$DOI.getField("field2_notindexed"), 2))
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$54] <- [$$DOI.getField("inner_items")]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$D, $$DOI])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    unnest $$DOI <- scan-collection($$52)
                     -- UNNEST  |PARTITIONED|
+                      select (and(eq($$D.getField("field1"), 1), eq($$D.getField("field4"), 4)))
                       -- STREAM_SELECT  |PARTITIONED|
+                        assign [$$52] <- [$$D.getField("outer_items")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$D])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                              data-scan []<-[$$49, $$D] <- TestDataverse.Dataset1
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

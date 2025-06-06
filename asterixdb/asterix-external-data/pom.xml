@@ -156,6 +156,14 @@
           </excludes>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -210,7 +218,6 @@
               <usedDependency>net.razorvine:serpent</usedDependency>
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
-              <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
               <usedDependency>io.netty:netty-handler-proxy</usedDependency>
               <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
@@ -542,10 +549,6 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http2</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-transport-native-unix-common</artifactId>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>

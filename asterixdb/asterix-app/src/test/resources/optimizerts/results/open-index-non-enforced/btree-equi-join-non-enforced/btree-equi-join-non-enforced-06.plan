@@ -1,26 +1,52 @@
+distribute result [$$29]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$29])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$29] <- [{"c1": $$36, "c2": $$37}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$36(ASC), $$37(ASC) ]  |PARTITIONED|
+          order (ASC, $$36) (ASC, $$37)
           -- STABLE_SORT [$$36(ASC), $$37(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$36, $$37])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (eq($$34, $$35))
                   -- HYBRID_HASH_JOIN [$$34][$$35]  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                      project ([$$36, $$34])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$36, $$34] <- [$$t1.getField("c_x"), $$t1.getField("c_s")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$t1])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.TestOpen1)  |PARTITIONED|
+                              data-scan []<-[$$32, $$t1] <- test.TestOpen1
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+                      project ([$$37, $$35])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$37, $$35] <- [$$t2.getField("c_x"), $$t2.getField("c_s")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$t2])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.TestOpen2)  |PARTITIONED|
+                              data-scan []<-[$$33, $$t2] <- test.TestOpen2
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

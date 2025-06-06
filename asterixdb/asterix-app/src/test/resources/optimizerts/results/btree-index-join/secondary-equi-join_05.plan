@@ -1,18 +1,36 @@
+distribute result [$$26]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$26])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$26] <- [{"bar": $$bar, "testdst": $$testdst}]
       -- ASSIGN  |PARTITIONED|
+        select (eq($$bar, $$testdst.getField(1)))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$bar, $$testdst])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.testdst.testdst)  |PARTITIONED|
+              unnest-map [$$27, $$testdst] <- index-search("testdst", 0, "test", "testdst", true, false, 1, $$31, 1, $$31, true, true, true)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$31)
                   -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$bar, $$31])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (test.testdst.sec_Idx)  |PARTITIONED|
+                          unnest-map [$$30, $$31] <- index-search("sec_Idx", 0, "test", "testdst", true, true, 1, $$32, 1, $$32, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              assign [$$32] <- [cast-lax($$bar)]
                               -- ASSIGN  |UNPARTITIONED|
+                                unnest $$bar <- scan-collection(array: [ 1, 2, 3 ])
                                 -- UNNEST  |UNPARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

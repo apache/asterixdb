@@ -1,54 +1,108 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$33])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$33] <- [{"title1": $$36, "title2": $$37}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$36, $$37])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$38) (ASC, $$39)
             -- STABLE_SORT [$$38(ASC), $$39(ASC)]  |PARTITIONED|
+              exchange
               -- RANGE_PARTITION_EXCHANGE [$$38(ASC), $$39(ASC)]  |PARTITIONED|
+                forward: shared-variable = $$52
                 -- FORWARD  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
                     -- REPLICATE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (and(contains($$36, $$37), lt($$38, $$39)))
                         -- STREAM_SELECT  |PARTITIONED|
+                          project ([$$38, $$36, $$39, $$37])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$37] <- [$$o2.getField(2)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$38, $$36, $$39, $$o2])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                                  unnest-map [$$39, $$o2] <- index-search("DBLP", 0, "test", "DBLP", true, false, 1, $$48, 1, $$48, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      order (ASC, $$48)
                                       -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                                          unnest-map [$$48] <- index-search("ngram_index", 5, "test", "DBLP", true, true, 0, missing, 12, false, 1, $$36)
+                                          -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                              project ([$$38, $$36])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$36] <- [$$47.getField(2)]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                                    data-scan []<-[$$38, $$47] <- test.DBLP
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    aggregate [$$52] <- [agg-range-map($$49, $$50, $$51)]
                     -- AGGREGATE  |UNPARTITIONED|
+                      exchange
                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                        aggregate [$$49, $$50, $$51] <- [agg-local-sampling($$38, $$39), agg-null-writer($$38), agg-null-writer($$39)]
                         -- AGGREGATE  |PARTITIONED|
+                          project ([$$38, $$39])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              replicate
                               -- REPLICATE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  select (and(contains($$36, $$37), lt($$38, $$39)))
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    project ([$$38, $$36, $$39, $$37])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      assign [$$37] <- [$$o2.getField(2)]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$38, $$36, $$39, $$o2])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                                            unnest-map [$$39, $$o2] <- index-search("DBLP", 0, "test", "DBLP", true, false, 1, $$48, 1, $$48, true, true, true)
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                order (ASC, $$48)
                                                 -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                                                    unnest-map [$$48] <- index-search("ngram_index", 5, "test", "DBLP", true, true, 0, missing, 12, false, 1, $$36)
+                                                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                                      exchange
                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        project ([$$38, $$36])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          assign [$$36] <- [$$47.getField(2)]
                                                           -- ASSIGN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                                              data-scan []<-[$$38, $$47] <- test.DBLP
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

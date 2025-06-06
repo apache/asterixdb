@@ -30,6 +30,7 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,6 +40,7 @@ import org.junit.runners.Parameterized.Parameters;
  * Runs the Transaction Processing Council (TPC) runtime tests with the storage parallelism.
  */
 
+@Ignore("Only tests data generation function for tpcds, causes intermittent failures")
 @RunWith(Parameterized.class)
 public class TPCExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";

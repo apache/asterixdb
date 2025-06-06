@@ -1,30 +1,60 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$33])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$33] <- [{"c1": $$44, "c2": $$45}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$44(ASC), $$45(ASC) ]  |PARTITIONED|
+          order (ASC, $$44) (ASC, $$45)
           -- STABLE_SORT [$$44(ASC), $$45(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$44, $$45])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (eq($$42, $$43))
                   -- HYBRID_HASH_JOIN [$$42][$$43]  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
+                      project ([$$44, $$42])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$44, $$42] <- [$$48.getField("c_x"), $$48.getField("c_s")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$48])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$48] <- [$$t1.getField("nested")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$t1])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.TestOpen1)  |PARTITIONED|
+                                  data-scan []<-[$$40, $$t1] <- test.TestOpen1
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
+                      project ([$$45, $$43])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$45, $$43] <- [$$49.getField("c_x"), $$49.getField("c_s")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$49])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$49] <- [$$t2.getField("nested")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$t2])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.TestOpen2)  |PARTITIONED|
+                                  data-scan []<-[$$41, $$t2] <- test.TestOpen2
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
+import org.apache.asterix.external.input.record.reader.stream.AvailableInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.commons.lang3.StringUtils;
@@ -70,7 +71,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
         }
         // Use gzip stream if needed
         if (StringUtils.endsWithIgnoreCase(fileName, ".gz") || StringUtils.endsWithIgnoreCase(fileName, ".gzip")) {
-            in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+            in = new GZIPInputStream(new AvailableInputStream(in), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         }
         return true;
     }
@@ -80,7 +81,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
      *
      * @return true
      */
-    private boolean doGetInputStream(GetObjectRequest request) throws RuntimeDataException {
+    private boolean doGetInputStream(GetObjectRequest request) throws HyracksDataException {
         int retries = 0;
         while (retries < MAX_RETRIES) {
             try {
@@ -93,7 +94,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 return false;
             } catch (S3Exception ex) {
                 if (!shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "S3 retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
 
@@ -101,10 +102,10 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 3 ? 1 : 2));
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
             } catch (SdkException ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         }
         return true;

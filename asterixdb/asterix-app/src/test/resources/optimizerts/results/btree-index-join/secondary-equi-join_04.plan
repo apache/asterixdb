@@ -1,33 +1,66 @@
+distribute result [$$41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$41])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$41] <- [{"a": $$a, "b": $$b, "c": $$c}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$a, $$b, $$c])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (eq($$42, $$c.getField(1)))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$a, $$b, $$42, $$c])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.testdst3.testdst3)  |PARTITIONED|
+                unnest-map [$$45, $$c] <- index-search("testdst3", 0, "test", "testdst3", true, false, 1, $$49, 1, $$49, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$49)
                     -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$a, $$b, $$42, $$49])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (test.testdst3.sec3_Idx)  |PARTITIONED|
+                            unnest-map [$$48, $$49] <- index-search("sec3_Idx", 0, "test", "testdst3", true, true, 1, $$42, 1, $$42, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                project ([$$a, $$b, $$42])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (eq($$46, $$42))
                                     -- HYBRID_HASH_JOIN [$$46][$$42]  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                                        assign [$$46] <- [$$a.getField(1)]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$a])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+                                              data-scan []<-[$$43, $$a] <- test.testdst
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
+                                        assign [$$42] <- [$$b.getField(1)]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$b])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.testdst2)  |PARTITIONED|
+                                              data-scan []<-[$$44, $$b] <- test.testdst2
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

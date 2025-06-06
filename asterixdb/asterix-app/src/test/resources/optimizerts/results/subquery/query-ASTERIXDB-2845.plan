@@ -1,134 +1,250 @@
+distribute result [$$272]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$272])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$272] <- [{"j_jid": $$277, "j_a": $$285, "m1_jid": $$287, "m1_x": $#4, "m1_c1": $$290, "m2_jid": $#6, "m2_y": $#5, "m2_c2": $$291}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$277(ASC), $#4(ASC), $#5(ASC), $#6(ASC) ]  |PARTITIONED|
+          order (ASC, $$277) (ASC, $#4) (ASC, $#5) (ASC, $#6)
           -- STABLE_SORT [$$277(ASC), $#4(ASC), $#5(ASC), $#6(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$277, $$285, $$287, $#4, $$290, $#6, $#5, $$291])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  left outer join (and(eq($$277, $$303), eq($$240, $$308), eq($$290, $$298), eq($$287, $$299), eq($#4, $$300), eq($$295, $$301)))
                   -- HYBRID_HASH_JOIN [$$277, $$240, $$290, $$287, $#4, $$295][$$303, $$308, $$298, $$299, $$300, $$301]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      window-aggregate [$$295] <- [row-number-impl()] partition [$$277, $$240, $$290, $$287, $#4]
                       -- WINDOW_STREAM  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$277) (ASC, $$240) (ASC, $$290) (ASC, $$287) (ASC, $#4)
                           -- STABLE_SORT [$$277(ASC), $$240(ASC), $$290(ASC), $$287(ASC), $#4(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$277, $$285, $$287, $#4, $$290, $$240])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (eq($$277, $$jid))
                                   -- HYBRID_HASH_JOIN [$$277][$$jid]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$277, $$285])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$285] <- [$$jds.getField("a")]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$277, $$jds])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            assign [$$277, $$jds] <- [$$303, $$305]
                                             -- ASSIGN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                replicate
                                                 -- REPLICATE  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.jds)  |PARTITIONED|
+                                                    data-scan []<-[$$303, $$305] <- test.jds
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$jid]  |PARTITIONED|
+                                      assign [$$290, $#4, $$287] <- [$$240.getField(0), $$240.getField("x"), $$240.getField("jid")]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$jid, $$240])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$240] <- [{"jid": $$jid, "x": $$x, "c1": $$280}]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- SORT_GROUP_BY[$$324, $$325]  |PARTITIONED|
-                                                      {
+                                              group by ([$$jid := $$324; $$x := $$325]) decor ([]) {
+                                                        aggregate [$$280] <- [agg-sql-sum($$323)]
                                                         -- AGGREGATE  |LOCAL|
+                                                          nested tuple source
                                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                      }
+                                                     }
+                                              -- SORT_GROUP_BY[$$324, $$325]  |PARTITIONED|
+                                                exchange
                                                 -- HASH_PARTITION_EXCHANGE [$$324, $$325]  |PARTITIONED|
-                                                  -- SORT_GROUP_BY[$$273, $$274]  |PARTITIONED|
-                                                          {
+                                                  group by ([$$324 := $$273; $$325 := $$274]) decor ([]) {
+                                                            aggregate [$$323] <- [agg-sql-count(1)]
                                                             -- AGGREGATE  |LOCAL|
+                                                              nested tuple source
                                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                          }
+                                                         }
+                                                  -- SORT_GROUP_BY[$$273, $$274]  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      project ([$$273, $$274])
                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                        assign [$$274, $$273] <- [$$mds.getField("x"), $$mds.getField("jid")]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          project ([$$mds])
                                                           -- STREAM_PROJECT  |PARTITIONED|
+                                                            assign [$$mds] <- [$$313]
                                                             -- ASSIGN  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                replicate
                                                                 -- REPLICATE  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    project ([$$313])
                                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- DATASOURCE_SCAN (test.mds)  |PARTITIONED|
+                                                                        data-scan []<-[$$314, $$313] <- test.mds
+                                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                          exchange
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            empty-tuple-source
                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (true)
                       -- NESTED_LOOP  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          select (eq($$303, $$299))
                           -- STREAM_SELECT  |PARTITIONED|
+                            window-aggregate [$$301] <- [row-number-impl()] partition [$$303, $$308, $$298, $$299, $$300]
                             -- WINDOW_STREAM  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$303) (ASC, $$308) (ASC, $$298) (ASC, $$299) (ASC, $$300)
                                 -- STABLE_SORT [$$303(ASC), $$308(ASC), $$298(ASC), $$299(ASC), $$300(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$303, $$308, $$298, $$299, $$300])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        left outer join (eq($$303, $$306))
                                         -- HYBRID_HASH_JOIN [$$303][$$306]  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$303])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                replicate
                                                 -- REPLICATE  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.jds)  |PARTITIONED|
+                                                    data-scan []<-[$$303, $$305] <- test.jds
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          exchange
                                           -- HASH_PARTITION_EXCHANGE [$$306]  |PARTITIONED|
+                                            assign [$$300, $$299, $$298] <- [$$308.getField("x"), $$308.getField("jid"), $$308.getField(0)]
                                             -- ASSIGN  |PARTITIONED|
+                                              project ([$$306, $$308])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$308] <- [{"jid": $$306, "x": $$309, "c1": $$310}]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- SORT_GROUP_BY[$$327, $$328]  |PARTITIONED|
-                                                            {
+                                                    group by ([$$306 := $$327; $$309 := $$328]) decor ([]) {
+                                                              aggregate [$$310] <- [agg-sql-sum($$326)]
                                                               -- AGGREGATE  |LOCAL|
+                                                                nested tuple source
                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                            }
+                                                           }
+                                                    -- SORT_GROUP_BY[$$327, $$328]  |PARTITIONED|
+                                                      exchange
                                                       -- HASH_PARTITION_EXCHANGE [$$327, $$328]  |PARTITIONED|
-                                                        -- SORT_GROUP_BY[$$311, $$312]  |PARTITIONED|
-                                                                {
+                                                        group by ([$$327 := $$311; $$328 := $$312]) decor ([]) {
+                                                                  aggregate [$$326] <- [agg-sql-count(1)]
                                                                   -- AGGREGATE  |LOCAL|
+                                                                    nested tuple source
                                                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                }
+                                                               }
+                                                        -- SORT_GROUP_BY[$$311, $$312]  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            project ([$$311, $$312])
                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                              assign [$$311, $$312] <- [$$313.getField("jid"), $$313.getField("x")]
                                                               -- ASSIGN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  replicate
                                                                   -- REPLICATE  |PARTITIONED|
+                                                                    exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      project ([$$313])
                                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                                        exchange
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          -- DATASOURCE_SCAN (test.mds)  |PARTITIONED|
+                                                                          data-scan []<-[$$314, $$313] <- test.mds
+                                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                            exchange
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                              empty-tuple-source
                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          project ([$#6, $#5, $$291])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$291, $#6, $#5] <- [$$256.getField(0), $$256.getField("jid"), $$256.getField("y")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$256])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$256] <- [{"jid": $$jid, "y": $$y, "c2": $$281}]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- SORT_GROUP_BY[$$330, $$331]  |PARTITIONED|
-                                            {
+                                    group by ([$$jid := $$330; $$y := $$331]) decor ([]) {
+                                              aggregate [$$281] <- [agg-sql-sum($$329)]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- SORT_GROUP_BY[$$330, $$331]  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$330, $$331]  |PARTITIONED|
-                                        -- SORT_GROUP_BY[$$275, $$276]  |PARTITIONED|
-                                                {
+                                        group by ([$$330 := $$275; $$331 := $$276]) decor ([]) {
+                                                  aggregate [$$329] <- [agg-sql-count(1)]
                                                   -- AGGREGATE  |LOCAL|
+                                                    nested tuple source
                                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                }
+                                               }
+                                        -- SORT_GROUP_BY[$$275, $$276]  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$275, $$276])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$276, $$275] <- [$$mds.getField("y"), $$mds.getField("jid")]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$mds])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  assign [$$mds] <- [$$313]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      replicate
                                                       -- REPLICATE  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          project ([$$313])
                                                           -- STREAM_PROJECT  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- DATASOURCE_SCAN (test.mds)  |PARTITIONED|
+                                                              data-scan []<-[$$314, $$313] <- test.mds
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

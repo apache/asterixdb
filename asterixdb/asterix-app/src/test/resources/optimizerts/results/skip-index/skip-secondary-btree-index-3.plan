@@ -1,15 +1,30 @@
+distribute result [$$emp]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$emp])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        join (eq($$18, $$15))
         -- HYBRID_HASH_JOIN [$$15][$$18]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            assign [$$15] <- [$$emp.getField(1)]
             -- ASSIGN  |PARTITIONED|
+              project ([$$emp])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+                  data-scan []<-[$$17, $$emp] <- test.testdst
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+          exchange
           -- BROADCAST_EXCHANGE  |PARTITIONED|
+            unnest $$18 <- scan-collection(array: [ "Roger", "Max" ])
             -- UNNEST  |UNPARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

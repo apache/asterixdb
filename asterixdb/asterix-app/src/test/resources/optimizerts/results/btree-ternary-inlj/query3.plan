@@ -1,49 +1,98 @@
+distribute result [$$75]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$75])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$75] <- [{"$1": $$82}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$82] <- [agg-sql-sum($$85)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$85] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (eq($$76, $$C.getField("k")))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$76, $$C])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (TestDataverse.IndexDatasetC.IndexDatasetC)  |PARTITIONED|
+                    unnest-map [$$80, $$C] <- index-search("IndexDatasetC", 0, "TestDataverse", "IndexDatasetC", true, false, 1, $$91, 1, $$91, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$91)
                         -- STABLE_SORT [$$91(ASC)]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$76, $$91])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (TestDataverse.IndexDatasetC.indexC)  |PARTITIONED|
+                                unnest-map [$$90, $$91] <- index-search("indexC", 0, "TestDataverse", "IndexDatasetC", true, true, 1, $$76, 1, $$76, true, true, true)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    project ([$$76])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      select (eq($$76, $$B.getField("k")))
                                       -- STREAM_SELECT  |PARTITIONED|
+                                        project ([$$76, $$B])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- BTREE_SEARCH (TestDataverse.IndexDatasetB.IndexDatasetB)  |PARTITIONED|
+                                            unnest-map [$$79, $$B] <- index-search("IndexDatasetB", 0, "TestDataverse", "IndexDatasetB", true, false, 1, $$89, 1, $$89, true, true, true)
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                order (ASC, $$89)
                                                 -- STABLE_SORT [$$89(ASC)]  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    project ([$$76, $$89])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- BTREE_SEARCH (TestDataverse.IndexDatasetB.indexB)  |PARTITIONED|
+                                                        unnest-map [$$88, $$89] <- index-search("indexB", 0, "TestDataverse", "IndexDatasetB", true, true, 1, $$76, 1, $$76, true, true, true)
+                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                          exchange
                                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                            project ([$$76])
                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                              select (eq($$76, $$A.getField("k")))
                                                               -- STREAM_SELECT  |PARTITIONED|
+                                                                project ([$$76, $$A])
                                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- BTREE_SEARCH (TestDataverse.IndexDatasetA.IndexDatasetA)  |PARTITIONED|
+                                                                    unnest-map [$$78, $$A] <- index-search("IndexDatasetA", 0, "TestDataverse", "IndexDatasetA", true, false, 1, $$87, 1, $$87, true, true, true)
+                                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        order (ASC, $$87)
                                                                         -- STABLE_SORT [$$87(ASC)]  |PARTITIONED|
+                                                                          exchange
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            project ([$$76, $$87])
                                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                                              exchange
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                -- BTREE_SEARCH (TestDataverse.IndexDatasetA.indexA)  |PARTITIONED|
+                                                                                unnest-map [$$86, $$87] <- index-search("indexA", 0, "TestDataverse", "IndexDatasetA", true, true, 1, $$76, 1, $$76, true, true, true)
+                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                  exchange
                                                                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                    project ([$$76])
                                                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                                                      assign [$$76] <- [$$P.getField(1)]
                                                                                       -- ASSIGN  |PARTITIONED|
+                                                                                        project ([$$P])
                                                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                                                          exchange
                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                            -- DATASOURCE_SCAN (TestDataverse.ProbeDataset)  |PARTITIONED|
+                                                                                            data-scan []<-[$$77, $$P] <- TestDataverse.ProbeDataset
+                                                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                              exchange
                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                empty-tuple-source
                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

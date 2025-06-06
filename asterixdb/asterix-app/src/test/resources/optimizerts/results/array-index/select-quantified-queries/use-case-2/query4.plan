@@ -1,22 +1,41 @@
+distribute result [$$50]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$50])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$50] <- [{"$1": $$52}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$52] <- [agg-sql-sum($$55)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$55] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (and($$41, eq($$42, 0)))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$41, $$42])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  -- SUBPLAN  |PARTITIONED|
-                          {
+                  subplan {
+                            aggregate [$$41, $$42] <- [non-empty-stream(), agg-sql-count(switch-case(and(gt($$D, "2016"), lt($$D, "2017")), true, null, true))]
                             -- AGGREGATE  |LOCAL|
+                              unnest $$D <- scan-collection($$53)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
+                         }
+                  -- SUBPLAN  |PARTITIONED|
+                    project ([$$53])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$53] <- [$$C.getField(2).getField("dates_notindexed")]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$C])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                            data-scan []<-[$$51, $$C] <- TestYelp.YelpCheckin
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

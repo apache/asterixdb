@@ -1,25 +1,50 @@
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$22])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$22] <- [{"res": $$29}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
+          order (ASC, $$29)
           -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$29])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (and(gt($$25, 499), lt($$25, 99999)))
                 -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$29, $$25])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$29, $$25] <- [$$31.getField("c_x"), $$31.getField("c_i8")]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$31])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$31] <- [$$t.getField("nested")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$t])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.TestOpen.TestOpen)  |PARTITIONED|
+                              unnest-map [$$27, $$t] <- index-search("TestOpen", 0, "test", "TestOpen", false, false, 1, $$36, 1, $$36, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$36)
                                   -- STABLE_SORT [$$36(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$36])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (test.TestOpen.idx_i8)  |PARTITIONED|
+                                          unnest-map [$$34, $$35, $$36] <- index-search("idx_i8", 0, "test", "TestOpen", false, false, 1, $$32, 1, $$33, true, true, false)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$32, $$33] <- [127, 127]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

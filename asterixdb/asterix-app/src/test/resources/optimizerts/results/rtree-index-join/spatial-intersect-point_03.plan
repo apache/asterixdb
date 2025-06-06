@@ -1,23 +1,46 @@
+distribute result [$$27]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$27])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$27] <- [{"a": $$a, "b": $$b}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$a, $$b])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (spatial-intersect($$30, $$b.getField(1)))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$a, $$30, $$b])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
+                unnest-map [$$29, $$b] <- index-search("MyData", 0, "test", "MyData", true, false, 1, $$40, 1, $$40, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$40)
                     -- STABLE_SORT [$$40(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$a, $$30, $$40])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- RTREE_SEARCH (test.MyData.rtree_index)  |PARTITIONED|
+                            unnest-map [$$36, $$37, $$38, $$39, $$40] <- index-search("rtree_index", 1, "test", "MyData", true, true, 4, $$32, $$33, $$34, $$35)
+                            -- RTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                assign [$$32, $$33, $$34, $$35] <- [create-mbr($$30, 2, 0), create-mbr($$30, 2, 1), create-mbr($$30, 2, 2), create-mbr($$30, 2, 3)]
                                 -- ASSIGN  |PARTITIONED|
+                                  assign [$$30] <- [$$a.getField(1)]
                                   -- ASSIGN  |PARTITIONED|
+                                    project ([$$a])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.MyData)  |PARTITIONED|
+                                        data-scan []<-[$$28, $$a] <- test.MyData
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,15 +1,30 @@
+distribute result [$$o]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$o])
     -- STREAM_PROJECT  |PARTITIONED|
+      select (and(get-item(edit-distance-check($$39, "Amihay Motro", 5), 0), get-item(edit-distance-check($$39, "Amihay Motro", 3), 0)))
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$39] <- [$$o.getField(3)]
         -- ASSIGN  |PARTITIONED|
+          project ([$$o])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+              unnest-map [$$40, $$o] <- index-search("DBLP", 0, "test", "DBLP", false, false, 1, $$42, 1, $$42, true, true, true)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$42)
                   -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                      unnest-map [$$42] <- index-search("ngram_index", 5, "test", "DBLP", false, false, 2, 3, 12, false, 1, $$41)
+                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$41] <- ["Amihay Motro"]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

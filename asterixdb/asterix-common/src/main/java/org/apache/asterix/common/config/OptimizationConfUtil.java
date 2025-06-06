@@ -120,7 +120,7 @@ public class OptimizationConfUtil {
             return externalScanMemorySizeParameter != null ? intByteParser.parse(externalScanMemorySizeParameter)
                     : compilerExternalScanMemorySize;
         } catch (IllegalArgumentException e) {
-            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 
@@ -156,7 +156,7 @@ public class OptimizationConfUtil {
         try {
             memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
         } catch (IllegalArgumentException e) {
-            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
         int frameLimit = (int) (memBudget / frameSize);
         if (frameLimit < minFrameLimit) {
@@ -175,7 +175,7 @@ public class OptimizationConfUtil {
             return valueInQuery == null ? compilerProperties.getSortSamples()
                     : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
         } catch (IllegalArgumentException e) {
-            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc,
+            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, e, sourceLoc,
                     CompilerProperties.COMPILER_SORT_SAMPLES_KEY, 1, "samples");
         }
     }

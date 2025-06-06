@@ -1,24 +1,48 @@
+distribute result [$$40]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$40])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$40] <- [{"aid": $$42, "bid": $$b.getField(0)}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$42(ASC) ]  |PARTITIONED|
+          order (ASC, $$42)
           -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$42, $$b])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  left outer join (eq($$44, $$45))
                   -- HYBRID_HASH_JOIN [$$44][$$45]  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
+                      project ([$$42, $$44])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$44] <- [$$a.getField(3)]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                            data-scan []<-[$$42, $$a] <- test.DBLP
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                      assign [$$45] <- [$$b.getField(3)]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$b])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                            data-scan []<-[$$43, $$b] <- test.CSX
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

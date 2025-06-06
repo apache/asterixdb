@@ -27,20 +27,21 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class CompilationException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
+    public static CompilationException create(ErrorCode error, Serializable... params) {
+        return new CompilationException(error, params);
+    }
+
+    public static CompilationException create(ErrorCode error, Throwable th, Serializable... params) {
+        return new CompilationException(error, th, params);
+    }
+
     public static CompilationException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
         return new CompilationException(error, sourceLoc, params);
     }
 
-    public static CompilationException create(ErrorCode error, Serializable... params) {
-        return create(error, null, params);
-    }
-
-    public CompilationException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(error, cause, sourceLoc, params);
-    }
-
-    public CompilationException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
-        this(error, null, sourceLoc, params);
+    public static CompilationException create(ErrorCode error, Throwable th, SourceLocation sourceLoc,
+            Serializable... params) {
+        return new CompilationException(error, th, sourceLoc, params);
     }
 
     public CompilationException(ErrorCode error, Serializable... params) {
@@ -49,6 +50,14 @@ public class CompilationException extends AlgebricksException {
 
     public CompilationException(ErrorCode errorCode, Throwable cause, Serializable... params) {
         this(errorCode, cause, null, params);
+    }
+
+    public CompilationException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        this(error, null, sourceLoc, params);
+    }
+
+    public CompilationException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(error, cause, sourceLoc, params);
     }
 
     /**

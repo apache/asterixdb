@@ -6680,6 +6680,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash_join_exchange">
+        <output-dir compare="Text">hash_join_exchange</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="hash_join_exchange_1">
+        <output-dir compare="Text">hash_join_exchange_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="ASTERIXDB-3502">
         <output-dir compare="Text">ASTERIXDB-3502</output-dir>
       </compilation-unit>
@@ -7316,6 +7326,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="handle_error_fun">
+        <output-dir compare="Text">handle_error_fun</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-3334">
         <output-dir compare="Text">query-ASTERIXDB-3334</output-dir>
       </compilation-unit>
@@ -7358,6 +7373,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="remove_listify">
         <output-dir compare="Text">remove_listify</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-3562">
+        <output-dir compare="Text">query-ASTERIXDB-3562</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

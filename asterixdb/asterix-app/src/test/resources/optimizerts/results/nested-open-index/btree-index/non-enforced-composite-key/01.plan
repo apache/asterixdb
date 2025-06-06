@@ -1,15 +1,30 @@
+distribute result [$$emp]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (gt($$emp.getField("nested").getField("fname"), "Roger"))
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$emp])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.testdst.testdst)  |PARTITIONED|
+          unnest-map [$$15, $$emp] <- index-search("testdst", 0, "test", "testdst", false, false, 1, $$21, 1, $$21, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$21)
               -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$21])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.testdst.sec_Idx)  |PARTITIONED|
+                      unnest-map [$$19, $$20, $$21] <- index-search("sec_Idx", 0, "test", "testdst", false, false, 1, $$18, 0, false, true, false)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$18] <- ["Roger"]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,44 +1,82 @@
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$46])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$46] <- [{"name": $$name, "age": $$age}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (DESC, $$name) (ASC, $$age)
           -- STABLE_SORT [$$name(DESC), $$age(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$name(DESC), $$age(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$53
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
-                              {
+                      group by ([$$name := $$47; $$age := $$48]) decor ([]) {
+                                aggregate [] <- []
                                 -- AGGREGATE  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$47, $$48]  |PARTITIONED|
+                          project ([$$47, $$48])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$48, $$47] <- [$$c.getField(2), $$c.getField(1)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$c])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (`gby-using-orderby-desc`.Customers)  |PARTITIONED|
+                                  data-scan []<-[$$49, $$c] <- `gby-using-orderby-desc`.Customers
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$53] <- [agg-range-map($$50, $$51, $$52)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$50, $$51, $$52] <- [agg-local-sampling($$name, $$age), agg-null-writer($$name), agg-null-writer($$age)]
                       -- AGGREGATE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
-                                      {
+                              group by ([$$name := $$47; $$age := $$48]) decor ([]) {
+                                        aggregate [] <- []
                                         -- AGGREGATE  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
+                                     }
+                              -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$47, $$48]  |PARTITIONED|
+                                  project ([$$47, $$48])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$48, $$47] <- [$$c.getField(2), $$c.getField(1)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$c])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (`gby-using-orderby-desc`.Customers)  |PARTITIONED|
+                                          data-scan []<-[$$49, $$c] <- `gby-using-orderby-desc`.Customers
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

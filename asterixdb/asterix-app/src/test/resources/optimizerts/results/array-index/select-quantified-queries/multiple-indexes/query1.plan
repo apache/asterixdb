@@ -1,43 +1,83 @@
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$30])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$30] <- [{"k": $$k}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$k])
         -- STREAM_PROJECT  |PARTITIONED|
+          select ($$28)
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$k, $$28])
             -- STREAM_PROJECT  |PARTITIONED|
-              -- SUBPLAN  |PARTITIONED|
-                      {
+              subplan {
+                        aggregate [$$28] <- [non-empty-stream()]
                         -- AGGREGATE  |LOCAL|
+                          select (and(eq($$34, 284), eq($$33, 263)))
                           -- STREAM_SELECT  |LOCAL|
+                            assign [$$34, $$33] <- [$$v.getField("a"), $$v.getField("b")]
                             -- ASSIGN  |LOCAL|
+                              unnest $$v <- scan-collection($$32)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                assign [$$32] <- [$$k.getField("uarr_i")]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$k])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.KSI.KSI)  |PARTITIONED|
+                      unnest-map [$$31, $$k] <- index-search("KSI", 0, "test", "KSI", false, false, 1, $$43, 1, $$43, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          intersect [$$43] <- [[$$38], [$$42]]
                           -- INTERSECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              distinct ([$$38])
                               -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- STABLE_SORT [$$40(ASC)]  |PARTITIONED|
+                                  order (ASC, $$38)
+                                  -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$38])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (test.KSI.KS1_array_index1)  |PARTITIONED|
+                                          unnest-map [$$37, $$38] <- index-search("KS1_array_index1", 0, "test", "KSI", false, false, 1, $$35, 1, $$36, true, true, true)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$35, $$36] <- [284, 284]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              distinct ([$$42])
                               -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- STABLE_SORT [$$44(ASC)]  |PARTITIONED|
+                                  order (ASC, $$42)
+                                  -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$42])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (test.KSI.KS1_array_index2)  |PARTITIONED|
+                                          unnest-map [$$41, $$42] <- index-search("KS1_array_index2", 0, "test", "KSI", false, false, 1, $$39, 1, $$40, true, true, true)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$39, $$40] <- [263, 263]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

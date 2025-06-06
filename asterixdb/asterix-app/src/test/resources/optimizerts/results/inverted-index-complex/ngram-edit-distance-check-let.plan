@@ -1,13 +1,26 @@
+distribute result [$$o]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (get-item(edit-distance-check($$o.getField(3), "Amihay Motro", 1), 0))
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$o])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+          unnest-map [$$25, $$o] <- index-search("DBLP", 0, "test", "DBLP", false, false, 1, $$28, 1, $$28, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$28)
               -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                  unnest-map [$$28] <- index-search("ngram_index", 5, "test", "DBLP", false, false, 2, 1, 12, false, 1, $$27)
+                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      assign [$$27] <- ["Amihay Motro"]
                       -- ASSIGN  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

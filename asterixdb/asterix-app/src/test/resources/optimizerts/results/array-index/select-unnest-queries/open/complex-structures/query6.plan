@@ -1,22 +1,44 @@
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$28])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$28] <- [{"D": $$D, "F": $$F}]
       -- ASSIGN  |PARTITIONED|
+        select (gt($$F.getField("open_field_3b").getField("open_field_4"), 0))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$D, $$F])
           -- STREAM_PROJECT  |PARTITIONED|
+            unnest $$F <- scan-collection($$30)
             -- UNNEST  |PARTITIONED|
+              assign [$$30] <- [$$D.getField(1).getField(0)]
               -- ASSIGN  |PARTITIONED|
+                project ([$$D])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (TestDataverse.TestDataset.TestDataset)  |PARTITIONED|
+                    unnest-map [$$29, $$D] <- index-search("TestDataset", 0, "TestDataverse", "TestDataset", false, false, 1, $$36, 1, $$36, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        distinct ([$$36])
                         -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$36)
                             -- STABLE_SORT [$$36(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$36])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (TestDataverse.TestDataset.testIndex2c)  |PARTITIONED|
+                                    unnest-map [$$35, $$36] <- index-search("testIndex2c", 0, "TestDataverse", "TestDataset", false, false, 1, $$34, 0, true, true, false)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$34] <- [0]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

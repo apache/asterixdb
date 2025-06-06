@@ -1,96 +1,192 @@
+distribute result [$#1]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$#1])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$114) (ASC, $$115) (ASC, $$116)
         -- STABLE_SORT [$$114(ASC), $$115(ASC), $$116(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$114(ASC), $$115(ASC), $$116(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$219
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    union ($$213, $$214, $#1) ($$117, $$74, $$116) ($$143, $$73, $$115) ($$71, $$76, $$114)
                     -- UNION_ALL  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$213, $$117, $$143, $$71])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                            project ([$$71, $$213, $$117, $$143])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$213, $$117, $$143] <- [cast($$45), $$45.getField("v3"), $$45.getField("v2")]
                               -- ASSIGN  |PARTITIONED|
+                                assign [$$45] <- [{"v1": $$71}]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$71])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$71] <- [$$76]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            select (like($$76, "Orders%"))
                                             -- STREAM_SELECT  |PARTITIONED|
+                                              project ([$$76])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                                  data-scan []<-[$$75, $$76, $$ds] <- Metadata.Dataset
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$214, $$74, $$73, $$76])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$214] <- [cast({"v1": $$76, "v2": $$73, "v3": $$74})]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              join (true)
                               -- NESTED_LOOP  |PARTITIONED|
+                                exchange
                                 -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                                  select (like($$73, "Orders%"))
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    project ([$$73, $$74])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (Metadata.Index)  |PARTITIONED|
+                                        data-scan []<-[$$72, $$73, $$74, $$idx] <- Metadata.Index
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  replicate
                                   -- REPLICATE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      select (like($$76, "Orders%"))
                                       -- STREAM_SELECT  |PARTITIONED|
+                                        project ([$$76])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                            data-scan []<-[$$75, $$76, $$ds] <- Metadata.Dataset
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$219] <- [agg-range-map($$215, $$216, $$217, $$218)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$215, $$216, $$217, $$218] <- [agg-local-sampling($$114, $$115, $$116), agg-null-writer($$114), agg-null-writer($$115), agg-null-writer($$116)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$114, $$115, $$116])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              union ($$213, $$214, $#1) ($$117, $$74, $$116) ($$143, $$73, $$115) ($$71, $$76, $$114)
                               -- UNION_ALL  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$213, $$117, $$143, $$71])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                                      project ([$$71, $$213, $$117, $$143])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$213, $$117, $$143] <- [cast($$45), $$45.getField("v3"), $$45.getField("v2")]
                                         -- ASSIGN  |PARTITIONED|
+                                          assign [$$45] <- [{"v1": $$71}]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$71])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$71] <- [$$76]
                                               -- ASSIGN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  replicate
                                                   -- REPLICATE  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      select (like($$76, "Orders%"))
                                                       -- STREAM_SELECT  |PARTITIONED|
+                                                        project ([$$76])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                                            data-scan []<-[$$75, $$76, $$ds] <- Metadata.Dataset
+                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$214, $$74, $$73, $$76])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$214] <- [cast({"v1": $$76, "v2": $$73, "v3": $$74})]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        join (true)
                                         -- NESTED_LOOP  |PARTITIONED|
+                                          exchange
                                           -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                                            select (like($$73, "Orders%"))
                                             -- STREAM_SELECT  |PARTITIONED|
+                                              project ([$$73, $$74])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (Metadata.Index)  |PARTITIONED|
+                                                  data-scan []<-[$$72, $$73, $$74, $$idx] <- Metadata.Index
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          exchange
                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                select (like($$76, "Orders%"))
                                                 -- STREAM_SELECT  |PARTITIONED|
+                                                  project ([$$76])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                                      data-scan []<-[$$75, $$76, $$ds] <- Metadata.Dataset
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

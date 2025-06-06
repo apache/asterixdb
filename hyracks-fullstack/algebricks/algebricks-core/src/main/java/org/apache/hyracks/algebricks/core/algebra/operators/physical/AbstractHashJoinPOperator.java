@@ -137,24 +137,25 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                 .getPartitioningType() == requirements.getPartitioningType()) {
                             switch (requirements.getPartitioningType()) {
                                 case UNORDERED_PARTITIONED: {
-                                    UnorderedPartitionedProperty upp1 =
+                                    UnorderedPartitionedProperty unorderedFirstDelivered =
                                             (UnorderedPartitionedProperty) firstDeliveredPartitioning;
-                                    Set<LogicalVariable> set1 = upp1.getColumnSet();
-                                    UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) requirements;
-                                    Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
+                                    Set<LogicalVariable> firstDeliveredVars = unorderedFirstDelivered.getColumnSet();
+                                    UnorderedPartitionedProperty unorderedRequired =
+                                            (UnorderedPartitionedProperty) requirements;
+                                    Set<LogicalVariable> modifiedRequiredVars = new ListSet<LogicalVariable>();
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                                    Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
-                                    Set<LogicalVariable> keysCurrent = uppreq.getColumnSet();
-                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent))
+                                    Set<LogicalVariable> coveredVars = new ListSet<LogicalVariable>();
+                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(firstDeliveredVars))
                                             ? keysRightBranch : keysLeftBranch;
                                     List<LogicalVariable> keysSecond =
                                             keysFirst == keysRightBranch ? keysLeftBranch : keysRightBranch;
-                                    for (LogicalVariable r : uppreq.getColumnSet()) {
-                                        EquivalenceClass ecSnd = eqmap.get(r);
+                                    for (LogicalVariable r : firstDeliveredVars) {
+                                        EquivalenceClass ecFirst = eqmap.get(r);
                                         boolean found = false;
                                         int j = 0;
                                         for (LogicalVariable rvar : keysFirst) {
-                                            if (rvar == r || ecSnd != null && eqmap.get(rvar) == ecSnd) {
+                                            if (!modifiedRequiredVars.contains(keysSecond.get(j))
+                                                    && (rvar == r || (ecFirst != null && ecFirst == eqmap.get(rvar)))) {
                                                 found = true;
                                                 break;
                                             }
@@ -165,27 +166,19 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                                     + " among " + keysFirst);
                                         }
                                         LogicalVariable v2 = keysSecond.get(j);
-                                        EquivalenceClass ecFst = eqmap.get(v2);
-                                        for (LogicalVariable vset1 : set1) {
-                                            if (vset1 == v2 || ecFst != null && eqmap.get(vset1) == ecFst) {
-                                                if (!covered.add(vset1)) {
-                                                    continue;
-                                                }
-                                                modifuppreq.add(r);
-                                                break;
-                                            }
-                                        }
-                                        if (covered.equals(set1)) {
+                                        coveredVars.add(r);
+                                        modifiedRequiredVars.add(v2);
+                                        if (coveredVars.equals(firstDeliveredVars)) {
                                             break;
                                         }
                                     }
-                                    if (!covered.equals(set1)) {
+                                    if (!coveredVars.equals(firstDeliveredVars)) {
                                         throw new AlgebricksException("Could not modify " + requirements
                                                 + " to agree with partitioning property " + firstDeliveredPartitioning
                                                 + " delivered by previous input operator.");
                                     }
-                                    UnorderedPartitionedProperty upp2 =
-                                            new UnorderedPartitionedProperty(modifuppreq, requirements.getNodeDomain());
+                                    UnorderedPartitionedProperty upp2 = new UnorderedPartitionedProperty(
+                                            modifiedRequiredVars, requirements.getNodeDomain());
                                     return new Pair<>(false, upp2);
                                 }
                                 case ORDERED_PARTITIONED: {

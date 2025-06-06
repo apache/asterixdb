@@ -1,29 +1,26 @@
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$42])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$42] <- [{"x": $$x, "y": $$44}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$x, $$44])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.s.s)  |PARTITIONED|
+            unnest-map [$$44, $$z] <- index-search("s", 0, "test", "s", true, true, 1, $$52, 1, $$52, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
-                  -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
+                order (ASC, $$52)
+                -- STABLE_SORT [$$52(ASC)]  |PARTITIONED|
+                  exchange
+                  -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                    assign [$$52] <- [cast-lax($$x.getField(0))]
                     -- ASSIGN  |UNPARTITIONED|
+                      unnest $$x <- scan-collection(multiset: {{ { "a": 1 }, { "a": 2 } }})
                       -- UNNEST  |UNPARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

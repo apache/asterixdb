@@ -1,22 +1,44 @@
+distribute result [$$16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$16])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$16] <- [{"res": $$20}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+          order (ASC, $$20)
           -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$20])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (eq($$t.getField("c_s"), "world"))
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$20] <- [$$t.getField("c_x")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$t])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.TestOpen.TestOpen)  |PARTITIONED|
+                        unnest-map [$$18, $$t] <- index-search("TestOpen", 0, "test", "TestOpen", false, false, 1, $$25, 1, $$25, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$25)
                             -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$25])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.TestOpen.idx_s)  |PARTITIONED|
+                                    unnest-map [$$24, $$25] <- index-search("idx_s", 0, "test", "TestOpen", false, false, 1, $$22, 1, $$23, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$22, $$23] <- ["world", "world"]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

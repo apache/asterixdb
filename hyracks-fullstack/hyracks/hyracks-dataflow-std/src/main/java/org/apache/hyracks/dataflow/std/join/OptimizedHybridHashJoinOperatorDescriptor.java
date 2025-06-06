@@ -513,12 +513,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         stats.getLevel().set(level);
                     }
 
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId()
-                                + ") (pid " + ") - (level " + level + ")" + " - BuildSize:\t" + buildPartSize
-                                + "\tProbeSize:\t" + probePartSize + " - MemForJoin " + (state.memForJoin)
-                                + "  - LeftOuter is " + isLeftOuter);
-                    }
+                    LOGGER.trace(
+                            "\n>>>Joining Partition Pairs (thread_id {}) (pid ) - (level {}) - BuildSize:\t{}\tProbeSize:\t{} - MemForJoin {}  - LeftOuter is {}",
+                            Thread.currentThread().getId(), level, buildPartSize, probePartSize, state.memForJoin,
+                            isLeftOuter);
 
                     // Calculate the expected hash table size for the both side.
                     long expectedHashTableSizeForBuildInFrame =
@@ -534,10 +532,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         int tabSize = -1;
                         if (!forceRoleReversal && (isLeftOuter || (buildPartSize < probePartSize))) {
                             //Case 1.1 - InMemHJ (without Role-Reversal)
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level "
-                                        + level + "]");
-                            }
+                            LOGGER.trace("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level {}]",
+                                    level);
                             tabSize = buildSizeInTuple;
                             if (tabSize == 0) {
                                 throw new HyracksDataException(
@@ -547,10 +543,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             applyInMemHashJoin(buildKeys, probeKeys, tabSize, buildRd, probeRd, buildHpc, probeHpc,
                                     buildSideReader, probeSideReader, probComp); // checked-confirmed
                         } else { //Case 1.2 - InMemHJ with Role Reversal
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ"
-                                        + "WITH RoleReversal - [Level " + level + "]");
-                            }
+                            LOGGER.trace(
+                                    "\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJWITH RoleReversal - [Level {}]",
+                                    level);
                             tabSize = probeSizeInTuple;
                             if (tabSize == 0) {
                                 throw new HyracksDataException(
@@ -563,25 +558,18 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                     //Apply (Recursive) HHJ
                     else {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("\t>>>Case 2. ApplyRecursiveHHJ - [Level " + level + "]");
-                        }
+                        LOGGER.trace("\t>>>Case 2. ApplyRecursiveHHJ - [Level {}]", level);
                         if (!forceRoleReversal && (isLeftOuter || buildPartSize < probePartSize)) {
                             //Case 2.1 - Recursive HHJ (without Role-Reversal)
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug(
-                                        "\t\t>>>Case 2.1 - RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
-                                                + level + "]");
-                            }
+                            LOGGER.trace(
+                                    "\t\t>>>Case 2.1 - RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level {}]",
+                                    level);
                             applyHybridHashJoin((int) buildPartSize, PROBE_REL, BUILD_REL, probeKeys, buildKeys,
                                     probeRd, buildRd, probeHpc, buildHpc, probeSideReader, buildSideReader, level,
                                     beforeMax, probComp);
 
                         } else { //Case 2.2 - Recursive HHJ (with Role-Reversal)
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug(
-                                        "\t\t>>>Case 2.2. - RecursiveHHJ WITH RoleReversal - [Level " + level + "]");
-                            }
+                            LOGGER.trace("\t\t>>>Case 2.2. - RecursiveHHJ WITH RoleReversal - [Level {}]", level);
 
                             applyHybridHashJoin((int) probePartSize, BUILD_REL, PROBE_REL, buildKeys, probeKeys,
                                     buildRd, probeRd, buildHpc, probeHpc, buildSideReader, probeSideReader, level,
@@ -647,10 +635,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         BitSet rPStatus = rHHj.getPartitionStatus();
                         if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD * beforeMax))) {
                             //Case 2.1.1 - Keep applying HHJ
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH "
-                                        + "(isLeftOuter || build<probe) - [Level " + level + "]");
-                            }
+                            LOGGER.trace(
+                                    "\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level {}]",
+                                    level);
                             for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                                 RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
                                 RunFileReader rprfw = rHHj.getProbeRFReader(rPid);
@@ -679,10 +666,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             }
 
                         } else { //Case 2.1.2 - Switch to NLJ
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("\t\t>>>Case 2.1.2 - SWITCHED to NLJ RecursiveHHJ WITH "
-                                        + "(isLeftOuter || build<probe) - [Level " + level + "]");
-                            }
+                            LOGGER.trace(
+                                    "\t\t>>>Case 2.1.2 - SWITCHED to NLJ RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level {}]",
+                                    level);
                             for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                                 RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
                                 RunFileReader rprfw = rHHj.getProbeRFReader(rPid);

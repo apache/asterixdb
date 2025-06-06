@@ -1,37 +1,71 @@
+commit
 -- COMMIT  |PARTITIONED|
+  project ([$$35])
   -- STREAM_PROJECT  |PARTITIONED|
+    exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      insert into test.targetDataset from record: $$37 partitioned by [$$35]
       -- INSERT_DELETE  |PARTITIONED|
+        exchange
         -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+          assign [$$35] <- [$$37.getField(0)]
           -- ASSIGN  |PARTITIONED|
+            project ([$$37])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$37] <- [cast(check-unknown(object-merge-ignore-duplicates($$33, {"tid": create-uuid()})))]
               -- ASSIGN  |PARTITIONED|
+                project ([$$33])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$33] <- [{"$1": object-merge($$x, {"full-country": $$32})}]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$32, $$x])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- PRE_CLUSTERED_GROUP_BY[$$38]  |PARTITIONED|
-                                {
+                        group by ([$$43 := $$38]) decor ([$$x]) {
+                                  aggregate [$$32] <- [listify($$31)]
                                   -- AGGREGATE  |LOCAL|
+                                    select (not(is-missing($$42)))
                                     -- STREAM_SELECT  |LOCAL|
+                                      nested tuple source
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- PRE_CLUSTERED_GROUP_BY[$$38]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$38)
                             -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$x, $$31, $$42, $$38])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    left outer join (eq($$39, $$41))
                                     -- HYBRID_HASH_JOIN [$$41][$$39]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$41] <- [$$x.getField(1)]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN (test.tweetDataset)  |PARTITIONED|
+                                            data-scan []<-[$$38, $$x] <- test.tweetDataset
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                        project ([$$31, $$42, $$39])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$42, $$31] <- [true, $$c.getField(1)]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.countryDataset)  |PARTITIONED|
+                                              data-scan []<-[$$39, $$c] <- test.countryDataset
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

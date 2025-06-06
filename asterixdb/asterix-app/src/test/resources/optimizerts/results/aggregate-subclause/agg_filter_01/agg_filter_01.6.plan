@@ -1,26 +1,46 @@
+distribute result [$$122]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$122])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$122] <- [{"twothous": $$124, "fivethous": $$134, "tenthous": $$tenk.tenthous, "cnt": $$126, "sm": $$127, "cnt_filter": $$128, "sm_filter": $$129}]
       -- ASSIGN  |UNPARTITIONED|
-        -- WINDOW  |UNPARTITIONED|
-                {
+        window-aggregate [] <- [] order (ASC, $$tenk.tenthous) frame on (ASC, $$tenk.tenthous) start unbounded end [$$tenk.tenthous] {
+                  aggregate [$$129, $$128] <- [agg-sql-sum($$tenk.tenthous), agg-sql-count(1)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    select (eq($$124, 0))
                     -- STREAM_SELECT  |UNPARTITIONED|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                }
-          -- WINDOW  |UNPARTITIONED|
-                  {
+               }
+        -- WINDOW  |UNPARTITIONED|
+          window-aggregate [] <- [] order (ASC, $$tenk.tenthous) frame on (ASC, $$tenk.tenthous) start unbounded end [$$tenk.tenthous] {
+                    aggregate [$$127, $$126] <- [agg-sql-sum($$tenk.tenthous), agg-sql-count(1)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- WINDOW  |UNPARTITIONED|
+            exchange
             -- SORT_MERGE_EXCHANGE [$$tenk.tenthous(ASC) ]  |PARTITIONED|
+              order (ASC, $$tenk.tenthous)
               -- STABLE_SORT [$$tenk.tenthous(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$124, $$134, $$tenk.tenthous])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    select (eq($$tenk.getField(7), 0))
                     -- STREAM_SELECT  |PARTITIONED|
+                      assign [$$134, $$tenk.tenthous, $$124] <- [$$tenk.getField(9), $$tenk.getField(10), $$tenk.getField(8)]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$tenk])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                            data-scan []<-[$$125, $$tenk] <- test.tenk
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

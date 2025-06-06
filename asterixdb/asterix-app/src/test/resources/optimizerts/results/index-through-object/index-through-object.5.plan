@@ -1,11 +1,22 @@
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$28])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$28] <- [{"U": $$U, "augmentedUser": $$33}]
       -- ASSIGN  |PARTITIONED|
+        select (eq($$33.getField(1), "Glenn"))
         -- STREAM_SELECT  |PARTITIONED|
+          assign [$$33] <- [object-put($$U, "name", "John")]
           -- ASSIGN  |PARTITIONED|
+            project ([$$U])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
+                data-scan []<-[$$29, $$U] <- test.Users
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

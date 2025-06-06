@@ -1,41 +1,76 @@
+distribute result [$$ds1]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$ds1])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$55(ASC) ]  |PARTITIONED|
+        project ([$$ds1, $$55])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (neq($$49, 0))
           -- STREAM_SELECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- SORT_GROUP_BY[$$65]  |PARTITIONED|
-                      {
+              group by ([$$55 := $$65]) decor ([$$ds1]) {
+                        aggregate [$$49] <- [agg-sum($$64)]
                         -- AGGREGATE  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SORT_GROUP_BY[$$65]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$65]  |PARTITIONED|
-                  -- PRE_CLUSTERED_GROUP_BY[$$46]  |PARTITIONED|
-                          {
+                  group by ([$$65 := $$46]) decor ([$$ds1]) {
+                            aggregate [$$64] <- [agg-count({"$1": 1})]
                             -- AGGREGATE  |LOCAL|
+                              select (not(is-missing($$54)))
                               -- STREAM_SELECT  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
+                         }
+                  -- PRE_CLUSTERED_GROUP_BY[$$46]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$46)
                       -- STABLE_SORT [$$46(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$ds1, $$54, $$46])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              left outer join (eq($$48, $$b))
                               -- HYBRID_HASH_JOIN [$$b][$$48]  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$b]  |PARTITIONED|
+                                  project ([$$ds1, $$46, $$b])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    unnest $$b <- scan-collection($$50)
                                     -- UNNEST  |PARTITIONED|
+                                      assign [$$50] <- [array-star($$ds1.getField("a")).getField("b")]
                                       -- ASSIGN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
+                                          data-scan []<-[$$46, $$ds1] <- test.ds1
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+                                  project ([$$54, $$48])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$54, $$48] <- [true, get-item($$ds2.getField("x"), 0).getField("y")]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$ds2])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.ds2)  |PARTITIONED|
+                                          data-scan []<-[$$47, $$ds2] <- test.ds2
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

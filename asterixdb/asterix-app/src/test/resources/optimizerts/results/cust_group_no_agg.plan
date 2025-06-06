@@ -1,15 +1,27 @@
+distribute result [$$name]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- SORT_GROUP_BY[$$34]  |PARTITIONED|
-            {
+    group by ([$$name := $$34]) decor ([]) {
+              aggregate [] <- []
               -- AGGREGATE  |LOCAL|
+                nested tuple source
                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-            }
+           }
+    -- SORT_GROUP_BY[$$34]  |PARTITIONED|
+      exchange
       -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+        project ([$$34])
         -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$34] <- [$$c.getField(1)]
           -- ASSIGN  |PARTITIONED|
+            project ([$$c])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (group_no_agg.Customers)  |PARTITIONED|
+                data-scan []<-[$$35, $$c] <- group_no_agg.Customers
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -67,6 +67,8 @@ public final class TestHelper {
     private static final String[] TEST_DIRS = new String[] { "txnLogDir", "IODevice", "spill_area", "config" };
     private static final String PATTERN_VAR_ID_PREFIX = "\\$\\$";
     private static final Pattern PATTERN_VAR_ID = Pattern.compile(PATTERN_VAR_ID_PREFIX + "(\\d+)");
+    private static final Map<Integer, Integer> EXPECTED = new HashMap<>();
+    private static final Map<Integer, Integer> ACTUAL = new HashMap<>();
     private static final ObjectMapper SORTED_MAPPER = new ObjectMapper();
     private static final ObjectWriter PRETTY_SORTED_WRITER;
 
@@ -314,10 +316,20 @@ public final class TestHelper {
         return objectMapper;
     }
 
+    public static void comparePlansWithoutCost(List<String> linesExpected, List<String> linesActual, File queryFile)
+            throws Exception {
+        comparePlans(linesExpected, linesActual, queryFile, TestHelper::planLineEqualsWithoutCosts);
+    }
+
     public static void comparePlans(List<String> linesExpected, List<String> linesActual, File queryFile)
             throws Exception {
-        int varBaseExpected = findBaseVarId(linesExpected);
-        int varBaseActual = findBaseVarId(linesActual);
+        comparePlans(linesExpected, linesActual, queryFile, TestHelper::planLineEquals);
+    }
+
+    public static void comparePlans(List<String> linesExpected, List<String> linesActual, File queryFile,
+            LineComparator lineComparator) throws Exception {
+        int varBaseExpected = findBaseVarId(linesExpected, EXPECTED);
+        int varBaseActual = findBaseVarId(linesActual, ACTUAL);
 
         Iterator<String> readerExpected = linesExpected.iterator();
         Iterator<String> readerActual = linesActual.iterator();
@@ -330,7 +342,7 @@ public final class TestHelper {
             }
             lineActual = readerActual.next();
 
-            if (!planLineEquals(lineExpected, varBaseExpected, lineActual, varBaseActual)) {
+            if (!lineComparator.equalLines(lineExpected, varBaseExpected, lineActual, varBaseActual)) {
                 throw TestExecutor.createLineChangedException(queryFile, lineExpected, lineActual, num);
             }
             ++num;
@@ -343,13 +355,20 @@ public final class TestHelper {
 
     private static boolean planLineEquals(String lineExpected, int varIdBaseExpected, String lineActual,
             int varIdBaseActual) {
-        String lineExpectedNorm = normalizePlanLine(lineExpected, varIdBaseExpected);
-        String lineActualNorm = normalizePlanLine(lineActual, varIdBaseActual);
+        String lineExpectedNorm = normalizePlanLine(lineExpected, varIdBaseExpected, EXPECTED);
+        String lineActualNorm = normalizePlanLine(lineActual, varIdBaseActual, ACTUAL);
+        return lineExpectedNorm.equals(lineActualNorm);
+    }
+
+    private static boolean planLineEqualsWithoutCosts(String lineExpected, int varIdBaseExpected, String lineActual,
+            int varIdBaseActual) {
+        String lineExpectedNorm = normalizePlanLine(removeCost(lineExpected), varIdBaseExpected, EXPECTED);
+        String lineActualNorm = normalizePlanLine(removeCost(lineActual), varIdBaseActual, ACTUAL);
         return lineExpectedNorm.equals(lineActualNorm);
     }
 
     // rewrite variable ids in given plan line: $$varId -> $$(varId-varIdBase)
-    private static String normalizePlanLine(String line, int varIdBase) {
+    private static String normalizePlanLine(String line, int varIdBase, Map<Integer, Integer> varMap) {
         if (varIdBase == Integer.MAX_VALUE) {
             // plan did not contain any variables -> no rewriting necessary
             return line;
@@ -358,23 +377,43 @@ public final class TestHelper {
         StringBuilder sb = new StringBuilder(line.length());
         while (m.find()) {
             int varId = Integer.parseInt(m.group(1));
-            int newVarId = varId - varIdBase;
+            Integer newVarId = varMap.get(varId);
+            if (newVarId == null) {
+                throw new IllegalStateException("no new var id mapped for " + varId);
+            }
             m.appendReplacement(sb, PATTERN_VAR_ID_PREFIX + newVarId);
         }
         m.appendTail(sb);
         return sb.toString();
     }
 
-    private static int findBaseVarId(Collection<String> plan) {
+    private static int findBaseVarId(Collection<String> plan, Map<Integer, Integer> map) {
         int varIdBase = Integer.MAX_VALUE;
+        map.clear();
+        int counter = 1;
         Matcher m = PATTERN_VAR_ID.matcher("");
         for (String line : plan) {
             m.reset(line);
             while (m.find()) {
                 int varId = Integer.parseInt(m.group(1));
+                Integer previouslyMapped = map.putIfAbsent(varId, counter);
+                if (previouslyMapped == null) {
+                    counter++;
+                }
                 varIdBase = Math.min(varIdBase, varId);
             }
         }
         return varIdBase;
+    }
+
+    private static String removeCost(String originalStr) {
+        int i = originalStr.indexOf(" [cardinality: ");
+        return i >= 0 ? originalStr.substring(0, i) : originalStr;
+    }
+
+    @FunctionalInterface
+    private interface LineComparator {
+        boolean equalLines(String lineExpected, int varIdBaseExpected, String lineActual, int varIdBaseActual);
+
     }
 }

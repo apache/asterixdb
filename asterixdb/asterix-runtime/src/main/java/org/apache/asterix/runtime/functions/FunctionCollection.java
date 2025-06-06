@@ -380,6 +380,7 @@ import org.apache.asterix.runtime.evaluators.functions.GetIntersectionDescriptor
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetTypeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfErrorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
@@ -1335,6 +1336,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(DecodeDataverseNameDescriptor.FACTORY);
         fc.add(RandomWithSeedDescriptor.FACTORY);
         fc.add(SerializedSizeDescriptor.FACTORY);
+        fc.add(IfErrorDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
         return fc;

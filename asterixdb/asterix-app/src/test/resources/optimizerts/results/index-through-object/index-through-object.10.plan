@@ -1,20 +1,40 @@
+distribute result [$$83]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$83])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$83] <- [{"U1": $$U1, "U2": $$U2, "augmentedUser1": $$99, "augmentedUser2": $$100, "augmentedUser3": object-add($$100, "favoriteColor", "Red"), "augmentedUser4": object-add(object-add($$100, "favoriteColor", "Red"), "favoriteDrink", "Wine")}]
       -- ASSIGN  |PARTITIONED|
+        select (eq($$100.getField("name"), "Sally"))
         -- STREAM_SELECT  |PARTITIONED|
+          assign [$$100] <- [object-add($$U2, "favoriteFood", "Pizza")]
           -- ASSIGN  |PARTITIONED|
+            project ([$$U1, $$99, $$U2])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
+                unnest-map [$$85, $$U2] <- index-search("Users", 0, "test", "Users", true, true, 1, $$86, 1, $$86, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$80(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$80]  |PARTITIONED|
+                    order (ASC, $$86)
+                    -- STABLE_SORT [$$86(ASC)]  |PARTITIONED|
+                      exchange
+                      -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
+                        assign [$$86] <- [to-bigint($$U1.getField("bestFriend"))]
                         -- ASSIGN  |PARTITIONED|
+                          select (eq($$99.getField("name"), "John"))
                           -- STREAM_SELECT  |PARTITIONED|
+                            assign [$$99] <- [object-add($$U1, "favoriteColor", "Green")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$U1])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
+                                  data-scan []<-[$$84, $$U1] <- test.Users
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

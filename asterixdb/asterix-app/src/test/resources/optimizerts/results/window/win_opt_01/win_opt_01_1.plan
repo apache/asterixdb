@@ -1,11 +1,22 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$47])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$47] <- [{"m": $$m, "t": $$t, "row_nubmer": $$40, "percent_rank": round-half-to-even($$45, 2)}]
       -- ASSIGN  |LOCAL|
+        window-aggregate [$$45, $$40] <- [percent-rank-impl($$t), row-number-impl()] partition [$$m] order (ASC, $$t)
         -- WINDOW  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$m) (ASC, $$t)
             -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                assign [$$m] <- [numeric-mod($$t, 4)]
                 -- ASSIGN  |UNPARTITIONED|
+                  unnest $$t <- range(1, 20)
                   -- UNNEST  |UNPARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

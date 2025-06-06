@@ -1,44 +1,88 @@
+distribute result [$$140]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$140])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$140] <- [{"t0_unique1": $#1, "t1_unique1": $#2, "t2_unique1": $#3}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$#1(ASC), $#2(ASC), $#3(ASC) ]  |PARTITIONED|
+          order (ASC, $#1) (ASC, $#2) (ASC, $#3)
           -- STABLE_SORT [$#1(ASC), $#2(ASC), $#3(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$#1, $#2, $#3])
               -- STREAM_PROJECT  |PARTITIONED|
+                assign [$#3, $#2, $#1] <- [if-missing($$151, null), if-missing($$155, null), if-missing($$154, null)]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$151, $$155, $$154])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      left outer join (eq($$143, $$142))
                       -- HYBRID_HASH_JOIN [$$142][$$143]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$151, $$142])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$151] <- [$$tenk.getField(0)]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                                unnest-map [$$142, $$tenk] <- index-search("tenk", 0, "test", "tenk", false, false, 0, 1, $$165, true, false, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$165] <- [6]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$155, $$154, $$143])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$154, $$155] <- [$$123.getField(1).getField(0), $$123.getField(0).getField(0)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$143, $$123])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$123] <- [{"$6": $$107, "$8": $$115}]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$143, $$107, $$115])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      left outer join (eq($$144, $$143))
                                       -- HYBRID_HASH_JOIN [$$143][$$144]  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          project ([$$143, $$107])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            assign [$$107] <- [{"unique1": $$tenk.getField(0), "unique2": $$143}]
                                             -- ASSIGN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                                                unnest-map [$$143, $$tenk] <- index-search("tenk", 0, "test", "tenk", false, false, 0, 1, $$168, true, false, false)
+                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    assign [$$168] <- [4]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          project ([$$115, $$144])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            assign [$$115] <- [{"unique1": $$tenk.getField(0), "unique2": $$144}]
                                             -- ASSIGN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                                                unnest-map [$$144, $$tenk] <- index-search("tenk", 0, "test", "tenk", false, false, 0, 1, $$171, true, false, false)
+                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    assign [$$171] <- [2]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

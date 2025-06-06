@@ -1,23 +1,43 @@
+distribute result [$$49]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$49])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$49] <- [{"c1": $$51, "sum": $$52}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$51(ASC) ]  |PARTITIONED|
+          order (ASC, $$51)
           -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$51, $$52])
               -- STREAM_PROJECT  |PARTITIONED|
-                -- WINDOW  |PARTITIONED|
-                        {
+                window-aggregate [] <- [] partition [$$37] order (ASC, $$51) frame on (ASC, $$39) start unbounded end [$$39] exclude [$$39] {
+                          aggregate [$$52] <- [agg-sql-sum($$51)]
                           -- AGGREGATE  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       }
+                -- WINDOW  |PARTITIONED|
+                  window-aggregate [$$39] <- [row-number-impl()] partition [$$37] order (ASC, $$51)
                   -- WINDOW_STREAM  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$37) (ASC, $$51)
                       -- STABLE_SORT [$$37(ASC), $$51(ASC)]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+                          project ([$$51, $$37])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$37] <- [numeric-mod($$t1.getField("c2"), 2)]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                                data-scan []<-[$$51, $$t1] <- test.t1
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,24 +1,48 @@
+distribute result [$$37]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- SORT_MERGE_EXCHANGE [$$37(ASC) ]  |PARTITIONED|
+    order (ASC, $$37)
     -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$37])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$34, $$35))
             -- HYBRID_HASH_JOIN [$$35][$$34]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+                project ([$$37, $$35])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$37, $$35] <- [$$tenk2.getField(0), $$tenk2.getField(7)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$tenk2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.tenk2)  |PARTITIONED|
+                        data-scan []<-[$$33, $$tenk2] <- test.tenk2
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                project ([$$34])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$34] <- [$$tenk1.getField(7)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$tenk1])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.tenk1.tenk1)  |PARTITIONED|
+                        unnest-map [$$32, $$tenk1] <- index-search("tenk1", 0, "test", "tenk1", false, false, 0, 1, $$38, true, false, false)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$38] <- [1]
                             -- ASSIGN  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

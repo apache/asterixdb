@@ -1,15 +1,30 @@
+distribute result [$$16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$16])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$16] <- [{"res": $$20}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+          order (ASC, $$20)
           -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$20])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (gt($$t.getField("c_i64"), 2.0))
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$20] <- [$$t.getField("c_x")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$t])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.TestOpen)  |PARTITIONED|
+                        data-scan []<-[$$18, $$t] <- test.TestOpen
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

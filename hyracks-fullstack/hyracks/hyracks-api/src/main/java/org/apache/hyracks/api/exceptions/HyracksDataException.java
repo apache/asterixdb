@@ -43,8 +43,6 @@ public class HyracksDataException extends HyracksException {
         }
         if (cause instanceof HyracksDataException) {
             return (HyracksDataException) cause;
-        } else if (cause instanceof InterruptedException) {
-            Thread.currentThread().interrupt();
         }
         return new HyracksDataException(cause);
     }

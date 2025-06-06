@@ -1,12 +1,24 @@
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$42])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$42] <- [{"id": $$48, "f_dt_fmt": $$57}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$48(ASC) ]  |PARTITIONED|
+          select (lt($$57, datetime: { 2020-12-20T00:00:00.000 }))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$48, $$57])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$57] <- [datetime-default-null($$ds5.getField("f_dt_fmt"), "MM-DD-YYYY hh:mm:ss.nnna")]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds5)  |PARTITIONED|
+                  data-scan []<-[$$48, $$ds5] <- test.ds5
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

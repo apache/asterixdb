@@ -1,95 +1,178 @@
+distribute result [$$112]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$112])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$112] <- [{"l_shipmode": $$l_shipmode, "high_line_count": $$123, "low_line_count": $$124}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$l_shipmode)
           -- STABLE_SORT [$$l_shipmode(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$l_shipmode(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$134
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$131]  |PARTITIONED|
-                              {
+                      group by ([$$l_shipmode := $$131]) decor ([]) {
+                                aggregate [$$123, $$124] <- [agg-global-sql-sum($$129), agg-global-sql-sum($$130)]
                                 -- AGGREGATE  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SORT_GROUP_BY[$$131]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$131]  |PARTITIONED|
-                          -- SORT_GROUP_BY[$$114]  |PARTITIONED|
-                                  {
+                          group by ([$$131 := $$114]) decor ([]) {
+                                    aggregate [$$129, $$130] <- [agg-local-sql-sum(switch-case(true, or(eq($$119, "1-URGENT"), eq($$119, "2-HIGH")), numeric-add(1, numeric-multiply($$119, 0)), numeric-add(0, numeric-multiply($$119, 0)))), agg-local-sql-sum(switch-case(true, eq(true, or(eq($$119, "1-URGENT"), eq($$119, "2-HIGH"))), numeric-add(0, numeric-multiply($$119, 0)), numeric-add(1, numeric-multiply($$119, 0))))]
                                     -- AGGREGATE  |LOCAL|
+                                      nested tuple source
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                  }
+                                 }
+                          -- SORT_GROUP_BY[$$114]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$119, $$114])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  join (eq($$120, $$114))
                                   -- HYBRID_HASH_JOIN [$$114][$$120]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$119, $$114])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          join (eq($$121, $$118))
                                           -- HYBRID_HASH_JOIN [$$121][$$118]  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              project ([$$114, $$121])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                select (and(lt($$116, $$115), ge($$115, "1994-01-01"), lt($$115, "1995-01-01"), lt($$l.getField("l_shipdate"), $$116)))
                                                 -- STREAM_SELECT  |PARTITIONED|
+                                                  assign [$$116, $$115, $$114, $$121] <- [$$l.getField("l_commitdate"), $$l.getField("l_receiptdate"), $$l.getField("l_shipmode"), $$l.getField("l_orderkey")]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    project ([$$l])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                                        data-scan []<-[$$117, $$l] <- tpch.LineItem
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source
                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                            exchange
                                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                              project ([$$119, $$118])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$119] <- [$$o.getField("o_orderpriority")]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                                                    data-scan []<-[$$118, $$o] <- tpch.Orders
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                      unnest $$120 <- scan-collection(array: [ "MAIL", "SHIP" ])
                                       -- UNNEST  |UNPARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$134] <- [agg-range-map($$132, $$133)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$132, $$133] <- [agg-local-sampling($$l_shipmode), agg-null-writer($$l_shipmode)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$l_shipmode])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate
                             -- REPLICATE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- SORT_GROUP_BY[$$131]  |PARTITIONED|
-                                        {
+                                group by ([$$l_shipmode := $$131]) decor ([]) {
+                                          aggregate [$$123, $$124] <- [agg-global-sql-sum($$129), agg-global-sql-sum($$130)]
                                           -- AGGREGATE  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- SORT_GROUP_BY[$$131]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$131]  |PARTITIONED|
-                                    -- SORT_GROUP_BY[$$114]  |PARTITIONED|
-                                            {
+                                    group by ([$$131 := $$114]) decor ([]) {
+                                              aggregate [$$129, $$130] <- [agg-local-sql-sum(switch-case(true, or(eq($$119, "1-URGENT"), eq($$119, "2-HIGH")), numeric-add(1, numeric-multiply($$119, 0)), numeric-add(0, numeric-multiply($$119, 0)))), agg-local-sql-sum(switch-case(true, eq(true, or(eq($$119, "1-URGENT"), eq($$119, "2-HIGH"))), numeric-add(0, numeric-multiply($$119, 0)), numeric-add(1, numeric-multiply($$119, 0))))]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- SORT_GROUP_BY[$$114]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        project ([$$119, $$114])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            join (eq($$120, $$114))
                                             -- HYBRID_HASH_JOIN [$$114][$$120]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$119, $$114])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    join (eq($$121, $$118))
                                                     -- HYBRID_HASH_JOIN [$$121][$$118]  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        project ([$$114, $$121])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          select (and(lt($$116, $$115), ge($$115, "1994-01-01"), lt($$115, "1995-01-01"), lt($$l.getField("l_shipdate"), $$116)))
                                                           -- STREAM_SELECT  |PARTITIONED|
+                                                            assign [$$116, $$115, $$114, $$121] <- [$$l.getField("l_commitdate"), $$l.getField("l_receiptdate"), $$l.getField("l_shipmode"), $$l.getField("l_orderkey")]
                                                             -- ASSIGN  |PARTITIONED|
+                                                              project ([$$l])
                                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                                                  data-scan []<-[$$117, $$l] <- tpch.LineItem
+                                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                    exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      empty-tuple-source
                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                      exchange
                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        project ([$$119, $$118])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          assign [$$119] <- [$$o.getField("o_orderpriority")]
                                                           -- ASSIGN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                                                              data-scan []<-[$$118, $$o] <- tpch.Orders
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                              exchange
                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                unnest $$120 <- scan-collection(array: [ "MAIL", "SHIP" ])
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

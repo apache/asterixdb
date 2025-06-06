@@ -1,13 +1,26 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$31])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$31] <- [{"k": $$k, "v": $$v}]
       -- ASSIGN  |PARTITIONED|
+        select (and(eq($$v.getField("a"), 284), eq($$v.getField("b"), 263), eq($$v.getField("c"), 123)))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$k, $$v])
           -- STREAM_PROJECT  |PARTITIONED|
+            unnest $$v <- scan-collection($$33)
             -- UNNEST  |PARTITIONED|
+              assign [$$33] <- [$$k.getField("uarr_i")]
               -- ASSIGN  |PARTITIONED|
+                project ([$$k])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (test.KSI)  |PARTITIONED|
+                    data-scan []<-[$$32, $$k] <- test.KSI
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

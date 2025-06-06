@@ -1,22 +1,44 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$35])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$35] <- [{"l_partkey": $$37}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$37])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (and(eq($$37, $$39), eq($$42, $$43), eq($$44, $$40)))
             -- HYBRID_HASH_JOIN [$$37, $$42, $$44][$$39, $$43, $$40]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$37, $$44]  |PARTITIONED|
+                project ([$$37, $$42, $$44])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$44, $$42] <- [$$li.getField(2), $$li.getField(5)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$37, $$li])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (`join-super-key_1`.LineItems)  |PARTITIONED|
+                        data-scan []<-[$$37, $$38, $$li] <- `join-super-key_1`.LineItems
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$39, $$43, $$40])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$43] <- [$$ps.getField(3)]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (`join-super-key_1`.PartSupp)  |PARTITIONED|
+                      data-scan []<-[$$39, $$40, $$ps] <- `join-super-key_1`.PartSupp
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

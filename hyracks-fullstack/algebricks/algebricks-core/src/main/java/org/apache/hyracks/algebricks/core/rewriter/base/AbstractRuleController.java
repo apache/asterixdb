@@ -147,7 +147,7 @@ public abstract class AbstractRuleController {
         try {
             context.getPlanStabilityVerifier().recordPlanSignature(opRef);
         } catch (AlgebricksException e) {
-            throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE,
+            throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, e,
                     String.format("Illegal state before rule %s. %s", rule.getClass().getName(), e.getMessage()));
         }
     }
@@ -158,7 +158,7 @@ public abstract class AbstractRuleController {
             try {
                 context.getPlanStructureVerifier().verifyPlanStructure(opRef);
             } catch (AlgebricksException e) {
-                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE,
+                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, e,
                         String.format("Fired rule %s produced illegal %s", rule.getClass().getName(), e.getMessage()));
             }
         } else {
@@ -169,7 +169,7 @@ public abstract class AbstractRuleController {
                     printRuleApplication(rule, "not fired, but failed sanity check: " + e.getMessage(), beforePlan,
                             getPlanString(opRef));
                 }
-                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE,
+                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, e,
                         String.format("Non-fired rule %s unexpectedly %s", rule.getClass().getName(), e.getMessage()));
             }
         }

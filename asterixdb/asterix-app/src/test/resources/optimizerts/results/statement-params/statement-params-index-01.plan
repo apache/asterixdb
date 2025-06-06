@@ -1,19 +1,38 @@
+distribute result [$$26]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$26])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$26] <- [{"id": $$29, "fname": $$28, "lname": $$32, "age": $$33}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
+          select (eq($$28, "Julio"))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$29, $$33, $$32, $$28])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$33, $$32, $$28] <- [$$l.getField(3), $$l.getField(2), $$l.getField(1)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.employee.employee)  |PARTITIONED|
+                  unnest-map [$$29, $$l] <- index-search("employee", 0, "test", "employee", false, false, 1, $$37, 1, $$37, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$37)
                       -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$37])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.employee.idx_employee_fname)  |PARTITIONED|
+                              unnest-map [$$36, $$37] <- index-search("idx_employee_fname", 0, "test", "employee", false, false, 1, $$34, 1, $$35, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$34, $$35] <- ["Julio", "Julio"]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

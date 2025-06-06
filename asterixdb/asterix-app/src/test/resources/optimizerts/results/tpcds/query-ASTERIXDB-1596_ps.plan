@@ -1,58 +1,116 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$47])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$47] <- [{"cs1": $$cs1, "cr1": $$cr1, "i1": $$i1}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$cs1, $$cr1, $$i1])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$50) (ASC, $$51)
             -- STABLE_SORT [$$50(ASC), $$51(ASC)]  |PARTITIONED|
+              exchange
               -- RANGE_PARTITION_EXCHANGE [$$50(ASC), $$51(ASC)]  |PARTITIONED|
+                forward: shared-variable = $$69
                 -- FORWARD  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
                     -- REPLICATE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$cs1, $$cr1, $$i1, $$50, $$51])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            join (eq($$54, $$50))
                             -- HYBRID_HASH_JOIN [$$50][$$54]  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                                project ([$$cs1, $$cr1, $$50, $$51])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    left outer join (and(eq($$51, $$53), eq($$50, $$52)))
                                     -- HYBRID_HASH_JOIN [$$51, $$50][$$53, $$52]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
+                                        data-scan []<-[$$50, $$51, $$cs1] <- tpcds.catalog_sales
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
+                                        data-scan []<-[$$52, $$53, $$cr1] <- tpcds.catalog_returns
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
+                                data-scan []<-[$$54, $$i1] <- tpcds.item
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    aggregate [$$69] <- [agg-range-map($$66, $$67, $$68)]
                     -- AGGREGATE  |UNPARTITIONED|
+                      exchange
                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                        aggregate [$$66, $$67, $$68] <- [agg-local-sampling($$50, $$51), agg-null-writer($$50), agg-null-writer($$51)]
                         -- AGGREGATE  |PARTITIONED|
+                          project ([$$50, $$51])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              replicate
                               -- REPLICATE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$cs1, $$cr1, $$i1, $$50, $$51])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      join (eq($$54, $$50))
                                       -- HYBRID_HASH_JOIN [$$50][$$54]  |PARTITIONED|
+                                        exchange
                                         -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                                          project ([$$cs1, $$cr1, $$50, $$51])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              left outer join (and(eq($$51, $$53), eq($$50, $$52)))
                                               -- HYBRID_HASH_JOIN [$$51, $$50][$$53, $$52]  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
+                                                  data-scan []<-[$$50, $$51, $$cs1] <- tpcds.catalog_sales
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
+                                                  data-scan []<-[$$52, $$53, $$cr1] <- tpcds.catalog_returns
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
+                                          data-scan []<-[$$54, $$i1] <- tpcds.item
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
