@@ -19,8 +19,6 @@
 
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.utils.RedactionUtil.REDACTED_SENSITIVE_ENTRY_VALUE;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -442,7 +440,12 @@ public class QueryServiceRequestParameters {
         object.put("source", source);
         if (statementParams != null) {
             for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
-                object.set('$' + statementParam.getKey(), REDACTED_SENSITIVE_ENTRY_VALUE);
+                try {
+                    String s = OBJECT_MAPPER.writeValueAsString(statementParam.getValue());
+                    object.put('$' + statementParam.getKey(), LogRedactionUtil.userData(s));
+                } catch (JsonProcessingException e) {
+                    // ignore
+                }
             }
         }
         return object;

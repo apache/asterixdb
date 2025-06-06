@@ -94,8 +94,14 @@
     <hadoop.version>3.4.1</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.22.1</log4j.version>
+    <!-- IMPORTANT: please keep the aws-crt version in sync with that defined in the AWS SDK BOM -->
+    <!-- you can get this by inspecting the aws-sdk-java-pom for the SDK version. e.g.
+     $ curl -s https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.31.57/aws-sdk-java-pom-2.31.57.pom | grep awscrt.version
+        <awscrt.version>0.38.1</awscrt.version>
+      -->
     <awsjavasdk.version>2.29.27</awsjavasdk.version>
-    <awsjavasdk.crt.version>0.29.10</awsjavasdk.crt.version>
+    <awsjavasdk.crt.version>0.33.3</awsjavasdk.crt.version>
+
     <parquet.version>1.14.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.779</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
@@ -1562,74 +1568,6 @@
         <artifactId>reflections</artifactId>
         <version>0.9.12</version>
       </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>s3</artifactId>
-        <version>${awsjavasdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport-classes-epoll</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>regions</artifactId>
-        <version>${awsjavasdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>auth</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>aws-core</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>sdk-core</artifactId>
-        <version>${awsjavasdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>apache-client</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>http-client-spi</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>s3-transfer-manager</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>sts</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk.crt</groupId>
-        <artifactId>aws-crt</artifactId>
-        <version>${awsjavasdk.crt.version}</version>
-      </dependency>
       <!-- Mock for Adobe AWS S3 -->
       <dependency>
         <groupId>com.adobe.testing</groupId>
@@ -1986,6 +1924,23 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java-util</artifactId>
         <version>${protobuf-java.version}</version>
+      </dependency>
+      <!-- IMPORTANT: please keep the aws-crt version in sync with that defined in the AWS SDK BOM -->
+      <!-- you can get this by inspecting the aws-sdk-java-pom for the SDK version:
+       $ curl -s https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.31.57/aws-sdk-java-pom-2.31.57.pom | grep awscrt.version
+        <awscrt.version>0.38.1</awscrt.version>
+        -->
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${awsjavasdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk.crt</groupId>
+        <artifactId>aws-crt</artifactId>
+        <version>${awsjavasdk.crt.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

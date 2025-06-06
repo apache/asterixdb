@@ -181,7 +181,7 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
 
         } else {
             runtimeAndConstraints = mp.getWriteDatabaseWithKeyRuntime(sourceColumn, keyEvalFactories, writeDataSink,
-                    inputDesc, typeEnv.getVarType(sourceVariable));
+                    inputDesc, typeEnv.getVarType(sourceVariable), context.getWarningCollector());
         }
 
         IPushRuntimeFactory runtime = runtimeAndConstraints.first;

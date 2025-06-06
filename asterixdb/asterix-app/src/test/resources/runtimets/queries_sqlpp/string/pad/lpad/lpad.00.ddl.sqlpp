@@ -26,5 +26,3 @@ upsert into padding_example ([
 {"id":4, "f": "👩‍👩‍👧‍👦", "f1": "✓✓✓"},
 {"id":5, "f": null, "f1" : null}
 ]);
-
-
