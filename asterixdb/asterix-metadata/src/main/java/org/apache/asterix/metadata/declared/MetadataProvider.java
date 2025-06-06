@@ -800,7 +800,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     @Override
     public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteDatabaseWithKeyRuntime(int sourceColumn,
             IScalarEvaluatorFactory[] keyEvaluatorFactories, IWriteDataSink sink, RecordDescriptor inputDesc,
-            Object sourceType) throws AlgebricksException {
+            Object sourceType, IWarningCollector warningCollector) throws AlgebricksException {
         throw new UnsupportedOperationException();
     }
 
