@@ -48,8 +48,10 @@ import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -86,6 +88,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnn
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
@@ -348,6 +351,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         // we made sure indexSubTree has datasource scan
         AbstractDataSourceOperator dataSourceOp =
                 (AbstractDataSourceOperator) indexSubTree.getDataSourceRef().getValue();
+        SourceLocation dataSrcLoc = dataSourceOp.getSourceLocation();
         List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
         int numSecondaryKeys = analysisCtx.getNumberOfMatchedKeys(chosenIndex);
 
@@ -643,7 +647,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (!assignKeyVarList.isEmpty()) {
             // Assign operator that sets the constant secondary-index search-key fields if necessary.
             AssignOperator assignSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
-            assignSearchKeys.setSourceLocation(dataSourceOp.getSourceLocation());
+            assignSearchKeys.setSourceLocation(dataSrcLoc);
             if (probeSubTree == null) {
                 // We are optimizing a selection query.
                 // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
@@ -672,6 +676,11 @@ public class BTreeAccessMethod implements IAccessMethod {
         } else {
             // All index search keys are variables.
             inputOp = probeSubTree.getRoot();
+        }
+
+        // if a key is of type ANY, we need to cast the search value to ANY if it is record/list for proper comparison
+        if (chosenIndexKeyFieldTypes.stream().anyMatch(t -> t.getTypeTag() == ATypeTag.ANY)) {
+            inputOp = addCastAssignOp(context, chosenIndexKeyFieldTypes, jobGenParams, inputOp, dataSrcLoc);
         }
 
         // Creates an unnest-map for the secondary index search.
@@ -763,7 +772,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
                 UnnestingFunctionCallExpression primaryIndexSearchFunc =
                         new UnnestingFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
-                primaryIndexSearchFunc.setSourceLocation(dataSourceOp.getSourceLocation());
+                primaryIndexSearchFunc.setSourceLocation(dataSrcLoc);
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);
                 if (!leftOuterUnnestMapRequired) {
                     unnestMapOp = new UnnestMapOperator(scanVariables, new MutableObject<>(primaryIndexSearchFunc),
@@ -785,7 +794,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 }
             }
             unnestMapOp.setExecutionMode(ExecutionMode.PARTITIONED);
-            unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
+            unnestMapOp.setSourceLocation(dataSrcLoc);
             unnestMapOp.getInputs().add(new MutableObject<>(inputOp));
             context.computeAndSetTypeEnvironmentForOperator(unnestMapOp);
             indexSearchOp = unnestMapOp;
@@ -798,6 +807,51 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         OperatorManipulationUtil.copyCardCostAnnotations(dataSourceOp, indexSearchOp);
         return indexSearchOp;
+    }
+
+    private static ILogicalOperator addCastAssignOp(IOptimizationContext ctx, List<IAType> indexKeysTypes,
+            BTreeJobGenParams jobGenParams, ILogicalOperator inputOp, SourceLocation srcLoc)
+            throws AlgebricksException {
+        // cast the input values (low/high vars) if needed and update the jobGenParams
+        List<LogicalVariable> lowKeyVars = jobGenParams.getLowKeyVarList();
+        List<LogicalVariable> highKeyVars = jobGenParams.getHighKeyVarList();
+        List<LogicalVariable> castAssignVars = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> castAssignExprs = new ArrayList<>();
+        castInputValues(ctx, indexKeysTypes, lowKeyVars, inputOp, castAssignVars, castAssignExprs, srcLoc);
+        castInputValues(ctx, indexKeysTypes, highKeyVars, inputOp, castAssignVars, castAssignExprs, srcLoc);
+        if (castAssignVars.isEmpty()) {
+            return inputOp;
+        }
+        AssignOperator castAssignOp = new AssignOperator(castAssignVars, castAssignExprs);
+        castAssignOp.setSourceLocation(srcLoc);
+        castAssignOp.getInputs().add(new MutableObject<>(inputOp));
+        castAssignOp.setExecutionMode(inputOp.getExecutionMode());
+        return castAssignOp;
+    }
+
+    private static void castInputValues(IOptimizationContext ctx, List<IAType> indexKeyTypes,
+            List<LogicalVariable> inputVars, ILogicalOperator inputOp, List<LogicalVariable> castAssignVars,
+            List<Mutable<ILogicalExpression>> castAssignExprs, SourceLocation srcLoc) throws AlgebricksException {
+        for (int i = 0; i < inputVars.size(); i++) {
+            LogicalVariable inputVar = inputVars.get(i);
+            IVariableTypeEnvironment typeEnv = ctx.getOutputTypeEnvironment(inputOp);
+            IAType varType = (IAType) typeEnv.getVarType(inputVar);
+            IAType varActualType = TypeComputeUtils.getActualType(varType);
+            IAType indexKeyType = indexKeyTypes.get(i);
+            if (varActualType.getTypeTag().isDerivedType() && indexKeyType.getTypeTag() == ATypeTag.ANY) {
+                LogicalVariable newInputVar = ctx.newVar();
+                castAssignVars.add(newInputVar);
+                VariableReferenceExpression newInputVarRef = new VariableReferenceExpression(inputVar);
+                newInputVarRef.setSourceLocation(srcLoc);
+                ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.CAST_TYPE),
+                        new ArrayList<>(Collections.singletonList(new MutableObject<>(newInputVarRef))));
+                castFunc.setSourceLocation(srcLoc);
+                TypeCastUtils.setRequiredAndInputTypes(castFunc, BuiltinType.ANY, varType);
+                castAssignExprs.add(new MutableObject<>(castFunc));
+                inputVars.set(i, newInputVar);
+            }
+        }
     }
 
     private int createKeyVarsAndExprs(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,

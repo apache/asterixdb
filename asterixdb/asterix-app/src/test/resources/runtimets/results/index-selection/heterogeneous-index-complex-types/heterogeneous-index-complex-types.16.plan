@@ -1,0 +1,40 @@
+distribute result [$$29]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"d1": $$d1, "d2": $$d2}] project: [$$29]
+    -- ASSIGN  |PARTITIONED|
+      select (eq($$32, $$d2.getField("strarr"))) project: [$$d1, $$d2]
+      -- STREAM_SELECT  |PARTITIONED|
+        project ([$$d1, $$32, $$d2])
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            unnest-map [$$31, $$d2] <- index-search("ds2", 0, "Default", "test", "ds2", true, false, 1, $$35, 1, $$35, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$35)
+                -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (eq($$32, $$34)) project: [$$d1, $$32, $$35]
+                    -- STREAM_SELECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$34, $$35] <- index-search("idx_strarr", 0, "Default", "test", "ds2", true, true, 1, $$32, 1, $$32, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
+                          -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$32] <- [$$d1.getField("strarr")]
+                            -- ASSIGN  |PARTITIONED|
+                              project ([$$d1])
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  data-scan []<-[$$30, $$d1] <- test.ds1
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
+                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
