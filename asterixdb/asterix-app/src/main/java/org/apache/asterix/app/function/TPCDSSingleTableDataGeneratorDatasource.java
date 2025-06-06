@@ -78,7 +78,7 @@ public class TPCDSSingleTableDataGeneratorDatasource extends FunctionDataSource 
 
     @Override
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
-        return md.getDataPartitioningProvider().getClusterLocations();
+        return md.getClusterLocations();
     }
 
     @Override

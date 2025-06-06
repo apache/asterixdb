@@ -127,9 +127,8 @@ public abstract class FunctionDataSource extends DataSource {
             AlgebricksAbsolutePartitionConstraint locations);
 
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
-        String[] sortedLocations = md.getDataPartitioningProvider().getClusterLocations().getLocations();
-        return new AlgebricksAbsolutePartitionConstraint(
-                Arrays.stream(sortedLocations).distinct().toArray(String[]::new));
+        String[] locations = md.getClusterLocations().getLocations();
+        return new AlgebricksAbsolutePartitionConstraint(Arrays.stream(locations).distinct().toArray(String[]::new));
     }
 
     protected IDataParserFactory createDataParserFactory() {
