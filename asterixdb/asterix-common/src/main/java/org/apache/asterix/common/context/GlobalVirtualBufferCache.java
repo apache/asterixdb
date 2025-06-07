@@ -318,7 +318,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
+    public void unpin(ICachedPage page) {
         vbc.unpin(page);
     }
 

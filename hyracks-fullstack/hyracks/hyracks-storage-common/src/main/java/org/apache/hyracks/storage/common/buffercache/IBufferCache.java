@@ -131,9 +131,8 @@ public interface IBufferCache {
      *
      * @param page
      *            the page
-     * @throws HyracksDataException
      */
-    void unpin(ICachedPage page) throws HyracksDataException;
+    void unpin(ICachedPage page);
 
     /**
      * Flush the page if it is dirty

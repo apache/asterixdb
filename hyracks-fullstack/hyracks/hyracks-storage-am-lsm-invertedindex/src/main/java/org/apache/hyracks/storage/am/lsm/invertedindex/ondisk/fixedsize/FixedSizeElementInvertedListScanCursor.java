@@ -127,7 +127,7 @@ public class FixedSizeElementInvertedListScanCursor extends AbstractInvertedList
     }
 
     @Override
-    public void unloadPages() throws HyracksDataException {
+    public void unloadPages() {
         if (pinned) {
             bufferCache.unpin(page);
             pinned = false;
