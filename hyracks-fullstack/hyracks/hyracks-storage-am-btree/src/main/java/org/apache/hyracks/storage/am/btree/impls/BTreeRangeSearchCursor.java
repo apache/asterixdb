@@ -46,7 +46,6 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
     protected final IBTreeLeafFrame frame;
     protected final ITreeIndexTupleReference frameTuple;
     protected final boolean exclusiveLatchNodes;
-    protected boolean isPageDirty;
 
     protected IBufferCache bufferCache = null;
     protected int fileId = -1;
@@ -118,7 +117,6 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
                 releasePage();
             }
             page = nextLeaf;
-            isPageDirty = false;
             frame.setPage(page);
             pageId = nextLeafPage;
             nextLeafPage = frame.getNextLeaf();
@@ -159,8 +157,6 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
                 reconciliationTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
                 releasePage();
-                page = null;
-                isPageDirty = false;
 
                 // reconcile
                 searchCb.reconcile(reconciliationTuple);
@@ -236,7 +232,6 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
         originalKeyCmp = initialState.getOriginalKeyComparator();
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
         page = initialState.getPage();
-        isPageDirty = false;
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
@@ -267,7 +262,7 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
         stopTupleIndex = getHighKeyIndex();
     }
 
-    protected void resetBeforeOpen() throws HyracksDataException {
+    protected void resetBeforeOpen() {
         releasePage();
     }
 
@@ -278,8 +273,6 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
         }
 
         tupleIndex = 0;
-        page = null;
-        isPageDirty = false;
         pred = null;
     }
 
@@ -298,13 +291,17 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
         return exclusiveLatchNodes;
     }
 
-    protected void releasePage() throws HyracksDataException {
+    /**
+     * Releases the page and unpins it from the buffer cache, clearing the reference to the page.
+     */
+    protected void releasePage() {
         if (exclusiveLatchNodes) {
-            page.releaseWriteLatch(isPageDirty);
+            page.releaseWriteLatch(false);
         } else {
             page.releaseReadLatch();
         }
         bufferCache.unpin(page);
+        page = null;
     }
 
     protected ICachedPage acquirePage(int pageId) throws HyracksDataException {

@@ -142,7 +142,10 @@ public class TreeIndexDiskOrderScanCursor extends EnforcedIndexCursor implements
         return false;
     }
 
-    protected void releasePage() throws HyracksDataException {
+    /**
+     * Releases the current page, if it is not null, clearing the reference to it.
+     */
+    protected void releasePage() {
         if (page != null) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
