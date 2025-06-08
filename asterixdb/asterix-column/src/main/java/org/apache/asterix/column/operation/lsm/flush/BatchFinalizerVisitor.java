@@ -66,7 +66,7 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
     @Override
     public Void visit(ObjectSchemaNode objectNode, AbstractSchemaNestedNode arg) throws HyracksDataException {
         level++;
-        columnSchemaMetadata.flushDefinitionLevels(level, arg, objectNode);
+        columnSchemaMetadata.flushDefinitionLevels(level - 1, arg, objectNode);
         List<AbstractSchemaNode> children = objectNode.getChildren();
         for (int i = 0; i < children.size(); i++) {
             children.get(i).accept(this, objectNode);
@@ -81,7 +81,7 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
     public Void visit(AbstractCollectionSchemaNode collectionNode, AbstractSchemaNestedNode arg)
             throws HyracksDataException {
         level++;
-        columnSchemaMetadata.flushDefinitionLevels(level, arg, collectionNode);
+        columnSchemaMetadata.flushDefinitionLevels(level - 1, arg, collectionNode);
         collectionNode.getItemNode().accept(this, collectionNode);
         collectionNode.setCounter(0);
         columnSchemaMetadata.clearDefinitionLevels(collectionNode);
