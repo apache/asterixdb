@@ -283,6 +283,7 @@
                 <argument>${project.build.directory}${file.separator}TweetSent.pyz</argument>
                 <argument>--site-packages</argument>
                 <argument>${project.build.directory}${file.separator}..${file.separator}src${file.separator}test${file.separator}resources${file.separator}TweetSent</argument>
+                <argument>--prefer-binary</argument>
                 <argument>scikit-learn</argument>
               </arguments>
               <environmentVariables>
@@ -364,6 +365,7 @@
               <workingDirectory>${project.build.directory}</workingDirectory>
               <arguments>
                 <argument>install</argument>
+                <argument>--prefer-binary</argument>
                 <argument>-r </argument>
                 <argument>ch2/requirements.txt</argument>
               </arguments>
