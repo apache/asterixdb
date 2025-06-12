@@ -64,7 +64,8 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return the size needed to store columns' offsets
      */
-    public abstract int getColumnOccupiedSpace(boolean includeCurrentTupleColumns);
+    public abstract int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment,
+            boolean includeCurrentTupleColumns, boolean adaptive);
 
     /**
      * @return maximum number of tuples to be stored per page (i.e., page0)
@@ -88,8 +89,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return total flushed length (including page zero)
      */
-    public abstract int flush(ByteBuffer pageZero, IColumnPageZeroWriter columnPageZeroWriter)
-            throws HyracksDataException;
+    public abstract int flush(IColumnPageZeroWriter columnPageZeroWriter) throws HyracksDataException;
 
     /**
      * Close the current writer and release all allocated temporary buffers

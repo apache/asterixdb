@@ -100,12 +100,11 @@ public abstract class AbstractColumnBTreeLeafFrame implements ITreeIndexFrame {
         // Duplicate to avoid interference when scanning the dataset twice
         this.buf = page.getBuffer().duplicate();
         buf.clear();
-        buf.position(HEADER_SIZE);
         resetPageZeroReader();
     }
 
     protected void resetPageZeroReader() {
-
+        buf.position(HEADER_SIZE);
     };
 
     @Override

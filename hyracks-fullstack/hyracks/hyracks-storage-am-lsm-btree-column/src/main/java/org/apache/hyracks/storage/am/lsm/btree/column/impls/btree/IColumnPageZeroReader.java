@@ -19,18 +19,24 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.btree;
 
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 
 public interface IColumnPageZeroReader {
 
-    void reset(ByteBuffer pageZeroBuf);
+    default void reset(ByteBuffer pageZeroBuf) {
+        reset(pageZeroBuf, AbstractColumnBTreeLeafFrame.HEADER_SIZE);
+    }
 
-    int getColumnOffset(int columnIndex);
+    void reset(ByteBuffer pageZeroBuf, int headerSize);
 
-    int getColumnFilterOffset(int columnIndex);
+    int getColumnOffset(int columnIndex) throws HyracksDataException;
 
-    long getLong(int offset);
+    long getColumnFilterMin(int columnIndex) throws HyracksDataException;
+
+    long getColumnFilterMax(int columnIndex) throws HyracksDataException;
 
     void skipFilters();
 
@@ -44,7 +50,7 @@ public interface IColumnPageZeroReader {
 
     int getNumberOfPresentColumns();
 
-    int getRelativeColumnIndex(int columnIndex);
+    int getRelativeColumnIndex(int columnIndex) throws HyracksDataException;
 
     int getNextLeaf();
 
@@ -52,11 +58,21 @@ public interface IColumnPageZeroReader {
 
     int getPageZeroCapacity();
 
-    boolean isValidColumn(int columnIndex);
+    boolean isValidColumn(int columnIndex) throws HyracksDataException;
 
-    void getAllColumns(IntOpenHashSet presentColumns);
+    void getAllColumns(BitSet presentColumns);
 
     ByteBuffer getPageZeroBuf();
 
     void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs);
+
+    int getNumberOfPageZeroSegments();
+
+    BitSet getPageZeroSegmentsPages();
+
+    int getHeaderSize();
+
+    void resetStream(IColumnBufferProvider pageZeroSegmentBufferProvider) throws HyracksDataException;
+
+    BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll);
 }

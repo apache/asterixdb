@@ -139,16 +139,15 @@ public class FilterAccessorProvider {
     }
 
     public static void setFilterValues(List<IColumnRangeFilterValueAccessor> filterValueAccessors,
-            ColumnBTreeReadLeafFrame frame) {
+            ColumnBTreeReadLeafFrame frame) throws HyracksDataException {
         IColumnPageZeroReader pageZeroReader = frame.getColumnPageZeroReader();
         for (int i = 0; i < filterValueAccessors.size(); i++) {
             ColumnRangeFilterValueAccessor accessor = (ColumnRangeFilterValueAccessor) filterValueAccessors.get(i);
             int columnIndex = accessor.getColumnIndex();
             long normalizedValue;
             if (pageZeroReader.isValidColumn(columnIndex)) {
-                int filterOffset = pageZeroReader.getColumnFilterOffset(columnIndex);
-                normalizedValue = accessor.isMin() ? pageZeroReader.getLong(filterOffset)
-                        : pageZeroReader.getLong(filterOffset + Long.BYTES);
+                normalizedValue = accessor.isMin() ? pageZeroReader.getColumnFilterMin(columnIndex)
+                        : pageZeroReader.getColumnFilterMax(columnIndex);
             } else {
                 // Column is missing
                 normalizedValue = accessor.isMin() ? Long.MAX_VALUE : Long.MIN_VALUE;

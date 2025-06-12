@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.StorageUtil;
@@ -50,11 +51,13 @@ public final class ColumnSweeper {
     private final ColumnSweepLockInfo lockedColumns;
     private final ColumnRanges ranges;
     private final List<ILSMDiskComponent> sweepableComponents;
+    private final List<ICachedPage> segmentPagesTempHolder;
 
     public ColumnSweeper(int numberOfPrimaryKeys) {
         lockedColumns = new ColumnSweepLockInfo();
         ranges = new ColumnRanges(numberOfPrimaryKeys);
         sweepableComponents = new ArrayList<>();
+        segmentPagesTempHolder = new ArrayList<>();
     }
 
     public long sweep(BitSet plan, SweepContext context, IColumnTupleProjector sweepProjector)
@@ -175,12 +178,18 @@ public final class ColumnSweeper {
                     columnsLocked = page0.trySweepLock(lockedColumns);
                     if (columnsLocked) {
                         leafFrame.setPage(page0);
+                        leafFrame.pinPageZeroSegments(fileId, leafFrame.getPageId(), segmentPagesTempHolder,
+                                context.getBufferCache(), SweepBufferCacheReadContext.INSTANCE);
                         ranges.reset(leafFrame, plan);
                         freedSpace += punchHoles(context, leafFrame);
                     }
                 } finally {
                     if (columnsLocked) {
                         page0.sweepUnlock();
+                    }
+                    // unpin segment pages
+                    for (ICachedPage cachedPage : segmentPagesTempHolder) {
+                        context.unpin(cachedPage, bcOpCtx);
                     }
                     context.unpin(page0, bcOpCtx);
                 }

@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.values.writer;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.column.bytes.stream.out.MultiPersistentBufferBytesOutputStream;
@@ -61,17 +60,16 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
      * This method replaces the direct page zero buffer manipulation with a more abstracted approach,
      * which allows for different page zero layouts (default or sparse).
      *
-     * @param pageZero The page zero buffer to be used
      * @param pageZeroWriter The writer implementation for page zero operations
      * @param presentColumnsIndexes Array containing the indexes of columns present in this batch
      * @param numberOfColumns Total number of columns in the schema
      */
-    public void setPageZeroWriter(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter,
-            int[] presentColumnsIndexes, int numberOfColumns) {
+    public void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes,
+            int numberOfColumns) throws HyracksDataException {
         this.pageZeroWriter = pageZeroWriter;
-        pageZeroWriter.reset(pageZero, presentColumnsIndexes, numberOfColumns);
+        pageZeroWriter.resetBasedOnColumns(presentColumnsIndexes, numberOfColumns);
         pageZeroWriter.allocateColumns();
-        nonKeyColumnStartOffset = pageZeroWriter.getPageZeroBuffer().capacity();
+        nonKeyColumnStartOffset = pageZeroWriter.getPageZeroBufferCapacity();
     }
 
     @Override

@@ -43,6 +43,9 @@ public interface IColumnReadContext extends IBufferCacheReadContext {
     ICachedPage pinNext(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException;
 
+    void preparePageZeroSegments(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
+            throws HyracksDataException;
+
     /**
      * Prepare the columns' pages
      * Notes:

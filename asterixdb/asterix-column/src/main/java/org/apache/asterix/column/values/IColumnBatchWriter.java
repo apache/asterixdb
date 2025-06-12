@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.values;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,13 +40,12 @@ public interface IColumnBatchWriter {
      * abstraction that supports different page zero layouts (default vs sparse).
      * The writer will be used to manage column offsets, filters, and primary key storage.
      * 
-     * @param pageZero The page zero buffer where metadata will be written
      * @param pageZeroWriter The writer implementation for page zero operations
      * @param presentColumnsIndexes Array of column indexes that contain data in this batch
      * @param numberOfColumns Total number of columns in the schema
      */
-    void setPageZeroWriter(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes,
-            int numberOfColumns);
+    void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes, int numberOfColumns)
+            throws HyracksDataException;
 
     /**
      * Writes the primary keys' values to Page0

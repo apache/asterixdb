@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples;
 
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
-
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,6 +27,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,6 +39,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private static final String UNSUPPORTED_OPERATION_MSG = "Operation is not supported for column tuples";
     private final int componentIndex;
     protected final ColumnBTreeReadLeafFrame frame;
+    protected final IColumnBufferProvider pageZeroSegmentBufferProvider;
     private final IColumnBufferProvider[] primaryKeyBufferProviders;
     private final IColumnBufferProvider[] filterBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
@@ -74,6 +74,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         pinnedPages = new LongOpenHashSet();
         int numberOfFilteredColumns = info.getNumberOfFilteredColumns();
         filterBufferProviders = new IColumnBufferProvider[numberOfFilteredColumns];
+        pageZeroSegmentBufferProvider = new ColumnMultiPageZeroBufferProvider(multiPageOp, pinnedPages);
         for (int i = 0; i < numberOfFilteredColumns; i++) {
             int columnIndex = info.getFilteredColumnIndex(i);
             if (columnIndex < 0) {
@@ -103,8 +104,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     public void newPage() throws HyracksDataException {
         tupleIndex = 0;
         ByteBuffer pageZero = frame.getBuffer();
+        // should not be needed, as it just been reset in step above
         pageZero.clear();
-        pageZero.position(HEADER_SIZE);
+        pageZero.position(frame.getHeaderSize());
 
         int numberOfTuples = frame.getTupleCount();
 
@@ -113,6 +115,13 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
             IColumnBufferProvider provider = primaryKeyBufferProviders[i];
             provider.reset(frame);
             startPrimaryKey(provider, i, numberOfTuples);
+        }
+
+        // if the pageZero segments > 1, reset the page zero segment buffer provider
+        if (frame.getPageZeroSegmentCount() > 1) {
+            IColumnPageZeroReader pageZeroReader = frame.getColumnPageZeroReader();
+            pageZeroSegmentBufferProvider.reset(frame);
+            pageZeroReader.resetStream(pageZeroSegmentBufferProvider);
         }
     }
 
@@ -248,6 +257,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         for (int i = 0; i < buffersProviders.length; i++) {
             buffersProviders[i].releaseAll();
         }
+
+        // release pageZero segment buffer provider
+        pageZeroSegmentBufferProvider.releaseAll();
 
         maxNumberOfPinnedPages = Math.max(maxNumberOfPinnedPages, pinnedPages.size());
         pinnedPages.clear();

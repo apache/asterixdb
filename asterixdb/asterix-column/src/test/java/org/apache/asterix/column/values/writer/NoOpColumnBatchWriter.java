@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.values.writer;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.column.values.IColumnBatchWriter;
@@ -33,8 +32,8 @@ public class NoOpColumnBatchWriter implements IColumnBatchWriter {
     }
 
     @Override
-    public void setPageZeroWriter(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter,
-            int[] presentColumnsIndexes, int numberOfColumns) {
+    public void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes,
+            int numberOfColumns) {
         // NoOp
     }
 

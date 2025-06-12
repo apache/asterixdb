@@ -19,7 +19,6 @@
 package org.apache.asterix.column.operation.lsm.flush;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.asterix.column.values.IColumnValuesWriter;
@@ -29,6 +28,8 @@ import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
 import org.apache.asterix.column.zero.PageZeroWriterFlavorSelector;
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
+import org.apache.asterix.column.zero.writers.multipage.DefaultColumnMultiPageZeroWriter;
+import org.apache.asterix.column.zero.writers.multipage.SparseColumnMultiPageZeroWriter;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -144,18 +145,37 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int getColumnOccupiedSpace(boolean includeCurrentTupleColumns) {
-        int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+    public int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment, boolean includeCurrentTupleColumns,
+            boolean adaptive) {
         int totalNumberOfColumns = getAbsoluteNumberOfColumns(includeCurrentTupleColumns);
+        totalNumberOfColumns = Math.min(totalNumberOfColumns, maxColumnsInPageZerothSegment);
+
+        int spaceOccupiedByDefaultWriter = DefaultColumnMultiPageZeroWriter.EXTENDED_HEADER_SIZE + totalNumberOfColumns
+                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+
+        if (!adaptive) {
+            // go for default multipage writer
+            return spaceOccupiedByDefaultWriter;
+        }
+
+        // Maximum space occupied by the columns = maxColumnsInPageZerothSegment * (offset + filter size)
+        int spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
+        pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
+                spaceOccupiedBySparseWriter, adaptive);
+
+        return Math.min(spaceOccupiedBySparseWriter, spaceOccupiedByDefaultWriter);
+    }
+
+    private int getSpaceOccupiedBySparseWriter(int maxColumnsInPageZerothSegment) {
+        int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+        int numberOfPagesRequired = (int) Math.ceil(
+                (double) (presentColumns - maxColumnsInPageZerothSegment) / IColumnPageZeroWriter.MIN_COLUMN_SPACE);
+        int headerSpace = SparseColumnMultiPageZeroWriter.getHeaderSpace(numberOfPagesRequired);
+        presentColumns = Math.min(presentColumns, maxColumnsInPageZerothSegment);
 
         // space occupied by the sparse writer
-        int spaceOccupiedBySparseWriter = presentColumns
+        return headerSpace + presentColumns
                 * (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
-        int spaceOccupiedByDefaultWriter = totalNumberOfColumns
-                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
-        pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
-                spaceOccupiedBySparseWriter);
-        return Math.min(spaceOccupiedBySparseWriter, spaceOccupiedByDefaultWriter);
     }
 
     @Override
@@ -193,10 +213,9 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public final int flush(ByteBuffer pageZero, IColumnPageZeroWriter pageZeroWriter) throws HyracksDataException {
+    public final int flush(IColumnPageZeroWriter pageZeroWriter) throws HyracksDataException {
         int numberOfColumns = getAbsoluteNumberOfColumns(false);
         finalizer.finalizeBatchColumns(columnMetadata, presentColumnsIndexes, pageZeroWriter);
-        writer.setPageZeroWriter(pageZero, pageZeroWriter, toIndexArray(presentColumnsIndexes), numberOfColumns);
 
         //assertion logging
         int presentColumnsCount = presentColumnsIndexes.cardinality();
@@ -207,6 +226,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
                     beforeTransformColumnCount, currentTupleColumnsCount, presentColumnsCount);
         }
 
+        writer.setPageZeroWriter(pageZeroWriter, toIndexArray(presentColumnsIndexes), numberOfColumns);
         return finalizer.finalizeBatch(writer);
     }
 

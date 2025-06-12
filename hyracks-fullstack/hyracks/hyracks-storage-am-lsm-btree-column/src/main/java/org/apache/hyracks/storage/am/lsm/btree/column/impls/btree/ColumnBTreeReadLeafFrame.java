@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.btree;
 
+import java.util.BitSet;
+import java.util.List;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
@@ -25,9 +29,10 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleRea
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame {
     private final AbstractColumnTupleReader columnarTupleReader;
@@ -45,8 +50,23 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
 
     @Override
     protected void resetPageZeroReader() {
-        columnPageZeroReader = pageZeroWriterFlavorSelector.createPageZeroReader(getFlagByte());
+        columnPageZeroReader = pageZeroWriterFlavorSelector.createPageZeroReader(getFlagByte(), buf.capacity());
         columnPageZeroReader.reset(buf);
+        buf.position(columnPageZeroReader.getHeaderSize());
+    }
+
+    public void pinPageZeroSegments(int fileId, int pageZeroId, List<ICachedPage> segmentPages,
+            IBufferCache bufferCache, IBufferCacheReadContext bcOpCtx) throws HyracksDataException {
+        // pins all the segments, used by the column planner and sweeper
+        int numberOfPageSegments = getNumberOfPageZeroSegments();
+        for (int i = 1; i < numberOfPageSegments; i++) {
+            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageZeroId + i);
+            if (bcOpCtx != null) {
+                segmentPages.add(bufferCache.pin(dpid, bcOpCtx));
+            } else {
+                segmentPages.add(bufferCache.pin(dpid));
+            }
+        }
     }
 
     @Override
@@ -71,7 +91,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return rightMostTuple;
     }
 
-    public void getAllColumns(IntOpenHashSet presentColumns) {
+    public void getAllColumns(BitSet presentColumns) {
         columnPageZeroReader.getAllColumns(presentColumns);
     }
 
@@ -88,11 +108,15 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return BufferedFileHandle.getPageId(((CachedPage) page).getDiskPageId());
     }
 
+    public int getNumberOfPageZeroSegments() {
+        return columnPageZeroReader.getNumberOfPageZeroSegments();
+    }
+
     public int getNumberOfColumns() {
         return columnPageZeroReader.getNumberOfPresentColumns();
     }
 
-    public int getColumnOffset(int columnIndex) {
+    public int getColumnOffset(int columnIndex) throws HyracksDataException {
         // update the exception message.
         if (!columnPageZeroReader.isValidColumn(columnIndex)) {
             throw new IndexOutOfBoundsException(columnIndex + " >= " + getNumberOfColumns());
@@ -100,7 +124,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return columnPageZeroReader.getColumnOffset(columnIndex);
     }
 
-    public boolean isValidColumn(int columnIndex) {
+    public boolean isValidColumn(int columnIndex) throws HyracksDataException {
         return columnPageZeroReader.isValidColumn(columnIndex);
     }
 
@@ -110,6 +134,14 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
 
     public int getMegaLeafNodeLengthInBytes() {
         return columnPageZeroReader.getMegaLeafNodeLengthInBytes();
+    }
+
+    public int getHeaderSize() {
+        return columnPageZeroReader.getHeaderSize();
+    }
+
+    public int getPageZeroSegmentCount() {
+        return columnPageZeroReader.getNumberOfPageZeroSegments();
     }
 
     // flag needs to be directly accessed from the buffer, as this will be used to choose the pageReader
@@ -147,5 +179,13 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
 
     public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
         columnPageZeroReader.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
+    }
+
+    public BitSet getPageZeroSegmentsPages() {
+        return columnPageZeroReader.getPageZeroSegmentsPages();
+    }
+
+    public BitSet markRequiredPageZeroSegments(BitSet projectedColumns, int pageZeroId, boolean markAll) {
+        return columnPageZeroReader.markRequiredPageSegments(projectedColumns, pageZeroId, markAll);
     }
 }

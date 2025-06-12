@@ -18,21 +18,33 @@
  */
 package org.apache.asterix.column.zero.writers;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.FLAG_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.LEFT_MOST_KEY_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.MEGA_LEAF_NODE_LENGTH;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.NUMBER_OF_COLUMNS_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.RIGHT_MOST_KEY_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.SIZE_OF_COLUMNS_OFFSETS_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.TUPLE_COUNT_OFFSET;
+
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.asterix.column.bytes.stream.out.ByteBufferOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IValuesWriter;
 
 /**
  * Default implementation of page zero writer that allocates space for all columns in the schema.
- * 
+ * <p>
  * This writer uses a fixed layout where every column in the schema has a reserved slot,
  * regardless of whether data is present for that column. This approach is optimal for
  * dense datasets where most columns contain data.
- * 
+ * <p>
  * Memory layout in page zero:
  * 1. Column offsets: 4 bytes per column (numberOfColumns * 4 bytes)
  * 2. Column filters: 16 bytes per column (numberOfColumns * 16 bytes) - min/max values
@@ -44,24 +56,26 @@ public class DefaultColumnPageZeroWriter implements IColumnPageZeroWriter {
     /** Size in bytes for storing column filter (min + max values) */
     public static final int FILTER_SIZE = Long.BYTES * 2; // min and max
 
-    private final ByteBufferOutputStream primaryKeys;
-    private ByteBuffer pageZero;
+    protected final ByteBufferOutputStream primaryKeys;
+    protected ByteBuffer pageZero;
+    protected int headerSize;
     private int numberOfColumns;
 
     // Offset positions within page zero buffer
-    private int primaryKeysOffset; // Where primary key data starts
-    private int columnsOffset; // Where column offset array starts  
-    private int filtersOffset; // Where column filter array starts
+    protected int primaryKeysOffset; // Where primary key data starts
+    protected int columnsOffset; // Where column offset array starts
+    protected int filtersOffset; // Where column filter array starts
 
     public DefaultColumnPageZeroWriter() {
         primaryKeys = new ByteBufferOutputStream();
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int[] presentColumns, int numberOfColumns) {
-        this.pageZero = pageZeroBuf;
+    public void resetBasedOnColumns(int[] presentColumns, int numberOfColumns, int headerSize) {
         this.numberOfColumns = numberOfColumns;
-        this.primaryKeysOffset = pageZeroBuf.position();
+        primaryKeysOffset = headerSize;
+        this.headerSize = headerSize;
+        pageZero.position(headerSize);
     }
 
     @Override
@@ -71,7 +85,7 @@ public class DefaultColumnPageZeroWriter implements IColumnPageZeroWriter {
 
     /**
      * Allocates space in page zero for all column metadata.
-     * 
+     * <p>
      * The allocation strategy reserves space for all columns in the schema:
      * - Column offsets: Fixed array of 4-byte integers
      * - Column filters: Fixed array of 16-byte min/max pairs
@@ -140,6 +154,48 @@ public class DefaultColumnPageZeroWriter implements IColumnPageZeroWriter {
     }
 
     @Override
+    public void setPageZero(ByteBuffer pageZero) {
+        // this method is used to set the pageZero buffer
+        // only caller is the MultiColumnPageZeroWriter
+        this.pageZero = pageZero;
+    }
+
+    public void flush(ByteBuffer buf, int numberOfTuples, ITupleReference minKey, ITupleReference maxKey,
+            AbstractColumnTupleWriter columnWriter, ITreeIndexTupleWriter rowTupleWriter) throws HyracksDataException {
+        this.pageZero = buf;
+        // Prepare the space for writing the columns' information such as the primary keys
+        pageZero.position(HEADER_SIZE);
+        this.primaryKeysOffset = buf.position();
+        // Flush the columns to persistence pages and write the length of the mega leaf node in pageZero
+        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, columnWriter.flush(this));
+        // Write min and max keys
+        int offset = buf.position();
+        buf.putInt(LEFT_MOST_KEY_OFFSET, offset);
+        offset += rowTupleWriter.writeTuple(minKey, buf.array(), offset);
+        buf.putInt(RIGHT_MOST_KEY_OFFSET, offset);
+        rowTupleWriter.writeTuple(maxKey, buf.array(), offset);
+
+        // Write page information
+        buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
+        buf.put(FLAG_OFFSET, flagCode());
+        buf.putInt(NUMBER_OF_COLUMNS_OFFSET, getNumberOfColumns());
+        buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, getColumnOffsetsSize());
+
+        // reset the collected meta info
+        columnWriter.reset();
+    }
+
+    public void flush(ByteBuffer buf, int numberOfTuples, AbstractColumnTupleWriter writer)
+            throws HyracksDataException {
+        this.pageZero = buf;
+        pageZero.position(HEADER_SIZE);
+        this.primaryKeysOffset = buf.position();
+        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(this));
+        buf.putInt(NUMBER_OF_COLUMNS_OFFSET, getNumberOfColumns());
+        buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
+    }
+
+    @Override
     public int getNumberOfColumns() {
         return numberOfColumns;
     }
@@ -158,8 +214,8 @@ public class DefaultColumnPageZeroWriter implements IColumnPageZeroWriter {
     }
 
     @Override
-    public ByteBuffer getPageZeroBuffer() {
-        return pageZero;
+    public int getPageZeroBufferCapacity() {
+        return pageZero.capacity();
     }
 
     /**
@@ -176,5 +232,10 @@ public class DefaultColumnPageZeroWriter implements IColumnPageZeroWriter {
     @Override
     public int getColumnOffsetsSize() {
         return numberOfColumns * COLUMN_OFFSET_SIZE;
+    }
+
+    @Override
+    public int getHeaderSize() {
+        return headerSize;
     }
 }

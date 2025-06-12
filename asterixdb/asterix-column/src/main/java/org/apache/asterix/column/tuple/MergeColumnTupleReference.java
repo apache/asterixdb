@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.tuple;
 
+import java.util.BitSet;
+
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.operation.lsm.merge.IEndOfPageCallBack;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnReadMetadata;
@@ -29,15 +31,13 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-
 public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleReference {
     // NoOP callback is for empty pages only
     private static final IEndOfPageCallBack EMPTY_PAGE_CALLBACK = createNoOpCallBack();
     private final IColumnValuesReader[] columnReaders;
     private int skipCount;
     private IEndOfPageCallBack endOfPageCallBack;
-    private IntOpenHashSet presentColumnIndexes;
+    private BitSet presentColumnIndexes;
     private int mergingLength;
 
     public MergeColumnTupleReference(int componentIndex, ColumnBTreeReadLeafFrame frame,
@@ -155,7 +155,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         };
     }
 
-    public void setColumnIndexes(IntOpenHashSet presentColumnsIndexes) {
+    public void setColumnIndexes(BitSet presentColumnsIndexes) {
         this.presentColumnIndexes = presentColumnsIndexes;
     }
 

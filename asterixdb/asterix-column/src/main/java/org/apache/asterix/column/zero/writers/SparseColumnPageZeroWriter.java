@@ -20,55 +20,53 @@ package org.apache.asterix.column.zero.writers;
 
 import static org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter.FILTER_SIZE;
 
-import java.nio.ByteBuffer;
 import java.util.BitSet;
 
-import org.apache.asterix.column.bytes.stream.out.ByteBufferOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IValuesWriter;
 
 /**
  * Sparse implementation of page zero writer that only allocates space for present columns.
- * 
+ * <p>
  * This writer optimizes space usage for sparse datasets by storing only the columns
  * that actually contain data. Each column entry includes both the column index and
  * its data offset, allowing for efficient lookup while minimizing space overhead.
- *
+ *<p>
  * Memory layout in page zero:
  * 1. Column entries: 8 bytes per present column (4 bytes index + 4 bytes offset)
  * 2. Column filters: 16 bytes per present column (min/max values)
  * 3. Primary key data: variable size, written sequentially
- *
+ * <p>
  * This layout is particularly beneficial when the number of present columns is
  * significantly smaller than the total schema size.
  */
-public class SparseColumnPageZeroWriter implements IColumnPageZeroWriter {
+public class SparseColumnPageZeroWriter extends DefaultColumnPageZeroWriter {
     /** Size in bytes for storing a column index */
     public static final int COLUMN_INDEX_SIZE = Integer.BYTES;
     /** Size in bytes for storing a column entry (index + offset) */
     public static final int COLUMN_OFFSET_SIZE = Integer.BYTES + COLUMN_INDEX_SIZE;
 
-    private final ByteBufferOutputStream primaryKeys;
     private int[] presentColumns;
     private int numberOfPresentColumns;
-    private ByteBuffer pageZero;
-
-    // Offset positions within page zero buffer
-    private int primaryKeysOffset; // Where primary key data starts
-    private int columnsOffset; // Where column entries array starts
-    private int filtersOffset; // Where column filter array starts
 
     public SparseColumnPageZeroWriter() {
-        primaryKeys = new ByteBufferOutputStream();
+        super();
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int[] presentColumns, int numberOfColumns /* not being used */) {
-        this.pageZero = pageZeroBuf;
+    public void resetBasedOnColumns(int[] presentColumns, int numberOfColumns /* not being used */, int headerSize) {
         this.presentColumns = presentColumns;
         this.numberOfPresentColumns = presentColumns.length;
-        this.primaryKeysOffset = pageZeroBuf.position();
+        this.primaryKeysOffset = headerSize;
+        this.headerSize = headerSize;
+        pageZero.position(headerSize);
+    }
+
+    public void resetInnerBasedOnColumns(int[] presentColumns, int numberOfPresentColumns, int headerSize) {
+        this.presentColumns = presentColumns;
+        this.numberOfPresentColumns = numberOfPresentColumns;
+        this.primaryKeysOffset = headerSize; // Reset primary keys offset for sparse layout
+        pageZero.position(headerSize);
     }
 
     @Override
@@ -159,9 +157,9 @@ public class SparseColumnPageZeroWriter implements IColumnPageZeroWriter {
      * @param columnIndex The absolute column index to find
      * @return the relative position within present columns, or -1 if not found
      */
-    private int findColumnIndex(int columnIndex) {
+    public int findColumnIndex(int[] presentColumns, int numberOfPresentColumns, int columnIndex) {
         int low = 0;
-        int high = presentColumns.length - 1;
+        int high = numberOfPresentColumns - 1;
         while (low <= high) {
             int mid = (low + high) >>> 1;
             int midVal = presentColumns[mid];
@@ -194,13 +192,8 @@ public class SparseColumnPageZeroWriter implements IColumnPageZeroWriter {
     }
 
     @Override
-    public ByteBuffer getPageZeroBuffer() {
-        return pageZero;
-    }
-
-    @Override
     public int getNumberOfColumns() {
-        return presentColumns.length;
+        return numberOfPresentColumns;
     }
 
     /**
@@ -215,7 +208,7 @@ public class SparseColumnPageZeroWriter implements IColumnPageZeroWriter {
      */
     @Override
     public int getRelativeColumnIndex(int columnIndex) {
-        int columnRelativeIndex = findColumnIndex(columnIndex);
+        int columnRelativeIndex = findColumnIndex(presentColumns, numberOfPresentColumns, columnIndex);
         if (columnRelativeIndex == -1) {
             throw new IllegalStateException("Column index " + columnIndex + " does not exist in present columns.");
         }

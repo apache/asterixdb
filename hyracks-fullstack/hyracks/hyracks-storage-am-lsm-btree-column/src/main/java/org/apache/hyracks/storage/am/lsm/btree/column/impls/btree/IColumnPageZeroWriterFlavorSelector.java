@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.btree;
 
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+
 /**
  * Strategy interface for selecting the optimal page zero writer implementation.
  * 
@@ -40,24 +42,27 @@ public interface IColumnPageZeroWriterFlavorSelector {
      * @param spaceOccupiedByDefaultWriter Space in bytes required by the default writer
      * @param spaceOccupiedBySparseWriter Space in bytes required by the sparse writer
      */
-    void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter);
+    void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter,
+            boolean adaptive);
 
     /**
      * Creates the appropriate page zero reader for the given writer type.
-     * 
+     * <p>
      * This method is used during deserialization to create a reader that matches
      * the writer type used during serialization. The flag identifies which
      * layout was used.
-     * 
-     * @param flag The flag code identifying the writer type (0=default, 1=sparse)
+     *
+     * @param flag     The flag code identifying the writer type (0=default, 1=sparse)
+     * @param capacity
      * @return the appropriate reader instance
      */
-    IColumnPageZeroReader createPageZeroReader(byte flag);
+    IColumnPageZeroReader createPageZeroReader(byte flag, int capacity);
 
     /**
      * Returns the currently selected page zero writer instance.
      * 
      * @return the writer instance selected by the most recent call to switchPageZeroWriterIfNeeded
      */
-    IColumnPageZeroWriter getPageZeroWriter();
+    IColumnPageZeroWriter getPageZeroWriter(IColumnWriteMultiPageOp multiPageOpRef, int zerothSegmentMaxColumns,
+            int maximumColumnPerPageSegment);
 }

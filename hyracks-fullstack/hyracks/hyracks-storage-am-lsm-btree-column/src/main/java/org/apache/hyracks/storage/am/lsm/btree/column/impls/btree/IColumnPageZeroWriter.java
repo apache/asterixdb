@@ -22,6 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 
 /**
  * Interface for writing column metadata to page zero of a column page.
@@ -39,14 +42,23 @@ public interface IColumnPageZeroWriter {
     /** Flag code for sparse page zero writer */
     byte SPARSE_WRITER_FLAG = 1;
 
+    byte MULTI_PAGE_DEFAULT_WRITER_FLAG = 2;
+
+    byte MULTI_PAGE_SPARSE_WRITER_FLAG = 3;
+
+    int MIN_COLUMN_SPACE = 4 + 16; // offset + filter size
+
     /**
      * Initializes the writer with page zero buffer and column information.
-     * 
-     * @param pageZeroBuf The page zero buffer to write to
+     *
      * @param presentColumns Array of column indexes that are present in this page
      * @param numberOfColumns Total number of columns in the schema (may be larger than presentColumns)
      */
-    void reset(ByteBuffer pageZeroBuf, int[] presentColumns, int numberOfColumns);
+    void resetBasedOnColumns(int[] presentColumns, int numberOfColumns, int headerSize) throws HyracksDataException;
+
+    default void resetBasedOnColumns(int[] presentColumns, int numberOfColumns) throws HyracksDataException {
+        resetBasedOnColumns(presentColumns, numberOfColumns, AbstractColumnBTreeLeafFrame.HEADER_SIZE);
+    }
 
     /**
      * Returns the flag code that identifies this writer type.
@@ -69,7 +81,7 @@ public interface IColumnPageZeroWriter {
      * @param relativeColumnIndex The relative column index within this page (for sparse layouts)
      * @param offset The byte offset where the column's data begins
      */
-    void putColumnOffset(int absoluteColumnIndex, int relativeColumnIndex, int offset);
+    void putColumnOffset(int absoluteColumnIndex, int relativeColumnIndex, int offset) throws HyracksDataException;
 
     /**
      * Stores filter information (min/max values) for a column.
@@ -79,7 +91,8 @@ public interface IColumnPageZeroWriter {
      * @param normalizedMinValue The normalized minimum value in the column
      * @param normalizedMaxValue The normalized maximum value in the column
      */
-    void putColumnFilter(int relativeColumnIndex, long normalizedMinValue, long normalizedMaxValue);
+    void putColumnFilter(int relativeColumnIndex, long normalizedMinValue, long normalizedMaxValue)
+            throws HyracksDataException;
 
     /**
      * Writes primary key column data to page zero.
@@ -115,7 +128,7 @@ public interface IColumnPageZeroWriter {
      * 
      * @return the page zero buffer
      */
-    ByteBuffer getPageZeroBuffer();
+    int getPageZeroBufferCapacity();
 
     /**
      * Maps an absolute column index to a relative index within this page.
@@ -133,4 +146,11 @@ public interface IColumnPageZeroWriter {
      * @return size in bytes of column offset storage
      */
     int getColumnOffsetsSize();
+
+    void setPageZero(ByteBuffer pageZero);
+
+    void flush(ByteBuffer buf, int numberOfTuples, ITupleReference minKey, ITupleReference maxKey,
+            AbstractColumnTupleWriter columnWriter, ITreeIndexTupleWriter rowTupleWriter) throws HyracksDataException;
+
+    int getHeaderSize();
 }

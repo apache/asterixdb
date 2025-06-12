@@ -18,16 +18,14 @@
  */
 package org.apache.asterix.column.zero.readers;
 
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
-
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     private final Int2IntOpenHashMap columnIndexToRelativeColumnIndex;
@@ -38,8 +36,8 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf) {
-        super.reset(pageZeroBuf);
+    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
+        super.reset(pageZeroBuf, headerSize);
         columnIndexToRelativeColumnIndex.clear();
     }
 
@@ -47,28 +45,26 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     public int getColumnOffset(int columnIndex) {
         int relativeColumnIndex = getRelativeColumnIndex(columnIndex);
         return pageZeroBuf.getInt(
-                HEADER_SIZE + relativeColumnIndex * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + Integer.BYTES);
+                headerSize + relativeColumnIndex * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + Integer.BYTES);
     }
 
     @Override
     public int getColumnFilterOffset(int columnIndex) {
         int relativeColumnIndex = getRelativeColumnIndex(columnIndex);
-        int columnsOffsetEnd =
-                HEADER_SIZE + getNumberOfPresentColumns() * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+        int columnsOffsetEnd = headerSize + numberOfPresentColumns * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         return columnsOffsetEnd + relativeColumnIndex * DefaultColumnPageZeroWriter.FILTER_SIZE;
     }
 
     @Override
     public void skipFilters() {
-        int filterEndOffset = HEADER_SIZE + getNumberOfPresentColumns()
-                * (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        int filterEndOffset = headerSize + numberOfPresentColumns
+                * (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + SparseColumnPageZeroWriter.FILTER_SIZE);
         pageZeroBuf.position(filterEndOffset);
     }
 
     @Override
     public void skipColumnOffsets() {
-        int columnsOffsetEnd =
-                HEADER_SIZE + getNumberOfPresentColumns() * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+        int columnsOffsetEnd = headerSize + numberOfPresentColumns * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         pageZeroBuf.position(columnsOffsetEnd);
     }
 
@@ -87,7 +83,7 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
             return 0;
         }
 
-        int totalColumns = getNumberOfPresentColumns();
+        int totalColumns = numberOfPresentColumns;
         int lastColumnIndex = getColumnIndex(totalColumns - 1);
         int lastColumn = pageZeroBuf.getInt(lastColumnIndex);
         if (lastColumn == columnIndex) {
@@ -115,7 +111,7 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     }
 
     private int getColumnIndex(int index) {
-        return HEADER_SIZE + index * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+        return headerSize + index * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
     }
 
     @Override
@@ -125,11 +121,17 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     }
 
     @Override
-    public void getAllColumns(IntOpenHashSet presentColumns) {
-        int columnIndex = getColumnIndex(0);
-        for (int i = 0; i < getNumberOfPresentColumns(); i++) {
+    public void getAllColumns(BitSet presentColumns) {
+        if (numberOfPresentColumns == 0) {
+            return;
+        }
+
+        int columnIndex = headerSize;
+        int limit = columnIndex + numberOfPresentColumns * SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+
+        while (columnIndex < limit) {
             int column = pageZeroBuf.getInt(columnIndex);
-            presentColumns.add(column);
+            presentColumns.set(column);
             columnIndex += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
     }
@@ -137,7 +139,7 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     @Override
     public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
         int columnIndex = getColumnIndex(0);
-        for (int i = 0; i < getNumberOfPresentColumns(); i++) {
+        for (int i = 0; i < numberOfPresentColumns; i++) {
             int column = pageZeroBuf.getInt(columnIndex);
             int offset = pageZeroBuf.getInt(columnIndex + SparseColumnPageZeroWriter.COLUMN_INDEX_SIZE);
             offsetColumnIndexPairs[i] = IntPairUtil.of(offset, column);

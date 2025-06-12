@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.zero.readers;
 
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.LEFT_MOST_KEY_OFFSET;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.MEGA_LEAF_NODE_LENGTH;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.NEXT_LEAF_OFFSET;
@@ -27,54 +26,78 @@ import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.Abstrac
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.TUPLE_COUNT_OFFSET;
 
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-
 public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     protected ByteBuffer pageZeroBuf;
+    protected BitSet pageZeroSegmentsPages;
+    protected int numberOfPresentColumns;
+    protected int headerSize;
+
+    public DefaultColumnPageZeroReader() {
+        this.pageZeroSegmentsPages = new BitSet();
+    }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf) {
+    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
         this.pageZeroBuf = pageZeroBuf;
+        this.numberOfPresentColumns = pageZeroBuf.getInt(NUMBER_OF_COLUMNS_OFFSET);
+        this.headerSize = headerSize;
+    }
+
+    public void reset(ByteBuffer pageZeroBuf, int numberOfPresentColumns, int headerSize) {
+        this.pageZeroBuf = pageZeroBuf;
+        this.numberOfPresentColumns = numberOfPresentColumns;
+        this.headerSize = headerSize;
     }
 
     @Override
     public int getColumnOffset(int columnIndex) {
-        return pageZeroBuf.getInt(HEADER_SIZE + columnIndex * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE);
+        return pageZeroBuf.getInt(headerSize + columnIndex * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE);
     }
 
-    @Override
-    public int getColumnFilterOffset(int columnIndex) {
-        int columnsOffsetEnd =
-                HEADER_SIZE + getNumberOfPresentColumns() * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+    protected int getColumnFilterOffset(int columnIndex) {
+        int columnsOffsetEnd = headerSize + numberOfPresentColumns * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         return columnsOffsetEnd + columnIndex * DefaultColumnPageZeroWriter.FILTER_SIZE;
     }
 
     @Override
-    public long getLong(int offset) {
-        return pageZeroBuf.getLong(offset);
+    public long getColumnFilterMin(int columnIndex) {
+        int filterOffset = getColumnFilterOffset(columnIndex);
+        return pageZeroBuf.getLong(filterOffset);
+    }
+
+    @Override
+    public long getColumnFilterMax(int columnIndex) {
+        int filterOffset = getColumnFilterOffset(columnIndex);
+        return pageZeroBuf.getLong(filterOffset + Long.BYTES);
     }
 
     @Override
     public void skipFilters() {
-        int filterEndOffset = getColumnFilterOffset(getNumberOfPresentColumns());
+        int filterEndOffset = getColumnFilterOffset(numberOfPresentColumns);
         pageZeroBuf.position(filterEndOffset);
     }
 
     @Override
     public void skipColumnOffsets() {
-        int columnEndOffset =
-                HEADER_SIZE + getNumberOfPresentColumns() * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+        int columnEndOffset = headerSize + numberOfPresentColumns * DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         pageZeroBuf.position(columnEndOffset);
     }
 
     @Override
     public int getTupleCount() {
         return pageZeroBuf.getInt(TUPLE_COUNT_OFFSET);
+    }
+
+    @Override
+    public int getNumberOfPageZeroSegments() {
+        return 1;
     }
 
     @Override
@@ -114,16 +137,13 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
 
     @Override
     public boolean isValidColumn(int columnIndex) {
-        int relativeColumnIndex = getRelativeColumnIndex(columnIndex);
-        return relativeColumnIndex < getNumberOfPresentColumns();
+        return columnIndex < numberOfPresentColumns;
     }
 
     @Override
-    public void getAllColumns(IntOpenHashSet presentColumns) {
-        int numberOfColumns = getNumberOfPresentColumns();
-        for (int i = 0; i < numberOfColumns; i++) {
-            presentColumns.add(i);
-        }
+    public void getAllColumns(BitSet presentColumns) {
+        int numberOfColumns = numberOfPresentColumns;
+        presentColumns.set(0, numberOfColumns);
     }
 
     @Override
@@ -133,11 +153,33 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
 
     @Override
     public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
-        int columnOffsetStart = HEADER_SIZE;
+        int columnOffsetStart = headerSize;
         for (int i = 0; i < offsetColumnIndexPairs.length; i++) {
             int offset = pageZeroBuf.getInt(columnOffsetStart);
             offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
             columnOffsetStart += DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
+    }
+
+    @Override
+    public BitSet getPageZeroSegmentsPages() {
+        return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public int getHeaderSize() {
+        return headerSize;
+    }
+
+    @Override
+    public void resetStream(IColumnBufferProvider pageZeroSegmentBufferProvider) {
+        throw new UnsupportedOperationException("Not supported for DefaultColumnPageZeroReader");
+    }
+
+    @Override
+    public BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll) {
+        pageZeroSegmentsPages.clear();
+        pageZeroSegmentsPages.set(0);
+        return pageZeroSegmentsPages;
     }
 }

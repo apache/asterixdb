@@ -35,13 +35,13 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 import it.unimi.dsi.fastutil.longs.LongSet;
 
-public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
+public class ColumnMultiBufferProvider implements IColumnBufferProvider {
     private final int columnIndex;
     private final IColumnReadMultiPageOp multiPageOp;
     private final Queue<ICachedPage> pages;
     private final LongSet pinnedPages;
-    private int numberOfRemainingPages;
-    private int startPage;
+    protected int numberOfRemainingPages;
+    protected int startPage;
     private int startOffset;
     private int length;
 

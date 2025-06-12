@@ -19,12 +19,19 @@
 package org.apache.asterix.column.zero;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter.DEFAULT_WRITER_FLAG;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter.MULTI_PAGE_DEFAULT_WRITER_FLAG;
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter.MULTI_PAGE_SPARSE_WRITER_FLAG;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter.SPARSE_WRITER_FLAG;
 
 import org.apache.asterix.column.zero.readers.DefaultColumnPageZeroReader;
 import org.apache.asterix.column.zero.readers.SparseColumnPageZeroReader;
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
+import org.apache.asterix.column.zero.writers.multipage.DefaultColumnMultiPageZeroReader;
+import org.apache.asterix.column.zero.writers.multipage.DefaultColumnMultiPageZeroWriter;
+import org.apache.asterix.column.zero.writers.multipage.SparseColumnMultiPageZeroReader;
+import org.apache.asterix.column.zero.writers.multipage.SparseColumnMultiPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriterFlavorSelector;
@@ -43,7 +50,7 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
  */
 public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavorSelector {
     // Flag indicating which writer type is currently selected (DEFAULT_WRITER_FLAG=default, SPARSE_WRITER_FLAG=sparse)
-    protected byte writerFlag = DEFAULT_WRITER_FLAG;
+    protected byte writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
 
     // Cache of writer instances to avoid repeated object creation
     private final Byte2ObjectArrayMap<IColumnPageZeroWriter> writers;
@@ -65,13 +72,19 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
      * @param spaceOccupiedBySparseWriter Space in bytes required by the sparse writer
      */
     @Override
-    public void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter) {
+    public void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter,
+            boolean adaptive) {
+        if (!adaptive) {
+            // If not adaptive, always use the default writer
+            writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
+            return;
+        }
         if (spaceOccupiedByDefaultWriter <= spaceOccupiedBySparseWriter) {
             // Default writer is more space-efficient (or equal), use it
-            writerFlag = DEFAULT_WRITER_FLAG;
+            writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
         } else {
             // Sparse writer is more space-efficient, use it
-            writerFlag = SPARSE_WRITER_FLAG;
+            writerFlag = MULTI_PAGE_SPARSE_WRITER_FLAG;
         }
     }
 
@@ -83,12 +96,15 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
      * @throws IllegalStateException if an unsupported writer flag is encountered
      */
     @Override
-    public IColumnPageZeroWriter getPageZeroWriter() {
-       return switch (writerFlag) {
-           case DEFAULT_WRITER_FLAG -> writers.computeIfAbsent(DEFAULT_WRITER_FLAG, k -> new DefaultColumnPageZeroWriter());
-           case SPARSE_WRITER_FLAG -> writers.computeIfAbsent(SPARSE_WRITER_FLAG, k -> new SparseColumnPageZeroWriter());
-           default -> throw new IllegalStateException("Unsupported writer flag: " + writerFlag);
-       };
+    public IColumnPageZeroWriter getPageZeroWriter(IColumnWriteMultiPageOp multiPageOpRef, int zerothSegmentMaxColumns,
+            int bufferCapacity) {
+               return switch (writerFlag) {
+                   case DEFAULT_WRITER_FLAG -> writers.computeIfAbsent(DEFAULT_WRITER_FLAG, k -> new DefaultColumnPageZeroWriter());
+                   case SPARSE_WRITER_FLAG -> writers.computeIfAbsent(SPARSE_WRITER_FLAG, k -> new SparseColumnPageZeroWriter());
+                   case MULTI_PAGE_DEFAULT_WRITER_FLAG -> writers.computeIfAbsent(MULTI_PAGE_DEFAULT_WRITER_FLAG, k -> new DefaultColumnMultiPageZeroWriter(multiPageOpRef, zerothSegmentMaxColumns, bufferCapacity));
+                   case MULTI_PAGE_SPARSE_WRITER_FLAG -> writers.computeIfAbsent(MULTI_PAGE_SPARSE_WRITER_FLAG, k -> new SparseColumnMultiPageZeroWriter(multiPageOpRef, zerothSegmentMaxColumns, bufferCapacity));
+                   default -> throw new IllegalStateException("Unsupported writer flag: " + writerFlag);
+               };
     }
 
     /**
@@ -101,11 +117,13 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
      * @throws IllegalStateException if an unsupported reader flag is encountered
      */
     @Override
-    public IColumnPageZeroReader createPageZeroReader(byte flag) {
-        return switch (flag) {
-            case DEFAULT_WRITER_FLAG -> readers.computeIfAbsent(DEFAULT_WRITER_FLAG, k -> new DefaultColumnPageZeroReader());
-            case SPARSE_WRITER_FLAG -> readers.computeIfAbsent(SPARSE_WRITER_FLAG, k -> new SparseColumnPageZeroReader());
-            default -> throw new IllegalStateException("Unsupported reader flag: " + flag);
-        };
+    public IColumnPageZeroReader createPageZeroReader(byte flag, int bufferCapacity) {
+                return switch (flag) {
+                    case DEFAULT_WRITER_FLAG -> readers.computeIfAbsent(DEFAULT_WRITER_FLAG, k -> new DefaultColumnPageZeroReader());
+                    case SPARSE_WRITER_FLAG -> readers.computeIfAbsent(SPARSE_WRITER_FLAG, k -> new SparseColumnPageZeroReader());
+                    case MULTI_PAGE_DEFAULT_WRITER_FLAG -> readers.computeIfAbsent(MULTI_PAGE_DEFAULT_WRITER_FLAG, k -> new DefaultColumnMultiPageZeroReader(bufferCapacity));
+                    case MULTI_PAGE_SPARSE_WRITER_FLAG -> readers.computeIfAbsent(MULTI_PAGE_SPARSE_WRITER_FLAG, k -> new SparseColumnMultiPageZeroReader(bufferCapacity));
+                    default -> throw new IllegalStateException("Unsupported reader flag: " + flag);
+                };
     }
 }

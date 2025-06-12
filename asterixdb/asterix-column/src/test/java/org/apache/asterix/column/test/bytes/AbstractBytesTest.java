@@ -19,8 +19,6 @@
 package org.apache.asterix.column.test.bytes;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.MEGA_LEAF_NODE_LENGTH;
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.NUMBER_OF_COLUMNS_OFFSET;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.TUPLE_COUNT_OFFSET;
 
 import java.io.File;
@@ -190,14 +188,8 @@ public abstract class AbstractBytesTest extends TestBase {
     protected void writeFullPage(ByteBuffer pageZero, AbstractColumnTupleWriter writer, int tupleCount)
             throws HyracksDataException {
         pageZero.clear();
-        //Reserve the header space
-        pageZero.position(HEADER_SIZE);
-        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(pageZero, new DefaultColumnPageZeroWriter()));
-        //Write page header
-        int numberOfColumn = writer.getAbsoluteNumberOfColumns(false);
-        pageZero.putInt(TUPLE_COUNT_OFFSET, tupleCount);
-        pageZero.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumn);
-
+        DefaultColumnPageZeroWriter pageZeroWriter = new DefaultColumnPageZeroWriter();
+        pageZeroWriter.flush(pageZero, tupleCount, writer);
     }
 
     protected boolean isFull(AbstractColumnTupleWriter columnWriter, int tupleCount, ITupleReference tuple) {
@@ -210,7 +202,7 @@ public abstract class AbstractBytesTest extends TestBase {
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getColumnOccupiedSpace(true);
+        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, true, false);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //New tuple required space
