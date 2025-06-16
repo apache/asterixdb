@@ -106,7 +106,9 @@ public class NCConfig extends ControllerConfig {
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
-                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
+        STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT(INTEGER_BYTE_UNIT, 5000),
+        ADAPTIVE_PAGE_ZERO_WRITER_SELECTION(BOOLEAN, false);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -257,6 +259,11 @@ public class NCConfig extends ControllerConfig {
                     return "Path to HTTP basic credentials";
                 case ABORT_TASKS_TIMEOUT:
                     return "The maximum time to wait for the tasks to be aborted";
+                case STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT:
+                    return "The maximum number of columns in zero segment (default: 5000).";
+                case ADAPTIVE_PAGE_ZERO_WRITER_SELECTION:
+                    return "The config to choose between writers dynamically (default: false, i.e. use the "
+                            + "default writer for all segments).";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -636,4 +643,11 @@ public class NCConfig extends ControllerConfig {
         return appConfig.getInt(Option.ABORT_TASKS_TIMEOUT);
     }
 
+    public int getStorageMaxColumnsInZerothSegment() {
+        return appConfig.getInt(Option.STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT);
+    }
+
+    public boolean isAdaptivePageZeroWriterSelection() {
+        return appConfig.getBoolean(Option.ADAPTIVE_PAGE_ZERO_WRITER_SELECTION);
+    }
 }

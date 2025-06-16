@@ -66,7 +66,7 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(),
+        testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getNcConfig(), harness.getIOManager(),
                 harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
                 valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),

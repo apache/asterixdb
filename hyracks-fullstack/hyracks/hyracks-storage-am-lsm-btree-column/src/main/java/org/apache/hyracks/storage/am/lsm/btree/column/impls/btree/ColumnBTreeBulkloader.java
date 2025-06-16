@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTreeNSMBulkLoader;
 import org.apache.hyracks.storage.am.btree.impls.BTreeSplitKey;
@@ -69,8 +70,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private int maxTupleCount;
     private int lastRequiredFreeSpace;
 
-    public ColumnBTreeBulkloader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
+    public ColumnBTreeBulkloader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
+            IPageWriteCallback callback, ITreeIndex index, ITreeIndexFrame leafFrame,
+            IBufferCacheWriteContext writeContext) throws HyracksDataException {
         super(fillFactor, verifyInput, callback, index, leafFrame, writeContext);
         columnsPages = new ArrayList<>();
         pageZeroSegments = new ArrayList<>();
@@ -84,8 +86,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         setLowKey = true;
 
         // Writer config
-        maxColumnsInPageZerothSegment = 40; // setting a lower value for testing, should be coming from config.
-        adaptiveWriter = false; // should be coming from config.
+        maxColumnsInPageZerothSegment = storageConfig.getStorageMaxColumnsInZerothSegment();
+        adaptiveWriter = storageConfig.isAdaptivePageZeroWriterSelection();
 
         // For logging. Starts with 1 for page0
         numberOfPagesInCurrentLeafNode = 1;

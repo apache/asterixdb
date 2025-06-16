@@ -22,6 +22,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -51,12 +52,14 @@ public class ColumnBTree extends DiskBTree {
         throw new IllegalAccessError("Missing write column metadata");
     }
 
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback,
-            IColumnMetadata columnMetadata, IColumnWriteContext writeContext) throws HyracksDataException {
+    public IIndexBulkLoader createBulkLoader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
+            IPageWriteCallback callback, IColumnMetadata columnMetadata, IColumnWriteContext writeContext)
+            throws HyracksDataException {
         ColumnBTreeLeafFrameFactory columnLeafFrameFactory = (ColumnBTreeLeafFrameFactory) leafFrameFactory;
         ColumnBTreeWriteLeafFrame writeLeafFrame =
                 columnLeafFrameFactory.createWriterFrame(columnMetadata, writeContext);
-        return new ColumnBTreeBulkloader(fillFactor, verifyInput, callback, this, writeLeafFrame, writeContext);
+        return new ColumnBTreeBulkloader(storageConfig, fillFactor, verifyInput, callback, this, writeLeafFrame,
+                writeContext);
     }
 
     @Override

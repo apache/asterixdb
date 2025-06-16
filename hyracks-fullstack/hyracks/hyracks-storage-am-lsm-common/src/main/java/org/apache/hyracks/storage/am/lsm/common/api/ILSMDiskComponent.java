@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
@@ -124,6 +125,7 @@ public interface ILSMDiskComponent extends ILSMComponent {
      * Creates a bulkloader pipeline which includes all chained operations, bulkloading individual elements of the
      * component: indexes, LSM filters, Bloom filters, buddy indexes, etc.
      *
+     * @param storageConfig
      * @param operation
      * @param fillFactor
      * @param verifyInput
@@ -134,9 +136,9 @@ public interface ILSMDiskComponent extends ILSMComponent {
      * @return the created disk component bulk loader
      * @throws HyracksDataException
      */
-    ILSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent,
-            IPageWriteCallback callback) throws HyracksDataException;
+    ILSMDiskComponentBulkLoader createBulkLoader(NCConfig storageConfig, ILSMIOOperation operation, float fillFactor,
+            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+            boolean cleanupEmptyComponent, IPageWriteCallback callback) throws HyracksDataException;
 
     /**
      * Returns all pages of the component to the buffer cache

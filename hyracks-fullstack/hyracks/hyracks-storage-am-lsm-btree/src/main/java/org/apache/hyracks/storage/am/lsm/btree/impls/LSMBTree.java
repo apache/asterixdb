@@ -27,6 +27,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
@@ -90,7 +91,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     // Primary and Primary Key LSMBTree has a Bloomfilter, but Secondary one doesn't have.
     private final boolean hasBloomFilter;
 
-    public LSMBTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+    public LSMBTree(NCConfig storageConfig, IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
@@ -101,8 +102,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             boolean needKeyDupCheck, boolean hasBloomFilter, int[] btreeFields, int[] filterFields, boolean durable,
             boolean updateAware, ITracer tracer, boolean atomic) throws HyracksDataException {
-        super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
+        super(storageConfig, ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate,
+                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
                 bulkLoadComponentFactory, filterFrameFactory, filterManager, filterFields, durable, filterHelper,
                 btreeFields, tracer, atomic);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
@@ -265,8 +266,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 }
                 component = createDiskComponent(componentFactory, flushOp.getTarget(), null,
                         flushOp.getBloomFilterTarget(), true);
-                componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, numElements, false, false,
-                        false, pageWriteCallbackFactory.createPageWriteCallback());
+                componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f, false, numElements,
+                        false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
                 IIndexCursor scanCursor = accessor.createSearchCursor(false);
                 accessor.search(scanCursor, nullPred);
                 try {
@@ -335,8 +336,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     mergedComponent = createDiskComponent(getMergeComponentFactory(), mergeOp.getTarget(), null,
                             mergeOp.getBloomFilterTarget(), true);
                     IPageWriteCallback pageWriteCallback = pageWriteCallbackFactory.createPageWriteCallback();
-                    componentBulkLoader = mergedComponent.createBulkLoader(operation, 1.0f, false, numElements, false,
-                            false, false, pageWriteCallback);
+                    componentBulkLoader = mergedComponent.createBulkLoader(storageConfig, operation, 1.0f, false,
+                            numElements, false, false, false, pageWriteCallback);
                     while (cursor.hasNext()) {
                         cursor.next();
                         ITupleReference frameTuple = cursor.getTuple();
