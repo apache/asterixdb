@@ -165,6 +165,7 @@ public final class ColumnSweeper {
         int freedSpace = 0;
         context.open(fileId);
         try {
+            Throwable failure = null;
             while (nextPageId >= 0) {
                 if (context.stopSweeping()) {
                     // Exit as the index is being dropped
@@ -183,16 +184,29 @@ public final class ColumnSweeper {
                         ranges.reset(leafFrame, plan);
                         freedSpace += punchHoles(context, leafFrame);
                     }
+                } catch (Throwable th) {
+                    failure = th;
                 } finally {
                     if (columnsLocked) {
                         page0.sweepUnlock();
                     }
                     // unpin segment pages
                     for (ICachedPage cachedPage : segmentPagesTempHolder) {
-                        context.unpin(cachedPage, bcOpCtx);
+                        try {
+                            context.unpin(cachedPage, bcOpCtx);
+                        } catch (Throwable e) {
+                            if (failure == null) {
+                                failure = e;
+                            } else {
+                                failure.addSuppressed(e);
+                            }
+                        }
                     }
                     context.unpin(page0, bcOpCtx);
                 }
+            }
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
             }
         } finally {
             context.close();

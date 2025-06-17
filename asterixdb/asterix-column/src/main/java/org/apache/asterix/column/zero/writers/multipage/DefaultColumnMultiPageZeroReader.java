@@ -40,6 +40,9 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZeroReader {
     public static final int headerSize = DefaultColumnMultiPageZeroWriter.EXTENDED_HEADER_SIZE;
@@ -272,5 +275,16 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
     @Override
     public int getHeaderSize() {
         return EXTENDED_HEADER_SIZE;
+    }
+
+    @Override
+    public void printPageZeroReaderInfo() {
+        ColumnarValueException ex = new ColumnarValueException();
+        ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
+        readerNode.put("headerSize", headerSize);
+        readerNode.put("maxColumnsInZerothSegment", zerothSegmentMaxColumns);
+        readerNode.put("maxNumberOfColumnsInAPage", maxNumberOfColumnsInAPage);
+        readerNode.put("numberOfPageZeroSegments", numberOfPageZeroSegments);
+        LOGGER.debug("DefaultColumnMultiPageZeroReader Info: {}", readerNode.toPrettyString());
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.column.zero.readers;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.FLAG_OFFSET;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.LEFT_MOST_KEY_OFFSET;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.MEGA_LEAF_NODE_LENGTH;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.NEXT_LEAF_OFFSET;
@@ -31,9 +32,16 @@ import java.util.BitSet;
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
+    protected static Logger LOGGER = LogManager.getLogger();
+
     protected ByteBuffer pageZeroBuf;
     protected BitSet pageZeroSegmentsPages;
     protected int numberOfPresentColumns;
@@ -181,5 +189,15 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
         pageZeroSegmentsPages.clear();
         pageZeroSegmentsPages.set(0);
         return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public void printPageZeroReaderInfo() {
+        ColumnarValueException ex = new ColumnarValueException();
+        ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
+        readerNode.put("headerSize", headerSize);
+        readerNode.put("numberOfPresentColumns", numberOfPresentColumns);
+        readerNode.put("flag", pageZeroBuf.get(FLAG_OFFSET));
+        LOGGER.debug("SingleColumnPageZeroReader Info: {}", readerNode.toPrettyString());
     }
 }

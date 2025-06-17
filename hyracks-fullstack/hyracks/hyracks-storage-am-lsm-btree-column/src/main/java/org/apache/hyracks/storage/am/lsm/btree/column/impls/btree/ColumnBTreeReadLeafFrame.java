@@ -188,4 +188,8 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     public BitSet markRequiredPageZeroSegments(BitSet projectedColumns, int pageZeroId, boolean markAll) {
         return columnPageZeroReader.markRequiredPageSegments(projectedColumns, pageZeroId, markAll);
     }
+
+    public void printPageZeroReaderInfo() {
+        columnPageZeroReader.printPageZeroReaderInfo();
+    }
 }

@@ -44,12 +44,12 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
  * This class implements an optimization strategy for sparse columns:
  * - Default writer: Allocates space for all columns in the schema (suitable for dense data)
  * - Sparse writer: Only allocates space for present columns (suitable for sparse data)
+ * - Multi-page writers: Variants of the above writers that support multi-page operations
  *</p>
  * The selector automatically chooses the most space-efficient option based on the actual
  * space requirements of each approach.
  */
 public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavorSelector {
-    // Flag indicating which writer type is currently selected (DEFAULT_WRITER_FLAG=default, SPARSE_WRITER_FLAG=sparse)
     protected byte writerFlag = IColumnPageZeroWriter.ColumnPageZeroWriterType.ADAPTIVE.getWriterFlag();
 
     // Cache of writer instances to avoid repeated object creation

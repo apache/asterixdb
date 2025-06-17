@@ -20,8 +20,11 @@ package org.apache.asterix.column.zero.writers.multipage;
 
 import org.apache.asterix.column.bytes.stream.in.MultiPageZeroByteBuffersReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractColumnMultiPageZeroReader implements IColumnPageZeroReader {
+    protected static final Logger LOGGER = LogManager.getLogger();
     protected MultiPageZeroByteBuffersReader segmentBuffers;
 
     AbstractColumnMultiPageZeroReader() {

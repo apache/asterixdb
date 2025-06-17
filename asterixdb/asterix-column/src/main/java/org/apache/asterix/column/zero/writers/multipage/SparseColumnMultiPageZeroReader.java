@@ -40,6 +40,9 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
@@ -357,5 +360,17 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
             }
         }
         return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public void printPageZeroReaderInfo() {
+        ColumnarValueException ex = new ColumnarValueException();
+        ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
+        readerNode.put("headerSize", headerSize);
+        readerNode.put("maxColumnIndexInZerothSegment", maxColumnIndexInZerothSegment);
+        readerNode.put("numberOfColumnInZerothSegment", numberOfColumnInZerothSegment);
+        readerNode.put("maxNumberOfColumnsInAPage", maxNumberOfColumnsInAPage);
+        readerNode.put("numberOfPageZeroSegments", numberOfPageZeroSegments);
+        LOGGER.debug("SparseColumnMultiPageZeroReader Info: {}", readerNode.toPrettyString());
     }
 }

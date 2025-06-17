@@ -42,7 +42,7 @@ public final class MultiPersistentPageZeroBufferBytesOutputStream extends Abstra
 
     @Override
     protected void preReset() {
-        if (allocatedBytes > 0) {
+        if (allocatedBytes > 0 || !buffers.isEmpty()) {
             //This should not be the case, with the pageZero segments.
             //As the stream should be finished after the flush.
             throw new IllegalStateException("PageZero segments should already be finished after flush");

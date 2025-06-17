@@ -75,4 +75,6 @@ public interface IColumnPageZeroReader {
     void resetStream(IColumnBufferProvider pageZeroSegmentBufferProvider) throws HyracksDataException;
 
     BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll);
+
+    void printPageZeroReaderInfo();
 }
