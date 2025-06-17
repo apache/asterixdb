@@ -108,7 +108,7 @@ public class NCConfig extends ControllerConfig {
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
                 ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
         STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT(INTEGER_BYTE_UNIT, 5000),
-        ADAPTIVE_PAGE_ZERO_WRITER_SELECTION(BOOLEAN, false);
+        STORAGE_PAGE_ZERO_WRITER(STRING, "default");
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -261,9 +261,9 @@ public class NCConfig extends ControllerConfig {
                     return "The maximum time to wait for the tasks to be aborted";
                 case STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT:
                     return "The maximum number of columns in zero segment (default: 5000).";
-                case ADAPTIVE_PAGE_ZERO_WRITER_SELECTION:
-                    return "The config to choose between writers dynamically (default: false, i.e. use the "
-                            + "default writer for all segments).";
+                case STORAGE_PAGE_ZERO_WRITER:
+                    return "The config to choose between writers for page zero. (Possible values: default, sparse, adaptive), "
+                            + "(default value: default)";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -647,7 +647,7 @@ public class NCConfig extends ControllerConfig {
         return appConfig.getInt(Option.STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT);
     }
 
-    public boolean isAdaptivePageZeroWriterSelection() {
-        return appConfig.getBoolean(Option.ADAPTIVE_PAGE_ZERO_WRITER_SELECTION);
+    public String getStoragePageZeroWriter() {
+        return appConfig.getString(Option.STORAGE_PAGE_ZERO_WRITER);
     }
 }

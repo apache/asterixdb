@@ -62,6 +62,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.write.DefaultColumnWriteContext;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -202,7 +203,8 @@ public abstract class AbstractBytesTest extends TestBase {
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, true, false);
+        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, true,
+                IColumnPageZeroWriter.ColumnPageZeroWriterType.DEFAULT);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //New tuple required space

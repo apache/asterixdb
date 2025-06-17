@@ -48,6 +48,22 @@ public interface IColumnPageZeroWriter {
 
     int MIN_COLUMN_SPACE = 4 + 16; // offset + filter size
 
+    enum ColumnPageZeroWriterType {
+        DEFAULT((byte) 2), // multi-page default page zero
+        SPARSE((byte) 3), // multi-page sparse page zero
+        ADAPTIVE((byte) -1); // adaptive writer that switches between default and sparse based on space efficiency
+
+        private final byte writerFlag;
+
+        ColumnPageZeroWriterType(byte writerFlag) {
+            this.writerFlag = writerFlag;
+        }
+
+        public byte getWriterFlag() {
+            return writerFlag;
+        }
+    }
+
     /**
      * Initializes the writer with page zero buffer and column information.
      *

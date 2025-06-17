@@ -50,7 +50,7 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
  */
 public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavorSelector {
     // Flag indicating which writer type is currently selected (DEFAULT_WRITER_FLAG=default, SPARSE_WRITER_FLAG=sparse)
-    protected byte writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
+    protected byte writerFlag = IColumnPageZeroWriter.ColumnPageZeroWriterType.ADAPTIVE.getWriterFlag();
 
     // Cache of writer instances to avoid repeated object creation
     private final Byte2ObjectArrayMap<IColumnPageZeroWriter> writers;
@@ -72,13 +72,7 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
      * @param spaceOccupiedBySparseWriter Space in bytes required by the sparse writer
      */
     @Override
-    public void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter,
-            boolean adaptive) {
-        if (!adaptive) {
-            // If not adaptive, always use the default writer
-            writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
-            return;
-        }
+    public void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter) {
         if (spaceOccupiedByDefaultWriter <= spaceOccupiedBySparseWriter) {
             // Default writer is more space-efficient (or equal), use it
             writerFlag = MULTI_PAGE_DEFAULT_WRITER_FLAG;
@@ -88,10 +82,15 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
         }
     }
 
+    @Override
+    public void setPageZeroWriterFlag(byte writerFlag) {
+        this.writerFlag = writerFlag;
+    }
+
     /**
      * Returns the currently selected page zero writer instance.
      * Writers are cached to avoid repeated object creation.
-     * 
+     *
      * @return the selected writer instance
      * @throws IllegalStateException if an unsupported writer flag is encountered
      */
@@ -107,11 +106,16 @@ public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavor
                };
     }
 
+    @Override
+    public byte getWriterFlag() {
+        return writerFlag;
+    }
+
     /**
      * Creates a page zero reader instance based on the provided flag.
      * This method is used during deserialization to create the appropriate reader
      * for the writer type that was used during serialization.
-     * 
+     *
      * @param flag The flag code identifying the writer type (DEFAULT_WRITER_FLAG=default, SPARSE_WRITER_FLAG=sparse)
      * @return the appropriate reader instance
      * @throws IllegalStateException if an unsupported reader flag is encountered

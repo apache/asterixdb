@@ -57,7 +57,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private final ISplitKey lowKey;
     private final IColumnWriteContext columnWriteContext;
     private final int maxColumnsInPageZerothSegment;
-    private final boolean adaptiveWriter;
+    private final IColumnPageZeroWriter.ColumnPageZeroWriterType pageZeroWriterType;
     private boolean setLowKey;
     private int tupleCount;
 
@@ -87,7 +87,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
         // Writer config
         maxColumnsInPageZerothSegment = storageConfig.getStorageMaxColumnsInZerothSegment();
-        adaptiveWriter = storageConfig.isAdaptivePageZeroWriterSelection();
+        pageZeroWriterType = IColumnPageZeroWriter.ColumnPageZeroWriterType
+                .valueOf(storageConfig.getStoragePageZeroWriter().toUpperCase());
 
         // For logging. Starts with 1 for page0
         numberOfPagesInCurrentLeafNode = 1;
@@ -123,6 +124,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private boolean isFull(ITupleReference tuple) throws HyracksDataException {
         if (tupleCount == 0) {
             columnWriter.updateColumnMetadataForCurrentTuple(tuple);
+            // this is for non-adaptive case.
+            columnWriter.setWriterType(pageZeroWriterType);
             return false;
         } else if (tupleCount >= columnWriter.getMaxNumberOfTuples()) {
             //We reached the maximum number of tuples
@@ -131,7 +134,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         //Columns' Offsets
         columnWriter.updateColumnMetadataForCurrentTuple(tuple);
         int requiredFreeSpace =
-                columnWriter.getPageZeroWriterOccupiedSpace(maxColumnsInPageZerothSegment, true, adaptiveWriter);
+                columnWriter.getPageZeroWriterOccupiedSpace(maxColumnsInPageZerothSegment, true, pageZeroWriterType);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //min and max tuples' sizes

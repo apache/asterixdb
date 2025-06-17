@@ -34,16 +34,17 @@ public interface IColumnPageZeroWriterFlavorSelector {
 
     /**
      * Evaluates and switches the page zero writer based on space efficiency.
-     * 
+     * <p>
      * This method compares the space requirements of both writer implementations
      * and selects the one that uses less space. The decision is made dynamically
      * for each batch of data to optimize storage utilization.
-     * 
+     *
      * @param spaceOccupiedByDefaultWriter Space in bytes required by the default writer
-     * @param spaceOccupiedBySparseWriter Space in bytes required by the sparse writer
+     * @param spaceOccupiedBySparseWriter  Space in bytes required by the sparse writer
      */
-    void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter,
-            boolean adaptive);
+    void switchPageZeroWriterIfNeeded(int spaceOccupiedByDefaultWriter, int spaceOccupiedBySparseWriter);
+
+    byte getWriterFlag();
 
     /**
      * Creates the appropriate page zero reader for the given writer type.
@@ -57,6 +58,8 @@ public interface IColumnPageZeroWriterFlavorSelector {
      * @return the appropriate reader instance
      */
     IColumnPageZeroReader createPageZeroReader(byte flag, int capacity);
+
+    void setPageZeroWriterFlag(byte writerFlag);
 
     /**
      * Returns the currently selected page zero writer instance.

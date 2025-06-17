@@ -65,7 +65,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      * @return the size needed to store columns' offsets
      */
     public abstract int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment,
-            boolean includeCurrentTupleColumns, boolean adaptive);
+            boolean includeCurrentTupleColumns, IColumnPageZeroWriter.ColumnPageZeroWriterType adaptive);
 
     /**
      * @return maximum number of tuples to be stored per page (i.e., page0)
@@ -106,4 +106,10 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      * @return
      */
     public abstract IColumnPageZeroWriterFlavorSelector getColumnPageZeroWriterFlavorSelector();
+
+    public void setWriterType(IColumnPageZeroWriter.ColumnPageZeroWriterType pageZeroWriterType) {
+        if (pageZeroWriterType != IColumnPageZeroWriter.ColumnPageZeroWriterType.ADAPTIVE) {
+            getColumnPageZeroWriterFlavorSelector().setPageZeroWriterFlag(pageZeroWriterType.getWriterFlag());
+        }
+    }
 }

@@ -146,24 +146,37 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
 
     @Override
     public int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment, boolean includeCurrentTupleColumns,
-            boolean adaptive) {
-        int totalNumberOfColumns = getAbsoluteNumberOfColumns(includeCurrentTupleColumns);
-        totalNumberOfColumns = Math.min(totalNumberOfColumns, maxColumnsInPageZerothSegment);
+            IColumnPageZeroWriter.ColumnPageZeroWriterType writerType) {
+        int spaceOccupiedByDefaultWriter;
+        int spaceOccupiedBySparseWriter;
 
-        int spaceOccupiedByDefaultWriter = DefaultColumnMultiPageZeroWriter.EXTENDED_HEADER_SIZE + totalNumberOfColumns
-                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
-
-        if (!adaptive) {
-            // go for default multipage writer
+        if (writerType == IColumnPageZeroWriter.ColumnPageZeroWriterType.DEFAULT) {
+            // go for default multi-page writer
+            spaceOccupiedByDefaultWriter =
+                    getSpaceOccupiedByDefaultWriter(maxColumnsInPageZerothSegment, includeCurrentTupleColumns);
             return spaceOccupiedByDefaultWriter;
+        } else if (writerType == IColumnPageZeroWriter.ColumnPageZeroWriterType.SPARSE) {
+            // Maximum space occupied by the columns = maxColumnsInPageZerothSegment * (offset + filter size)
+            spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
+            return spaceOccupiedBySparseWriter;
         }
 
-        // Maximum space occupied by the columns = maxColumnsInPageZerothSegment * (offset + filter size)
-        int spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
+        spaceOccupiedByDefaultWriter =
+                getSpaceOccupiedByDefaultWriter(maxColumnsInPageZerothSegment, includeCurrentTupleColumns);
+        spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
         pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
-                spaceOccupiedBySparseWriter, adaptive);
+                spaceOccupiedBySparseWriter);
 
         return Math.min(spaceOccupiedBySparseWriter, spaceOccupiedByDefaultWriter);
+    }
+
+    private int getSpaceOccupiedByDefaultWriter(int maxColumnsInPageZerothSegment, boolean includeCurrentTupleColumns) {
+        int spaceOccupiedByDefaultWriter;
+        int totalNumberOfColumns = getAbsoluteNumberOfColumns(includeCurrentTupleColumns);
+        totalNumberOfColumns = Math.min(totalNumberOfColumns, maxColumnsInPageZerothSegment);
+        spaceOccupiedByDefaultWriter = DefaultColumnMultiPageZeroWriter.EXTENDED_HEADER_SIZE + totalNumberOfColumns
+                * (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        return spaceOccupiedByDefaultWriter;
     }
 
     private int getSpaceOccupiedBySparseWriter(int maxColumnsInPageZerothSegment) {
