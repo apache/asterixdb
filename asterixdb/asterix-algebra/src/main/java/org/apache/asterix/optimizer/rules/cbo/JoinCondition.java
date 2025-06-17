@@ -19,10 +19,12 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 
 public class JoinCondition {
 
@@ -47,6 +49,7 @@ public class JoinCondition {
     protected comparisonOp comparisonType;
     protected JoinOperator joinOp = null;
     protected List<LogicalVariable> usedVars = null;
+    protected List<SelectOperator> derivedSelOps = new ArrayList<>(); // only one of them will be regarded as original
 
     protected enum comparisonOp {
         OP_EQ,

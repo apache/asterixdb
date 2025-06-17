@@ -1334,6 +1334,7 @@ public class JoinEnum {
 
         findJoinConditionsAndDoTC();
         addTCSelectionPredicates();
+        keepOnlyOneSelectivityHint();
         int lastBaseLevelJnNum = enumerateBaseLevelJoinNodes();
         if (lastBaseLevelJnNum == PlanNode.NO_PLAN) {
             return PlanNode.NO_PLAN;
@@ -1375,6 +1376,26 @@ public class JoinEnum {
         return lastJn.cheapestPlanIndex;
     }
 
+    private void keepOnlyOneSelectivityHint() {
+        AbstractFunctionCallExpression afce;
+        for (JoinCondition jc : joinConditions) {
+            int n = 0;
+            for (SelectOperator selOp : jc.derivedSelOps) {
+                afce = (AbstractFunctionCallExpression) selOp.getCondition().getValue();
+                if (afce.hasAnnotation(PredicateCardinalityAnnotation.class)) {
+                    n++;
+                }
+            }
+            if (n <= 1) { // R.a = S.a and R.a < 1
+                return; // perfect. At most one predicate has the annotation
+            } else {// n == 2, both of them have it of them have it, So remove it from the last one
+                // R.a = S.a and R.a < 1 and S.a < 1; user typed in both predicates, so each one looks derived.
+                afce = (AbstractFunctionCallExpression) jc.derivedSelOps.get(n - 1).getCondition().getValue();
+                afce.removeAnnotation(PredicateCardinalityAnnotation.class);
+            }
+        }
+    }
+
     // R.a = S.a and R.a op operand ==> S.a op operand
     private void addTCSelectionPredicates() throws AlgebricksException {
         List<SelectOperator> existingSelOps = new ArrayList<>();
@@ -1396,33 +1417,33 @@ public class JoinEnum {
             List<JoinCondition> jcs = findVarinJoinPreds(var);
             for (JoinCondition jc : jcs) { // join predicate can be R.a = S.a or S.a = R.a. Check for both cases
                 if (var == jc.usedVars.get(0)) { // R.a
-                    newSelOp = makeNewSelOper(existingSelOps, jc.usedVars.get(1), // == S.a
+                    newSelOp = makeNewSelOper(jc, existingSelOps, jc.usedVars.get(1), // == S.a
                             ((AbstractFunctionCallExpression) selOp.getCondition().getValue()).getFunctionInfo(), // op
                             exp.getArguments().get(1)); // operand
                     if (newSelOp != null) { // does not already exist
-                        addSelOpToLeafInput(jc.usedVars.get(1), newSelOp);
+                        addSelOpToLeafInput(jc, jc.usedVars.get(1), newSelOp);
                     }
                 } else if (var == jc.usedVars.get(1)) { // R.a
-                    newSelOp = makeNewSelOper(existingSelOps, jc.usedVars.get(0), // == S.a
+                    newSelOp = makeNewSelOper(jc, existingSelOps, jc.usedVars.get(0), // == S.a
                             ((AbstractFunctionCallExpression) selOp.getCondition().getValue()).getFunctionInfo(), // op
                             exp.getArguments().get(1)); // operand
                     if (newSelOp != null) {
-                        addSelOpToLeafInput(jc.usedVars.get(0), newSelOp);
+                        addSelOpToLeafInput(jc, jc.usedVars.get(0), newSelOp);
                     }
                 }
             }
         }
     }
 
-    private SelectOperator makeNewSelOper(List<SelectOperator> existingSelOps, LogicalVariable var, IFunctionInfo tag,
-            Mutable<ILogicalExpression> arg) throws AlgebricksException {
+    private SelectOperator makeNewSelOper(JoinCondition jc, List<SelectOperator> existingSelOps, LogicalVariable var,
+            IFunctionInfo tag, Mutable<ILogicalExpression> arg) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
         VariableReferenceExpression e1 = new VariableReferenceExpression(var);
         arguments.add(new MutableObject<>(e1)); // S.a
         arguments.add(new MutableObject<>(arg.getValue())); // this will be the operand
         ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(tag, arguments); //S.a op operand
         SelectOperator newsel = new SelectOperator(new MutableObject<>(expr), null, null);
-        if (newSelNotPresent(newsel, existingSelOps)) {
+        if (newSelNotPresent(jc, newsel, existingSelOps)) {
             LOGGER.info("adding newsel " + newsel.getCondition());
             return newsel; // add since it does not exist
         } else {
@@ -1430,21 +1451,33 @@ public class JoinEnum {
         }
     }
 
-    private boolean newSelNotPresent(SelectOperator newsel, List<SelectOperator> existingSelOps) {
+    private boolean newSelNotPresent(JoinCondition jc, SelectOperator newsel, List<SelectOperator> existingSelOps) {
         for (SelectOperator existingSelOp : existingSelOps) {
             if (newsel.getCondition().equals(existingSelOp.getCondition())) {
+                PredicateCardinalityAnnotation anno = new PredicateCardinalityAnnotation(0.9999); // cannot be 1.0 as check in setCardsAndSizes will not work
+                AbstractFunctionCallExpression afce =
+                        (AbstractFunctionCallExpression) existingSelOp.getCondition().getValue();
+                afce.putAnnotation(anno);
+                jc.derivedSelOps.add(existingSelOp);
                 return false;
             }
         }
         return true;
     }
 
-    private void addSelOpToLeafInput(LogicalVariable var, SelectOperator newSelOp) throws AlgebricksException {
+    private void addSelOpToLeafInput(JoinCondition jc, LogicalVariable var, SelectOperator newSelOp)
+            throws AlgebricksException {
         int l = varLeafInputIds.get(var); // get the corresponding leafInput using the map
         ILogicalOperator parent = leafInputs.get(l - 1);
         ILogicalOperator child = parent.getInputs().get(0).getValue();
         parent.getInputs().get(0).setValue(newSelOp);
         newSelOp.getInputs().add(new MutableObject<>(child));
+        // Add the selectivity annotation with selectivity 1.0;
+        // Note the actual cardinality will be different; but all join cardinalities should be ok.
+        PredicateCardinalityAnnotation anno = new PredicateCardinalityAnnotation(0.9999);
+        AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newSelOp.getCondition().getValue();
+        afce.putAnnotation(anno);
+        jc.derivedSelOps.add(newSelOp);
         optCtx.computeAndSetTypeEnvironmentForOperator(newSelOp);
     }
 

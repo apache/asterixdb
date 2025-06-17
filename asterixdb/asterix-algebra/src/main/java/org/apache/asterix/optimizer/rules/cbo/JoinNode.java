@@ -371,6 +371,7 @@ public class JoinNode {
 
         // There are predicates here. So skip the predicates and get the original dataset card.
         // Now apply all the predicates and get the card after all predicates are applied.
+        // We call the sampling query even if a selectivity hint was provided because we have to get the lengths of the variables.
         result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
                 primaryKey);
         double predicateCardinalityFromSample = joinEnum.getStatsHandle().findPredicateCardinality(result, true);

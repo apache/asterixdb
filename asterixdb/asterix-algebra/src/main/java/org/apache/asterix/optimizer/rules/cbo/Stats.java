@@ -153,15 +153,7 @@ public class Stats {
                 return 1.0;
             }
             double productivity = anno.getJoinProductivity();
-            if (productivity <= 0) {
-                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.of(joinExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                            "productivity",
-                            "Productivity specified: " + productivity + ", has to be a decimal value greater than 0"));
-                }
-                return 1.0;
-            }
+
             if (leftIndex == idx1) {
                 return productivity / card2;
             } else {
