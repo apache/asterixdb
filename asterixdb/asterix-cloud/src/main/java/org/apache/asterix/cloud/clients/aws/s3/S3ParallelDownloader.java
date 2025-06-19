@@ -77,8 +77,7 @@ class S3ParallelDownloader implements IParallelDownloader {
     @Override
     public void downloadFiles(Collection<FileReference> toDownload) throws HyracksDataException {
         try {
-            List<CompletableFuture<CompletedFileDownload>> downloads = startDownloadingFiles(toDownload);
-            waitForFileDownloads(downloads);
+            downloadFilesAndWait(toDownload);
         } catch (IOException | ExecutionException | InterruptedException e) {
             throw HyracksDataException.create(e);
         }
@@ -104,9 +103,10 @@ class S3ParallelDownloader implements IParallelDownloader {
         s3AsyncClient.close();
     }
 
-    private List<CompletableFuture<CompletedFileDownload>> startDownloadingFiles(Collection<FileReference> toDownload)
-            throws IOException {
+    private void downloadFilesAndWait(Collection<FileReference> toDownload)
+            throws IOException, ExecutionException, InterruptedException {
         List<CompletableFuture<CompletedFileDownload>> downloads = new ArrayList<>();
+        int maxPending = config.getRequestsMaxPendingHttpConnections();
         for (FileReference fileReference : toDownload) {
             // multipart download
             profiler.objectGet();
@@ -126,13 +126,18 @@ class S3ParallelDownloader implements IParallelDownloader {
 
             FileDownload fileDownload = transferManager.downloadFile(builder.build());
             downloads.add(fileDownload.completionFuture());
+            if (maxPending > 0 && downloads.size() >= maxPending) {
+                waitForFileDownloads(downloads);
+                downloads.clear();
+            }
         }
-        return downloads;
+        if (!downloads.isEmpty()) {
+            waitForFileDownloads(downloads);
+        }
     }
 
     private void waitForFileDownloads(List<CompletableFuture<CompletedFileDownload>> downloads)
             throws ExecutionException, InterruptedException {
-
         for (CompletableFuture<CompletedFileDownload> download : downloads) {
             download.get();
         }
