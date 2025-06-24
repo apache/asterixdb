@@ -59,7 +59,7 @@ public class SqlppExecutionColumnTest {
         LangExecutionUtil.tearDown();
     }
 
-    @Parameters(name = "SqlppColumnarExecutionTest {index}: {0}")
+    @Parameters(name = "SqlppExecutionColumnTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         IGNORED = new HashSet<>(AsterixTestHelper.readTestListFile(new File(IGNORE_FILE)));
         Collection<Object[]> tests = LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_sqlpp_column.xml");

@@ -334,7 +334,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 IAType actualType = TypeComputeUtils.getActualType(originalType);
                 if (actualType.getTypeTag() == ATypeTag.OBJECT) {
                     ARecordType subRecord = (ARecordType) actualType;
-                    subRecord = deepCheckAndCopy(fieldPath, subRecord, pathList, isOpen);
+                    subRecord = deepCheckAndCopy(fieldPath, subRecord, pathList, subRecord.isOpen());
                     if (subRecord != null) {
                         destFieldNames.add(srcFieldNames[i]);
                         destFieldTypes.add(wrapWithOriginalType(subRecord, originalType));
@@ -348,9 +348,6 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         }
 
         int n = destFieldNames.size();
-        if (n == 0) {
-            return null;
-        }
         return new ARecordType(srcRecType.getTypeName(), destFieldNames.toArray(new String[n]),
                 destFieldTypes.toArray(new IAType[n]), isOpen);
     }
