@@ -100,6 +100,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             throws AlgebricksException, HyracksDataException {
         JobConf conf = new JobConf();
         ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        locationConstraints = getPartitions(appCtx);
         configureJobConf(appCtx, conf, configuration);
         confFactory = new ConfFactory(conf);
         String tableMetadataPath = getTablePath(configuration);
@@ -156,7 +157,6 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             scanFiles = getScanFiles(scan, engine);
         }
         LOGGER.info("Number of delta table parquet data files to scan: {}", scanFiles.size());
-        locationConstraints = getPartitions(appCtx);
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
         distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
         issueWarnings(warnings, warningCollector);
