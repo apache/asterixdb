@@ -112,6 +112,21 @@
       <output-dir compare="Text">tiny-social-example</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects/object-remove-fields">
+    <compilation-unit name="documentation-example">
+      <output-dir compare="Text">documentation-example</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects/object-remove-fields">
+    <compilation-unit name="tiny-social-example">
+      <output-dir compare="Text">tiny-social-example</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects/object-remove-fields">
+    <compilation-unit name="highly-nested-open">
+      <output-dir compare="Text">highly-nested-open</output-dir>
+    </compilation-unit>
+  </test-case>
   <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="no_fieldname_constr">
       <output-dir compare="Text">no_fieldname_constr</output-dir>

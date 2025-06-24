@@ -185,6 +185,7 @@ objects/get-object-fields: tiny-social-example-no-complex-types
 objects/get-object-fields: tiny-social-example-only-lists
 objects/get-object-fields: tiny-social-example-only-records
 objects/get-object-field-value: tiny-social-example
+objects/object-remove-fields: tiny-social-example
 objects: object_length
 objects: object_names
 objects: object_remove
