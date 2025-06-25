@@ -1,0 +1,1 @@
+{ "d1": { "id": "11", "c_intarr": [ 1, 2 ], "c_strarr": [ "a", "b" ], "c_obj": { "a": 9 }, "c_int": 10, "strarr": [ "a", "b" ], "intarr": [ 1, 2 ] }, "d2": { "id": "22", "strarr": [ "a", "b" ], "intarr": [ 1, 2 ] } }

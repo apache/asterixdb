@@ -276,8 +276,12 @@ public class ValidateUtil {
                     case UUID:
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
-                    case ANY:
                         break;
+                    case ANY:
+                        if (indexType == IndexType.BTREE) {
+                            // ANY is only allowed for normal secondary indexes
+                            break;
+                        }
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                 "The field '"

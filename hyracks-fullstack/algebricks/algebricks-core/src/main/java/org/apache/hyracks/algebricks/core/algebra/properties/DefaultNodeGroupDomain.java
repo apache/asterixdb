@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections4.MultiSet;
@@ -72,11 +71,5 @@ public class DefaultNodeGroupDomain implements INodeDomain {
      */
     public String[] getNodes() {
         return nodes.toArray(new String[0]);
-    }
-
-    public String[] getSortedNodes() {
-        String[] sortedNodes = nodes.toArray(new String[0]);
-        Arrays.sort(sortedNodes);
-        return sortedNodes;
     }
 }

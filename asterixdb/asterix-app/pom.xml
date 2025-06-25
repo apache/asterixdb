@@ -1183,10 +1183,12 @@
     <dependency>
       <groupId>org.apache.iceberg</groupId>
       <artifactId>iceberg-data</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.iceberg</groupId>
       <artifactId>iceberg-parquet</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>tech.allegro.schema.json2avro</groupId>

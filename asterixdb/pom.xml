@@ -102,7 +102,7 @@
     <awsjavasdk.version>2.29.27</awsjavasdk.version>
     <awsjavasdk.crt.version>0.33.3</awsjavasdk.crt.version>
 
-    <parquet.version>1.14.3</parquet.version>
+    <parquet.version>1.15.2</parquet.version>
     <hadoop-awsjavasdk.version>1.12.779</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>

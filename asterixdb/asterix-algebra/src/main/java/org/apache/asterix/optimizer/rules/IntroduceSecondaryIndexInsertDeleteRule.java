@@ -860,7 +860,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                 AbstractFunctionCallExpression theFieldAccessFunc;
                 LogicalVariable fieldVar = context.newVar();
-                if (fieldType == null && !ATypeTag.ANY.equals(skType.getTypeTag())) {
+                if (fieldType == null) {
                     // Open field. must prevent inlining to maintain the cast before the primaryOp and
                     // make handling of records with incorrect value type for this field easier and cleaner
                     context.addNotToBeInlinedVar(fieldVar);
@@ -871,6 +871,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     theFieldAccessFunc = createCastExpression(index, skType, fieldAccessFunc, sourceLoc,
                             indexFieldId.funId, indexFieldId.extraArg);
                 } else {
+                    // sanity check. (heterogeneous) index keys with type ANY should not be on typed fields
+                    ATypeTag skTag = skType.getTypeTag();
+                    if (ATypeTag.ANY.equals(skTag)) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                                "type mismatch for field " + indexFieldId.fieldName + ". secondary key type " + skTag
+                                        + ", field type " + fieldType.getTypeTag());
+                    }
                     // Get the desired field position
                     int pos = indexFieldId.fieldName.size() > 1 ? -1
                             : sourceType.getFieldIndex(indexFieldId.fieldName.get(0));
@@ -903,12 +910,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
     private static IndexFieldId createIndexFieldId(Index index, List<String> skName, IAType skType, Integer skSrc,
             ARecordType sourceType, SourceLocation srcLoc) throws AlgebricksException {
         IAType fieldType = sourceType.getSubFieldType(skName);
-        FunctionIdentifier skFun = null;
-        IAObject fmtArg = null;
         Pair<FunctionIdentifier, IAObject> castExpr;
         if (ATypeTag.ANY.equals(skType.getTypeTag())) {
-            return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
+            // heterogeneous index needs to make sure the keys are in the open format (for records & lists values)
+            return new IndexFieldId(skSrc, skName, skType.getTypeTag(), BuiltinFunctions.CAST_TYPE, null);
         }
+        FunctionIdentifier skFun = null;
+        IAObject fmtArg = null;
         if (fieldType == null) {
             // open field
             castExpr = getCastExpression(index, skType, srcLoc);

@@ -25,7 +25,6 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1059,10 +1058,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return dataPartitioningProvider.getClusterLocations();
     }
 
-    public DataPartitioningProvider getDataPartitioningProvider() {
-        return dataPartitioningProvider;
-    }
-
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
             JobSpecification jobSpec, Dataset dataset, int[] ridIndexes, boolean retainInput,
             IVariableTypeEnvironment typeEnv, IOperatorSchema opSchema, JobGenContext context,
@@ -1880,10 +1875,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (!(nodeDomain instanceof DefaultNodeGroupDomain inputDomain)) {
             return null;
         }
-        String[] inputLocations = inputDomain.getSortedNodes();
         AlgebricksAbsolutePartitionConstraint locations = dataPartitioningProvider.getClusterLocations();
-        String[] clusterLocations = locations.getLocations();
-        if (!Arrays.equals(inputLocations, clusterLocations)) {
+        if (!inputDomain.sameAs(new DefaultNodeGroupDomain(locations))) {
             return null;
         }
         return dataPartitioningProvider.getPartitionsMap();

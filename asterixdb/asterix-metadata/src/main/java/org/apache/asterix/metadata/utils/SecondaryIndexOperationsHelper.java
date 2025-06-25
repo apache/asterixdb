@@ -329,9 +329,10 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             throws AlgebricksException {
         IFunctionManager funManger = metadataProvider.getFunctionManager();
         IDataFormat dataFormat = metadataProvider.getDataFormat();
-        //if the target type is "BuiltinType.ANY" there is no need to cast. If not we have to cast.
         if (ATypeTag.ANY.equals(targetType.getTypeTag())) {
-            return fieldEvalFactory;
+            // this is to ensure records and lists values are in the open format
+            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+            return createCastFunction(targetType, BuiltinType.ANY, true, sourceLoc).createEvaluatorFactory(castArg);
         }
 
         // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if the overriding type is

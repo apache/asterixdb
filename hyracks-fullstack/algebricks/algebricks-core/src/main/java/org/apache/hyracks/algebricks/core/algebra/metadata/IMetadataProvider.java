@@ -201,6 +201,11 @@ public interface IMetadataProvider<S, I> {
 
     boolean isBlockingOperatorDisabled();
 
+    /**
+     * Returns the cluster partitions map when the input node domain is the same as the cluster. Otherwise, null.
+     * @param nodeDomain input node domain
+     * @return the cluster partitions map.
+     */
     int[][] getPartitionsMap(INodeDomain nodeDomain);
 
 }
