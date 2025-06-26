@@ -37,7 +37,7 @@ public final class ColumnSingleBufferProvider implements IColumnBufferProvider {
     }
 
     @Override
-    public void reset(ColumnBTreeReadLeafFrame frame) {
+    public void reset(ColumnBTreeReadLeafFrame frame) throws HyracksDataException {
         int offset = frame.getColumnOffset(columnIndex);
         this.buffer = frame.getBuffer().duplicate();
         buffer.position(offset);

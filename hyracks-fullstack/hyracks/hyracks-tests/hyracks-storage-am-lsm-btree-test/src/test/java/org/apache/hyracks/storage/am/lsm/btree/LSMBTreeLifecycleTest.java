@@ -54,10 +54,10 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, fieldSerdes.length,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
+        testCtx = LSMBTreeTestContext.create(harness.getNCConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                fieldSerdes.length, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
                 harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false,
                 harness.getCompressorDecompressorFactory());
         index = testCtx.getIndex();

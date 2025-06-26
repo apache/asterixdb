@@ -131,6 +131,23 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     }
 
     @Override
+    public void preparePageZeroSegments(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
+            throws HyracksDataException {
+        if (leafFrame.getNumberOfPageZeroSegments() <= 1) { // don't need to include the zeroth segment
+            return;
+        }
+
+        // pin the required page segments
+        mergedPageRanges.clear();
+        int pageZeroId = leafFrame.getPageId();
+        BitSet pageZeroSegmentRanges =
+                leafFrame.markRequiredPageZeroSegments(projectedColumns, pageZeroId, operation == MERGE);
+        // Merge the page zero segments ranges
+        mergePageZeroSegmentRanges(pageZeroSegmentRanges);
+        mergedPageRanges.pin(columnCtx, bufferCache, fileId, pageZeroId);
+    }
+
+    @Override
     public void prepareColumns(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
         if (leafFrame.getTupleCount() == 0) {
@@ -139,9 +156,12 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
         columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns);
         int pageZeroId = leafFrame.getPageId();
+        int numberOfPageZeroSegments = leafFrame.getNumberOfPageZeroSegments();
 
         if (operation == MERGE) {
-            pinAll(fileId, pageZeroId, leafFrame.getMegaLeafNodeNumberOfPages() - 1, bufferCache);
+            // will contain column pages along with page zero segments
+            pinAll(fileId, pageZeroId + numberOfPageZeroSegments - 1,
+                    leafFrame.getMegaLeafNodeNumberOfPages() - numberOfPageZeroSegments, bufferCache);
         } else {
             pinProjected(fileId, pageZeroId, bufferCache);
         }
@@ -196,6 +216,36 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
         // pin the calculated pageRanges
         mergedPageRanges.pin(columnCtx, bufferCache, fileId, pageZeroId);
+    }
+
+    private void mergePageZeroSegmentRanges(BitSet pageZeroSegmentRanges) {
+        // Since the 0th segment is already pinned, we can skip it
+        pageZeroSegmentRanges.clear(0);
+        if (pageZeroSegmentRanges.cardinality() == 0) {
+            // No page zero segments, nothing to merge
+            return;
+        }
+
+        int start = -1;
+        int prev = -1;
+
+        int current = pageZeroSegmentRanges.nextSetBit(0);
+        while (current >= 0) {
+            if (start == -1) {
+                // Start of a new range
+                start = current;
+            } else if (current != prev + 1) {
+                // Discontinuous: close the current range
+                mergedPageRanges.addRange(start, prev);
+                start = current;
+            }
+
+            prev = current;
+            current = pageZeroSegmentRanges.nextSetBit(current + 1);
+        }
+
+        // Close the final range
+        mergedPageRanges.addRange(start, prev);
     }
 
     @Override

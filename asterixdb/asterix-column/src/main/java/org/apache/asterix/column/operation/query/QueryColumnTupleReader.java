@@ -21,6 +21,7 @@ package org.apache.asterix.column.operation.query;
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
 import org.apache.asterix.column.tuple.QueryColumnTupleReference;
 import org.apache.asterix.column.tuple.QueryColumnWithMetaTupleReference;
+import org.apache.asterix.column.zero.PageZeroWriterFlavorSelector;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
@@ -30,6 +31,7 @@ public class QueryColumnTupleReader extends AbstractColumnTupleReader {
     private final QueryColumnMetadata columnMetadata;
 
     public QueryColumnTupleReader(AbstractColumnImmutableReadMetadata columnMetadata) {
+        super(new PageZeroWriterFlavorSelector());
         this.columnMetadata = (QueryColumnMetadata) columnMetadata;
     }
 

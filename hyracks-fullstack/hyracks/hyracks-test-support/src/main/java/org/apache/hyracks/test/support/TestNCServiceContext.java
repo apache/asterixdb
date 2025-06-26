@@ -35,22 +35,26 @@ import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.util.trace.ITracer;
 
 public class TestNCServiceContext implements INCServiceContext {
     private final ILifeCycleComponentManager lccm;
     private final IIOManager ioManager;
     private final String nodeId;
+    private NodeControllerService ncs;
 
     private Serializable distributedState;
     private Object appCtx;
 
     private final IMemoryManager mm;
 
-    public TestNCServiceContext(IIOManager ioManager, String nodeId) {
+    public TestNCServiceContext(IIOManager ioManager, String nodeId) throws Exception {
         this.lccm = new LifeCycleComponentManager();
         this.ioManager = ioManager;
         this.nodeId = nodeId;
+        this.ncs = new NodeControllerService(new NCConfig(nodeId));
         mm = new IMemoryManager() {
             @Override
             public long getMaximumMemory() {
@@ -138,7 +142,7 @@ public class TestNCServiceContext implements INCServiceContext {
 
     @Override
     public IControllerService getControllerService() {
-        return null;
+        return ncs;
     }
 
     @Override

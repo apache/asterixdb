@@ -22,6 +22,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -30,7 +31,7 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
 
     public ColumnBTreeWriteLeafFrame(ITreeIndexTupleWriter rowTupleWriter,
             AbstractColumnTupleWriter columnTupleWriter) {
-        super(rowTupleWriter);
+        super(rowTupleWriter, columnTupleWriter.getColumnPageZeroWriterFlavorSelector());
         this.columnTupleWriter = columnTupleWriter;
     }
 
@@ -47,25 +48,12 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
         buf.putInt(NEXT_LEAF_OFFSET, -1);
     }
 
-    void flush(AbstractColumnTupleWriter columnWriter, int numberOfTuples, ITupleReference minKey,
-            ITupleReference maxKey) throws HyracksDataException {
-        // Prepare the space for writing the columns' information such as the primary keys
-        buf.position(HEADER_SIZE);
-        // Flush the columns to persistence pages and write the length of the mega leaf node in pageZero
-        buf.putInt(MEGA_LEAF_NODE_LENGTH, columnWriter.flush(buf));
-
-        // Write min and max keys
-        int offset = buf.position();
-        buf.putInt(LEFT_MOST_KEY_OFFSET, offset);
-        offset += rowTupleWriter.writeTuple(minKey, buf.array(), offset);
-        buf.putInt(RIGHT_MOST_KEY_OFFSET, offset);
-        rowTupleWriter.writeTuple(maxKey, buf.array(), offset);
-
-        // Write page information
-        int numberOfColumns = columnWriter.getNumberOfColumns(false);
-        buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
-        buf.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumns);
-        buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, columnWriter.getColumnOffsetsSize(false));
+    void flush(AbstractColumnTupleWriter columnWriter, int numberOfTuples, int zerothSegmentMaxColumns,
+            ITupleReference minKey, ITupleReference maxKey, IColumnWriteMultiPageOp multiPageOpRef)
+            throws HyracksDataException {
+        IColumnPageZeroWriter pageZeroWriter = pageZeroWriterFlavorSelector.getPageZeroWriter(multiPageOpRef,
+                zerothSegmentMaxColumns, getBuffer().capacity());
+        pageZeroWriter.flush(buf, numberOfTuples, minKey, maxKey, columnWriter, rowTupleWriter);
     }
 
     public AbstractColumnTupleWriter getColumnTupleWriter() {

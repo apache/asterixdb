@@ -1,1 +1,1 @@
-{ "id": 1, "project": "AsterixDB", "related": [ "Hivestrix", "Preglix", "Apache VXQuery" ], "address": {  } }
+{ "id": 1, "project": "AsterixDB", "address": {  }, "related": [ "Hivestrix", "Preglix", "Apache VXQuery" ] }

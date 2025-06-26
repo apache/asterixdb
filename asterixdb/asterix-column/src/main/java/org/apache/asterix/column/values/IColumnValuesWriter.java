@@ -20,17 +20,17 @@ package org.apache.asterix.column.values;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IValuesWriter;
 
 /**
  * Column writer for values
  */
-public interface IColumnValuesWriter {
+public interface IColumnValuesWriter extends IValuesWriter {
 
     /**
      * Reset the writer
@@ -122,13 +122,6 @@ public interface IColumnValuesWriter {
      * @return normalized maximum column value
      */
     long getNormalizedMaxValue();
-
-    /**
-     * Flush the columns value to output stream
-     *
-     * @param out output stream
-     */
-    void flush(OutputStream out) throws HyracksDataException;
 
     /**
      * Close the writer and release all allocated buffers

@@ -65,6 +65,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * Flush column metadata belongs to a flushing {@link ILSMMemoryComponent}
@@ -72,6 +73,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public class FlushColumnMetadata extends AbstractColumnMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
+    public final IntOpenHashSet orderedColumns;
     protected final Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels;
     private final Mutable<IColumnWriteMultiPageOp> multiPageOpRef;
     private final IFieldNamesDictionary fieldNamesDictionary;
@@ -93,6 +95,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         super(datasetType, metaType, primaryKeys.size());
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
+        this.orderedColumns = new IntOpenHashSet();
         definitionLevels = new HashMap<>();
         columnWriters = new ArrayList<>();
         level = -1;
@@ -133,6 +136,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         super(datasetType, metaType, numPrimaryKeys);
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
+        this.orderedColumns = new IntOpenHashSet();
         this.definitionLevels = definitionLevels;
         this.columnWriters = columnWriters;
         level = -1;
@@ -346,11 +350,18 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
             throws HyracksDataException {
         AbstractSchemaNode currentChild = child;
         ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
+        boolean newChild = currentChild == null;
         if (currentChild == null || normalizedTypeTag != ATypeTag.MISSING && normalizedTypeTag != ATypeTag.NULL
                 && currentChild.getTypeTag() != ATypeTag.UNION
                 && getNormalizedTypeTag(currentChild.getTypeTag()) != normalizedTypeTag) {
             //Create a new child or union type if required type is different from the current child type
+            int visitedBatchVersion = newChild ? -1 : currentChild.getVisitedBatchVersion();
             currentChild = createChild(child, childTypeTag);
+            //Missing will become UNION, hence only NULL and NULL will be replaced
+            if (!newChild && (child.getTypeTag() == ATypeTag.NULL)) {
+                //This will be a replaced child
+                currentChild.setFormerChildNull(visitedBatchVersion);
+            }
             //Flag that the schema has changed
             changed = true;
         }
@@ -421,23 +432,28 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     public void flushDefinitionLevels(int level, AbstractSchemaNestedNode parent, AbstractSchemaNode node)
             throws HyracksDataException {
+        flushDefinitionLevels(level, parent, node, false);
+    }
+
+    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node,
+            boolean includeChildColumns) throws HyracksDataException {
+        //Flush all definition levels from parent to the current node
+        flushDefinitionLevels(level, parent, node, includeChildColumns);
+        //Add null value (+2) to say that both the parent and the child are present
+        definitionLevels.get(node).add(ColumnValuesUtil.getNullMask(level + 2) | level);
+        node.incrementCounter();
+    }
+
+    private void flushDefinitionLevels(int level, AbstractSchemaNestedNode parent, AbstractSchemaNode node,
+            boolean includeChildColumns) throws HyracksDataException {
         if (parent != null) {
             RunLengthIntArray parentDefLevels = definitionLevels.get(parent);
             if (node.getCounter() < parentDefLevels.getSize()) {
                 int parentMask = ColumnValuesUtil.getNullMask(level);
                 int childMask = ColumnValuesUtil.getNullMask(level + 1);
-                flushDefinitionLevels(parentMask, childMask, parentDefLevels, node);
+                flushDefinitionLevels(parentMask, childMask, parentDefLevels, node, includeChildColumns);
             }
         }
-    }
-
-    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node)
-            throws HyracksDataException {
-        //Flush all definition levels from parent to the current node
-        flushDefinitionLevels(level, parent, node);
-        //Add null value (+2) to say that both the parent and the child are present
-        definitionLevels.get(node).add(ColumnValuesUtil.getNullMask(level + 2) | level);
-        node.incrementCounter();
     }
 
     public void close() {
@@ -449,7 +465,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     }
 
     protected void flushDefinitionLevels(int parentMask, int childMask, RunLengthIntArray parentDefLevels,
-            AbstractSchemaNode node) throws HyracksDataException {
+            AbstractSchemaNode node, boolean includeChildColumns) throws HyracksDataException {
         int startIndex = node.getCounter();
         if (node.isNested()) {
             RunLengthIntArray childDefLevels = definitionLevels.get((AbstractSchemaNestedNode) node);
@@ -519,7 +535,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
                 nullWriterIndexes.add(columnIndex);
                 createdChild = createChild(normalizedTypeTag);
                 int mask = ColumnValuesUtil.getNullMask(level);
-                flushDefinitionLevels(mask, mask, defLevels, createdChild);
+                flushDefinitionLevels(mask, mask, defLevels, createdChild, false);
             } else {
                 //Different type. Make union
                 createdChild = addDefinitionLevelsAndGet(new UnionSchemaNode(child, createChild(normalizedTypeTag)));

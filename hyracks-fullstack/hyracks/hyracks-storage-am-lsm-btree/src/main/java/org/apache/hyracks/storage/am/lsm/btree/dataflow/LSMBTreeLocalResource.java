@@ -30,6 +30,8 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
@@ -105,6 +107,7 @@ public class LSMBTreeLocalResource extends LsmResource {
 
     @Override
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
+        NCConfig storageConfig = ((NodeControllerService) serviceCtx.getControllerService()).getConfiguration();
         IIOManager ioManager = storageManager.getIoManager(serviceCtx);
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> vbcs = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
@@ -112,9 +115,9 @@ public class LSMBTreeLocalResource extends LsmResource {
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         //TODO: enable updateAwareness for secondary LSMBTree indexes
         boolean updateAware = false;
-        return LSMBTreeUtil.createLSMTree(ioManager, vbcs, file, storageManager.getBufferCache(serviceCtx), typeTraits,
-                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
+        return LSMBTreeUtil.createLSMTree(storageConfig, ioManager, vbcs, file,
+                storageManager.getBufferCache(serviceCtx), typeTraits, cmpFactories, bloomFilterKeyFields,
+                bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, pageWriteCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories,
                 btreeFields, filterFields, durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer(),

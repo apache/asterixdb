@@ -25,6 +25,7 @@ import java.util.concurrent.Semaphore;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -79,7 +80,7 @@ public class TestLsmBtree extends LSMBTree {
     private volatile int numFinishedMerges;
     private volatile int numStartedMerges;
 
-    public TestLsmBtree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+    public TestLsmBtree(NCConfig storageConfig, IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
@@ -91,11 +92,11 @@ public class TestLsmBtree extends LSMBTree {
             ILSMPageWriteCallbackFactory pageWriteCallbackFactory, boolean needKeyDupCheck, boolean hasBloomFilter,
             int[] btreeFields, int[] filterFields, boolean durable, boolean updateAware, ITracer tracer)
             throws HyracksDataException {
-        super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
-                diskBufferCache, fileManager, componentFactory, bulkLoadComponentFactory, filterHelper,
-                filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,
-                opTracker, ioScheduler, ioOperationCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck,
-                hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer, false);
+        super(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
+                deleteLeafFrameFactory, diskBufferCache, fileManager, componentFactory, bulkLoadComponentFactory,
+                filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories,
+                mergePolicy, opTracker, ioScheduler, ioOperationCallbackFactory, pageWriteCallbackFactory,
+                needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer, false);
         addModifyCallback(AllowTestOpCallback.INSTANCE);
         addSearchCallback(AllowTestOpCallback.INSTANCE);
         addFlushCallback(AllowTestOpCallback.INSTANCE);

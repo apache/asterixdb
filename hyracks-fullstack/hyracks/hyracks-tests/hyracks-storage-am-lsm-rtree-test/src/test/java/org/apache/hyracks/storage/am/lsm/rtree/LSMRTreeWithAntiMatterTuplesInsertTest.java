@@ -56,11 +56,11 @@ public class LSMRTreeWithAntiMatterTuplesInsertTest extends AbstractRTreeInsertT
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, valueProviderFactories, numKeys,
-                rtreePolicyType, harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
-                harness.getMetadataPageManagerFactory());
+        return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getNcConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                valueProviderFactories, numKeys, rtreePolicyType, harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory());
     }
 
     @Override

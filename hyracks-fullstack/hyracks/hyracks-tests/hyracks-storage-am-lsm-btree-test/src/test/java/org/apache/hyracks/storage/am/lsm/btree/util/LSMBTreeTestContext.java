@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.common.CheckTuple;
@@ -76,11 +77,11 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         upsertCheckTuple(checkTuple, checkTuples);
     }
 
-    public static LSMBTreeTestContext create(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            FileReference file, IBufferCache diskBufferCache, ISerializerDeserializer[] fieldSerdes, int numKeyFields,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+    public static LSMBTreeTestContext create(NCConfig storageConfig, IIOManager ioManager,
+            List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
+            ISerializerDeserializer[] fieldSerdes, int numKeyFields, double bloomFilterFalsePositiveRate,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, boolean filtered, boolean needKeyDupCheck,
             boolean updateAware, ICompressorDecompressorFactory compressorDecompressorFactory)
             throws HyracksDataException {
@@ -100,16 +101,16 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             }
             int[] filterfields = { btreefields.length };
             IBinaryComparatorFactory[] filterCmp = { cmpFactories[0] };
-            lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
-                    cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                    ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, filterTypeTraits,
-                    filterCmp, btreefields, filterfields, true, metadataPageManagerFactory, updateAware, ITracer.NONE,
-                    compressorDecompressorFactory, true, null, null);
+            lsmTree = LSMBTreeUtil.createLSMTree(storageConfig, ioManager, virtualBufferCaches, file, diskBufferCache,
+                    typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy,
+                    opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck,
+                    filterTypeTraits, filterCmp, btreefields, filterfields, true, metadataPageManagerFactory,
+                    updateAware, ITracer.NONE, compressorDecompressorFactory, true, null, null);
         } else {
-            lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
-                    cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                    ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, null, null, null, null,
-                    true, metadataPageManagerFactory,
+            lsmTree = LSMBTreeUtil.createLSMTree(storageConfig, ioManager, virtualBufferCaches, file, diskBufferCache,
+                    typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy,
+                    opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, null, null,
+                    null, null, true, metadataPageManagerFactory,
                     updateAware, new Tracer(LSMBTreeTestContext.class.getSimpleName(),
                             ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()),
                     compressorDecompressorFactory, true, null, null);

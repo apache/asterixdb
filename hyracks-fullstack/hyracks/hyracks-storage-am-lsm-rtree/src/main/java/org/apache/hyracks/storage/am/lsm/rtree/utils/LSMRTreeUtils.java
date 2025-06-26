@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
@@ -75,17 +76,17 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFacto
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMRTreeUtils {
-    public static LSMRTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            FileReference file, IBufferCache diskBufferCache, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILSMPageWriteCallbackFactory pageWriteCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
-            int[] rtreeFields, int[] buddyBTreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable, boolean isPointMBR,
-            IMetadataPageManagerFactory freePageManagerFactory, ITypeTraits nullTypeTraits,
-            INullIntrospector nullIntrospector) throws HyracksDataException {
+    public static LSMRTree createLSMTree(NCConfig storageConfig, IIOManager ioManager,
+            List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
+            boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) throws HyracksDataException {
         int valueFieldCount = buddyBTreeFields.length;
         int keyFieldCount = typeTraits.length - valueFieldCount;
         ITypeTraits[] btreeTypeTraits = new ITypeTraits[valueFieldCount];
@@ -138,17 +139,18 @@ public class LSMRTreeUtils {
         ILSMDiskComponentFactory componentFactory =
                 new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, filterHelper);
 
-        return new LSMRTree(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory,
-                filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
-                rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,
-                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, rtreeFields,
-                buddyBTreeFields, filterFields, durable, isPointMBR);
+        return new LSMRTree(storageConfig, ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
+                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache,
+                fileNameManager, componentFactory, filterHelper, filterFrameFactory, filterManager,
+                bloomFilterFalsePositiveRate, typeTraits.length, rtreeCmpFactories, btreeCmpFactories,
+                linearizeCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory, pageWriteCallbackFactory, rtreeFields, buddyBTreeFields, filterFields, durable,
+                isPointMBR);
     }
 
-    public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IIOManager ioManager,
-            List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+    public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(NCConfig storageConfig,
+            IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
+            IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
@@ -237,12 +239,12 @@ public class LSMRTreeUtils {
         ILSMDiskComponentFactory bulkLoadComponentFactory =
                 new LSMRTreeWithAntiMatterTuplesDiskComponentFactory(bulkLoadRTreeFactory, filterHelper);
 
-        return new LSMRTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
-                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache,
-                fileNameManager, componentFactory, bulkLoadComponentFactory, filterHelper, filterFrameFactory,
-                filterManager, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories, linearizerCmpFactory,
-                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
-                pageWriteCallbackFactory, rtreeFields, filterFields, durable, isPointMBR);
+        return new LSMRTreeWithAntiMatterTuples(storageConfig, ioManager, virtualBufferCaches,
+                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
+                diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory, filterHelper,
+                filterFrameFactory, filterManager, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories,
+                linearizerCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory, pageWriteCallbackFactory, rtreeFields, filterFields, durable, isPointMBR);
     }
 
     public static ILinearizeComparatorFactory proposeBestLinearizer(ITypeTraits[] typeTraits, int numKeyFields)

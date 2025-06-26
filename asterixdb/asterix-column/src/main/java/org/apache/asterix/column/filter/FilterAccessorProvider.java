@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.filter;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,11 +41,12 @@ import org.apache.asterix.column.metadata.schema.visitor.PathExtractorVisitor;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
-import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
 
 public class FilterAccessorProvider {
     private final ObjectSchemaNode root;
@@ -138,16 +138,16 @@ public class FilterAccessorProvider {
         return filterColumnReaders;
     }
 
-    public static void setFilterValues(List<IColumnRangeFilterValueAccessor> filterValueAccessors, ByteBuffer pageZero,
-            int numberOfColumns) {
+    public static void setFilterValues(List<IColumnRangeFilterValueAccessor> filterValueAccessors,
+            ColumnBTreeReadLeafFrame frame) throws HyracksDataException {
+        IColumnPageZeroReader pageZeroReader = frame.getColumnPageZeroReader();
         for (int i = 0; i < filterValueAccessors.size(); i++) {
             ColumnRangeFilterValueAccessor accessor = (ColumnRangeFilterValueAccessor) filterValueAccessors.get(i);
             int columnIndex = accessor.getColumnIndex();
             long normalizedValue;
-            if (columnIndex < numberOfColumns) {
-                int filterOffset = pageZero.position() + columnIndex * AbstractColumnFilterWriter.FILTER_SIZE;
-                normalizedValue =
-                        accessor.isMin() ? pageZero.getLong(filterOffset) : pageZero.getLong(filterOffset + Long.BYTES);
+            if (pageZeroReader.isValidColumn(columnIndex)) {
+                normalizedValue = accessor.isMin() ? pageZeroReader.getColumnFilterMin(columnIndex)
+                        : pageZeroReader.getColumnFilterMax(columnIndex);
             } else {
                 // Column is missing
                 normalizedValue = accessor.isMin() ? Long.MAX_VALUE : Long.MIN_VALUE;

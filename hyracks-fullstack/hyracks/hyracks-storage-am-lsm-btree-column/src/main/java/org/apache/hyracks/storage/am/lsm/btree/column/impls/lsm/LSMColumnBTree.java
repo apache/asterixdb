@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManager;
@@ -64,7 +65,7 @@ public class LSMColumnBTree extends LSMBTree {
      */
     private IColumnMetadata columnMetadata;
 
-    public LSMColumnBTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+    public LSMColumnBTree(NCConfig storageConfig, IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
@@ -74,9 +75,9 @@ public class LSMColumnBTree extends LSMBTree {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic,
             IColumnIndexDiskCacheManager diskCacheManager) throws HyracksDataException {
-        super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
-                diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null, null, null,
-                bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
+        super(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
+                deleteLeafFrameFactory, diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null,
+                null, null, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
                 ioOpCallbackFactory, pageWriteCallbackFactory, true, true, btreeFields, null, true, false, tracer,
                 atomic);
         this.columnManager = columnManager;

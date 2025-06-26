@@ -35,6 +35,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractSchemaNode {
     private int counter;
+    //Indicates if all the columns of the children is to be included
+    private boolean needAllColumns;
+
+    //Needed for estimating the column count
+    protected int previousNumberOfColumns; // before transform
+    protected int numberOfColumns;
+    protected int numberOfVisitedColumnsInBatch;
+    private int newDiscoveredColumns;
+    private int visitedBatchVersion;
+    private int formerChildNullVersion;
 
     public abstract ATypeTag getTypeTag();
 
@@ -46,6 +56,14 @@ public abstract class AbstractSchemaNode {
 
     public final void incrementCounter() {
         counter++;
+    }
+
+    public void needAllColumns(boolean needAllColumns) {
+        this.needAllColumns = needAllColumns;
+    }
+
+    public boolean needAllColumns() {
+        return needAllColumns;
     }
 
     public final void setCounter(int counter) {
@@ -89,5 +107,55 @@ public abstract class AbstractSchemaNode {
             default:
                 throw new UnsupportedEncodingException(typeTag + " is not supported");
         }
+    }
+
+    // Needed for estimating the number of columns.
+    public void setNumberOfVisitedColumnsInBatch(int numberOfVisitedColumnsInBatch) {
+        this.numberOfVisitedColumnsInBatch = numberOfVisitedColumnsInBatch;
+    }
+
+    public int getNumberOfVisitedColumnsInBatch() {
+        return numberOfVisitedColumnsInBatch;
+    }
+
+    public void setNewDiscoveredColumns(int newDiscoveredColumns) {
+        this.newDiscoveredColumns = newDiscoveredColumns;
+    }
+
+    public int getNewDiscoveredColumns() {
+        return newDiscoveredColumns;
+    }
+
+    public int getNumberOfColumns() {
+        return numberOfColumns;
+    }
+
+    public void incrementColumns(int deltaColumns) {
+        this.numberOfColumns += deltaColumns;
+    }
+
+    public int getDeltaColumnsChanged() {
+        if (previousNumberOfColumns != numberOfColumns) {
+            int diff = numberOfColumns - previousNumberOfColumns;
+            previousNumberOfColumns = numberOfColumns;
+            return diff;
+        }
+        return 0;
+    }
+
+    public void setFormerChildNull(int formerChildNullVersion) {
+        this.formerChildNullVersion = formerChildNullVersion;
+    }
+
+    public int formerChildNullVersion() {
+        return formerChildNullVersion;
+    }
+
+    public int getVisitedBatchVersion() {
+        return visitedBatchVersion;
+    }
+
+    public void setVisitedBatchVersion(int visitedBatchVersion) {
+        this.visitedBatchVersion = visitedBatchVersion;
     }
 }

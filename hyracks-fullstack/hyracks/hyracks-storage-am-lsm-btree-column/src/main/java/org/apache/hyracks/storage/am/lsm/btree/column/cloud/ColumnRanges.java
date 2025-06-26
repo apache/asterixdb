@@ -25,10 +25,13 @@ import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.ge
 
 import java.util.BitSet;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read.CloudColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweepPlanner;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweeper;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.longs.LongArrays;
@@ -38,6 +41,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * Computes columns offsets, lengths, and pages
  */
 public final class ColumnRanges {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final LongComparator OFFSET_COMPARATOR = IntPairUtil.FIRST_COMPARATOR;
     private final int numberOfPrimaryKeys;
 
@@ -79,7 +83,7 @@ public final class ColumnRanges {
      *
      * @param leafFrame to compute the ranges for
      */
-    public void reset(ColumnBTreeReadLeafFrame leafFrame) {
+    public void reset(ColumnBTreeReadLeafFrame leafFrame) throws HyracksDataException {
         reset(leafFrame, EMPTY, EMPTY, EMPTY);
     }
 
@@ -89,7 +93,7 @@ public final class ColumnRanges {
      * @param leafFrame to compute the ranges for
      * @param plan      eviction plan
      */
-    public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet plan) {
+    public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet plan) throws HyracksDataException {
         reset(leafFrame, plan, EMPTY, EMPTY);
     }
 
@@ -102,7 +106,7 @@ public final class ColumnRanges {
      * @param cloudOnlyColumns locked columns that cannot be read from a local disk
      */
     public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet requestedColumns, BitSet evictableColumns,
-            BitSet cloudOnlyColumns) {
+            BitSet cloudOnlyColumns) throws HyracksDataException {
         // Set leafFrame
         this.leafFrame = leafFrame;
         // Ensure arrays capacities (given the leafFrame's columns and pages)
@@ -110,11 +114,8 @@ public final class ColumnRanges {
 
         // Get the number of columns in a page
         int numberOfColumns = leafFrame.getNumberOfColumns();
-        for (int i = 0; i < numberOfColumns; i++) {
-            int offset = leafFrame.getColumnOffset(i);
-            // Set the first 32-bits to the offset and the second 32-bits to columnIndex
-            offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
-        }
+        // Set the first 32-bits to the offset and the second 32-bits to columnIndex
+        leafFrame.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
 
         // Set artificial offset to determine the last column's length
         int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
@@ -125,12 +126,20 @@ public final class ColumnRanges {
 
         int columnOrdinal = 0;
         for (int i = 0; i < numberOfColumns; i++) {
+            if (offsetColumnIndexPairs[i] == 0) { // any column's offset can't be zero
+                LOGGER.warn(
+                        "Unexpected zero column offset at index {}. This may indicate a logic error or data inconsistency.",
+                        i);
+                continue;
+            }
             int columnIndex = getColumnIndexFromPair(offsetColumnIndexPairs[i]);
             int offset = getOffsetFromPair(offsetColumnIndexPairs[i]);
             int nextOffset = getOffsetFromPair(offsetColumnIndexPairs[i + 1]);
 
             // Compute the column's length in bytes (set 0 for PKs)
             int length = columnIndex < numberOfPrimaryKeys ? 0 : nextOffset - offset;
+            // In case of sparse columns, few columnIndexes can be greater than the total sparse column count.
+            ensureCapacity(columnIndex);
             lengths[columnIndex] = length;
 
             // Get start page ID (given the computed length above)
@@ -166,7 +175,7 @@ public final class ColumnRanges {
      * @param columnIndex column index
      * @return pageID
      */
-    public int getColumnStartPageIndex(int columnIndex) {
+    public int getColumnStartPageIndex(int columnIndex) throws HyracksDataException {
         int pageSize = leafFrame.getBuffer().capacity();
         return getColumnPageIndex(leafFrame.getColumnOffset(columnIndex), pageSize);
     }
@@ -177,7 +186,7 @@ public final class ColumnRanges {
      * @param columnIndex column index
      * @return number of pages
      */
-    public int getColumnNumberOfPages(int columnIndex) {
+    public int getColumnNumberOfPages(int columnIndex) throws HyracksDataException {
         int pageSize = leafFrame.getBuffer().capacity();
         int offset = getColumnStartOffset(leafFrame.getColumnOffset(columnIndex), pageSize);
         int firstBufferLength = pageSize - offset;
@@ -278,6 +287,12 @@ public final class ColumnRanges {
         }
     }
 
+    private void ensureCapacity(int columnIndex) {
+        if (columnIndex >= lengths.length) {
+            lengths = IntArrays.grow(lengths, columnIndex + 1);
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -292,8 +307,18 @@ public final class ColumnRanges {
         for (int i = 0; i < leafFrame.getNumberOfColumns(); i++) {
             builder.append(String.format("%03d", i));
             builder.append(":");
-            int startPageId = getColumnStartPageIndex(i);
-            int columnPagesCount = getColumnNumberOfPages(i);
+            int startPageId = 0;
+            try {
+                startPageId = getColumnStartPageIndex(i);
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
+            int columnPagesCount = 0;
+            try {
+                columnPagesCount = getColumnNumberOfPages(i);
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
             printColumnPages(builder, numberOfPages, startPageId, columnPagesCount);
         }
 

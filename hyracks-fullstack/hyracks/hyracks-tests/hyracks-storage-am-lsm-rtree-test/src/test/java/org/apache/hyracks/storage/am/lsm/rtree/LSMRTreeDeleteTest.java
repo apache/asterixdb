@@ -56,11 +56,12 @@ public class LSMRTreeDeleteTest extends AbstractRTreeDeleteTest {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return LSMRTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, valueProviderFactories, numKeys,
-                rtreePolicyType, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory());
+        return LSMRTreeTestContext.create(harness.getNcConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                valueProviderFactories, numKeys, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
+                harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
+                harness.getMetadataPageManagerFactory());
     }
 
     @Override
