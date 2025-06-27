@@ -300,9 +300,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitSelectOperator(SelectOperator op, Integer indent) throws AlgebricksException {
-        String retainMissing = op.getMissingPlaceholderVariable() != null
+        String retainMissing = (op.getMissingPlaceholderVariable() != null)
                 ? " retain-untrue (" + op.getMissingPlaceholderVariable() + " <- " + op.getRetainMissingAsValue() + ")"
-                : "";
+                : (op.getRetainMissingAsValue() != null ? " retain-untrue" : "");
         addIndent(indent).append("select (").append(op.getCondition().getValue().accept(exprVisitor, indent))
                 .append(")").append(retainMissing)
                 .append(op.isProjectPushed() ? " project: " + str(op.getProjectVariables()) : "");
