@@ -113,15 +113,19 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
 import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
@@ -457,7 +461,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case CREATE_FUNCTION:
                         handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
-                                Creator.DEFAULT_CREATOR);
+                                Creator.DEFAULT_CREATOR, hcc);
                         break;
                     case FUNCTION_DROP:
                         handleFunctionDropStatement(metadataProvider, stmt, requestParameters);
@@ -3187,7 +3191,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
-            IStatementRewriter stmtRewriter, IRequestParameters requestParameters, Creator creator) throws Exception {
+            IStatementRewriter stmtRewriter, IRequestParameters requestParameters, Creator creator,
+            IHyracksClientConnection hcc) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
         DataverseName funDataverse = signature.getDataverseName();
@@ -3220,7 +3225,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName,
                 signature.getName(), libraryDatabaseName, libraryDataverseName, libraryName);
         try {
-            doCreateFunction(metadataProvider, cfs, signature, stmtRewriter, requestParameters, creator);
+            doCreateFunction(metadataProvider, cfs, signature, stmtRewriter, requestParameters, creator, hcc);
         } finally {
             metadataProvider.getLocks().unlock();
             metadataProvider.setDefaultNamespace(activeNamespace);
@@ -3229,7 +3234,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected CreateResult doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
             FunctionSignature functionSignature, IStatementRewriter stmtRewriter, IRequestParameters requestParameters,
-            Creator creator) throws Exception {
+            Creator creator, IHyracksClientConnection hcc) throws Exception {
         DataverseName dataverseName = functionSignature.getDataverseName();
         String databaseName = functionSignature.getDatabaseName();
         SourceLocation sourceLoc = cfs.getSourceLocation();
@@ -3373,7 +3378,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         cfs.isTransform());
                 fd.setSourceLocation(sourceLoc);
 
-                Query wrappedQuery = queryRewriter.createFunctionAccessorQuery(fd);
+                int arity = functionSignature.getArity();
+                List<Expression> args;
+                if (cfs.isTransform()) {
+                    args = Collections.singletonList(new RecordConstructor(Collections.emptyList()));
+                } else {
+                    args = arity == FunctionIdentifier.VARARGS ? Collections.emptyList()
+                            : Collections.nCopies(arity, new LiteralExpr(MissingLiteral.INSTANCE));
+                }
+                Query wrappedQuery = queryRewriter.createFunctionAccessorQuery(fd, args);
                 List<FunctionDecl> fdList = new ArrayList<>(declaredFunctions.size() + 1);
                 fdList.addAll(declaredFunctions);
                 fdList.add(fd);
@@ -3392,6 +3405,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 "Transform function definition can not use collections/views");
                     }
                     validateTransformFunction(metadataProvider, rewrittenQuery, sourceLoc);
+                    apiFramework.compileQuery(hcc, metadataProvider, (Query) rewrittenQuery.first,
+                            rewrittenQuery.second, null, sessionOutput, null, null, responsePrinter, warningCollector,
+                            requestParameters, jobFlags);
                 }
                 appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
 
