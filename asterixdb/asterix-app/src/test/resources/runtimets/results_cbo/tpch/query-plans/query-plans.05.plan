@@ -1,36 +1,36 @@
-distribute result [$$122] [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+distribute result [$$122] [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+  exchange [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 10 [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+    limit 10 [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$122] <- [{"$1": 3, "l_orderkey": $$l_orderkey, "revenue": $$134, "o_orderdate": $$o_orderdate, "o_shippriority": $$o_shippriority}] project: [$$122] [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+      assign [$$122] <- [{"$1": 3, "l_orderkey": $$l_orderkey, "revenue": $$134, "o_orderdate": $$o_orderdate, "o_shippriority": $$o_shippriority}] project: [$$122] [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+        exchange [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
         -- SORT_MERGE_EXCHANGE [$$134(DESC), $$o_orderdate(ASC) ]  |PARTITIONED|
-          limit 10 [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+          limit 10 [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
           -- STREAM_LIMIT  |PARTITIONED|
-            exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+            exchange [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (topK: 10) (DESC, $$134) (ASC, $$o_orderdate) [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+              order (topK: 10) (DESC, $$134) (ASC, $$o_orderdate) [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
               -- STABLE_SORT [topK: 10] [$$134(DESC), $$o_orderdate(ASC)]  |PARTITIONED|
-                exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+                exchange [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   group by ([$$l_orderkey := $$142; $$o_orderdate := $$143; $$o_shippriority := $$144]) decor ([]) {
                             aggregate [$$134] <- [global-sql-sum-serial($$141)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- AGGREGATE  |LOCAL|
                               nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                         } [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
+                         } [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1353243.22]
                   -- EXTERNAL_GROUP_BY[$$142, $$143, $$144]  |PARTITIONED|
-                    exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1322667.4]
+                    exchange [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1322667.4]
                     -- HASH_PARTITION_EXCHANGE [$$142, $$143, $$144]  |PARTITIONED|
                       group by ([$$142 := $$131; $$143 := $$127; $$144 := $$125]) decor ([]) {
                                 aggregate [$$141] <- [local-sql-sum-serial(numeric-multiply($$139, numeric-subtract(1, $$140)))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- AGGREGATE  |LOCAL|
                                   nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                             } [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1322667.4]
+                             } [cardinality: 178.87, doc-size: 20.0, op-cost: 0.0, total-cost: 1322667.4]
                       -- EXTERNAL_GROUP_BY[$$131, $$127, $$125]  |PARTITIONED|
                         exchange [cardinality: 30575.82, doc-size: 20.0, op-cost: 0.0, total-cost: 1292091.58]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

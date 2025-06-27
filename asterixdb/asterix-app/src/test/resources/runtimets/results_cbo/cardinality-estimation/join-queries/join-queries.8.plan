@@ -1,26 +1,26 @@
-distribute result [$$119] [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
+distribute result [$$119] [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
+  exchange [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project: [$$119] [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
+    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project: [$$119] [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
+      exchange [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         group by ([$$n_name := $$142]) decor ([]) {
                   aggregate [$$132] <- [global-sql-sum-serial($$141)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
+               } [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6741.88]
         -- EXTERNAL_GROUP_BY[$$142]  |PARTITIONED|
-          exchange [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6703.4]
+          exchange [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6703.4]
           -- HASH_PARTITION_EXCHANGE [$$142]  |PARTITIONED|
             group by ([$$142 := $$120]) decor ([]) {
                       aggregate [$$141] <- [local-sql-sum-serial(numeric-multiply($$139, numeric-subtract(1, $$140)))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 25.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6703.4]
+                   } [cardinality: 24.0, doc-size: 45.0, op-cost: 0.0, total-cost: 6703.4]
             -- EXTERNAL_GROUP_BY[$$120]  |PARTITIONED|
               exchange [cardinality: 38.48, doc-size: 45.0, op-cost: 0.0, total-cost: 6664.92]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

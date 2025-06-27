@@ -1,26 +1,26 @@
-distribute result [$$199] [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+distribute result [$$199] [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+  exchange [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$199] <- [{"$1": 8, "o_year": $$o_year, "mkt_share": numeric-divide($$214, $$215)}] project: [$$199] [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+    assign [$$199] <- [{"$1": 8, "o_year": $$o_year, "mkt_share": numeric-divide($$214, $$215)}] project: [$$199] [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+      exchange [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         group by ([$$o_year := $$238]) decor ([]) {
                   aggregate [$$214, $$215] <- [global-sql-sum-serial($$236), global-sql-sum-serial($$237)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+               } [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
         -- EXTERNAL_GROUP_BY[$$238]  |PARTITIONED|
-          exchange [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
+          exchange [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
           -- HASH_PARTITION_EXCHANGE [$$238]  |PARTITIONED|
             group by ([$$238 := $$200]) decor ([]) {
                       aggregate [$$236, $$237] <- [local-sql-sum-serial(switch-case(true, eq($$232, "PERU"), numeric-multiply($$230, numeric-subtract(1, $$231)), 0)), local-sql-sum-serial(numeric-multiply($$230, numeric-subtract(1, $$231)))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 2.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
+                   } [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
             -- EXTERNAL_GROUP_BY[$$200]  |PARTITIONED|
               exchange [cardinality: 165.56, doc-size: 70.0, op-cost: 0.0, total-cost: 1258620.94]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
