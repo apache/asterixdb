@@ -1,28 +1,28 @@
-distribute result [$$51] [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+distribute result [$$51] [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+  exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"$1": $$55}] project: [$$51] [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+    assign [$$51] <- [{"$1": $$55}] project: [$$51] [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
     -- ASSIGN  |PARTITIONED|
-      project ([$$55]) [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+      project ([$$55]) [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+        exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$l_orderkey := $$59]) decor ([]) {
                     aggregate [$$55] <- [sql-sum-serial($$58)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+                 } [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
           -- EXTERNAL_GROUP_BY[$$59]  |PARTITIONED|
-            exchange [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10755.9]
+            exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10755.9]
             -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
               group by ([$$59 := $$53]) decor ([]) {
                         aggregate [$$58] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 1298.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10755.9]
+                     } [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10755.9]
               -- EXTERNAL_GROUP_BY[$$53]  |PARTITIONED|
                 exchange [cardinality: 4750.9, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

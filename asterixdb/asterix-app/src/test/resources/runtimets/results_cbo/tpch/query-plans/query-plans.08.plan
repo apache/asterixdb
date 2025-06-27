@@ -1,30 +1,30 @@
-distribute result [$$186] [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.79]
+distribute result [$$186] [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.79]
+  exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$186] <- [{"$1": 7, "supp_nation": $$supp_nation, "cust_nation": $$cust_nation, "l_year": $$l_year, "revenue": $$200}] project: [$$186] [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.79]
+    assign [$$186] <- [{"$1": 7, "supp_nation": $$supp_nation, "cust_nation": $$cust_nation, "l_year": $$l_year, "revenue": $$200}] project: [$$186] [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.79]
+      exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
       -- SORT_MERGE_EXCHANGE [$$supp_nation(ASC), $$cust_nation(ASC), $$l_year(ASC) ]  |PARTITIONED|
-        order (ASC, $$supp_nation) (ASC, $$cust_nation) (ASC, $$l_year) [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.79]
+        order (ASC, $$supp_nation) (ASC, $$cust_nation) (ASC, $$l_year) [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
         -- STABLE_SORT [$$supp_nation(ASC), $$cust_nation(ASC), $$l_year(ASC)]  |PARTITIONED|
-          exchange [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
+          exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$supp_nation := $$217; $$cust_nation := $$218; $$l_year := $$219]) decor ([]) {
                       aggregate [$$200] <- [global-sql-sum-serial($$216)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
+                   } [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
             -- EXTERNAL_GROUP_BY[$$217, $$218, $$219]  |PARTITIONED|
-              exchange [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
+              exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
               -- HASH_PARTITION_EXCHANGE [$$217, $$218, $$219]  |PARTITIONED|
                 group by ([$$217 := $$191; $$218 := $$192; $$219 := $$214]) decor ([]) {
                           aggregate [$$216] <- [local-sql-sum-serial($$184)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- AGGREGATE  |LOCAL|
                             nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                       } [cardinality: 2.52, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
+                       } [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
                 -- EXTERNAL_GROUP_BY[$$191, $$192, $$214]  |PARTITIONED|
                   exchange [cardinality: 569.85, doc-size: 68.16, op-cost: 0.0, total-cost: 985678.73]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -68,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
@@ -1005,7 +1006,7 @@ public class Stats {
                 setTotalCardFromSample(sampleWithPredicates);
             }
             // get the estimated distinct cardinality for the dataset (i.e., D_est or D_est_f)
-            distinctCard = findEstDistinctWithPredicates(grpByDistinctOp, origDatasetCard, sampleDataSource);
+            distinctCard = findEstDistinctWithPredicates(grpByDistinctOp, origDatasetCard, sampleDataSource, index);
         }
         return distinctCard;
     }
@@ -1022,24 +1023,87 @@ public class Stats {
     }
 
     private long findEstDistinctWithPredicates(ILogicalOperator grpByDistinctOp, double origDatasetCardinality,
-            SampleDataSource sampleDataSource) throws AlgebricksException {
+            SampleDataSource sampleDataSource, Index index) throws AlgebricksException {
         double estDistCardinalityFromSample = -1.0;
         double estDistCardinality = -1.0;
 
         LogicalOperatorTag tag = grpByDistinctOp.getOperatorTag();
-        if (tag == LogicalOperatorTag.GROUP || tag == LogicalOperatorTag.DISTINCT) {
+        if (tag == LogicalOperatorTag.DISTINCT) {
             ILogicalOperator copyOfGrpByDistinctOp = OperatorManipulationUtil.bottomUpCopyOperators(grpByDistinctOp);
             if (setSampleDataSource(copyOfGrpByDistinctOp, sampleDataSource)) {
                 // get distinct cardinality from the sampling source
                 List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfGrpByDistinctOp);
                 estDistCardinalityFromSample = findPredicateCardinality(result, false);
             }
+        } else if (tag == LogicalOperatorTag.GROUP) {
+            ILogicalOperator copyOfGrpByDistinctOp = OperatorManipulationUtil.bottomUpCopyOperators(grpByDistinctOp);
+            if (setSampleDataSource(copyOfGrpByDistinctOp, sampleDataSource)) {
+                // get distinct cardinality from the sampling source
+                GroupByOperator gb = (GroupByOperator) copyOfGrpByDistinctOp;
+                int numFields = gb.getGroupByList().size();
+                if (numFields == 1) { // This is the very simple case. So kept it.
+                    List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfGrpByDistinctOp);
+                    estDistCardinalityFromSample = findPredicateCardinality(result, false);
+                    if (estDistCardinalityFromSample != -1.0) { // estimate distinct cardinality for the dataset from the sampled cardinality
+                        estDistCardinality = secondDistinctEstimator(estDistCardinalityFromSample, index);
+                    }
+                } else { // now create one sample query with multiple count distincts
+                    // Bypass the group by operator
+                    // now add aggregate [$$49, $$50] <- [agg-sql-count-distinct($$39), agg-sql-count-distinct($$44)]
+                    //List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
+                    List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = gb.getGroupByList();
+                    List<AggregateFunctionCallExpression> aggExprList = new ArrayList<>();
+                    List<BuiltinFunctionInfo> countFn = new ArrayList<>();
+                    // create a new var List [$$49, $$50]
+                    List<LogicalVariable> varList = new ArrayList<>();
+
+                    // create Mutable expressions
+                    List<Mutable<ILogicalExpression>> aggExprMutableList = new ArrayList<>(1);
+
+                    for (int i = 0; i < numFields; i++) {
+                        ILogicalExpression var = groupByList.get(i).second.getValue();
+                        Mutable<ILogicalExpression> mvar = new MutableObject<>(var);
+                        List<Mutable<ILogicalExpression>> fields = new ArrayList<>();
+                        fields.add(mvar);
+                        countFn.add(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SQL_COUNTN_DISTINCT));
+                        aggExprList.add(new AggregateFunctionCallExpression(countFn.get(i), false, fields));
+                        //aggexprList is [agg-sql-count-distinct($$39), agg-sql-count-distinct($$44)]
+                        varList.add(optCtx.newVar());
+                        aggExprMutableList.add(new MutableObject<>(aggExprList.get(i)));
+                    }
+                    AggregateOperator newAggOp = new AggregateOperator(varList, aggExprMutableList);
+                    //connect newAggOp to the leafInput below bypassing the groupby
+                    newAggOp.getInputs().add(new MutableObject<>(gb.getInputs().get(0).getValue()));
+
+                    List<List<IAObject>> result = helperFunction(joinEnum.optCtx, newAggOp);
+                    List<Double> sampleEstimates = extractSampleEstimates(result, numFields);
+                    estDistCardinality = 1; //change
+                    for (int i = 0; i < numFields; i++) {
+                        estDistCardinality *= secondDistinctEstimator(sampleEstimates.get(i), index); // any checks? zero?
+                    }
+                    if (estDistCardinality > origDatasetCardinality) {
+                        estDistCardinality = origDatasetCardinality; // obviously cannot be higher than the dataset cardinality
+                    }
+                }
+            }
         }
+
         if (estDistCardinalityFromSample != -1.0) { // estimate distinct cardinality for the dataset from the sampled cardinality
-            estDistCardinality = distinctEstimator(estDistCardinalityFromSample, origDatasetCardinality);
+            estDistCardinality = secondDistinctEstimator(estDistCardinalityFromSample, index);
         }
         estDistCardinality = Math.max(0.0, estDistCardinality);
         return Math.round(estDistCardinality);
+    }
+
+    private List<Double> extractSampleEstimates(List<List<IAObject>> result, int numFields) {
+        List<Double> sampleEstimates = new ArrayList<>();
+        ARecord record = (ARecord) (result.get(0)).get(0);
+        for (int i = 0; i < numFields; i++) {
+            IAObject obj = record.getValueByPos(i);
+            double x = (double) ((AInt64) obj).getLongValue();
+            sampleEstimates.add(x);
+        }
+        return sampleEstimates;
     }
 
     // Formula is d = D (1 - e^(-sampleCard/D))
@@ -1081,60 +1145,6 @@ public class Stats {
             D = 1.0;
         }
         return D;
-    }
-
-    // Use the Newton-Raphson method for distinct cardinality estimation.
-    private double distinctEstimator(double estDistinctCardinalityFromSample, double origDatasetCardinality) {
-        // initialize the estimate to be the number of distinct values from the sample.
-        double estDistinctCardinality = initNR(estDistinctCardinalityFromSample);
-        setDistinctCardFromSample(estDistinctCardinality);
-
-        int itr_counter = 0, max_counter = 1000; // allow a maximum number of iterations
-        double denominator = derivativeFunctionForMMO(estDistinctCardinality);
-        if (denominator == 0.0) { // Newton-Raphson method requires it to be non-zero
-            return estDistinctCardinality;
-        }
-        double fraction = functionForMMO(estDistinctCardinality) / denominator;
-        while (Math.abs(fraction) >= 0.001 && itr_counter < max_counter) {
-            denominator = derivativeFunctionForMMO(estDistinctCardinality);
-            if (denominator == 0.0) {
-                break;
-            }
-            fraction = functionForMMO(estDistinctCardinality) / denominator;
-            estDistinctCardinality = estDistinctCardinality - fraction;
-            itr_counter++;
-            if (estDistinctCardinality > origDatasetCardinality) {
-                estDistinctCardinality = origDatasetCardinality; // for preventing infinite growth beyond N
-                break;
-            }
-        }
-
-        // estimated cardinality cannot be less the initial one from samples
-        estDistinctCardinality = Math.max(estDistinctCardinality, estDistinctCardinalityFromSample);
-
-        return estDistinctCardinality;
-    }
-
-    double initNR(double estDistinctCardinalityFromSample) {
-        double estDistinctCardinality = estDistinctCardinalityFromSample;
-
-        // Boundary condition checks for Newton-Raphson method.
-        if (totalCardFromSample <= MIN_TOTAL_SAMPLES) {
-            setTotalCardFromSample(totalCardFromSample + 2);
-            estDistinctCardinality = totalCardFromSample - 1;
-        } else if (estDistinctCardinality == totalCardFromSample) {
-            estDistinctCardinality--;
-        }
-        return estDistinctCardinality;
-    }
-
-    private double functionForMMO(double x) {
-        return (x * (1.0 - Math.exp(-1.0 * (double) totalCardFromSample / x)) - distinctCardFromSample);
-    }
-
-    private double derivativeFunctionForMMO(double x) {
-        double arg = ((double) totalCardFromSample / x);
-        return (1.0 - (arg + 1.0) * Math.exp(-1.0 * arg));
     }
 
     private boolean setSampleDataSource(ILogicalOperator op, SampleDataSource sampleDataSource) {
