@@ -433,12 +433,12 @@ public class HttpServer {
         return addresses.iterator().next();
     }
 
-    private void closeChannels() throws InterruptedException {
+    void closeChannels() throws InterruptedException {
         synchronized (lock) {
             for (Channel channel : channels) {
                 channel.closeFuture().removeListener(channelCloseListener);
-                channel.close();
-                channel.closeFuture().sync();
+                channel.close().sync();
+                LOGGER.info("channel {} closed", channel);
             }
             channels.clear();
         }

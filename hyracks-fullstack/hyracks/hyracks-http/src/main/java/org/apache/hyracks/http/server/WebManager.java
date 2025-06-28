@@ -113,4 +113,27 @@ public class WebManager {
     public void add(HttpServer server) {
         servers.add(server);
     }
+
+    /**
+     * Closes all channels associated with the servers in this WebManager.
+     * This prevents any additional connections from being established.
+     */
+    public void closeChannels() throws Exception {
+        List<Exception> closeExceptions = Collections.synchronizedList(new ArrayList<>());
+        servers.parallelStream().forEach(server -> {
+            try {
+                server.closeChannels();
+            } catch (Exception e) {
+                closeExceptions.add(e);
+            }
+        });
+        if (!closeExceptions.isEmpty()) {
+            Exception ex = null;
+            for (Exception closeException : closeExceptions) {
+                ex = ExceptionUtils.suppress(ex, closeException);
+            }
+            throw ex;
+        }
+
+    }
 }
