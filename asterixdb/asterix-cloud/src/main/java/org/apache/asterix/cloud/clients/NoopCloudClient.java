@@ -76,7 +76,7 @@ public class NoopCloudClient implements ICloudClient {
 
     @Override
     public byte[] readAllBytes(String bucket, String path) throws HyracksDataException {
-        return new byte[0];
+        return null;
     }
 
     @Override
