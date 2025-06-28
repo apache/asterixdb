@@ -479,6 +479,11 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
+    public synchronized boolean isPendingRemoval(String nodeId) {
+        return pendingRemoval.contains(nodeId);
+    }
+
+    @Override
     public synchronized void setMetadataPartitionId(ClusterPartition partition) {
         metadataPartition = partition;
     }
