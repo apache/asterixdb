@@ -248,6 +248,8 @@ public interface IClusterStateManager {
 
     Map<String, Map<IOption, Object>> getActiveNcConfiguration();
 
+    boolean isPendingRemoval(String nodeId);
+
     /**
      * Sets the cluster partition in which metadata datasets stored
      *
