@@ -126,10 +126,9 @@ public final class ColumnRanges {
 
         int columnOrdinal = 0;
         for (int i = 0; i < numberOfColumns; i++) {
-            if (offsetColumnIndexPairs[i] == 0) { // any column's offset can't be zero
-                LOGGER.warn(
-                        "Unexpected zero column offset at index {}. This may indicate a logic error or data inconsistency.",
-                        i);
+            if (offsetColumnIndexPairs[i] == 0) {
+                //Any requested column's offset can't be zero
+                //In case a column is not being present in the accessed pageZero segments, it will be defaulted to 0
                 continue;
             }
             int columnIndex = getColumnIndexFromPair(offsetColumnIndexPairs[i]);
