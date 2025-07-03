@@ -112,20 +112,19 @@ public final class ColumnRanges {
         // Ensure arrays capacities (given the leafFrame's columns and pages)
         init();
 
-        // Get the number of columns in a page
-        int numberOfColumns = leafFrame.getNumberOfColumns();
         // Set the first 32-bits to the offset and the second 32-bits to columnIndex
-        leafFrame.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
+        int numberOfPresentColumnsInLeaf = leafFrame.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
 
         // Set artificial offset to determine the last column's length
         int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
-        offsetColumnIndexPairs[numberOfColumns] = IntPairUtil.of(megaLeafLength, numberOfColumns);
+        offsetColumnIndexPairs[numberOfPresentColumnsInLeaf] =
+                IntPairUtil.of(megaLeafLength, numberOfPresentColumnsInLeaf);
 
         // Sort the pairs by offset (i.e., lowest offset first)
-        LongArrays.stableSort(offsetColumnIndexPairs, 0, numberOfColumns, OFFSET_COMPARATOR);
+        LongArrays.stableSort(offsetColumnIndexPairs, 0, numberOfPresentColumnsInLeaf, OFFSET_COMPARATOR);
 
         int columnOrdinal = 0;
-        for (int i = 0; i < numberOfColumns; i++) {
+        for (int i = 0; i < numberOfPresentColumnsInLeaf; i++) {
             if (offsetColumnIndexPairs[i] == 0) {
                 //Any requested column's offset can't be zero
                 //In case a column is not being present in the accessed pageZero segments, it will be defaulted to 0

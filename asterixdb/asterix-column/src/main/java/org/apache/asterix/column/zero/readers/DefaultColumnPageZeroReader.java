@@ -160,13 +160,14 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     }
 
     @Override
-    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+    public int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
         int columnOffsetStart = headerSize;
-        for (int i = 0; i < offsetColumnIndexPairs.length; i++) {
+        for (int i = 0; i < numberOfPresentColumns; i++) {
             int offset = pageZeroBuf.getInt(columnOffsetStart);
             offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
             columnOffsetStart += DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
+        return numberOfPresentColumns;
     }
 
     @Override

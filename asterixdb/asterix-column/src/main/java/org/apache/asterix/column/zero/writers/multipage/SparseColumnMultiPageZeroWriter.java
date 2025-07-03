@@ -96,8 +96,7 @@ public class SparseColumnMultiPageZeroWriter implements IColumnPageZeroWriter {
         segments = new MultiPersistentPageZeroBufferBytesOutputStream(multiPageOpRef);
         this.zerothSegmentMaxColumns = zerothSegmentMaxColumns;
         this.zerothSegmentWriter = new SparseColumnPageZeroWriter();
-        this.maximumNumberOfColumnsInAPage = bufferCachePageSize
-                / (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + SparseColumnPageZeroWriter.FILTER_SIZE);
+        this.maximumNumberOfColumnsInAPage = getMaximumNumberOfColumnsInAPage(bufferCachePageSize);
     }
 
     @Override
@@ -282,7 +281,12 @@ public class SparseColumnMultiPageZeroWriter implements IColumnPageZeroWriter {
         return MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + numberOfPageZeroSegments * Integer.BYTES;
     }
 
-    public static int getHeaderSpace(int numberOfPageZeroSegments) {
-        return MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + numberOfPageZeroSegments * Integer.BYTES;
+    public static int getHeaderSpace(int numberOfExtraPagesRequired) {
+        return MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + numberOfExtraPagesRequired * Integer.BYTES;
+    }
+
+    public static int getMaximumNumberOfColumnsInAPage(int bufferCachePageSize) {
+        return bufferCachePageSize
+                / (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + SparseColumnPageZeroWriter.FILTER_SIZE);
     }
 }

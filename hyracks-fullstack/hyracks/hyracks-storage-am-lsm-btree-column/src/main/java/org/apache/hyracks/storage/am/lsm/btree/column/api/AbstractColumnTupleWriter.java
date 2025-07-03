@@ -64,7 +64,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      *
      * @return the size needed to store columns' offsets
      */
-    public abstract int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment,
+    public abstract int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment, int bufferCapacity,
             boolean includeCurrentTupleColumns, IColumnPageZeroWriter.ColumnPageZeroWriterType adaptive);
 
     /**

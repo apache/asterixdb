@@ -118,28 +118,24 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         // This method finds the segment index (except for 0th segment) for the given columnIndex.
         if (numberOfPageZeroSegments == 1) {
             // only zeroth segment is present
-            return -1;
+            return 0;
         }
         // gives 0 based segment index (0 for zeroth segment, 1 for first segment, etc.)
-        if (columnIndex <= maxColumnIndexInZerothSegment) {
-            return 0;
-        } else {
-            int start = 0;
-            int end = numberOfPageZeroSegments - 1;
-            int resultSegment = -1;
-            while (start <= end) {
-                int mid = (start + end) / 2;
-                int segmentColumnIndex =
-                        pageZeroBuf.getInt(MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + mid * Integer.BYTES);
-                if (segmentColumnIndex >= columnIndex) {
-                    resultSegment = mid;
-                    end = mid - 1; // continue searching in the left half
-                } else {
-                    start = mid + 1;
-                }
+        int start = 1;
+        int end = numberOfPageZeroSegments - 1;
+        int resultSegment = -1;
+        while (start <= end) {
+            int mid = (start + end) / 2;
+            int segmentColumnIndex =
+                    pageZeroBuf.getInt(MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + mid * Integer.BYTES);
+            if (segmentColumnIndex >= columnIndex) {
+                resultSegment = mid;
+                end = mid - 1; // continue searching in the left half
+            } else {
+                start = mid + 1;
             }
-            return resultSegment;
         }
+        return resultSegment;
     }
 
     private int findRelativeColumnIndex(int columnIndex) throws HyracksDataException {
@@ -150,7 +146,7 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
             return zerothSegmentReader.getRelativeColumnIndex(columnIndex);
         } else {
             int segmentIndex = findSegment(columnIndex);
-            if (segmentIndex == -1) {
+            if (segmentIndex <= 0) {
                 return -1;
             }
             segmentIndex -= 1; // Adjusting to get the segment index for the segment stream
@@ -303,23 +299,30 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
     }
 
     @Override
-    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
-        // OffsetColumnIndexPairs is of size getNumberOfPresentColumns() + 1
+    public int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+        // offsetColumnIndexPairs >= getNumberOfPresentColumns() + 1 (maybe because of the previous MegaLeaf).
+        // Do not rely on offsetColumnIndexPairs.length, as it may be larger than the number of present columns.
+        // This is because the same array is reused for multiple leaf segments, and previous leaves may have more columns.
         int columnOffsetStart = headerSize;
-        for (int i = 0; i < Math.min(offsetColumnIndexPairs.length - 1, numberOfColumnInZerothSegment); i++) {
+        int currentColumnIndex = 0;
+        int numberOfColumns = getNumberOfPresentColumns();
+        while (currentColumnIndex < Math.min(numberOfColumns, numberOfColumnInZerothSegment)) {
             int columnIndex = pageZeroBuf.getInt(columnOffsetStart);
             int columnOffset = pageZeroBuf.getInt(columnOffsetStart + SparseColumnPageZeroWriter.COLUMN_INDEX_SIZE);
-            offsetColumnIndexPairs[i] = IntPairUtil.of(columnOffset, columnIndex);
+            offsetColumnIndexPairs[currentColumnIndex++] = IntPairUtil.of(columnOffset, columnIndex);
             columnOffsetStart += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
 
-        if (offsetColumnIndexPairs.length - 1 > numberOfColumnInZerothSegment) {
+        // If the pages are not pinned, we will not read any columnIndex, but the old stuffs will already be present in the offsetColumnIndexPairs.
+        if (numberOfColumns > numberOfColumnInZerothSegment) {
             // read the rest of the columns from the segment stream
             int columnsInLastSegment = getNumberOfPresentColumns() - numberOfColumnInZerothSegment
                     - (numberOfPageZeroSegments - 2) * maxNumberOfColumnsInAPage;
-            segmentBuffers.readSparseOffset(offsetColumnIndexPairs, numberOfPageZeroSegments, maxNumberOfColumnsInAPage,
-                    columnsInLastSegment);
+            currentColumnIndex = segmentBuffers.readSparseOffset(offsetColumnIndexPairs, numberOfPageZeroSegments,
+                    maxNumberOfColumnsInAPage, columnsInLastSegment, currentColumnIndex);
         }
+
+        return currentColumnIndex;
     }
 
     @Override
@@ -343,14 +346,26 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         // Not marking the zeroth segment
         if (numberOfPageZeroSegments == 1 || markAll) {
             // mark all segments as required
-            pageZeroSegmentsPages.set(1, numberOfPageZeroSegments);
+            pageZeroSegmentsPages.set(0, numberOfPageZeroSegments);
         } else {
             // Iterate over the projected columns and mark the segments that contain them
             int currentIndex = projectedColumns.nextSetBit(maxColumnIndexInZerothSegment + 1);
             while (currentIndex >= 0) {
                 int rangeEnd = projectedColumns.nextClearBit(currentIndex); // exclusive
                 int startSegmentIndex = findSegment(currentIndex);
+                if (startSegmentIndex == -1) {
+                    //This indicates that the currentIndex > MaxColumnIndex in the last segment
+                    //Hence this leaf doesn't need to pin the segment for requested column ranges.
+
+                    //We can return early as next projectedColumns next set bit will also be out of bounds.
+                    break;
+                }
                 int endSegmentIndex = findSegment(rangeEnd - 1);
+                if (endSegmentIndex == -1) {
+                    //This indicates that the rangeEnd - 1 > MaxColumnIndex in the last segment
+                    //but the startSegmentIndex is valid, hence we may pin to the last segment.
+                    endSegmentIndex = numberOfPageZeroSegments - 1; // Last segment index
+                }
 
                 if (startSegmentIndex <= endSegmentIndex) {
                     pageZeroSegmentsPages.set(startSegmentIndex, endSegmentIndex + 1);

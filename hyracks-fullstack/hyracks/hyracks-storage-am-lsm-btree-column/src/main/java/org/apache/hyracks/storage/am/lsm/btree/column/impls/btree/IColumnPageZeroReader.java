@@ -64,7 +64,7 @@ public interface IColumnPageZeroReader {
 
     ByteBuffer getPageZeroBuf();
 
-    void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs);
+    int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs);
 
     int getNumberOfPageZeroSegments();
 

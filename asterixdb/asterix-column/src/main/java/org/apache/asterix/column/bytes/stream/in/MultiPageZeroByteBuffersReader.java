@@ -82,7 +82,8 @@ public final class MultiPageZeroByteBuffersReader {
         pointable.set(buffer.array(), position, length);
     }
 
-    public void readOffset(long[] offsetColumnIndexPairs, int maxColumnsInZerothSegment, int numberOfColumnsInAPage) {
+    public int readOffset(long[] offsetColumnIndexPairs, int maxColumnsInZerothSegment, int numberOfColumnsInAPage,
+            int currentColumnIndex) {
         int numberOfColumns = offsetColumnIndexPairs.length - 1;
         for (Int2IntMap.Entry pair : segmentDir.int2IntEntrySet()) {
             int segmentIndex = pair.getIntKey();
@@ -92,18 +93,20 @@ public final class MultiPageZeroByteBuffersReader {
             int segmentOffset = 0;
             for (int j = 0; j < numberOfColumnsInAPage; j++) {
                 int columnOffset = buffer.getInt(segmentOffset);
-                offsetColumnIndexPairs[columnIndex] = IntPairUtil.of(columnOffset, columnIndex);
+                offsetColumnIndexPairs[currentColumnIndex] = IntPairUtil.of(columnOffset, columnIndex);
                 segmentOffset += DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+                currentColumnIndex++;
                 columnIndex++;
                 if (columnIndex == numberOfColumns) {
                     break; // No need to read more columns from this buffer.
                 }
             }
         }
+        return currentColumnIndex;
     }
 
-    public void readSparseOffset(long[] offsetColumnIndexPairs, int numberOfPageSegments, int numberOfColumnsInAPage,
-            int numberOfColumnsInLastSegment) {
+    public int readSparseOffset(long[] offsetColumnIndexPairs, int numberOfPageSegments, int numberOfColumnsInAPage,
+            int numberOfColumnsInLastSegment, int currentColumnIndex) {
         for (Int2IntMap.Entry pair : segmentDir.int2IntEntrySet()) {
             int segmentIndex = pair.getIntKey();
             int bufferIndex = pair.getIntValue();
@@ -114,10 +117,11 @@ public final class MultiPageZeroByteBuffersReader {
             for (int j = 0; j < numberOfColumnsInSegment; j++) {
                 int columnIndex = buffer.getInt(segmentOffset);
                 int columnOffset = buffer.getInt(segmentOffset + Integer.BYTES);
-                offsetColumnIndexPairs[columnIndex] = IntPairUtil.of(columnOffset, columnIndex);
+                offsetColumnIndexPairs[currentColumnIndex++] = IntPairUtil.of(columnOffset, columnIndex);
                 segmentOffset += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
             }
         }
+        return currentColumnIndex;
     }
 
     public void readAllColumns(BitSet presentColumns, int numberOfPageSegments, int numberOfColumnsInAPage,
