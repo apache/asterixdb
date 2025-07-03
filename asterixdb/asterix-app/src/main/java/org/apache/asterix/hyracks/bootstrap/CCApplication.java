@@ -300,6 +300,7 @@ public class CCApplication extends BaseCCApplication {
     public void stop() throws Exception {
         LOGGER.info("Stopping Asterix cluster controller");
         super.stop();
+        webManager.closeChannels(); // stop accepting new requests
         appCtx.getClusterStateManager().setState(SHUTTING_DOWN);
         ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
         AsterixStateProxy.unregisterRemoteObject();
