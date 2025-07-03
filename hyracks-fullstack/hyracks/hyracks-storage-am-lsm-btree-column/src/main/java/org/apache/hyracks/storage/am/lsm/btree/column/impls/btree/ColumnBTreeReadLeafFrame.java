@@ -190,6 +190,10 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return columnPageZeroReader.markRequiredPageSegments(projectedColumns, pageZeroId, markAll);
     }
 
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        columnPageZeroReader.unPinNotRequiredPageZeroSegments();
+    }
+
     public void printPageZeroReaderInfo() {
         columnPageZeroReader.printPageZeroReaderInfo();
     }

@@ -34,9 +34,12 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples.ColumnMul
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 public final class MultiPageZeroByteBuffersReader {
     private static final ByteBuffer EMPTY;
+    private final IntList notRequiredSegmentsIndexes;
     private ColumnMultiPageZeroBufferProvider bufferProvider;
     private final Int2IntMap segmentDir; // should I just create a buffer[numberOfSegments] instead?
     private int maxBuffersSize;
@@ -51,15 +54,15 @@ public final class MultiPageZeroByteBuffersReader {
     public MultiPageZeroByteBuffersReader() {
         this.buffers = new ArrayList<>();
         segmentDir = new Int2IntOpenHashMap();
+        notRequiredSegmentsIndexes = new IntArrayList();
         segmentDir.defaultReturnValue(-1);
     }
 
-    public void reset(IColumnBufferProvider bufferProvider) throws HyracksDataException {
-        ColumnMultiPageZeroBufferProvider pageZeroBufferProvider = (ColumnMultiPageZeroBufferProvider) bufferProvider;
+    public void reset(IColumnBufferProvider pageZeroBufferProvider) throws HyracksDataException {
         reset();
-        this.bufferProvider = pageZeroBufferProvider;
-        maxBuffersSize = pageZeroBufferProvider.getNumberOfRemainingPages();
-        pageZeroBufferProvider.readAll(buffers, segmentDir);
+        this.bufferProvider = (ColumnMultiPageZeroBufferProvider) pageZeroBufferProvider;
+        maxBuffersSize = bufferProvider.getNumberOfRemainingPages();
+        bufferProvider.readAll(buffers, segmentDir);
     }
 
     public void read(int segmentIndex, IPointable pointable, int position, int length)
@@ -145,6 +148,32 @@ public final class MultiPageZeroByteBuffersReader {
                 offset += stride;
             }
         }
+    }
+
+    public void unPinNotRequiredSegments(BitSet pageZeroSegmentsPages, int numberOfPageZeroSegments)
+            throws HyracksDataException {
+        if (numberOfPageZeroSegments <= 1) {
+            // If there is only one segment, it is always pinned.
+            // So no need to unpin the segments.
+            return;
+        }
+        notRequiredSegmentsIndexes.clear();
+        // Start checking from index 1 (0th segment is always pinned)
+        int i = pageZeroSegmentsPages.nextClearBit(1);
+        while (i >= 1 && i < numberOfPageZeroSegments) {
+            int segmentIndex = i - 1; // Adjusted index for segmentDir
+
+            int bufferIndex = segmentDir.get(segmentIndex);
+            if (bufferIndex != -1) {
+                buffers.set(bufferIndex, EMPTY);
+                notRequiredSegmentsIndexes.add(bufferIndex);
+                segmentDir.remove(segmentIndex);
+            }
+
+            i = pageZeroSegmentsPages.nextClearBit(i + 1);
+        }
+        // Unpin the buffers that are not required anymore.
+        bufferProvider.releasePages(notRequiredSegmentsIndexes);
     }
 
     public int findColumnIndexInSegment(int segmentIndex, int columnIndex, int numberOfColumnsInSegment)

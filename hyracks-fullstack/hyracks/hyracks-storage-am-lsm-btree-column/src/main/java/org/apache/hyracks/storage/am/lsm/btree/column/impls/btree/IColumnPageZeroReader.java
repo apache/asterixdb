@@ -77,4 +77,6 @@ public interface IColumnPageZeroReader {
     BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll);
 
     void printPageZeroReaderInfo();
+
+    void unPinNotRequiredPageZeroSegments() throws HyracksDataException;
 }

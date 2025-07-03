@@ -64,8 +64,8 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         super();
         zerothSegmentReader = new SparseColumnPageZeroReader();
         this.pageZeroSegmentsPages = new BitSet();
-        this.maxNumberOfColumnsInAPage = bufferCapacity
-                / (SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE + SparseColumnPageZeroWriter.FILTER_SIZE);
+        this.maxNumberOfColumnsInAPage =
+                SparseColumnMultiPageZeroWriter.getMaximumNumberOfColumnsInAPage(bufferCapacity);
         this.offsetPointable = new VoidPointable();
         this.columnIndexToRelativeColumnIndex = new Int2IntOpenHashMap();
         columnIndexToRelativeColumnIndex.defaultReturnValue(-1);
@@ -346,7 +346,7 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         // Not marking the zeroth segment
         if (numberOfPageZeroSegments == 1 || markAll) {
             // mark all segments as required
-            pageZeroSegmentsPages.set(0, numberOfPageZeroSegments);
+            pageZeroSegmentsPages.set(1, numberOfPageZeroSegments);
         } else {
             // Iterate over the projected columns and mark the segments that contain them
             int currentIndex = projectedColumns.nextSetBit(maxColumnIndexInZerothSegment + 1);
@@ -375,6 +375,11 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
             }
         }
         return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        segmentBuffers.unPinNotRequiredSegments(pageZeroSegmentsPages, numberOfPageZeroSegments);
     }
 
     @Override

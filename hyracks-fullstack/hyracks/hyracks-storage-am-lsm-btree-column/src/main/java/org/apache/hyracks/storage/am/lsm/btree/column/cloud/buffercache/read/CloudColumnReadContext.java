@@ -138,19 +138,17 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         }
 
         // pin the required page segments
-        mergedPageRanges.clear();
+        //        mergedPageRanges.clear();
         int pageZeroId = leafFrame.getPageId();
-        // Pinning all the segments of the page zero for now,
+        // Pinning all the segments of the page zero
         // as the column eviction logic is based on the length of the columns which
         // gets evaluated from the page zero segments.
-
-        //TODO: find a way to pin only the segments that are required for the operation
-        // or pin all the segments and then unpin the segments that are not required
-        boolean markAll = true || operation == MERGE;
-        BitSet pageZeroSegmentRanges = leafFrame.markRequiredPageZeroSegments(projectedColumns, pageZeroId, markAll);
-        // Merge the page zero segments ranges
-        mergePageZeroSegmentRanges(pageZeroSegmentRanges);
-        mergedPageRanges.pin(columnCtx, bufferCache, fileId, pageZeroId);
+        BitSet pageZeroSegmentRanges =
+                leafFrame.markRequiredPageZeroSegments(projectedColumns, pageZeroId, operation == MERGE);
+        // will unpin the non-required segments after columnRanges.reset()
+        // can we do lazily?
+        int numberOfPageZeroSegments = leafFrame.getNumberOfPageZeroSegments();
+        pinAll(fileId, pageZeroId, numberOfPageZeroSegments - 1, bufferCache);
     }
 
     @Override

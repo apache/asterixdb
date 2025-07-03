@@ -60,8 +60,8 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         super();
         zerothSegmentReader = new DefaultColumnPageZeroReader();
         this.pageZeroSegmentsPages = new BitSet();
-        this.maxNumberOfColumnsInAPage = bufferCapacity
-                / (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        this.maxNumberOfColumnsInAPage =
+                DefaultColumnMultiPageZeroWriter.getMaximumNumberOfColumnsInAPage(bufferCapacity);
         this.offsetPointable = new VoidPointable();
     }
 
@@ -256,7 +256,7 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         // Not marking the zeroth segment
         if (numberOfPageZeroSegments == 1 || markAll) {
             // mark all segments as required
-            pageZeroSegmentsPages.set(0, numberOfPageZeroSegments);
+            pageZeroSegmentsPages.set(1, numberOfPageZeroSegments);
         } else {
             // Iterate over the projected columns and mark the segments that contain them
             int currentIndex = projectedColumns.nextSetBit(zerothSegmentMaxColumns);
@@ -276,6 +276,11 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         }
 
         return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        segmentBuffers.unPinNotRequiredSegments(pageZeroSegmentsPages, numberOfPageZeroSegments);
     }
 
     @Override

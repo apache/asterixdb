@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class ColumnMultiPageZeroBufferProvider implements IColumnBufferProvider {
@@ -75,14 +76,13 @@ public class ColumnMultiPageZeroBufferProvider implements IColumnBufferProvider 
             // will do on request basis? or prefetch all the segments?
             return;
         }
-        // traverse the set segments and read the pages
-        int currentIndex = pageZeroSegmentsPages.nextSetBit(0);
-        while (currentIndex != -1) {
-            int segmentIndex = currentIndex - 1; // segmentIndex starts from 1
+        //Since all the pageSegments are pinned for calculating the lengths of the columns,
+        //read all the segments and store them in the buffers list.
+        //after ColumnRanges.reset(), unpin the segments that are not required.
+        for (int segmentIndex = 0; segmentIndex < numberOfRemainingPages; segmentIndex++) {
             ByteBuffer buffer = read(segmentIndex);
             segmentDir.put(segmentIndex, buffers.size());
             buffers.add(buffer);
-            currentIndex = pageZeroSegmentsPages.nextSetBit(currentIndex + 1);
         }
     }
 
@@ -97,9 +97,39 @@ public class ColumnMultiPageZeroBufferProvider implements IColumnBufferProvider 
     @Override
     public void releaseAll() throws HyracksDataException {
         for (ICachedPage page : pages) {
-            multiPageOp.unpin(page);
+            if (page != null) {
+                multiPageOp.unpin(page);
+            }
         }
         pages.clear();
+    }
+
+    public void releasePages(IntList notRequiredSegmentsIndexes) throws HyracksDataException {
+        //From the list of cached pages, remove those pages.
+        //Pages and buffers list are in sync, so we can use the same indexes.
+        Throwable th = null;
+        for (int pageIndex : notRequiredSegmentsIndexes) {
+            if (pageIndex < 0 || pageIndex >= pages.size()) {
+                throw new IndexOutOfBoundsException("Page index out of bounds: " + pageIndex);
+            }
+            try {
+                ICachedPage page = pages.get(pageIndex);
+                if (page != null) {
+                    multiPageOp.unpin(page);
+                    pinnedPages.remove(((CachedPage) page).getDiskPageId());
+                    pages.set(pageIndex, null); // Clear the reference
+                }
+            } catch (Exception e) {
+                if (th == null) {
+                    th = e;
+                } else {
+                    th.addSuppressed(e);
+                }
+            }
+        }
+        if (th != null) {
+            throw HyracksDataException.create(th);
+        }
     }
 
     @Override
