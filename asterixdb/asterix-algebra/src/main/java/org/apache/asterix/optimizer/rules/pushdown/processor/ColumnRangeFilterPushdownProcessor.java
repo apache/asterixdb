@@ -83,7 +83,8 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     }
 
     @Override
-    protected boolean handleCompare(AbstractFunctionCallExpression expression, int depth) throws AlgebricksException {
+    protected FilterBranch handleCompare(AbstractFunctionCallExpression expression, int depth,
+            UseDescriptor currentDescriptor) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> args = expression.getArguments();
 
         Mutable<ILogicalExpression> leftRef = args.get(0);
@@ -98,15 +99,15 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
             return pushdownRangeFilter(left, right, expression, false);
         }
         // Either it is a compare that doesn't involve a constant there's a function that wraps the value access path
-        return false;
+        return FilterBranch.NA;
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+    protected FilterBranch handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
             throws AlgebricksException {
         // This means we got something like WHERE $r.getField("isVerified") -- where isVerified is a boolean field.
         if (node.getType() != ExpectedSchemaNodeType.ANY) {
-            return false;
+            return FilterBranch.NA;
         }
         IAObject constantValue = ABoolean.TRUE;
         String functionName = expression.getFunctionIdentifier().getName();
@@ -116,7 +117,7 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         ARecordType path = pathBuilderVisitor.buildPath((AnyExpectedSchemaNode) node, constantValue.getType(),
                 sourceInformationMap, functionCallInfo);
         paths.put(expression, path);
-        return true;
+        return FilterBranch.FILTER_PATH;
     }
 
     @Override
@@ -132,12 +133,12 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         scanDefineDescriptor.getPathLocations().putAll(sourceInformationMap);
     }
 
-    private boolean pushdownRangeFilter(ILogicalExpression pathExpr, ILogicalExpression constExpr,
+    private FilterBranch pushdownRangeFilter(ILogicalExpression pathExpr, ILogicalExpression constExpr,
             AbstractFunctionCallExpression funcExpr, boolean leftConstant) throws AlgebricksException {
         AnyExpectedSchemaNode node = getNode(pathExpr);
         IAObject constantValue = ((AsterixConstantValue) ((ConstantExpression) constExpr).getValue()).getObject();
         if (node == null || !SUPPORTED_CONSTANT_TYPES.contains(constantValue.getType().getTypeTag())) {
-            return false;
+            return FilterBranch.NA;
         }
         String functionName = funcExpr.getFunctionIdentifier().getName();
         SourceLocation sourceLocation = funcExpr.getSourceLocation();
@@ -146,7 +147,7 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         ARecordType path =
                 pathBuilderVisitor.buildPath(node, constantValue.getType(), sourceInformationMap, functionCallInfo);
         paths.put(pathExpr, path);
-        return true;
+        return FilterBranch.COMPARE;
     }
 
     private AnyExpectedSchemaNode getNode(ILogicalExpression expression) throws AlgebricksException {
