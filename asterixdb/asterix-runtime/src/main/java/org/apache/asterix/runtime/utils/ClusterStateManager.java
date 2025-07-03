@@ -474,6 +474,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return ncConfigMap;
     }
 
+    @Override
     public synchronized Set<String> getNodesPendingRemoval() {
         return new HashSet<>(pendingRemoval);
     }

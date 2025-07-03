@@ -299,6 +299,7 @@ public class NCApplication extends BaseNCApplication {
 
     @Override
     public void preStop() throws Exception {
+        webManager.closeChannels();
         runtimeContext.preStop();
     }
 
