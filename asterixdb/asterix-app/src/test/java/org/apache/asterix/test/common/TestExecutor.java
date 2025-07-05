@@ -2254,16 +2254,22 @@ public class TestExecutor {
                         }
                         fail(true, testCaseCtx, cUnit, testFileCtxs, pb, testFile, e);
                     } else {
-                        LOGGER.info("testFile {} raised an (expected) exception", testFile, e.toString());
+                        LOGGER.info("testFile {} raised an (expected) exception: {}", testFile, e.toString());
                     }
                 }
                 if (numOfFiles == testFileCtxs.size()) {
-                    if (testCaseCtx.numOfErrors < cUnit.getExpectedError().size()) {
+                    int numExpectedErrors = cUnit.getExpectedError().size();
+                    if (testCaseCtx.numOfErrors < numExpectedErrors) {
                         LOGGER.error("Test {} failed to raise (an) expected exception(s)", cUnit.getName());
                         throw new Exception(
                                 "Test \"" + cUnit.getName() + "\" FAILED; expected exception was not thrown...");
                     }
                     ensureWarnings(testCaseCtx.expectedWarnings, cUnit);
+                    if (testCaseCtx.numOfErrors > numExpectedErrors) {
+                        LOGGER.error("Test {} raised more exceptions than expected", cUnit.getName());
+                        throw new Exception(
+                                "Test \"" + cUnit.getName() + "\" FAILED; too many exceptions were thrown...");
+                    }
                     LOGGER.info(
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     if (passedGroup != null) {
