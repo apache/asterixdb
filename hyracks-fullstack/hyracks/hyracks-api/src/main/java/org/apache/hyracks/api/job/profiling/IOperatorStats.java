@@ -72,10 +72,10 @@ public interface IOperatorStats extends IWritable, Serializable {
     ICounter cloudPersistPageCounter();
 
     /**
-     * @return A counter used to set the average tuple size outputted by an operator
+     * @return A counter used to set the total number of tuple bytes outputted by an operator
      */
 
-    ICounter getAverageTupleSz();
+    ICounter getTupleBytes();
 
     /**
      * @return A counter used to set the max tuple size outputted by an operator
@@ -93,6 +93,8 @@ public interface IOperatorStats extends IWritable, Serializable {
      * @return A counter used to track the number of tuples read by operators that originate data,
      *         like index searches or other scan types
      */
+
+    ICounter getTotalFrameCount();
 
     ICounter getInputTupleCounter();
 
