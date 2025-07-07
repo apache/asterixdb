@@ -34,10 +34,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
 
 //Based in part on LoggingHandler from Netty
@@ -99,18 +97,15 @@ public class CLFLogger extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-        if (msg instanceof DefaultHttpResponse) {
-            HttpResponse resp = (DefaultHttpResponse) msg;
+        if (msg instanceof DefaultHttpResponse resp) {
             statusCode = resp.status().code();
             if (msg instanceof DefaultFullHttpResponse) {
-                lastChunk = true;
                 respSize = resp.headers().getInt(HttpHeaderNames.CONTENT_LENGTH, 0);
             }
-        } else if (msg instanceof DefaultHttpContent) {
-            HttpContent content = (DefaultHttpContent) msg;
-
+        } else if (msg instanceof DefaultHttpContent content) {
             respSize += content.content().readableBytes();
-        } else if (msg instanceof LastHttpContent) {
+        }
+        if (msg instanceof LastHttpContent) {
             lastChunk = true;
         }
 
