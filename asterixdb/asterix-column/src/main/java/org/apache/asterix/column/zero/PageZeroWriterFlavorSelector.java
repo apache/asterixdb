@@ -50,7 +50,7 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
  * space requirements of each approach.
  */
 public class PageZeroWriterFlavorSelector implements IColumnPageZeroWriterFlavorSelector {
-    protected byte writerFlag = IColumnPageZeroWriter.ColumnPageZeroWriterType.ADAPTIVE.getWriterFlag();
+    protected byte writerFlag = IColumnPageZeroWriter.ColumnPageZeroWriterType.DEFAULT.getWriterFlag();
 
     // Cache of writer instances to avoid repeated object creation
     private final Byte2ObjectArrayMap<IColumnPageZeroWriter> writers;

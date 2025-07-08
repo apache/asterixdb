@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
@@ -43,12 +44,11 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     protected static Logger LOGGER = LogManager.getLogger();
 
     protected ByteBuffer pageZeroBuf;
-    protected BitSet pageZeroSegmentsPages;
+    protected static final BitSet EMPTY_SEGMENTS = new BitSet();
     protected int numberOfPresentColumns;
     protected int headerSize;
 
     public DefaultColumnPageZeroReader() {
-        this.pageZeroSegmentsPages = new BitSet();
     }
 
     @Override
@@ -160,18 +160,19 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     }
 
     @Override
-    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+    public int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
         int columnOffsetStart = headerSize;
-        for (int i = 0; i < offsetColumnIndexPairs.length; i++) {
+        for (int i = 0; i < numberOfPresentColumns; i++) {
             int offset = pageZeroBuf.getInt(columnOffsetStart);
             offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
             columnOffsetStart += DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
+        return numberOfPresentColumns;
     }
 
     @Override
     public BitSet getPageZeroSegmentsPages() {
-        return pageZeroSegmentsPages;
+        return EMPTY_SEGMENTS;
     }
 
     @Override
@@ -186,9 +187,12 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
 
     @Override
     public BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll) {
-        pageZeroSegmentsPages.clear();
-        pageZeroSegmentsPages.set(0);
-        return pageZeroSegmentsPages;
+        return EMPTY_SEGMENTS;
+    }
+
+    @Override
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        // No-OP
     }
 
     @Override

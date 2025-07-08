@@ -64,7 +64,7 @@ public interface IColumnPageZeroReader {
 
     ByteBuffer getPageZeroBuf();
 
-    void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs);
+    int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs);
 
     int getNumberOfPageZeroSegments();
 
@@ -77,4 +77,6 @@ public interface IColumnPageZeroReader {
     BitSet markRequiredPageSegments(BitSet projectedColumns, int pageZeroId, boolean markAll);
 
     void printPageZeroReaderInfo();
+
+    void unPinNotRequiredPageZeroSegments() throws HyracksDataException;
 }

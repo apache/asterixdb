@@ -119,6 +119,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     public int getColumnOffset(int columnIndex) throws HyracksDataException {
         // update the exception message.
         if (!columnPageZeroReader.isValidColumn(columnIndex)) {
+            printPageZeroReaderInfo();
             throw new IndexOutOfBoundsException(columnIndex + " >= " + getNumberOfColumns());
         }
         return columnPageZeroReader.getColumnOffset(columnIndex);
@@ -177,8 +178,8 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         throw new IllegalArgumentException("Use createTupleReference(int)");
     }
 
-    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
-        columnPageZeroReader.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
+    public int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+        return columnPageZeroReader.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
     }
 
     public BitSet getPageZeroSegmentsPages() {
@@ -187,6 +188,10 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
 
     public BitSet markRequiredPageZeroSegments(BitSet projectedColumns, int pageZeroId, boolean markAll) {
         return columnPageZeroReader.markRequiredPageSegments(projectedColumns, pageZeroId, markAll);
+    }
+
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        columnPageZeroReader.unPinNotRequiredPageZeroSegments();
     }
 
     public void printPageZeroReaderInfo() {

@@ -73,10 +73,10 @@ public class ExternalDatasetFilterPushdownProcessor extends ColumnFilterPushdown
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
+    protected FilterBranch handlePath(AbstractFunctionCallExpression expression, IExpectedSchemaNode node)
             throws AlgebricksException {
         if (node.getType() != ExpectedSchemaNodeType.ANY) {
-            return false;
+            return FilterBranch.NA;
         }
 
         // The inferred path from the provided expression
@@ -84,8 +84,8 @@ public class ExternalDatasetFilterPushdownProcessor extends ColumnFilterPushdown
         if (prefix.getPaths().contains(expressionPath)) {
             // The expression refer to a declared computed field. Add it to the filter paths
             paths.put(expression, expressionPath);
-            return true;
+            return FilterBranch.FILTER_PATH;
         }
-        return false;
+        return FilterBranch.NA;
     }
 }

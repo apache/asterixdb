@@ -14727,6 +14727,11 @@
   </test-group>
   <test-group name="index-leftouterjoin">
     <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="index-leftouterjoin-example">
+        <output-dir compare="Text">index-leftouterjoin-example</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-pidx-with-join-btree-sidx1">
         <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
       </compilation-unit>
@@ -16621,6 +16626,11 @@
     <test-case FilePath="column">
       <compilation-unit name="filter/double-precision">
         <output-dir compare="Text">filter/double-precision</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/return-array">
+        <output-dir compare="Text">filter/return-array</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">

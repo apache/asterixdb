@@ -145,8 +145,8 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment, boolean includeCurrentTupleColumns,
-            IColumnPageZeroWriter.ColumnPageZeroWriterType writerType) {
+    public int getPageZeroWriterOccupiedSpace(int maxColumnsInPageZerothSegment, int bufferCapacity,
+            boolean includeCurrentTupleColumns, IColumnPageZeroWriter.ColumnPageZeroWriterType writerType) {
         int spaceOccupiedByDefaultWriter;
         int spaceOccupiedBySparseWriter;
 
@@ -157,13 +157,13 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
             return spaceOccupiedByDefaultWriter;
         } else if (writerType == IColumnPageZeroWriter.ColumnPageZeroWriterType.SPARSE) {
             // Maximum space occupied by the columns = maxColumnsInPageZerothSegment * (offset + filter size)
-            spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
+            spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment, bufferCapacity);
             return spaceOccupiedBySparseWriter;
         }
 
         spaceOccupiedByDefaultWriter =
                 getSpaceOccupiedByDefaultWriter(maxColumnsInPageZerothSegment, includeCurrentTupleColumns);
-        spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment);
+        spaceOccupiedBySparseWriter = getSpaceOccupiedBySparseWriter(maxColumnsInPageZerothSegment, bufferCapacity);
         pageZeroWriterFlavorSelector.switchPageZeroWriterIfNeeded(spaceOccupiedByDefaultWriter,
                 spaceOccupiedBySparseWriter);
 
@@ -179,11 +179,14 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         return spaceOccupiedByDefaultWriter;
     }
 
-    private int getSpaceOccupiedBySparseWriter(int maxColumnsInPageZerothSegment) {
+    private int getSpaceOccupiedBySparseWriter(int maxColumnsInPageZerothSegment, int bufferCapacity) {
         int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
-        int numberOfPagesRequired = (int) Math.ceil(
-                (double) (presentColumns - maxColumnsInPageZerothSegment) / IColumnPageZeroWriter.MIN_COLUMN_SPACE);
-        int headerSpace = SparseColumnMultiPageZeroWriter.getHeaderSpace(numberOfPagesRequired);
+        int maximumNumberOfColumnsInASegment =
+                SparseColumnMultiPageZeroWriter.getMaximumNumberOfColumnsInAPage(bufferCapacity);
+        int numberOfExtraPagesRequired = presentColumns <= maxColumnsInPageZerothSegment ? 0
+                : (int) Math.ceil(
+                        (double) (presentColumns - maxColumnsInPageZerothSegment) / maximumNumberOfColumnsInASegment);
+        int headerSpace = SparseColumnMultiPageZeroWriter.getHeaderSpace(numberOfExtraPagesRequired);
         presentColumns = Math.min(presentColumns, maxColumnsInPageZerothSegment);
 
         // space occupied by the sparse writer

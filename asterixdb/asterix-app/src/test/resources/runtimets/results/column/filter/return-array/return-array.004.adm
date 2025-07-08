@@ -1,0 +1,1 @@
+{ "ColumnDataset": { "id": "1", "homo_array_field": [ 1, 2, 3 ], "hetero_array_field": [ 1, "a", true ], "nested_field": { "a": 1, "array_field": [ 1, "a", true ] } } }

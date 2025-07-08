@@ -133,8 +133,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         }
         //Columns' Offsets
         columnWriter.updateColumnMetadataForCurrentTuple(tuple);
-        int requiredFreeSpace =
-                columnWriter.getPageZeroWriterOccupiedSpace(maxColumnsInPageZerothSegment, true, pageZeroWriterType);
+        int requiredFreeSpace = columnWriter.getPageZeroWriterOccupiedSpace(maxColumnsInPageZerothSegment,
+                columnarFrame.getBuffer().capacity(), true, pageZeroWriterType);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //min and max tuples' sizes

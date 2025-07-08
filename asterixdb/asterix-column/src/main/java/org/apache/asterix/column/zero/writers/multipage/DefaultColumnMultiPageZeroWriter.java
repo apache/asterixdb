@@ -95,8 +95,7 @@ public class DefaultColumnMultiPageZeroWriter implements IColumnPageZeroWriter {
         segments = new MultiPersistentPageZeroBufferBytesOutputStream(multiPageOpRef); // should this be populated at reset?
         this.zerothSegmentWriter = new DefaultColumnPageZeroWriter();
         this.zerothSegmentMaxColumns = zerothSegmentMaxColumns;
-        this.maximumNumberOfColumnsInAPage = bufferCapacity
-                / (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        this.maximumNumberOfColumnsInAPage = getMaximumNumberOfColumnsInAPage(bufferCapacity);
     }
 
     @Override
@@ -262,5 +261,10 @@ public class DefaultColumnMultiPageZeroWriter implements IColumnPageZeroWriter {
     @Override
     public int getHeaderSize() {
         return EXTENDED_HEADER_SIZE;
+    }
+
+    public static int getMaximumNumberOfColumnsInAPage(int bufferCapacity) {
+        return bufferCapacity
+                / (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
     }
 }

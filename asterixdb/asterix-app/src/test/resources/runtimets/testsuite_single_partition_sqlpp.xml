@@ -105,6 +105,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/return-array">
+        <output-dir compare="Text">filter/return-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="io/flush/ASTERIXDB-3597">
         <output-dir compare="Text">io/flush/ASTERIXDB-3597</output-dir>
       </compilation-unit>

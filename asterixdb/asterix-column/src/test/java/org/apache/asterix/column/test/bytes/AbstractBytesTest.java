@@ -202,8 +202,10 @@ public abstract class AbstractBytesTest extends TestBase {
         }
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
+        //Since this test uses DefaultWriter, it does not need the bufferCapacity in the calculation
+        int bufferCapacity = Integer.MAX_VALUE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, true,
+        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, bufferCapacity, true,
                 IColumnPageZeroWriter.ColumnPageZeroWriterType.DEFAULT);
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();

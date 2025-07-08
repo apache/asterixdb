@@ -60,8 +60,8 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         super();
         zerothSegmentReader = new DefaultColumnPageZeroReader();
         this.pageZeroSegmentsPages = new BitSet();
-        this.maxNumberOfColumnsInAPage = bufferCapacity
-                / (DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE + DefaultColumnPageZeroWriter.FILTER_SIZE);
+        this.maxNumberOfColumnsInAPage =
+                DefaultColumnMultiPageZeroWriter.getMaximumNumberOfColumnsInAPage(bufferCapacity);
         this.offsetPointable = new VoidPointable();
     }
 
@@ -230,19 +230,24 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
     }
 
     @Override
-    public void populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
+    public int populateOffsetColumnIndexPairs(long[] offsetColumnIndexPairs) {
         int columnOffsetStart = headerSize;
-        for (int i = 0; i < Math.min(offsetColumnIndexPairs.length, zerothSegmentMaxColumns); i++) {
+        int numberOfColumns = getNumberOfPresentColumns();
+        int currentColumnIndex = 0;
+        while (currentColumnIndex < Math.min(numberOfColumns, zerothSegmentMaxColumns)) {
             // search in the 0th segment
             int offset = pageZeroBuf.getInt(columnOffsetStart);
-            offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
+            offsetColumnIndexPairs[currentColumnIndex] = IntPairUtil.of(offset, currentColumnIndex);
             columnOffsetStart += DefaultColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
+            currentColumnIndex++;
         }
 
-        if (offsetColumnIndexPairs.length > zerothSegmentMaxColumns) {
+        if (numberOfColumns > zerothSegmentMaxColumns) {
             // read the rest of the columns from the segment stream
-            segmentBuffers.readOffset(offsetColumnIndexPairs, zerothSegmentMaxColumns, maxNumberOfColumnsInAPage);
+            currentColumnIndex = segmentBuffers.readOffset(offsetColumnIndexPairs, zerothSegmentMaxColumns,
+                    maxNumberOfColumnsInAPage, currentColumnIndex);
         }
+        return currentColumnIndex;
     }
 
     @Override
@@ -255,7 +260,8 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         } else {
             // Iterate over the projected columns and mark the segments that contain them
             int currentIndex = projectedColumns.nextSetBit(zerothSegmentMaxColumns);
-            while (currentIndex >= 0) {
+            int totalNumberOfColumns = getNumberOfPresentColumns();
+            while (currentIndex >= 0 && currentIndex < totalNumberOfColumns) {
                 int rangeEnd = projectedColumns.nextClearBit(currentIndex); // exclusive
 
                 int fromSegmentIndex = (currentIndex - zerothSegmentMaxColumns) / maxNumberOfColumnsInAPage + 1;
@@ -270,6 +276,11 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         }
 
         return pageZeroSegmentsPages;
+    }
+
+    @Override
+    public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
+        segmentBuffers.unPinNotRequiredSegments(pageZeroSegmentsPages, numberOfPageZeroSegments);
     }
 
     @Override
