@@ -106,7 +106,7 @@ public abstract class BaseClientRequest implements IClientRequest {
         ObjectNode json = JSONUtil.createObject();
         json.put("uuid", requestReference.getUuid());
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());
-        json.put("elapsedTime", getElapsedTimeInSecs() + "s");
+        json.put("elapsedTime", getElapsedTimeInSecs());
         json.put("node", requestReference.getNode());
         json.put("state", state.getLabel());
         json.put("userAgent", requestReference.getUserAgent());
