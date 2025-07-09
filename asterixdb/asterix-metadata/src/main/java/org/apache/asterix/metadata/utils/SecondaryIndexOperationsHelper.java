@@ -139,7 +139,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         this.metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        this.itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, metaType, dataset);
+        this.itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, dataset);
 
         Pair<ARecordType, ARecordType> enforcedTypes = getEnforcedType(index, itemType, metaType);
         this.enforcedItemType = enforcedTypes.first;

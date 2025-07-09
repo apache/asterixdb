@@ -97,11 +97,14 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(dataset);
             filterFieldName = DatasetUtil.getFilterField(dataset);
-            IAType filterSourceType = filterSourceIndicator == null || filterSourceIndicator == 0
-                    ? mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
-                            dataset.getItemTypeName())
-                    : mp.findType(dataset.getMetaItemTypeDatabaseName(), dataset.getMetaItemTypeDataverseName(),
-                            dataset.getMetaItemTypeName());
+            IAType dataType = mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName());
+            dataType = mp.findTypeForDatasetWithoutType(dataType, dataset);
+            IAType metaItemType = mp.findType(dataset.getMetaItemTypeDatabaseName(),
+                    dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+            IAType filterSourceType =
+                    filterSourceIndicator == null || filterSourceIndicator == 0 ? dataType : metaItemType;
+            filterSourceType = mp.findTypeForDatasetWithoutType(filterSourceType, dataset);
 
             if (filterSourceType.getTypeTag() == ATypeTag.OBJECT) {
                 itemType = (ARecordType) filterSourceType;
@@ -596,6 +599,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     IAType recordItemType = ((MetadataProvider) context.getMetadataProvider()).findType(
                             dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
                             dataset.getItemTypeName());
+                    recordItemType = ((MetadataProvider) context.getMetadataProvider())
+                            .findTypeForDatasetWithoutType(recordItemType, dataset);
                     ARecordType recordType = (ARecordType) recordItemType;
                     ARecordType metaRecType = (ARecordType) metaItemType;
                     int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recordType, metaRecType);

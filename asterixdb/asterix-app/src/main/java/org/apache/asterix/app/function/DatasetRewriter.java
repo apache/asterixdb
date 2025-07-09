@@ -150,6 +150,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         Dataset dataset = fetchDataset(metadata, datasetFnCall);
         IAType type = metadata.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
                 dataset.getItemTypeName());
+        type = ((MetadataProvider) mp).findTypeForDatasetWithoutType(type, dataset);
         if (type == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, datasetFnCall.getSourceLocation(),
                     "No type for " + dataset() + " " + dataset.getDatasetName());

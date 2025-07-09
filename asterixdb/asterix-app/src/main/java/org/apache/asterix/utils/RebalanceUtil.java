@@ -356,7 +356,7 @@ public class RebalanceUtil {
         ARecordType itemType = (ARecordType) metadataProvider.findType(source.getItemTypeDatabaseName(),
                 source.getItemTypeDataverseName(), source.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, source);
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, source);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, source);
         int numberOfPrimaryKeys = source.getPrimaryKeys().size();
 
         // The assembly cost of ALL_FIELDS_TYPE could be expensive if record structure is "complex"

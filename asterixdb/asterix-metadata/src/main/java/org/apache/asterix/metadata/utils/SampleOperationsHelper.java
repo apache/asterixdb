@@ -130,7 +130,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         itemType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, dataset);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, dataset);
 
         recordDesc = dataset.getPrimaryRecordDescriptor(metadataProvider);
         comparatorFactories = dataset.getPrimaryComparatorFactories(metadataProvider, itemType, metaType);

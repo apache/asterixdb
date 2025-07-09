@@ -338,7 +338,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 metaDt = (ARecordType) metadataNode
                         .getDatatype(txnId, metaTypeDatabase, metatypeDataverseName, metatypeName).getDatatype();
             }
-            recordDt = (ARecordType) MetadataManagerUtil.findTypeForDatasetWithoutType(recordDt, metaDt, dataset);
+            recordDt = (ARecordType) MetadataManagerUtil.findTypeForDatasetWithoutType(recordDt, dataset);
             searchKeyType = new ArrayList<>(searchElementCount);
             for (int i = 0; i < searchElementCount; i++) {
                 Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);

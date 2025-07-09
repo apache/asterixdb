@@ -71,13 +71,11 @@ public class MetadataManagerUtil {
      * internal details.
      *
      * @param itemType     record type of the dataset
-     * @param metaItemType record type of the meta part of the dataset
      * @param dataset      the actual dataset
      * @return type computed from primary keys if dataset without type spec, otherwise the original itemType itself
      * @throws AlgebricksException AlgebricksException
      */
-    public static IAType findTypeForDatasetWithoutType(IAType itemType, IAType metaItemType, Dataset dataset)
-            throws AlgebricksException {
+    public static IAType findTypeForDatasetWithoutType(IAType itemType, Dataset dataset) throws AlgebricksException {
         if (dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL) {
             InternalDatasetDetails dsDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
             if (dsDetails.isDatasetWithoutTypeSpecification()) {
@@ -252,7 +250,7 @@ public class MetadataManagerUtil {
                 dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDatabaseName(),
                 dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
-        itemType = findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        itemType = findTypeForDatasetWithoutType(itemType, dataset);
 
         INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
         return new DatasetDataSource(id, dataset, itemType, metaItemType, datasourceType, dataset.getDatasetDetails(),
