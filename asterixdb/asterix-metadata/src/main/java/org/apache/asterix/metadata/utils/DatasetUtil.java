@@ -347,7 +347,7 @@ public class DatasetUtil {
         if (dataset.hasMetaPart()) {
             metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
         }
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, dataset);
 
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
@@ -471,7 +471,7 @@ public class DatasetUtil {
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
         ARecordType itemType = (ARecordType) metadataProvider.findType(dataset);
         ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, dataset);
 
         Index primaryIndex = metadataProvider.getIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
                 dataset.getDatasetName(), dataset.getDatasetName());

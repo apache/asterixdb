@@ -164,8 +164,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         if (isPrimaryIndex && formatInfo.getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
             ARecordType datasetType = (ARecordType) metadataProvider.findType(dataset);
             ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
-            datasetType =
-                    (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType, metaItemType, dataset);
+            datasetType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType, dataset);
             tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(context, typeEnv, formatInfo,
                     projectionFiltrationInfo, datasetType, metaItemType, dataset.getPrimaryKeys().size());
         }

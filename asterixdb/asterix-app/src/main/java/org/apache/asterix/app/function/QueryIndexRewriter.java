@@ -159,7 +159,7 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         Index index = validateIndex(f, metadataProvider, loc, databaseName, dataverseName, datasetName, indexName);
         ARecordType dsType = (ARecordType) metadataProvider.findType(dataset);
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, metaType, dataset);
+        dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, dataset);
 
         List<IAType> dsKeyTypes = KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, dsType, metaType);
         List<Pair<IAType, Boolean>> secKeyTypes = KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, dsType, metaType);

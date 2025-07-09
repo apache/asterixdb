@@ -766,7 +766,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         }
         ARecordType itemType = (ARecordType) metadataProvider.findType(this);
         ARecordType metaType = (ARecordType) metadataProvider.findMetaType(this);
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, this);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, this);
 
         // Set the serde/traits for primary keys
         for (int i = 0; i < numPrimaryKeys; i++) {
@@ -830,7 +830,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             throws AlgebricksException {
         ARecordType recordType = (ARecordType) metadataProvider.findType(this);
         ARecordType metaType = (ARecordType) metadataProvider.findMetaType(this);
-        recordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, metaType, this);
+        recordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, this);
 
         List<List<String>> partitioningKeys = getPrimaryKeys();
         int numPrimaryKeys = partitioningKeys.size();

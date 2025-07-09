@@ -163,8 +163,7 @@ public class DatasetDataSource extends DataSource {
                                     dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName())
                             .getDatatype();
                 }
-                datasetType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType, metaItemType,
-                        dataset);
+                datasetType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType, dataset);
                 int numberOfPrimaryKeys = dataset.getPrimaryKeys().size();
                 ITupleProjectorFactory tupleProjectorFactory =
                         IndexUtil.createTupleProjectorFactory(context, typeEnv, dataset.getDatasetFormatInfo(),

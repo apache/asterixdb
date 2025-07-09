@@ -190,6 +190,7 @@ public class ConnectorApiServletTest {
             String itemTypeDatabase = dataset.getItemTypeDatabaseName();
             ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
                     dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+            recordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, dataset);
             // Metadata transaction commits.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return recordType;
