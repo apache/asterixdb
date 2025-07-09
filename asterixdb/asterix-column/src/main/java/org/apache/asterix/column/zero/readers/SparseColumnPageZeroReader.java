@@ -29,21 +29,26 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     private final Int2IntOpenHashMap columnIndexToRelativeColumnIndex;
+    private final BitSet presentColumnsIndices;
 
     public SparseColumnPageZeroReader() {
         columnIndexToRelativeColumnIndex = new Int2IntOpenHashMap();
+        presentColumnsIndices = new BitSet();
         columnIndexToRelativeColumnIndex.defaultReturnValue(-1);
     }
 
     @Override
     public void reset(ByteBuffer pageZeroBuf, int headerSize) {
         super.reset(pageZeroBuf, headerSize);
+        setPresentColumnsIndices();
         columnIndexToRelativeColumnIndex.clear();
+
     }
 
     @Override
     public void reset(ByteBuffer pageZeroBuf, int numberOfPresentColumns, int headerSize) {
         super.reset(pageZeroBuf, numberOfPresentColumns, headerSize);
+        setPresentColumnsIndices();
         columnIndexToRelativeColumnIndex.clear();
     }
 
@@ -126,8 +131,8 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
         return relativeColumnIndex != -1;
     }
 
-    @Override
-    public void getAllColumns(BitSet presentColumns) {
+    private void setPresentColumnsIndices() {
+        presentColumnsIndices.clear();
         if (numberOfPresentColumns == 0) {
             return;
         }
@@ -137,9 +142,15 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
 
         while (columnIndex < limit) {
             int column = pageZeroBuf.getInt(columnIndex);
-            presentColumns.set(column);
+            presentColumnsIndices.set(column);
             columnIndex += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
+    }
+
+    @Override
+    public void getAllColumns(BitSet presentColumns) {
+        //Iterate through the present columns indices and set them in the BitSet
+        presentColumns.or(presentColumnsIndices);
     }
 
     @Override

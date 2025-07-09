@@ -53,6 +53,7 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
     private int zerothSegmentMaxColumns;
     private int numberOfPageZeroSegments; // includes the zeroth segment
     private ByteBuffer pageZeroBuf;
+    private int numberOfColumns;
 
     private final VoidPointable offsetPointable;
 
@@ -77,6 +78,7 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         zerothSegmentReader.reset(pageZeroBuf, Math.min(zerothSegmentMaxColumns, getNumberOfPresentColumns()),
                 headerSize);
         numberOfPageZeroSegments = pageZeroBuf.getInt(NUMBER_OF_PAGE_ZERO_SEGMENTS_OFFSET);
+        numberOfColumns = pageZeroBuf.getInt(NUMBER_OF_COLUMNS_OFFSET);
     }
 
     @Override
@@ -220,7 +222,8 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
 
     @Override
     public void getAllColumns(BitSet presentColumns) {
-        int numberOfColumns = getNumberOfPresentColumns();
+        //Don't ask for pageZeroBuf.getInt(NUMBER_OF_COLUMNS_OFFSET) here, as the cursor might have been closed.
+        //and the cached page might have been recycled.
         presentColumns.set(0, numberOfColumns);
     }
 

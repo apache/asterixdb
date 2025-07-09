@@ -150,8 +150,9 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
 
     @Override
     public void getAllColumns(BitSet presentColumns) {
-        int numberOfColumns = numberOfPresentColumns;
-        presentColumns.set(0, numberOfColumns);
+        //Don't ask for pageZeroBuf.getInt(NUMBER_OF_COLUMNS_OFFSET) here, as the cursor might have been closed.
+        //and the cached page might have been recycled.
+        presentColumns.set(0, numberOfPresentColumns);
     }
 
     @Override

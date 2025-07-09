@@ -51,6 +51,8 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
     private final int maxNumberOfColumnsInAPage;
     private final BitSet pageZeroSegmentsPages;
     private final Int2IntOpenHashMap columnIndexToRelativeColumnIndex;
+    private final VoidPointable offsetPointable;
+    private final BitSet presentColumnsIndices;
 
     private int maxColumnIndexInZerothSegment;
     private int numberOfColumnInZerothSegment;
@@ -58,10 +60,9 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
     private int headerSize;
     private ByteBuffer pageZeroBuf;
 
-    private final VoidPointable offsetPointable;
-
     public SparseColumnMultiPageZeroReader(int bufferCapacity) {
         super();
+        presentColumnsIndices = new BitSet();
         zerothSegmentReader = new SparseColumnPageZeroReader();
         this.pageZeroSegmentsPages = new BitSet();
         this.maxNumberOfColumnsInAPage =
@@ -85,6 +86,7 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         headerSize = MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + numberOfPageZeroSegments * Integer.BYTES;
         zerothSegmentReader.reset(pageZeroBuf, Math.min(numberOfColumnInZerothSegment, getNumberOfPresentColumns()),
                 headerSize);
+        setPresentColumnsIndices();
         columnIndexToRelativeColumnIndex.clear();
     }
 
@@ -276,21 +278,30 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         return findRelativeColumnIndex(columnIndex) != -1;
     }
 
-    @Override
-    public void getAllColumns(BitSet presentColumns) {
+    private void setPresentColumnsIndices() {
+        presentColumnsIndices.clear();
+        int numberOfPresentColumns = getNumberOfPresentColumns();
+        if (numberOfPresentColumns == 0) {
+            return;
+        }
         int columnOffsetStart = headerSize;
-        for (int i = 0; i < Math.min(getNumberOfPresentColumns(), numberOfColumnInZerothSegment); i++) {
+        for (int i = 0; i < Math.min(numberOfPresentColumns, numberOfColumnInZerothSegment); i++) {
             int columnIndex = pageZeroBuf.getInt(columnOffsetStart);
-            presentColumns.set(columnIndex);
+            presentColumnsIndices.set(columnIndex);
             columnOffsetStart += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
-        if (getNumberOfPresentColumns() > numberOfColumnInZerothSegment) {
+        if (numberOfPresentColumns > numberOfColumnInZerothSegment) {
             // read the rest of the columns from the segment stream
             int columnsInLastSegment = getNumberOfPresentColumns() - numberOfColumnInZerothSegment
                     - (numberOfPageZeroSegments - 2) * maxNumberOfColumnsInAPage;
-            segmentBuffers.readAllColumns(presentColumns, numberOfPageZeroSegments, maxNumberOfColumnsInAPage,
+            segmentBuffers.readAllColumns(presentColumnsIndices, numberOfPageZeroSegments, maxNumberOfColumnsInAPage,
                     columnsInLastSegment);
         }
+    }
+
+    @Override
+    public void getAllColumns(BitSet presentColumns) {
+        presentColumns.or(presentColumnsIndices);
     }
 
     @Override

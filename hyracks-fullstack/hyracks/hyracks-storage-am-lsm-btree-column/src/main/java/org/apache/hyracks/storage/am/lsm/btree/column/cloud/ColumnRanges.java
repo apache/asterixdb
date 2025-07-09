@@ -84,7 +84,7 @@ public final class ColumnRanges {
      * @param leafFrame to compute the ranges for
      */
     public void reset(ColumnBTreeReadLeafFrame leafFrame) throws HyracksDataException {
-        reset(leafFrame, EMPTY, EMPTY, EMPTY);
+        reset(leafFrame, EMPTY, EMPTY, EMPTY, false);
     }
 
     /**
@@ -94,7 +94,7 @@ public final class ColumnRanges {
      * @param plan      eviction plan
      */
     public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet plan) throws HyracksDataException {
-        reset(leafFrame, plan, EMPTY, EMPTY);
+        reset(leafFrame, plan, EMPTY, EMPTY, false);
     }
 
     /**
@@ -106,7 +106,7 @@ public final class ColumnRanges {
      * @param cloudOnlyColumns locked columns that cannot be read from a local disk
      */
     public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet requestedColumns, BitSet evictableColumns,
-            BitSet cloudOnlyColumns) throws HyracksDataException {
+            BitSet cloudOnlyColumns, boolean unPinPageZeroSegments) throws HyracksDataException {
         try {
             // Set leafFrame
             this.leafFrame = leafFrame;
@@ -167,8 +167,10 @@ public final class ColumnRanges {
             // to indicate the end
             columnsOrder[columnOrdinal] = -1;
         } finally {
-            //Unpin the not required segment pages
-            leafFrame.unPinNotRequiredPageZeroSegments();
+            if (unPinPageZeroSegments) {
+                //Unpin the not required segment pages
+                leafFrame.unPinNotRequiredPageZeroSegments();
+            }
         }
     }
 
@@ -213,7 +215,7 @@ public final class ColumnRanges {
      *
      * @param pageId page ID
      * @return true of the page should be read from the cloud, false otherwise
-     * @see #reset(ColumnBTreeReadLeafFrame, BitSet, BitSet, BitSet)
+     * @see #reset(ColumnBTreeReadLeafFrame, BitSet, BitSet, BitSet, boolean)
      */
     public boolean isCloudOnly(int pageId) {
         // Compute the relative page ID for this mega leaf node

@@ -158,7 +158,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             return;
         }
 
-        columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns);
+        columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns, true);
         int pageZeroId = leafFrame.getPageId();
         int numberOfPageZeroSegments = leafFrame.getNumberOfPageZeroSegments();
 
