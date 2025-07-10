@@ -20,12 +20,15 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -116,20 +119,28 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         return new SubplanPushRuntime(ctx, false);
     }
 
-    public class SubplanPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
+    public class SubplanPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime
+            implements IProfiledPushRuntime {
 
         protected final IHyracksTaskContext ctx;
 
         protected final NestedTupleSourceRuntime[] startOfPipelines;
 
-        boolean first;
+        private final boolean profile;
 
-        boolean profile;
+        private final List<IProfiledPushRuntime> timedMicroOps;
+
+        boolean first;
 
         protected SubplanPushRuntime(IHyracksTaskContext ctx, boolean ignoreFailures) throws HyracksDataException {
             this.ctx = ctx;
             this.profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
             this.first = true;
+            if (profile) {
+                timedMicroOps = new ArrayList<>();
+            } else {
+                timedMicroOps = Collections.emptyList();
+            }
 
             IMissingWriter[] missingWriters = new IMissingWriter[missingWriterFactories.length];
             for (int i = 0; i < missingWriterFactories.length; i++) {
@@ -169,9 +180,16 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 PipelineAssembler pa =
                         new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, outputRecordDescriptor, ignoreFailures);
                 IFrameWriter head = pa.assemblePipeline(outputWriter, ctx, stats);
+                if (profile) {
+                    timedMicroOps.addAll(pa.getProfiledPushRuntimes());
+                }
                 startOfPipelines[i] = (NestedTupleSourceRuntime) head;
                 pipelineAssemblers[i] = pa;
             }
+        }
+
+        public void computeTimings() {
+            timedMicroOps.forEach(IProfiledPushRuntime::computeTimings);
         }
 
         @Override

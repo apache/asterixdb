@@ -18,11 +18,15 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.meta;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.ProfiledPushRuntime;
@@ -127,6 +131,11 @@ public class PipelineAssembler {
 
     public IPushRuntime[] getPushRuntime(IPushRuntimeFactory runtimeFactory) {
         return runtimeMap.get(runtimeFactory);
+    }
+
+    public List<IProfiledPushRuntime> getProfiledPushRuntimes() {
+        return runtimeMap.values().stream().flatMap(Arrays::stream).filter(f -> f instanceof IProfiledPushRuntime)
+                .map(f -> (IProfiledPushRuntime) f).collect(Collectors.toList());
     }
 
     //TODO: refactoring is needed

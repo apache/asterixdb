@@ -21,11 +21,13 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -35,6 +37,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
@@ -204,6 +207,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             private boolean opened = false;
             private IOperatorStats parentStats = NoOpOperatorStats.INSTANCE;
             private Map<IPushRuntimeFactory, IOperatorStats> microOpStats = new HashMap<>();
+            private List<IProfiledPushRuntime> profiledPushRuntimes = Collections.emptyList();
 
             public void open() throws HyracksDataException {
                 if (startOfPipeline == null) {
@@ -211,9 +215,12 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                             outputArity > 0 ? AlgebricksMetaOperatorDescriptor.this.outRecDescs[0] : null;
                     RecordDescriptor pipelineInputRecordDescriptor = recordDescProvider
                             .getInputRecordDescriptor(AlgebricksMetaOperatorDescriptor.this.getActivityId(), 0);
-                    PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity,
+                    PipelineAssembler assembler = new PipelineAssembler(pipeline, inputArity, outputArity,
                             pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor);
-                    startOfPipeline = pa.assemblePipeline(writer, ctx, microOpStats);
+                    startOfPipeline = assembler.assemblePipeline(writer, ctx, microOpStats);
+                    if (ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME)) {
+                        profiledPushRuntimes = assembler.getProfiledPushRuntimes();
+                    }
                 }
                 opened = true;
                 startOfPipeline.open();
@@ -246,6 +253,9 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             @Override
             public void deinitialize() throws HyracksDataException {
                 super.deinitialize();
+                if (ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME)) {
+                    profiledPushRuntimes.forEach(IProfiledPushRuntime::computeTimings);
+                }
             }
 
             @Override
