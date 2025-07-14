@@ -216,7 +216,7 @@ abstract class LangExpressionToPlanTranslator
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDatabaseName(),
                 dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
-        itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, dataset);
 
         DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDatabaseName(),
                 stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
@@ -886,7 +886,7 @@ abstract class LangExpressionToPlanTranslator
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDatabaseName(),
                 dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
-        itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, dataset);
 
         INodeDomain domain = metadataProvider.findNodeDomain(dataset.getNodeGroupName());
         return new DatasetDataSource(sourceId, dataset, itemType, metaItemType, DataSource.Type.INTERNAL_DATASET,

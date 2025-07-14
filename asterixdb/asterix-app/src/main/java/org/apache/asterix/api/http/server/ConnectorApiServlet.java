@@ -114,6 +114,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                 String itemTypeDatabase = dataset.getItemTypeDatabaseName();
                 ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
                         dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+                recordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, dataset);
                 List<List<String>> primaryKeys = dataset.getPrimaryKeys();
                 StringBuilder pkStrBuf = new StringBuilder();
                 for (List<String> keys : primaryKeys) {

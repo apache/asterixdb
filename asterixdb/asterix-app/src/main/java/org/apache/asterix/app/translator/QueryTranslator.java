@@ -1382,7 +1382,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             */
             if (!ds.hasMetaPart()) {
-                aRecordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(aRecordType, null, ds);
+                aRecordType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(aRecordType, ds);
             }
 
             List<List<IAType>> indexFieldTypes = new ArrayList<>(indexedElementsCount);

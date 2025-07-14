@@ -168,7 +168,7 @@ public class QueryPartitionRewriter extends FunctionRewriter implements IResultT
         Dataset dataset = validateDataset(metadataProvider, dbName, dvName, dsName, loc);
         ARecordType dsType = (ARecordType) metadataProvider.findType(dataset);
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, metaType, dataset);
+        dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, dataset);
 
         List<IAType> dsKeyTypes = KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, dsType, metaType);
         List<List<String>> primaryKeys = dataset.getPrimaryKeys();

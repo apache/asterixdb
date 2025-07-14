@@ -409,9 +409,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.findTypeEntity(mdTxnCtx, database, dataverseName, typeName);
     }
 
-    public IAType findTypeForDatasetWithoutType(IAType recordType, IAType metaRecordType, Dataset dataset)
-            throws AlgebricksException {
-        return MetadataManagerUtil.findTypeForDatasetWithoutType(recordType, metaRecordType, dataset);
+    public IAType findTypeForDatasetWithoutType(IAType recordType, Dataset dataset) throws AlgebricksException {
+        return MetadataManagerUtil.findTypeForDatasetWithoutType(recordType, dataset);
     }
 
     public IAType findType(String database, DataverseName dataverseName, String typeName) throws AlgebricksException {
@@ -747,6 +746,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (isIndexOnlyPlan) {
             ARecordType recType = (ARecordType) findType(dataset.getItemTypeDatabaseName(),
                     dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+            recType = (ARecordType) findTypeForDatasetWithoutType(recType, dataset);
             List<List<String>> secondaryKeyFields = secondaryIndexDetails.getKeyFieldNames();
             List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryIndex,
