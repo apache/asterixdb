@@ -62,6 +62,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinali
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -69,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
@@ -170,18 +172,16 @@ public class Stats {
                 return 0.5;
             }
 
-            if (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ))) {
-                return 0.5; // this may not be accurate obviously!
-            } // we can do all relops here and other joins such as interval joins and spatial joins, the compile time might increase a lot
-
             boolean unnestOp1 = joinEnum.findUnnestOp(joinEnum.leafInputs.get(idx1 - 1));
             boolean unnestOp2 = joinEnum.findUnnestOp(joinEnum.leafInputs.get(idx2 - 1));
             boolean unnestOp = unnestOp1 || unnestOp2;
+            boolean okOp = acceptableOp(joinExpr.getFunctionIdentifier());
             Index.SampleIndexDetails idxDetails1 = (Index.SampleIndexDetails) index1.getIndexDetails();
             Index.SampleIndexDetails idxDetails2 = (Index.SampleIndexDetails) index2.getIndexDetails();
             if (((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
                     || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())
-                    || exprUsedVars.size() > 2) && !unnestOp) { //* if there are more than 2 variables, it is not a simple join like r.a op s.a
+                    || (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)))
+                    || exprUsedVars.size() > 2) && !unnestOp && okOp) { //* if there are more than 2 variables, it is not a simple join like r.a op s.a
                 double sels = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
                         joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
                 if (sels == 0.0) {
@@ -193,6 +193,28 @@ public class Stats {
             double seln = naiveJoinSelectivity(exprUsedVars, card1, card2, idx1, idx2, unnestOp1, unnestOp2);
             return seln;
         }
+    }
+
+    private boolean acceptableOp(FunctionIdentifier functionIdentifier) {
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.NEQ)) {
+            return true;
+        }
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.LT)) {
+            return true;
+        }
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.GT)) {
+            return true;
+        }
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.GE)) {
+            return true;
+        }
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.LE)) {
+            return true;
+        }
+        if (functionIdentifier.equals(BuiltinFunctions.IF_MISSING_OR_NULL)) { // added this for q16 in CH2
+            return true;
+        }
+        return false;
     }
 
     private double naiveJoinSelectivity(List<LogicalVariable> exprUsedVars, double card1, double card2, int idx1,
@@ -254,9 +276,9 @@ public class Stats {
     private double findJoinSelFromSamples(ILogicalOperator left, ILogicalOperator right, Index index1, Index index2,
             AbstractFunctionCallExpression joinExpr, JoinOperator join) throws AlgebricksException {
         AbstractBinaryJoinOperator abjoin = join.getAbstractJoinOp();
-        Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left, index1);
+        Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left, index1, joinExpr);
         abjoin.getInputs().get(0).setValue(leftOutput.getFirst());
-        Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right, index2);
+        Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right, index2, joinExpr);
         abjoin.getInputs().get(1).setValue(rightOutput.getFirst());
         abjoin.getCondition().setValue(joinExpr);
         List<List<IAObject>> result = runSamplingQuery(optCtx, abjoin);
@@ -265,9 +287,17 @@ public class Stats {
         return sel;
     }
 
-    private Pair<ILogicalOperator, Double> replaceDataSourceWithSample(ILogicalOperator op, Index index)
-            throws AlgebricksException {
+    private Pair<ILogicalOperator, Double> replaceDataSourceWithSample(ILogicalOperator op, Index index,
+            AbstractFunctionCallExpression joinExpr) throws AlgebricksException {
         ILogicalOperator selOp = OperatorManipulationUtil.bottomUpCopyOperators(op);
+        if (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ))) {
+            // add a limit operator to restrict the number of tuples on each side of the join to 1000
+            AsterixConstantValue cnstVal = new AsterixConstantValue(new AInt64(1000));
+            ConstantExpression constantExpression = new ConstantExpression(cnstVal);
+            LimitOperator lo = new LimitOperator(constantExpression, false);
+            lo.getInputs().add(new MutableObject<>(selOp));
+            selOp = lo;
+        }
         // must set all the Sel operators to be true, otherwise we will be multiplying the single table sels also here.
         storeSelectConditionsAndMakeThemTrue(selOp, null);
         ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(selOp);
