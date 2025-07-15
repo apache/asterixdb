@@ -69,6 +69,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private int maxNumberOfPagesInALeafNode;
     private int maxTupleCount;
     private int lastRequiredFreeSpace;
+    private int sparseLeafsCount;
+    private int densePagesCount;
 
     public ColumnBTreeBulkloader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
             IPageWriteCallback callback, ITreeIndex index, ITreeIndexFrame leafFrame,
@@ -98,6 +100,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         numberOfLeafNodes = 1;
         maxTupleCount = 0;
         lastRequiredFreeSpace = 0;
+        sparseLeafsCount = 0;
+        densePagesCount = 0;
     }
 
     @Override
@@ -161,6 +165,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             try {
                 columnarFrame.flush(columnWriter, tupleCount, maxColumnsInPageZerothSegment, lowKey.getTuple(),
                         splitKey.getTuple(), this);
+                updatePageLayoutStat();
             } catch (Exception e) {
                 logState(e);
                 throw e;
@@ -191,6 +196,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             try {
                 columnarFrame.flush(columnWriter, tupleCount, maxColumnsInPageZerothSegment, lowKey.getTuple(),
                         splitKey.getTuple(), this);
+                updatePageLayoutStat();
             } catch (Exception e) {
                 logState(e);
                 throw e;
@@ -238,6 +244,14 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
          */
         writeColumnAndSegmentPages();
         super.writeLastLeaf(page);
+    }
+
+    private void updatePageLayoutStat() {
+        if (columnWriter.getWriterFlag() == IColumnPageZeroWriter.MULTI_PAGE_DEFAULT_WRITER_FLAG) {
+            densePagesCount++;
+        } else {
+            sparseLeafsCount++;
+        }
     }
 
     private void writeColumnAndSegmentPages() throws HyracksDataException {
@@ -315,9 +329,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         }
 
         LOGGER.debug(
-                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, and maxLeafNodePages: {}",
+                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, maxLeafNodePages: {}, denseLeafCount: {}, and sparseLeafCount: {}",
                 status, maxTupleCount, tupleCount, numberOfLeafNodes, numberOfTempConfiscatedPages,
-                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode);
+                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode, densePagesCount, sparseLeafsCount);
     }
 
     /*

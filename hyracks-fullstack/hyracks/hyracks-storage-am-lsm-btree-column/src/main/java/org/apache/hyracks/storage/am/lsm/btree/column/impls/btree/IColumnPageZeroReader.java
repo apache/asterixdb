@@ -23,14 +23,15 @@ import java.util.BitSet;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 
 public interface IColumnPageZeroReader {
 
-    default void reset(ByteBuffer pageZeroBuf) {
-        reset(pageZeroBuf, AbstractColumnBTreeLeafFrame.HEADER_SIZE);
+    default void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType) {
+        reset(pageZeroBuf, projectorType, AbstractColumnBTreeLeafFrame.HEADER_SIZE);
     }
 
-    void reset(ByteBuffer pageZeroBuf, int headerSize);
+    void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize);
 
     int getColumnOffset(int columnIndex) throws HyracksDataException;
 

@@ -107,9 +107,17 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      */
     public abstract IColumnPageZeroWriterFlavorSelector getColumnPageZeroWriterFlavorSelector();
 
+    /**
+     * Get writer flag for accounting sparse vs dense leafs.
+     *
+     * @return
+     */
+    public abstract byte getWriterFlag();
+
     public void setWriterType(IColumnPageZeroWriter.ColumnPageZeroWriterType pageZeroWriterType) {
         if (pageZeroWriterType != IColumnPageZeroWriter.ColumnPageZeroWriterType.ADAPTIVE) {
             getColumnPageZeroWriterFlavorSelector().setPageZeroWriterFlag(pageZeroWriterType.getWriterFlag());
         }
     }
+
 }

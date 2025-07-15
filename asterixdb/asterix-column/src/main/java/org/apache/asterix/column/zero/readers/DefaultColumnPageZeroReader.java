@@ -32,6 +32,7 @@ import java.util.BitSet;
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroReader;
@@ -52,13 +53,14 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize) {
         this.pageZeroBuf = pageZeroBuf;
         this.numberOfPresentColumns = pageZeroBuf.getInt(NUMBER_OF_COLUMNS_OFFSET);
         this.headerSize = headerSize;
     }
 
-    public void reset(ByteBuffer pageZeroBuf, int numberOfPresentColumns, int headerSize) {
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int numberOfPresentColumns,
+            int headerSize) {
         this.pageZeroBuf = pageZeroBuf;
         this.numberOfPresentColumns = numberOfPresentColumns;
         this.headerSize = headerSize;

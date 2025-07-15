@@ -39,6 +39,7 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
@@ -78,20 +79,23 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf) {
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType) {
         this.pageZeroBuf = pageZeroBuf;
         numberOfPageZeroSegments = pageZeroBuf.getInt(NUMBER_OF_PAGE_ZERO_SEGMENTS_OFFSET);
         numberOfColumnInZerothSegment = pageZeroBuf.getInt(MAX_COLUMNS_IN_ZEROTH_SEGMENT);
         maxColumnIndexInZerothSegment = pageZeroBuf.getInt(MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET);
         headerSize = MAX_COLUMNS_INDEX_IN_ZEROTH_SEGMENT_OFFSET + numberOfPageZeroSegments * Integer.BYTES;
-        zerothSegmentReader.reset(pageZeroBuf, Math.min(numberOfColumnInZerothSegment, getNumberOfPresentColumns()),
-                headerSize);
-        setPresentColumnsIndices();
+        zerothSegmentReader.reset(pageZeroBuf, projectorType,
+                Math.min(numberOfColumnInZerothSegment, getNumberOfPresentColumns()), headerSize);
         columnIndexToRelativeColumnIndex.clear();
+        if (projectorType == ColumnProjectorType.MERGE) {
+            //This Info is only required for the merge operation, hence we can skip it for the projection operation.
+            setPresentColumnsIndices();
+        }
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize) {
         throw new UnsupportedOperationException("This method is not supported for multi-page zero readers.");
     }
 

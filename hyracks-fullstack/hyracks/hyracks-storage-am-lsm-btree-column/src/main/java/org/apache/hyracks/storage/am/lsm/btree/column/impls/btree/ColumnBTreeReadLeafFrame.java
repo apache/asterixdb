@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -38,12 +39,14 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     private final AbstractColumnTupleReader columnarTupleReader;
     private final ITreeIndexTupleReference leftMostTuple;
     private final ITreeIndexTupleReference rightMostTuple;
+    private final ColumnProjectorType projectorType;
     private IColumnPageZeroReader columnPageZeroReader;
 
-    public ColumnBTreeReadLeafFrame(ITreeIndexTupleWriter rowTupleWriter,
-            AbstractColumnTupleReader columnarTupleReader) {
+    public ColumnBTreeReadLeafFrame(ITreeIndexTupleWriter rowTupleWriter, AbstractColumnTupleReader columnarTupleReader,
+            ColumnProjectorType projectorType) {
         super(rowTupleWriter, columnarTupleReader.getPageZeroWriterFlavorSelector());
         this.columnarTupleReader = columnarTupleReader;
+        this.projectorType = projectorType;
         leftMostTuple = rowTupleWriter.createTupleReference();
         rightMostTuple = rowTupleWriter.createTupleReference();
     }
@@ -51,7 +54,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     @Override
     protected void resetPageZeroReader() {
         columnPageZeroReader = pageZeroWriterFlavorSelector.createPageZeroReader(getFlagByte(), buf.capacity());
-        columnPageZeroReader.reset(buf);
+        columnPageZeroReader.reset(buf, projectorType);
         buf.position(columnPageZeroReader.getHeaderSize());
     }
 
@@ -170,7 +173,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     }
 
     public ColumnBTreeReadLeafFrame createCopy() {
-        return new ColumnBTreeReadLeafFrame(rowTupleWriter, columnarTupleReader);
+        return new ColumnBTreeReadLeafFrame(rowTupleWriter, columnarTupleReader, projectorType);
     }
 
     @Override

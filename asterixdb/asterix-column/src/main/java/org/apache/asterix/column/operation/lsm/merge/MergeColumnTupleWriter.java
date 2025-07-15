@@ -246,6 +246,11 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
+    public byte getWriterFlag() {
+        return pageZeroWriterFlavorSelector.getWriterFlag();
+    }
+
+    @Override
     public void close() {
         columnMetadata.close();
         writer.close();

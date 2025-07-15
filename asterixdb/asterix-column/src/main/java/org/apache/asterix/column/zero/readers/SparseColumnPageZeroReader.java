@@ -23,6 +23,7 @@ import java.util.BitSet;
 
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -38,18 +39,22 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
-        super.reset(pageZeroBuf, headerSize);
-        setPresentColumnsIndices();
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize) {
+        super.reset(pageZeroBuf, projectorType, headerSize);
         columnIndexToRelativeColumnIndex.clear();
-
+        if (projectorType == ColumnProjectorType.MERGE) {
+            setPresentColumnsIndices();
+        }
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int numberOfPresentColumns, int headerSize) {
-        super.reset(pageZeroBuf, numberOfPresentColumns, headerSize);
-        setPresentColumnsIndices();
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int numberOfPresentColumns,
+            int headerSize) {
+        super.reset(pageZeroBuf, projectorType, numberOfPresentColumns, headerSize);
         columnIndexToRelativeColumnIndex.clear();
+        if (projectorType == ColumnProjectorType.MERGE) {
+            setPresentColumnsIndices();
+        }
     }
 
     @Override
