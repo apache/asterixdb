@@ -24,8 +24,10 @@ import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.app.message.EstimateColumnCountRequestMessage;
 import org.apache.asterix.app.message.StorageSizeRequestMessage;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IMetadataLockManager;
@@ -43,7 +45,11 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.DatasetPartitions;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.hyracks.api.util.InvokeUtil;
+
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 
 public class StorageUtil {
 
@@ -94,6 +100,60 @@ public class StorageUtil {
                         index));
             }
             return (long) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, TimeUnit.SECONDS.toMillis(60), true);
+        } finally {
+            InvokeUtil.tryWithCleanups(() -> MetadataManager.INSTANCE.commitTransaction(mdTxnCtx),
+                    () -> metadataProvider.getLocks().unlock());
+        }
+    }
+
+    public static Int2IntMap getEstimatedColumnCount(ICcApplicationContext appCtx, String database,
+            DataverseName dataverse, String collection) throws Exception {
+        IClusterManagementWork.ClusterState state = appCtx.getClusterStateManager().getState();
+        if (!(state == ACTIVE || state == REBALANCE_REQUIRED)) {
+            throw new RuntimeDataException(REJECT_BAD_CLUSTER_STATE, state);
+        }
+
+        if (!appCtx.getNamespaceResolver().isUsingDatabase()) {
+            database = MetadataConstants.DEFAULT_DATABASE;
+        }
+
+        IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            lockManager.acquireDatabaseReadLock(metadataProvider.getLocks(), database);
+            lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), database, dataverse);
+            lockManager.acquireDatasetReadLock(metadataProvider.getLocks(), database, dataverse, collection);
+            Dataset dataset = metadataProvider.findDataset(database, dataverse, collection);
+            if (dataset == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, collection,
+                        MetadataUtil.dataverseName(database, dataverse, metadataProvider.isUsingDatabase()));
+            }
+
+            if (dataset.getDatasetType() != DatasetConfig.DatasetType.INTERNAL) {
+                throw new CompilationException(ErrorCode.ESTIMATED_COLUMN_COUNT_NOT_APPLICABLE_TO_TYPE,
+                        "collection type: " + dataset.getDatasetType());
+            }
+
+            if (dataset.getDatasetFormatInfo().getFormat() != DatasetConfig.DatasetFormat.COLUMN) {
+                throw new CompilationException(ErrorCode.ESTIMATED_COLUMN_COUNT_NOT_APPLICABLE_TO_TYPE,
+                        "storage format type: " + dataset.getDatasetFormatInfo().getFormat());
+            }
+
+            final List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
+            CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
+
+            Map<String, List<DatasetPartitions>> nodeResources =
+                    DatasetUtil.getNodeResourcesWithoutSecondaries(metadataProvider, dataset);
+            long reqId = messageBroker.newRequestId();
+            List<EstimateColumnCountRequestMessage> requests = new ArrayList<>();
+            for (String nc : ncs) {
+                requests.add(new EstimateColumnCountRequestMessage(reqId, nodeResources.get(nc)));
+            }
+
+            return (Int2IntMap) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, TimeUnit.SECONDS.toMillis(60),
+                    true);
         } finally {
             InvokeUtil.tryWithCleanups(() -> MetadataManager.INSTANCE.commitTransaction(mdTxnCtx),
                     () -> metadataProvider.getLocks().unlock());

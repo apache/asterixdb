@@ -31,6 +31,7 @@ import org.apache.asterix.app.function.QueryPartitionRewriter;
 import org.apache.asterix.app.function.StorageComponentsRewriter;
 import org.apache.asterix.app.function.TPCDSAllTablesDataGeneratorRewriter;
 import org.apache.asterix.app.function.TPCDSSingleTableDataGeneratorRewriter;
+import org.apache.asterix.app.function.collectioncolumncount.CollectionEstimateColumnCountRewriter;
 import org.apache.asterix.app.function.collectionsize.StorageSizeRewriter;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.AInt64TypeComputer;
@@ -112,6 +113,12 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addFunction(StorageSizeRewriter.STORAGE_SIZE, AInt64TypeComputer.INSTANCE, true);
         BuiltinFunctions.addUnnestFun(StorageSizeRewriter.STORAGE_SIZE, true);
         BuiltinFunctions.addDatasourceFunction(StorageSizeRewriter.STORAGE_SIZE, StorageSizeRewriter.INSTANCE);
+        // Estimate column count
+        BuiltinFunctions.addFunction(CollectionEstimateColumnCountRewriter.ESTIMATED_COLLECTION_COLUMN_COUNT,
+                (expression, env, metadataProvider) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(CollectionEstimateColumnCountRewriter.ESTIMATED_COLLECTION_COLUMN_COUNT, true);
+        BuiltinFunctions.addDatasourceFunction(CollectionEstimateColumnCountRewriter.ESTIMATED_COLLECTION_COLUMN_COUNT,
+                CollectionEstimateColumnCountRewriter.INSTANCE);
     }
 
     private MetadataBuiltinFunctions() {

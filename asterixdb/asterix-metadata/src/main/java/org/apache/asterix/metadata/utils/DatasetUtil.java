@@ -817,6 +817,13 @@ public class DatasetUtil {
             secondaries
                     .add(new IndexDataflowHelperFactory(storageManager, idxPartitioningProperties.getSplitsProvider()));
         }
+        populateNcResources(dataset, partitioningProperties, nc2Resources, primary, secondaries);
+        return nc2Resources;
+    }
+
+    private static void populateNcResources(Dataset dataset, PartitioningProperties partitioningProperties,
+            Map<String, List<DatasetPartitions>> nc2Resources, IIndexDataflowHelperFactory primary,
+            List<IIndexDataflowHelperFactory> secondaries) {
         AlgebricksAbsolutePartitionConstraint computeLocations =
                 (AlgebricksAbsolutePartitionConstraint) partitioningProperties.getConstraints();
         int[][] computeStorageMap = partitioningProperties.getComputeStorageMap();
@@ -830,6 +837,18 @@ public class DatasetUtil {
                 dsPartitions.add(storagePartition);
             }
         }
+    }
+
+    public static Map<String, List<DatasetPartitions>> getNodeResourcesWithoutSecondaries(
+            MetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException {
+        Map<String, List<DatasetPartitions>> nc2Resources = new HashMap<>();
+        IStorageManager storageManager = metadataProvider.getStorageComponentProvider().getStorageManager();
+
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IIndexDataflowHelperFactory primary =
+                new IndexDataflowHelperFactory(storageManager, partitioningProperties.getSplitsProvider());
+
+        populateNcResources(dataset, partitioningProperties, nc2Resources, primary, Collections.emptyList());
         return nc2Resources;
     }
 
