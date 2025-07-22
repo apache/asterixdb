@@ -80,4 +80,6 @@ public interface IColumnPageZeroReader {
     void printPageZeroReaderInfo();
 
     void unPinNotRequiredPageZeroSegments() throws HyracksDataException;
+
+    void setPresentColumnsIndices();
 }

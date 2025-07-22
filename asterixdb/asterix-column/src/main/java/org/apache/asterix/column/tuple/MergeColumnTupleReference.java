@@ -92,6 +92,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     @Override
     public void newPage() throws HyracksDataException {
         super.newPage();
+        frame.setPresentColumnsIndices();
         // the tuples are being read, meanwhile MegaLeaf changed
         if (presentColumnIndexes != null) {
             frame.getAllColumns(presentColumnIndexes);

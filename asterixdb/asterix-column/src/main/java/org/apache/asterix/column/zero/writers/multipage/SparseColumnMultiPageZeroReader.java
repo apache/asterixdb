@@ -88,10 +88,6 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         zerothSegmentReader.reset(pageZeroBuf, projectorType,
                 Math.min(numberOfColumnInZerothSegment, getNumberOfPresentColumns()), headerSize);
         columnIndexToRelativeColumnIndex.clear();
-        if (projectorType == ColumnProjectorType.MERGE) {
-            //This Info is only required for the merge operation, hence we can skip it for the projection operation.
-            setPresentColumnsIndices();
-        }
     }
 
     @Override
@@ -282,7 +278,8 @@ public class SparseColumnMultiPageZeroReader extends AbstractColumnMultiPageZero
         return findRelativeColumnIndex(columnIndex) != -1;
     }
 
-    private void setPresentColumnsIndices() {
+    @Override
+    public void setPresentColumnsIndices() {
         presentColumnsIndices.clear();
         int numberOfPresentColumns = getNumberOfPresentColumns();
         if (numberOfPresentColumns == 0) {

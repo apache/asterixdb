@@ -200,4 +200,8 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
     public void printPageZeroReaderInfo() {
         columnPageZeroReader.printPageZeroReaderInfo();
     }
+
+    public void setPresentColumnsIndices() {
+        columnPageZeroReader.setPresentColumnsIndices();
+    }
 }

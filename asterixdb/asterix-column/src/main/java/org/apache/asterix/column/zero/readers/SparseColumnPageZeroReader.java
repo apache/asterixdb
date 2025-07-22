@@ -42,9 +42,6 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize) {
         super.reset(pageZeroBuf, projectorType, headerSize);
         columnIndexToRelativeColumnIndex.clear();
-        if (projectorType == ColumnProjectorType.MERGE) {
-            setPresentColumnsIndices();
-        }
     }
 
     @Override
@@ -52,9 +49,6 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
             int headerSize) {
         super.reset(pageZeroBuf, projectorType, numberOfPresentColumns, headerSize);
         columnIndexToRelativeColumnIndex.clear();
-        if (projectorType == ColumnProjectorType.MERGE) {
-            setPresentColumnsIndices();
-        }
     }
 
     @Override
@@ -136,7 +130,8 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
         return relativeColumnIndex != -1;
     }
 
-    private void setPresentColumnsIndices() {
+    @Override
+    public void setPresentColumnsIndices() {
         presentColumnsIndices.clear();
         if (numberOfPresentColumns == 0) {
             return;

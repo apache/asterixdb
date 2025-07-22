@@ -283,6 +283,10 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
     }
 
     @Override
+    public void setPresentColumnsIndices() {
+    }
+
+    @Override
     public void unPinNotRequiredPageZeroSegments() throws HyracksDataException {
         segmentBuffers.unPinNotRequiredSegments(pageZeroSegmentsPages, numberOfPageZeroSegments);
     }

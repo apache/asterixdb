@@ -199,6 +199,10 @@ public class DefaultColumnPageZeroReader implements IColumnPageZeroReader {
     }
 
     @Override
+    public void setPresentColumnsIndices() {
+    }
+
+    @Override
     public void printPageZeroReaderInfo() {
         ColumnarValueException ex = new ColumnarValueException();
         ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
