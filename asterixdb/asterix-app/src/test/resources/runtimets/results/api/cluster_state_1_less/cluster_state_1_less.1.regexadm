@@ -37,6 +37,7 @@
     "compiler.cbo" : true,
     "compiler.column.filter" : true,
     "compiler.copy.to.write.buffer.size" : 8388608,
+    "compiler.deltalake.filesplits" : false,
     "compiler\.external\.field\.pushdown" : true,
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,

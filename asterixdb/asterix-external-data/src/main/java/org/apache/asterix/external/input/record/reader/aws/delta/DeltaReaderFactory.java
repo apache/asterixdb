@@ -25,12 +25,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -45,6 +47,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -55,6 +58,8 @@ import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.metadata.BlockMetaData;
 
 import io.delta.kernel.Scan;
 import io.delta.kernel.Snapshot;
@@ -73,13 +78,14 @@ import io.delta.kernel.utils.FileStatus;
 
 public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = LogManager.getLogger();
     private transient AlgebricksAbsolutePartitionConstraint locationConstraints;
     private String scanState;
     protected final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
     protected ConfFactory confFactory;
     private String filterExpressionStr;
+    private boolean usingSplits;
 
     public List<PartitionWorkLoadBasedOnSize> getPartitionWorkLoadsBasedOnSize() {
         return partitionWorkLoadsBasedOnSize;
@@ -157,10 +163,41 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
             scanFiles = getScanFiles(scan, engine);
         }
+        int numPartitions = getPartitionConstraint().getLocations().length;
         LOGGER.info("Number of delta table parquet data files to scan: {}", scanFiles.size());
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
-        distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
+        try {
+            usingSplits = getFileSplitsConfig(configuration, appCtx);
+            if (usingSplits) {
+                distributeSplits(scanFiles, conf, numPartitions);
+            } else {
+                distributeFiles(scanFiles, numPartitions);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         issueWarnings(warnings, warningCollector);
+    }
+
+    private boolean getFileSplitsConfig(Map<String, String> configuration, ICcApplicationContext appCtx) {
+        String fileSplits = configuration.get(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY);
+        return fileSplits != null ? Boolean.parseBoolean(fileSplits)
+                : appCtx.getCompilerProperties().isDeltaLakeFileSplitsEnabled();
+    }
+
+    private List<SerializableFileSplit> getInputSplits(Row file, JobConf conf) throws IOException {
+        List<SerializableFileSplit> inputSplits = new ArrayList<>();
+        FileStatus fileStatus = InternalScanFileUtils.getAddFileStatus(file);
+        Path parquetPath = new Path(fileStatus.getPath());
+        try (ParquetFileReader reader = ParquetFileReader.open(conf, parquetPath)) {
+            List<BlockMetaData> blocks = reader.getFooter().getBlocks();
+            for (BlockMetaData block : blocks) {
+                long start = block.getStartingPos();
+                long length = block.getCompressedSize();
+                inputSplits.add(new SerializableFileSplit(parquetPath, start, length, conf));
+            }
+        }
+        return inputSplits;
     }
 
     private List<Row> getScanFiles(Scan scan, Engine engine) {
@@ -195,10 +232,9 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
     public void distributeFiles(List<Row> scanFiles, int partitionsCount) {
         PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
                 Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
-
         // Prepare the workloads based on the number of partitions
         for (int i = 0; i < partitionsCount; i++) {
-            workloadQueue.add(new PartitionWorkLoadBasedOnSize());
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize(false));
         }
         for (Row scanFileRow : scanFiles) {
             PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
@@ -209,12 +245,37 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 
+    private void distributeSplits(List<Row> scanFiles, JobConf conf, int partitionsCount) throws IOException {
+        PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
+                Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
+        // Prepare the workloads based on the number of partitions
+        for (int i = 0; i < partitionsCount; i++) {
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize(true));
+        }
+        for (Row scanFile : scanFiles) {
+            String scanFileJson = RowSerDe.serializeRowToJson(scanFile);
+            List<SerializableFileSplit> splits = getInputSplits(scanFile, conf);
+            // Distribute splits across partitions
+            for (int i = 0; i < splits.size(); i++) {
+                PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
+                workload.addScanFileSplit(scanFileJson, splits.get(i));
+                workloadQueue.add(workload);
+            }
+        }
+        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
+    }
+
     @Override
     public IRecordReader<?> createRecordReader(IExternalDataRuntimeContext context) throws HyracksDataException {
         try {
             int partition = context.getPartition();
-            return new DeltaFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getScanFiles(), scanState,
-                    confFactory, filterExpressionStr);
+            if (usingSplits) {
+                return new DeltaFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getScanFileSplits(),
+                        scanState, confFactory, filterExpressionStr);
+            } else {
+                return new DeltaFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getScanFiles(), scanState,
+                        confFactory, filterExpressionStr);
+            }
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -231,20 +292,36 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
         private final List<String> scanFiles = new ArrayList<>();
+        private final Map<String, List<SerializableFileSplit>> scanFileSplits = new HashMap<>();
+        private final boolean usingSplits;
         private long totalSize = 0;
 
-        public PartitionWorkLoadBasedOnSize() {
+        public PartitionWorkLoadBasedOnSize(boolean usingSplits) {
+            this.usingSplits = usingSplits;
         }
 
         public List<String> getScanFiles() {
             return scanFiles;
         }
 
+        public Map<String, List<SerializableFileSplit>> getScanFileSplits() {
+            return scanFileSplits;
+        }
+
+        public boolean isUsingSplits() {
+            return usingSplits;
+        }
+
         public void addScanFile(String scanFile, long size) {
             this.scanFiles.add(scanFile);
             this.totalSize += size;
+        }
+
+        public void addScanFileSplit(String scanFile, SerializableFileSplit split) {
+            this.totalSize += split.getLength();
+            this.scanFileSplits.computeIfAbsent(scanFile, k -> new ArrayList<>()).add(split);
         }
 
         public long getTotalSize() {
@@ -253,7 +330,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
 
         @Override
         public String toString() {
-            return "Files: " + scanFiles.size() + ", Total Size: " + totalSize;
+            return "Files: " + (usingSplits ? scanFileSplits.size() : scanFiles.size()) + ", Total Size: " + totalSize;
         }
     }
 
