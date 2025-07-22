@@ -1128,5 +1128,10 @@
       <artifactId>converter</artifactId>
       <version>0.2.15</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client-runtime</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
