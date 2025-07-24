@@ -77,6 +77,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewr
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppLoadAccessedDataset;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppRightJoinRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppSpecialFunctionNameRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppVectorDistanceRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SubstituteGroupbyExpressionWithVariableVisitor;
@@ -146,6 +147,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         // Resolves function calls
         resolveFunctionCalls();
+
+        // Rewrites vector_distance(vec1, vec2, metric) into concrete 2-arg vector builtins.
+        rewriteVectorDistanceCalls();
 
         // Generates column names.
         generateColumnNames();
@@ -257,6 +261,11 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void resolveFunctionCalls() throws CompilationException {
         SqlppFunctionCallResolverVisitor visitor =
                 new SqlppFunctionCallResolverVisitor(context, allowNonStoredUdfCalls);
+        rewriteTopExpr(visitor, null);
+    }
+
+    protected void rewriteVectorDistanceCalls() throws CompilationException {
+        SqlppVectorDistanceRewriteVisitor visitor = new SqlppVectorDistanceRewriteVisitor();
         rewriteTopExpr(visitor, null);
     }
 

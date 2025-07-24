@@ -1196,6 +1196,16 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier GET_OVERLAPPING_INTERVAL =
             FunctionConstants.newAsterix("get-overlapping-interval", 2);
 
+    //Vector functions
+    public static final FunctionIdentifier EUCLIDEAN_DISTANCE = FunctionConstants.newAsterix("euclidean-distance", 2);
+    public static final FunctionIdentifier EUCLIDEAN_SQUARED_DISTANCE =
+            FunctionConstants.newAsterix("euclidean-squared-distance", 2);
+    public static final FunctionIdentifier COSINE_SIMILARITY = FunctionConstants.newAsterix("cosine-similarity", 2);
+    public static final FunctionIdentifier DOT_PRODUCT = FunctionConstants.newAsterix("dot-product", 2);
+    public static final FunctionIdentifier COSINE_DISTANCE = FunctionConstants.newAsterix("cosine-distance", 2);
+    public static final FunctionIdentifier DOT_DISTANCE = FunctionConstants.newAsterix("dot-distance", 2);
+    public static final FunctionIdentifier VECTOR_DISTANCE = FunctionConstants.newAsterix("vector-distance", 3);
+
     // Temporal functions
     public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS =
             FunctionConstants.newAsterix("unix-time-from-date-in-days", 1);
@@ -1919,6 +1929,15 @@ public class BuiltinFunctions {
         addFunction(SCALAR_KURTOSIS_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_KURTOSIS_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_KURTOSIS_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+
+        // Vector functions
+        addFunction(EUCLIDEAN_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(EUCLIDEAN_SQUARED_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(COSINE_SIMILARITY, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(DOT_PRODUCT, ADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(COSINE_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(DOT_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(VECTOR_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
 
         // Window functions
 

@@ -166,6 +166,12 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("variance_samp", "var_samp");
         addFunctionMapping("variance_pop", "var_pop");
 
+        // Vector functions — canonical SQL++ names: euclidean_distance, euclidean_squared_distance,
+        // cosine_similarity, dot_product, vector_distance (compile-time rewrite to concrete metric)
+        // Compatibility aliases
+        addFunctionMapping("l2_distance", "euclidean-distance");
+        addFunctionMapping("l2_squared_distance", "euclidean-squared-distance");
+
         // OGC SFA geospatial function aliases.
         // Many GIS dialects use CamelCase (e.g. ST_IsEmpty) which lowercases to
         // compressed forms like st_isempty; these don't normalize to the canonical

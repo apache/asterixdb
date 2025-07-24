@@ -286,6 +286,7 @@ public class ParserTestExecutor extends TestExecutor {
     private void rewrite(IQueryRewriter rewriter, Query topExpr, LangRewritingContext context) throws Exception {
         invokeMethod(rewriter, "setup", context, topExpr, null, true, false);
         invokeMethod(rewriter, "resolveFunctionCalls");
+        invokeMethod(rewriter, "rewriteVectorDistanceCalls");
         invokeMethod(rewriter, "generateColumnNames");
         invokeMethod(rewriter, "substituteGroupbyKeyExpression");
         invokeMethod(rewriter, "rewriteGroupBys");

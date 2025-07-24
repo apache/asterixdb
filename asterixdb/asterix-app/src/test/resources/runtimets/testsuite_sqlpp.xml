@@ -23,6 +23,7 @@
         <!ENTITY GeoQueries SYSTEM "queries_sqlpp/geojson/GeoJSONQueries.xml">
         <!ENTITY TemporalQueries SYSTEM "queries_sqlpp/temporal/TemporalQueries.xml">
         <!ENTITY CBOJoinQueries SYSTEM "queries_sqlpp/cbo-join/CBOJoinQueries.xml">
+        <!ENTITY VectorQueries SYSTEM "queries_sqlpp/vector/VectorQueries.xml">
         ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
   &ObjectsQueries;
@@ -31,4 +32,5 @@
   &TemporalQueries;
   &SqlppQueries;
   &CBOJoinQueries;
+  &VectorQueries;
 </test-suite>

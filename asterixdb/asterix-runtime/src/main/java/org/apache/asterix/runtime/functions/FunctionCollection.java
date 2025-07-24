@@ -647,6 +647,12 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.WeekOfYear2Descr
 import org.apache.asterix.runtime.evaluators.functions.temporal.WeekOfYearDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.CosineDistanceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.CosineSimilarityDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.DotDistanceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.DotProductDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanDistanceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanSquaredDistanceDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.DenseRankRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.NtileRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.PercentRankRunningAggregateDescriptor;
@@ -1333,6 +1339,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(PrintDateTimeDescriptor.FACTORY);
         fc.add(GetOverlappingIntervalDescriptor.FACTORY);
         fc.add(DurationFromIntervalDescriptor.FACTORY);
+
+        // Vector functions
+        fc.add(EuclideanDistanceDescriptor.FACTORY);
+        fc.add(EuclideanSquaredDistanceDescriptor.FACTORY);
+        fc.add(CosineSimilarityDescriptor.FACTORY);
+        fc.add(DotProductDescriptor.FACTORY);
+        fc.add(CosineDistanceDescriptor.FACTORY);
+        fc.add(DotDistanceDescriptor.FACTORY);
 
         // Type functions.
         fc.add(GetTypeDescriptor.FACTORY);
