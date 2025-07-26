@@ -263,6 +263,8 @@
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

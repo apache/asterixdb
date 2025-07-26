@@ -64,19 +64,18 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
         for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
             pointable.nextChild();
             AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
-            if(child.getTypeTag() == ATypeTag.MISSING){
-            continue;
+            if (child.getTypeTag() == ATypeTag.MISSING) {
+                continue;
             }
             nonMissingChildren++;
             String childColumnName = fieldNamesDictionary.getOrCreateFieldNameIndex(pointable.getFieldName());
             ParquetSchemaTree.SchemaNode childType = recordType.getChildren().get(childColumnName);
             if (childType == null) {
-                schemaComparisonType = ISchemaChecker.max(schemaComparisonType, SchemaComparisonType.CONFLICTING);
-                continue;
+                return SchemaComparisonType.CONFLICTING;
             }
             schemaComparisonType = ISchemaChecker.max(schemaComparisonType, child.accept(this, childType));
         }
-        if(nonMissingChildren!= recordType.getChildren().size()) {
+        if (nonMissingChildren != recordType.getChildren().size()) {
             return SchemaComparisonType.CONFLICTING;
         }
         return schemaComparisonType;
@@ -118,7 +117,7 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
             return SchemaComparisonType.GROWING;
         }
         // SchemaNode.getTypeTag can never be MISSING here
-        if(currentValue.getTypeTag()==ATypeTag.NULL){
+        if (currentValue.getTypeTag() == ATypeTag.NULL) {
             return SchemaComparisonType.EQUIVALENT;
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.FlatType inferredType)) {
@@ -131,7 +130,7 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
         if (!inferredType.isCompatibleWith(currentValue.getTypeTag())) {
             return ISchemaChecker.SchemaComparisonType.CONFLICTING;
         }
-        if(inferredType.isStrictChildOf(currentValue.getTypeTag())) {
+        if (inferredType.isStrictChildOf(currentValue.getTypeTag())) {
             return ISchemaChecker.SchemaComparisonType.GROWING;
         }
         if (inferredType.isStrictParentOf(currentValue.getTypeTag())) {

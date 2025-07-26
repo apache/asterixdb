@@ -184,11 +184,11 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
         for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
             pointable.nextChild();
             AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
-            String columnName = fieldNamesDictionary.getOrCreateFieldNameIndex(pointable.getFieldName());
             if (child.getTypeTag() == ATypeTag.MISSING) {
                 continue;
             }
             nonMissingChildren++;
+            String columnName = fieldNamesDictionary.getOrCreateFieldNameIndex(pointable.getFieldName());
             if (!groupType.containsField(columnName)) {
                 LOGGER.info("Group type: {} does not contain field in record type: {}",
                         LogRedactionUtil.userData(groupType.getName()), LogRedactionUtil.userData(columnName));
@@ -299,12 +299,12 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
         recordConsumer.startMessage();
         for (int i = 0; i < rec.getNumberOfChildren(); i++) {
             rec.nextChild();
-            String columnName = fieldNamesDictionary.getOrCreateFieldNameIndex(rec.getFieldName());
             AbstractLazyVisitablePointable child = rec.getChildVisitablePointable();
             if (child.getTypeTag() == ATypeTag.MISSING) {
                 continue;
             }
             nonMissingChildren++;
+            String columnName = fieldNamesDictionary.getOrCreateFieldNameIndex(rec.getFieldName());
             if (!schema.containsField(columnName)) {
                 LOGGER.info("Schema: {} does not contain field: {}", LogRedactionUtil.userData(schema.toString()),
                         LogRedactionUtil.userData(columnName));

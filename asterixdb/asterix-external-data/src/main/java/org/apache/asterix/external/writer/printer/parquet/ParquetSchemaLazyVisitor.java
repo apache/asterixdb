@@ -97,7 +97,8 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             schemaNode.setType(new ParquetSchemaTree.ListType());
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.ListType listType)) {
-            LOGGER.info("Incompatible type found in list: {} and {}" ,LogRedactionUtil.userData(schemaNode.toString()) ,pointable.getTypeTag());
+            LOGGER.info("Incompatible type found in list: {} and {}", LogRedactionUtil.userData(schemaNode.toString()),
+                    pointable.getTypeTag());
             throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
         }
         int numChildren = pointable.getNumberOfChildren();
@@ -105,7 +106,7 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
             pointable.nextChild();
             AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
 
-            if(child.getTypeTag()==ATypeTag.MISSING) {
+            if (child.getTypeTag() == ATypeTag.MISSING) {
                 throw RuntimeDataException.create(PARQUET_UNSUPPORTED_MIXED_TYPE_ARRAY);
             }
 
@@ -118,15 +119,14 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
     }
 
     @Override
-    public Void visit(FlatLazyVisitablePointable pointable,ParquetSchemaTree.SchemaNode schemaNode)
+    public Void visit(FlatLazyVisitablePointable pointable, ParquetSchemaTree.SchemaNode schemaNode)
             throws HyracksDataException {
-        if(pointable.getTypeTag() == ATypeTag.NULL) {
-            return  null;
+        if (pointable.getTypeTag() == ATypeTag.NULL) {
+            return null;
         }
 
         if (schemaNode.getType() == null) {
-            if (pointable.getTypeTag() == ATypeTag.MISSING)
-            {
+            if (pointable.getTypeTag() == ATypeTag.MISSING) {
                 foundMissing = true;
                 schemaNode.setType(new ParquetSchemaTree.FlatType(ATypeTag.MISSING));
                 return null;
@@ -186,11 +186,12 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
 
     private static void removeMissing(ParquetSchemaTree.SchemaNode schemaNode) {
         if (schemaNode.getType() == null) {
-         return;
+            return;
         }
         if (schemaNode.getType() instanceof ParquetSchemaTree.RecordType recordType) {
-            recordType.getChildren().entrySet().removeIf(
-                    entry ->  (entry.getValue().getType() instanceof ParquetSchemaTree.FlatType flatType &&  flatType.getTypeTag() == ATypeTag.MISSING));
+            recordType.getChildren().entrySet()
+                    .removeIf(entry -> (entry.getValue().getType() instanceof ParquetSchemaTree.FlatType flatType
+                            && flatType.getTypeTag() == ATypeTag.MISSING));
 
             for (Map.Entry<String, ParquetSchemaTree.SchemaNode> entry : recordType.getChildren().entrySet()) {
                 removeMissing(entry.getValue());
