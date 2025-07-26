@@ -42,7 +42,7 @@ public class LocalCloudUtil {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MOCK_SERVER_PORT = 8001;
-    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
+    public static final String MOCK_SERVER_ENDPOINT = "http://127.0.0.1:" + MOCK_SERVER_PORT;
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
     public static final String STORAGE_DUMMY_FILE = "storage/dummy.txt";
     public static final String MOCK_SERVER_REGION = "us-west-2";
@@ -81,7 +81,7 @@ public class LocalCloudUtil {
         LOGGER.info("S3 mock server started successfully");
 
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
+        URI endpoint = URI.create(MOCK_SERVER_ENDPOINT); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();

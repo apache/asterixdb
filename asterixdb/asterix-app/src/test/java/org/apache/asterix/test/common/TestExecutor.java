@@ -2419,21 +2419,7 @@ public class TestExecutor {
             // For adapter placeholder, it means we have a template to replace
             if (placeholder.getName().equals("adapter")) {
                 str = str.replace("%adapter%", placeholder.getValue());
-
-                // Early terminate if there are no template place holders to replace
-                if (noTemplateRequired(str)) {
-                    continue;
-                }
-
-                if (placeholder.getValue().equalsIgnoreCase("S3")) {
-                    str = applyS3Substitution(str, placeholders);
-                } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
-                    str = applyAzureSubstitution(str, placeholders);
-                } else if (placeholder.getValue().equalsIgnoreCase("GCS")) {
-                    str = applyGCSSubstitution(str, placeholders);
-                } else if (placeholder.getValue().equalsIgnoreCase("HDFS")) {
-                    str = applyHDFSSubstitution(str, placeholders);
-                }
+                str = applyAdapterSubstitution(str, placeholder.getValue(), placeholders);
             } else {
                 // Any other place holders, just replace with the value
                 str = str.replace("%" + placeholder.getName() + "%", placeholder.getValue());
@@ -2452,6 +2438,19 @@ public class TestExecutor {
         str = str.replace(TENANT_ID_PLACEHOLDER, TENANT_ID_DEFAULT);
         str = replaceExternalEndpoint(str);
 
+        return str;
+    }
+
+    protected String applyAdapterSubstitution(String str, String adapter, List<Placeholder> placeholders) {
+        if (adapter.equalsIgnoreCase("S3")) {
+            str = applyS3Substitution(str, placeholders);
+        } else if (adapter.equalsIgnoreCase("AzureBlob")) {
+            str = applyAzureSubstitution(str, placeholders);
+        } else if (adapter.equalsIgnoreCase("GCS")) {
+            str = applyGCSSubstitution(str, placeholders);
+        } else if (adapter.equalsIgnoreCase("HDFS")) {
+            str = applyHDFSSubstitution(str, placeholders);
+        }
         return str;
     }
 
@@ -2494,16 +2493,28 @@ public class TestExecutor {
             str = setS3TemplateDefault(str);
         }
 
-        // Set to default if not replaced
-        if (isReplaced && !hasRegion) {
-            str = str.replace(TestConstants.S3_REGION_PLACEHOLDER, TestConstants.S3_REGION_DEFAULT);
-        }
-
-        if (isReplaced && !hasServiceEndpoint) {
-            str = str.replace(TestConstants.S3_SERVICE_ENDPOINT_PLACEHOLDER, TestConstants.S3_SERVICE_ENDPOINT_DEFAULT);
-        }
+        str = str.replace(TestConstants.S3_REGION_PLACEHOLDER, getS3RegionDefault());
+        str = str.replace(TestConstants.S3_SERVICE_ENDPOINT_PLACEHOLDER, getS3ServiceEndpointDefault());
+        str = str.replace(TestConstants.S3_ACCESS_KEY_ID_PLACEHOLDER, getS3AccessKeyIdDefault());
+        str = str.replace(TestConstants.S3_SECRET_ACCESS_KEY_PLACEHOLDER, getS3SecretAccessKeyDefault());
 
         return str;
+    }
+
+    protected String getS3AccessKeyIdDefault() {
+        return TestConstants.S3_ACCESS_KEY_ID_DEFAULT;
+    }
+
+    protected String getS3SecretAccessKeyDefault() {
+        return TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT;
+    }
+
+    protected String getS3ServiceEndpointDefault() {
+        return TestConstants.S3_SERVICE_ENDPOINT_DEFAULT;
+    }
+
+    protected String getS3RegionDefault() {
+        return TestConstants.S3_REGION_DEFAULT;
     }
 
     protected String setS3Template(String str) {
