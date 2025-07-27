@@ -1388,7 +1388,6 @@
     </test-case>
   </test-group>
   <!-- Iceberg Tests Start -->
-  <!-- ASTERIXDB-3468: iceberg tests failing due to unsupported version
   <test-group name="iceberg">
     <test-case FilePath="external-dataset/s3">
       <compilation-unit name="iceberg">
@@ -1435,7 +1434,6 @@
           </compilation-unit>
       </test-case>
   </test-group>
-  -->
   <test-group name="copy-from">
     <test-case FilePath="copy-from">
       <compilation-unit name="copy-2">
