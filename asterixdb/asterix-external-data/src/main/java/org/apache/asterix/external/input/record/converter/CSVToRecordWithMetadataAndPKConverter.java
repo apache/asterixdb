@@ -47,7 +47,7 @@ public class CSVToRecordWithMetadataAndPKConverter
             IExternalDataRuntimeContext context) {
         IWarningCollector warningCollector = context.getTaskContext().getWarningCollector();
         this.cursor = new FieldCursorForDelimitedDataParser(null, delimiter, ExternalDataConstants.QUOTE,
-                ExternalDataConstants.QUOTE, warningCollector, ExternalDataConstants.EMPTY_STRING);
+                ExternalDataConstants.QUOTE, warningCollector, ExternalDataConstants.EMPTY_STRING, true);
         this.record = new CharArrayRecord();
         this.valueIndex = valueIndex;
         this.recordWithMetadata = new RecordWithMetadataAndPK<>(record, metaType.getFieldTypes(), recordType,

@@ -40,7 +40,7 @@ public class CursorTest {
             reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
             // skip header
             final FieldCursorForDelimitedDataParser cursor =
-                    new FieldCursorForDelimitedDataParser(reader, ',', '"', '"', null, () -> "");
+                    new FieldCursorForDelimitedDataParser(reader, ',', '"', '"', null, () -> "", true);
             // get number of fields from header (first record is header)
             cursor.nextRecord();
             int numOfFields = 0;

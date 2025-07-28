@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -44,6 +45,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
     private int readLength;
     private boolean inQuote;
     private IWarningCollector warnings;
+    private boolean quoteCheckNeeded;
     private static final List<String> recordReaderFormats = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
     private static final String REQUIRED_CONFIGS = KEY_QUOTE;
@@ -55,7 +57,12 @@ public class QuotedLineRecordReader extends LineRecordReader {
         this.warnings = ctx.getWarningCollector();
         String quoteString = config.get(KEY_QUOTE);
         ExternalDataUtils.validateChar(quoteString, KEY_QUOTE);
-        this.quote = quoteString.charAt(0);
+        if (CSVUtils.NONE.equalsIgnoreCase(quoteString)) {
+            this.quoteCheckNeeded = false;
+        } else {
+            this.quoteCheckNeeded = true;
+            this.quote = quoteString.charAt(0);
+        }
         this.escape = ExternalDataUtils.validateGetEscape(config, config.get(ExternalDataConstants.KEY_FORMAT));
     }
 
@@ -88,6 +95,9 @@ public class QuotedLineRecordReader extends LineRecordReader {
 
     @Override
     public boolean hasNext() throws IOException {
+        if (!quoteCheckNeeded) {
+            return super.hasNext();
+        }
         while (true) {
             if (done) {
                 return false;
