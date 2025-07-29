@@ -85,7 +85,7 @@ Chirp users, their Chirps, Gleambook users, their users' employment information,
 some of the key features of AsterixDB. :-)) As a point of information, SQL++ is case-insensitive
 for both keywords and built-in type names, so the exact style of the examples below is just one of
 a number of possibilities.
-
+```
         DROP DATAVERSE TinySocial IF EXISTS;
         CREATE DATAVERSE TinySocial;
         USE TinySocial;
@@ -102,7 +102,7 @@ a number of possibilities.
         CREATE TYPE ChirpMessageType AS closed {
             chirpId: string,
             user: ChirpUserType,
-            senderLocation: point?,
+            senderLocation: geometry?,
             sendTime: datetime,
             referredTopics: {{ string }},
             messageText: string
@@ -127,9 +127,10 @@ a number of possibilities.
             messageId: int,
             authorId: int,
             inResponseTo: int?,
-            senderLocation: point?,
+            senderLocation: geometry?,
             message: string
         };
+```
 
 The first three lines above tell AsterixDB to drop the old TinySocial dataverse, if one already
 exists, and then to create a brand new one and make it the focus of the statements that follow.
@@ -141,7 +142,7 @@ Interestingly (based on one of Chirp's APIs), each Chirp message actually embeds
 sending user's information (current as of when the message was sent), so this is an example of a nested
 object in ADM.
 Chirp messages can optionally contain the sender's location, which is modeled via the senderLocation
-field of spatial type _point_; the question mark following the field type indicates its optionality.
+field of spatial type _geometry_; the question mark following the field type indicates its optionality.
 An optional field is like a nullable field in SQL---it may be present or missing, but when it's present,
 its value's data type will conform to the datatype's specification.
 The sendTime field illustrates the use of a temporal primitive type, _datetime_.
@@ -172,7 +173,7 @@ The only fields that _must_ be specified a priori are the primary key fields of 
 Now that we have defined our datatypes, we can move on and create datasets to store the actual data.
 (If we wanted to, we could even have several named datasets based on any one of these datatypes.)
 We can do this as follows, utilizing the SQL++ DDL capabilities of AsterixDB.
-
+```
         USE TinySocial;
 
         CREATE DATASET GleambookUsers(GleambookUserType)
@@ -192,10 +193,7 @@ We can do this as follows, utilizing the SQL++ DDL capabilities of AsterixDB.
         CREATE INDEX gbAuthorIdx on GleambookMessages(authorId) TYPE btree;
         CREATE INDEX gbSenderLocIndex on GleambookMessages(senderLocation) TYPE rtree;
         CREATE INDEX gbMessageIdx on GleambookMessages(message) TYPE keyword;
-
-        SELECT VALUE ds FROM Metadata.`Dataset` ds;
-        SELECT VALUE ix FROM Metadata.`Index` ix;
-
+```
 The SQL++ DDL statements above create four datasets for holding our social data in the TinySocial
 dataverse: GleambookUsers, GleambookMessages, ChirpUsers, and ChirpMessages.
 The first _CREATE DATASET_ statement creates the GleambookUsers data set.
@@ -225,9 +223,13 @@ In addition to btree, _rtree_ and inverted _keyword_ indexes are supported by As
 Indexes can also have composite keys, and more advanced text indexing is available as well
 (ngram(k), where k is the desired gram length).
 
-### Querying the Metadata Dataverse ###
+```
+        SELECT VALUE ds FROM Metadata.`Dataset` ds;
+        SELECT VALUE ix FROM Metadata.`Index` ix;
+```
 
-The last two statements above show how you can use queries in SQL++ to examine the AsterixDB
+### Querying the Metadata Dataverse ###
+The above two statements above show how you can use queries in SQL++ to examine the AsterixDB
 system catalogs and tell what artifacts you have created.
 Just as relational DBMSs use their own tables to store their catalogs, AsterixDB uses
 its own datasets to persist descriptions of its datasets, datatypes, indexes, and so on.
@@ -276,18 +278,18 @@ of the data instances will be stored separately from their associated field name
 
         INSERT INTO ChirpMessages
         ([
-        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"product-z","customization"}},"messageText":" love product-z its customization is good:)"},
-        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"ccast","shortcut-menu"}},"messageText":" like ccast its shortcut-menu is awesome:)"},
-        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" like product-w the speed is good:)"},
-        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"product-b","voice-command"}},"messageText":" like product-b the voice-command is mind-blowing:)"},
-        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" can't stand product-w its speed is terrible:("},
-        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"x-phone","voice-clarity"}},"messageText":" like x-phone the voice-clarity is good:)"},
-        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"product-y","platform"}},"messageText":" like product-y the platform is good"},
-        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"product-z","shortcut-menu"}},"messageText":" like product-z the shortcut-menu is awesome:)"},
-        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"ccast","voicemail-service"}},"messageText":" love ccast its voicemail-service is awesome"},
-        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"ccast","voice-clarity"}},"messageText":" hate ccast its voice-clarity is OMG:("},
-        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"x-phone","platform"}},"messageText":" can't stand x-phone its platform is terrible"},
-        {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":point("24.82,94.63"),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"product-y","voice-command"}},"messageText":" like product-y the voice-command is amazing:)"}
+        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(47.44,80.65),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"product-z","customization"}},"messageText":" love product-z its customization is good:)"},
+        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":st_make_point(32.84,67.14),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"ccast","shortcut-menu"}},"messageText":" like ccast its shortcut-menu is awesome:)"},
+        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(29.72,75.8),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" like product-w the speed is good:)"},
+        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(39.28,70.48),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"product-b","voice-command"}},"messageText":" like product-b the voice-command is mind-blowing:)"},
+        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(40.09,92.69),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" can't stand product-w its speed is terrible:("},
+        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":st_make_point(47.51,83.99),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"x-phone","voice-clarity"}},"messageText":" like x-phone the voice-clarity is good:)"},
+        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":st_make_point(36.21,72.6),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"product-y","platform"}},"messageText":" like product-y the platform is good"},
+        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(46.05,93.34),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"product-z","shortcut-menu"}},"messageText":" like product-z the shortcut-menu is awesome:)"},
+        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":st_make_point(36.86,74.62),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"ccast","voicemail-service"}},"messageText":" love ccast its voicemail-service is awesome"},
+        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":st_make_point(29.15,76.53),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"ccast","voice-clarity"}},"messageText":" hate ccast its voice-clarity is OMG:("},
+        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":st_make_point(37.59,68.42),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"x-phone","platform"}},"messageText":" can't stand x-phone its platform is terrible"},
+        {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":st_make_point(24.82,94.63),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"product-y","voice-command"}},"messageText":" like product-y the voice-command is amazing:)"}
         ]);
 
 [Gleambook Users](../data/gbu.adm)
@@ -308,27 +310,27 @@ of the data instances will be stored separately from their associated field name
         {"id":10,"alias":"Bram","name":"BramHatch","userSince":datetime("2010-10-16T10:10:00"),"friendIds":{{1,5,9}},"employment":[{"organizationName":"physcane","startDate":date("2007-06-05"),"endDate":date("2011-11-05")}]}
         ]);
 
-[Gleambook Messages](../data/gbm.adm)
+[Gleambook Messages](   ../data/gbm.adm)
 
         USE TinySocial;
 
         INSERT INTO GleambookMessages
         ([
-        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love product-b its shortcut-menu is awesome:)"},
-        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike x-phone its touch-screen is horrible"},
-        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like product-y the plan is amazing"},
-        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand acast the network is horrible:("},
-        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love product-b the customization is mind-blowing"},
-        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like product-z its platform is mind-blowing"},
-        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike product-b the speed is horrible"},
-        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like ccast the 3G is awesome:)"},
-        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love ccast its wireless is good"},
-        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand product-w the touch-screen is terrible"},
-        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand acast its plan is terrible"},
-        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand product-z its voicemail-service is OMG:("},
-        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike x-phone the voice-command is bad:("},
-        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love acast its 3G is good:)"},
-        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like x-phone the voicemail-service is awesome"}
+        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":st_make_point(47.16,77.75),"message":" love product-b its shortcut-menu is awesome:)"},
+        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":st_make_point(41.66,80.87),"message":" dislike x-phone its touch-screen is horrible"},
+        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":st_make_point(48.09,81.01),"message":" like product-y the plan is amazing"},
+        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":st_make_point(37.73,97.04),"message":" can't stand acast the network is horrible:("},
+        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":st_make_point(34.7,90.76),"message":" love product-b the customization is mind-blowing"},
+        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":st_make_point(31.5,75.56),"message":" like product-z its platform is mind-blowing"},
+        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":st_make_point(32.91,85.05),"message":" dislike product-b the speed is horrible"},
+        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":st_make_point(40.33,80.87),"message":" like ccast the 3G is awesome:)"},
+        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":st_make_point(34.45,96.48),"message":" love ccast its wireless is good"},
+        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":st_make_point(42.5,70.01),"message":" can't stand product-w the touch-screen is terrible"},
+        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":st_make_point(38.97,77.49),"message":" can't stand acast its plan is terrible"},
+        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":st_make_point(42.26,77.76),"message":" can't stand product-z its voicemail-service is OMG:("},
+        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":st_make_point(42.77,78.92),"message":" dislike x-phone the voice-command is bad:("},
+        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":st_make_point(41.33,85.28),"message":" love acast its 3G is good:)"},
+        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":st_make_point(44.47,67.11),"message":" like x-phone the voicemail-service is awesome"}
         ]);
 
 
@@ -385,7 +387,7 @@ Since this dataset is indexed on user id (its primary key), this query will be d
 
 The expected result for our sample data is as follows:
 
-        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": datetime("2008-01-01T10:10:00.000Z"), "friendIds": {{ 3 }}, "employment": [ { "organizationName": "Plexlane", "startDate": date("2010-02-28") } ] }
+        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": "2008-01-01T10:10:00.000", "friendIds": [ 3 ], "employment": [ { "organizationName": "Plexlane", "startDate": "2010-02-28" } ] }
 
 
 ### Query 0-B - Range Scan ###
@@ -400,9 +402,9 @@ For example, for our next query, let's find the Gleambook users whose ids are in
 
 This query's expected result, also evaluable using the primary index on user id, is:
 
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": "2011-01-22T10:10:00.000", "friendIds": [ 1, 4 ], "employment": [ { "organizationName": "Hexviafind", "startDate": "2010-04-27" } ], "nickname": "Izzy" }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": "2012-07-10T10:10:00.000", "friendIds": [ 1, 5, 8, 9 ], "employment": [ { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ] }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": "2010-12-27T10:10:00.000", "friendIds": [ 2 ], "employment": [ { "organizationName": "Zamcorporation", "startDate": "2010-06-08" } ] }
 
 ### Query 1 - Other Query Filters ###
 SQL++ can do range queries on any data type that supports the appropriate set of comparators.
@@ -417,10 +419,10 @@ As an example, this next query retrieves the Gleambook users who joined between 
 
 The expected result for this query, also an indexable query, is as follows:
 
-        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
+        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": "2010-10-16T10:10:00.000", "friendIds": [ 1, 5, 9 ], "employment": [ { "organizationName": "physcane", "startDate": "2007-06-05", "endDate": "2011-11-05" } ] }
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": "2011-01-22T10:10:00.000", "friendIds": [ 1, 4 ], "employment": [ { "organizationName": "Hexviafind", "startDate": "2010-04-27" } ], "nickname": "Izzy" }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": "2012-07-10T10:10:00.000", "friendIds": [ 1, 5, 8, 9 ], "employment": [ { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ] }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": "2010-12-27T10:10:00.000", "friendIds": [ 2 ], "employment": [ { "organizationName": "Zamcorporation", "startDate": "2010-06-08" } ] }
 
 ### Query 2-A - Equijoin ###
 In addition to simply binding variables to data instances and returning them "whole",
@@ -476,21 +478,21 @@ as SQL was not designed to handle the richer, nested data model that underlies t
 
 The expected result of this version of the SQL++ join query for our sample data set is:
 
-        { "user": { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": datetime("2005-01-17T10:10:00.000Z"), "friendIds": {{ 1, 3, 7 }}, "employment": [ { "organizationName": "jaydax", "startDate": date("2009-05-15") } ] }, "msg": { "messageId": 5, "authorId": 6, "inResponseTo": 2, "senderLocation": point("34.7,90.76"), "message": " love product-b the customization is mind-blowing" } }
-        { "user": { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": datetime("2005-09-20T10:10:00.000Z"), "friendIds": {{ 3, 10 }}, "employment": [ { "organizationName": "Zuncan", "startDate": date("2003-04-22"), "endDate": date("2009-12-13") } ], "nickname": "Woody" }, "msg": { "messageId": 14, "authorId": 9, "inResponseTo": 12, "senderLocation": point("41.33,85.28"), "message": " love acast its 3G is good:)" } }
-        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 12, "authorId": 10, "inResponseTo": 6, "senderLocation": point("42.26,77.76"), "message": " can't stand product-z its voicemail-service is OMG:(" } }
-        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 13, "authorId": 10, "inResponseTo": 4, "senderLocation": point("42.77,78.92"), "message": " dislike x-phone the voice-command is bad:(" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 8, "authorId": 1, "inResponseTo": 11, "senderLocation": point("40.33,80.87"), "message": " like ccast the 3G is awesome:)" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 10, "authorId": 1, "inResponseTo": 12, "senderLocation": point("42.5,70.01"), "message": " can't stand product-w the touch-screen is terrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 11, "authorId": 1, "inResponseTo": 1, "senderLocation": point("38.97,77.49"), "message": " can't stand acast its plan is terrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 2, "authorId": 1, "inResponseTo": 4, "senderLocation": point("41.66,80.87"), "message": " dislike x-phone its touch-screen is horrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 4, "authorId": 1, "inResponseTo": 2, "senderLocation": point("37.73,97.04"), "message": " can't stand acast the network is horrible:(" } }
-        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 6, "authorId": 2, "inResponseTo": 1, "senderLocation": point("31.5,75.56"), "message": " like product-z its platform is mind-blowing" } }
-        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 3, "authorId": 2, "inResponseTo": 4, "senderLocation": point("48.09,81.01"), "message": " like product-y the plan is amazing" } }
-        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 9, "authorId": 3, "inResponseTo": 12, "senderLocation": point("34.45,96.48"), "message": " love ccast its wireless is good" } }
-        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 1, "authorId": 3, "inResponseTo": 2, "senderLocation": point("47.16,77.75"), "message": " love product-b its shortcut-menu is awesome:)" } }
-        { "user": { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": datetime("2010-01-05T10:10:00.000Z"), "friendIds": {{ 3, 6, 10 }}, "employment": [ { "organizationName": "Kongreen", "startDate": date("2010-11-27") } ] }, "msg": { "messageId": 7, "authorId": 5, "inResponseTo": 15, "senderLocation": point("32.91,85.05"), "message": " dislike product-b the speed is horrible" } }
-        { "user": { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": datetime("2012-08-07T10:10:00.000Z"), "friendIds": {{ 6 }}, "employment": [ { "organizationName": "Labzatron", "startDate": date("2011-04-19") } ] }, "msg": { "messageId": 15, "authorId": 7, "inResponseTo": 11, "senderLocation": point("44.47,67.11"), "message": " like x-phone the voicemail-service is awesome" } }
+        { "user": { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": "2005-01-17T10:10:00.000", "friendIds": [ 1, 3, 7 ], "employment": [ { "organizationName": "jaydax", "startDate": "2009-05-15" } ] }, "msg": { "messageId": 5, "authorId": 6, "inResponseTo": 2, "senderLocation": { “type”: “Point”, “coordinates”:[34.7,90.76] }, "message": " love product-b the customization is mind-blowing" } }
+        { "user": { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": "2005-09-20T10:10:00.000", "friendIds": [ 3, 10 ], "employment": [ { "organizationName": "Zuncan", "startDate": "2003-04-22", "endDate": "2009-12-13" } ], "nickname": "Woody" }, "msg": { "messageId": 14, "authorId": 9, "inResponseTo": 12, "senderLocation": { “type”: “Point”, “coordinates”:[41.33,85.28] }, "message": " love acast its 3G is good:)" } }
+        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": "2010-10-16T10:10:00.000", "friendIds": [ 1, 5, 9 ], "employment": [ { "organizationName": "physcane", "startDate": "2007-06-05", "endDate": "2011-11-05" } ] }, "msg": { "messageId": 12, "authorId": 10, "inResponseTo": 6, "senderLocation": { “type”: “Point”, “coordinates”:[42.26,77.76] }, "message": " can't stand product-z its voicemail-service is OMG:(" } }
+        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": "2010-10-16T10:10:00.000", "friendIds": [ 1, 5, 9 ], "employment": [ { "organizationName": "physcane", "startDate": "2007-06-05", "endDate": "2011-11-05" } ] }, "msg": { "messageId": 13, "authorId": 10, "inResponseTo": 4, "senderLocation": { “type”: “Point”, “coordinates”:[42.77,78.92] }, "message": " dislike x-phone the voice-command is bad:(" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 8, "authorId": 1, "inResponseTo": 11, "senderLocation": { “type”: “Point”, “coordinates”:[40.33,80.87] }, "message": " like ccast the 3G is awesome:)" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 10, "authorId": 1, "inResponseTo": 12, "senderLocation": { “type”: “Point”, “coordinates”:[42.5,70.01] }, "message": " can't stand product-w the touch-screen is terrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 11, "authorId": 1, "inResponseTo": 1, "senderLocation": { “type”: “Point”, “coordinates”:[38.97,77.49] }, "message": " can't stand acast its plan is terrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 2, "authorId": 1, "inResponseTo": 4, "senderLocation": { “type”: “Point”, “coordinates”:[41.66,80.87] }, "message": " dislike x-phone its touch-screen is horrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 4, "authorId": 1, "inResponseTo": 2, "senderLocation": { “type”: “Point”, “coordinates”:[37.73,97.04] }, "message": " can't stand acast the network is horrible:(" } }
+        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": "2011-01-22T10:10:00.000", "friendIds": [ 1, 4 ], "employment": [ { "organizationName": "Hexviafind", "startDate": "2010-04-27" } ], "nickname": "Izzy" }, "msg": { "messageId": 6, "authorId": 2, "inResponseTo": 1, "senderLocation": { “type”: “Point”, “coordinates”:[31.5,75.56] }, "message": " like product-z its platform is mind-blowing" } }
+        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": "2011-01-22T10:10:00.000", "friendIds": [ 1, 4 ], "employment": [ { "organizationName": "Hexviafind", "startDate": "2010-04-27" } ], "nickname": "Izzy" }, "msg": { "messageId": 3, "authorId": 2, "inResponseTo": 4, "senderLocation": { “type”: “Point”, “coordinates”:[48.09,81.01] }, "message": " like product-y the plan is amazing" } }
+        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": "2012-07-10T10:10:00.000", "friendIds": [ 1, 5, 8, 9 ], "employment": [ { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ] }, "msg": { "messageId": 9, "authorId": 3, "inResponseTo": 12, "senderLocation": { “type”: “Point”, “coordinates”:[34.45,96.48] }, "message": " love ccast its wireless is good" } }
+        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": "2012-07-10T10:10:00.000", "friendIds": [ 1, 5, 8, 9 ], "employment": [ { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ] }, "msg": { "messageId": 1, "authorId": 3, "inResponseTo": 2, "senderLocation": { “type”: “Point”, “coordinates”:[47.16,77.75] }, "message": " love product-b its shortcut-menu is awesome:)" } }
+        { "user": { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": "2010-01-05T10:10:00.000", "friendIds": [ 3, 6, 10 ], "employment": [ { "organizationName": "Kongreen", "startDate": "2010-11-27" } ] }, "msg": { "messageId": 7, "authorId": 5, "inResponseTo": 15, "senderLocation": { “type”: “Point”, “coordinates”:[32.91,85.05] }, "message": " dislike product-b the speed is horrible" } }
+        { "user": { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": "2012-08-07T10:10:00.000", "friendIds": [ 6 ], "employment": [ { "organizationName": "Labzatron", "startDate": "2011-04-19" } ] }, "msg": { "messageId": 15, "authorId": 7, "inResponseTo": 11, "senderLocation": { “type”: “Point”, “coordinates”:[44.47,67.11] }, "message": " like x-phone the voicemail-service is awesome" } }
 
 Finally (for now :-)), another less lazy and more explicit SQL++ way of achieving the result shown above is:
 
@@ -613,7 +615,7 @@ functions on the spatial data type instead of id equality in the correlated quer
         SELECT cm1.messageText AS message,
                (SELECT VALUE cm2.messageText
                 FROM ChirpMessages cm2
-                WHERE `spatial-distance`(cm1.senderLocation, cm2.senderLocation) <= 1
+                WHERE st_distance(cm1.senderLocation, cm2.senderLocation) <= 1
                   AND cm2.chirpId < cm1.chirpId) AS nearbyMessages
         FROM ChirpMessages cm1;
 
@@ -680,13 +682,13 @@ This leads us to the following SQL++ query:
 
 The expected result in this case is:
 
-        { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": datetime("2005-01-17T10:10:00.000Z"), "friendIds": {{ 1, 3, 7 }}, "employment": [ { "organizationName": "jaydax", "startDate": date("2009-05-15") } ] }
-        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": datetime("2008-01-01T10:10:00.000Z"), "friendIds": {{ 3 }}, "employment": [ { "organizationName": "Plexlane", "startDate": date("2010-02-28") } ] }
-        { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
-        { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": datetime("2010-01-05T10:10:00.000Z"), "friendIds": {{ 3, 6, 10 }}, "employment": [ { "organizationName": "Kongreen", "startDate": date("2010-11-27") } ] }
-        { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": datetime("2012-08-07T10:10:00.000Z"), "friendIds": {{ 6 }}, "employment": [ { "organizationName": "Labzatron", "startDate": date("2011-04-19") } ] }
+        { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": "2005-01-17T10:10:00.000", "friendIds": [ 1, 3, 7 ], "employment": [ { "organizationName": "jaydax", "startDate": "2009-05-15" } ] }
+        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": "2008-01-01T10:10:00.000", "friendIds": [ 3 ], "employment": [ { "organizationName": "Plexlane", "startDate": "2010-02-28" } ] }
+        { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": "2012-08-20T10:10:00.000", "friendIds": [ 2, 3, 6, 10 ], "employment": [ { "organizationName": "Codetechno", "startDate": "2006-08-06" }, { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ], "nickname": "Mags", "gender": "F" }
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": "2011-01-22T10:10:00.000", "friendIds": [ 1, 4 ], "employment": [ { "organizationName": "Hexviafind", "startDate": "2010-04-27" } ], "nickname": "Izzy" }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": "2010-12-27T10:10:00.000", "friendIds": [ 2 ], "employment": [ { "organizationName": "Zamcorporation", "startDate": "2010-06-08" } ] }
+        { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": "2010-01-05T10:10:00.000", "friendIds": [ 3, 6, 10 ], "employment": [ { "organizationName": "Kongreen", "startDate": "2010-11-27" } ] }
+        { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": "2012-08-07T10:10:00.000", "friendIds": [ 6 ], "employment": [ { "organizationName": "Labzatron", "startDate": "2011-04-19" } ] }
 
 ### Query 7 - Universal Quantification ###
 As an example of a universal SQL++ query, here we show a query to list the Gleambook users who are currently unemployed.
@@ -701,9 +703,9 @@ following SQL++ query:
 
 Here is the expected result for our sample data:
 
-        { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": datetime("2005-09-20T10:10:00.000Z"), "friendIds": {{ 3, 10 }}, "employment": [ { "organizationName": "Zuncan", "startDate": date("2003-04-22"), "endDate": date("2009-12-13") } ], "nickname": "Woody" }
-        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
+        { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": "2005-09-20T10:10:00.000", "friendIds": [ 3, 10 ], "employment": [ { "organizationName": "Zuncan", "startDate": "2003-04-22", "endDate": "2009-12-13" } ], "nickname": "Woody" }
+        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": "2010-10-16T10:10:00.000", "friendIds": [ 1, 5, 9 ], "employment": [ { "organizationName": "physcane", "startDate": "2007-06-05", "endDate": "2011-11-05" } ] }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": "2012-07-10T10:10:00.000", "friendIds": [ 1, 5, 8, 9 ], "employment": [ { "organizationName": "geomedia", "startDate": "2010-06-17", "endDate": "2010-01-26" } ] }
 
 ### Query 8 - Simple Aggregation ###
 Like SQL, the SQL++ language of AsterixDB provides support for computing aggregates over large amounts of data.
@@ -837,18 +839,18 @@ be used for the query's similarity operator and that a similarity index of 0.3 b
 
 The expected result for this fuzzy join query is:
 
-        { "chirp": { "chirpId": "11", "user": { "screenName": "NilaMilliron_tw", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Nila Milliron", "followersCount": 22649 }, "senderLocation": point("37.59,68.42"), "sendTime": datetime("2008-03-09T10:10:00.000Z"), "referredTopics": {{ "x-phone", "platform" }}, "messageText": " can't stand x-phone its platform is terrible" }, "similarChirps": [ "6", "7" ] }
-        { "chirp": { "chirpId": "2", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("32.84,67.14"), "sendTime": datetime("2010-05-13T10:10:00.000Z"), "referredTopics": {{ "ccast", "shortcut-menu" }}, "messageText": " like ccast its shortcut-menu is awesome:)" }, "similarChirps": [ "9", "8" ] }
-        { "chirp": { "chirpId": "3", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("29.72,75.8"), "sendTime": datetime("2006-11-04T10:10:00.000Z"), "referredTopics": {{ "product-w", "speed" }}, "messageText": " like product-w the speed is good:)" }, "similarChirps": [ "5" ] }
-        { "chirp": { "chirpId": "4", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("39.28,70.48"), "sendTime": datetime("2011-12-26T10:10:00.000Z"), "referredTopics": {{ "product-b", "voice-command" }}, "messageText": " like product-b the voice-command is mind-blowing:)" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "6", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("47.51,83.99"), "sendTime": datetime("2010-05-07T10:10:00.000Z"), "referredTopics": {{ "x-phone", "voice-clarity" }}, "messageText": " like x-phone the voice-clarity is good:)" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "7", "user": { "screenName": "ChangEwing_573", "lang": "en", "friendsCount": 182, "statusesCount": 394, "name": "Chang Ewing", "followersCount": 32136 }, "senderLocation": point("36.21,72.6"), "sendTime": datetime("2011-08-25T10:10:00.000Z"), "referredTopics": {{ "product-y", "platform" }}, "messageText": " like product-y the platform is good" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "9", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("36.86,74.62"), "sendTime": datetime("2012-07-21T10:10:00.000Z"), "referredTopics": {{ "ccast", "voicemail-service" }}, "messageText": " love ccast its voicemail-service is awesome" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "1", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("47.44,80.65"), "sendTime": datetime("2008-04-26T10:10:00.000Z"), "referredTopics": {{ "product-z", "customization" }}, "messageText": " love product-z its customization is good:)" }, "similarChirps": [ "8" ] }
-        { "chirp": { "chirpId": "10", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("29.15,76.53"), "sendTime": datetime("2008-01-26T10:10:00.000Z"), "referredTopics": {{ "ccast", "voice-clarity" }}, "messageText": " hate ccast its voice-clarity is OMG:(" }, "similarChirps": [ "2", "6", "9" ] }
-        { "chirp": { "chirpId": "12", "user": { "screenName": "OliJackson_512", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Oli Jackson", "followersCount": 22649 }, "senderLocation": point("24.82,94.63"), "sendTime": datetime("2010-02-13T10:10:00.000Z"), "referredTopics": {{ "product-y", "voice-command" }}, "messageText": " like product-y the voice-command is amazing:)" }, "similarChirps": [ "4", "7" ] }
-        { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("40.09,92.69"), "sendTime": datetime("2006-08-04T10:10:00.000Z"), "referredTopics": {{ "product-w", "speed" }}, "messageText": " can't stand product-w its speed is terrible:(" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("46.05,93.34"), "sendTime": datetime("2005-10-14T10:10:00.000Z"), "referredTopics": {{ "product-z", "shortcut-menu" }}, "messageText": " like product-z the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "11", "user": { "screenName": "NilaMilliron_tw", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Nila Milliron", "followersCount": 22649 }, "senderLocation": { “type”: “Point”, “coordinates”:[37.59,68.42] }, "sendTime": "2008-03-09T10:10:00.000", "referredTopics": [ "x-phone", "platform" ], "messageText": " can't stand x-phone its platform is terrible" }, "similarChirps": [ "6", "7" ] }
+        { "chirp": { "chirpId": "2", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": { “type”: “Point”, “coordinates”:[32.84,67.14] }, "sendTime": "2010-05-13T10:10:00.000", "referredTopics": [ "ccast", "shortcut-menu" ], "messageText": " like ccast its shortcut-menu is awesome:)" }, "similarChirps": [ "9", "8" ] }
+        { "chirp": { "chirpId": "3", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[29.72,75.8] }, "sendTime": "2006-11-04T10:10:00.000", "referredTopics": [ "product-w", "speed" ], "messageText": " like product-w the speed is good:)" }, "similarChirps": [ "5" ] }
+        { "chirp": { "chirpId": "4", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[39.28,70.48] }, "sendTime": "2011-12-26T10:10:00.000", "referredTopics": [ "product-b", "voice-command" ], "messageText": " like product-b the voice-command is mind-blowing:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "6", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": { “type”: “Point”, “coordinates”:[47.51,83.99] }, "sendTime": "2010-05-07T10:10:00.000", "referredTopics": [ "x-phone", "voice-clarity" ], "messageText": " like x-phone the voice-clarity is good:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "7", "user": { "screenName": "ChangEwing_573", "lang": "en", "friendsCount": 182, "statusesCount": 394, "name": "Chang Ewing", "followersCount": 32136 }, "senderLocation": { “type”: “Point”, “coordinates”:[36.21,72.6] }, "sendTime": "2011-08-25T10:10:00.000", "referredTopics": [ "product-y", "platform" ], "messageText": " like product-y the platform is good" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "9", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[36.86,74.62] }, "sendTime": "2012-07-21T10:10:00.000", "referredTopics": [ "ccast", "voicemail-service" ], "messageText": " love ccast its voicemail-service is awesome" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "1", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[47.44,80.65] }, "sendTime": "2008-04-26T10:10:00.000", "referredTopics": [ "product-z", "customization" ], "messageText": " love product-z its customization is good:)" }, "similarChirps": [ "8" ] }
+        { "chirp": { "chirpId": "10", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": { “type”: “Point”, “coordinates”:[29.15,76.53] }, "sendTime": "2008-01-26T10:10:00.000", "referredTopics": [ "ccast", "voice-clarity" ], "messageText": " hate ccast its voice-clarity is OMG:(" }, "similarChirps": [ "2", "6", "9" ] }
+        { "chirp": { "chirpId": "12", "user": { "screenName": "OliJackson_512", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Oli Jackson", "followersCount": 22649 }, "senderLocation": { “type”: “Point”, “coordinates”:[24.82,94.63] }, "sendTime": "2010-02-13T10:10:00.000", "referredTopics": [ "product-y", "voice-command" ], "messageText": " like product-y the voice-command is amazing:)" }, "similarChirps": [ "4", "7" ] }
+        { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[40.09,92.69] }, "sendTime": "2006-08-04T10:10:00.000", "referredTopics": [ "product-w", "speed" ], "messageText": " can't stand product-w its speed is terrible:(" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[46.05,93.34] }, "sendTime": "2005-10-14T10:10:00.000", "referredTopics": [ "product-z", "shortcut-menu" ], "messageText": " like product-z the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
 
 ## Inserting New Data  ###
 In addition to loading and querying data, AsterixDB supports incremental additions to datasets via the SQL++ _INSERT_ statement.
@@ -870,9 +872,9 @@ have all gone up in the interim, although he appears not to have moved in the la
                  "name": "Nathan Giesen",
                  "followersCount": 49420
                 },
-            "senderLocation": point("47.44,80.65"),
+            "senderLocation": st_make_point(47.44,80.65),
             "sendTime": datetime("2008-04-26T10:10:35"),
-            "referredTopics": {{"chirping"}},
+            "referredTopics": ["chirping"],
             "messageText": "chirpy chirp, my fellow chirpers!"
            }
         );

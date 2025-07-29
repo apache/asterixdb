@@ -23,6 +23,7 @@
   <formats>
     <format>zip</format>
     <format>dir</format>
+    <format>tar.bz2</format>
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
@@ -40,6 +41,11 @@
       <excludes>
         <exclude>**/*.sh</exclude>
       </excludes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
+      <directory>src/conf</directory>
+      <outputDirectory>apache-asterixdb-${project.version}/conf</outputDirectory>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>

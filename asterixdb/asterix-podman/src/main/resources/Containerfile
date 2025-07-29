@@ -1,0 +1,49 @@
+###############################################################################
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+# limitations under the License.
+###############################################################################
+
+FROM eclipse-temurin:21-jre-jammy AS install
+ENV TZ = Etc/UTC
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ASTERIX_DIR=/opt/apache-asterixdb
+RUN apt update; \
+    apt -y install lbzip2
+
+
+COPY target/asterix-server-0.9.10-SNAPSHOT-binary-assembly.tar.bz2 asterix.tar.bz2
+RUN mkdir -p $ASTERIX_DIR && \
+    tar -xf asterix.tar.bz2 --strip-components=1 -C $ASTERIX_DIR
+
+FROM eclipse-temurin:21-jre-jammy
+ENV TZ = Etc/UTC
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update; \
+    apt -y upgrade
+ENV ASTERIX_HOME=/var/lib/asterix
+ENV PATH=$ASTERIX_HOME/bin:$PATH
+ENV ASTERIX_DIR=/opt/apache-asterixdb
+COPY target/entrypoint.sh entrypoint.sh
+RUN mkdir -p /var/lib/asterix/data && \
+    groupadd --system asterix && \
+    useradd --system --home-dir $ASTERIX_HOME --gid=asterix asterix && \
+    chown -R asterix:asterix /var/lib/asterix && \
+    chmod +x /entrypoint.sh
+COPY --from=install $ASTERIX_DIR $ASTERIX_DIR
+RUN chown -R asterix:asterix /opt/apache-asterixdb	
+USER asterix:asterix
+ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE 19001 19002 19004 19006 19007 1098 1099

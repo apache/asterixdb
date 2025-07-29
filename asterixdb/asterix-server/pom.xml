@@ -838,6 +838,17 @@
               <platforms>
                 <platform>unix</platform>
               </platforms>
+              <name>asterixccnc</name>
+              <mainClass>org.apache.asterix.hyracks.bootstrap.CCNCApplication</mainClass>
+              <commandLineArguments>
+                <commandLineArgument>-app-class</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplication</commandLineArgument>
+              </commandLineArguments>
+            </program>
+            <program>
+              <platforms>
+                <platform>unix</platform>
+              </platforms>
               <name>asterixnc</name>
               <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
               <commandLineArguments>

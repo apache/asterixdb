@@ -1,17 +1,26 @@
-FROM ubuntu:22.04
+FROM eclipse-temurin:21-jre-jammy
+ENV ASTERIX_DIR=/opt/apache-asterixdb
+
 RUN apt -y update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt -y install systemd openjdk-17-jre-headless unzip wget curl python3-pip python3-venv python3-systemd
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt -y install systemd unzip wget curl python3-pip python3-venv python3-systemd
 RUN pip3 install shiv msgpack
-COPY target/asterix-server_*all.deb .
-RUN dpkg -i asterix-server*.deb
-COPY src/test/resources/cc.conf /opt/apache-asterixdb/cc.conf
-COPY src/test/resources/passwd /opt/apache-asterixdb/etc/passwd
-RUN mkdir -p /etc/systemd/system/pyudf@.service.d/
+# --- Add and unpack the Asterix tarball ---
+COPY target/asterix-server-*-binary-assembly.tar.bz2 /asterix.tar.bz2
+RUN mkdir -p $ASTERIX_DIR && \
+    tar -xf /asterix.tar.bz2 --strip-components=1 -C $ASTERIX_DIR
+
+# --- Config and credential setup ---
+COPY src/test/resources/cc.conf $ASTERIX_DIR/cc.conf
+COPY src/test/resources/passwd $ASTERIX_DIR/etc/passwd
 COPY src/test/resources/testenv.conf /etc/systemd/system/pyudf@.service.d/
 COPY src/test/resources/setup.sh /opt
 RUN chmod +x /opt/setup.sh
+
+# --- Enable services for test environment ---
 RUN systemctl enable asterix-nc asterix-cc pyudf.socket
 
-EXPOSE 19001 19002 19004
+# --- Expose necessary ports ---
+EXPOSE 19001 19002 19004 19006 19007 1098 1099
 
-CMD [ "/lib/systemd/systemd" ]
+# --- Run systemd as PID 1 ---
+CMD ["/lib/systemd/systemd"]
