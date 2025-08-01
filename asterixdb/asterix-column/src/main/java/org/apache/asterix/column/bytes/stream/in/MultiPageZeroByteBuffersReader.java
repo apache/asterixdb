@@ -86,8 +86,7 @@ public final class MultiPageZeroByteBuffersReader {
     }
 
     public int readOffset(long[] offsetColumnIndexPairs, int maxColumnsInZerothSegment, int numberOfColumnsInAPage,
-            int currentColumnIndex) {
-        int numberOfColumns = offsetColumnIndexPairs.length - 1;
+            int currentColumnIndex, int numberOfColumns) {
         for (Int2IntMap.Entry pair : segmentDir.int2IntEntrySet()) {
             int segmentIndex = pair.getIntKey();
             int bufferIndex = pair.getIntValue();

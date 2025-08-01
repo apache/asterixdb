@@ -249,7 +249,7 @@ public class DefaultColumnMultiPageZeroReader extends AbstractColumnMultiPageZer
         if (numberOfColumns > zerothSegmentMaxColumns) {
             // read the rest of the columns from the segment stream
             currentColumnIndex = segmentBuffers.readOffset(offsetColumnIndexPairs, zerothSegmentMaxColumns,
-                    maxNumberOfColumnsInAPage, currentColumnIndex);
+                    maxNumberOfColumnsInAPage, currentColumnIndex, numberOfColumns);
         }
         return currentColumnIndex;
     }

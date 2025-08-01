@@ -137,6 +137,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             return;
         }
 
+        columnRanges.pageZeroSegmentsInit(leafFrame);
         int pageZeroId = leafFrame.getPageId();
         // Pinning all the segments of the page zero
         // as the column eviction logic is based on the length of the columns which
