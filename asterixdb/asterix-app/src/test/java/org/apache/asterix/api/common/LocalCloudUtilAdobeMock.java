@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.api.common;
 
-import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_HOSTNAME;
+import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_ENDPOINT;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 
 import java.net.URI;
@@ -79,7 +79,7 @@ public class LocalCloudUtilAdobeMock {
         LOGGER.info("S3 mock server started successfully");
 
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
+        URI endpoint = URI.create(MOCK_SERVER_ENDPOINT); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();

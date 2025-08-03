@@ -167,9 +167,9 @@ public class CloudProperties extends AbstractProperties {
                     return "The waiting time (in milliseconds) if a requesting thread failed to acquire a token if the"
                             + " rate limit of cloud requests exceeded (default: 100, min: 1, and max: 5000)";
                 case CLOUD_MAX_WRITE_REQUESTS_PER_SECOND:
-                    return "The maximum number of write requests per second (default: 2500, 0 means unlimited)";
+                    return "The maximum number of write requests per second (default: 250, 0 means unlimited)";
                 case CLOUD_MAX_READ_REQUESTS_PER_SECOND:
-                    return "The maximum number of read requests per second (default: 4000, 0 means unlimited)";
+                    return "The maximum number of read requests per second (default: 1500, 0 means unlimited)";
                 case CLOUD_WRITE_BUFFER_SIZE:
                     return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
