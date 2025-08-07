@@ -1674,7 +1674,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);
 
             bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
-            EntityDetails entityDetails = EntityDetails.newIndex(databaseName, dataverseName, indexName);
+            EntityDetails entityDetails = EntityDetails.newIndex(databaseName, dataverseName, datasetName, indexName);
             doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails);
 
         } catch (Exception e) {
@@ -2661,7 +2661,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, databaseName, dataverseName, datasetName, indexName);
             }
             beforeDropTxnCommit(metadataProvider, mdTxnCtx,
-                    EntityDetails.newIndex(databaseName, dataverseName, indexName));
+                    EntityDetails.newIndex(databaseName, dataverseName, datasetName, indexName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {

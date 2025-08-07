@@ -40,6 +40,8 @@ public class EntityDetails {
     private final DataverseName dataverseName;
     private final String entityName;
     private final EntityType entityType;
+    // The name of the dataset, only applicable for index entities.
+    private String datasetName;
     // The number of arguments that the function accepts. Relevant only for function entity.
     private int functionArity;
 
@@ -52,11 +54,14 @@ public class EntityDetails {
 
     private EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType,
             int functionArity) {
-        this.databaseName = databaseName;
-        this.dataverseName = dataverseName;
-        this.entityName = entityName;
-        this.entityType = entityType;
+        this(databaseName, dataverseName, entityName, entityType);
         this.functionArity = functionArity;
+    }
+
+    private EntityDetails(String databaseName, DataverseName dataverseName, String datasetName, String entityName,
+            EntityType entityType) {
+        this(databaseName, dataverseName, entityName, entityType);
+        this.datasetName = datasetName;
     }
 
     public static EntityDetails newDatabase(String databaseName) {
@@ -84,8 +89,9 @@ public class EntityDetails {
         return new EntityDetails(databaseName, dataverseName, synonymName, EntityType.SYNONYM);
     }
 
-    public static EntityDetails newIndex(String databaseName, DataverseName dataverseName, String indexName) {
-        return new EntityDetails(databaseName, dataverseName, indexName, EntityType.INDEX);
+    public static EntityDetails newIndex(String databaseName, DataverseName dataverseName, String datasetName,
+            String indexName) {
+        return new EntityDetails(databaseName, dataverseName, datasetName, indexName, EntityType.INDEX);
     }
 
     public static EntityDetails newExtension(String extensionName) {
@@ -110,6 +116,10 @@ public class EntityDetails {
 
     public int getFunctionArity() {
         return functionArity;
+    }
+
+    public String getDatasetName() {
+        return datasetName;
     }
 
     public static String getFunctionNameWithArity(String functionName, int functionArity) {
