@@ -254,6 +254,8 @@ public class Stats {
             AbstractFunctionCallExpression joinExpr, JoinOperator join) throws AlgebricksException {
         AbstractBinaryJoinOperator abjoin = join.getAbstractJoinOp();
         Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left, index1);
+        ILogicalOperator originalLeft = abjoin.getInputs().get(0).getValue();
+        ILogicalOperator originalRight = abjoin.getInputs().get(1).getValue();
         abjoin.getInputs().get(0).setValue(leftOutput.getFirst());
         Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right, index2);
         abjoin.getInputs().get(1).setValue(rightOutput.getFirst());
@@ -261,6 +263,9 @@ public class Stats {
         List<List<IAObject>> result = runSamplingQuery(optCtx, abjoin);
         double estCardSample = findPredicateCardinality(result, false);
         double sel = estCardSample / leftOutput.getSecond() / rightOutput.getSecond();
+
+        abjoin.getInputs().get(0).setValue(originalLeft);
+        abjoin.getInputs().get(1).setValue(originalRight);
         return sel;
     }
 
