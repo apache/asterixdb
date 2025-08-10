@@ -430,16 +430,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case CREATE_SYNONYM:
-                        handleCreateSynonymStatement(metadataProvider, stmt);
+                        handleCreateSynonymStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case SYNONYM_DROP:
-                        handleDropSynonymStatement(metadataProvider, stmt);
+                        handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case CREATE_VIEW:
                         handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
                         break;
                     case VIEW_DROP:
-                        handleViewDropStatement(metadataProvider, stmt);
+                        handleViewDropStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case LOAD:
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
@@ -2805,7 +2805,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public void handleViewDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    public void handleViewDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         ViewDropStatement stmtDrop = (ViewDropStatement) stmt;
         SourceLocation sourceLoc = stmtDrop.getSourceLocation();
         String viewName = stmtDrop.getViewName().getValue();
@@ -2816,7 +2817,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, viewName);
         try {
-            doDropView(metadataProvider, stmtDrop, dataverseName, viewName);
+            doDropView(metadataProvider, stmtDrop, dataverseName, viewName, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
             ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
@@ -2824,7 +2825,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected boolean doDropView(MetadataProvider metadataProvider, ViewDropStatement stmtViewDrop,
-            DataverseName dataverseName, String viewName) throws Exception {
+            DataverseName dataverseName, String viewName, IRequestParameters requestParameters) throws Exception {
         SourceLocation sourceLoc = stmtViewDrop.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -3556,7 +3557,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
         metadataProvider.validateDatabaseObjectName(css.getDataverseName(), css.getSynonymName(),
                 css.getSourceLocation());
@@ -3570,15 +3572,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
         try {
-            doCreateSynonym(metadataProvider, css, dataverseName, synonymName, objectDataverseName, objectName);
+            doCreateSynonym(metadataProvider, css, dataverseName, synonymName, objectDataverseName, objectName,
+                    requestParameters, true);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected CreateResult doCreateSynonym(MetadataProvider metadataProvider, CreateSynonymStatement css,
-            DataverseName dataverseName, String synonymName, DataverseName objectDataverseName, String objectName)
-            throws Exception {
+            DataverseName dataverseName, String synonymName, DataverseName objectDataverseName, String objectName,
+            IRequestParameters requestParameters, boolean viaCreateSynonymStatement) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -3609,7 +3612,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         SynonymDropStatement stmtSynDrop = (SynonymDropStatement) stmt;
         String synonymName = stmtSynDrop.getSynonymName();
         metadataProvider.validateDatabaseObjectName(stmtSynDrop.getDataverseName(), synonymName,
@@ -3620,14 +3624,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.dropSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
         try {
-            doDropSynonym(metadataProvider, stmtSynDrop, dataverseName, synonymName);
+            doDropSynonym(metadataProvider, stmtSynDrop, dataverseName, synonymName, requestParameters, true);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropSynonym(MetadataProvider metadataProvider, SynonymDropStatement stmtSynDrop,
-            DataverseName dataverseName, String synonymName) throws Exception {
+            DataverseName dataverseName, String synonymName, IRequestParameters requestParameters,
+            boolean viaDropSynonymStatement) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
