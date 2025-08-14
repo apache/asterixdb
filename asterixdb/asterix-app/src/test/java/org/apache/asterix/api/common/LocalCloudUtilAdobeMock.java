@@ -103,6 +103,7 @@ public class LocalCloudUtilAdobeMock {
             } catch (Exception ex) {
                 // do nothing
             }
+            s3Mock = null;
         }
     }
 }

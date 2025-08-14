@@ -68,16 +68,12 @@ public class LocalCloudUtil {
         if (cleanStart) {
             FileUtils.deleteQuietly(new File(MOCK_FILE_BACKEND));
         }
+        stopS3MockServer();
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
         // Use file backend for debugging/inspection
         s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withFileBackend(MOCK_FILE_BACKEND).build();
-        stopS3MockServer();
-        try {
-            s3MockServer.start();
-        } catch (Exception ex) {
-            // it might already be started, do nothing
-        }
+        s3MockServer.start();
         LOGGER.info("S3 mock server started successfully");
 
         S3ClientBuilder builder = S3Client.builder();
@@ -118,6 +114,7 @@ public class LocalCloudUtil {
             } catch (Exception ex) {
                 // do nothing
             }
+            s3MockServer = null;
         }
     }
 }
