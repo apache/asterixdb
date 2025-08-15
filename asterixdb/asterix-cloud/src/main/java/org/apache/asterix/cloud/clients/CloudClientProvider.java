@@ -33,7 +33,6 @@ public class CloudClientProvider {
     public static final String S3 = "s3";
     public static final String GCS = "gs";
     public static final String AZ_BLOB = "azblob";
-    public static final String NONE = "none";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
@@ -46,7 +45,6 @@ public class CloudClientProvider {
             case S3 -> new S3CloudClient(S3ClientConfig.of(cloudProperties), guardian);
             case GCS -> new GCSCloudClient(GCSClientConfig.of(cloudProperties), guardian);
             case AZ_BLOB -> new AzBlobStorageCloudClient(AzBlobStorageClientConfig.of(cloudProperties), guardian);
-            case NONE -> NoopCloudClient.INSTANCE;
             default -> throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
         };
 

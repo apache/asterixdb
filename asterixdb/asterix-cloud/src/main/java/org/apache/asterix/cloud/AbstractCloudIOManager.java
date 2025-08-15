@@ -145,11 +145,6 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             partitionPaths.add(resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir));
         }
 
-        if (CloudClientProvider.NONE.equals(storageScheme)) {
-            LOGGER.info("Cloud storage scheme is '{}', nothing to reconcile / download", storageScheme);
-            return;
-        }
-
         LOGGER.info("Initializing cloud manager with ({}) storage partitions: {}", partitions.size(), partitions);
         if (!currentOnDiskPartitions.isEmpty()) {
             deleteUnkeptPartitionDirs(currentOnDiskPartitions);
