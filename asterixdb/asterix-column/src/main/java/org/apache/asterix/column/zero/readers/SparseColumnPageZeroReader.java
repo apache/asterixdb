@@ -23,27 +23,31 @@ import java.util.BitSet;
 
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.column.zero.writers.SparseColumnPageZeroWriter;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IntPairUtil;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     private final Int2IntOpenHashMap columnIndexToRelativeColumnIndex;
+    private final BitSet presentColumnsIndices;
 
     public SparseColumnPageZeroReader() {
         columnIndexToRelativeColumnIndex = new Int2IntOpenHashMap();
+        presentColumnsIndices = new BitSet();
         columnIndexToRelativeColumnIndex.defaultReturnValue(-1);
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int headerSize) {
-        super.reset(pageZeroBuf, headerSize);
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int headerSize) {
+        super.reset(pageZeroBuf, projectorType, headerSize);
         columnIndexToRelativeColumnIndex.clear();
     }
 
     @Override
-    public void reset(ByteBuffer pageZeroBuf, int numberOfPresentColumns, int headerSize) {
-        super.reset(pageZeroBuf, numberOfPresentColumns, headerSize);
+    public void reset(ByteBuffer pageZeroBuf, ColumnProjectorType projectorType, int numberOfPresentColumns,
+            int headerSize) {
+        super.reset(pageZeroBuf, projectorType, numberOfPresentColumns, headerSize);
         columnIndexToRelativeColumnIndex.clear();
     }
 
@@ -127,7 +131,8 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
     }
 
     @Override
-    public void getAllColumns(BitSet presentColumns) {
+    public void setPresentColumnsIndices() {
+        presentColumnsIndices.clear();
         if (numberOfPresentColumns == 0) {
             return;
         }
@@ -137,9 +142,15 @@ public class SparseColumnPageZeroReader extends DefaultColumnPageZeroReader {
 
         while (columnIndex < limit) {
             int column = pageZeroBuf.getInt(columnIndex);
-            presentColumns.set(column);
+            presentColumnsIndices.set(column);
             columnIndex += SparseColumnPageZeroWriter.COLUMN_OFFSET_SIZE;
         }
+    }
+
+    @Override
+    public void getAllColumns(BitSet presentColumns) {
+        //Iterate through the present columns indices and set them in the BitSet
+        presentColumns.or(presentColumnsIndices);
     }
 
     @Override

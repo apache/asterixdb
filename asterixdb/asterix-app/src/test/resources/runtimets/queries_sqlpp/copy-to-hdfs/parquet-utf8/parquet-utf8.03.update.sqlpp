@@ -24,7 +24,6 @@ COPY (
 ) toWriter
 TO hdfs
 PATH ("copy-to-result", "parquet-utf8")
-TYPE ( { comment:string, id:bigint, name:string } )
 WITH {
     "hdfs":"hdfs://127.0.0.1:31888",
     "format":"parquet"

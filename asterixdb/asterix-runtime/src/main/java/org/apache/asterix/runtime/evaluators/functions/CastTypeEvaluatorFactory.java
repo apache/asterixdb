@@ -47,4 +47,20 @@ public class CastTypeEvaluatorFactory implements IScalarEvaluatorFactory {
         IScalarEvaluator argEval = recordEvalFactory.createScalarEvaluator(ctx);
         return new CastTypeEvaluator(reqType, inputType, argEval, sourceLoc);
     }
+
+    public IAType getReqType() {
+        return reqType;
+    }
+
+    public IAType getInputType() {
+        return inputType;
+    }
+
+    public SourceLocation getSourceLoc() {
+        return sourceLoc;
+    }
+
+    public IScalarEvaluatorFactory getRecordEvalFactory() {
+        return recordEvalFactory;
+    }
 }

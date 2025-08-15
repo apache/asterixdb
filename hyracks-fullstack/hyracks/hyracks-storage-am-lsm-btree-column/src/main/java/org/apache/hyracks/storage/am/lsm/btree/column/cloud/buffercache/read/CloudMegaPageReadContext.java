@@ -248,8 +248,8 @@ public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
                 pageCounter++;
             } catch (Throwable th) {
                 LOGGER.log(getLevel(th),
-                        "Error while pinning page number {} with number of pages {}. stream: {}, columnRanges:\n {}", i,
-                        numberOfPages, gapStream, columnRanges, th);
+                        "Error while pinning page number {} having pageZeroId {} with number of pages {}. stream: {}, columnRanges:\n {}",
+                        i, pageZeroId, numberOfPages, gapStream, columnRanges, th);
                 throw th;
             }
         }

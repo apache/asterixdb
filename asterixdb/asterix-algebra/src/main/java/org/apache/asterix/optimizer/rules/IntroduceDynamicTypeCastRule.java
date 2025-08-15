@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -165,6 +166,11 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             inputRecordType = ((AUnionType) inputRecordType).getActualType();
             checkUnknown = true;
         }
+        boolean hasMetaPart = op.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT
+                && ((DatasetDataSource) ((InsertDeleteUpsertOperator) op).getDataSource()).getDataset().hasMetaPart();
+        if (hasMetaPart) {
+            checkUnknown = false;
+        }
 
         /** see whether the input record type needs to be casted */
         boolean cast = !compatible(requiredRecordType, inputRecordType, op);
@@ -173,7 +179,11 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CHECK_UNKNOWN);
         }
         if (cast) {
-            addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CAST_TYPE);
+            if (hasMetaPart) {
+                addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CAST_TYPE_LAX);
+            } else {
+                addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CAST_TYPE);
+            }
         }
         return cast || checkUnknown;
     }

@@ -24,7 +24,6 @@ COPY (
 ) toWriter
 TO %adapter%
 PATH (%pathprefix% "copy-to-result", "parquet-utf8")
-TYPE ( { comment:string, id:bigint, name:string } )
 WITH {
     %template_colons%,
     %additionalProperties%

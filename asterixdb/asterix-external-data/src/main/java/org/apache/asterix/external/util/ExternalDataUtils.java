@@ -72,6 +72,7 @@ import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.Namespace;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -163,6 +164,10 @@ public class ExternalDataUtils {
         char quote = validateCharOrDefault(configuration, KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE.charAt(0));
         validateDelimiterAndQuote(delimiter, quote);
         return quote;
+    }
+
+    public static boolean isQuoteNeeded(Map<String, String> configuration) {
+        return !CSVUtils.NONE.equalsIgnoreCase(configuration.get(KEY_QUOTE));
     }
 
     public static char validateGetEscape(Map<String, String> configuration, String format) throws HyracksDataException {
@@ -690,10 +695,15 @@ public class ExternalDataUtils {
             return defaultValue;
         }
         validateChar(value, key);
-        return value.charAt(0);
+        return CSVUtils.extractSingleChar(value);
+
     }
 
     public static void validateChar(String parameterValue, String parameterName) throws RuntimeDataException {
+        if (parameterName.equals(KEY_QUOTE) && CSVUtils.NONE.equalsIgnoreCase(parameterValue)) {
+            return;
+
+        }
         if (parameterValue.length() != 1) {
             throw new RuntimeDataException(ErrorCode.INVALID_CHAR_LENGTH, parameterValue, parameterName);
         }

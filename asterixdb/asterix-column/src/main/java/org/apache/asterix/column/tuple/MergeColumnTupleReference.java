@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.column.tuple;
 
-import java.util.BitSet;
-
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.operation.lsm.merge.IEndOfPageCallBack;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnReadMetadata;
@@ -37,7 +35,6 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     private final IColumnValuesReader[] columnReaders;
     private int skipCount;
     private IEndOfPageCallBack endOfPageCallBack;
-    private BitSet presentColumnIndexes;
     private int mergingLength;
 
     public MergeColumnTupleReference(int componentIndex, ColumnBTreeReadLeafFrame frame,
@@ -87,15 +84,6 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         IColumnValuesReader reader = columnReaders[ordinal];
         reader.reset(columnStream, numberOfTuples);
         mergingLength += buffersProvider.getLength();
-    }
-
-    @Override
-    public void newPage() throws HyracksDataException {
-        super.newPage();
-        // the tuples are being read, meanwhile MegaLeaf changed
-        if (presentColumnIndexes != null) {
-            frame.getAllColumns(presentColumnIndexes);
-        }
     }
 
     @Override
@@ -153,13 +141,5 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
                 throw new NullPointerException("endOfPageCallBack is null");
             }
         };
-    }
-
-    public void setColumnIndexes(BitSet presentColumnsIndexes) {
-        this.presentColumnIndexes = presentColumnsIndexes;
-    }
-
-    public void fillColumnIndexes() {
-        frame.getAllColumns(presentColumnIndexes);
     }
 }

@@ -272,4 +272,24 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
             }
         };
     }
+
+    public IScalarEvaluatorFactory getRecordEvalFactory() {
+        return recordEvalFactory;
+    }
+
+    public ARecordType getRecordType() {
+        return recordType;
+    }
+
+    public List<String> getFieldPath() {
+        return fieldPath;
+    }
+
+    public SourceLocation getSourceLoc() {
+        return sourceLoc;
+    }
+
+    public FunctionIdentifier getFunID() {
+        return funID;
+    }
 }

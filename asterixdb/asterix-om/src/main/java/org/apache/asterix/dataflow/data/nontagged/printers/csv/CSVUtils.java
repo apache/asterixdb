@@ -118,7 +118,7 @@ public class CSVUtils {
         return value != null ? extractSingleChar(value) : extractSingleChar(defaultValue);
     }
 
-    private static char extractSingleChar(String input) {
+    public static char extractSingleChar(String input) {
         if (CSVUtils.NONE.equalsIgnoreCase(input)) {
             return CSVUtils.NULL_CHAR;
         } else {

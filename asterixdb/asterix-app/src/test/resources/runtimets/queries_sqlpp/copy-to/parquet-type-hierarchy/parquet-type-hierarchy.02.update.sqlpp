@@ -20,7 +20,7 @@
 use test;
 
 
-insert into TestCollection({"id":2});
+insert into TestCollection({"id":2, "rating" : null, "ratings" : [null]});
 insert into TestCollection({"id":5,"rating" :1 , "ratings" : [] });
 insert into TestCollection({"id":8,"rating" :2 , "ratings" : [ 1 ] });
 insert into TestCollection({"id":10,"rating" :3.0 , "ratings" : [ 1, 2, 3] });

@@ -76,7 +76,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     DataOutput dos = tb.getDataOutput();
 
                     FieldCursorForDelimitedDataParser cursor = new FieldCursorForDelimitedDataParser(
-                            new InputStreamReader(in), fieldDelimiter, quote, escape, warningCollector, () -> "");
+                            new InputStreamReader(in), fieldDelimiter, quote, escape, warningCollector, () -> "", true);
                     while (cursor.nextRecord()) {
                         tb.reset();
                         for (int i = 0; i < valueParsers.length; ++i) {

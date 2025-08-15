@@ -253,6 +253,11 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         presentColumnsIndexes.clear();
     }
 
+    @Override
+    public byte getWriterFlag() {
+        return pageZeroWriterFlavorSelector.getWriterFlag();
+    }
+
     public static int[] toIndexArray(BitSet bitSet) {
         int[] result = new int[bitSet.cardinality()];
         int idx = 0;
