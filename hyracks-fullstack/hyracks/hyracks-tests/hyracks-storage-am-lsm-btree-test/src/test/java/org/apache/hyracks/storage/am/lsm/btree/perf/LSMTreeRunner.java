@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
@@ -66,6 +67,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     protected IHyracksTaskContext ctx;
     protected IOManager ioManager;
     protected int ioDeviceId;
+    protected NCConfig ncConfig;
     protected IBufferCache bufferCache;
     protected int lsmtreeFileId;
 
@@ -95,6 +97,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ncConfig = new NCConfig(null);
 
         ioDeviceId = 0;
         file = ioManager.resolveAbsolutePath(onDiskDir);
@@ -118,7 +121,7 @@ public class LSMTreeRunner implements IExperimentRunner {
             }
         }, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-        lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, typeTraits,
+        lsmtree = LSMBTreeUtil.createLSMTree(ncConfig, ioManager, virtualBufferCaches, file, bufferCache, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),
                 new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallbackFactory.INSTANCE,
                 NoOpPageWriteCallbackFactory.INSTANCE, true, null, null, null, null, true,

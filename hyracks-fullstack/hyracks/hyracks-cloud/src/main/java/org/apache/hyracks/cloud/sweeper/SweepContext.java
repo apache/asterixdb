@@ -88,6 +88,10 @@ public final class SweepContext implements ISweepContext {
         return cloudIOManager.punchHole(handle.getFileHandle(), offset, length);
     }
 
+    public BufferCache getBufferCache() {
+        return bufferCache;
+    }
+
     /**
      * Whether the sweep operation should stop or proceed
      * Stopping condition:

@@ -81,6 +81,34 @@ abstract class AbstractMultiBufferBytesOutputStream extends AbstractBytesOutputS
         }
     }
 
+    public void writeInSegment(int bufferIndex, int off, int val) throws IOException {
+        if (bufferIndex >= buffers.size()) {
+            int requiredBuffers = bufferIndex - buffers.size() + 1;
+            allocateBuffers(requiredBuffers);
+        }
+        ByteBuffer buffer = buffers.get(bufferIndex);
+        buffer.putInt(off, val);
+    }
+
+    public void writeInSegment(int bufferIndex, int off, int val1, int val2) throws IOException {
+        if (bufferIndex >= buffers.size()) {
+            int requiredBuffers = bufferIndex - buffers.size() + 1;
+            allocateBuffers(requiredBuffers);
+        }
+        ByteBuffer buffer = buffers.get(bufferIndex);
+        buffer.putInt(off, val1);
+        buffer.putInt(off + Integer.BYTES, val2);
+    }
+
+    public void writeInSegment(int bufferIndex, int off, long val) throws IOException {
+        if (bufferIndex >= buffers.size()) {
+            int requiredBuffers = bufferIndex - buffers.size() + 1;
+            allocateBuffers(requiredBuffers);
+        }
+        ByteBuffer buffer = buffers.get(bufferIndex);
+        buffer.putLong(off, val);
+    }
+
     @Override
     public void reserveByte(IReservedPointer pointer) throws IOException {
         ensureCapacity(Byte.BYTES);
@@ -160,5 +188,11 @@ abstract class AbstractMultiBufferBytesOutputStream extends AbstractBytesOutputS
         int size = buffer.capacity();
         allocatedBytes += size;
         return size;
+    }
+
+    protected void allocateBuffers(int count) throws HyracksDataException {
+        for (int i = 0; i < count; i++) {
+            allocateBuffer();
+        }
     }
 }

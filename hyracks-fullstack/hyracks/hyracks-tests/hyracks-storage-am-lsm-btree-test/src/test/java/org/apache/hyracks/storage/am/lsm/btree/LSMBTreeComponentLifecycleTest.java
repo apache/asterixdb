@@ -78,10 +78,10 @@ public class LSMBTreeComponentLifecycleTest {
 
     private OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             ILSMIOOperationScheduler scheduler, ILSMIOOperationCallbackFactory ioCallbackFactory) throws Exception {
-        return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                scheduler, ioCallbackFactory, harness.getPageWriteCallbackFactory(),
+        return LSMBTreeTestContext.create(harness.getNCConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getOperationTracker(), scheduler, ioCallbackFactory, harness.getPageWriteCallbackFactory(),
                 harness.getMetadataPageManagerFactory(), false, true, false,
                 harness.getCompressorDecompressorFactory());
     }

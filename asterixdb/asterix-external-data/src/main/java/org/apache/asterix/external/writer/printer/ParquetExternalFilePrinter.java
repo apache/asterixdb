@@ -40,16 +40,15 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
     private final CompressionCodecName compressionCodecName;
     private final MessageType schema;
     private ParquetOutputFile parquetOutputFile;
-    //    private String parquetSchemaString;
     private ParquetWriter<IValueReference> writer;
     private final long rowGroupSize;
     private final int pageSize;
     private final ParquetProperties.WriterVersion writerVersion;
 
-    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, MessageType parquetSchemaString,
+    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, MessageType parquetSchema,
             IAType typeInfo, long rowGroupSize, int pageSize, ParquetProperties.WriterVersion writerVersion) {
         this.compressionCodecName = compressionCodecName;
-        this.schema = parquetSchemaString;
+        this.schema = parquetSchema;
         this.typeInfo = typeInfo;
         this.rowGroupSize = rowGroupSize;
         this.pageSize = pageSize;

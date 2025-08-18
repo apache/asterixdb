@@ -120,6 +120,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="io/merge/ASTERIXDB-3601">
+        <output-dir compare="Text">io/merge/ASTERIXDB-3601</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="delete/001">
         <output-dir compare="Text">delete/001</output-dir>
       </compilation-unit>

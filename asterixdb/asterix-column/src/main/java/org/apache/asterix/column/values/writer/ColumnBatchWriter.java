@@ -18,12 +18,8 @@
  */
 package org.apache.asterix.column.values.writer;
 
-import static org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter.FILTER_SIZE;
-
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
-import org.apache.asterix.column.bytes.stream.out.ByteBufferOutputStream;
 import org.apache.asterix.column.bytes.stream.out.MultiPersistentBufferBytesOutputStream;
 import org.apache.asterix.column.bytes.stream.out.pointer.IReservedPointer;
 import org.apache.asterix.column.values.IColumnBatchWriter;
@@ -32,21 +28,22 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 
 /**
- * A writer for a batch columns' values
+ * A writer for a batch columns' values.
+ * This implementation abstracts the page zero operations using IColumnPageZeroWriter,
+ * which allows for supporting different column formats including sparse columns.
  */
 public final class ColumnBatchWriter implements IColumnBatchWriter {
-    private final ByteBufferOutputStream primaryKeys;
     private final MultiPersistentBufferBytesOutputStream columns;
     private final int pageSize;
     private final double tolerance;
     private final IColumnWriteContext writeContext;
     private final IReservedPointer columnLengthPointer;
-    private ByteBuffer pageZero;
-    private int columnsOffset;
-    private int filtersOffset;
-    private int primaryKeysOffset;
+    // The writer for page zero, which handles all page zero operations including 
+    // column offsets and filters. This abstraction supports both default and sparse column formats.
+    private IColumnPageZeroWriter pageZeroWriter;
     private int nonKeyColumnStartOffset;
 
     public ColumnBatchWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int pageSize, double tolerance,
@@ -54,35 +51,31 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
         this.pageSize = pageSize;
         this.tolerance = tolerance;
         this.writeContext = writeContext;
-        primaryKeys = new ByteBufferOutputStream();
         columns = new MultiPersistentBufferBytesOutputStream(multiPageOpRef);
         columnLengthPointer = columns.createPointer();
     }
 
-    @Override
-    public void setPageZeroBuffer(ByteBuffer pageZero, int numberOfColumns, int numberOfPrimaryKeys) {
-        this.pageZero = pageZero;
-        int offset = pageZero.position();
-
-        columnsOffset = offset;
-        offset += numberOfColumns * Integer.BYTES;
-
-        filtersOffset = offset;
-        offset += numberOfColumns * FILTER_SIZE;
-
-        pageZero.position(offset);
-        primaryKeysOffset = offset;
-        primaryKeys.reset(pageZero);
-        nonKeyColumnStartOffset = pageZero.capacity();
+    /**
+     * Sets the page zero writer implementation and initializes it.
+     * This method replaces the direct page zero buffer manipulation with a more abstracted approach,
+     * which allows for different page zero layouts (default or sparse).
+     *
+     * @param pageZeroWriter The writer implementation for page zero operations
+     * @param presentColumnsIndexes Array containing the indexes of columns present in this batch
+     * @param numberOfColumns Total number of columns in the schema
+     */
+    public void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes,
+            int numberOfColumns) throws HyracksDataException {
+        this.pageZeroWriter = pageZeroWriter;
+        pageZeroWriter.resetBasedOnColumns(presentColumnsIndexes, numberOfColumns);
+        pageZeroWriter.allocateColumns();
+        nonKeyColumnStartOffset = pageZeroWriter.getPageZeroBufferCapacity();
     }
 
     @Override
     public void writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException {
-        for (int i = 0; i < primaryKeyWriters.length; i++) {
-            IColumnValuesWriter writer = primaryKeyWriters[i];
-            setColumnOffset(i, primaryKeysOffset + primaryKeys.size());
-            writer.flush(primaryKeys);
-        }
+        // Delegate primary key column writing to the page zero writer
+        pageZeroWriter.writePrimaryKeyColumns(primaryKeyWriters);
     }
 
     @Override
@@ -102,6 +95,14 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
         writeContext.close();
     }
 
+    /**
+     * Writes a column's data to the batch.
+     * This method handles column data placement, ensuring optimal space usage and minimizing page splits.
+     * It also records column offsets and filter values in page zero through the pageZeroWriter.
+     * 
+     * @param writer The column values writer containing data to be written
+     * @throws HyracksDataException If an error occurs during writing
+     */
     private void writeColumn(IColumnValuesWriter writer) throws HyracksDataException {
         boolean overlapping = true;
         if (!hasEnoughSpace(columns.getCurrentBufferPosition(), writer)) {
@@ -118,9 +119,21 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
         writeContext.startWritingColumn(columnIndex, overlapping);
         int columnRelativeOffset = columns.size();
         columns.reserveInteger(columnLengthPointer);
-        setColumnOffset(writer.getColumnIndex(), nonKeyColumnStartOffset + columnRelativeOffset);
 
-        writeFilter(writer);
+        // Get the relative column index within the current page zero layout
+        // This mapping is particularly important for sparse columns where not all columns may be present
+        int relativeColumnIndex = pageZeroWriter.getRelativeColumnIndex(columnIndex);
+
+        // Record the column's absolute offset in page zero using the writer abstraction
+        pageZeroWriter.putColumnOffset(columnIndex, relativeColumnIndex,
+                nonKeyColumnStartOffset + columnRelativeOffset);
+
+        // Store column filter information (min/max values) in page zero
+        // This allows for faster filtering during query execution
+        pageZeroWriter.putColumnFilter(relativeColumnIndex, writer.getNormalizedMinValue(),
+                writer.getNormalizedMaxValue());
+
+        // Write the actual column data
         writer.flush(columns);
 
         int length = columns.size() - columnRelativeOffset;
@@ -128,6 +141,15 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
         writeContext.endWritingColumn(columnIndex, length);
     }
 
+    /**
+     * Determines if there is enough space in the current buffer for a column.
+     * This method implements a space management strategy that balances between
+     * optimal buffer utilization and minimizing column splits across pages.
+     *
+     * @param bufferPosition Current position in the buffer
+     * @param columnWriter The column writer with data to be written
+     * @return true if there is enough space, false otherwise
+     */
     private boolean hasEnoughSpace(int bufferPosition, IColumnValuesWriter columnWriter) {
         if (bufferPosition == 0) {
             // if the current buffer is empty, then use it
@@ -158,15 +180,5 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
          * - false --> we split the column into two pages
          */
         return freeSpace > columnSize || remainingPercentage >= tolerance;
-    }
-
-    private void setColumnOffset(int columnIndex, int offset) {
-        pageZero.putInt(columnsOffset + Integer.BYTES * columnIndex, offset);
-    }
-
-    private void writeFilter(IColumnValuesWriter writer) {
-        int offset = filtersOffset + writer.getColumnIndex() * FILTER_SIZE;
-        pageZero.putLong(offset, writer.getNormalizedMinValue());
-        pageZero.putLong(offset + Long.BYTES, writer.getNormalizedMaxValue());
     }
 }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTreeNSMBulkLoader;
 import org.apache.hyracks.storage.am.btree.impls.BTreeSplitKey;
@@ -49,11 +50,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements IColumnWriteMultiPageOp {
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<CachedPage> columnsPages;
+    private final List<ICachedPage> pageZeroSegments; // contains from 1st segment to the last segment of page0
     private final List<CachedPage> tempConfiscatedPages;
     private final ColumnBTreeWriteLeafFrame columnarFrame;
     private final AbstractColumnTupleWriter columnWriter;
     private final ISplitKey lowKey;
     private final IColumnWriteContext columnWriteContext;
+    private final int maxColumnsInPageZerothSegment;
+    private final IColumnPageZeroWriter.ColumnPageZeroWriterType pageZeroWriterType;
     private boolean setLowKey;
     private int tupleCount;
 
@@ -61,14 +65,19 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private int numberOfLeafNodes;
     private int numberOfPagesInCurrentLeafNode;
     private int maxNumberOfPagesForAColumn;
+    private int maxNumberOfPageZeroSegments; // Exclude the zeroth segment
     private int maxNumberOfPagesInALeafNode;
     private int maxTupleCount;
     private int lastRequiredFreeSpace;
+    private int sparseLeafsCount;
+    private int densePagesCount;
 
-    public ColumnBTreeBulkloader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
+    public ColumnBTreeBulkloader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
+            IPageWriteCallback callback, ITreeIndex index, ITreeIndexFrame leafFrame,
+            IBufferCacheWriteContext writeContext) throws HyracksDataException {
         super(fillFactor, verifyInput, callback, index, leafFrame, writeContext);
         columnsPages = new ArrayList<>();
+        pageZeroSegments = new ArrayList<>();
         tempConfiscatedPages = new ArrayList<>();
         columnWriteContext = (IColumnWriteContext) writeContext;
         columnarFrame = (ColumnBTreeWriteLeafFrame) leafFrame;
@@ -78,13 +87,21 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         lowKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         setLowKey = true;
 
+        // Writer config
+        maxColumnsInPageZerothSegment = storageConfig.getStorageMaxColumnsInZerothSegment();
+        pageZeroWriterType = IColumnPageZeroWriter.ColumnPageZeroWriterType
+                .valueOf(storageConfig.getStoragePageZeroWriter().toUpperCase());
+
         // For logging. Starts with 1 for page0
         numberOfPagesInCurrentLeafNode = 1;
         maxNumberOfPagesForAColumn = 0;
         maxNumberOfPagesInALeafNode = 0;
+        maxNumberOfPageZeroSegments = 0;
         numberOfLeafNodes = 1;
         maxTupleCount = 0;
         lastRequiredFreeSpace = 0;
+        sparseLeafsCount = 0;
+        densePagesCount = 0;
     }
 
     @Override
@@ -92,6 +109,10 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         if (isFull(tuple)) {
             writeFullLeafPage();
             confiscateNewLeafPage();
+        }
+        if (tupleCount == 0) {
+            //Since we are writing the first tuple, we need to estimate the number of columns.
+            columnWriter.updateColumnMetadataForCurrentTuple(tuple);
         }
         //Save the key of the last inserted tuple
         setMinMaxKeys(tuple);
@@ -106,17 +127,20 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
     private boolean isFull(ITupleReference tuple) throws HyracksDataException {
         if (tupleCount == 0) {
+            columnWriter.updateColumnMetadataForCurrentTuple(tuple);
+            // this is for non-adaptive case.
+            columnWriter.setWriterType(pageZeroWriterType);
             return false;
         } else if (tupleCount >= columnWriter.getMaxNumberOfTuples()) {
             //We reached the maximum number of tuples
             return true;
         }
-        int requiredFreeSpace = AbstractColumnBTreeLeafFrame.HEADER_SIZE;
         //Columns' Offsets
         columnWriter.updateColumnMetadataForCurrentTuple(tuple);
-        requiredFreeSpace += columnWriter.getColumnOffsetsSize(true);
+        int requiredFreeSpace = columnWriter.getPageZeroWriterOccupiedSpace(maxColumnsInPageZerothSegment,
+                columnarFrame.getBuffer().capacity(), true, pageZeroWriterType);
         //Occupied space from previous writes
-        requiredFreeSpace += columnWriter.getOccupiedSpace();
+        requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //min and max tuples' sizes
         requiredFreeSpace += lowKey.getTuple().getTupleSize() + getSplitKeySize(tuple);
         //New tuple required space
@@ -139,7 +163,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         if (tupleCount > 0) {
             splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
             try {
-                columnarFrame.flush(columnWriter, tupleCount, lowKey.getTuple(), splitKey.getTuple());
+                columnarFrame.flush(columnWriter, tupleCount, maxColumnsInPageZerothSegment, lowKey.getTuple(),
+                        splitKey.getTuple(), this);
+                updatePageLayoutStat();
             } catch (Exception e) {
                 logState(e);
                 throw e;
@@ -168,7 +194,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         if (tupleCount > 0) {
             //We need to flush columns to confiscate all columns pages first before calling propagateBulk
             try {
-                columnarFrame.flush(columnWriter, tupleCount, lowKey.getTuple(), splitKey.getTuple());
+                columnarFrame.flush(columnWriter, tupleCount, maxColumnsInPageZerothSegment, lowKey.getTuple(),
+                        splitKey.getTuple(), this);
+                updatePageLayoutStat();
             } catch (Exception e) {
                 logState(e);
                 throw e;
@@ -185,7 +213,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
          * Write columns' pages first to ensure they (columns' pages) are written before pageZero.
          * It ensures pageZero does not land in between columns' pages if compression is enabled
          */
-        writeColumnsPages();
+        writeColumnAndSegmentPages();
         //Then write page0
         write(leafFrontier.page);
 
@@ -214,8 +242,40 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
          * Write columns' pages first to ensure they (columns' pages) are written before pageZero.
          * It ensures pageZero does not land in between columns' pages if compression is enabled
          */
-        writeColumnsPages();
+        writeColumnAndSegmentPages();
         super.writeLastLeaf(page);
+    }
+
+    private void updatePageLayoutStat() {
+        if (columnWriter.getWriterFlag() == IColumnPageZeroWriter.MULTI_PAGE_DEFAULT_WRITER_FLAG) {
+            densePagesCount++;
+        } else {
+            sparseLeafsCount++;
+        }
+    }
+
+    private void writeColumnAndSegmentPages() throws HyracksDataException {
+        for (ICachedPage c : columnsPages) {
+            write(c);
+        }
+
+        // For logging
+        int numberOfPagesInPersistedColumn = columnsPages.size();
+        maxNumberOfPagesForAColumn = Math.max(maxNumberOfPagesForAColumn, numberOfPagesInPersistedColumn);
+        numberOfPagesInCurrentLeafNode += numberOfPagesInPersistedColumn;
+        columnsPages.clear();
+
+        // persist page zero segments from 1 to the last segment
+        for (ICachedPage page : pageZeroSegments) {
+            write(page);
+        }
+
+        int numberOfPageZeroSegments = pageZeroSegments.size();
+        maxNumberOfPageZeroSegments = Math.max(maxNumberOfPageZeroSegments, numberOfPageZeroSegments);
+        pageZeroSegments.clear();
+
+        // Indicate to the columnWriteContext that all columns were persisted
+        columnWriteContext.columnsPersisted();
     }
 
     private void writeColumnsPages() throws HyracksDataException {
@@ -236,6 +296,10 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     @Override
     public void abort() throws HyracksDataException {
         for (ICachedPage page : columnsPages) {
+            bufferCache.returnPage(page, false);
+        }
+
+        for (ICachedPage page : pageZeroSegments) {
             bufferCache.returnPage(page, false);
         }
 
@@ -265,9 +329,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         }
 
         LOGGER.debug(
-                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, and maxLeafNodePages: {}",
+                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, maxLeafNodePages: {}, denseLeafCount: {}, and sparseLeafCount: {}",
                 status, maxTupleCount, tupleCount, numberOfLeafNodes, numberOfTempConfiscatedPages,
-                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode);
+                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode, densePagesCount, sparseLeafsCount);
     }
 
     /*
@@ -282,6 +346,15 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         long dpid = BufferedFileHandle.getDiskPageId(fileId, pageId);
         CachedPage page = (CachedPage) bufferCache.confiscatePage(dpid);
         columnsPages.add(page);
+        return page.getBuffer();
+    }
+
+    @Override
+    public ByteBuffer confiscatePageZeroPersistent() throws HyracksDataException {
+        int pageId = freePageManager.takePage(metaFrame);
+        long dpid = BufferedFileHandle.getDiskPageId(fileId, pageId);
+        CachedPage page = (CachedPage) bufferCache.confiscatePage(dpid);
+        pageZeroSegments.add(page);
         return page.getBuffer();
     }
 
@@ -308,9 +381,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             // number of tuples processed for the current leaf
             state.put("currentLeafTupleCount", tupleCount);
             // number of columns
-            state.put("currentLeafColumnCount", columnWriter.getNumberOfColumns(false));
+            state.put("currentLeafColumnCount", columnWriter.getAbsoluteNumberOfColumns(false));
             // number of columns including current tuple
-            state.put("currentColumnCount", columnWriter.getNumberOfColumns(true));
+            state.put("currentColumnCount", columnWriter.getAbsoluteNumberOfColumns(true));
             state.put("lastRequiredFreeSpace", lastRequiredFreeSpace);
             state.put("splitKeyTupleSize", splitKey.getTuple().getTupleSize());
             state.put("splitKeyTupleSizeByTupleWriter", tupleWriter.bytesRequired(splitKey.getTuple()));

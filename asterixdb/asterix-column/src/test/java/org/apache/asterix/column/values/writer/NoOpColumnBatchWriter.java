@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.column.values.writer;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.column.values.IColumnBatchWriter;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 
 public class NoOpColumnBatchWriter implements IColumnBatchWriter {
     public static final IColumnBatchWriter INSTANCE = new NoOpColumnBatchWriter();
@@ -32,7 +32,8 @@ public class NoOpColumnBatchWriter implements IColumnBatchWriter {
     }
 
     @Override
-    public void setPageZeroBuffer(ByteBuffer pageZeroBuffer, int numberOfColumns, int numberOfPrimaryKeys) {
+    public void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes,
+            int numberOfColumns) {
         // NoOp
     }
 

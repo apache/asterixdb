@@ -110,7 +110,9 @@ public class NCConfig extends ControllerConfig {
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
-                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
+        STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT(INTEGER_BYTE_UNIT, 5000),
+        STORAGE_PAGE_ZERO_WRITER(STRING, "default");
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -267,6 +269,11 @@ public class NCConfig extends ControllerConfig {
                     return "Path to HTTP basic credentials";
                 case ABORT_TASKS_TIMEOUT:
                     return "The maximum time to wait for the tasks to be aborted";
+                case STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT:
+                    return "The maximum number of columns in zero segment (default: 5000).";
+                case STORAGE_PAGE_ZERO_WRITER:
+                    return "The config to choose between writers for page zero. (Possible values: default, sparse, adaptive), "
+                            + "(default value: default)";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -644,6 +651,14 @@ public class NCConfig extends ControllerConfig {
 
     public int getAbortedTasksTimeout() {
         return appConfig.getInt(Option.ABORT_TASKS_TIMEOUT);
+    }
+
+    public int getStorageMaxColumnsInZerothSegment() {
+        return appConfig.getInt(Option.STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT);
+    }
+
+    public String getStoragePageZeroWriter() {
+        return appConfig.getString(Option.STORAGE_PAGE_ZERO_WRITER);
     }
 
     public long getLibraryMaxFileSize() {

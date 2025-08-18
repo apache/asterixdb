@@ -30,6 +30,8 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -130,6 +132,7 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
     @Override
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
         IIOManager ioManager = storageManager.getIoManager(serviceCtx);
+        NCConfig storageConfig = ((NodeControllerService) serviceCtx.getControllerService()).getConfiguration();
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
         IBufferCache bufferCache = storageManager.getBufferCache(serviceCtx);
@@ -138,17 +141,18 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
         ioOpCallbackFactory.initialize(serviceCtx, this);
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         if (isPartitioned) {
-            return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits,
+            return InvertedIndexUtils.createPartitionedLSMInvertedIndex(storageConfig, ioManager, virtualBufferCaches,
+                    typeTraits, cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                    fullTextConfigEvaluatorFactory, bufferCache, file.getAbsolutePath(), bloomFilterFalsePositiveRate,
+                    mergePolicy, opTrackerProvider.getOperationTracker(serviceCtx, this), ioScheduler,
+                    ioOpCallbackFactory, pageWriteCallbackFactory, invertedIndexFields, filterTypeTraits,
+                    filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
+                    invertedIndexFieldsForNonBulkLoadOps, durable, metadataPageManagerFactory, serviceCtx.getTracer(),
+                    nullTypeTraits, nullIntrospector);
+        } else {
+            return InvertedIndexUtils.createLSMInvertedIndex(storageConfig, ioManager, virtualBufferCaches, typeTraits,
                     cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, fullTextConfigEvaluatorFactory,
                     bufferCache, file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerProvider.getOperationTracker(serviceCtx, this), ioScheduler, ioOpCallbackFactory,
-                    pageWriteCallbackFactory, invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                    filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
-                    metadataPageManagerFactory, serviceCtx.getTracer(), nullTypeTraits, nullIntrospector);
-        } else {
-            return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits, cmpFactories,
-                    tokenTypeTraits, tokenCmpFactories, tokenizerFactory, fullTextConfigEvaluatorFactory, bufferCache,
-                    file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
                     opTrackerProvider.getOperationTracker(serviceCtx, this), ioScheduler, ioOpCallbackFactory,
                     pageWriteCallbackFactory, invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                     filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,

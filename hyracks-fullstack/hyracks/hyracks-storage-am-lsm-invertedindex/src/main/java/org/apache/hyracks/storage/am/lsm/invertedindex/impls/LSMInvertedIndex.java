@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PermutingTupleReference;
@@ -99,7 +100,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     protected final ITypeTraits nullTypeTraits;
     protected final INullIntrospector nullIntrospector;
 
-    public LSMInvertedIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+    public LSMInvertedIndex(NCConfig storageConfig, IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ILSMDiskComponentFactory componentFactory, IComponentFilterHelper filterHelper,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             double bloomFilterFalsePositiveRate, IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
@@ -111,8 +112,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             int[] invertedIndexFields, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
             int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable, ITracer tracer, ITypeTraits nullTypeTraits,
             INullIntrospector nullIntrospector) throws HyracksDataException {
-        super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
+        super(storageConfig, ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate,
+                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
                 componentFactory, filterFrameFactory, filterManager, filterFields, durable, filterHelper,
                 invertedIndexFields, tracer);
         this.tokenizerFactory = tokenizerFactory;
@@ -283,8 +284,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             btreeCountingCursor.destroy();
         }
 
-        ILSMDiskComponentBulkLoader componentBulkLoader = component.createBulkLoader(operation, 1.0f, false,
-                numBTreeTuples, false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
+        ILSMDiskComponentBulkLoader componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f,
+                false, numBTreeTuples, false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
 
         // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
         IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor(false);
@@ -367,15 +368,15 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                         numElements += ((LSMInvertedIndexDiskComponent) mergeOp.getMergingComponents().get(i))
                                 .getBloomFilter().getNumElements();
                     }
-                    componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, numElements, false, false,
-                            false, pageWriteCallbackFactory.createPageWriteCallback());
+                    componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f, false, numElements,
+                            false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
                     loadDeleteTuples(opCtx, btreeCursor, mergePred, componentBulkLoader);
                 } finally {
                     btreeCursor.destroy();
                 }
             } else {
-                componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false, false, false,
-                        pageWriteCallbackFactory.createPageWriteCallback());
+                componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f, false, 0L, false,
+                        false, false, pageWriteCallbackFactory.createPageWriteCallback());
             }
             search(opCtx, cursor, mergePred);
             try {

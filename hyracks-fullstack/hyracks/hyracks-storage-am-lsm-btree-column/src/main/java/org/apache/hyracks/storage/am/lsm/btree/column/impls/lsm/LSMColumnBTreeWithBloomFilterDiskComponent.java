@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
@@ -50,8 +51,8 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
     }
 
     @Override
-    public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+    public ChainedLSMDiskComponentBulkLoader createBulkLoader(NCConfig storageConfig, ILSMIOOperation operation,
+            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
             boolean cleanupEmptyComponent, IPageWriteCallback callback) throws HyracksDataException {
         ChainedLSMDiskComponentBulkLoader chainedBulkLoader =
                 new ChainedLSMDiskComponentBulkLoader(operation, this, cleanupEmptyComponent);
@@ -60,7 +61,8 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
             chainedBulkLoader.addBulkLoader(createFilterBulkLoader());
         }
         //Add index bulkloader
-        chainedBulkLoader.addBulkLoader(createColumnIndexBulkLoader(operation, fillFactor, verifyInput, callback));
+        chainedBulkLoader.addBulkLoader(
+                createColumnIndexBulkLoader(storageConfig, operation, fillFactor, verifyInput, callback));
 
         if (numElementsHint > 0) {
             chainedBulkLoader.addBulkLoader(createBloomFilterBulkLoader(numElementsHint, callback));
@@ -70,8 +72,8 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
         return chainedBulkLoader;
     }
 
-    private IChainedComponentBulkLoader createColumnIndexBulkLoader(ILSMIOOperation operation, float fillFactor,
-            boolean verifyInput, IPageWriteCallback callback) throws HyracksDataException {
+    private IChainedComponentBulkLoader createColumnIndexBulkLoader(NCConfig storageConfig, ILSMIOOperation operation,
+            float fillFactor, boolean verifyInput, IPageWriteCallback callback) throws HyracksDataException {
         LSMIOOperationType operationType = operation.getIOOperationType();
         LSMColumnBTree lsmColumnBTree = (LSMColumnBTree) getLsmIndex();
         ColumnBTree columnBTree = (ColumnBTree) getIndex();
@@ -91,8 +93,8 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
         int numberOfColumns = columnMetadata.getNumberOfColumns();
         IColumnIndexDiskCacheManager diskCacheManager = lsmColumnBTree.getDiskCacheManager();
         IColumnWriteContext writeContext = diskCacheManager.createWriteContext(numberOfColumns, operationType);
-        IIndexBulkLoader bulkLoader =
-                columnBTree.createBulkLoader(fillFactor, verifyInput, callback, columnMetadata, writeContext);
+        IIndexBulkLoader bulkLoader = columnBTree.createBulkLoader(storageConfig, fillFactor, verifyInput, callback,
+                columnMetadata, writeContext);
         return new LSMColumnIndexBulkloader(bulkLoader, columnMetadata, getMetadata());
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.column.operation.lsm.flush;
 
+import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -32,12 +33,16 @@ import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.values.IColumnBatchWriter;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 
 public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, AbstractSchemaNestedNode> {
     private final FlushColumnMetadata columnSchemaMetadata;
     private final IColumnValuesWriter[] primaryKeyWriters;
     private final PriorityQueue<IColumnValuesWriter> orderedColumns;
+    private BitSet presentColumnsIndex;
+    private IColumnPageZeroWriter columnPageZeroWriter;
     private int level;
+    private boolean needAllColumns;
 
     public BatchFinalizerVisitor(FlushColumnMetadata columnSchemaMetadata) {
         this.columnSchemaMetadata = columnSchemaMetadata;
@@ -50,15 +55,21 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
         level = -1;
     }
 
-    public int finalizeBatch(IColumnBatchWriter batchWriter, FlushColumnMetadata columnMetadata)
-            throws HyracksDataException {
+    public void finalizeBatchColumns(FlushColumnMetadata columnMetadata, BitSet presentColumnsIndexes,
+            IColumnPageZeroWriter pageZeroWriter) throws HyracksDataException {
         orderedColumns.clear();
+        this.presentColumnsIndex = presentColumnsIndexes;
+        this.needAllColumns = false;
+        this.columnPageZeroWriter = pageZeroWriter;
 
+        // is this needed to parse the whole schema??
         columnMetadata.getRoot().accept(this, null);
         if (columnMetadata.getMetaRoot() != null) {
             columnMetadata.getMetaRoot().accept(this, null);
         }
+    }
 
+    public int finalizeBatch(IColumnBatchWriter batchWriter) throws HyracksDataException {
         batchWriter.writePrimaryKeyColumns(primaryKeyWriters);
         return batchWriter.writeColumns(orderedColumns);
     }
@@ -66,13 +77,18 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
     @Override
     public Void visit(ObjectSchemaNode objectNode, AbstractSchemaNestedNode arg) throws HyracksDataException {
         level++;
+        boolean previousNeedAllColumns = needAllColumns;
+        needAllColumns = needAllColumns | objectNode.needAllColumns();
         columnSchemaMetadata.flushDefinitionLevels(level - 1, arg, objectNode);
         List<AbstractSchemaNode> children = objectNode.getChildren();
         for (int i = 0; i < children.size(); i++) {
             children.get(i).accept(this, objectNode);
         }
         objectNode.setCounter(0);
+        objectNode.setNumberOfVisitedColumnsInBatch(0);
         columnSchemaMetadata.clearDefinitionLevels(objectNode);
+        objectNode.needAllColumns(false);
+        needAllColumns = previousNeedAllColumns;
         level--;
         return null;
     }
@@ -81,34 +97,50 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
     public Void visit(AbstractCollectionSchemaNode collectionNode, AbstractSchemaNestedNode arg)
             throws HyracksDataException {
         level++;
+        boolean previousNeedAllColumns = needAllColumns;
+        needAllColumns = needAllColumns | collectionNode.needAllColumns();
         columnSchemaMetadata.flushDefinitionLevels(level - 1, arg, collectionNode);
         collectionNode.getItemNode().accept(this, collectionNode);
         collectionNode.setCounter(0);
+        collectionNode.setNumberOfVisitedColumnsInBatch(0);
         columnSchemaMetadata.clearDefinitionLevels(collectionNode);
+        collectionNode.needAllColumns(false);
+        needAllColumns = previousNeedAllColumns;
         level--;
         return null;
     }
 
     @Override
     public Void visit(UnionSchemaNode unionNode, AbstractSchemaNestedNode arg) throws HyracksDataException {
+        boolean previousNeedAllColumns = needAllColumns;
+        needAllColumns = needAllColumns | unionNode.needAllColumns();
         columnSchemaMetadata.flushDefinitionLevels(level, arg, unionNode);
         for (AbstractSchemaNode node : unionNode.getChildren().values()) {
             node.accept(this, unionNode);
         }
         unionNode.setCounter(0);
+        unionNode.setNumberOfVisitedColumnsInBatch(0);
         columnSchemaMetadata.clearDefinitionLevels(unionNode);
+        unionNode.needAllColumns(false);
+        needAllColumns = previousNeedAllColumns;
         return null;
     }
 
     @Override
     public Void visit(PrimitiveSchemaNode primitiveNode, AbstractSchemaNestedNode arg) throws HyracksDataException {
         columnSchemaMetadata.flushDefinitionLevels(level, arg, primitiveNode);
-        if (!primitiveNode.isPrimaryKey()) {
+        if (needAllColumns) {
+            presentColumnsIndex.set(primitiveNode.getColumnIndex());
+        }
+        // in case of DefaultWriter all non-primary columns should be included
+        if (!primitiveNode.isPrimaryKey() && columnPageZeroWriter.includeOrderedColumn(presentColumnsIndex,
+                primitiveNode.getColumnIndex(), needAllColumns)) {
             orderedColumns.add(columnSchemaMetadata.getWriter(primitiveNode.getColumnIndex()));
         }
 
         //Prepare for the next batch
         primitiveNode.setCounter(0);
+        primitiveNode.setNumberOfVisitedColumnsInBatch(0);
         return null;
     }
 }

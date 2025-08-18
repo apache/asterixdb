@@ -23,12 +23,16 @@ import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.ge
 import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getColumnStartOffset;
 import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfRemainingPages;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read.CloudColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweepPlanner;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweeper;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.longs.LongArrays;
@@ -38,6 +42,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * Computes columns offsets, lengths, and pages
  */
 public final class ColumnRanges {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final LongComparator OFFSET_COMPARATOR = IntPairUtil.FIRST_COMPARATOR;
     private final int numberOfPrimaryKeys;
 
@@ -79,8 +84,8 @@ public final class ColumnRanges {
      *
      * @param leafFrame to compute the ranges for
      */
-    public void reset(ColumnBTreeReadLeafFrame leafFrame) {
-        reset(leafFrame, EMPTY, EMPTY, EMPTY);
+    public void reset(ColumnBTreeReadLeafFrame leafFrame) throws HyracksDataException {
+        reset(leafFrame, EMPTY, EMPTY, EMPTY, false);
     }
 
     /**
@@ -89,8 +94,8 @@ public final class ColumnRanges {
      * @param leafFrame to compute the ranges for
      * @param plan      eviction plan
      */
-    public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet plan) {
-        reset(leafFrame, plan, EMPTY, EMPTY);
+    public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet plan) throws HyracksDataException {
+        reset(leafFrame, plan, EMPTY, EMPTY, false);
     }
 
     /**
@@ -102,62 +107,73 @@ public final class ColumnRanges {
      * @param cloudOnlyColumns locked columns that cannot be read from a local disk
      */
     public void reset(ColumnBTreeReadLeafFrame leafFrame, BitSet requestedColumns, BitSet evictableColumns,
-            BitSet cloudOnlyColumns) {
-        // Set leafFrame
-        this.leafFrame = leafFrame;
-        // Ensure arrays capacities (given the leafFrame's columns and pages)
-        init();
+            BitSet cloudOnlyColumns, boolean unPinPageZeroSegments) throws HyracksDataException {
+        try {
+            // Set leafFrame
+            this.leafFrame = leafFrame;
+            // Ensure arrays capacities (given the leafFrame's columns and pages)
+            init();
 
-        // Get the number of columns in a page
-        int numberOfColumns = leafFrame.getNumberOfColumns();
-        for (int i = 0; i < numberOfColumns; i++) {
-            int offset = leafFrame.getColumnOffset(i);
             // Set the first 32-bits to the offset and the second 32-bits to columnIndex
-            offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
-        }
+            int numberOfPresentColumnsInLeaf = leafFrame.populateOffsetColumnIndexPairs(offsetColumnIndexPairs);
 
-        // Set artificial offset to determine the last column's length
-        int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
-        offsetColumnIndexPairs[numberOfColumns] = IntPairUtil.of(megaLeafLength, numberOfColumns);
+            // Set artificial offset to determine the last column's length
+            int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
+            offsetColumnIndexPairs[numberOfPresentColumnsInLeaf] =
+                    IntPairUtil.of(megaLeafLength, numberOfPresentColumnsInLeaf);
 
-        // Sort the pairs by offset (i.e., lowest offset first)
-        LongArrays.stableSort(offsetColumnIndexPairs, 0, numberOfColumns, OFFSET_COMPARATOR);
+            // Sort the pairs by offset (i.e., lowest offset first)
+            LongArrays.stableSort(offsetColumnIndexPairs, 0, numberOfPresentColumnsInLeaf, OFFSET_COMPARATOR);
 
-        int columnOrdinal = 0;
-        for (int i = 0; i < numberOfColumns; i++) {
-            int columnIndex = getColumnIndexFromPair(offsetColumnIndexPairs[i]);
-            int offset = getOffsetFromPair(offsetColumnIndexPairs[i]);
-            int nextOffset = getOffsetFromPair(offsetColumnIndexPairs[i + 1]);
+            int columnOrdinal = 0;
+            for (int i = 0; i < numberOfPresentColumnsInLeaf; i++) {
+                if (offsetColumnIndexPairs[i] == 0) {
+                    //Any requested column's offset can't be zero
+                    //In case a column is not being present in the accessed pageZero segments, it will be defaulted to 0
+                    continue;
+                }
+                int columnIndex = getColumnIndexFromPair(offsetColumnIndexPairs[i]);
+                int offset = getOffsetFromPair(offsetColumnIndexPairs[i]);
+                int nextOffset = getOffsetFromPair(offsetColumnIndexPairs[i + 1]);
 
-            // Compute the column's length in bytes (set 0 for PKs)
-            int length = columnIndex < numberOfPrimaryKeys ? 0 : nextOffset - offset;
-            lengths[columnIndex] = length;
+                // Compute the column's length in bytes (set 0 for PKs)
+                int length = columnIndex < numberOfPrimaryKeys ? 0 : nextOffset - offset;
+                // In case of sparse columns, few columnIndexes can be greater than the total sparse column count.
+                ensureCapacity(columnIndex);
+                lengths[columnIndex] = length;
 
-            // Get start page ID (given the computed length above)
-            int startPageId = getColumnStartPageIndex(columnIndex);
-            // Get the number of pages (given the computed length above)
-            int numberOfPages = getColumnNumberOfPages(columnIndex);
+                // Get start page ID (given the computed length above)
+                int startPageId = getColumnStartPageIndex(columnIndex);
 
-            if (columnIndex >= numberOfPrimaryKeys && requestedColumns.get(columnIndex)) {
-                // Set column index
-                columnsOrder[columnOrdinal++] = columnIndex;
-                // Compute cloud-only and evictable pages
-                setCloudOnlyAndEvictablePages(columnIndex, cloudOnlyColumns, evictableColumns, startPageId,
-                        numberOfPages);
-                // A requested column. Keep its pages as requested
-                continue;
+                // Get the number of pages (given the computed length above)
+                int numberOfPages = getColumnNumberOfPages(columnIndex);
+
+                if (columnIndex >= numberOfPrimaryKeys && requestedColumns.get(columnIndex)) {
+                    // Set column index
+                    columnsOrder[columnOrdinal++] = columnIndex;
+                    // Compute cloud-only and evictable pages
+                    setCloudOnlyAndEvictablePages(columnIndex, cloudOnlyColumns, evictableColumns, startPageId,
+                            numberOfPages);
+                    // A requested column. Keep its pages as requested
+                    continue;
+                }
+
+                // Mark the page as non-evictable
+                for (int j = startPageId; j < startPageId + numberOfPages; j++) {
+                    nonEvictablePages.set(j);
+                }
             }
 
-            // Mark the page as non-evictable
-            for (int j = startPageId; j < startPageId + numberOfPages; j++) {
-                nonEvictablePages.set(j);
+            // Bound the nonRequestedPages to the number of pages in the mega leaf node
+            nonEvictablePages.set(leafFrame.getMegaLeafNodeNumberOfPages());
+            // to indicate the end
+            columnsOrder[columnOrdinal] = -1;
+        } finally {
+            if (unPinPageZeroSegments) {
+                //Unpin the not required segment pages
+                leafFrame.unPinNotRequiredPageZeroSegments();
             }
         }
-
-        // Bound the nonRequestedPages to the number of pages in the mega leaf node
-        nonEvictablePages.set(leafFrame.getMegaLeafNodeNumberOfPages());
-        // to indicate the end
-        columnsOrder[columnOrdinal] = -1;
     }
 
     /**
@@ -166,7 +182,7 @@ public final class ColumnRanges {
      * @param columnIndex column index
      * @return pageID
      */
-    public int getColumnStartPageIndex(int columnIndex) {
+    public int getColumnStartPageIndex(int columnIndex) throws HyracksDataException {
         int pageSize = leafFrame.getBuffer().capacity();
         return getColumnPageIndex(leafFrame.getColumnOffset(columnIndex), pageSize);
     }
@@ -177,7 +193,7 @@ public final class ColumnRanges {
      * @param columnIndex column index
      * @return number of pages
      */
-    public int getColumnNumberOfPages(int columnIndex) {
+    public int getColumnNumberOfPages(int columnIndex) throws HyracksDataException {
         int pageSize = leafFrame.getBuffer().capacity();
         int offset = getColumnStartOffset(leafFrame.getColumnOffset(columnIndex), pageSize);
         int firstBufferLength = pageSize - offset;
@@ -201,7 +217,7 @@ public final class ColumnRanges {
      *
      * @param pageId page ID
      * @return true of the page should be read from the cloud, false otherwise
-     * @see #reset(ColumnBTreeReadLeafFrame, BitSet, BitSet, BitSet)
+     * @see #reset(ColumnBTreeReadLeafFrame, BitSet, BitSet, BitSet, boolean)
      */
     public boolean isCloudOnly(int pageId) {
         // Compute the relative page ID for this mega leaf node
@@ -239,9 +255,15 @@ public final class ColumnRanges {
         return leafFrame.getMegaLeafNodeNumberOfPages();
     }
 
+    public void pageZeroSegmentsInit(ColumnBTreeReadLeafFrame leafFrame) throws HyracksDataException {
+        this.leafFrame = leafFrame;
+        pageZeroId = leafFrame.getPageId();
+    }
+
     private void init() {
         int numberOfColumns = leafFrame.getNumberOfColumns();
         offsetColumnIndexPairs = LongArrays.ensureCapacity(offsetColumnIndexPairs, numberOfColumns + 1, 0);
+        Arrays.fill(offsetColumnIndexPairs, 0, numberOfColumns + 1, Long.MAX_VALUE);
         lengths = IntArrays.ensureCapacity(lengths, numberOfColumns, 0);
         columnsOrder = IntArrays.ensureCapacity(columnsOrder, numberOfColumns + 1, 0);
         nonEvictablePages.clear();
@@ -278,6 +300,12 @@ public final class ColumnRanges {
         }
     }
 
+    private void ensureCapacity(int columnIndex) {
+        if (columnIndex >= lengths.length) {
+            lengths = IntArrays.grow(lengths, columnIndex + 1);
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -292,8 +320,18 @@ public final class ColumnRanges {
         for (int i = 0; i < leafFrame.getNumberOfColumns(); i++) {
             builder.append(String.format("%03d", i));
             builder.append(":");
-            int startPageId = getColumnStartPageIndex(i);
-            int columnPagesCount = getColumnNumberOfPages(i);
+            int startPageId = 0;
+            try {
+                startPageId = getColumnStartPageIndex(i);
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
+            int columnPagesCount = 0;
+            try {
+                columnPagesCount = getColumnNumberOfPages(i);
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
             printColumnPages(builder, numberOfPages, startPageId, columnPagesCount);
         }
 

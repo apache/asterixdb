@@ -783,6 +783,14 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "select");
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
+            if (op.getRetainMissingAsValue() != null) {
+                LogicalVariable placeholderVar = op.getMissingPlaceholderVariable();
+                IAlgebricksConstantValue retainValue = op.getRetainMissingAsValue();
+                if (placeholderVar != null) {
+                    jsonGenerator.writeStringField("retain-untrue-variable", String.valueOf(placeholderVar));
+                }
+                jsonGenerator.writeStringField("retain-untrue-value", String.valueOf(retainValue));
+            }
             if (op.isProjectPushed()) {
                 writeArrayFieldOfVariables(PROJECT_VARIABLES_FIELD, op.getProjectVariables());
             }

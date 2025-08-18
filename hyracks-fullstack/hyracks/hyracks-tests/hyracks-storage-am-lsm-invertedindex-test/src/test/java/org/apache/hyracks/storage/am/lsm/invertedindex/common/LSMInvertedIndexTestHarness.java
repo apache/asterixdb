@@ -31,6 +31,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
@@ -67,6 +68,7 @@ public class LSMInvertedIndexTestHarness {
     protected final int numMutableComponents;
 
     protected IOManager ioManager;
+    protected NCConfig ncConfig;
     protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected List<IVirtualBufferCache> virtualBufferCaches;
@@ -101,6 +103,7 @@ public class LSMInvertedIndexTestHarness {
         this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;
         this.pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;
+        this.ncConfig = new NCConfig(null);
     }
 
     public void setUp() throws HyracksDataException {
@@ -175,6 +178,10 @@ public class LSMInvertedIndexTestHarness {
 
     public IOManager getIOManager() {
         return ioManager;
+    }
+
+    public NCConfig getNCConfig() {
+        return ncConfig;
     }
 
     public int getIODeviceId() {

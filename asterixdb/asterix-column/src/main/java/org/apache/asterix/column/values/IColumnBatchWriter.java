@@ -18,13 +18,34 @@
  */
 package org.apache.asterix.column.values;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 
+/**
+ * Interface for writing column batch data to storage pages.
+ * 
+ * This interface abstracts the process of writing columnar data, supporting both
+ * dense and sparse column layouts through the use of pluggable page zero writers.
+ * The writer handles page zero metadata, primary key storage, and column data placement
+ * across multiple pages with optimal space utilization.
+ */
 public interface IColumnBatchWriter {
-    void setPageZeroBuffer(ByteBuffer pageZeroBuffer, int numberOfColumns, int numberOfPrimaryKeys);
+
+    /**
+     * Configures the page zero writer for this batch.
+     * 
+     * This method replaces the previous direct buffer approach with a more flexible
+     * abstraction that supports different page zero layouts (default vs sparse).
+     * The writer will be used to manage column offsets, filters, and primary key storage.
+     * 
+     * @param pageZeroWriter The writer implementation for page zero operations
+     * @param presentColumnsIndexes Array of column indexes that contain data in this batch
+     * @param numberOfColumns Total number of columns in the schema
+     */
+    void setPageZeroWriter(IColumnPageZeroWriter pageZeroWriter, int[] presentColumnsIndexes, int numberOfColumns)
+            throws HyracksDataException;
 
     /**
      * Writes the primary keys' values to Page0

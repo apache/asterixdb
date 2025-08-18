@@ -19,8 +19,6 @@
 package org.apache.asterix.column.test.bytes;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.HEADER_SIZE;
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.MEGA_LEAF_NODE_LENGTH;
-import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.NUMBER_OF_COLUMNS_OFFSET;
 import static org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame.TUPLE_COUNT_OFFSET;
 
 import java.io.File;
@@ -48,6 +46,7 @@ import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.test.bytes.components.TestColumnBufferProvider;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
+import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
@@ -63,6 +62,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.write.DefaultColumnWriteContext;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZeroWriter;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -189,14 +189,8 @@ public abstract class AbstractBytesTest extends TestBase {
     protected void writeFullPage(ByteBuffer pageZero, AbstractColumnTupleWriter writer, int tupleCount)
             throws HyracksDataException {
         pageZero.clear();
-        //Reserve the header space
-        pageZero.position(HEADER_SIZE);
-        pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(pageZero));
-        //Write page header
-        int numberOfColumn = writer.getNumberOfColumns(false);
-        pageZero.putInt(TUPLE_COUNT_OFFSET, tupleCount);
-        pageZero.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumn);
-
+        DefaultColumnPageZeroWriter pageZeroWriter = new DefaultColumnPageZeroWriter();
+        pageZeroWriter.flush(pageZero, tupleCount, writer);
     }
 
     protected boolean isFull(AbstractColumnTupleWriter columnWriter, int tupleCount, ITupleReference tuple) {
@@ -208,10 +202,13 @@ public abstract class AbstractBytesTest extends TestBase {
         }
         //Reserved for the number of pages
         int requiredFreeSpace = HEADER_SIZE;
+        //Since this test uses DefaultWriter, it does not need the bufferCapacity in the calculation
+        int bufferCapacity = Integer.MAX_VALUE;
         //Columns' Offsets
-        requiredFreeSpace += columnWriter.getColumnOffsetsSize(true);
+        requiredFreeSpace += columnWriter.getPageZeroWriterOccupiedSpace(100, bufferCapacity, true,
+                IColumnPageZeroWriter.ColumnPageZeroWriterType.DEFAULT);
         //Occupied space from previous writes
-        requiredFreeSpace += columnWriter.getOccupiedSpace();
+        requiredFreeSpace += columnWriter.getPrimaryKeysEstimatedSize();
         //New tuple required space
         requiredFreeSpace += columnWriter.bytesRequired(tuple);
         return PAGE_SIZE <= requiredFreeSpace;

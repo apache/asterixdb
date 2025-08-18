@@ -35,16 +35,16 @@ use test;
 
 
 insert into TestCollection({"id":2});
-insert into TestCollection({"id":5,"name":"virat"});
-insert into TestCollection({"id":8,"name":{"first":"virat"}});
-insert into TestCollection({"id":10,"name":{"first":"virat"},"age":18});
-insert into TestCollection({"id":12,"name":123});
-insert into TestCollection({"id":15,"name":[123,456]});
-insert into TestCollection({"id":17,"name":765});
-insert into TestCollection({"id":20,"name":[789]});
-insert into TestCollection({"id":21,"name":[{"first":"virat"}]});
-insert into TestCollection({"id":27,"name":[{"first":"virat","second":"kohli"}]});
-insert into TestCollection({"id":28,"name":{"first":"virat"}});
+insert into TestCollection({"id":5, "name":"virat"});
+insert into TestCollection({"id":8, "name":{"first":"virat"}});
+insert into TestCollection({"id":10, "name":{"first":"virat"},"age":18});
+insert into TestCollection({"id":12, "name":123});
+insert into TestCollection({"id":15, "name":[123,456]});
+insert into TestCollection({"id":17, "name":765});
+insert into TestCollection({"id":20, "name":[789]});
+insert into TestCollection({"id":21, "name":[{"first":"virat"}]});
+insert into TestCollection({"id":27, "name":[{"first":"virat","second":"kohli"}]});
+insert into TestCollection({"id":28, "name":{"first":"virat"}});
 
 
 

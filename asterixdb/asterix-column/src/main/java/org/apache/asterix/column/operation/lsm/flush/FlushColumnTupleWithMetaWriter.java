@@ -31,7 +31,8 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
     public FlushColumnTupleWithMetaWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
             double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
         super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize, writeContext);
-        metaColumnTransformer = new ColumnTransformer(columnMetadata, columnMetadata.getMetaRoot());
+        metaColumnTransformer =
+                new ColumnTransformer(columnMetadata, columnMetadata.getMetaRoot(), presentColumnsIndexes);
         metaPointable = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
     }
 

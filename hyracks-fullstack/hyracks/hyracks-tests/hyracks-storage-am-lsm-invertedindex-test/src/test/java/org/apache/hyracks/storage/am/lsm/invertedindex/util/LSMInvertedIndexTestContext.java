@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
@@ -134,6 +135,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             throws HyracksDataException {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IOManager ioManager = harness.getIOManager();
+        NCConfig storageConfig = harness.getNCConfig();
         IBinaryComparatorFactory[] allCmpFactories =
                 SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         // Set token type traits and comparators.
@@ -186,8 +188,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case LSM: {
-                invIndex =
-                        InvertedIndexUtils.createLSMInvertedIndex(ioManager, harness.getVirtualBufferCaches(),
+                invIndex = InvertedIndexUtils
+                        .createLSMInvertedIndex(storageConfig, ioManager, harness.getVirtualBufferCaches(),
                                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                                 tokenizerFactory, fullTextConfigEvaluatorFactory, harness.getDiskBufferCache(),
                                 harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),
@@ -203,7 +205,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             }
             case PARTITIONED_LSM: {
                 invIndex = InvertedIndexUtils
-                        .createPartitionedLSMInvertedIndex(ioManager, harness.getVirtualBufferCaches(),
+                        .createPartitionedLSMInvertedIndex(storageConfig, ioManager, harness.getVirtualBufferCaches(),
                                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                                 tokenizerFactory, fullTextConfigEvaluatorFactory, harness.getDiskBufferCache(),
                                 harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),

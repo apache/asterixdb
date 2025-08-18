@@ -54,9 +54,9 @@ public class LSMBTreeFileManagerTest {
     @Test
     public void deleteOrphanedFilesTest() throws Exception {
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE };
-        LSMBTreeTestContext ctx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, 1,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+        LSMBTreeTestContext ctx = LSMBTreeTestContext.create(harness.getNCConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                1, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
                 harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false,
                 harness.getCompressorDecompressorFactory());

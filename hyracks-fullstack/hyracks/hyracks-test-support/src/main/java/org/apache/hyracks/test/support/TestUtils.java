@@ -73,12 +73,12 @@ public class TestUtils {
 
     public static IHyracksTaskContext create(int frameSize, IOManager ioManager) {
         try {
-            INCServiceContext serviceCtx = new TestNCServiceContext(ioManager, null);
+            INCServiceContext serviceCtx = new TestNCServiceContext(ioManager, "asterix_nc1");
             TestJobletContext jobletCtx = new TestJobletContext(frameSize, serviceCtx, new JobId(0));
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
             IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid, 1);
             return taskCtx;
-        } catch (HyracksException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

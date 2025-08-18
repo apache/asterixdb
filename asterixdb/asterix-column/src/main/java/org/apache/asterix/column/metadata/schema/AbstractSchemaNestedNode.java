@@ -19,6 +19,17 @@
 package org.apache.asterix.column.metadata.schema;
 
 public abstract class AbstractSchemaNestedNode extends AbstractSchemaNode {
+    //A nestedNode can initially be empty, which contributes
+    //to a missing column.
+    protected boolean missingInitiallyInBatch;
+
+    public void setMissingInitiallyInBatch(boolean missingInitiallyInBatch) {
+        this.missingInitiallyInBatch = missingInitiallyInBatch;
+    }
+
+    public boolean isMissingInitiallyInBatch() {
+        return missingInitiallyInBatch;
+    }
 
     @Override
     public final boolean isNested() {

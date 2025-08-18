@@ -131,17 +131,40 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     }
 
     @Override
+    public void preparePageZeroSegments(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
+            throws HyracksDataException {
+        if (leafFrame.getNumberOfPageZeroSegments() <= 1) { // don't need to include the zeroth segment
+            return;
+        }
+
+        columnRanges.pageZeroSegmentsInit(leafFrame);
+        int pageZeroId = leafFrame.getPageId();
+        // Pinning all the segments of the page zero
+        // as the column eviction logic is based on the length of the columns which
+        // gets evaluated from the page zero segments.
+        BitSet pageZeroSegmentRanges =
+                leafFrame.markRequiredPageZeroSegments(projectedColumns, pageZeroId, operation == MERGE);
+        // will unpin the non-required segments after columnRanges.reset()
+        // can we do lazily?
+        int numberOfPageZeroSegments = leafFrame.getNumberOfPageZeroSegments();
+        pinAll(fileId, pageZeroId, numberOfPageZeroSegments - 1, bufferCache);
+    }
+
+    @Override
     public void prepareColumns(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
         if (leafFrame.getTupleCount() == 0) {
             return;
         }
 
-        columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns);
+        columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns, true);
         int pageZeroId = leafFrame.getPageId();
+        int numberOfPageZeroSegments = leafFrame.getNumberOfPageZeroSegments();
 
         if (operation == MERGE) {
-            pinAll(fileId, pageZeroId, leafFrame.getMegaLeafNodeNumberOfPages() - 1, bufferCache);
+            // will contain column pages along with page zero segments
+            pinAll(fileId, pageZeroId + numberOfPageZeroSegments - 1,
+                    leafFrame.getMegaLeafNodeNumberOfPages() - numberOfPageZeroSegments, bufferCache);
         } else {
             pinProjected(fileId, pageZeroId, bufferCache);
         }

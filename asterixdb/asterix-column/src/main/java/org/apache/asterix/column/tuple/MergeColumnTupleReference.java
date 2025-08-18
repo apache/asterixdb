@@ -18,14 +18,11 @@
  */
 package org.apache.asterix.column.tuple;
 
-import java.nio.ByteBuffer;
-
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.operation.lsm.merge.IEndOfPageCallBack;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnReadMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
-import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
@@ -65,9 +62,9 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
-    protected boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples) {
+    protected boolean startNewPage(int numberOfTuples) {
         //Skip filters
-        pageZero.position(pageZero.position() + numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE);
+        frame.skipFilters();
         // skip count is always start from zero as no "search" is conducted during a merge
         this.skipCount = 0;
         mergingLength = 0;

@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+
+insert into TestCollection(  {"id":8, "name":null, "nested" : { "List":[100,null,300], "A" : null , "randomK" : null   } , "obj_array" : [{"first":"first"},{"first":null},{"first":"second"}]  ,   "a" : { "b" : null } , "c" : null , "f" : null  , "arr" : [[1,null,2], null]  });
+insert into TestCollection(  {"id":10,"name":"Virat", "nested" : { "List":[] , "A" : null , "randomK" : null    }  , "obj_array": [{"first":"first"},{"first":"second"}]  , "a" : { "b" : null }  , "c" : { "d" : null , "e" : null  } , "f" : [] ,"arr" : [ [1,2], [] ] } );
+insert into TestCollection({"id":28,"name":"Virat", "nested" : { "List":[null] , "A" : "a" , "randomK" : null    } ,  "obj_array": [{"first":"first"},{"first":"second"}]  , "a" : {"b" : 1} , "c" : { "d" : 1 , "e" : null  } , "f" : [1,null] , "arr" : [ [1,2], [null] ]  } );
+insert into TestCollection({"id":34, "name":null ,"nested" : { "List":null , "A" : null  , "randomK" : "randomV"   } , "obj_array": [{"first":"first"},{"first":"second"}]  , "a" : null  , "c" : { "d" : null , "e" : 1  } , "f" : [2,null,3.0] , "arr" : [[]]   });
+insert into TestCollection({"id":37 , "name" : "Kohli", "nested" : { "List":[1,2,3] , "A" : "a" , "randomK" : null   } , "obj_array": [{"first":"first"},{"first":"second"}]  , "a" : { "b" : 1 }  , "c" : { "d" : 1 , "e" : 1  }, "f" : [3.6,4.0] ,   "arr" : [[1,2,3]]   });
+-- insert into TestCollection({"id":41  });

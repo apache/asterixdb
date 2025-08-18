@@ -111,7 +111,7 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
 
     @Override
     protected void flushDefinitionLevels(int parentMask, int childMask, RunLengthIntArray parentDefLevels,
-            AbstractSchemaNode node) throws HyracksDataException {
+            AbstractSchemaNode node, boolean includeChildColumns) throws HyracksDataException {
         //NoOp
     }
 
@@ -136,8 +136,8 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
     }
 
     @Override
-    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node)
-            throws HyracksDataException {
+    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node,
+            boolean includeChildColumns) throws HyracksDataException {
         //NoOp
     }
 

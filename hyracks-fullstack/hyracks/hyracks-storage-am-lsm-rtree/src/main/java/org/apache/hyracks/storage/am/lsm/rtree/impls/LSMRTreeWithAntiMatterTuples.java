@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
@@ -71,10 +72,11 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     private static final ICursorFactory cursorFactory = opCtx -> new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx);
 
-    public LSMRTreeWithAntiMatterTuples(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            RTreeFrameFactory rtreeInteriorFrameFactory, RTreeFrameFactory rtreeLeafFrameFactory,
-            ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
+    public LSMRTreeWithAntiMatterTuples(NCConfig storageConfig, IIOManager ioManager,
+            List<IVirtualBufferCache> virtualBufferCaches, RTreeFrameFactory rtreeInteriorFrameFactory,
+            RTreeFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, IBufferCache diskBufferCache,
+            ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
             ILSMDiskComponentFactory bulkLoadComponentFactory, IComponentFilterHelper filterHelper,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager, int fieldCount,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeComparatorFactories,
@@ -82,7 +84,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) throws HyracksDataException {
-        super(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+        super(storageConfig, ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache, fileManager, componentFactory,
                 bulkLoadComponentFactory, fieldCount, rtreeCmpFactories, btreeComparatorFactories, linearizer,
                 comparatorFields, linearizerArray, 0, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
@@ -113,8 +115,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                     try {
                         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
                         component = createDiskComponent(componentFactory, flushOp.getTarget(), null, null, true);
-                        componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false, false,
-                                false, pageWriteCallbackFactory.createPageWriteCallback());
+                        componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f, false, 0L,
+                                false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
                         // Since the LSM-RTree is used as a secondary assumption, the
                         // primary key will be the last comparator in the BTree comparators
                         rTreeTupleSorter =
@@ -244,8 +246,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
         ILSMDiskComponent component = createDiskComponent(componentFactory, mergeOp.getTarget(), null, null, true);
 
-        ILSMDiskComponentBulkLoader componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false,
-                false, false, pageWriteCallbackFactory.createPageWriteCallback());
+        ILSMDiskComponentBulkLoader componentBulkLoader = component.createBulkLoader(storageConfig, operation, 1.0f,
+                false, 0L, false, false, false, pageWriteCallbackFactory.createPageWriteCallback());
         try {
             try {
                 while (cursor.hasNext()) {
