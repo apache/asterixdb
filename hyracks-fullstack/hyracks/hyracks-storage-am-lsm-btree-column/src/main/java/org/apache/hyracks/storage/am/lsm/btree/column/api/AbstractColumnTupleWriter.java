@@ -97,6 +97,11 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
     public abstract void close();
 
     /**
+     * On abort, release all allocated temporary buffers
+     */
+    public abstract void abort();
+
+    /**
      * reset the state after flush
      */
     public abstract void reset();

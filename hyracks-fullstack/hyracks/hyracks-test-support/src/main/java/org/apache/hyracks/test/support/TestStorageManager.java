@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.disk.NoOpDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
@@ -45,6 +46,11 @@ public class TestStorageManager implements IStorageManager {
     @Override
     public IBufferCache getBufferCache(INCServiceContext ctx) {
         return TestStorageManagerComponentHolder.getBufferCache(ctx);
+    }
+
+    @Override
+    public IColumnBufferPool getColumnBufferPool(INCServiceContext ctx) {
+        return TestStorageManagerComponentHolder.getColumnBufferPool(ctx);
     }
 
     @Override

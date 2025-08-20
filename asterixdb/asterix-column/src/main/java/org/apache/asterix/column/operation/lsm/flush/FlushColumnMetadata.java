@@ -457,11 +457,13 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     }
 
     public void close() {
-        //Dereference multiPageOp
-        multiPageOpRef.setValue(null);
         for (int i = 0; i < columnWriters.size(); i++) {
             columnWriters.get(i).close();
         }
+        // In close, there is a rest call, where the buffer is being returned to @link ColumnBufferPool
+        // hence, we should dereference the multiPageOp after close().
+        //Dereference multiPageOp
+        multiPageOpRef.setValue(null);
     }
 
     protected void flushDefinitionLevels(int parentMask, int childMask, RunLengthIntArray parentDefLevels,

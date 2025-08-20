@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -39,11 +40,13 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.ColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.DefaultDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.FileMapManager;
@@ -56,6 +59,7 @@ import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFa
 
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
+    private static IColumnBufferPool columnBufferPool;
     private static IFileMapProvider fileMapProvider;
     private static IOManager ioManager;
     private static ILocalResourceRepository localResourceRepository;
@@ -76,6 +80,7 @@ public class TestStorageManagerComponentHolder {
         fileMapProvider = null;
         localResourceRepository = null;
         lcManager = null;
+        columnBufferPool = null;
     }
 
     public synchronized static IResourceLifecycleManager<IIndex> getIndexLifecycleManager() {
@@ -91,6 +96,13 @@ public class TestStorageManagerComponentHolder {
             return getBufferCache(ioManager);
         }
         return bufferCache;
+    }
+
+    public synchronized static IColumnBufferPool getColumnBufferPool(INCServiceContext ctx) {
+        if (columnBufferPool == null) {
+            return getColumnBufferPool();
+        }
+        return columnBufferPool;
     }
 
     private synchronized static IFileMapProvider getFileMapProvider() {
@@ -140,6 +152,15 @@ public class TestStorageManagerComponentHolder {
             }
         }
         return resourceIdFactory;
+    }
+
+    public static IColumnBufferPool getColumnBufferPool() {
+        if (columnBufferPool != null) {
+            return columnBufferPool;
+        }
+
+        columnBufferPool = new ColumnBufferPool(4 * 1024, 500, 3.0, TimeUnit.MINUTES.toMillis(2));
+        return columnBufferPool;
     }
 
     public static IBufferCache getBufferCache(IIOManager ioManager) {

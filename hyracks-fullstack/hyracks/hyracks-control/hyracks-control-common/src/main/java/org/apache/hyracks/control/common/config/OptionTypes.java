@@ -73,27 +73,7 @@ public class OptionTypes {
 
     public static final IOptionType<Integer> INTEGER = new IntegerOptionType();
 
-    public static final IOptionType<Double> DOUBLE = new IOptionType<Double>() {
-        @Override
-        public Double parse(String s) {
-            return Double.parseDouble(s);
-        }
-
-        @Override
-        public Double parse(JsonNode node) {
-            return node.isNull() ? null : node.asDouble();
-        }
-
-        @Override
-        public Class<Double> targetType() {
-            return Double.class;
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (double) value);
-        }
-    };
+    public static final IOptionType<Double> DOUBLE = new DoubleOptionType();
 
     public static final IOptionType<String> STRING = new IOptionType<String>() {
         @Override
@@ -258,6 +238,11 @@ public class OptionTypes {
 
     public static IOptionType<Integer> getRangedIntegerType(final int minValueInclusive, final int maxValueInclusive) {
         return new RangedIntegerOptionType(minValueInclusive, maxValueInclusive);
+    }
+
+    public static IOptionType<Double> getRangedDoubleType(final double minValueInclusive,
+            final double maxValueInclusive) {
+        return new RangedDoubleOptionType(minValueInclusive, maxValueInclusive);
     }
 
     public static class IntegerOptionType implements IOptionType<Integer> {
@@ -429,6 +414,73 @@ public class OptionTypes {
         @Override
         public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (long) value);
+        }
+    }
+
+    private static class DoubleOptionType implements IOptionType<Double> {
+        @Override
+        public Double parse(String s) {
+            return Double.parseDouble(s);
+        }
+
+        @Override
+        public Double parse(JsonNode node) {
+            return node.isNull() ? null : node.asDouble();
+        }
+
+        @Override
+        public Class<Double> targetType() {
+            return Double.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (double) value);
+        }
+    }
+
+    private static class RangedDoubleOptionType extends DoubleOptionType {
+        private final double minValue;
+        private final double maxValue;
+
+        RangedDoubleOptionType(double minValue, double maxValue) {
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+        }
+
+        @Override
+        public Double parse(String value) {
+            double doubleValue = super.parse(value);
+            rangeCheck(doubleValue);
+            return doubleValue;
+        }
+
+        @Override
+        public Double parse(JsonNode node) {
+            if (node.isNull()) {
+                return null;
+            }
+            double doubleValue = node.asDouble();
+            rangeCheck(doubleValue);
+            return doubleValue;
+        }
+
+        void rangeCheck(double doubleValue) {
+            if (Double.isNaN(doubleValue)) {
+                throw new IllegalArgumentException("double value cannot be NaN");
+            }
+            if (doubleValue < minValue || doubleValue > maxValue) {
+                if (maxValue == Double.MAX_VALUE) {
+                    if (minValue == 0.0) {
+                        throw new IllegalArgumentException("double value must not be negative, but was " + doubleValue);
+                    } else if (minValue == Double.MIN_VALUE) {
+                        throw new IllegalArgumentException(
+                                "double value must be greater than " + Double.MIN_VALUE + ", but was " + doubleValue);
+                    }
+                }
+                throw new IllegalArgumentException("double value must be between " + minValue + "-" + maxValue
+                        + " (inclusive), but was " + doubleValue);
+            }
         }
     }
 

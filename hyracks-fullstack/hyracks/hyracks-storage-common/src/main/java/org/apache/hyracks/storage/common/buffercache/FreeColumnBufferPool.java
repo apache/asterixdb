@@ -16,51 +16,47 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.common.buffer;
+package org.apache.hyracks.storage.common.buffercache;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.util.StorageUtil;
 
-public class NoOpWriteMultiPageOp implements IColumnWriteMultiPageOp {
-    public static final IColumnWriteMultiPageOp INSTANCE = new NoOpWriteMultiPageOp();
-
-    private NoOpWriteMultiPageOp() {
-    }
+public class FreeColumnBufferPool implements IColumnBufferPool {
+    private static final int INITIAL_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
 
     @Override
-    public ByteBuffer confiscatePersistent() throws HyracksDataException {
-        return null;
-    }
-
-    @Override
-    public ByteBuffer confiscatePageZeroPersistent() throws HyracksDataException {
-        return null;
-    }
-
-    @Override
-    public ByteBuffer confiscateTemporary() throws HyracksDataException {
-        return null;
-    }
-
-    @Override
-    public ByteBuffer confiscateTemporary0thBuffer() {
-        return null;
-    }
-
-    @Override
-    public void releaseTemporary0thBuffer(ByteBuffer buffer) {
+    public void reserve(int requestedBuffers) throws InterruptedException {
 
     }
 
     @Override
-    public void persist() throws HyracksDataException {
+    public boolean tryReserve(int requestedBuffers) {
+        return true;
+    }
+
+    @Override
+    public void release(int buffers) {
 
     }
 
     @Override
-    public int getNumberOfPersistentBuffers() {
+    public ByteBuffer getBuffer() {
+        return ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
+    }
+
+    @Override
+    public int getMaxReservedBuffers() {
         return 0;
+    }
+
+    @Override
+    public void recycle(ByteBuffer buffer) {
+
+    }
+
+    @Override
+    public void close() {
+
     }
 }

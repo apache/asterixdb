@@ -36,14 +36,18 @@ import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 
 public class ColumnBTree extends DiskBTree {
-    public ColumnBTree(IBufferCache bufferCache, IPageManager freePageManager,
+    private final IColumnBufferPool columnBufferPool;
+
+    public ColumnBTree(IBufferCache bufferCache, IColumnBufferPool columnBufferPool, IPageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, FileReference file) {
         super(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
+        this.columnBufferPool = columnBufferPool;
     }
 
     @Override
@@ -71,6 +75,10 @@ public class ColumnBTree extends DiskBTree {
     public BTreeAccessor createAccessor(IIndexAccessParameters iap, int index, IColumnProjectionInfo projectionInfo,
             IColumnReadContext context) {
         return new ColumnBTreeAccessor(this, iap, index, projectionInfo, context);
+    }
+
+    public IColumnBufferPool getColumnBufferPool() {
+        return columnBufferPool;
     }
 
     public class ColumnBTreeAccessor extends DiskBTreeAccessor {

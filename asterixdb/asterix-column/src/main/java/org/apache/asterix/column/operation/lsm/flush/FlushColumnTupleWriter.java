@@ -200,6 +200,12 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         writer.close();
     }
 
+    @Override
+    public final void abort() {
+        // this call will reset the writers, releasing the 0th buffer back to the pool
+        columnMetadata.close();
+    }
+
     public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
         // Execution can reach here in case of Load statements
         // and the type of tuple in that case is PermutingFrameTupleReference
