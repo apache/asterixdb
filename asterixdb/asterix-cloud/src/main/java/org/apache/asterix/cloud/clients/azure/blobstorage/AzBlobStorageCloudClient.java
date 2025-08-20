@@ -407,16 +407,21 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     private static void configCredentialsToAzClient(BlobServiceClientBuilder builder,
             AzBlobStorageClientConfig config) {
-        if (config.isAnonymousAuth()) {
-            StorageSharedKeyCredential creds =
-                    new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY);
-            builder.credential(creds);
+        String storageAccount = System.getenv("AZURE_STORAGE_ACCOUNT");
+        String storageKey = System.getenv("AZURE_STORAGE_KEY");
+
+        if (storageAccount != null && storageKey != null) {
+            builder.credential(new StorageSharedKeyCredential(storageAccount, storageKey));
+        } else if (config.isAnonymousAuth()) {
+            // TODO(mblow): this mapping anonymous auth -> Azurite default account (hack) should be removed ASAP
+            builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY));
         } else {
             builder.credential(config.createCredentialsProvider());
         }
     }
 
     private static String getEndpoint(AzBlobStorageClientConfig config) {
+        // TODO(mblow): this mapping anonymous auth -> Azurite default endpoint (hack) should be removed ASAP
         return config.isAnonymousAuth() ? AZURITE_ENDPOINT + config.getBucket()
                 : config.getEndpoint() + "/" + config.getBucket();
     }
