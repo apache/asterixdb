@@ -22,6 +22,7 @@ import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.JacksonProperties;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
@@ -100,4 +101,6 @@ public interface IPropertiesFactory {
      * @return new node properties
      */
     NodeProperties newNodeProperties();
+
+    JacksonProperties newJacksonProperties();
 }
