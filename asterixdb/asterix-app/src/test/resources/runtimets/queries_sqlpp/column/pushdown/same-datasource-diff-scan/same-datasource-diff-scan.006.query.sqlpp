@@ -1,0 +1,34 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// this is currently not handled. the second filter is still not pushed down even though the plan has different unnest
+// map on the same datasource.
+
+SET `compiler.sort.parallel` "false";
+USE test;
+EXPLAIN
+SELECT DISTINCT t.user_id FROM (
+SELECT ds1.id AS user_id FROM ds1 WHERE ds1.val >= 20 AND ds1.val <= 50
+UNION ALL
+SELECT ds1.id AS user_id FROM ds_contains AS c JOIN ds1 ON c.id /*+ indexnl */ = ds1.id
+ WHERE ds1.val = 1
+UNION ALL
+SELECT ds1.id AS user_id FROM ds_disjoint AS d JOIN ds1 ON d.id /*+ indexnl */ = ds1.id
+) AS t
+ORDER BY t.user_id;

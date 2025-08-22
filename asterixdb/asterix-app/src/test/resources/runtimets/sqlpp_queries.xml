@@ -16781,6 +16781,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="pushdown/same-datasource-diff-scan">
+        <output-dir compare="Text">pushdown/same-datasource-diff-scan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="select-count-one-field">
         <output-dir compare="Text">select-count-one-field</output-dir>
       </compilation-unit>

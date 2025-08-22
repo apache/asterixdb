@@ -94,7 +94,6 @@ public class PushdownContext {
             scanDefDesc = new ScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable, metaVariable,
                     scanOperator);
         }
-        new ScanDefineDescriptor(scopes.size(), dataset, pkList, recordVariable, metaVariable, scanOperator);
         defineChain.put(recordVariable, scanDefDesc);
         useChain.put(recordVariable, new ArrayList<>());
         if (metaVariable != null) {
