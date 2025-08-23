@@ -37,12 +37,20 @@ public class AsterixProperties {
         configManager.register(NodeProperties.Option.class, CompilerProperties.Option.class,
                 MetadataProperties.Option.class, ExternalProperties.Option.class, ActiveProperties.Option.class,
                 MessagingProperties.Option.class, ReplicationProperties.Option.class, StorageProperties.Option.class,
-                TransactionProperties.Option.class);
+                TransactionProperties.Option.class, JacksonProperties.Option.class);
 
         // we need to process the old-style asterix config before we apply defaults!
         configManager.addConfigurator(IConfigManager.ConfiguratorMetric.APPLY_DEFAULTS.metric() - 1, () -> {
             try {
                 PropertiesAccessor.getInstance(configManager.getAppConfig());
+            } catch (AsterixException e) {
+                throw HyracksDataException.create(e);
+            }
+        });
+        configManager.addConfigurator(IConfigManager.ConfiguratorMetric.APPLY_DEFAULTS.metric() + 1, () -> {
+            try {
+                PropertiesAccessor accessor = PropertiesAccessor.getInstance(configManager.getAppConfig());
+                JacksonProperties.configureJackson(accessor);
             } catch (AsterixException e) {
                 throw HyracksDataException.create(e);
             }

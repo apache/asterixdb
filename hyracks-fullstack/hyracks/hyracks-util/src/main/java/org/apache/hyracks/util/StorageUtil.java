@@ -26,15 +26,15 @@ import java.util.regex.Pattern;
 public class StorageUtil {
 
     public static final int BASE = 1024;
-    private static final Pattern PATTERN = Pattern.compile("^(-?[.0-9]+)([A-Z]{0,2})$");
+    private static final Pattern PATTERN = Pattern.compile("^(-?[.0-9]+)([A-Z]{0,3})$");
 
     public enum StorageUnit {
         BYTE("B", "b", 1),
-        KILOBYTE("KB", "kb", BASE),
-        MEGABYTE("MB", "m", KILOBYTE.multiplier * BASE),
-        GIGABYTE("GB", "g", MEGABYTE.multiplier * BASE),
-        TERABYTE("TB", "t", GIGABYTE.multiplier * BASE),
-        PETABYTE("PB", "p", TERABYTE.multiplier * BASE);
+        KILOBYTE("KiB", "kb", BASE),
+        MEGABYTE("MiB", "m", KILOBYTE.multiplier * BASE),
+        GIGABYTE("GiB", "g", MEGABYTE.multiplier * BASE),
+        TERABYTE("TiB", "t", GIGABYTE.multiplier * BASE),
+        PETABYTE("PiB", "p", TERABYTE.multiplier * BASE);
 
         private final String unitTypeInLetter;
         private final String linuxUnitTypeInLetter;
@@ -43,7 +43,8 @@ public class StorageUtil {
 
         static {
             for (StorageUnit unit : values()) {
-                SUFFIX_TO_UNIT_MAP.put(unit.unitTypeInLetter, unit);
+                SUFFIX_TO_UNIT_MAP.put(unit.unitTypeInLetter.toUpperCase(), unit);
+                SUFFIX_TO_UNIT_MAP.put(unit.unitTypeInLetter.replace("i", ""), unit);
             }
         }
 
@@ -124,11 +125,11 @@ public class StorageUtil {
 
     private static IllegalArgumentException invalidFormatException(String s) {
         return new IllegalArgumentException(
-                "The given string: " + s + " is not a byte unit string (e.g., 320KB or 1024).");
+                "The given string: " + s + " is not a byte unit string (e.g., 320KiB or 1024).");
     }
 
     /**
-     * Return byte value for the given string (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...)
+     * Return byte value for the given string (e.g., 0.1KiB, 100kb, 1mb, 3MiB, 8.5GiB ...)
      *
      * @throws IllegalArgumentException
      */
@@ -143,7 +144,7 @@ public class StorageUtil {
 
     /**
      * Returns a human readable value in storage units rounded up to two decimal places.
-     * e.g. toHumanReadableSize(1024L * 1024L * 1024l * 10L *) + 1024l * 1024l * 59) returns 1.06 GB
+     * e.g. toHumanReadableSize(1024L * 1024L * 1024l * 10L *) + 1024l * 1024l * 59) returns 1.06 GiB
      *
      * @param bytes
      * @return Value in storage units.
@@ -153,7 +154,7 @@ public class StorageUtil {
             return bytes + " B";
         }
         final int baseValue = (63 - Long.numberOfLeadingZeros(bytes)) / 10;
-        final char bytePrefix = " kMGTPE".charAt(baseValue);
+        final String bytePrefix = new String[] { " ", "Ki", "Mi", "Gi", "Ti", "Pi" }[baseValue];
         final long divisor = 1L << (baseValue * 10);
         if (bytes % divisor == 0) {
             return String.format("%d %sB", bytes / divisor, bytePrefix);

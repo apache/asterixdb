@@ -102,8 +102,7 @@ public class NCConfig extends ControllerConfig {
         PYTHON_DS_PATH(STRING, (String) null),
         CREDENTIAL_FILE(
                 OptionTypes.STRING,
-                (Function<IApplicationConfig, String>) appConfig -> FileUtil
-                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
+                appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
                 ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
 
         private final IOptionType parser;

@@ -24,7 +24,7 @@ import org.junit.Test;
 public class StorageUnitTest {
 
     @Test
-    public void test() {
+    public void testParse() {
         // Valid cases
         double result1NoUnit = StorageUtil.getSizeInBytes("1"); // Defaults to bytes
         Assert.assertEquals(1.0, result1NoUnit, 0);
@@ -37,6 +37,9 @@ public class StorageUnitTest {
 
         double result1Kb = StorageUtil.getSizeInBytes("1KB");
         Assert.assertEquals(1024.0, result1Kb, 0);
+
+        double result1Kb2 = StorageUtil.getSizeInBytes("1KiB");
+        Assert.assertEquals(1024.0, result1Kb2, 0);
 
         double result1KbWithSpaces = StorageUtil.getSizeInBytes(" 1 K B ");
         Assert.assertEquals(1024.0, result1KbWithSpaces, 0);
@@ -68,6 +71,17 @@ public class StorageUnitTest {
         invalidCase("123MBB");
     }
 
+    @Test
+    public void testToString() {
+        Assert.assertEquals("1 KiB", StorageUtil.toHumanReadableSize(1024));
+        Assert.assertEquals("1.02 KiB", StorageUtil.toHumanReadableSize(1048));
+        Assert.assertEquals("1 MiB", StorageUtil.toHumanReadableSize(1024 * 1024));
+        Assert.assertEquals("1.50 MiB", StorageUtil.toHumanReadableSize(1024 * 1536));
+        Assert.assertEquals("1.75 MiB", StorageUtil.toHumanReadableSize(StorageUtil.getByteValue("1.75 MiB")));
+        Assert.assertEquals("1.75 MiB", StorageUtil.toHumanReadableSize(StorageUtil.getByteValue("1.75 MB")));
+        Assert.assertEquals("11.77 TiB", StorageUtil.toHumanReadableSize(StorageUtil.getByteValue("12345678 MB")));
+    }
+
     private void invalidCase(String value) {
         try {
             StorageUtil.getSizeInBytes(value);
@@ -76,4 +90,5 @@ public class StorageUnitTest {
                     .contains("IllegalArgumentException: The given string: " + value + " is not a byte unit string"));
         }
     }
+
 }
