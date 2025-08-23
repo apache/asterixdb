@@ -45,10 +45,8 @@ public class TestConstants {
         public static final String ACCOUNT_NAME_PLACEHOLDER = "%azure-accountname%";
         public static final String AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
         public static final int AZURITE_PORT = 15055;
-        public static final String AZURITE_HOSTNAME = "127.0.0.1:" + AZURITE_PORT;
         public static final String AZURITE_ENDPOINT =
                 "http://127.0.0.1:" + AZURITE_PORT + "/" + AZURITE_ACCOUNT_NAME_DEFAULT;
-
         // account key
         public static final String ACCOUNT_KEY_PLACEHOLDER = "%azure-accountkey%";
         public static final String AZURITE_ACCOUNT_KEY_DEFAULT =
