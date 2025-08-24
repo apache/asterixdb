@@ -197,7 +197,7 @@ public class ConfigUsageTest {
         return maxWidth;
     }
 
-    private String extractValue(Column column, IOption option) {
+    protected String extractValue(Column column, IOption option) {
         switch (column) {
             case SECTION:
                 return getSectionDisplayFunction().apply(option.section());
