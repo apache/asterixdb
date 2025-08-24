@@ -489,8 +489,8 @@
               <noticeUrl>https://raw.githubusercontent.com/msgpack/msgpack-java/0.8.20/NOTICE</noticeUrl>
             </override>
             <override>
-              <gav>com.github.luben:zstd-jni:1.5.0-1</gav>
-              <url>https://raw.githubusercontent.com/luben/zstd-jni/v1.5.0-1/LICENSE</url>
+              <gav>com.github.luben:zstd-jni:1.5.6-6</gav>
+              <url>https://raw.githubusercontent.com/luben/zstd-jni/v1.5.6-6/LICENSE</url>
             </override>
             <override>
               <gav>com.github.luben:zstd-jni:1.5.6-2</gav>

@@ -658,7 +658,7 @@
                                 <goal>npm</goal>
                             </goals>
                             <configuration>
-                                <arguments>install azurite@3.31.0</arguments>
+                                <arguments>install azurite@3.35.0</arguments>
                             </configuration>
                         </execution>
                     </executions>
