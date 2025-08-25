@@ -108,8 +108,7 @@ public class NCConfig extends ControllerConfig {
         LIBRARY_MAX_ARCHIVE_ENTRIES(INTEGER, 4096),
         CREDENTIAL_FILE(
                 OptionTypes.STRING,
-                (Function<IApplicationConfig, String>) appConfig -> FileUtil
-                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
+                appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
                 ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
         STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT(INTEGER_BYTE_UNIT, 5000),
         STORAGE_PAGE_ZERO_WRITER(STRING, "default");
