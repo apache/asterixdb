@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -60,7 +61,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -175,6 +178,16 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
     public Boolean visit(CaseExpression caseExpression, T arg) throws CompilationException {
         return visit(caseExpression.getConditionExpr(), arg) || visitExprList(caseExpression.getWhenExprs(), arg)
                 || visitExprList(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(ChangeExpression changeExpr, T arg) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, changeExpr.getSourceLocation());
+    }
+
+    @Override
+    public Boolean visit(SetExpression setexpr, T arg) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setexpr.getSourceLocation());
     }
 
     @Override

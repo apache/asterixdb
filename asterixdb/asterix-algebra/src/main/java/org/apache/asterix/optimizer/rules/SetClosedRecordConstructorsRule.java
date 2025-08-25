@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import org.apache.asterix.common.annotations.isTransformRecordAnnotation;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -108,7 +109,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throws AlgebricksException {
             boolean allClosed = true;
             boolean changed = false;
-            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
+            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                    && !expr.hasAnnotation(isTransformRecordAnnotation.class)) {
                 ARecordType reqType = (ARecordType) TypeCastUtils.getRequiredType(expr);
                 if (reqType == null || !reqType.isOpen()) {
                     int n = expr.getArguments().size();

@@ -19,7 +19,6 @@
 package org.apache.asterix.lang.common.visitor.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
@@ -170,11 +169,6 @@ public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisit
 
     @Override
     public R visit(UnorderedListTypeDefinition ulte, T arg) throws CompilationException {
-        return null;
-    }
-
-    @Override
-    public R visit(UpdateClause del, T arg) throws CompilationException {
         return null;
     }
 

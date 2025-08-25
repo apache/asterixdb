@@ -237,6 +237,7 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
 
                             if (needInnerSubplan) {
                                 SubplanOperator newInnerSubplan = new SubplanOperator(copiedDestOpNestedPlanRootRef);
+                                newInnerSubplan.setFailSafe(upperSubplan.isFailSafe());
                                 NestedTupleSourceOperator newNts =
                                         new NestedTupleSourceOperator(new MutableObject<>(destOp));
                                 newInnerSubplan.getInputs().add(new MutableObject<>(newNts));
@@ -350,6 +351,7 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
             ILogicalOperator destOpRoot = destOpRootRef.getValue();
             if (!destOpRootRefs.isEmpty()) {
                 SubplanOperator newSubplanOp = new SubplanOperator(destOpRoot);
+                newSubplanOp.setFailSafe(destOp.isFailSafe());
                 newSubplanOp.setSourceLocation(destOp.getSourceLocation());
                 newSubplanOp.getInputs().add(new MutableObject<>(currentInputOp));
 

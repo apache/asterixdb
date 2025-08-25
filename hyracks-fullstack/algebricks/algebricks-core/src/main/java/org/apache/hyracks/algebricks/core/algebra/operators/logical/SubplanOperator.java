@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class SubplanOperator extends AbstractOperatorWithNestedPlans {
+    private boolean isFailSafe = false;
 
     public SubplanOperator() {
         super();
@@ -55,6 +56,14 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
     public void setRootOp(Mutable<ILogicalOperator> opRef) {
         ILogicalPlan p = new ALogicalPlanImpl(opRef);
         nestedPlans.add(p);
+    }
+
+    public void setFailSafe(boolean failSafe) {
+        this.isFailSafe = failSafe;
+    }
+
+    public boolean isFailSafe() {
+        return this.isFailSafe;
     }
 
     @Override

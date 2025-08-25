@@ -33,32 +33,29 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-/**
- * The record merge ignore duplicates differs from the normal record merging in the following scenarios:
- * - When 2 fields have matching names, but different values, left record field will be taken.
- * - When 2 fields have matching names, but different types, left record field will be taken.
- *
- * Examples:
- * - Matching field name, type and value
- * - normal merge: {id: 1}, {id: 1} -> {id: 1}
- * - ignore merge: {id: 1}, {id: 1} -> {id: 1}
- *
- * - Matching field name, type, different value
- * - normal merge: {id: 1}, {id: 2} -> duplicate field exception (mismatched value)
- * - ignore merge: {id: 1}, {id: 2} -> {id: 1} (mismatched values are ignored, left record field is taken)
- *
- * - Matching field name, different type
- * - normal merge: {id: 1}, {id: "1"} -> duplicate field exception (mismatched type)
- * - ignore merge: {id: 1}, {id: "1"} -> {id: 1} (mismatched types are ignored, left record field is taken)
- */
+/*-- Original UPDATE statement
+UPDATE users SET name = "John", age = 25 WHERE id = 1
+
+-- Step 1: The SetExpression (name = "John", age = 25) is converted to a RecordConstructor
+-- containing the field-value pairs. This record constructor is annotated with
+-- isTransformRecordAnnotation to mark it as a transformation record:
+{"name": "John", "age": 25}
+
+-- Step 2: RECORD_TRANSFORM merges the transformation record with the source record
+record-transform(
+    {"name": "John", "age": 25},  -- ← Transformation record (first argument)
+    originalUserRecord            -- ← Source record from the dataset (second argument)
+)
+-- Result: The source record is updated with new values, preserving other fields
+*/
 
 @MissingNullInOutFunction
-public class RecordMergeIgnoreDuplicatesDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class RecordTransformDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new RecordMergeIgnoreDuplicatesDescriptor();
+            return new RecordTransformDescriptor();
         }
 
         @Override
@@ -84,14 +81,13 @@ public class RecordMergeIgnoreDuplicatesDescriptor extends AbstractScalarFunctio
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), true, false, false,
-                        false);
+                return new RecordTransformEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), false);
             }
         };
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.RECORD_MERGE_IGNORE_DUPLICATES;
+        return BuiltinFunctions.RECORD_TRANSFORM;
     }
 }

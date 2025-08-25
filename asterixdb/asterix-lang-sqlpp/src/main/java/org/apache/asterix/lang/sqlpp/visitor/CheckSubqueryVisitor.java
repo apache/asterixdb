@@ -63,7 +63,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -171,6 +173,20 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     public Boolean visit(CaseExpression caseExpression, ILangExpression arg) throws CompilationException {
         return visit(caseExpression.getConditionExpr(), arg) || visitExprList(caseExpression.getWhenExprs(), arg)
                 || visitExprList(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(ChangeExpression changeExpr, ILangExpression arg) throws CompilationException {
+        return visit(changeExpr.getPriorExpr(), arg) || (changeExpr.hasSetExpr() && visit(changeExpr.getSetExpr(), arg))
+                || visit(changeExpr.getPathExpr(), arg) || visit(changeExpr.getChangeSeq(), arg)
+                || visit(changeExpr.getCondition(), arg) || visit(changeExpr.getPosExpr(), arg)
+                || visit(changeExpr.getSourceExpr(), arg) || visit(changeExpr.getDataTransformRecord(), arg)
+                || visit(changeExpr.getDataRemovalRecord(), arg);
+    }
+
+    @Override
+    public Boolean visit(SetExpression setexpr, ILangExpression arg) throws CompilationException {
+        return visitExprList(setexpr.getPathExprList(), arg) || visitExprList(setexpr.getValueExprList(), arg);
     }
 
     @Override

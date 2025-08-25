@@ -18,50 +18,22 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.List;
-import java.util.Objects;
-
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.AbstractStatement;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class UpdateStatement extends AbstractStatement {
+public class UpdateStatement extends InsertStatement {
 
-    private VariableExpr vars;
-    private Expression target;
-    private Expression condition;
-    private List<UpdateClause> ucs;
-
-    public UpdateStatement(VariableExpr vars, Expression target, Expression condition, List<UpdateClause> ucs) {
-        this.vars = vars;
-        this.target = target;
-        this.condition = condition;
-        this.ucs = ucs;
+    public UpdateStatement(Namespace namespace, String datasetName, Query query, VariableExpr aliasVar, int varCounter,
+            Expression returnExpression) {
+        super(namespace, datasetName, query, varCounter, aliasVar, returnExpression);
     }
 
     @Override
     public Kind getKind() {
-        return Statement.Kind.UPDATE;
-    }
-
-    public VariableExpr getVariableExpr() {
-        return vars;
-    }
-
-    public Expression getTarget() {
-        return target;
-    }
-
-    public Expression getCondition() {
-        return condition;
-    }
-
-    public List<UpdateClause> getUpdateClauses() {
-        return ucs;
+        return Kind.UPDATE;
     }
 
     @Override
@@ -71,25 +43,13 @@ public class UpdateStatement extends AbstractStatement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(condition, target, ucs, vars);
+        return 31 * super.hashCode() + Kind.UPDATE.hashCode();
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
-        if (this == object) {
-            return true;
-        }
-        if (!(object instanceof UpdateStatement)) {
-            return false;
-        }
-        UpdateStatement update = (UpdateStatement) object;
-        return Objects.equals(condition, update.condition) && Objects.equals(target, update.target)
-                && Objects.equals(ucs, update.ucs) && Objects.equals(vars, update.vars);
-    }
+        return this == object || object instanceof UpdateStatement && super.equals(object);
 
-    @Override
-    public byte getCategory() {
-        return Category.UPDATE;
     }
-
 }

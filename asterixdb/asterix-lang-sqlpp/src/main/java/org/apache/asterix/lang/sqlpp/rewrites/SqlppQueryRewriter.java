@@ -56,6 +56,7 @@ import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.CheckUpdateSetExpressionsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
@@ -65,6 +66,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlCompatRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseAggregateExtractionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppChangeExprToSelectExprVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppFunctionCallResolverVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
@@ -73,6 +75,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupingSetsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppLoadAccessedDataset;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppModificationExprToSetExprVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppRightJoinRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppSpecialFunctionNameRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowAggregationSugarVisitor;
@@ -174,6 +177,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites Group-By clauses with multiple grouping sets into UNION ALL
         // Must run after rewriteSetOperations() and before variableCheckAndRewrite()
         rewriteGroupingSets();
+
+        // TODO (Shahrzad): Check and combine the following three rewrites into one, if possible.
+
+        // Rewrites change expressions into SET expressions for Update statements
+        rewriteUpdateModificationExpressions();
+
+        // Validate that fields targeted by UPDATE statement are not primary keys
+        checkUpdateSetExpressions();
+
+        // Rewrites ChangeExpression sequences into SelectExpressions
+        rewriteUpdateChangeExpressions();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();
@@ -302,6 +316,12 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         rewriteTopExpr(variableCheckAndRewriteVisitor, null);
     }
 
+    protected void checkUpdateSetExpressions() throws CompilationException {
+        CheckUpdateSetExpressionsVisitor setParameterCheckVisitor =
+                new CheckUpdateSetExpressionsVisitor(metadataProvider);
+        rewriteTopExpr(setParameterCheckVisitor, null);
+    }
+
     protected void rewriteGroupBys() throws CompilationException {
         SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context);
         rewriteTopExpr(groupByVisitor, null);
@@ -331,6 +351,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteCaseExpressions() throws CompilationException {
         // Normalizes CASE expressions and rewrites simple ones into switch-case()
         SqlppCaseExpressionVisitor visitor = new SqlppCaseExpressionVisitor();
+        rewriteTopExpr(visitor, null);
+    }
+
+    protected void rewriteUpdateModificationExpressions() throws CompilationException {
+        SqlppModificationExprToSetExprVisitor visitor =
+                new SqlppModificationExprToSetExprVisitor(context, metadataProvider, externalVars);
+        rewriteTopExpr(visitor, null);
+    }
+
+    protected void rewriteUpdateChangeExpressions() throws CompilationException {
+        SqlppChangeExprToSelectExprVisitor visitor = new SqlppChangeExprToSelectExprVisitor(context, externalVars);
         rewriteTopExpr(visitor, null);
     }
 

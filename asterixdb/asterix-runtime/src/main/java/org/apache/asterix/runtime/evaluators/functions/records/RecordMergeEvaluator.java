@@ -30,8 +30,10 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
@@ -63,19 +65,24 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RecordMergeEvaluator extends AbstractScalarEval {
 
     private final boolean isIgnoreDuplicates;
+    private final boolean onlyIncludeLeftRecordFields;
+    private final boolean mergeOnTransformRecords;
+    private final boolean isTransform;
 
     private final ARecordType outRecType;
+    private final ARecordType leftRecType;
 
     private final IVisitablePointable vp0;
     private final IVisitablePointable vp1;
 
-    private final IPointable argPtr0 = new VoidPointable();
-    private final IPointable argPtr1 = new VoidPointable();
+    protected final IPointable argPtr0 = new VoidPointable();
+    protected final IPointable argPtr1 = new VoidPointable();
 
-    private final IScalarEvaluator eval0;
-    private final IScalarEvaluator eval1;
+    protected final IScalarEvaluator eval0;
+    protected final IScalarEvaluator eval1;
 
     private final List<RecordBuilder> rbStack = new ArrayList<>();
+    private final List<RuntimeRecordTypeInfo> leftRecordTypeInfoStack = new ArrayList<>();
 
     private final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
     private final IBinaryComparator stringBinaryComparator =
@@ -83,25 +90,29 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
 
     private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
     private final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
-    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput out = resultStorage.getDataOutput();
 
     RecordMergeEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
-            SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates)
+            SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates,
+            boolean onlyIncludeLeftRecordFields, boolean mergeOnTransformRecords, boolean isTransform)
             throws HyracksDataException {
         super(sourceLocation, identifier);
 
         this.isIgnoreDuplicates = isIgnoreDuplicates;
+        this.onlyIncludeLeftRecordFields = onlyIncludeLeftRecordFields;
+        this.mergeOnTransformRecords = mergeOnTransformRecords;
+        this.isTransform = isTransform;
 
         eval0 = args[0].createScalarEvaluator(ctx);
         eval1 = args[1].createScalarEvaluator(ctx);
 
         outRecType = (ARecordType) argTypes[0];
-        ARecordType inRecType0 = (ARecordType) argTypes[1];
+        leftRecType = (ARecordType) argTypes[1];
         ARecordType inRecType1 = (ARecordType) argTypes[2];
 
         PointableAllocator pa = new PointableAllocator();
-        vp0 = pa.allocateRecordValue(inRecType0);
+        vp0 = pa.allocateRecordValue(leftRecType);
         vp1 = pa.allocateRecordValue(inRecType1);
     }
 
@@ -110,11 +121,13 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
         resultStorage.reset();
         eval0.evaluate(tuple, argPtr0);
         eval1.evaluate(tuple, argPtr1);
-
         if (PointableHelper.checkAndSetMissingOrNull(result, argPtr0, argPtr1)) {
             return;
         }
+        evaluateImpl(result);
+    }
 
+    protected void evaluateImpl(IPointable result) throws HyracksDataException {
         vp0.set(argPtr0);
         vp1.set(argPtr1);
 
@@ -122,7 +135,7 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
         ARecordVisitablePointable rp1 = (ARecordVisitablePointable) vp1;
 
         try {
-            mergeFields(outRecType, rp0, rp1, 0);
+            mergeFields(outRecType, leftRecType, rp0, rp1, 0);
             rbStack.get(0).write(out, true);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
@@ -130,20 +143,35 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
         result.set(resultStorage);
     }
 
-    private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
+    private void mergeFields(ARecordType combinedType, ARecordType leftRecType, ARecordVisitablePointable leftRecord,
             ARecordVisitablePointable rightRecord, int nestedLevel) throws IOException {
-        if (rbStack.size() < (nestedLevel + 1)) {
+        if (rbStack.size() <= nestedLevel) {
             rbStack.add(new RecordBuilder());
+        }
+        if (leftRecordTypeInfoStack.size() <= nestedLevel) {
+            leftRecordTypeInfoStack.add(new RuntimeRecordTypeInfo());
         }
 
         rbStack.get(nestedLevel).reset(combinedType);
         rbStack.get(nestedLevel).init();
+        leftRecordTypeInfoStack.get(nestedLevel).reset(leftRecType);
 
         // Add all fields from left record
         for (int i = 0; i < leftRecord.getFieldNames().size(); i++) {
             IVisitablePointable leftName = leftRecord.getFieldNames().get(i);
             IVisitablePointable leftValue = leftRecord.getFieldValues().get(i);
-            ATypeTag leftType = PointableHelper.getTypeTag(leftValue);
+
+            // Infer type of the left field
+            ATypeTag leftValueTypeTag = PointableHelper.getTypeTag(leftValue);
+            int pos = leftRecordTypeInfoStack.get(nestedLevel).getFieldIndex(leftName.getByteArray(),
+                    leftName.getStartOffset() + 1, leftName.getLength() - 1);
+            IAType leftValueType = BuiltinType.ANY;
+            if (pos >= 0) {
+                leftValueType = leftRecType.getFieldTypes()[pos];
+            }
+            ARecordType leftValueRecType = TypeComputeUtils.extractRecordType(leftValueType);
+            boolean isleftTransformRec =
+                    (leftValueTypeTag == ATypeTag.OBJECT) && leftValueRecType != null && isTransform;
 
             // Check if a match for the left record exists on the right record
             boolean foundMatch = false;
@@ -155,11 +183,12 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
                 // Check if same field name and not same value exists (same name and value, just take the left one)
                 if (PointableHelper.isEqual(leftName, rightName, stringBinaryComparator)
                         && !deepEqualAssessor.isEqual(leftValue, rightValue)) {
-
                     // Same name, different value, both of type Record, do nested join
-                    if (ATypeTag.OBJECT == rightType && ATypeTag.OBJECT == leftType) {
+                    if (ATypeTag.OBJECT == rightType && ((mergeOnTransformRecords && isleftTransformRec)
+                            || (!mergeOnTransformRecords && ATypeTag.OBJECT == leftValueTypeTag))) {
                         // We are merging two sub records
-                        addFieldToSubRecord(combinedType, leftName, leftValue, rightValue, nestedLevel);
+                        addFieldToSubRecord(combinedType, leftValueRecType, leftName, leftValue, rightValue,
+                                nestedLevel);
                         foundMatch = true;
                     }
                     // Same name, different value, not of type Record, handle duplicate field
@@ -173,8 +202,8 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
             }
 
             // If no match is found, we add the left field
-            if (!foundMatch) {
-                addFieldToSubRecord(combinedType, leftName, leftValue, null, nestedLevel);
+            if (!foundMatch && !onlyIncludeLeftRecordFields) {
+                addFieldToSubRecord(combinedType, leftValueRecType, leftName, leftValue, null, nestedLevel);
             }
 
         }
@@ -186,14 +215,15 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
             boolean foundMatch = false;
             for (int i = 0; i < leftRecord.getFieldNames().size(); i++) {
                 IVisitablePointable leftName = leftRecord.getFieldNames().get(i);
-                if (rightName.equals(leftName)) {
+                if (PointableHelper.isEqual(leftName, rightName, stringBinaryComparator)) {
                     foundMatch = true;
+                    break;
                 }
             }
 
             // If no match is found, we add the right field
             if (!foundMatch) {
-                addFieldToSubRecord(combinedType, rightName, rightValue, null, nestedLevel);
+                addFieldToSubRecord(combinedType, null, rightName, rightValue, null, nestedLevel);
             }
         }
     }
@@ -205,8 +235,9 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
      * the second value can be null, indicated that you just add the value of left as a field to subrb
      *
      */
-    private void addFieldToSubRecord(ARecordType combinedType, IVisitablePointable fieldNamePointable,
-            IVisitablePointable leftValue, IVisitablePointable rightValue, int nestedLevel) throws IOException {
+    private void addFieldToSubRecord(ARecordType combinedType, ARecordType leftRecType,
+            IVisitablePointable fieldNamePointable, IVisitablePointable leftValue, IVisitablePointable rightValue,
+            int nestedLevel) throws IOException {
 
         runtimeRecordTypeInfo.reset(combinedType);
         int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),
@@ -217,8 +248,8 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
             if (rightValue == null) {
                 rbStack.get(nestedLevel).addField(pos, leftValue);
             } else {
-                mergeFields((ARecordType) combinedType.getFieldTypes()[pos], (ARecordVisitablePointable) leftValue,
-                        (ARecordVisitablePointable) rightValue, nestedLevel + 1);
+                mergeFields((ARecordType) combinedType.getFieldTypes()[pos], leftRecType,
+                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue, nestedLevel + 1);
 
                 tabvs.reset();
                 rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
@@ -228,8 +259,8 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
             if (rightValue == null) {
                 rbStack.get(nestedLevel).addField(fieldNamePointable, leftValue);
             } else {
-                mergeFields(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, (ARecordVisitablePointable) leftValue,
-                        (ARecordVisitablePointable) rightValue, nestedLevel + 1);
+                mergeFields(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, leftRecType,
+                        (ARecordVisitablePointable) leftValue, (ARecordVisitablePointable) rightValue, nestedLevel + 1);
                 tabvs.reset();
                 rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
                 rbStack.get(nestedLevel).addField(fieldNamePointable, tabvs);

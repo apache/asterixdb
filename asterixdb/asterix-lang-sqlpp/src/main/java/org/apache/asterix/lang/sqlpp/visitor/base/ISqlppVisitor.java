@@ -33,7 +33,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 
 public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
@@ -67,4 +69,8 @@ public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
     R visit(CaseExpression caseExpression, T arg) throws CompilationException;
 
     R visit(WindowExpression windowExpression, T arg) throws CompilationException;
+
+    R visit(SetExpression setexpr, T arg) throws CompilationException;
+
+    R visit(ChangeExpression changeExpr, T arg) throws CompilationException;
 }

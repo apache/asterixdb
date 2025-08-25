@@ -44,6 +44,7 @@ import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.RecordRemoveRecursiveTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToObjectVarStrTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -195,6 +196,7 @@ public class TypeComputerTest {
         differentBehaviorFunctions.add(InjectFailureTypeComputer.class.getSimpleName());
         differentBehaviorFunctions.add(RecordAddFieldsTypeComputer.class.getSimpleName());
         differentBehaviorFunctions.add(OpenRecordConstructorResultType.class.getSimpleName());
+        differentBehaviorFunctions.add(RecordRemoveRecursiveTypeComputer.class.getSimpleName());
         differentBehaviorFunctions.add(RecordRemoveFieldsTypeComputer.class.getSimpleName());
         differentBehaviorFunctions.add(ClosedRecordConstructorResultType.class.getSimpleName());
         differentBehaviorFunctions.add(LocalAvgTypeComputer.class.getSimpleName());

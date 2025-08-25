@@ -30,6 +30,7 @@ import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
 import org.apache.commons.lang3.ArrayUtils;
@@ -44,15 +45,24 @@ import org.apache.hyracks.util.LogRedactionUtil;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
     private static final SourceLocation DUMMY_LOCATION = new SourceLocation(0, 0);
+    public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer(false, false, false);
+    public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES =
+            new RecordMergeTypeComputer(true, false, false);
+    public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES_MERGE_ON_TRANSFORM_RECORDS =
+            new RecordMergeTypeComputer(true, false, true);
+    public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES_HANDLE_DELETIONS =
+            new RecordMergeTypeComputer(true, true, false);
 
-    public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer(false);
-    public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES = new RecordMergeTypeComputer(true);
-
-    private RecordMergeTypeComputer(boolean isIgnoreDuplicates) {
+    protected RecordMergeTypeComputer(boolean isIgnoreDuplicates, boolean handleLeftRecordAsDeletions,
+            boolean mergeOnTransformRecords) {
         this.isIgnoreDuplicates = isIgnoreDuplicates;
+        this.handleLeftRecordAsDeletions = handleLeftRecordAsDeletions;
+        this.mergeOnTransformRecords = mergeOnTransformRecords;
     }
 
     private final boolean isIgnoreDuplicates;
+    private final boolean handleLeftRecordAsDeletions;
+    private final boolean mergeOnTransformRecords;
 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -73,15 +83,17 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             throw new TypeMismatchException(f.getSourceLocation(), funcId, 1, t1.getTypeTag(), ATypeTag.OBJECT);
         }
 
-        return merge(recType0, recType1, isIgnoreDuplicates, unknownable, f.getSourceLocation());
+        return merge(recType0, recType1, isIgnoreDuplicates, handleLeftRecordAsDeletions, mergeOnTransformRecords,
+                unknownable, f.getSourceLocation());
     }
 
     public static IAType merge(ARecordType recType0, ARecordType recType1) throws AlgebricksException {
-        return merge(recType0, recType1, true, false, DUMMY_LOCATION);
+        return merge(recType0, recType1, true, false, false, false, DUMMY_LOCATION);
     }
 
     private static IAType merge(ARecordType recType0, ARecordType recType1, boolean isIgnoreDuplicates,
-            boolean unknownable, SourceLocation sourceLocation) throws AlgebricksException {
+            boolean handleLeftRecordAsDeletions, boolean mergeOnTransformRecords, boolean unknownable,
+            SourceLocation sourceLocation) throws AlgebricksException {
 
         List<String> resultFieldNames = new ArrayList<>();
         Collections.addAll(resultFieldNames, recType0.getFieldNames());
@@ -94,7 +106,11 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                 //Deep Copy prevents altering of input types
                 resultFieldTypes.add(nestedType.deepCopy(nestedType));
             } else {
-                resultFieldTypes.add(recType0.getFieldType(fieldName));
+                if (handleLeftRecordAsDeletions) {
+                    resultFieldTypes.add(BuiltinType.AMISSING);
+                } else {
+                    resultFieldTypes.add(recType0.getFieldType(fieldName));
+                }
             }
         }
 
@@ -112,10 +128,16 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                 IAType resultFieldType = resultFieldTypes.get(pos);
 
                 // This is for fields with matching names, but different type tags.
-                if (resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag()) {
-
+                if ((resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag())
+                        || (fieldTypes[i].getTypeTag() == ATypeTag.OBJECT && mergeOnTransformRecords)) {
                     // If the ignore duplicates flag is set, we ignore the duplicate fields on the right record
                     if (isIgnoreDuplicates) {
+                        if (handleLeftRecordAsDeletions && fieldTypes[i].getTypeTag() != ATypeTag.MISSING) {
+                            /** The purpose of adding the field to resultType was to help skip adding fields
+                             from the RHS. Remove the MISSING type from LHS as soon as we've skipped all RHS fields. */
+                            resultFieldNames.remove(pos);
+                            resultFieldTypes.remove(pos);
+                        }
                         continue;
                     }
                     // If ignore duplicates flag is not set, we throw a duplicate field exception
@@ -127,8 +149,8 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
 
                 // This is for fields with matching names, matching types, type ARecord, do nested merge
                 if (fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
-                    resultFieldTypes.set(pos,
-                            mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType, sourceLocation));
+                    resultFieldTypes.set(pos, mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType,
+                            isIgnoreDuplicates, handleLeftRecordAsDeletions, mergeOnTransformRecords, sourceLocation));
                 }
             } else {
                 // If no field was found with a matching name, we simply add the field to be merged
@@ -152,36 +174,73 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
     }
 
     private static IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0,
+            boolean isIgnoreDuplicates, boolean handleLeftRecordAsDeletions, boolean mergeOnTransformRecords,
             SourceLocation sourceLoc) throws AlgebricksException {
         if (fieldType1.getTypeTag() != ATypeTag.OBJECT || fieldType0.getTypeTag() != ATypeTag.OBJECT) {
             throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc,
                     LogRedactionUtil.userData(fieldName));
         }
 
+        // If handleLeftRecordAsDeletions, first treat all flat values as missing
         ARecordType resultType = (ARecordType) fieldType0;
+
+        List<String> resultFieldNames = new ArrayList<>();
+        Collections.addAll(resultFieldNames, resultType.getFieldNames());
+        Collections.sort(resultFieldNames);
+
+        List<IAType> resultFieldTypes = new ArrayList<>();
+        for (String fname : resultFieldNames) {
+            if (resultType.getFieldType(fname).getTypeTag() == ATypeTag.OBJECT) {
+                ARecordType nestedType = (ARecordType) resultType.getFieldType(fname);
+                resultFieldTypes.add(nestedType.deepCopy(nestedType));
+            } else {
+                if (handleLeftRecordAsDeletions) {
+                    resultFieldTypes.add(BuiltinType.AMISSING);
+                } else {
+                    resultFieldTypes.add(resultType.getFieldType(fname));
+                }
+            }
+        }
+        ARecordType resultTypeSanitized =
+                new ARecordType(resultType.getTypeName(), resultFieldNames.toArray(new String[] {}),
+                        resultFieldTypes.toArray(new IAType[] {}), resultType.isOpen());
+
         ARecordType fieldType1Copy = (ARecordType) fieldType1;
 
         for (int i = 0; i < fieldType1Copy.getFieldTypes().length; i++) {
             String fname = fieldType1Copy.getFieldNames()[i];
-            int pos = resultType.getFieldIndex(fname);
+            int pos = resultTypeSanitized.getFieldIndex(fname);
             if (pos >= 0) {
+                if ((resultTypeSanitized.getFieldTypes()[pos].getTypeTag() != fieldType1Copy.getFieldTypes()[i]
+                        .getTypeTag())
+                        || (fieldType1Copy.getFieldTypes()[i].getTypeTag() == ATypeTag.OBJECT
+                                && mergeOnTransformRecords)) {
+                    if (isIgnoreDuplicates) {
+                        continue;
+                    } else {
+                        throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc,
+                                LogRedactionUtil.userData(fname));
+                    }
+                }
+
                 // If a sub-record do merge, else ignore and let the values decide what to do
                 if (fieldType1Copy.getFieldTypes()[i].getTypeTag() == ATypeTag.OBJECT) {
-                    IAType[] oldTypes = resultType.getFieldTypes();
+                    IAType[] oldTypes = resultTypeSanitized.getFieldTypes();
                     oldTypes[pos] = mergedNestedType(fname, fieldType1Copy.getFieldTypes()[i],
-                            resultType.getFieldTypes()[pos], sourceLoc);
-                    resultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(), oldTypes,
-                            resultType.isOpen());
+                            resultTypeSanitized.getFieldTypes()[pos], isIgnoreDuplicates, handleLeftRecordAsDeletions,
+                            mergeOnTransformRecords, sourceLoc);
+                    resultTypeSanitized = new ARecordType(resultTypeSanitized.getTypeName(),
+                            resultTypeSanitized.getFieldNames(), oldTypes, resultTypeSanitized.isOpen());
                 }
             } else {
-                IAType[] combinedFieldTypes =
-                        ArrayUtils.addAll(resultType.getFieldTypes().clone(), fieldType1Copy.getFieldTypes()[i]);
-                resultType = new ARecordType(resultType.getTypeName(),
-                        ArrayUtils.addAll(resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
-                        combinedFieldTypes, resultType.isOpen());
+                IAType[] combinedFieldTypes = ArrayUtils.addAll(resultTypeSanitized.getFieldTypes().clone(),
+                        fieldType1Copy.getFieldTypes()[i]);
+                resultTypeSanitized = new ARecordType(resultTypeSanitized.getTypeName(),
+                        ArrayUtils.addAll(resultTypeSanitized.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
+                        combinedFieldTypes, resultTypeSanitized.isOpen());
             }
         }
 
-        return resultType;
+        return resultTypeSanitized;
     }
 }

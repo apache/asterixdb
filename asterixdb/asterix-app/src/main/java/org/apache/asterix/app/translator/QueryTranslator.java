@@ -251,6 +251,7 @@ import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStat
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
+import org.apache.asterix.translator.CompiledStatements.CompiledUpdateStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.ExecutionPlans;
@@ -518,6 +519,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 requestParameters, stmtParams, stats);
                         break;
                     case INSERT:
+                    case UPDATE:
                     case UPSERT:
                         if (((InsertStatement) stmt).getReturnExpression() != null) {
                             metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
@@ -4607,6 +4609,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case UPSERT:
                 clfrqs = new CompiledUpsertStatement(databaseName, dataverseName, datasetName,
+                        rewrittenInsertUpsert.getQuery(), rewrittenInsertUpsert.getVarCounter(),
+                        rewrittenInsertUpsert.getVar(), rewrittenInsertUpsert.getReturnExpression());
+                clfrqs.setSourceLocation(insertUpsert.getSourceLocation());
+            case UPDATE:
+                clfrqs = new CompiledUpdateStatement(databaseName, dataverseName, datasetName,
                         rewrittenInsertUpsert.getQuery(), rewrittenInsertUpsert.getVarCounter(),
                         rewrittenInsertUpsert.getVar(), rewrittenInsertUpsert.getReturnExpression());
                 clfrqs.setSourceLocation(insertUpsert.getSourceLocation());

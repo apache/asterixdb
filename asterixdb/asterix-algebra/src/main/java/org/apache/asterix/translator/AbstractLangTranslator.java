@@ -66,6 +66,7 @@ import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.commons.lang3.StringUtils;
@@ -185,6 +186,14 @@ public abstract class AbstractLangTranslator {
                 invalidOperation = isSystemNamespace(namespace);
                 if (invalidOperation) {
                     message = formatDmlMessage("Upsert", namespace, usingDb);
+                }
+                break;
+
+            case UPDATE:
+                namespace = getStatementNamespace(((UpdateStatement) stmt).getNamespace(), activeNamespace);
+                invalidOperation = isSystemNamespace(namespace);
+                if (invalidOperation) {
+                    message = formatDmlMessage("Update", namespace, usingDb);
                 }
                 break;
 

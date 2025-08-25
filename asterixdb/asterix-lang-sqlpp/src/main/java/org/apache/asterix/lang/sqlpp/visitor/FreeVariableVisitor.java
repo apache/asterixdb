@@ -67,7 +67,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -487,6 +489,16 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         visit(caseExpr.getThenExprs(), freeVars);
         caseExpr.getElseExpr().accept(this, freeVars);
         return null;
+    }
+
+    @Override
+    public Void visit(ChangeExpression changeExpr, Collection<VariableExpr> freeVars) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, changeExpr.getSourceLocation());
+    }
+
+    @Override
+    public Void visit(SetExpression setexpr, Collection<VariableExpr> freeVars) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setexpr.getSourceLocation());
     }
 
     @Override

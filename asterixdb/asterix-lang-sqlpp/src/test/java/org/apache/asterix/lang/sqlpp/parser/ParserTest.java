@@ -193,4 +193,29 @@ public class ParserTest {
             }
         }
     }
+
+    @Test
+    public void testUpdateStatementFieldAccess() throws Exception {
+        // Test that UPDATE statements treat all field references as field access
+        String query1 = "UPDATE UserTypes SET uawserIwda=\"13122k\" WHERE userId=10;";
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
+        IParser parser = factory.createParser(query1);
+        try {
+            parser.parse();
+            System.out.println("SUCCESS: Field access parsing works for: " + query1);
+        } catch (CompilationException e) {
+            System.out.println("ERROR: " + e.getMessage());
+            throw e;
+        }
+
+        String query2 = "UPDATE UserTypes AS e SET a.uawserIwda=\"13122k\" WHERE userId=10;";
+        IParser parser2 = factory.createParser(query2);
+        try {
+            parser2.parse();
+            System.out.println("SUCCESS: Field access parsing works for: " + query2);
+        } catch (CompilationException e) {
+            System.out.println("ERROR: " + e.getMessage());
+            throw e;
+        }
+    }
 }

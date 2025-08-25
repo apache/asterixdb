@@ -99,7 +99,6 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.context.RootScopeFactory;
 import org.apache.asterix.lang.common.context.Scope;
@@ -208,6 +207,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression.UpdateType;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
@@ -631,6 +633,20 @@ class SQLPPParser extends ScopeChecker implements IParser {
     protected static <T extends AbstractLangExpression> T addSourceLocation(T expr, Token token) {
         expr.setSourceLocation(getSourceLocation(token));
         return expr;
+    }
+
+    private VariableExpr resolveOrCreateAlias(Expression pathExpr, Token startToken) throws ParseException {
+        String aliasName = "";
+        if (pathExpr instanceof VariableExpr) {
+            VariableExpr varExpr = (VariableExpr) pathExpr;
+            aliasName = varExpr.getVar().getValue();
+        } else if (pathExpr instanceof FieldAccessor) {
+            FieldAccessor fieldAccess = (FieldAccessor) pathExpr;
+            aliasName = fieldAccess.getIdent().getValue();
+        }
+        VariableExpr aliasVar = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(aliasName));
+        addSourceLocation(aliasVar, startToken);
+        return aliasVar;
     }
 
     private boolean isToken(String image) {
@@ -2960,56 +2976,254 @@ DeleteStatement DeleteStatement() throws ParseException:
   }
 }
 
+
+
 UpdateStatement UpdateStatement() throws ParseException:
 {
   Token startToken = null;
-  VariableExpr vars;
-  Expression target;
-  Expression condition;
-  UpdateClause uc;
-  List<UpdateClause> ucs = new ArrayList<UpdateClause>();
+  Pair<Namespace,Identifier> nameComponents = null;
+  VariableExpr aliasVar = null;
+  Expression changeSeq = null;
+  Expression condition = null;
+  Expression returnExpression = null;
 }
 {
-  <UPDATE> { startToken = token; } vars = Variable() <IN> target = Expression()
-  <WHERE> condition = Expression()
-  <LEFTPAREN> (uc = UpdateClause()
-    {
-      ucs.add(uc);
+  <UPDATE> {startToken = token;} nameComponents = QualifiedName() ((<AS>)? aliasVar = Variable())?
+  {
+    if (aliasVar == null) {
+        aliasVar = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue()));
+        addSourceLocation(aliasVar, startToken);
     }
-  (<COMMA> uc = UpdateClause()
-    {
-      ucs.add(uc);
+  }
+  changeSeq = ChangeSequence(aliasVar)
+  (<WHERE> condition = Expression())?
+  (<RETURNING> returnExpression = Expression())?
+  {
+    Namespace namespace = nameComponents.first != null ? nameComponents.first : defaultNamespace;
+    String datasetName = nameComponents.second.getValue();
+    String databaseName = namespace != null ? namespace.getDatabaseName() : null;
+    DataverseName dataverseName = namespace != null ? namespace.getDataverseName() : null;
+
+    List<Expression> datasetArgs = new ArrayList<Expression>();
+    datasetArgs.add(new LiteralExpr(new StringLiteral(databaseName)));
+    datasetArgs.add(new LiteralExpr(new StringLiteral(dataverseName!=null?dataverseName.getCanonicalForm():null)));
+    datasetArgs.add(new LiteralExpr(new StringLiteral(datasetName)));
+    CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), datasetArgs);
+    callExpression.setSourceLocation(getSourceLocation(startToken));
+
+    FromTerm fromTerm = new FromTerm(callExpression, aliasVar, null, null);
+    fromTerm.setSourceLocation(aliasVar.getSourceLocation());
+    FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
+    fromClause.setSourceLocation(aliasVar.getSourceLocation());
+
+    WhereClause whereClause = null;
+    if (condition != null) {
+        whereClause = new WhereClause(condition);
+        whereClause.setSourceLocation(condition.getSourceLocation());
     }
-  )*) <RIGHTPAREN>
+
+    // Create SELECT clause with IndexAccessor to extract element 0 from changeSeq
+    IndexAccessor inverseListifyExpr = new IndexAccessor(changeSeq, IndexAccessor.IndexKind.ELEMENT,
+            new LiteralExpr(new LongIntegerLiteral(0L)));
+    inverseListifyExpr.setSourceLocation(getSourceLocation(startToken));
+    SelectElement selectElement = new SelectElement(inverseListifyExpr);
+    selectElement.setSourceLocation(getSourceLocation(startToken));
+    SelectClause selectClause = new SelectClause(selectElement, null, false);
+    selectClause.setSourceLocation(getSourceLocation(startToken));
+
+    SelectBlock selectBlock = new SelectBlock(selectClause, fromClause,
+            whereClause != null ? Collections.singletonList(whereClause) : null, null, null);
+    selectBlock.setSourceLocation(aliasVar.getSourceLocation());
+    SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
+    selectSetOperation.setSourceLocation(aliasVar.getSourceLocation());
+    SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
+    selectExpression.setSourceLocation(aliasVar.getSourceLocation());
+
+    Query query = new Query(false, false, true, selectExpression, 0);
+    query.setBody(selectExpression);
+    query.setSourceLocation(getSourceLocation(startToken));
+
+    UpdateStatement stmt = new UpdateStatement(nameComponents.first, nameComponents.second.getValue(), query,
+            aliasVar, getVarCounter(), returnExpression);
+    return addSourceLocation(stmt, startToken);
+  }
+}
+
+Expression ChangeSequence(Expression seedExpr) throws ParseException:
+{
+  Token startToken = null;
+  ChangeExpression changeExpr = null;
+  Expression changeSeq = null;
+  ListConstructor listConstructor = null;
+}
+{
+  {
+    listConstructor = new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, new ArrayList<Expression>(Collections.singletonList(seedExpr)));
+  }
+  changeExpr = Change()
+  {
+  changeExpr.setPriorExpr(listConstructor);
+  }
+  (changeSeq = ChangeSequenceInner(changeSeq != null ? changeSeq : changeExpr))*
+  {
+    return changeSeq == null ? changeExpr : changeSeq;
+  }
+}
+
+
+ChangeExpression Change() throws ParseException:
+{
+  SetExpression setexp = null;
+  ChangeExpression modifyexp = null;
+}
+{
+  (
+    (<LEFTPAREN>
+      (
+        setexp = SetExpression()
+        |
+        modifyexp = UpdateExpression()
+        |
+        modifyexp = DeleteExpression()
+        |
+        modifyexp = InsertExpression()
+      )
+    <RIGHTPAREN>)
+    |
+    setexp = SetExpression()
+  )
+  {
+   if(modifyexp == null){
+   modifyexp= new ChangeExpression(setexp);
+   }
+    return modifyexp;
+  }
+}
+
+Expression ChangeSequenceInner(Expression inputExpr) throws ParseException:
+{
+  Token startToken = null;
+  ChangeExpression newChange = null;
+}
+{
+  { startToken = token; }
+  newChange = Change()
+  {
+    newChange.setPriorExpr(inputExpr);
+    return addSourceLocation(newChange, startToken);
+  }
+}
+
+SetExpression SetExpression() throws ParseException:
+{
+  Token startToken = null;
+  Expression pathExpr;
+  Expression valueExpr;
+  List<Expression> pathList = new ArrayList<Expression>();
+  List<Expression> valueList = new ArrayList<Expression>();
+}
+{
+  <SET> { startToken = token; }
+  pathExpr = PathAccessor() <EQ> valueExpr = Expression()
+  {
+    pathList.add(pathExpr);
+    valueList.add(valueExpr);
+  }
+  (<COMMA> pathExpr = PathAccessor() <EQ> valueExpr = Expression()
+  {
+    pathList.add(pathExpr);
+    valueList.add(valueExpr);
+  })*
+  {
+    SetExpression setExpr = new SetExpression(pathList, valueList);
+    return addSourceLocation(setExpr, startToken);
+  }
+}
+
+ChangeExpression UpdateExpression() throws ParseException:
+{
+  Token startToken = null;
+  Expression pathExpr;
+  VariableExpr aliasVar = null;
+  VariableExpr posVar = null;
+  Expression condition = null;
+  Expression changeSeq = null;
+}
+{
+  <UPDATE> {startToken = token;} pathExpr = PathAccessor()
+  ((<AS>)? aliasVar = Variable())? (<AT> posVar = Variable())?
+  {
+    if (aliasVar == null) {
+        aliasVar = resolveOrCreateAlias(pathExpr, startToken);
+    }
+  }
+  changeSeq = ChangeSequence((Expression) aliasVar)
+  (<WHERE> condition = Expression())?
+  {
+    ChangeExpression updateExpr = new ChangeExpression(pathExpr, aliasVar, posVar, changeSeq, condition, UpdateType.UPDATE ,null,null);
+    return addSourceLocation(updateExpr, startToken);
+  }
+}
+
+ChangeExpression DeleteExpression() throws ParseException:
+{
+  Token startToken = null;
+  Expression pathExpr;
+  VariableExpr aliasVar = null;
+  VariableExpr posVar = null;
+  Expression condition = null;
+}
+{
+  <DELETE> { startToken = token; } <FROM> pathExpr = PathAccessor()
+  ((<AS>)? aliasVar = Variable())? (<AT> posVar = Variable())?
+  {
+    if (aliasVar == null) {
+        aliasVar = resolveOrCreateAlias(pathExpr, startToken);
+    }
+  }
+  (<WHERE> condition = Expression())?
+  {
+    ChangeExpression deleteExpr = new ChangeExpression(pathExpr, aliasVar, posVar, null, condition, UpdateType.DELETE,null,null);
+    return addSourceLocation(deleteExpr, startToken);
+  }
+}
+
+
+ChangeExpression InsertExpression() throws ParseException:
+{
+  Token startToken = null;
+  Expression pathExpr;
+  VariableExpr aliasVar = null;
+  Expression posExpr = null;
+  Expression sourceExpr = null;
+}
+{
+    <INSERT> {startToken = token;} <INTO> pathExpr = PathAccessor()
+    (<AS> aliasVar = Variable())? (<AT> posExpr = Expression())?
+    <LEFTPAREN>
+        (sourceExpr = Expression() | sourceExpr = SelectExpression(false))
+    <RIGHTPAREN>
     {
-      UpdateStatement stmt = new UpdateStatement(vars, target, condition, ucs);
-      return addSourceLocation(stmt, startToken);
+        if (aliasVar == null) {
+        aliasVar = resolveOrCreateAlias(pathExpr, startToken);
+        }
+        ChangeExpression insertExpr = new ChangeExpression(pathExpr, aliasVar,null,null,null,UpdateType.INSERT ,posExpr, sourceExpr);
+        return addSourceLocation(insertExpr, startToken);
+
     }
 }
 
-UpdateClause UpdateClause() throws ParseException:
+Expression PathAccessor() throws ParseException:
 {
-  Expression target = null;
-  Expression value = null ;
-  InsertStatement is = null;
-  DeleteStatement ds = null;
-  UpdateStatement us = null;
-  Expression condition = null;
-  UpdateClause ifbranch = null;
-  UpdateClause elsebranch = null;
+  Expression expr = null;
+  FieldAccessor accessor = null;
 }
 {
-   (<SET> target = Expression() <EQ> value = Expression()
-   | is = InsertStatement()
-   | ds = DeleteStatement()
-   | us = UpdateStatement()
-   | <IF> <LEFTPAREN> condition = Expression() <RIGHTPAREN>
-     <THEN> ifbranch = UpdateClause()
-     [LOOKAHEAD(1) <ELSE> elsebranch = UpdateClause()]
-     {
-       return new UpdateClause(target, value, is, ds, us, condition, ifbranch, elsebranch);
-     }
-   )
+  expr = VariableRef()
+  (accessor = FieldAccessor(accessor != null ? accessor : expr))*
+  {
+    return accessor == null ? expr : accessor;
+  }
 }
 
 Statement SetStatement() throws ParseException:

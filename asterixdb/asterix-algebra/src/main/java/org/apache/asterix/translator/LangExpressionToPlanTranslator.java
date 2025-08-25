@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.common.annotations.ExistsComparisonExpressionAnnotation;
+import org.apache.asterix.common.annotations.isTransformRecordAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -78,6 +79,8 @@ import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.clause.SelectElement;
+import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -608,8 +611,13 @@ abstract class LangExpressionToPlanTranslator
                             stmt, resultMetadata);
                     break;
                 case UPSERT:
-                    leafOperator = translateUpsert(targetDatasource, seqRef, varRefsForLoading, pkeyAssignOp, unnestVar,
-                            topOp, pkeyExprs, seqVar, stmt, resultMetadata);
+                    leafOperator = translateUpsertUpdate(targetDatasource, seqRef, varRefsForLoading, pkeyAssignOp,
+                            unnestVar, topOp, pkeyExprs, seqVar, stmt, resultMetadata);
+                    break;
+
+                case UPDATE:
+                    leafOperator = translateUpsertUpdate(targetDatasource, seqRef, varRefsForLoading, pkeyAssignOp,
+                            unnestVar, topOp, pkeyExprs, seqVar, stmt, resultMetadata);
                     break;
                 case DELETE:
                     leafOperator =
@@ -655,7 +663,7 @@ abstract class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource,
+    protected ILogicalOperator translateUpsertUpdate(DatasetDataSource targetDatasource,
             Mutable<ILogicalExpression> payloadVarRef, List<Mutable<ILogicalExpression>> varRefsForLoading,
             ILogicalOperator pkeyAssignOp, LogicalVariable unnestVar, ILogicalOperator topOp,
             List<Mutable<ILogicalExpression>> pkeyExprs, LogicalVariable seqVar, ICompiledDmlStatement stmt,
@@ -1680,6 +1688,9 @@ abstract class LangExpressionToPlanTranslator
             throws CompilationException {
         AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
+        if (rc.isTransformRecord()) {
+            f.putAnnotation(isTransformRecordAnnotation.INSTANCE);
+        }
         f.setSourceLocation(rc.getSourceLocation());
         LogicalVariable v1 = context.newVar();
         AssignOperator a = new AssignOperator(v1, new MutableObject<>(f));
@@ -1939,6 +1950,7 @@ abstract class LangExpressionToPlanTranslator
                         srcRef.setValue(ntsOp);
                         Mutable<ILogicalOperator> planRoot = new MutableObject<>(p.first);
                         s.setRootOp(planRoot);
+                        s.setFailSafe(isFailSafeExpression(expr));
                         VariableReferenceExpression varRef = new VariableReferenceExpression(p.second);
                         varRef.setSourceLocation(sourceLoc);
                         return new Pair<>(varRef, new MutableObject<>(s));
@@ -2052,6 +2064,22 @@ abstract class LangExpressionToPlanTranslator
             default:
                 return false;
         }
+    }
+
+    private static boolean isFailSafeExpression(Expression expr) {
+        if (expr.getKind() == Kind.SELECT_EXPRESSION) {
+            SelectExpression selectExpr = (SelectExpression) expr;
+            SelectElement selectElement = selectExpr.getSelectSetOperation().getLeftInput().getSelectBlock()
+                    .getSelectClause().getSelectElement();
+            if (selectElement != null && selectElement.getExpression().getKind() == Kind.CALL_EXPRESSION) {
+                CallExpr fce = (CallExpr) selectElement.getExpression();
+                if (fce.getFunctionSignature().equals(BuiltinFunctions.RECORD_TRANSFORM)
+                        || fce.getFunctionSignature().equals(BuiltinFunctions.RECORD_REMOVE_RECURSIVE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {

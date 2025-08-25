@@ -27,14 +27,21 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class RecordConstructor extends AbstractExpression {
     private List<FieldBinding> fbList;
+    private final boolean isTransformRecord;
 
     public RecordConstructor() {
         super();
+        this.isTransformRecord = false;
     }
 
     public RecordConstructor(List<FieldBinding> fbList) {
+        this(fbList, false);
+    }
+
+    public RecordConstructor(List<FieldBinding> fbList, boolean isTransformRecord) {
         super();
         this.fbList = fbList;
+        this.isTransformRecord = isTransformRecord;
     }
 
     public List<FieldBinding> getFbList() {
@@ -43,6 +50,10 @@ public class RecordConstructor extends AbstractExpression {
 
     public void setFbList(List<FieldBinding> fbList) {
         this.fbList = fbList;
+    }
+
+    public boolean isTransformRecord() {
+        return isTransformRecord;
     }
 
     @Override
@@ -57,7 +68,7 @@ public class RecordConstructor extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(fbList);
+        return Objects.hash(fbList, isTransformRecord);
     }
 
     @Override
@@ -69,6 +80,6 @@ public class RecordConstructor extends AbstractExpression {
             return false;
         }
         RecordConstructor target = (RecordConstructor) object;
-        return Objects.equals(fbList, target.fbList);
+        return Objects.equals(fbList, target.fbList) && Objects.equals(isTransformRecord, target.isTransformRecord);
     }
 }

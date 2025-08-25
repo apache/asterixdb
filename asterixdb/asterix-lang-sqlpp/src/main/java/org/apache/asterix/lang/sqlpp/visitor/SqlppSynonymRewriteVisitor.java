@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
+import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -87,6 +88,19 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
         if (dsName != null) {
             truncateStmt.setNamespace(new Namespace(dsName.getFourth(), dsName.getFirst()));
             truncateStmt.setDatasetName(dsName.getSecond());
+        }
+        return null;
+    }
+
+    //TODO (Shahrzad): Add test for testing this.
+    @Override
+    public Void visit(UpdateStatement updateStatement, MetadataProvider mp) throws CompilationException {
+        Quadruple<DataverseName, String, Boolean, String> dsName = resolveDatasetNameUsingSynonyms(mp,
+                updateStatement.getDatabaseName(), updateStatement.getDataverseName(), updateStatement.getDatasetName(),
+                false, updateStatement.getSourceLocation());
+        if (dsName != null) {
+            updateStatement.setNamespace(new Namespace(dsName.getFourth(), dsName.getFirst()));
+            updateStatement.setDatasetName(dsName.getSecond());
         }
         return null;
     }

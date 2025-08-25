@@ -201,6 +201,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
         ArrayList<ILogicalPlan> newSubplans = new ArrayList<>();
         SubplanOperator subplanOp = new SubplanOperator(newSubplans);
+        subplanOp.setFailSafe(op.isFailSafe());
         for (ILogicalPlan plan : op.getNestedPlans()) {
             newSubplans.add(OperatorManipulationUtil.deepCopy(plan, subplanOp));
         }

@@ -57,7 +57,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -358,6 +360,98 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         caseExpr.getElseExpr().accept(this, step + 2);
         out.println();
         out.println(skip(step) + "END");
+        return null;
+    }
+
+    @Override
+    public Void visit(SetExpression setexpr, Integer step) throws CompilationException {
+        int setsize = setexpr.getPathExprList().size();
+        if (setsize == 0) {
+            return null;
+        }
+        out.println(skip(step) + "SET [");
+        List<Expression> pathlist = setexpr.getPathExprList();
+        List<Expression> valuelist = setexpr.getValueExprList();
+        for (int i = 0; i < valuelist.size(); ++i) {
+            out.print(skip(step + 1));
+            pathlist.get(i).accept(this, step + 1);
+            out.print(" = ");
+            valuelist.get(i).accept(this, step + 1);
+            if (i < valuelist.size() - 1) {
+                out.println();
+            }
+        }
+        out.println();
+        out.println(skip(step) + "]");
+        return null;
+    }
+
+    @Override
+    public Void visit(ChangeExpression changeExpr, Integer step) throws CompilationException {
+        out.println(skip(step) + "CHANGE [");
+
+        if (changeExpr.hasSetExpr()) {
+            changeExpr.getSetExpr().accept(this, step + 1);
+        } else {
+            // Handle different update types
+            ChangeExpression.UpdateType type = changeExpr.getType();
+            if (type != null) {
+                switch (type) {
+                    case UPDATE:
+                        out.println(skip(step + 1) + "UPDATE");
+                        changeExpr.getPathExpr().accept(this, step + 2);
+                        if (changeExpr.getAliasVar() != null) {
+                            out.println(skip(step + 1) + "AS");
+                            changeExpr.getAliasVar().accept(this, step + 2);
+                        }
+                        if (changeExpr.getPosVar() != null) {
+                            out.println(skip(step + 1) + "AT");
+                            changeExpr.getPosVar().accept(this, step + 2);
+                        }
+                        changeExpr.getChangeSeq().accept(this, step + 1);
+                        if (changeExpr.getCondition() != null) {
+                            out.println(skip(step + 1) + "WHERE");
+                            changeExpr.getCondition().accept(this, step + 2);
+                        }
+                        break;
+
+                    case DELETE:
+                        out.println(skip(step + 1) + "DELETE FROM");
+                        changeExpr.getPathExpr().accept(this, step + 2);
+                        if (changeExpr.getAliasVar() != null) {
+                            out.println(skip(step + 1) + "AS");
+                            changeExpr.getAliasVar().accept(this, step + 2);
+                        }
+                        if (changeExpr.getPosVar() != null) {
+                            out.println(skip(step + 1) + "AT");
+                            changeExpr.getPosVar().accept(this, step + 2);
+                        }
+                        if (changeExpr.getCondition() != null) {
+                            out.println(skip(step + 1) + "WHERE");
+                            changeExpr.getCondition().accept(this, step + 2);
+                        }
+                        break;
+
+                    case INSERT:
+                        out.println(skip(step + 1) + "INSERT INTO");
+                        changeExpr.getPathExpr().accept(this, step + 2);
+                        if (changeExpr.getAliasVar() != null) {
+                            out.println(skip(step + 1) + "AS");
+                            changeExpr.getAliasVar().accept(this, step + 2);
+                        }
+                        if (changeExpr.getPosExpr() != null) {
+                            out.println(skip(step + 1) + "AT INDEX");
+                            changeExpr.getPosExpr().accept(this, step + 2);
+                        }
+                        out.println(skip(step + 1) + "VALUES [");
+                        changeExpr.getSourceExpr().accept(this, step + 2);
+                        out.println();
+                        out.println(skip(step + 1) + "]");
+                        break;
+                }
+            }
+        }
+        out.println(skip(step) + "]");
         return null;
     }
 

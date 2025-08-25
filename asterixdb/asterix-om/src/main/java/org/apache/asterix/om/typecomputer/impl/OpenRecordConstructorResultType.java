@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.RecordFieldOrderAnnotation;
+import org.apache.asterix.common.annotations.isTransformRecordAnnotation;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -107,6 +108,9 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
                 isOpen = true;
             }
             allPossibleFieldNamesOrdered.add(fieldName);
+        }
+        if (f.hasAnnotation(isTransformRecordAnnotation.class)) {
+            isOpen = true;
         }
         String[] fieldNames = namesList.toArray(new String[0]);
         IAType[] fieldTypes = typesList.toArray(new IAType[0]);

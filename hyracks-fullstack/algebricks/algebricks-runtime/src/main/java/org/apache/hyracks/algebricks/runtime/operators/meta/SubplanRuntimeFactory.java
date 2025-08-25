@@ -49,7 +49,9 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
+
+    private final boolean isFailSafe;
 
     private final List<AlgebricksPipeline> pipelines;
 
@@ -62,8 +64,10 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     private final Map<IPushRuntimeFactory, IOperatorStats> stats;
 
     public SubplanRuntimeFactory(List<AlgebricksPipeline> pipelines, IMissingWriterFactory[] missingWriterFactories,
-            RecordDescriptor inputRecordDesc, RecordDescriptor outputRecordDesc, int[] projectionList) {
+            RecordDescriptor inputRecordDesc, RecordDescriptor outputRecordDesc, int[] projectionList,
+            boolean isFailSafe) {
         super(projectionList);
+        this.isFailSafe = isFailSafe;
         this.pipelines = pipelines;
         this.missingWriterFactories = missingWriterFactories;
         this.inputRecordDesc = inputRecordDesc;
@@ -72,6 +76,11 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
             throw new NotImplementedException();
         }
         this.stats = new HashMap<>();
+    }
+
+    public SubplanRuntimeFactory(List<AlgebricksPipeline> pipelines, IMissingWriterFactory[] missingWriterFactories,
+            RecordDescriptor inputRecordDesc, RecordDescriptor outputRecordDesc, int[] projectionList) {
+        this(pipelines, missingWriterFactories, inputRecordDesc, outputRecordDesc, projectionList, false);
     }
 
     @Override
@@ -206,27 +215,44 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
             tAccess.reset(buffer);
             int nTuple = tAccess.getTupleCount();
+
             for (int t = 0; t < nTuple; t++) {
                 tRef.reset(tAccess, t);
 
-                for (NestedTupleSourceRuntime nts : startOfPipelines) {
-                    nts.writeTuple(buffer, t);
-                }
-
-                int n = 0;
                 try {
-                    for (; n < startOfPipelines.length; n++) {
-                        NestedTupleSourceRuntime nts = startOfPipelines[n];
-                        try {
-                            nts.open();
-                        } catch (Exception e) {
-                            nts.fail();
+                    processTuple(buffer, t);
+                } catch (HyracksDataException e) {
+                    if (!isFailSafe) {
+                        throw e;
+                    }
+                }
+            }
+        }
+
+        private void processTuple(ByteBuffer buffer, int t) throws HyracksDataException {
+            for (NestedTupleSourceRuntime nts : startOfPipelines) {
+                nts.writeTuple(buffer, t);
+            }
+
+            int n = 0;
+            try {
+                for (; n < startOfPipelines.length; n++) {
+                    NestedTupleSourceRuntime nts = startOfPipelines[n];
+                    try {
+                        nts.open();
+                    } catch (Exception e) {
+                        nts.fail();
+                        throw e;
+                    }
+                }
+            } finally {
+                for (int i = n - 1; i >= 0; i--) {
+                    try {
+                        startOfPipelines[i].close();
+                    } catch (HyracksDataException e) {
+                        if (!isFailSafe) {
                             throw e;
                         }
-                    }
-                } finally {
-                    for (int i = n - 1; i >= 0; i--) {
-                        startOfPipelines[i].close();
                     }
                 }
             }
@@ -247,17 +273,20 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
             private final FrameTupleAccessor ta;
             private final ArrayTupleBuilder tb;
             private final IMissingWriter[] missingWriters;
+            private boolean noTupleOnFailure;
 
             private TupleOuterProduct(RecordDescriptor recordDescriptor, IMissingWriter[] missingWriters) {
                 ta = new FrameTupleAccessor(recordDescriptor);
                 tb = new ArrayTupleBuilder(
                         missingWriters.length + SubplanRuntimeFactory.this.inputRecordDesc.getFieldCount());
                 this.missingWriters = missingWriters;
+                this.noTupleOnFailure = false;
             }
 
             @Override
             public void open() throws HyracksDataException {
                 smthWasWritten = false;
+                noTupleOnFailure = false;
             }
 
             @Override
@@ -274,7 +303,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
             @Override
             public void close() throws HyracksDataException {
-                if (!smthWasWritten && !failed) {
+                if (!smthWasWritten && !failed && !noTupleOnFailure) {
                     // the case when we need to write nulls
                     appendNullsToTuple();
                     appendToFrameFromTupleBuilder(tb);
@@ -283,6 +312,9 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
             @Override
             public void fail() throws HyracksDataException {
+                if (isFailSafe) {
+                    noTupleOnFailure = true;
+                }
                 // writer.fail() is called by the outer class' writer.fail().
             }
 

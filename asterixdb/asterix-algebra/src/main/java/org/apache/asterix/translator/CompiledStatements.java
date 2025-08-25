@@ -440,6 +440,19 @@ public class CompiledStatements {
         }
     }
 
+    public static class CompiledUpdateStatement extends CompiledUpsertStatement {
+
+        public CompiledUpdateStatement(String databaseName, DataverseName dataverseName, String datasetName,
+                Query query, int varCounter, VariableExpr var, Expression returnExpression) {
+            super(databaseName, dataverseName, datasetName, query, varCounter, var, returnExpression);
+        }
+
+        @Override
+        public Statement.Kind getKind() {
+            return Statement.Kind.UPDATE;
+        }
+    }
+
     public static class CompiledSubscribeFeedStatement extends AbstractCompiledStatement
             implements ICompiledDmlStatement {
 

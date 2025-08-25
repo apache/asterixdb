@@ -43,7 +43,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -186,6 +188,49 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
             expr.accept(this, arg);
         }
         caseExpression.getElseExpr().accept(this, arg);
+        return null;
+    }
+
+    @Override
+    public Void visit(ChangeExpression changeExpr, Void arg) throws CompilationException {
+        if (changeExpr.getPriorExpr() != null) {
+            changeExpr.getPriorExpr().accept(this, arg);
+        }
+        if (changeExpr.hasSetExpr()) {
+            changeExpr.getSetExpr().accept(this, arg);
+        }
+        if (changeExpr.getPathExpr() != null) {
+            changeExpr.getPathExpr().accept(this, arg);
+        }
+        if (changeExpr.getChangeSeq() != null) {
+            changeExpr.getChangeSeq().accept(this, arg);
+        }
+        if (changeExpr.getCondition() != null) {
+            changeExpr.getCondition().accept(this, arg);
+        }
+        if (changeExpr.getPosExpr() != null) {
+            changeExpr.getPosExpr().accept(this, arg);
+        }
+        if (changeExpr.getSourceExpr() != null) {
+            changeExpr.getSourceExpr().accept(this, arg);
+        }
+        if (changeExpr.getDataTransformRecord() != null) {
+            changeExpr.getDataTransformRecord().accept(this, arg);
+        }
+        if (changeExpr.getDataRemovalRecord() != null) {
+            changeExpr.getDataRemovalRecord().accept(this, arg);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(SetExpression setExpression, Void arg) throws CompilationException {
+        for (Expression pathExpr : setExpression.getPathExprList()) {
+            pathExpr.accept(this, arg);
+        }
+        for (Expression valueExpr : setExpression.getValueExprList()) {
+            valueExpr.accept(this, arg);
+        }
         return null;
     }
 

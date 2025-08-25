@@ -43,7 +43,6 @@ import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause.NullOrderModifier;
 import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
-import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -678,52 +677,14 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(UpdateStatement update, Integer step) throws CompilationException {
-        out.println(skip(step) + "update ");
-        update.getVariableExpr().accept(this, step + 2);
-        out.print(" in ");
-        update.getTarget().accept(this, step + 2);
-        out.println();
-        out.print(skip(step) + "where ");
-        update.getCondition().accept(this, step + 2);
-        out.println();
-        out.print("(");
-        for (UpdateClause updateClause : update.getUpdateClauses()) {
-            updateClause.accept(this, step + 4);
-            out.println();
+        out.print(skip(step) + "update " + datasetSymbol
+                + generateFullName(update.getDataverseName(), update.getDatasetName()));
+        if (update.getVar() != null) {
+            out.print("as ");
+            update.getVar().accept(this, step);
         }
-        out.print(")");
+        update.getQuery().accept(this, step + 2);
         out.println(SEMICOLON);
-        return null;
-    }
-
-    @Override
-    public Void visit(UpdateClause del, Integer step) throws CompilationException {
-        if (del.hasSet()) {
-            out.println(skip(step) + "set ");
-            del.getTarget().accept(this, step + 2);
-            out.print("=");
-            del.getTarget().accept(this, step + 2);
-        } else if (del.hasInsert()) {
-            del.getInsertStatement().accept(this, step + 2);
-        } else if (del.hasDelete()) {
-            del.getDeleteStatement().accept(this, step + 2);
-        } else if (del.hasUpdate()) {
-            del.getUpdateStatement().accept(this, step + 2);
-        } else if (del.hasIfElse()) {
-            out.println();
-            out.print(skip(step) + "if (");
-            del.getCondition().accept(this, step);
-            out.print(")");
-            out.println();
-            out.print(skip(step) + "then ");
-            del.getIfBranch().accept(this, step);
-            if (del.hasElse()) {
-                out.println();
-                out.print(skip(step) + "else");
-                del.getElseBranch().accept(this, step);
-            }
-            out.println();
-        }
         return null;
     }
 

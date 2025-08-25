@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -37,14 +36,12 @@ import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
-import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.ViewDecl;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
@@ -154,27 +151,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         }
     }
 
-    private boolean resolveAsVariableReference(VariableExpr varExpr) throws CompilationException {
-        VarIdentifier varId = varExpr.getVar();
-        String varName = varId.getValue();
-        if (scopeChecker.isInForbiddenScopes(varName)) {
-            throw new CompilationException(ErrorCode.FORBIDDEN_SCOPE, varExpr.getSourceLocation());
-        }
-        Identifier ident = scopeChecker.lookupSymbol(varName);
-        if (ident == null) {
-            if (SqlppVariableUtil.isExternalVariableIdentifier(varId)) {
-                throw new CompilationException(ErrorCode.PARAMETER_NO_VALUE, varExpr.getSourceLocation(),
-                        SqlppVariableUtil.variableNameToDisplayedFieldName(varId.getValue()));
-            } else {
-                return false;
-            }
-        }
-        // Exists such an identifier
-        varExpr.setIsNewVar(false);
-        varExpr.setVar((VarIdentifier) ident);
-        return true;
-    }
-
     // try resolving the undefined identifier reference as a dataset access.
     // for a From/Join/UNNEST/Quantifiers binding expression
     private CallExpr resolveAsDataset(String databaseName, DataverseName dataverseName, String datasetName,
@@ -224,24 +200,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         callExpr.addHints(varExpr.getHints());
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
-    }
-
-    // resolve the undefined identifier reference as a field access on a context variable
-    private FieldAccessor resolveAsFieldAccessOverContextVar(VariableExpr varExpr) throws CompilationException {
-        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
-                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
-        Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
-                SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, varExpr.getSourceLocation());
-        VariableExpr contextVar = pickContextVar(contextVars, varExpr);
-        return generateFieldAccess(contextVar, varExpr.getVar(), varExpr.getSourceLocation());
-    }
-
-    // Rewrites for a field access by name
-    static FieldAccessor generateFieldAccess(Expression sourceExpr, VarIdentifier fieldVar, SourceLocation sourceLoc) {
-        VarIdentifier fieldName = SqlppVariableUtil.toUserDefinedVariableName(fieldVar.getValue());
-        FieldAccessor fa = new FieldAccessor(sourceExpr, fieldName);
-        fa.setSourceLocation(sourceLoc);
-        return fa;
     }
 
     private static boolean extractDataverseName(Expression expr, List<String> outDataverseName,
@@ -355,20 +313,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return winExpr;
         } else {
             return super.visit(winExpr, arg);
-        }
-    }
-
-    static VariableExpr pickContextVar(Collection<VariableExpr> contextVars, VariableExpr usedVar)
-            throws CompilationException {
-        switch (contextVars.size()) {
-            case 0:
-                throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER, usedVar.getSourceLocation(),
-                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
-            case 1:
-                return contextVars.iterator().next();
-            default:
-                throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, usedVar.getSourceLocation(),
-                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
         }
     }
 }

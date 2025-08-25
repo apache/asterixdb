@@ -483,6 +483,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitSubplanOperator(SubplanOperator op, ILogicalOperator arg) throws AlgebricksException {
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<ILogicalPlan>();
         SubplanOperator opCopy = new SubplanOperator(nestedPlansCopy);
+        opCopy.setFailSafe(op.isFailSafe());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;

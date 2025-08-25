@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,6 +38,7 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.context.Scope;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -67,6 +69,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     protected final ScopeChecker scopeChecker = new ScopeChecker();
     protected final LangRewritingContext context;
+    private int generatedVarCounter;
+    private static final String generatedVarDelimiter = ":gen:"; // this is being used for temporary vars ?
 
     /**
      * @param context, manages ids of variables and guarantees uniqueness of variables.
@@ -80,6 +84,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
      * @param externalVars pre-defined (external) variables that must be added to the initial scope
      */
     public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, Collection<VarIdentifier> externalVars) {
+        this.generatedVarCounter = 0;
         this.context = context;
         this.scopeChecker.setVarCounter(context.getVarCounter());
         if (externalVars != null) {
@@ -373,16 +378,13 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws CompilationException {
         scopeChecker.createNewScope();
 
-        // Visits the body query.
-        insertStatement.getQuery().accept(this, insertStatement);
-
-        // Registers the (inserted) data item variable.
         VariableExpr bindingVar = insertStatement.getVar();
         if (bindingVar != null) {
             addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar(), bindingVar.getSourceLocation(),
                     SqlppVariableAnnotation.CONTEXT_VARIABLE);
         }
 
+        insertStatement.getQuery().accept(this, insertStatement);
         // Visits the expression for the returning expression.
         Expression returningExpr = insertStatement.getReturnExpression();
         if (returningExpr != null) {
@@ -448,8 +450,17 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         return ve.variableScopeDispatch(this, arg, scopeChecker);
     }
 
+    private String getRootSymbol(String symbol) {
+        String rootVarSymbol = symbol;
+        int lastIndexGeneratedVar = rootVarSymbol.lastIndexOf(generatedVarDelimiter);
+        if (lastIndexGeneratedVar != -1) {
+            return rootVarSymbol.substring(0, lastIndexGeneratedVar);
+        }
+        return rootVarSymbol;
+    }
+
     // Adds a new encountered alias identifier into a scope
-    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var, SourceLocation sourceLoc,
+    protected void addNewVarSymbolToScope(Scope scope, VarIdentifier var, SourceLocation sourceLoc,
             SqlppVariableAnnotation... varAnnotations) throws CompilationException {
         if (scope.findLocalSymbol(var.getValue()) != null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -462,7 +473,27 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             annotations = EnumSet.noneOf(SqlppVariableAnnotation.class);
             Collections.addAll(annotations, varAnnotations);
         }
+
+        String rootVarSymbol = getRootSymbol(var.getValue());
+        boolean isGenerated = !(rootVarSymbol.equals(var.getValue()));
+        if (isGenerated) {
+            //for generated ones the name is different like u:gen:1 is a gerenrated for the root u.
+            Collections.addAll(annotations, SqlppVariableAnnotation.GENERATED_VARIABLE);
+        }
         scope.addNewVarSymbolToScope(var, annotations);
+    }
+
+    protected VariableExpr generateVarOverContext(SourceLocation sourceLoc) throws CompilationException {
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
+                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, sourceLoc);
+        VariableExpr contextVar = pickContextVar(contextVars, null);
+        String rootSymbol = getRootSymbol(contextVar.getVar().getValue());
+        String newGeneratedVar =
+                rootSymbol.concat(generatedVarDelimiter).concat(Integer.toString(++generatedVarCounter));
+        // Ensures each generated var has unique suffix
+        return new VariableExpr(new VarIdentifier(newGeneratedVar));
     }
 
     // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
@@ -478,6 +509,120 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         hostScope.merge(scopeToBeMerged);
     }
 
+    /**
+     * Resolves a variable expression to an actual variable identifier in the current scope.
+     * It handles two types of matches:
+     * 1. Exact Match: Finds a variable with the exact same name
+     *    Example: Searching for "name" finds variable "name"
+     * 2. Generated Variable Match: Finds a generated variable whose root symbol matches
+     *    Example: Searching for "U" finds generated variable "U:gen:1" because:
+     *    - "U:gen:1" is marked with GENERATED_VARIABLE annotation
+     *    - getRootSymbol("U:gen:1") returns "U"
+     *    - "U" matches the search term "U"
+     *
+     * This is particularly useful for UPDATE statements where the system creates generated
+     * variables (like "U:gen:1") as variants of the original context variable ("U"), but
+     * code still needs to resolve references to the original variable name.
+     */
+    protected boolean resolveAsVariableReference(VariableExpr varExpr) throws CompilationException {
+        VarIdentifier varId = varExpr.getVar();
+        String varName = varId.getValue();
+        if (scopeChecker.isInForbiddenScopes(varName)) {
+            throw new CompilationException(ErrorCode.FORBIDDEN_SCOPE, varExpr.getSourceLocation());
+        }
+
+        Iterator<Pair<Identifier, Set<? extends Scope.SymbolAnnotation>>> symbolIterator =
+                scopeChecker.getCurrentScope().liveSymbols(null);
+
+        VarIdentifier resolvedIdentifier = null;
+        while (symbolIterator.hasNext() && resolvedIdentifier == null) {
+            Pair<Identifier, Set<? extends Scope.SymbolAnnotation>> p = symbolIterator.next();
+            Identifier identifier = p.first;
+
+            if (identifier instanceof VarIdentifier) {
+                VarIdentifier currentVarId = (VarIdentifier) identifier;
+
+                // Check for exact match or generated variable match
+                if (currentVarId.getValue().equals(varName)
+                        || (p.second.contains(SqlppVariableAnnotation.GENERATED_VARIABLE)
+                                && getRootSymbol(currentVarId.getValue()).equals(varName))) {
+                    resolvedIdentifier = currentVarId;
+                }
+            }
+        }
+
+        if (resolvedIdentifier == null) {
+            if (SqlppVariableUtil.isExternalVariableIdentifier(varId)) {
+                throw new CompilationException(ErrorCode.PARAMETER_NO_VALUE, varExpr.getSourceLocation(),
+                        SqlppVariableUtil.variableNameToDisplayedFieldName(varId.getValue()));
+            } else {
+                return false;
+            }
+        }
+
+        varExpr.setIsNewVar(false);
+        varExpr.setVar(resolvedIdentifier);
+        return true;
+    }
+
+    protected boolean resolveAsContextVar(VariableExpr varExpr) throws CompilationException {
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
+                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, varExpr.getSourceLocation());
+        VariableExpr contextVar = pickContextVar(contextVars, varExpr);
+        return contextVar.equals(varExpr);
+    }
+
+    protected VariableExpr getContextVar(VariableExpr varExpr) throws CompilationException {
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
+                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, varExpr.getSourceLocation());
+        return pickContextVar(contextVars, varExpr);
+    }
+
+    // resolve the undefined identifier reference as a field access on a context variable
+    protected FieldAccessor resolveAsFieldAccessOverContextVar(VariableExpr varExpr) throws CompilationException {
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localVars =
+                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> contextVars = Scope.findVariablesAnnotatedBy(localVars.keySet(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, localVars, varExpr.getSourceLocation());
+        VariableExpr contextVar = pickContextVar(contextVars, varExpr);
+        return generateFieldAccess(contextVar, varExpr.getVar(), varExpr.getSourceLocation());
+    }
+
+    // Rewrites for a field access by name
+    public static FieldAccessor generateFieldAccess(Expression sourceExpr, VarIdentifier fieldVar,
+            SourceLocation sourceLoc) {
+        VarIdentifier fieldName = SqlppVariableUtil.toUserDefinedVariableName(fieldVar.getValue());
+        FieldAccessor fa = new FieldAccessor(sourceExpr, fieldName);
+        fa.setSourceLocation(sourceLoc);
+        return fa;
+    }
+
+    public static VariableExpr pickContextVar(Collection<VariableExpr> contextVars, VariableExpr usedVar)
+            throws CompilationException {
+        switch (contextVars.size()) {
+            case 0:
+                if (usedVar == null) {
+                    throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER,
+                            "Num variables in context: " + contextVars.size());
+                }
+                throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER, usedVar.getSourceLocation(),
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
+            case 1:
+                return contextVars.iterator().next();
+            default:
+                if (usedVar == null) {
+                    throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER,
+                            "Num variables in context: " + contextVars.size());
+                }
+                throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, usedVar.getSourceLocation(),
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
+        }
+    }
+
     public enum SqlppVariableAnnotation implements Scope.SymbolAnnotation {
         /**
          * Context variables are those that participate in the second stage of the name resolution process.
@@ -487,6 +632,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
          * <p>
          * See {@link org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor}
          */
-        CONTEXT_VARIABLE
+        CONTEXT_VARIABLE,
+        GENERATED_VARIABLE
     }
 }

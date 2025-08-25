@@ -24,7 +24,6 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -121,8 +120,6 @@ public interface ILangVisitor<R, T> {
     R visit(DeleteStatement del, T arg) throws CompilationException;
 
     R visit(UpdateStatement update, T arg) throws CompilationException;
-
-    R visit(UpdateClause del, T arg) throws CompilationException;
 
     R visit(TypeReferenceExpression tre, T arg) throws CompilationException;
 

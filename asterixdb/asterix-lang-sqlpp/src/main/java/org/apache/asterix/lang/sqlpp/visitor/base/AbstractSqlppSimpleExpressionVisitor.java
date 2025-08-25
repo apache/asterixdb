@@ -49,6 +49,7 @@ import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -65,7 +66,9 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -410,6 +413,39 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
+    public Expression visit(ChangeExpression changeExpr, ILangExpression arg) throws CompilationException {
+        if (changeExpr.hasPathExpr()) {
+            changeExpr.setPathExpr(visit(changeExpr.getPathExpr(), arg));
+        }
+        if (changeExpr.hasCondition()) {
+            changeExpr.setCondition(visit(changeExpr.getCondition(), arg));
+        }
+        if (changeExpr.hasChangeSeq()) {
+            changeExpr.setChangeSeq(visit(changeExpr.getChangeSeq(), arg));
+        }
+        if (changeExpr.hasPriorExpr()) {
+            changeExpr.setPriorExpr(visit(changeExpr.getPriorExpr(), arg));
+        }
+        if (changeExpr.hasSetExpr()) {
+            changeExpr.setSetExpr(visit(changeExpr.getSetExpr(), arg));
+        }
+        if (changeExpr.hasDataRemovalRecord()) {
+            changeExpr.setDataRemovalRecord(visit(changeExpr.getDataRemovalRecord(), arg));
+        }
+        if (changeExpr.hasDataTransformRecord()) {
+            changeExpr.setDataTransformRecord(visit(changeExpr.getDataTransformRecord(), arg));
+        }
+        return changeExpr;
+    }
+
+    @Override
+    public Expression visit(SetExpression setexpr, ILangExpression arg) throws CompilationException {
+        setexpr.setValueExprList(visit(setexpr.getValueExprList(), arg));
+        setexpr.setPathExprList(visit(setexpr.getPathExprList(), arg));
+        return setexpr;
+    }
+
+    @Override
     public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws CompilationException {
         Expression returnExpr = insertStatement.getReturnExpression();
         if (returnExpr != null) {
@@ -418,6 +454,11 @@ public class AbstractSqlppSimpleExpressionVisitor
         Query bodyQuery = insertStatement.getQuery();
         bodyQuery.accept(this, arg);
         return null;
+    }
+
+    @Override
+    public Expression visit(UpdateStatement updateStmt, ILangExpression arg) throws CompilationException {
+        return visit((InsertStatement) updateStmt, arg);
     }
 
     public Expression visit(Expression expr, ILangExpression arg) throws CompilationException {

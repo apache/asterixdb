@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.annotations.isTransformRecordAnnotation;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -372,7 +373,8 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
         // skip all functions that would produce records/arrays/multisets (derived types) in their open format
         // this is because constant folding them will make them closed (currently)
         if (function.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
-            if (returnType.getTypeTag() != ATypeTag.OBJECT || ((ARecordType) returnType).isOpen()) {
+            if (returnType.getTypeTag() != ATypeTag.OBJECT || ((ARecordType) returnType).isOpen()
+                    || function.hasAnnotation(isTransformRecordAnnotation.class)) {
                 return false;
             }
         }

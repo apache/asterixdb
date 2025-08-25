@@ -88,6 +88,11 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
                 continue;
             }
 
+            /** A failSafe subplan should be kept for its failSafe property of short-circuiting the job. */
+            if (subplan.isFailSafe()) {
+                continue;
+            }
+
             Set<LogicalVariable> usedVarsUp = new ListSet<>();
             OperatorPropertiesUtil.getFreeVariablesInPath(rootRef.getValue(), subplan, usedVarsUp);
 

@@ -126,8 +126,10 @@ import org.apache.asterix.om.typecomputer.impl.RecordAddTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordPutTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.RecordRemoveRecursiveTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRenameTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.RecordTransformTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarArrayAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
@@ -246,9 +248,12 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ARRAY_BINARY_SEARCH = FunctionConstants.newAsterix("array-binary-search", 2);
 
     // objects
+    public static final FunctionIdentifier RECORD_TRANSFORM = FunctionConstants.newAsterix("object-transform", 2);
     public static final FunctionIdentifier RECORD_MERGE = FunctionConstants.newAsterix("object-merge", 2);
     public static final FunctionIdentifier RECORD_MERGE_IGNORE_DUPLICATES =
             FunctionConstants.newAsterix("object-merge-ignore-duplicates", 2);
+    public static final FunctionIdentifier RECORD_REMOVE_RECURSIVE =
+            FunctionConstants.newAsterix("object-remove-recursive", 2);
     public static final FunctionIdentifier RECORD_CONCAT =
             FunctionConstants.newAsterix("object-concat", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RECORD_CONCAT_STRICT =
@@ -1253,6 +1258,8 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier IS_SYSTEM_NULL = FunctionConstants.newAsterix("is-system-null", 1);
     public static final FunctionIdentifier CHECK_UNKNOWN = FunctionConstants.newAsterix("check-unknown", 1);
+    public static final FunctionIdentifier CHECK_LIST = FunctionConstants.newAsterix("check-list", 1);
+    public static final FunctionIdentifier CHECK_INTEGER = FunctionConstants.newAsterix("check-integer", 1);
     public static final FunctionIdentifier COLLECTION_TO_SEQUENCE =
             FunctionConstants.newAsterix("collection-to-sequence", 1);
 
@@ -1363,6 +1370,8 @@ public class BuiltinFunctions {
 
         // and then, Asterix builtin functions
         addPrivateFunction(CHECK_UNKNOWN, NotUnknownTypeComputer.INSTANCE, true);
+        addPrivateFunction(CHECK_LIST, NotUnknownTypeComputer.INSTANCE, true);
+        addPrivateFunction(CHECK_INTEGER, NotUnknownTypeComputer.INSTANCE, true);
         addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE_MISSABLE, true);
         addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
@@ -2053,6 +2062,8 @@ public class BuiltinFunctions {
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);
         addPrivateFunction(RECORD_MERGE_IGNORE_DUPLICATES, RecordMergeTypeComputer.INSTANCE_IGNORE_DUPLICATES, true);
+        addPrivateFunction(RECORD_REMOVE_RECURSIVE, RecordRemoveRecursiveTypeComputer.INSTANCE, true);
+        addPrivateFunction(RECORD_TRANSFORM, RecordTransformTypeComputer.INSTANCE, true);
         addFunction(RECORD_CONCAT, OpenARecordTypeComputer.INSTANCE, true);
         addPrivateFunction(RECORD_CONCAT_STRICT, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(ADD_FIELDS, RecordAddFieldsTypeComputer.INSTANCE, true);
