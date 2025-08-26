@@ -43,9 +43,9 @@ public class LocalStorageCleanupTask implements INCLifecycleTask {
         INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
+        localResourceRepository.deleteCorruptedResources();
         deleteInvalidMetadataIndexes(localResourceRepository);
         final Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
-        localResourceRepository.deleteCorruptedResources();
         INcApplicationContext appCtx = (INcApplicationContext) cs.getApplicationContext();
         if (appCtx.isCloudDeployment() && nodePartitions.contains(metadataPartitionId)) {
             appCtx.getTransactionSubsystem().getTransactionManager().rollbackMetadataTransactionsWithoutWAL();
