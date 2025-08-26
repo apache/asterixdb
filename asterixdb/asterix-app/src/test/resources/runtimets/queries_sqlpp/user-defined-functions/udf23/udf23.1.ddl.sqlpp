@@ -28,5 +28,5 @@ create dataverse test;
 use test;
 
 create function test.numRows(){
-6
+7
 };

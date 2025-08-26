@@ -54,6 +54,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningS
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ADouble;
@@ -241,15 +242,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 IACursor cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX))
                                 .getCursor();
-                Map<String, String> properties = new HashMap<>();
-                while (cursor.next()) {
-                    ARecord field = (ARecord) cursor.get();
-                    String key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
-                            .getStringValue();
-                    String value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
-                            .getStringValue();
-                    properties.put(key, value);
-                }
+                Map<String, String> properties = TupleTranslatorUtils.getPropertiesFromIaCursor(cursor);
 
                 // Timestamp
                 Date timestamp = new Date((((ADateTime) datasetDetailsRecord
@@ -869,32 +862,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
     private void writeDatasetCreator(Dataset dataset) throws HyracksDataException {
         if (datasetEntity.databaseNameIndex() >= 0) {
-            Creator creatorInfo = dataset.getCreator();
-            RecordBuilder creatorObject = new RecordBuilder();
-            creatorObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getName());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_UUID);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getUuid());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            creatorObject.write(fieldValue.getDataOutput(), true);
-            recordBuilder.addField(fieldName, fieldValue);
+            TupleTranslatorUtils.writeCreator(dataset.getCreator(), recordBuilder, fieldName, fieldValue, aString,
+                    stringSerde);
         }
     }
 }

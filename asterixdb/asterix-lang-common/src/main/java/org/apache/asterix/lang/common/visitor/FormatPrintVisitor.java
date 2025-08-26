@@ -35,6 +35,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -116,6 +117,9 @@ import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
+import org.apache.asterix.lang.common.statement.catalog.CatalogCreateStatement;
+import org.apache.asterix.lang.common.statement.catalog.CatalogDropStatement;
+import org.apache.asterix.lang.common.statement.catalog.IcebergCatalogCreateStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -1101,6 +1105,31 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(ViewDecl vd, Integer arg) throws CompilationException {
         // this statement is internal
+        return null;
+    }
+
+    @Override
+    public Void visit(CatalogCreateStatement ccs, Integer step) throws CompilationException {
+        out.print(skip(step) + "create catalog " + ccs.getCatalogName());
+        out.print(generateIfNotExists(ccs.getIfNotExists()));
+        out.print(" type " + ccs.getCatalogType().toLowerCase());
+
+        if (IcebergUtils.isIcebergCatalog(ccs.getCatalogType())) {
+            IcebergCatalogCreateStatement iceberg = (IcebergCatalogCreateStatement) ccs;
+            out.print(" source " + iceberg.getSource().toString().toLowerCase());
+            if (iceberg.getWithObjectNode() != null) {
+                out.print(" with ");
+                out.print(iceberg.getWithObjectNode().toString());
+            }
+            out.println(SEMICOLON);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(CatalogDropStatement cds, Integer step) throws CompilationException {
+        out.print(skip(step) + "drop catalog " + cds.getCatalogName());
+        out.println(generateIfExists(cds.getIfExists()) + SEMICOLON);
         return null;
     }
 

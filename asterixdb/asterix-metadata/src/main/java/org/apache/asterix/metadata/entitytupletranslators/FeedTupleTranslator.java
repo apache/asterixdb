@@ -21,7 +21,6 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import java.io.DataOutput;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -32,6 +31,7 @@ import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.FeedEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -72,16 +72,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         AUnorderedList feedConfig = (AUnorderedList) feedRecord.getValueByPos(feedEntity.adapterConfigIndex());
         IACursor cursor = feedConfig.getCursor();
         // restore configurations
-        Map<String, String> adaptorConfiguration = new HashMap<>();
-        while (cursor.next()) {
-            ARecord field = (ARecord) cursor.get();
-            String key =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
-            String value =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
-            adaptorConfiguration.put(key, value);
-        }
-
+        Map<String, String> adaptorConfiguration = TupleTranslatorUtils.getPropertiesFromIaCursor(cursor);
         return new Feed(databaseName, dataverseName, feedName, adaptorConfiguration);
     }
 

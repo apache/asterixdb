@@ -176,6 +176,7 @@ public class MetadataBootstrap {
                 insertNewCompactionPoliciesIfNotExist(mdTxnCtx);
                 insertSynonymEntitiesIfNotExist(mdTxnCtx, mdIndexesProvider);
                 insertFullTextConfigAndFilterIfNotExist(mdTxnCtx, mdIndexesProvider);
+                insertCatalogIfNotExist(mdTxnCtx, mdIndexesProvider);
             }
             // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
@@ -365,6 +366,27 @@ public class MetadataBootstrap {
                 MetadataConstants.METADATA_DATAVERSE_NAME, MetadataConstants.FULL_TEXT_FILTER_DATASET_NAME) == null) {
             insertMetadataDatasets(mdTxnCtx,
                     new IMetadataIndex[] { metadataIndexesProvider.getFullTextFilterEntity().getIndex() });
+        }
+    }
+
+    // For backward-compatibility: for old datasets created by an older version of AsterixDB, they
+    // 1) may not have such a catalog dataset in the metadata catalog,
+    // 2) may not have the default catalog as an entry in the metadata catalog
+    // So here, let's try to insert if not exists
+    private static void insertCatalogIfNotExist(MetadataTransactionContext mdTxnCtx,
+            MetadataIndexesProvider metadataIndexesProvider) throws AlgebricksException {
+        // We need to insert data types first because datasets depend on data types
+        IAType catalogRecordType = metadataIndexesProvider.getCatalogEntity().getRecordType();
+        if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, catalogRecordType.getTypeName()) == null) {
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
+                    new Datatype(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
+                            catalogRecordType.getTypeName(), catalogRecordType, false));
+        }
+        if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, MetadataConstants.CATALOG_DATASET_NAME) == null) {
+            insertMetadataDatasets(mdTxnCtx,
+                    new IMetadataIndex[] { metadataIndexesProvider.getCatalogEntity().getIndex() });
         }
     }
 
@@ -602,10 +624,13 @@ public class MetadataBootstrap {
 
     private static void ensureCatalogUpgradability(IMetadataIndex index, MetadataIndexesProvider mdIndexesProvider) {
         if (index != mdIndexesProvider.getSynonymEntity().getIndex()
-                // Backward-compatibility: FULLTEXT_ENTITY_DATASET is added to AsterixDB recently
-                // and may not exist in an older dataverse
+                // Backward-compatibility:
+                // - FULLTEXT_ENTITY_DATASET entity
+                // - Catalog entity
+                // is added to AsterixDB recently and may not exist in an older dataverse
                 && index != mdIndexesProvider.getFullTextConfigEntity().getIndex()
-                && index != mdIndexesProvider.getFullTextFilterEntity().getIndex()) {
+                && index != mdIndexesProvider.getFullTextFilterEntity().getIndex()
+                && index != mdIndexesProvider.getCatalogEntity().getIndex()) {
             throw new IllegalStateException(
                     "attempt to create metadata index " + index.getIndexName() + ". Index should already exist");
         }

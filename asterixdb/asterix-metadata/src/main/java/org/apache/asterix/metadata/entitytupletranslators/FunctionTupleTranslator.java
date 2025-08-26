@@ -62,6 +62,7 @@ import org.apache.asterix.metadata.bootstrap.FunctionEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.utils.Creator;
+import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
@@ -700,32 +701,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
     private void writeFunctionCreator(Function function) throws HyracksDataException {
         if (functionEntity.databaseNameIndex() >= 0) {
-            Creator creatorInfo = function.getCreator();
-            RecordBuilder creatorObject = new RecordBuilder();
-            creatorObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getName());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_UUID);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getUuid());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            creatorObject.write(fieldValue.getDataOutput(), true);
-            recordBuilder.addField(fieldName, fieldValue);
+            TupleTranslatorUtils.writeCreator(function.getCreator(), recordBuilder, fieldName, fieldValue, aString,
+                    stringSerde);
         }
     }
 

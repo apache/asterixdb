@@ -43,6 +43,7 @@ import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -1352,12 +1353,64 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+
     public boolean isActive(TxnId txnId) throws AlgebricksException {
         try {
             return metadataNode.isActive(txnId);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
+    }
+
+    public void addCatalog(MetadataTransactionContext ctx, Catalog catalog) throws AlgebricksException {
+        try {
+            metadataNode.addCatalog(ctx.getTxnId(), catalog);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.addCatalog(catalog);
+    }
+
+    @Override
+    public Catalog getCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException {
+        Objects.requireNonNull(catalogName);
+        // first look in the context to see if this transaction created the
+        // requested entity itself (but the entity is still uncommitted)
+        Catalog catalog = ctx.getCatalog(catalogName);
+        if (catalog != null) {
+            // don't add this entity to the cache, since it is still uncommitted
+            return catalog;
+        }
+        if (ctx.catalogIsDropped(catalogName)) {
+            // entity has been dropped by this transaction but could still be in the cache
+            return null;
+        }
+        catalog = cache.getCatalog(catalogName);
+        if (catalog != null) {
+            // entity is already in the cache, don't add it again
+            return catalog;
+        }
+        try {
+            catalog = metadataNode.getCatalog(ctx.getTxnId(), catalogName);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // we fetched the entity from the MetadataNode. add it to the cache when this transaction commits
+        if (catalog != null) {
+            ctx.addCatalog(catalog);
+        }
+        return catalog;
+    }
+
+    @Override
+    public void dropCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException {
+        try {
+            Objects.requireNonNull(catalogName);
+            metadataNode.dropCatalog(ctx.getTxnId(), catalogName);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.dropCatalog(catalogName);
     }
 
     private static class CCMetadataManagerImpl extends MetadataManager {

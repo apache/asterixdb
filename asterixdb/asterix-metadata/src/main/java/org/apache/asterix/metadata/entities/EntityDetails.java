@@ -39,7 +39,8 @@ public class EntityDetails {
         DATAVERSE,
         SYNONYM,
         INDEX,
-        BUILT_IN_FUNCTION;
+        BUILT_IN_FUNCTION,
+        CATALOG
     }
 
     private final String databaseName;
@@ -112,6 +113,10 @@ public class EntityDetails {
 
     public static EntityDetails newExtension(String extensionName) {
         return new EntityDetails(null, null, extensionName, null);
+    }
+
+    public static EntityDetails newCatalog(String catalogName) {
+        return new EntityDetails(null, null, catalogName, EntityType.CATALOG);
     }
 
     public String getDatabaseName() {

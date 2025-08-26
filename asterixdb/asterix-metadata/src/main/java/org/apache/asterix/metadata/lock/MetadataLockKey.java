@@ -41,7 +41,8 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         ADAPTER,
         MERGE_POLICY,
         NODE_GROUP,
-        SYNONYM
+        SYNONYM,
+        CATALOG
     }
 
     private final EntityKind entityKind;
@@ -161,5 +162,9 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     static MetadataLockKey createMergePolicyLockKey(String mergePolicyName) {
         return new MetadataLockKey(EntityKind.MERGE_POLICY, null, null, null, mergePolicyName);
+    }
+
+    static MetadataLockKey createCatalogLockKey(String catalogName) {
+        return new MetadataLockKey(EntityKind.CATALOG, null, null, null, catalogName);
     }
 }

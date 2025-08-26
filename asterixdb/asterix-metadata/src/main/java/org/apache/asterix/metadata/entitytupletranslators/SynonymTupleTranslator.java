@@ -19,16 +19,15 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.bootstrap.SynonymEntity;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.utils.Creator;
+import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -158,32 +157,8 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
 
     private void writeSynonymCreator(Synonym synonym) throws HyracksDataException {
         if (synonymEntity.databaseNameIndex() >= 0) {
-            Creator creatorInfo = synonym.getCreator();
-            RecordBuilder creatorObject = new RecordBuilder();
-            creatorObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getName());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_UUID);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creatorInfo.getUuid());
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            creatorObject.addField(fieldName, fieldValue);
-
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-            fieldValue.reset();
-            creatorObject.write(fieldValue.getDataOutput(), true);
-            recordBuilder.addField(fieldName, fieldValue);
+            TupleTranslatorUtils.writeCreator(synonym.getCreator(), recordBuilder, fieldName, fieldValue, aString,
+                    stringSerde);
         }
     }
 }

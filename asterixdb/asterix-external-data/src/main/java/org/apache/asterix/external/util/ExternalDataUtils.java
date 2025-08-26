@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.PARSE_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.PROPERTY_INVALID_VALUE_TYPE;
 import static org.apache.asterix.common.metadata.MetadataConstants.DEFAULT_DATABASE;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_EMPTY_STRING_AS_NULL;
@@ -51,6 +53,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,6 +91,11 @@ import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
 import org.apache.asterix.external.util.google.gcs.GCSConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
+import org.apache.asterix.object.base.AdmArrayNode;
+import org.apache.asterix.object.base.AdmBooleanNode;
+import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.asterix.object.base.AdmStringNode;
+import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -1190,5 +1199,40 @@ public class ExternalDataUtils {
 
     public static boolean isGzipCompression(String compression) {
         return ExternalDataConstants.KEY_COMPRESSION_GZIP.equalsIgnoreCase(compression);
+    }
+
+    public static Map<String, String> convertStringArrayParamIntoNumberedParameters(AdmObjectNode withObjectNode,
+            SourceLocation sourceLocation) throws CompilationException {
+        Map<String, String> properties = new HashMap<>();
+        for (Map.Entry<String, IAdmNode> me : withObjectNode.getFields()) {
+            String fieldName = me.getKey();
+            IAdmNode fieldValue = me.getValue();
+            String fieldValueStr;
+            switch (fieldValue.getType()) {
+                case STRING:
+                    fieldValueStr = ((AdmStringNode) fieldValue).get();
+                    break;
+                case BOOLEAN:
+                    fieldValueStr = Boolean.toString(((AdmBooleanNode) fieldValue).get());
+                    break;
+                case ARRAY:
+                    AdmArrayNode arrayNode = (AdmArrayNode) fieldValue;
+                    Iterator<IAdmNode> iterator = arrayNode.iterator();
+                    int i = 0;
+                    while (iterator.hasNext()) {
+                        IAdmNode node = iterator.next();
+                        if (node.getType() != ATypeTag.STRING) {
+                            throw new CompilationException(PROPERTY_INVALID_VALUE_TYPE, fieldName,
+                                    ATypeTag.STRING.toString());
+                        }
+                        properties.put(fieldName + "#" + i++, ((AdmStringNode) node).get());
+                    }
+                    continue;
+                default:
+                    throw new CompilationException(PARSE_ERROR, sourceLocation, fieldName);
+            }
+            properties.put(fieldName, fieldValueStr);
+        }
+        return properties;
     }
 }

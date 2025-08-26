@@ -68,6 +68,7 @@ import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.api.INamespaceResolver;
+import org.apache.asterix.common.config.CatalogConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -83,6 +84,8 @@ import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
 import org.apache.asterix.lang.common.base.AbstractStatement;
@@ -180,6 +183,10 @@ import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
+import org.apache.asterix.lang.common.statement.catalog.CatalogCreateStatement;
+import org.apache.asterix.lang.common.statement.catalog.CatalogDropStatement;
+import org.apache.asterix.lang.common.statement.catalog.IcebergCatalogCreateStatement;
+import org.apache.asterix.lang.common.statement.catalog.IcebergCatalogDetailsDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -277,6 +284,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String CONFIG = "CONFIG";
     private static final String STATISTICS = "STATISTICS";
     private static final String ADVISE = "ADVISE";
+    private static final String CATALOG = "CATALOG";
+    private static final String SOURCE = "SOURCE";
+    private static final String CASCADE = "CASCADE";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -1088,6 +1098,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
     | stmt = CreateFullTextStatement(startToken)
+    | LOOKAHEAD({laIdentifier(CATALOG)}) stmt = CreateCatalogStatement(startToken)
     | stmt = CreateViewStatement(startToken, false)
   )
   {
@@ -1202,6 +1213,53 @@ void DatasetToken() throws ParseException:
 }
 {
     Dataset()
+}
+
+CatalogCreateStatement CreateCatalogStatement(Token startStmtToken) throws ParseException:
+{
+  CatalogCreateStatement stmt = null;
+}
+{
+  stmt = CatalogSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+CatalogCreateStatement CatalogSpecification(Token startStmtToken) throws ParseException:
+{
+  String catalogName = null;
+  boolean ifNotExists = false;
+  String catalogType = null;
+  String catalogSource = null;
+  Map<String, String> properties = new HashMap<String, String>();
+  RecordConstructor withRecord = null;
+}
+{
+  // this identifier is the soft keyword CATALOG, consume it then continue
+  <IDENTIFIER>
+  catalogName = Identifier()
+  ifNotExists = IfNotExists()
+  <TYPE> catalogType = Identifier()
+  (LOOKAHEAD({laIdentifier(SOURCE)}) <IDENTIFIER> catalogSource = Identifier())?
+  <WITH> withRecord = RecordConstructor()
+  {
+    try {
+      CatalogCreateStatement stmt;
+      if (IcebergUtils.isIcebergCatalog(catalogType)) {
+        properties.put(IcebergConstants.ICEBERG_SOURCE_PROPERTY_KEY, catalogSource);
+        IcebergCatalogDetailsDecl details = new IcebergCatalogDetailsDecl();
+        details.setProperties(properties);
+        details.setAdapter("");
+        stmt = new IcebergCatalogCreateStatement(catalogName, catalogType, catalogSource, details, withRecord, ifNotExists);
+      } else {
+        stmt = new CatalogCreateStatement(catalogName, catalogType, ifNotExists);
+      }
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+      throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+  }
 }
 
 DatasetDecl CreateDatasetStatement(Token startStmtToken) throws ParseException:
@@ -2449,6 +2507,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropFeedPolicyStatement(startToken)
     | stmt = DropSynonymStatement(startToken)
     | stmt = DropFullTextStatement(startToken)
+    | LOOKAHEAD({laIdentifier(CATALOG)}) stmt = DropCatalogStatement(startToken)
     | stmt = DropViewStatement(startToken)
   )
   {
@@ -2786,6 +2845,35 @@ SynonymDropStatement DropSynonymSpecification(Token startStmtToken) throws Parse
     SynonymDropStatement stmt = new SynonymDropStatement(pairId.first, pairId.second.getValue(), ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
+}
+
+CatalogDropStatement DropCatalogStatement(Token startStmtToken) throws ParseException:
+{
+  CatalogDropStatement stmt = null;
+}
+{
+  // consume the Catalog soft keyword first
+  <IDENTIFIER>
+  stmt = DropCatalogSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+CatalogDropStatement DropCatalogSpecification(Token startStmtToken) throws ParseException:
+{
+  String catalogName = null;
+  boolean ifExists = false;
+  boolean isCascade = false;
+}
+{
+  catalogName = Identifier()
+  ifExists = IfExists()
+  (LOOKAHEAD({laIdentifier(CASCADE)}) <IDENTIFIER> { isCascade = true; })?
+    {
+      CatalogDropStatement stmt = new CatalogDropStatement(catalogName, ifExists, isCascade);
+      return addSourceLocation(stmt, startStmtToken);
+    }
 }
 
 boolean IfExists() throws ParseException :

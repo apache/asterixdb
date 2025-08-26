@@ -24,6 +24,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.ADAPTER_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATABASE_DEPENDENT_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS;
+import static org.apache.asterix.common.exceptions.ErrorCode.CATALOG_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.COMPACTION_POLICY_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.DATABASE_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.DATASET_EXISTS;
@@ -42,6 +43,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.NODE_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.SYNONYM_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.TYPE_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_ADAPTER;
+import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_CATALOG;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATABASE;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATAVERSE;
@@ -105,7 +107,9 @@ import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
+import org.apache.asterix.metadata.bootstrap.MetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -126,6 +130,7 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entities.ViewDetails;
+import org.apache.asterix.metadata.entitytupletranslators.CatalogTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatabaseTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
@@ -3137,5 +3142,54 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         };
+    }
+
+    @Override
+    public void addCatalog(TxnId txnId, Catalog catalog) throws AlgebricksException, RemoteException {
+        try {
+            CatalogTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCatalogTupleTranslator(true);
+            ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(catalog);
+            insertTupleIntoIndex(txnId, mdIndexesProvider.getCatalogEntity().getIndex(), tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
+                throw new AsterixException(CATALOG_EXISTS, e, catalog.getCatalogName());
+            } else {
+                throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public Catalog getCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(catalogName);
+            CatalogTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCatalogTupleTranslator(false);
+            IValueExtractor<Catalog> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<Catalog> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getCatalogEntity().getIndex(), searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+        }
+    }
+
+    @Override
+    public void dropCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException {
+        try {
+            // delete the catalog entry from the 'Catalog' collection
+            ITupleReference searchKey = createTuple(catalogName);
+            MetadataIndex catalogIndex = mdIndexesProvider.getCatalogEntity().getIndex();
+            ITupleReference tuple = getTupleToBeDeleted(txnId, catalogIndex, searchKey);
+            deleteTupleFromIndex(txnId, catalogIndex, tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
+                throw new AsterixException(UNKNOWN_CATALOG, e, catalogName);
+            } else {
+                throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+            }
+        }
     }
 }

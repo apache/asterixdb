@@ -170,4 +170,11 @@ public interface IMetadataLockUtil {
 
     void disconnectFeedBegin(IMetadataLockManager lockManager, LockList locks, String database,
             DataverseName dataverseName, String datasetName, String feedName) throws AlgebricksException;
+
+    // catalog helpers
+    void createCatalogBegin(IMetadataLockManager lockManager, LockList locks, String catalogName)
+            throws AlgebricksException;
+
+    void dropCatalogBegin(IMetadataLockManager lockManager, LockList locks, String catalogName)
+            throws AlgebricksException;
 }

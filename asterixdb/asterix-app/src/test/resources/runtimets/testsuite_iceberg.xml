@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
+  <test-group name="iceberg">
+    <test-case FilePath="iceberg/catalog/">
+      <compilation-unit name="all-supported-types">
+        <output-dir compare="Text">all-supported-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/">
+      <compilation-unit name="check-catalog-record">
+        <output-dir compare="Text">check-catalog-record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="bad-catalog-type">
+        <output-dir compare="Text">bad-catalog-type</output-dir>
+        <expected-error>ASX1228: Unsupported catalog type: 'FakeIcebergCatalog'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="bad-source-type">
+        <output-dir compare="Text">bad-source-type</output-dir>
+        <expected-error>ASX1230: Unsupported Iceberg catalog source: 'FAKE_AWS_GLUE'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="missing-warehouse">
+        <output-dir compare="Text">missing-warehouse</output-dir>
+        <expected-error>ASX0049: Parameter(s) warehouse must be specified</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="missing-source-type">
+        <output-dir compare="Text">missing-source-type</output-dir>
+        <expected-error>ASX1229: Iceberg catalog source required</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="catalog-already-exists">
+        <output-dir compare="Text">catalog-already-exists</output-dir>
+        <expected-error>ASX1226: A catalog with this name myGlueCatalog already exists</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="drop-does-not-exist">
+        <output-dir compare="Text">drop-does-not-exist</output-dir>
+        <expected-error>ASX1227: Cannot find catalog with name myDoesNotExistGlueCatalog</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

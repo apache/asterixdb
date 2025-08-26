@@ -27,6 +27,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -163,6 +164,11 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(feedConnection, true));
     }
 
+    public void addCatalog(Catalog catalog) {
+        droppedCache.dropCatalog(catalog);
+        logAndApply(new MetadataLogicalOperation(catalog, true));
+    }
+
     public void dropDataset(String database, DataverseName dataverseName, String datasetName) {
         Dataset dataset = new Dataset(database, dataverseName, datasetName, null, null, null, null, null, null, null,
                 null, null, -1, MetadataUtil.PENDING_NO_OP, null);
@@ -261,6 +267,12 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(feedConnection, false));
     }
 
+    public void dropCatalog(String catalogName) {
+        Catalog catalog = new Catalog(catalogName, null, MetadataUtil.PENDING_NO_OP, null);
+        droppedCache.addCatalogIfNotExists(catalog);
+        logAndApply(new MetadataLogicalOperation(catalog, false));
+    }
+
     public void logAndApply(MetadataLogicalOperation op) {
         opLog.add(op);
         doOperation(op);
@@ -328,6 +340,10 @@ public class MetadataTransactionContext extends MetadataCache {
     public boolean fullTextFilterIsDropped(String databaseName, DataverseName dataverseName, String filterName) {
         //TODO(DB): check database and dataverse first?
         return droppedCache.getFullTextFilter(databaseName, dataverseName, filterName) != null;
+    }
+
+    public boolean catalogIsDropped(String catalogName) {
+        return droppedCache.getCatalog(catalogName) != null;
     }
 
     public List<MetadataLogicalOperation> getOpLog() {

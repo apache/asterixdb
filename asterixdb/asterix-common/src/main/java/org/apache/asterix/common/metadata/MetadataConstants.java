@@ -72,6 +72,7 @@ public class MetadataConstants {
     public static final String SYNONYM_DATASET_NAME = "Synonym";
     public static final String FULL_TEXT_CONFIG_DATASET_NAME = "FullTextConfig";
     public static final String FULL_TEXT_FILTER_DATASET_NAME = "FullTextFilter";
+    public static final String CATALOG_DATASET_NAME = "Catalog";
 
     public static final String PRIMARY_INDEX_PREFIX = "primary_idx_";
     public static final String SAMPLE_INDEX_PREFIX = "sample_idx_";

@@ -66,6 +66,7 @@ import org.apache.asterix.app.result.fields.ErrorsPrinter;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
+import org.apache.asterix.app.translator.handlers.CatalogStatementHandler;
 import org.apache.asterix.column.validation.ColumnPropertiesValidationUtil;
 import org.apache.asterix.column.validation.ColumnSupportedTypesValidator;
 import org.apache.asterix.common.api.IApplicationContext;
@@ -579,6 +580,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             extStmt.handle(hcc, this, requestParameters, metadataProvider,
                                     resultSetIdCounter.getAndInc());
                         }
+                        break;
+                    case CATALOG_CREATE:
+                    case CATALOG_DROP:
+                        handleCatalogStatement(kind, metadataProvider, stmt, hcc, requestParameters);
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
@@ -5754,6 +5759,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
         }
+    }
+
+    protected void handleCatalogStatement(Statement.Kind kind, MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+        CatalogStatementHandler statement = new CatalogStatementHandler(kind, metadataProvider, stmt,
+                Creator.DEFAULT_CREATOR, sessionConfig, lockUtil, lockManager);
+        statement.handle();
     }
 
     @Override

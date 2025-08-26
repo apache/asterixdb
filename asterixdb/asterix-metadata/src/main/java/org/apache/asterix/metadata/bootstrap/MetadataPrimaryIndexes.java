@@ -62,6 +62,8 @@ public class MetadataPrimaryIndexes {
             new MetadataIndexImmutableProperties(MetadataConstants.FULL_TEXT_FILTER_DATASET_NAME, 17, 17);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATABASE =
             new MetadataIndexImmutableProperties(MetadataConstants.DATABASE_DATASET_NAME, 18, 18);
+    public static final MetadataIndexImmutableProperties PROPERTIES_CATALOG =
+            new MetadataIndexImmutableProperties(MetadataConstants.CATALOG_DATASET_NAME, 19, 19);
 
     private MetadataPrimaryIndexes() {
     }

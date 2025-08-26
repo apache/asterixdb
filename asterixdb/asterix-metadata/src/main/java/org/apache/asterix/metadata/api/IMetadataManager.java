@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -924,4 +925,10 @@ public interface IMetadataManager extends IMetadataBootstrap {
     List<Dataset> getAllDatasets(MetadataTransactionContext ctx) throws AlgebricksException;
 
     boolean isActive(TxnId txnId) throws AlgebricksException;
+
+    void addCatalog(MetadataTransactionContext ctx, Catalog catalog) throws AlgebricksException;
+
+    Catalog getCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
+
+    void dropCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
 }

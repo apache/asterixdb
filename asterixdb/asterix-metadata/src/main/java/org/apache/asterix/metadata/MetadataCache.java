@@ -29,6 +29,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -90,6 +91,8 @@ public class MetadataCache {
     // Key is DataverseName. Key of value map is the full-text config name
     protected final Map<String, Map<DataverseName, Map<String, FullTextConfigMetadataEntity>>> fullTextConfigs =
             new HashMap<>();
+    // Key is catalog name
+    protected final Map<String, Catalog> catalogs = new HashMap<>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -144,6 +147,7 @@ public class MetadataCache {
                                                             libraries.clear();
                                                             compactionPolicies.clear();
                                                             synonyms.clear();
+                                                            catalogs.clear();
                                                         }
                                                     }
                                                 }
@@ -266,6 +270,12 @@ public class MetadataCache {
                 return dataverseCompactionPolicies.put(compactionPolicy.getPolicyName(), compactionPolicy);
             }
             return null;
+        }
+    }
+
+    public Catalog addOrUpdateCatalog(Catalog catalog) {
+        synchronized (catalogs) {
+            return catalogs.put(catalog.getCatalogName(), catalog);
         }
     }
 
@@ -500,6 +510,12 @@ public class MetadataCache {
         }
     }
 
+    public Catalog dropCatalog(Catalog catalog) {
+        synchronized (catalogs) {
+            return catalogs.remove(catalog.getCatalogName());
+        }
+    }
+
     public Database getDatabase(String databaseName) {
         synchronized (databases) {
             return databases.get(databaseName);
@@ -630,6 +646,12 @@ public class MetadataCache {
         }
     }
 
+    public Catalog getCatalog(String name) {
+        synchronized (catalogs) {
+            return catalogs.get(name);
+        }
+    }
+
     public Function addFunctionIfNotExists(Function function) {
         synchronized (functions) {
             FunctionSignature signature = new FunctionSignature(function.getDatabaseName(), function.getDataverseName(),
@@ -706,6 +728,15 @@ public class MetadataCache {
             }
             if (!m.containsKey(configName)) {
                 return m.put(configName, configMetadataEntity);
+            }
+            return null;
+        }
+    }
+
+    public Catalog addCatalogIfNotExists(Catalog catalog) {
+        synchronized (catalogs) {
+            if (!catalogs.containsKey(catalog.getCatalogName())) {
+                return catalogs.put(catalog.getCatalogName(), catalog);
             }
             return null;
         }

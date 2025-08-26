@@ -100,6 +100,10 @@ public class MetadataIndexesProvider {
         return FullTextFilterEntity.of(usingDatabase);
     }
 
+    public CatalogEntity getCatalogEntity() {
+        return CatalogEntity.of(usingDatabase);
+    }
+
     public IMetadataIndex[] getMetadataIndexes() {
         if (isUsingDatabase()) {
             return new IMetadataIndex[] { getDatabaseEntity().getIndex(), getDataverseEntity().getIndex(),
@@ -109,7 +113,7 @@ public class MetadataIndexesProvider {
                     getFeedPolicyEntity().getIndex(), getLibraryEntity().getIndex(),
                     getCompactionPolicyEntity().getIndex(), getExternalFileEntity().getIndex(),
                     getFeedConnectionEntity().getIndex(), getFullTextConfigEntity().getIndex(),
-                    getFullTextFilterEntity().getIndex() };
+                    getFullTextFilterEntity().getIndex(), getCatalogEntity().getIndex() };
         } else {
             return new IMetadataIndex[] { getDataverseEntity().getIndex(), getDatasetEntity().getIndex(),
                     getDatatypeEntity().getIndex(), getIndexEntity().getIndex(), getSynonymEntity().getIndex(),
@@ -118,7 +122,7 @@ public class MetadataIndexesProvider {
                     getFeedPolicyEntity().getIndex(), getLibraryEntity().getIndex(),
                     getCompactionPolicyEntity().getIndex(), getExternalFileEntity().getIndex(),
                     getFeedConnectionEntity().getIndex(), getFullTextConfigEntity().getIndex(),
-                    getFullTextFilterEntity().getIndex() };
+                    getFullTextFilterEntity().getIndex(), getCatalogEntity().getIndex() };
         }
     }
 

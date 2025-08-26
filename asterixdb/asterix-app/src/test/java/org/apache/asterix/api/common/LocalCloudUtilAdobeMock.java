@@ -35,6 +35,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 
 // With adobe mock, the s3 objects will be found in /tmp or /var folder
 // Search for line "Successfully created {} as root folder" in the info log file
@@ -83,6 +84,14 @@ public class LocalCloudUtilAdobeMock {
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();
+        if (cleanStart) {
+            try {
+                client.deleteBucket(DeleteBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
+                LOGGER.info("Deleted bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
+            } catch (Exception ex) {
+                // do nothing
+            }
+        }
         client.createBucket(CreateBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
         LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
 

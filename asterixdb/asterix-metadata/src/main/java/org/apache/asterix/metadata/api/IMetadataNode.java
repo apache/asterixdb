@@ -28,6 +28,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -1021,4 +1022,22 @@ public interface IMetadataNode extends Remote, Serializable {
     List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException, RemoteException;
 
     boolean isActive(TxnId txnId) throws RemoteException;
+
+    /**
+     * Inserts a new catalog into the metadata, acquiring local locks on behalf of
+     * the given transaction id.
+     *
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param catalog
+     *            Catalog instance to be inserted.
+     * @throws AlgebricksException
+     *             For example, if the catalog already exists.
+     * @throws RemoteException remote exception
+     */
+    void addCatalog(TxnId txnId, Catalog catalog) throws AlgebricksException, RemoteException;
+
+    Catalog getCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException;
+
+    void dropCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException;
 }

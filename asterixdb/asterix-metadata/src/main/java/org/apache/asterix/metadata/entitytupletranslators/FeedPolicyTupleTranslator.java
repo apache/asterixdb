@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.entitytupletranslators;
 
 import java.io.DataOutput;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -30,6 +29,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -73,17 +73,8 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
         IACursor cursor =
                 ((AUnorderedList) feedPolicyRecord.getValueByPos(feedPolicyEntity.propertiesIndex())).getCursor();
-        Map<String, String> policyParamters = new HashMap<>();
-        while (cursor.next()) {
-            ARecord field = (ARecord) cursor.get();
-            String key =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
-            String value =
-                    ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
-            policyParamters.put(key, value);
-        }
-
-        return new FeedPolicyEntity(databaseName, dataverseName, policyName, description, policyParamters);
+        Map<String, String> policyParameters = TupleTranslatorUtils.getPropertiesFromIaCursor(cursor);
+        return new FeedPolicyEntity(databaseName, dataverseName, policyName, description, policyParameters);
     }
 
     @Override

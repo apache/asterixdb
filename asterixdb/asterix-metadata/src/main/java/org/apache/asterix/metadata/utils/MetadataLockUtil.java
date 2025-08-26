@@ -398,6 +398,18 @@ public class MetadataLockUtil implements IMetadataLockUtil {
         lockMgr.acquireDatasetExclusiveModificationLock(locks, database, dataverseName, datasetName);
     }
 
+    @Override
+    public void createCatalogBegin(IMetadataLockManager lockManager, LockList locks, String catalogName)
+            throws AlgebricksException {
+        lockManager.acquireCatalogWriteLock(locks, catalogName);
+    }
+
+    @Override
+    public void dropCatalogBegin(IMetadataLockManager lockMgr, LockList locks, String catalogName)
+            throws AlgebricksException {
+        lockMgr.acquireCatalogWriteLock(locks, catalogName);
+    }
+
     private static void lockIfDifferentNamespace(IMetadataLockManager lockMgr, LockList locks, String lockedDatabase,
             DataverseName lockedDataverse, String toBeLockedDatabase, DataverseName toBeLockedDataverse)
             throws AlgebricksException {

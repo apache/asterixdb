@@ -130,6 +130,9 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_FULL_TEXT_TOKENIZER = "Tokenizer";
     public static final String FIELD_NAME_FULL_TEXT_FILTER_PIPELINE = "FullTextFilterPipeline";
     public static final String FIELD_NAME_FULL_TEXT_STOPWORD_LIST = "StopwordList";
+    public static final String FIELD_NAME_CATALOG_NAME = "CatalogName";
+    public static final String FIELD_NAME_CATALOG_TYPE = "CatalogType";
+    public static final String FIELD_NAME_CATALOG_DETAILS = "CatalogDetails";
 
     //open field
     public static final String FIELD_NAME_CREATOR_NAME = "Name";
@@ -299,6 +302,22 @@ public final class MetadataRecordTypes {
     //---------------------------------- FullText Config and Filter -------------------------//
     public static final String RECORD_NAME_FULL_TEXT_CONFIG = "FullTextConfigRecordType";
     public static final String RECORD_NAME_FULL_TEXT_FILTER = "FullTextFilterRecordType";
+
+    //-------------------------------------- Catalog ---------------------------------------//
+    public static final String RECORD_NAME_CATALOG = "CatalogRecordType";
+    public static final int CATALOG_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 0;
+    public static final int CATALOG_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 1;
+    public static final ARecordType CATALOG_DETAILS_RECORDTYPE =
+            createRecordType(
+                    // RecordTypeName
+                    null,
+                    // FieldNames
+                    new String[] { FIELD_NAME_DATASOURCE_ADAPTER, FIELD_NAME_PROPERTIES },
+                    // FieldTypes
+                    new IAType[] { BuiltinType.ASTRING,
+                            new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null) },
+                    //IsOpen?
+                    true);
 
     // private members
     private MetadataRecordTypes() {
