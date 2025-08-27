@@ -60,6 +60,7 @@ import io.delta.kernel.Scan;
 import io.delta.kernel.Snapshot;
 import io.delta.kernel.data.FilteredColumnarBatch;
 import io.delta.kernel.data.Row;
+import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
 import io.delta.kernel.exceptions.KernelEngineException;
 import io.delta.kernel.exceptions.KernelException;
@@ -104,7 +105,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         configureJobConf(appCtx, conf, configuration);
         confFactory = new ConfFactory(conf);
         String tableMetadataPath = getTablePath(configuration);
-        Engine engine = DeltaEngine.create(conf);
+        Engine engine = DefaultEngine.create(conf);
         io.delta.kernel.Table table = io.delta.kernel.Table.forPath(engine, tableMetadataPath);
         Snapshot snapshot;
         try {
@@ -122,7 +123,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             ARecordType expectedType = HDFSUtils.getExpectedType(conf);
             Map<String, FunctionCallInformation> functionCallInformationMap =
                     HDFSUtils.getFunctionCallInformationMap(conf);
-            StructType fileSchema = snapshot.getSchema(engine);
+            StructType fileSchema = snapshot.getSchema();
             requiredSchema = visitor.clipType(expectedType, fileSchema, functionCallInformationMap);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -132,26 +133,26 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         Expression filterExpression = ((DeltaTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
         Scan scan;
         if (filterExpression != null) {
-            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema)
-                    .withFilter(engine, (Predicate) filterExpression).build();
+            scan = snapshot.getScanBuilder().withReadSchema(requiredSchema).withFilter((Predicate) filterExpression)
+                    .build();
             if (scan.getRemainingFilter().isPresent()) {
                 filterExpressionStr = PredicateSerDe.serializeExpressionToJson(scan.getRemainingFilter().get());
             } else {
                 filterExpressionStr = null;
             }
         } else {
-            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            scan = snapshot.getScanBuilder().withReadSchema(requiredSchema).build();
             filterExpressionStr = null;
         }
         scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
         List<Row> scanFiles;
         try {
             scanFiles = getScanFiles(scan, engine);
-        } catch (UnsupportedOperationException | IllegalStateException e) {
+        } catch (UnsupportedOperationException | IllegalStateException | KernelEngineException e) {
             // Delta kernel API failed to apply expression due to type mismatch.
             // We need to fall back to skip applying the filter and return all files.
             LOGGER.info("Exception encountered while getting delta table files to scan {}", e.getMessage());
-            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+            scan = snapshot.getScanBuilder().withReadSchema(requiredSchema).build();
             filterExpressionStr = null;
             scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
             scanFiles = getScanFiles(scan, engine);

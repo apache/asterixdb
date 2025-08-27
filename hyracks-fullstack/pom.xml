@@ -343,10 +343,6 @@
             <artifactId>json-smart</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-          </exclusion>
-          <exclusion>
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>jsp-api</artifactId>
           </exclusion>
@@ -472,6 +468,11 @@
       <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jdk8</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
@@ -648,6 +649,11 @@
         <version>2.4.11</version>
       </dependency>
       <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>10.0.2</version>
+      </dependency>
+      <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
         <version>${asm.version}</version>
@@ -675,6 +681,11 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client-runtime</artifactId>
+        <version>3.4.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client-api</artifactId>
         <version>3.4.1</version>
       </dependency>
     </dependencies>
