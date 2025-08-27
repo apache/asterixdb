@@ -2149,6 +2149,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             validateDatasetsStateAfterNamespaceDrop(mdProvider, mdTxnCtx, datasets);
 
+            beforeDropTxnCommit(mdProvider, mdTxnCtx, EntityDetails.newDatabase(databaseName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2334,6 +2335,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             validateDatasetsStateAfterNamespaceDrop(metadataProvider, mdTxnCtx, datasets);
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx, EntityDetails.newDataverse(databaseName, dataverseName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2537,6 +2539,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup,
                     sourceLoc, EnumSet.of(DropOption.IF_EXISTS), requestParameters.isForceDropDataset());
 
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx.getValue(),
+                    EntityDetails.newDataset(databaseName, dataverseName, datasetName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             return true;
         } catch (Exception e) {
@@ -2656,6 +2660,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // #. finally, delete the existing index
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, databaseName, dataverseName, datasetName, indexName);
             }
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx,
+                    EntityDetails.newIndex(databaseName, dataverseName, indexName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -3170,6 +3176,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, itemTypeDatabaseName,
                         dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             }
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx,
+                    EntityDetails.newView(databaseName, dataverseName, viewName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -3600,6 +3608,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, inlineType.getDatabaseName(),
                         inlineType.getDataverseName(), inlineType.getName());
             }
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx,
+                    EntityDetails.newFunction(databaseName, dataverseName, signature.getName(), signature.getArity()));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -4083,6 +4093,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.UNKNOWN_SYNONYM, stmtSynDrop.getSourceLocation(), synonymName);
             }
             MetadataManager.INSTANCE.dropSynonym(mdTxnCtx, databaseName, dataverseName, synonymName);
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx,
+                    EntityDetails.newSynonym(databaseName, dataverseName, synonymName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -6045,6 +6057,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void beforeTxnCommit(MetadataProvider metadataProvider, Creator creator, EntityDetails entityDetails)
             throws AlgebricksException {
+        //no op
+    }
+
+    protected void beforeDropTxnCommit(MetadataProvider mdProvider, MetadataTransactionContext mdTxnCtx,
+            EntityDetails entityDetails) throws AlgebricksException {
         //no op
     }
 
