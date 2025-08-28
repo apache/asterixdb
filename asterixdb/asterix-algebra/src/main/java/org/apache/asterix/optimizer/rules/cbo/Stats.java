@@ -186,13 +186,12 @@ public class Stats {
             if (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ))) {
                 return 0.5; // this may not be accurate obviously!
             } // we can do all relops here and other joins such as interval joins and spatial joins, the compile time might increase a lot
-
-            Index.SampleIndexDetails idxDetails1 = (Index.SampleIndexDetails) index1.getIndexDetails();
-            Index.SampleIndexDetails idxDetails2 = (Index.SampleIndexDetails) index2.getIndexDetails();
-            if ((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
-                    || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())) {
-                double sel = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
-                        joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
+            ILogicalOperator leafInput1 = joinEnum.leafInputs.get(idx1 - 1);
+            ILogicalOperator leafInput2 = joinEnum.leafInputs.get(idx2 - 1);
+            LogicalVariable var1 = exprUsedVars.get(0);
+            LogicalVariable var2 = exprUsedVars.get(1);
+            if (isJoinSelFromSamplesApplicable(leafInput1, leafInput2, index1, index2, var1, var2)) {
+                double sel = findJoinSelFromSamples(leafInput1, leafInput2, index1, index2, joinExpr, jOp);
                 if (sel > 0.0) { // if sel is 0.0 we call naiveJoinSelectivity
                     return sel;
                 }
@@ -201,6 +200,45 @@ public class Stats {
             double sel = naiveJoinSelectivity(exprUsedVars, card1, card2, idx1, idx2);
             return sel;
         }
+    }
+
+    private boolean isJoinSelFromSamplesApplicable(ILogicalOperator leafInput1, ILogicalOperator leafInput2,
+            Index index1, Index index2, LogicalVariable var1, LogicalVariable var2) throws AlgebricksException {
+        Index.SampleIndexDetails details1 = (Index.SampleIndexDetails) index1.getIndexDetails();
+        Index.SampleIndexDetails details2 = (Index.SampleIndexDetails) index2.getIndexDetails();
+        if (details1.getSourceCardinality() >= details1.getSampleCardinalityTarget()
+                && details2.getSourceCardinality() >= details2.getSampleCardinalityTarget()) {
+            return false;
+        }
+        double numDistinct1 = computeNumDistinct(leafInput1, var1, index1);
+        if (numDistinct1 < 0) {
+            return false;
+        }
+        double avgNumRowsPerValue1 = details1.getSourceCardinality() / numDistinct1;
+        double numDistinct2 = computeNumDistinct(leafInput2, var2, index2);
+        if (numDistinct2 < 0) {
+            return false;
+        }
+        double avgNumRowsPerValue2 = details2.getSourceCardinality() / numDistinct2;
+        return avgNumRowsPerValue1 * avgNumRowsPerValue2 * Math.min(numDistinct1, numDistinct2) <= Math
+                .max(Math.max(details1.getSourceCardinality(), details2.getSourceCardinality()), 750000);
+    }
+
+    private double computeNumDistinct(ILogicalOperator leafInput, LogicalVariable var, Index index)
+            throws AlgebricksException {
+        List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput, var, index);
+        if (result == null) {
+            return -1; // Negative value indicates failure
+        }
+        double numDistincts = findPredicateCardinality(result, true);
+        Index.SampleIndexDetails details = (Index.SampleIndexDetails) index.getIndexDetails();
+        if (numDistincts == 0) {
+            numDistincts = details.getSourceCardinality(); // All values are nulls
+        }
+        if (numDistincts == 0) {
+            numDistincts = 1; // Sample is empty
+        }
+        return numDistincts;
     }
 
     private double naiveJoinSelectivity(List<LogicalVariable> exprUsedVars, double card1, double card2, int idx1,
