@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
 import static java.util.UUID.randomUUID;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,9 +37,13 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 
 public class FakeIndexProvider implements IIndexProvider {
@@ -54,7 +59,63 @@ public class FakeIndexProvider implements IIndexProvider {
         }
 
         addSingleDataSourceIndexes(planStateTree.getCboPlanNode().getLeafs());
+        addArrayIndexes(planStateTree.getCboPlanNode().getLeafs());
         addJoinIndexes(planStateTree.getCboPlanNode().getJoins(), planStateTree.getDataSourceScanVariableMap());
+    }
+
+    private void addArrayIndexes(List<AdvisorScanPlanNode> scanPlanNodes) {
+        for (AdvisorScanPlanNode scanPlanNode : scanPlanNodes) {
+            DataSourceScanOperator scanOperator = scanPlanNode.getScanOperator();
+
+            if (!(scanOperator.getDataSource() instanceof DatasetDataSource dataSource)) {
+                continue;
+            }
+            DatasetFullyQualifiedName qualifiedName = dataSource.getDataset().getDatasetFullyQualifiedName();
+
+            ScanFilter scanFilter = scanPlanNode.getFilter();
+            List<UnnestFilterCondition> unnestFilterConditions = scanFilter.unnestFilterConditions();
+
+            Map<List<List<String>>, Index.ArrayIndexElement> unnestToProjectListMap = new HashMap<>();
+            Map<String, Index> datasetIndexes = filterIndexesMap.get(qualifiedName);
+            if (datasetIndexes == null) {
+                continue;
+            }
+
+            for (UnnestFilterCondition unnestFilterCondition : unnestFilterConditions) {
+                List<List<String>> unnestList = unnestFilterCondition.getUnnestList();
+                List<String> projectList = unnestFilterCondition.getProjectList();
+
+                ConstantExpression constantExpression = unnestFilterCondition.getRhs();
+                IAlgebricksConstantValue constantValue = constantExpression.getValue();
+                if (!(constantValue instanceof AsterixConstantValue asterixConstantValue)) {
+                    continue;
+                }
+                IAType iaType = asterixConstantValue.getObject().getType();
+
+                Index.ArrayIndexElement arrayIndexElement = unnestToProjectListMap.get(unnestList);
+                if (arrayIndexElement != null) {
+                    if (!arrayIndexElement.getProjectList().contains(projectList)) {
+                        arrayIndexElement.getProjectList().add(projectList);
+                        arrayIndexElement.getTypeList().add(iaType);
+                    }
+                } else {
+                    List<List<String>> projectListWrapper = new ArrayList<>();
+                    projectListWrapper.add(projectList);
+                    List<IAType> typeList = new ArrayList<>();
+                    typeList.add(iaType);
+
+                    arrayIndexElement = new Index.ArrayIndexElement(unnestList, projectListWrapper, typeList, 0);
+                    unnestToProjectListMap.put(unnestList, arrayIndexElement);
+                }
+            }
+
+            for (Map.Entry<List<List<String>>, Index.ArrayIndexElement> entry : unnestToProjectListMap.entrySet()) {
+                String indexName = "fake_array_index_" + randomUUID();
+                FakeIndex fakeIndex = new FakeIndex(qualifiedName.getDatabaseName(), qualifiedName.getDataverseName(),
+                        qualifiedName.getDatasetName(), indexName, entry.getValue());
+                datasetIndexes.put(indexName, fakeIndex);
+            }
+        }
     }
 
     private void addSingleDataSourceIndexes(List<AdvisorScanPlanNode> scanPlanNodes) {
@@ -72,7 +133,10 @@ public class FakeIndexProvider implements IIndexProvider {
             List<ScanFilterCondition> filterConditions = filter.filterConditions();
             HashSet<List<String>> datasetFieldNames = new HashSet<>();
             for (ScanFilterCondition filterCondition : filterConditions) {
-                datasetFieldNames.add(filterCondition.getLhsFieldAccessPath());
+                if (scanOperator.getScanVariables().contains(filterCondition.getScanVar())) {
+                    datasetFieldNames.add(filterCondition.getLhsFieldAccessPath());
+                }
+
             }
             singleDataSourceFieldNamesMap.put(fullyQualifiedName, new Pair<>(scanOperator, datasetFieldNames));
 

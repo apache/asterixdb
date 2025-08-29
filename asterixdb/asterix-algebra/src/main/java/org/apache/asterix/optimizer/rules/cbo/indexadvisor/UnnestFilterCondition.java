@@ -20,29 +20,32 @@ package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
 import java.util.List;
 
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class ScanFilterCondition {
+public class UnnestFilterCondition {
     private final FunctionIdentifier fi;
-    private final LogicalVariable scanVar;
-    private final List<String> lhsFieldAccessPath;
+    private final List<List<String>> unnestList;
+    private final List<String> projectList;
     private final ConstantExpression rhs;
 
-    public ScanFilterCondition(FunctionIdentifier fi, LogicalVariable scanVar, List<String> lhsFieldAccessPath,
+    public UnnestFilterCondition(FunctionIdentifier fi, List<List<String>> unnestList, List<String> projectList,
             ConstantExpression rhs) {
         this.fi = fi;
-        this.scanVar = scanVar;
-        this.lhsFieldAccessPath = lhsFieldAccessPath;
+        this.unnestList = unnestList;
+        this.projectList = projectList;
         this.rhs = rhs;
     }
 
-    public List<String> getLhsFieldAccessPath() {
-        return lhsFieldAccessPath;
+    public List<List<String>> getUnnestList() {
+        return unnestList;
     }
 
-    public LogicalVariable getScanVar() {
-        return scanVar;
+    public ConstantExpression getRhs() {
+        return rhs;
+    }
+
+    public List<String> getProjectList() {
+        return projectList;
     }
 }

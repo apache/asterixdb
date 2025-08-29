@@ -25,6 +25,7 @@ import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -121,36 +122,62 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
             DataverseName dataverse = jobGenParams.getDataverseName();
             String datasetName = jobGenParams.getDatasetName();
 
-            if(fakeIndexProvider == null) {
+            if (fakeIndexProvider == null) {
                 // Case when CBO can't parse the plan correctly and the fake index provider is not set.
                 return;
             }
             Index fakeIndex = fakeIndexProvider.getIndex(databaseName, dataverse, datasetName, indexName);
-            if (fakeIndex == null || !(fakeIndex.getIndexDetails() instanceof Index.ValueIndexDetails)) {
+            if (fakeIndex == null) {
                 // skips secondary primary index like
                 // create primary index sec_primary_idx on A;
                 return;
             }
-            Index actualIndex = lookupIndex(databaseName, dataverse, datasetName,
-                    ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), actualIndexProvider);
 
-            if (actualIndex != null
-                    && actualIndex.getIndexDetails() instanceof Index.ValueIndexDetails valueIndexDetails) {
-                indexAdvisor.addPresentAdvise(actualIndex.getIndexName(), valueIndexDetails.getKeyFieldNames(),
-                        databaseName, dataverse.getCanonicalForm(), datasetName);
-                return;
+            if (fakeIndex.getIndexDetails() instanceof Index.ValueIndexDetails) {
+                Index actualIndex = lookupValueIndex(databaseName, dataverse, datasetName,
+                        ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(),
+                        actualIndexProvider);
+
+                if (actualIndex != null
+                        && actualIndex.getIndexDetails() instanceof Index.ValueIndexDetails valueIndexDetails) {
+                    indexAdvisor.addPresentAdviseString(getCreateIndexClause(actualIndex.getIndexName(),
+                            valueIndexDetails.getKeyFieldNames(), databaseName, dataverse, datasetName));
+                    return;
+                }
+
+                indexAdvisor.addRecommendedAdviseString(getCreateIndexClause(
+                        getIndexName(((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames()),
+                        ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), databaseName,
+                        dataverse, datasetName));
+
+            } else if (fakeIndex.getIndexDetails() instanceof Index.ArrayIndexDetails fakeArrayIndexDetails) {
+                Index actualIndex = lookupArrayIndex(databaseName, dataverse, datasetName,
+                        ((Index.ArrayIndexDetails) fakeIndex.getIndexDetails()).getElementList(), actualIndexProvider);
+                if (actualIndex != null
+                        && actualIndex.getIndexDetails() instanceof Index.ArrayIndexDetails arrayIndexDetails) {
+                    indexAdvisor.addPresentAdviseString(getCreateArrayIndexClause(actualIndex.getIndexName(),
+                            arrayIndexDetails, databaseName, dataverse, datasetName));
+                }
+
+                indexAdvisor.addRecommendedAdviseString(
+                        getCreateArrayIndexClause(getArrayIndexName(fakeArrayIndexDetails.getElementList()),
+                                fakeArrayIndexDetails, databaseName, dataverse, datasetName));
             }
-
-            indexAdvisor.addRecommendedAdvise(
-                    getIndexNameClause(((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames()),
-                    ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), databaseName,
-                    dataverse.getCanonicalForm(), datasetName);
 
         }
 
     }
 
-    private static Index lookupIndex(String databaseName, DataverseName dataverseName, String datasetName,
+    private static Index lookupArrayIndex(String databaseName, DataverseName dataverseName, String datasetName,
+            List<Index.ArrayIndexElement> elementList, IIndexProvider indexProvider) throws AlgebricksException {
+        return indexProvider.getDatasetIndexes(databaseName, dataverseName, datasetName).stream()
+                .filter(index -> index.getIndexDetails() instanceof Index.ArrayIndexDetails)
+                .filter(index -> (((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList()
+                        .equals(elementList)))
+                .filter(index -> !index.isEnforced()).findFirst().orElse(null);
+    }
+
+    private static Index lookupValueIndex(String databaseName, DataverseName dataverseName, String datasetName,
             List<List<String>> fieldsNames, IIndexProvider indexProvider) throws AlgebricksException {
         return indexProvider.getDatasetIndexes(databaseName, dataverseName, datasetName).stream()
                 .filter(index -> index.getIndexDetails() instanceof Index.ValueIndexDetails)
@@ -159,9 +186,72 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                 .filter(index -> !index.isEnforced()).findFirst().orElse(null);
     }
 
-    public static String getIndexNameClause(List<List<String>> fields) {
+    public static String getIndexName(List<List<String>> fields) {
         return "idx_" + fields.stream().map(field -> String.join("_", field)).collect(Collectors.joining("_"))
                 .replaceAll(" ", "");
+    }
+
+    public static String getArrayIndexName(List<Index.ArrayIndexElement> fields) {
+        return "array_idx_" + fields.stream().map(
+                field -> field.getUnnestList().stream().map(f -> String.join("_", f)).collect(Collectors.joining("_")))
+                .collect(Collectors.joining("_")).replaceAll(" ", "");
+    }
+
+    public static String getCreateArrayIndexClause(String indexName, Index.ArrayIndexDetails arrayIndexDetails,
+            String databaseName, DataverseName dataverseName, String datasetName) {
+        return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName + "`"
+                + getArrayKeyFieldNamesClause(arrayIndexDetails) + " EXCLUDE UNKNOWN KEY;";
+    }
+
+    public static String getCreateIndexClause(String indexName, List<List<String>> keyFieldNames, String databaseName,
+            DataverseName dataverseName, String datasetName) {
+        return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName + "`"
+                + getKeyFieldNamesClause(keyFieldNames) + ";";
+    }
+
+    public static String getArrayKeyFieldNamesClause(Index.ArrayIndexDetails arrayIndexDetails) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
+
+        for (Index.ArrayIndexElement arrayIndexElement : arrayIndexDetails.getElementList()) {
+            List<List<String>> unnestList = arrayIndexElement.getUnnestList();
+            List<List<String>> projectList = arrayIndexElement.getProjectList();
+            List<IAType> typeList = arrayIndexElement.getTypeList();
+            int size = unnestList.size();
+            for (int i = 0; i < size; i++) {
+                builder.append("UNNEST ");
+                builder.append(unnestList.get(i).stream().map(s -> "`" + s + "`").collect(Collectors.joining(".")));
+                builder.append(" ");
+            }
+
+            if (projectList.isEmpty() || (projectList.size() == 1 && projectList.getFirst().isEmpty())) {
+                builder.append(": ");
+                builder.append(typeList.getFirst());
+            } else {
+
+                for (int i = 0; i < projectList.size(); i++) {
+                    if (i == 0) {
+                        builder.append("SELECT ");
+                    }
+                    builder.append(
+                            projectList.get(i).stream().map(s -> "`" + s + "`").collect(Collectors.joining(".")));
+                    builder.append(": ");
+                    builder.append(typeList.get(i));
+                    if (i < projectList.size() - 1) {
+                        builder.append(", ");
+                    }
+                }
+            }
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+    public static String getKeyFieldNamesClause(List<List<String>> keyFieldNames) {
+        return keyFieldNames.stream()
+                .map(fields -> fields.stream().map(s -> "`" + s + "`").collect(Collectors.joining(".")))
+                .collect(Collectors.joining(",", "(", ")"));
+
     }
 
 }

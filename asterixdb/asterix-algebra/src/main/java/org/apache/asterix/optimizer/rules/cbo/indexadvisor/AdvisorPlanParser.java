@@ -78,7 +78,7 @@ public class AdvisorPlanParser {
 
     private static AbstractAdvisorPlanNode getJoinOpsAndLeafInputs(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        if (onlyAssigns(op)) {
+        if (isAssignLeadingToJoin(op)) {
             AbstractBinaryJoinOperator skipAssignOp = (AbstractBinaryJoinOperator) skipPastAssigns(op);
             AbstractAdvisorPlanNode leftPlanNode =
                     getJoinOpsAndLeafInputs(skipAssignOp.getInputs().get(0).getValue(), context);
@@ -100,7 +100,7 @@ public class AdvisorPlanParser {
         }
     }
 
-    private static boolean onlyAssigns(ILogicalOperator op) {
+    private static boolean isAssignLeadingToJoin(ILogicalOperator op) {
         while (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator aOp = (AssignOperator) op;
             int count = numVarRefExprs(aOp);

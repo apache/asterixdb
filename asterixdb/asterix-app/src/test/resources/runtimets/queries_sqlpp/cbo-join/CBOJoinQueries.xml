@@ -46,4 +46,14 @@
             <output-dir compare="Text">join-advise</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="array-simple-advise">
+            <output-dir compare="Text">array-simple-advise</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="nested-array-index">
+            <output-dir compare="Text">nested-array-index</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>

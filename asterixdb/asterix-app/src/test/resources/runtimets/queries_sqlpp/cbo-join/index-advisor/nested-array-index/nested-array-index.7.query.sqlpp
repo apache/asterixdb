@@ -1,0 +1,52 @@
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+--     distribute result [$$61] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--   project ([$$61]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--     assign [$$61] <- [{"o": $$o}] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+-- select ($$58) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--         subplan {
+--                   aggregate [$$58] <- [empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+-- select (not(if-missing-or-null(and(gt($$67, 100), lt($$68, 5.0)), false))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                       assign [$$68] <- [$$i.getField("price")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                         assign [$$67] <- [$$i.getField("qty")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                           unnest $$i <- scan-collection($$65) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                             nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+-- select (gt(len($$65), 0)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--             assign [$$65] <- [$$f3.getField("items")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--               unnest $$f3 <- scan-collection($$64) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                 assign [$$64] <- [$$n1.getField("f3")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                   unnest $$n1 <- scan-collection($$63) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                     assign [$$63] <- [$$69.getField("f2")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                       assign [$$69] <- [$$o.getField("f1")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                         data-scan []<-[$$62, $$o] <- Default.A [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+
+
+
+ADVISE
+SELECT *
+FROM A o, o.g1.g2 n1, n1.g3 g3
+WHERE LEN(g3.items) > 0 AND
+(EVERY i IN g3.items SATISFIES i.qty > 100 AND i.price < 5.00);

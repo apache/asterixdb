@@ -1,0 +1,1 @@
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX array_idx_a_b_c ON `Default`.`test`.`A`(UNNEST `a`.`b`.`c` : string) EXCLUDE UNKNOWN KEY;"}]}}}}]

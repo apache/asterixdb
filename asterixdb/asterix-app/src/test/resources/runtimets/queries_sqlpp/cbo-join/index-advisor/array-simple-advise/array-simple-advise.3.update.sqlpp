@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
-import java.util.List;
+use test;
 
-public record ScanFilter(List<ScanFilterCondition>filterConditions,List<UnnestFilterCondition>unnestFilterConditions){
 
-}
+ANALYZE DATASET A with {"sample": "high", "sample-seed": 2};

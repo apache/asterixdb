@@ -1550,12 +1550,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void errorOutIndexAdvisorSampleNotFound(DataSourceScanOperator scanOperator, IOptimizationContext context) throws AlgebricksException {
+    private void errorOutIndexAdvisorSampleNotFound(DataSourceScanOperator scanOperator, IOptimizationContext context)
+            throws AlgebricksException {
         if (!(scanOperator.getDataSource() instanceof DatasetDataSource dataSource)) {
             return;
         }
         DatasetFullyQualifiedName fullyQualifiedName = dataSource.getDataset().getDatasetFullyQualifiedName();
-        throw new AlgebricksException(ErrorCode.INDEX_ADVISOR_SAMPLE_NOT_FOUND, createSampleStatement(fullyQualifiedName));
+        throw new AlgebricksException(ErrorCode.INDEX_ADVISOR_SAMPLE_NOT_FOUND,
+                createSampleStatement(fullyQualifiedName));
     }
 
     private static String createSampleStatement(DatasetFullyQualifiedName dqn) {

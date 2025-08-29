@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
-import java.util.List;
 
-public record ScanFilter(List<ScanFilterCondition>filterConditions,List<UnnestFilterCondition>unnestFilterConditions){
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-}
+CREATE DATASET A PRIMARY KEY ( a_0 : integer);
+
+CREATE INDEX A_idx
+ON A (UNNEST categories:STRING)
+EXCLUDE UNKNOWN KEY;

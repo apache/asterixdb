@@ -42,4 +42,12 @@ public class FakeIndex extends Index {
                 , false, isPrimary, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
     }
 
+    public FakeIndex(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
+            ArrayIndexElement arrayIndexElement) {
+        super(databaseName, dataverseName, datasetName, indexName, DatasetConfig.IndexType.ARRAY,
+                new ArrayIndexDetails(Collections.singletonList(arrayIndexElement), false), false, false,
+                MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
+
+    }
+
 }

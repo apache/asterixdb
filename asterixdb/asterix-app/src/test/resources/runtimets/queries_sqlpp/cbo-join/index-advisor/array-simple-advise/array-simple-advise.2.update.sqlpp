@@ -16,10 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
-import java.util.List;
 
-public record ScanFilter(List<ScanFilterCondition>filterConditions,List<UnnestFilterCondition>unnestFilterConditions){
+use test;
 
-}
+INSERT INTO A(
+    SELECT VALUE    {"a_0": i, "a_1": i%20 , "a_2" : i , "categories": ["Drink"],
+     "items" : [ { "qty" : 80 , "price" : 6.0 }   ],
+     "orders": [ { "delivery_time": 1  }, { "delivery_time": 2  } , { "delivery_time": 3  } , { "delivery_time": 4  } , { "delivery_time": 5  } ]
+    }
+    FROM range(1, 1000) i
+);
+
+INSERT INTO A(
+    SELECT VALUE    {"a_0": i, "a_1": i%20 , "a_2" : i , "categories": ["Food"],
+
+    "items" : [ { "qty" : 120 , "price" : 2.0 }   ],
+    "orders": [ { "delivery_time": 6 }, { "delivery_time": 7 } , { "delivery_time": 8 } , { "delivery_time": 9 } , { "delivery_time": 10 }, { "delivery_time": 11 } ]
+     }
+    FROM range(1001, 1003) i
+);
+

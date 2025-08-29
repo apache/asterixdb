@@ -1,0 +1,46 @@
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+-- distribute result [$$58] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--   project ([$$58]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--     distinct ([$$58]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--       assign [$$58] <- [{"o": $$o}] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+-- select (and(gt($$64, 100), gt($$63, 0))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--           assign [$$64] <- [$$i.getField("qty")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--             assign [$$63] <- [$$i.getField("price")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--               unnest $$i <- scan-collection($$62) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                 assign [$$62] <- [$$67.getField("f6")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                   assign [$$67] <- [$$n3.getField("f5")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                     unnest $$n3 <- scan-collection($$61) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                       assign [$$61] <- [$$66.getField("f4")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                         assign [$$66] <- [$$n2.getField("f3")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                           unnest $$n2 <- scan-collection($$60) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                             assign [$$60] <- [$$65.getField("f2")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                               assign [$$65] <- [$$o.getField("f1")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                                 data-scan []<-[$$59, $$o] <- Default.A [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                                   empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+
+
+ADVISE
+SELECT DISTINCT o
+FROM A o, o.k1.k2 n2, n2.k3.k4 n3, n3.k5.k6 i
+WHERE i.qty > 100 AND i.price < 5.0;

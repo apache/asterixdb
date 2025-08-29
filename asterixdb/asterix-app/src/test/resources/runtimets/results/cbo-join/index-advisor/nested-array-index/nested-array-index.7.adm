@@ -1,0 +1,1 @@
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX array_idx_g1_g2_g3_items ON `Default`.`test`.`A`(UNNEST `g1`.`g2` UNNEST `g3` UNNEST `items` SELECT `qty`: bigint, `price`: double) EXCLUDE UNKNOWN KEY;"}]}}}}]

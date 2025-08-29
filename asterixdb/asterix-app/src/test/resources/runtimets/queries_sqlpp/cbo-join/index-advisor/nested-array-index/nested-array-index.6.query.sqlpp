@@ -1,0 +1,49 @@
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+--     distribute result [$$55] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--   project ([$$55]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--     assign [$$55] <- [{"p": $$p}] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+-- select ($$53) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--         subplan {
+--                   aggregate [$$53] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+-- select (eq($$c, "Food")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                       unnest $$c <- scan-collection($$59) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |LOCAL|
+--                } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--           assign [$$59] <- [$$n2.getField("categories")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--             unnest $$n2 <- scan-collection($$58) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--               assign [$$58] <- [$$62.getField("f5")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                 assign [$$62] <- [$$n1.getField("f4")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                   unnest $$n1 <- scan-collection($$57) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                     assign [$$57] <- [$$61.getField("f3")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                       assign [$$61] <- [$$60.getField("f2")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                         assign [$$60] <- [$$p.getField("f1")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                           data-scan []<-[$$56, $$p] <- Default.A [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+--                             empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0] -- |PARTITIONED|
+
+
+ADVISE
+SELECT *
+FROM A p, p.f1.f2.f3 n1, n1.f4.f5 n2
+WHERE SOME c IN n2.categories SATISFIES c = "Food";
