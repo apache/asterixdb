@@ -312,6 +312,14 @@ public class APIFramework {
             builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
             IndexAdvisor indexAdvisor = new IndexAdvisor(isAdviceOnly);
+
+            if (isAdviceOnly) {
+                if (!physOptConf.getCBOMode() && !physOptConf.getCBOTestMode()) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                            "Index advise cannot be used without CBO mode.");
+                }
+            }
+
             IRuleSetKind ruleSetKind = isAdviceOnly ? LOGICAL_ADVISOR : QUERY;
             ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter(), ruleSetKind,
                     indexAdvisor);

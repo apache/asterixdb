@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
@@ -71,6 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
@@ -140,8 +143,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
 
-        boolean cboMode = this.getCBOMode(context);
-        boolean cboTestMode = this.getCBOTestMode(context);
+        boolean cboMode = getCBOMode(context);
+        boolean cboTestMode = getCBOTestMode(context);
 
         if (!(cboMode || cboTestMode)) {
             return false;
@@ -215,6 +218,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             joinEnum.stats = new Stats(context, joinEnum);
             if (cboMode) {
                 if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
+                    if (adviseIndex) {
+                        errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
+                    }
                     return cleanUp();
                 }
             }
@@ -278,6 +284,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 fakeLeafInputsMap, context, indexProvider);
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
+                if (adviseIndex) {
+                    errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
+                }
                 return cleanUp();
             }
         }
@@ -768,12 +777,12 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private boolean getCBOMode(IOptimizationContext context) {
+    public static boolean getCBOMode(IOptimizationContext context) {
         PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
         return physOptConfig.getCBOMode();
     }
 
-    private boolean getCBOTestMode(IOptimizationContext context) {
+    public static boolean getCBOTestMode(IOptimizationContext context) {
         PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
         return physOptConfig.getCBOTestMode();
     }
@@ -1521,4 +1530,37 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
         return (leafInputs.size() == n);
     }
+
+    private void errorOutIndexAdvisorSamplesNotFound(List<ILogicalOperator> leafInputs, IOptimizationContext context)
+            throws AlgebricksException {
+        for (ILogicalOperator li : leafInputs) {
+            DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(li);
+            if (scanOp == null) {
+                // Scan Operator not found
+                continue;
+            }
+            Stats handle = joinEnum.getStatsHandle();
+            if (handle == null) {
+                continue;
+            }
+            Index index = handle.findSampleIndex(scanOp, context);
+            if (index == null) {
+                errorOutIndexAdvisorSampleNotFound(scanOp, context);
+            }
+        }
+    }
+
+    private void errorOutIndexAdvisorSampleNotFound(DataSourceScanOperator scanOperator, IOptimizationContext context) throws AlgebricksException {
+        if (!(scanOperator.getDataSource() instanceof DatasetDataSource dataSource)) {
+            return;
+        }
+        DatasetFullyQualifiedName fullyQualifiedName = dataSource.getDataset().getDatasetFullyQualifiedName();
+        throw new AlgebricksException(ErrorCode.INDEX_ADVISOR_SAMPLE_NOT_FOUND, createSampleStatement(fullyQualifiedName));
+    }
+
+    private static String createSampleStatement(DatasetFullyQualifiedName dqn) {
+        return "ANALYZE COLLECTION `" + dqn.getDatabaseName() + "`.`" + dqn.getDataverseName() + "`.`"
+                + dqn.getDatasetName() + "`;";
+    }
+
 }

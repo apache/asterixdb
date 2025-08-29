@@ -130,7 +130,6 @@ public class IndexAdvisor {
         }
 
         public String getCreateIndexClause() {
-
             return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName
                     + "`" + getKeyFieldNamesClause() + ";";
         }

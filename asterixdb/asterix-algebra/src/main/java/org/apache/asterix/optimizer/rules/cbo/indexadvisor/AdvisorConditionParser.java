@@ -47,11 +47,27 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 public class AdvisorConditionParser {
 
+    private static class ExprRef {
+        private final ILogicalExpression expr;
+        private final ILogicalOperator op;
+
+        public ExprRef(Mutable<ILogicalExpression> expr, ILogicalOperator op) {
+            this.expr = expr.getValue().cloneExpression();
+            this.op = op;
+        }
+
+        public ILogicalExpression getExpr() {
+            return expr;
+        }
+
+        public ILogicalOperator getOp() {
+            return op;
+        }
+    }
+
     public static ScanFilter parseScanNode(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-
-        List<Mutable<ILogicalExpression>> filterExprs = new ArrayList<>();
-        IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(op, context);
+        List<ExprRef> filterExprRefs = new ArrayList<>();
         ILogicalOperator tempOp = op;
         do {
             if (tempOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
@@ -59,35 +75,33 @@ public class AdvisorConditionParser {
                 ILogicalExpression condition = selectOp.getCondition().getValue();
                 List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
                 if (condition.splitIntoConjuncts(conjs)) {
-                    filterExprs.addAll(conjs);
+                    filterExprRefs.addAll(conjs.stream().map(expr -> new ExprRef(expr, selectOp)).toList());
                 } else {
-                    filterExprs.add(selectOp.getCondition());
+                    filterExprRefs.add(new ExprRef(selectOp.getCondition(), selectOp));
                 }
             }
             tempOp = tempOp.getInputs().getFirst().getValue();
         } while (tempOp.hasInputs());
 
-        filterExprs = OperatorManipulationUtil.cloneExpressions(filterExprs);
-
-        filterExprs.removeIf(expr -> !(expr.getValue() instanceof AbstractFunctionCallExpression));
+        filterExprRefs.removeIf(exprRef -> !(exprRef.getExpr() instanceof AbstractFunctionCallExpression));
 
         tempOp = op;
         do {
             if (tempOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                replaceExprsWithAssign((AssignOperator) tempOp, filterExprs);
+                replaceExprsWithAssign((AssignOperator) tempOp, filterExprRefs);
             }
             tempOp = tempOp.getInputs().getFirst().getValue();
         } while (tempOp.hasInputs());
 
         List<ScanFilterCondition> filterConditions = new ArrayList<>();
 
-        for (Mutable<ILogicalExpression> filterExpr : filterExprs) {
-            ScanFilterCondition filterCondition = parseCondition(filterExpr.getValue(), typeEnv);
+        for (ExprRef exprRef : filterExprRefs) {
+            IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(exprRef.getOp(), context);
+            ScanFilterCondition filterCondition = parseCondition(exprRef.getExpr(), typeEnv);
             if (filterCondition != null) {
                 filterConditions.add(filterCondition);
             }
         }
-
         return new ScanFilter(filterConditions);
     }
 
@@ -96,9 +110,7 @@ public class AdvisorConditionParser {
         if (!(logicalExpression instanceof AbstractFunctionCallExpression expr)) {
             return null;
         }
-
         FunctionIdentifier fi = expr.getFunctionIdentifier();
-
         if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(new Pair<>(fi, false))) {
             return null;
         }
@@ -137,6 +149,9 @@ public class AdvisorConditionParser {
 
             expr = functionCallExpr.getArguments().getFirst().getValue();
         }
+        if (fieldNames.isEmpty()) {
+            return null;
+        }
 
         VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
         LogicalVariable var = varRef.getVariableReference();
@@ -145,23 +160,21 @@ public class AdvisorConditionParser {
 
     public static JoinFilter parseJoinNode(AbstractBinaryJoinOperator joinOp, IOptimizationContext context)
             throws AlgebricksException {
-        List<Mutable<ILogicalExpression>> joinExprs = new ArrayList<>();
-        IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(joinOp, context);
-
+        List<ExprRef> joinExprs = new ArrayList<>();
         ILogicalExpression joinExpression = joinOp.getCondition().getValue();
         List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
         if (joinExpression.splitIntoConjuncts(conjs)) {
-            joinExprs.addAll(conjs);
+            joinExprs.addAll(conjs.stream().map(expr -> new ExprRef(expr, joinOp)).toList());
         } else {
-            joinExprs.add(joinOp.getCondition());
+            joinExprs.add(new ExprRef(joinOp.getCondition(), joinOp));
         }
-        joinExprs = OperatorManipulationUtil.cloneExpressions(joinExprs);
-        traverseAndReplace(joinOp, joinExprs);
 
+        traverseAndReplace(joinOp, joinExprs);
         List<JoinFilterCondition> joinConditions = new ArrayList<>();
 
-        for (Mutable<ILogicalExpression> joinExpr : joinExprs) {
-            JoinFilterCondition joinCondition = parseJoinCondition(joinExpr.getValue(), typeEnv);
+        for (ExprRef joinExprRef : joinExprs) {
+            IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(joinExprRef.getOp(), context);
+            JoinFilterCondition joinCondition = parseJoinCondition(joinExprRef.getExpr(), typeEnv);
             if (joinCondition != null) {
                 joinConditions.add(joinCondition);
             }
@@ -170,25 +183,22 @@ public class AdvisorConditionParser {
         return new JoinFilter(joinConditions);
     }
 
-    private static void traverseAndReplace(AbstractLogicalOperator op, List<Mutable<ILogicalExpression>> exprs) {
-
+    private static void traverseAndReplace(AbstractLogicalOperator op, List<ExprRef> exprs) {
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             replaceExprsWithAssign((AssignOperator) op, exprs);
         }
-
         for (Mutable<ILogicalOperator> input : op.getInputs()) {
             traverseAndReplace((AbstractLogicalOperator) input.getValue(), exprs);
         }
-
     }
 
-    public static void replaceExprsWithAssign(AssignOperator assignOp, List<Mutable<ILogicalExpression>> exprs) {
-        for (Mutable<ILogicalExpression> filterExpr : exprs) {
-            if (filterExpr.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+    private static void replaceExprsWithAssign(AssignOperator assignOp, List<ExprRef> exprRefs) {
+        for (ExprRef exprRef : exprRefs) {
+            if (exprRef.getExpr().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 continue;
             }
             for (int i = 0; i < assignOp.getVariables().size(); i++) {
-                OperatorManipulationUtil.replaceVarWithExpr((AbstractFunctionCallExpression) filterExpr.getValue(),
+                OperatorManipulationUtil.replaceVarWithExpr((AbstractFunctionCallExpression) exprRef.getExpr(),
                         assignOp.getVariables().get(i), assignOp.getExpressions().get(i).getValue());
             }
         }

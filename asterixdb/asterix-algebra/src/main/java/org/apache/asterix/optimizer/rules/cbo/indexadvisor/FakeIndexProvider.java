@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
 import static java.util.UUID.randomUUID;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,6 +132,9 @@ public class FakeIndexProvider implements IIndexProvider {
         for (Map.Entry<DatasetFullyQualifiedName, Set<List<String>>> entry : joinDataSourceFieldNamesMap.entrySet()) {
             DatasetFullyQualifiedName qualifiedName = entry.getKey();
             Set<List<String>> fieldNames = entry.getValue();
+            if (fieldNames.isEmpty()) {
+                continue;
+            }
 
             joinIndexEnumerator.init(fieldNames);
             Iterator<List<List<String>>> itr = joinIndexEnumerator.getIterator();
@@ -169,8 +173,8 @@ public class FakeIndexProvider implements IIndexProvider {
     @Override
     public List<Index> getDatasetIndexes(String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException {
-        return filterIndexesMap.get(new DatasetFullyQualifiedName(database, dataverseName, datasetName)).values()
-                .stream().toList();
+        return filterIndexesMap.getOrDefault(new DatasetFullyQualifiedName(database, dataverseName, datasetName),
+                Collections.emptyMap()).values().stream().toList();
     }
 
 }

@@ -138,7 +138,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         clear();
 
         boolean adviseIndex = context.getIndexAdvisor().getAdvise();
-        if (adviseIndex) {
+        if (adviseIndex && context.getIndexAdvisor().getFakeIndexProvider() != null) {
             setMetadataIndexDeclarations(context, (IIndexProvider) context.getIndexAdvisor().getFakeIndexProvider());
         } else {
             setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());

@@ -121,7 +121,16 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
             DataverseName dataverse = jobGenParams.getDataverseName();
             String datasetName = jobGenParams.getDatasetName();
 
+            if(fakeIndexProvider == null) {
+                // Case when CBO can't parse the plan correctly and the fake index provider is not set.
+                return;
+            }
             Index fakeIndex = fakeIndexProvider.getIndex(databaseName, dataverse, datasetName, indexName);
+            if (fakeIndex == null || !(fakeIndex.getIndexDetails() instanceof Index.ValueIndexDetails)) {
+                // skips secondary primary index like
+                // create primary index sec_primary_idx on A;
+                return;
+            }
             Index actualIndex = lookupIndex(databaseName, dataverse, datasetName,
                     ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), actualIndexProvider);
 
