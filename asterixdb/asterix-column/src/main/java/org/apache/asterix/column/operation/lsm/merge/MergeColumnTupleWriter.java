@@ -351,4 +351,13 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
 
     public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
     }
+
+    @Override
+    public void resetTemporaryBufferForCurrentTuple() {
+
+    }
+
+    public int getRequiredTemporaryBuffersCountIncludingCurrentTuple() {
+        return columnMetadata.getRequiredTemporaryBuffersCount();
+    }
 }

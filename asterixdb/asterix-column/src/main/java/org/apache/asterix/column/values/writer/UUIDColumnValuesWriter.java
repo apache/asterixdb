@@ -25,7 +25,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 
-final class UUIDColumnValuesWriter extends StringColumnValuesWriter {
+public final class UUIDColumnValuesWriter extends StringColumnValuesWriter {
 
     public UUIDColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
             boolean collection, boolean filtered) {
@@ -41,5 +41,14 @@ final class UUIDColumnValuesWriter extends StringColumnValuesWriter {
     @Override
     protected ATypeTag getTypeTag() {
         return ATypeTag.UUID;
+    }
+
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(filtered);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        return ParquetPlainFixedLengthValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
     }
 }

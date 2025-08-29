@@ -78,6 +78,11 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
     public abstract int getPrimaryKeysEstimatedSize();
 
     /**
+     * Reset the temporary buffer for the current tuple
+     */
+    public abstract void resetTemporaryBufferForCurrentTuple();
+
+    /**
      * Writes the tuple into a temporary internal buffers
      *
      * @param tuple The tuple to be written
@@ -125,4 +130,5 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
         }
     }
 
+    public abstract int getRequiredTemporaryBuffersCountIncludingCurrentTuple();
 }

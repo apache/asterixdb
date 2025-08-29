@@ -35,6 +35,8 @@ import org.apache.parquet.io.ParquetEncodingException;
  * Re-implementation of {@link PlainValuesWriter}
  */
 public class ParquetPlainFixedLengthValuesWriter extends AbstractParquetValuesWriter {
+    public static final int REQUIRED_TEMPORARY_BUFFERS = 1; // 1 for output stream
+
     private final AbstractBytesOutputStream outputStream;
     private final ValueOutputStream out;
 

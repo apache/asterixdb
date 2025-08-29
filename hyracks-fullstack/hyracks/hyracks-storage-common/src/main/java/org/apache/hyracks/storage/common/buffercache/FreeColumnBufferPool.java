@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.util.StorageUtil;
@@ -57,6 +59,21 @@ public class FreeColumnBufferPool implements IColumnBufferPool {
 
     @Override
     public void close() {
+
+    }
+
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
 
     }
 }

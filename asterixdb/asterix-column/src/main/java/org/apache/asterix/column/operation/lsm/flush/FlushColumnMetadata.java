@@ -88,11 +88,13 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     private boolean changed;
     protected int level;
     protected int repeated;
+    protected int requiredTemporaryBuffersCount;
 
     public FlushColumnMetadata(ARecordType datasetType, ARecordType metaType, List<List<String>> primaryKeys,
             List<Integer> keySourceIndicator, IColumnValuesWriterFactory columnWriterFactory,
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef) throws HyracksDataException {
         super(datasetType, metaType, primaryKeys.size());
+        this.requiredTemporaryBuffersCount = 0;
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
         this.orderedColumns = new IntOpenHashSet();
@@ -130,10 +132,11 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     public FlushColumnMetadata(ARecordType datasetType, ARecordType metaType, int numPrimaryKeys,
             boolean metaContainsKeys, IColumnValuesWriterFactory columnWriterFactory,
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef, List<IColumnValuesWriter> columnWriters,
-            IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
-            Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
+            int requiredTemporaryBuffers, IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root,
+            ObjectSchemaNode metaRoot, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
             ArrayBackedValueStorage serializedMetadata) {
         super(datasetType, metaType, numPrimaryKeys);
+        this.requiredTemporaryBuffersCount = requiredTemporaryBuffers;
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
         this.orderedColumns = new IntOpenHashSet();
@@ -253,7 +256,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
         //ColumnWriter
         List<IColumnValuesWriter> writers = new ArrayList<>();
-        deserializeWriters(input, writers, columnWriterFactory);
+        int requiredTemporaryBuffers = deserializeWriters(input, writers, columnWriterFactory);
 
         //FieldNames
         IFieldNamesDictionary fieldNamesDictionary = AbstractFieldNamesDictionary.deserialize(input);
@@ -270,7 +273,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         schemaStorage.append(serializedMetadata);
         logSchema(root, metaRoot, fieldNamesDictionary);
         return new FlushColumnMetadata(datasetType, metaType, numPrimaryKeys, metaContainsKeys, columnWriterFactory,
-                multiPageOpRef, writers, fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage);
+                multiPageOpRef, writers, requiredTemporaryBuffers, fieldNamesDictionary, root, metaRoot,
+                definitionLevels, schemaStorage);
     }
 
     @Override
@@ -301,12 +305,17 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         }
     }
 
-    public static void deserializeWriters(DataInput input, List<IColumnValuesWriter> writers,
+    public static int deserializeWriters(DataInput input, List<IColumnValuesWriter> writers,
             IColumnValuesWriterFactory columnWriterFactory) throws IOException {
+        int numberOfRequiredTemporaryBuffers = 0;
         int numberOfWriters = input.readInt();
         for (int i = 0; i < numberOfWriters; i++) {
-            writers.add(AbstractColumnValuesWriter.deserialize(input, columnWriterFactory));
+            IColumnValuesWriter writer = AbstractColumnValuesWriter.deserialize(input, columnWriterFactory);
+            numberOfRequiredTemporaryBuffers += writer.getRequiredTemporaryBuffersCount();
+            writers.add(writer);
         }
+
+        return numberOfRequiredTemporaryBuffers;
     }
 
     /* ********************************************************
@@ -578,6 +587,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
                 if (multiPageOpRef.getValue() != null) {
                     writer.reset();
                 }
+                requiredTemporaryBuffersCount += writer.getRequiredTemporaryBuffersCount();
                 addColumn(columnIndex, writer);
                 return new PrimitiveSchemaNode(columnIndex, normalizedTypeTag, primaryKey);
             default:
@@ -618,4 +628,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         return metaContainsKeys;
     }
 
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffersCount;
+    }
 }

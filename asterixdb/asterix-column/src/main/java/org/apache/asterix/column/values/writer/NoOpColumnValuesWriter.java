@@ -121,4 +121,13 @@ public class NoOpColumnValuesWriter implements IColumnValuesWriter {
     public void serialize(DataOutput output) throws IOException {
 
     }
+
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(false);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        return 0;
+    }
 }

@@ -222,6 +222,11 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
+    public void resetTemporaryBufferForCurrentTuple() {
+        columnMetadataWithCurrentTuple.resetBufferCount();
+    }
+
+    @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
         //This from an in-memory component, hence the cast
         LSMBTreeTupleReference btreeTuple = (LSMBTreeTupleReference) tuple;
@@ -282,5 +287,12 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
 
     protected void writeMeta(LSMBTreeTupleReference btreeTuple) throws HyracksDataException {
         //NoOp
+    }
+
+    @Override
+    public int getRequiredTemporaryBuffersCountIncludingCurrentTuple() {
+        int requiredBuffers = columnMetadata.getRequiredTemporaryBuffersCount()
+                + columnMetadataWithCurrentTuple.getRequiredTemporaryBuffersCountForCurrentTuple();
+        return requiredBuffers;
     }
 }
