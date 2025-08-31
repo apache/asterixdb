@@ -174,6 +174,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -191,6 +192,12 @@ public class TestExecutor {
      * Static variables
      */
     protected static final Logger LOGGER = LogManager.getLogger();
+
+    static {
+        StreamReadConstraints.overrideDefaultStreamReadConstraints(
+                StreamReadConstraints.builder().maxStringLength(Integer.MAX_VALUE).build());
+    }
+
     private static final ObjectMapper OM = new ObjectMapper();
     private static final ObjectWriter OBJECT_WRITER = OM.writer();
     private static final ObjectReader JSON_NODE_READER = OM.readerFor(JsonNode.class);
