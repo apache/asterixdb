@@ -42,15 +42,15 @@ In this scenario, `interval_after()` can be replaced with any of the 13 join fun
 Here is what each of the functions represent if A represents the first interval parameter,
 and B represents the second set interval parameter:
 
-| Function | Condition |
-|-------------------------|-------------------------|
-| Before(A, B) and After(B, A) | A.end < B.start |
-| Covers(A, B) and Covered_by(B, A) | A.start <= B.start and A.end >= B.end |
-| Ends(A, B) and Ended_by(B, A) | A.end = B.end and A.start >= B.start |
-| Meets(A, B) and Met_by(B, A) | A.end = B.start |
-| Overlaps(A, B) and Overlapped_by(B, A) | A.start < B.start and B.start > A.end and A.end > B.start |
-| Overlapping(A, B)| (A.start >= B.start and B.start < A.end) or (B.end <= A.end and B.end < A.start)|
-| Starts(A, B) and Started_by(B, A) | A.start = B.start and A.end <= B.end |
+| Function | Condition                                                                        |
+|-------------------------|----------------------------------------------------------------------------------|
+| Before(A, B) and After(B, A) | A.end < B.start                                                                  |
+| Covers(A, B) and Covered_by(B, A) | A.start <= B.start and A.end >= B.end                                            |
+| Ends(A, B) and Ended_by(B, A) | A.end = B.end and A.start >= B.start                                             |
+| Meets(A, B) and Met_by(B, A) | A.end = B.start                                                                  |
+| Overlaps(A, B) and Overlapped_by(B, A) | A.start < B.start AND A.end > B.start AND A.end < B.end                          |
+| Overlapping(A, B)| A.start < B.end and A.end > B.start |
+| Starts(A, B) and Started_by(B, A) | A.start = B.start and A.end <= B.end                                             |
 
 ### <a id="Range_hint"> Using a Range Hint </a>
 
