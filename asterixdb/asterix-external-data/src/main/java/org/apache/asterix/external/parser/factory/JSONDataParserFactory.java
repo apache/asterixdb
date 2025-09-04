@@ -41,16 +41,15 @@ import com.fasterxml.jackson.core.JsonParser;
 
 public class JSONDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final List<String> PARSER_FORMAT = Collections.unmodifiableList(
             Arrays.asList(ExternalDataConstants.FORMAT_JSON_LOWER_CASE, ExternalDataConstants.FORMAT_JSON_UPPER_CASE));
     private static final List<ATypeTag> UNSUPPORTED_TYPES = Collections
             .unmodifiableList(Arrays.asList(ATypeTag.MULTISET, ATypeTag.POINT3D, ATypeTag.CIRCLE, ATypeTag.RECTANGLE,
                     ATypeTag.INTERVAL, ATypeTag.DAYTIMEDURATION, ATypeTag.DURATION, ATypeTag.BINARY));
+    private static final JsonFactory jsonFactory;
 
-    private final JsonFactory jsonFactory;
-
-    public JSONDataParserFactory() {
+    static {
         jsonFactory = new JsonFactory();
         jsonFactory.configure(JsonParser.Feature.STRICT_DUPLICATE_DETECTION, true);
         jsonFactory.configure(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES, true);
