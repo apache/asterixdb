@@ -121,10 +121,11 @@ public class StartTasksWork extends AbstractWork {
     public void run() {
         Task task = null;
         int taskIndex = 0;
+        Joblet joblet = null;
         try {
             ncs.updateMaxJobId(jobId);
             NCServiceContext serviceCtx = ncs.getContext();
-            Joblet joblet = getOrCreateLocalJoblet(deploymentId, serviceCtx, acgBytes);
+            joblet = getOrCreateLocalJoblet(deploymentId, serviceCtx, acgBytes);
             if (ncs.getNodeStatus() != NodeStatus.ACTIVE) {
                 throw HyracksException.create(ErrorCode.NODE_IS_NOT_ACTIVE, ncs.getId());
             }
@@ -202,6 +203,9 @@ public class StartTasksWork extends AbstractWork {
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
             TaskAttemptId taskId = taskDescriptors.get(taskIndex).getTaskAttemptId();
             ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, task, exceptions, jobId, taskId));
+            if (joblet == null) {
+                ncs.getWorkQueue().schedule(new FailedJobletCreationCleanupWork(ncs, jobId));
+            }
         }
     }
 
