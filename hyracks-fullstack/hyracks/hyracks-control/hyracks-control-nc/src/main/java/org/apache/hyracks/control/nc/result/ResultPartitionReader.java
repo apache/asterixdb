@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.partitions.ResultSetPartitionId;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelWriteInterface;
@@ -102,8 +103,9 @@ public class ResultPartitionReader {
                     final ResultSetPartitionId partitionId = resultState.getResultSetPartitionId();
                     resultPartitionManager.removePartition(partitionId.getJobId(), partitionId.getResultSetId(),
                             partitionId.getPartition());
+
                 }
-            } catch (HyracksDataException e) {
+            } catch (HyracksException e) {
                 LOGGER.error("unexpected failure in partition reader clean up", e);
             }
         }

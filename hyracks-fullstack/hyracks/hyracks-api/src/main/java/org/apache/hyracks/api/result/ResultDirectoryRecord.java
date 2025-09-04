@@ -78,6 +78,10 @@ public class ResultDirectoryRecord implements Serializable {
         updateStatus(Status.SUCCESS);
     }
 
+    public boolean ready() {
+        return status == Status.SUCCESS;
+    }
+
     public void fail() {
         status = Status.FAILED;
     }

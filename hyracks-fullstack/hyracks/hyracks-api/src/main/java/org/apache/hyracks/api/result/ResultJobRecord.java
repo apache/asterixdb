@@ -34,6 +34,7 @@ public class ResultJobRecord implements IResultStateRecord {
         IDLE,
         RUNNING,
         SUCCESS,
+        REMOVED,
         FAILED
     }
 
@@ -114,6 +115,14 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.SUCCESS);
     }
 
+    public void consume() {
+        updateState(State.REMOVED);
+    }
+
+    public boolean consumed() {
+        return status.getState() == State.REMOVED;
+    }
+
     public void fail(List<Exception> exceptions) {
         updateState(State.FAILED);
         status.setExceptions(exceptions);
@@ -166,13 +175,21 @@ public class ResultJobRecord implements IResultStateRecord {
 
     public synchronized void updateState() {
         int successCount = 0;
+        int consumedCount = 0;
         ResultDirectoryRecord[] records = resultSetMetaData.getRecords();
         for (ResultDirectoryRecord record : records) {
-            if ((record != null) && (record.getStatus() == ResultDirectoryRecord.Status.SUCCESS)) {
-                successCount++;
+            if (record != null) {
+                if (record.ready()) {
+                    successCount++;
+                }
+                if (record.hasReachedReadEOS()) {
+                    consumedCount++;
+                }
             }
         }
-        if (successCount == records.length) {
+        if (consumedCount == records.length) {
+            consume();
+        } else if (successCount == records.length) {
             success();
         }
     }

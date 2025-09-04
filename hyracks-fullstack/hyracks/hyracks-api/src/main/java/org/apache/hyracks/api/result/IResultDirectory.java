@@ -57,4 +57,6 @@ public interface IResultDirectory {
      * @throws Exception
      */
     IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws Exception;
+
+    void releaseResult(JobId jobId, ResultSetId rsId);
 }

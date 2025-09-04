@@ -43,6 +43,8 @@ public interface IResultDirectoryService extends IJobLifecycleListener, IResultM
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition)
             throws HyracksDataException;
 
+    public void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws HyracksDataException;
+
     public void reportJobFailure(JobId jobId, List<Exception> exceptions);
 
     public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;

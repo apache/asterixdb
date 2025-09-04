@@ -110,6 +110,17 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     }
 
     @Override
+    public void reportPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
+        try {
+            LOGGER.trace("Reporting partition consumed: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,
+                    partition);
+            ncs.getClusterController(jobId.getCcId()).reportResultPartitionConsumed(jobId, rsId, partition);
+        } catch (Exception e) {
+            throw HyracksException.create(e);
+        }
+    }
+
+    @Override
     public void initializeResultPartitionReader(JobId jobId, ResultSetId resultSetId, int partition,
             IFrameWriter writer) throws HyracksException {
         ResultState resultState = getResultState(jobId, resultSetId, partition);
@@ -137,10 +148,12 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     }
 
     @Override
-    public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition) {
+    public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition)
+            throws HyracksException {
         ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap != null && rsIdMap.removePartition(jobId, resultSetId, partition)) {
             partitionResultStateMap.remove(jobId);
+            reportPartitionConsumed(jobId, resultSetId, partition);
         }
     }
 
