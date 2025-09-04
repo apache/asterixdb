@@ -85,10 +85,10 @@ public final class MergeColumnWriteMetadata extends AbstractColumnImmutableMetad
     }
 
     public void close() {
-        multiPageOpRef.setValue(null);
         for (int i = 0; i < columnWriters.size(); i++) {
             columnWriters.get(i).close();
         }
+        multiPageOpRef.setValue(null);
     }
 
     public static MergeColumnWriteMetadata create(ARecordType datasetType, ARecordType metaType,

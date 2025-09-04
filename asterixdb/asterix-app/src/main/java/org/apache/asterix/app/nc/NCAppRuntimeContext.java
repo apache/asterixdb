@@ -117,11 +117,14 @@ import org.apache.hyracks.storage.am.lsm.common.impls.GreedyScheduler;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.ColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.DefaultDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
+import org.apache.hyracks.storage.common.buffercache.FreeColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.storage.common.buffercache.IDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
@@ -145,6 +148,7 @@ import org.apache.logging.log4j.Logger;
 
 public class NCAppRuntimeContext implements INcApplicationContext {
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final double INVALID_BUFFER_POOL_MEMORY_PERCENTAGE = 0.0;
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCServiceContext ncServiceContext;
@@ -162,6 +166,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ExecutorService threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
     private IBufferCache bufferCache;
+    private IColumnBufferPool columnBufferPool;
     private IVirtualBufferCache virtualBufferCache;
     private ITransactionSubsystem txnSubsystem;
     private IMetadataNode metadataNodeStub;
@@ -325,6 +330,17 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                     fileInfoMap, defaultContext);
         }
 
+        if (storageProperties.getColumnBufferPoolMemoryPercentage() <= INVALID_BUFFER_POOL_MEMORY_PERCENTAGE) {
+            LOGGER.info("Using FreeColumnBufferPool since column buffer pool size percentage is {}",
+                    storageProperties.getColumnBufferSize());
+            this.columnBufferPool = new FreeColumnBufferPool();
+        } else {
+            this.columnBufferPool = new ColumnBufferPool(storageProperties.getColumnBufferSize(),
+                    storageProperties.getColumnBufferPoolMaxSize(),
+                    storageProperties.getColumnBufferPoolMemoryPercentage(),
+                    storageProperties.getColumnBufferAcquireTimeout());
+        }
+
         if (cloudConfigurator != null) {
             diskCacheService =
                     cloudConfigurator.createDiskCacheMonitoringService(getServiceContext(), bufferCache, fileInfoMap);
@@ -347,6 +363,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         ILifeCycleComponentManager lccm = getServiceContext().getLifeCycleComponentManager();
         lccm.register((ILifeCycleComponent) virtualBufferCache);
         lccm.register((ILifeCycleComponent) bufferCache);
+        lccm.register((ILifeCycleComponent) columnBufferPool);
         /*
          * LogManager must be stopped after RecoveryManager, DatasetLifeCycleManager, and ReplicationManager
          * to process any logs that might be generated during stopping these components
@@ -402,6 +419,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IBufferCache getBufferCache() {
         return bufferCache;
+    }
+
+    @Override
+    public IColumnBufferPool getColumnBufferPool() {
+        return columnBufferPool;
     }
 
     @Override

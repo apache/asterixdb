@@ -54,4 +54,15 @@ public interface IColumnWriteMultiPageOp {
      * @return a {@link IBufferCache}-backed buffer for temporary use
      */
     ByteBuffer confiscateTemporary() throws HyracksDataException;
+
+    /**
+     * @return a {@link org.apache.hyracks.storage.common.buffercache.ColumnBufferPool} - backed first buffer for temporary use
+     */
+    ByteBuffer confiscateTemporary0thBuffer();
+
+    /**
+     * release the acquired temporary buffer back to the {@link org.apache.hyracks.storage.common.buffercache.ColumnBufferPool}
+     * @param buffer
+     */
+    void releaseTemporary0thBuffer(ByteBuffer buffer);
 }

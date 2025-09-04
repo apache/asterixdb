@@ -25,13 +25,21 @@ import java.nio.ByteBuffer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
-import org.apache.hyracks.util.StorageUtil;
 
 public final class MultiTemporaryBufferBytesOutputStream extends AbstractMultiBufferBytesOutputStream {
-    private static final int INITIAL_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(32, StorageUtil.StorageUnit.KILOBYTE);
+    private boolean isFirstBufferFromColumnPool = false;
 
     public MultiTemporaryBufferBytesOutputStream(Mutable<IColumnWriteMultiPageOp> multiPageOpRef) {
         super(multiPageOpRef);
+    }
+
+    // Don't initialize for temporary buffers, as they are confiscated from the pool
+    @Override
+    public void reset() throws HyracksDataException {
+        preReset();
+        position = 0;
+        currentBufferIndex = 0;
+        releaseColumnBuffer();
     }
 
     @Override
@@ -41,21 +49,60 @@ public final class MultiTemporaryBufferBytesOutputStream extends AbstractMultiBu
 
     @Override
     protected ByteBuffer confiscateNewBuffer() throws HyracksDataException {
-        if (buffers.isEmpty()) {
+        // When a buffer reset occurs, the 0th buffer is set to null.
+        // If buffers are not empty, this means a buffer from the column pool was previously used.
+        // If the 0th buffer is null, a new buffer must be confiscated.
+        if (buffers.isEmpty() || buffers.get(0) == null) {
             /*
-             * One buffer on the house to avoid confiscating a whole page for a tiny stream.
+             * One buffer from the pool to avoid confiscating a whole page for a tiny stream.
              * This protects pressuring the buffer cache from confiscating pages for small columns. Think sparse
              * columns, which may take only a few hundreds of bytes to write.
              */
-            return ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
+            isFirstBufferFromColumnPool = true;
+            return multiPageOpRef.getValue().confiscateTemporary0thBuffer();
         }
         return multiPageOpRef.getValue().confiscateTemporary();
+    }
+
+    @Override
+    protected void ensureCapacity(int length) throws HyracksDataException {
+        ensure0thBufferAllocated();
+        super.ensureCapacity(length);
+    }
+
+    private void ensure0thBufferAllocated() throws HyracksDataException {
+        if ((currentBufferIndex == 0 && !isFirstBufferFromColumnPool)) {
+            // grab one from pool, as the buffers has already been reserved.
+            currentBuf = confiscateNewBuffer();
+            boolean isBufferEmpty = buffers.isEmpty();
+            currentBuf.clear();
+            if (buffers.isEmpty()) {
+                buffers.add(currentBuf);
+            } else {
+                buffers.set(0, currentBuf);
+            }
+            if (isBufferEmpty) {
+                allocatedBytes += currentBuf.capacity();
+            }
+        }
+    }
+
+    @Override
+    protected void releaseColumnBuffer() {
+        if (!isFirstBufferFromColumnPool) {
+            return;
+        }
+        multiPageOpRef.getValue().releaseTemporary0thBuffer(buffers.get(0));
+        isFirstBufferFromColumnPool = false;
+        buffers.set(0, null);
     }
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
         int writtenSize = 0;
         int numberOfUsedBuffers = currentBufferIndex + 1;
+        // This can be the case where the empty columns are being written
+        ensure0thBufferAllocated();
         for (int i = 0; i < numberOfUsedBuffers; i++) {
             ByteBuffer buffer = buffers.get(i);
             outputStream.write(buffer.array(), 0, buffer.position());

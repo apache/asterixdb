@@ -19,11 +19,13 @@
 package org.apache.asterix.external.input.record.reader.aws.delta;
 
 import static io.delta.kernel.internal.util.Utils.singletonCloseableIterator;
+import static io.delta.kernel.internal.util.Utils.toCloseableIterator;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -70,9 +72,12 @@ public class DeltaFileRecordReader implements IRecordReader<Row> {
     private Row scanFile;
     private CloseableIterator<Row> rows;
     private Optional<Predicate> filterPredicate;
+    private final boolean usingSplits;
+    private List<Map.Entry<String, List<SerializableFileSplit>>> scanAndSplits;
 
     public DeltaFileRecordReader(List<String> serScanFiles, String serScanState, ConfFactory config,
             String filterExpressionStr) throws HyracksDataException {
+        this.usingSplits = false;
         JobConf conf = config.getConf();
         this.engine = DefaultEngine.create(conf);
         this.scanFiles = new ArrayList<>();
@@ -88,19 +93,47 @@ public class DeltaFileRecordReader implements IRecordReader<Row> {
         if (scanFiles.size() > 0) {
             this.fileIndex = 0;
             this.scanFile = scanFiles.get(0);
-            this.fileStatus = InternalScanFileUtils.getAddFileStatus(scanFile);
-            this.physicalReadSchema = ScanStateRow.getPhysicalDataReadSchema(engine, scanState);
-            this.filterPredicate = PredicateSerDe.deserializeExpressionFromJson(filterExpressionStr);
-            try {
+            initializeDataIterators(filterExpressionStr);
+        }
+    }
+
+    public DeltaFileRecordReader(Map<String, List<SerializableFileSplit>> splitsMap, String serScanState,
+            ConfFactory config, String filterExpressionStr) throws HyracksDataException {
+        JobConf conf = config.getConf();
+        this.usingSplits = true;
+        this.engine = DeltaEngine.create(conf);
+        scanAndSplits = new ArrayList<>(splitsMap.entrySet());
+        this.scanState = RowSerDe.deserializeRowFromJson(serScanState);
+        this.physicalReadSchema = null;
+        this.physicalDataIter = null;
+        this.dataIter = null;
+        this.record = new GenericRecord<>();
+        if (scanAndSplits.size() > 0) {
+            this.fileIndex = 0;
+            this.scanFile = RowSerDe.deserializeRowFromJson(scanAndSplits.get(0).getKey());
+            initializeDataIterators(filterExpressionStr);
+        }
+    }
+
+    private void initializeDataIterators(String filterExpressionStr) throws HyracksDataException {
+        this.fileStatus = InternalScanFileUtils.getAddFileStatus(scanFile);
+        this.physicalReadSchema = ScanStateRow.getPhysicalDataReadSchema(engine, scanState);
+        this.filterPredicate = PredicateSerDe.deserializeExpressionFromJson(filterExpressionStr);
+        try {
+            if (usingSplits) {
+                this.physicalDataIter = ((DeltaParquetHandler) engine.getParquetHandler()).readParquetSplits(
+                        toCloseableIterator(scanAndSplits.get(fileIndex).getValue().iterator()), physicalReadSchema,
+                        filterPredicate);
+            } else {
                 this.physicalDataIter = engine.getParquetHandler()
                         .readParquetFiles(singletonCloseableIterator(fileStatus), physicalReadSchema, filterPredicate);
-                this.dataIter = Scan.transformPhysicalData(engine, scanState, scanFile, physicalDataIter);
-                if (dataIter.hasNext()) {
-                    rows = dataIter.next().getRows();
-                }
-            } catch (IOException e) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
             }
+            this.dataIter = Scan.transformPhysicalData(engine, scanState, scanFile, physicalDataIter);
+            if (dataIter.hasNext()) {
+                rows = dataIter.next().getRows();
+            }
+        } catch (IOException e) {
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }
     }
 
@@ -112,6 +145,9 @@ public class DeltaFileRecordReader implements IRecordReader<Row> {
         if (physicalDataIter != null) {
             physicalDataIter.close();
         }
+        if (rows != null) {
+            rows.close();
+        }
     }
 
     @Override
@@ -121,14 +157,25 @@ public class DeltaFileRecordReader implements IRecordReader<Row> {
         } else if (dataIter != null && dataIter.hasNext()) {
             rows = dataIter.next().getRows();
             return this.hasNext();
-        } else if (fileIndex < scanFiles.size() - 1) {
+        } else if ((!usingSplits && fileIndex < scanFiles.size() - 1)
+                || (usingSplits && fileIndex < scanAndSplits.size() - 1)) {
             fileIndex++;
-            scanFile = scanFiles.get(fileIndex);
+            if (usingSplits) {
+                scanFile = RowSerDe.deserializeRowFromJson(scanAndSplits.get(fileIndex).getKey());
+            } else {
+                scanFile = scanFiles.get(fileIndex);
+            }
             fileStatus = InternalScanFileUtils.getAddFileStatus(scanFile);
             physicalReadSchema = ScanStateRow.getPhysicalDataReadSchema(engine, scanState);
             try {
-                physicalDataIter = engine.getParquetHandler().readParquetFiles(singletonCloseableIterator(fileStatus),
-                        physicalReadSchema, filterPredicate);
+                if (usingSplits) {
+                    this.physicalDataIter = ((DeltaParquetHandler) engine.getParquetHandler()).readParquetSplits(
+                            toCloseableIterator(scanAndSplits.get(fileIndex).getValue().iterator()), physicalReadSchema,
+                            filterPredicate);
+                } else {
+                    physicalDataIter = engine.getParquetHandler().readParquetFiles(
+                            singletonCloseableIterator(fileStatus), physicalReadSchema, filterPredicate);
+                }
                 dataIter = Scan.transformPhysicalData(engine, scanState, scanFile, physicalDataIter);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);

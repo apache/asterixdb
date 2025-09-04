@@ -43,6 +43,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 import org.apache.hyracks.util.cache.ICacheManager;
@@ -68,6 +69,8 @@ public interface INcApplicationContext extends IApplicationContext {
     ILSMMergePolicyFactory getMetadataMergePolicyFactory();
 
     IBufferCache getBufferCache();
+
+    IColumnBufferPool getColumnBufferPool();
 
     IVirtualBufferCache getVirtualBufferCache();
 
