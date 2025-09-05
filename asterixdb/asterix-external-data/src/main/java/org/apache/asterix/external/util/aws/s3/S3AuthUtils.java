@@ -53,6 +53,7 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SESSION
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SIMPLE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORARY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INSTANCE_PROFILE_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ROLE_ARN_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.SECRET_ACCESS_KEY_FIELD_NAME;
@@ -160,6 +161,9 @@ public class S3AuthUtils {
             }
         }
 
+        boolean pathStyleAddressing =
+                validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
+        builder.forcePathStyle(pathStyleAddressing);
         return builder.build();
     }
 
@@ -214,6 +218,25 @@ public class S3AuthUtils {
             return AuthenticationType.ACCESS_KEYS;
         } else {
             return AuthenticationType.BAD_AUTHENTICATION;
+        }
+    }
+
+    public static boolean validateAndGetPathStyleAddressing(String pathStyleAddressing, String endpoint)
+            throws CompilationException {
+        if (pathStyleAddressing == null) {
+            return endpoint != null && !endpoint.isEmpty();
+        }
+        validatePathStyleAddressing(pathStyleAddressing);
+        return Boolean.parseBoolean(pathStyleAddressing);
+    }
+
+    public static void validatePathStyleAddressing(String pathStyleAddressing) throws CompilationException {
+        if (pathStyleAddressing == null) {
+            return;
+        }
+        if (!"true".equalsIgnoreCase(pathStyleAddressing) && !"false".equalsIgnoreCase(pathStyleAddressing)) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, PATH_STYLE_ADDRESSING_FIELD_NAME,
+                    "true, false");
         }
     }
 
@@ -385,11 +408,13 @@ public class S3AuthUtils {
             jobConf.set(HADOOP_SERVICE_END_POINT, Constants.CENTRAL_ENDPOINT);
         }
 
-        /*
-         * This is to allow S3 definition to have path-style form. Should always be true to match the current
-         * way we access files in S3
-         */
-        jobConf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
+        boolean pathStyleAddressing =
+                validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
+        if (pathStyleAddressing) {
+            jobConf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
+        } else {
+            jobConf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.FALSE);
+        }
 
         /*
          * Set the size of S3 connection pool to be the number of partitions

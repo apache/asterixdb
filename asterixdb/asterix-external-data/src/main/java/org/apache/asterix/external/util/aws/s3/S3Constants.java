@@ -28,6 +28,7 @@ public class S3Constants {
 
     // Authentication specific parameters
     public static final String REGION_FIELD_NAME = "region";
+    public static final String PATH_STYLE_ADDRESSING_FIELD_NAME = "pathStyleAddressing";
     public static final String CROSS_REGION_FIELD_NAME = "crossRegion";
     public static final String INSTANCE_PROFILE_FIELD_NAME = "instanceProfile";
     public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
