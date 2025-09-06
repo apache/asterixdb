@@ -106,7 +106,7 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
         }
 
         if (metaProjectedType != null && metaProjectedType != ALL_FIELDS_TYPE) {
-            generator.writeStringField("project-meta", getOnelinerSchema(projectedType, builder));
+            generator.writeStringField("project-meta", getOnelinerSchema(metaProjectedType, builder));
         }
 
         if (filterExpression != null) {
