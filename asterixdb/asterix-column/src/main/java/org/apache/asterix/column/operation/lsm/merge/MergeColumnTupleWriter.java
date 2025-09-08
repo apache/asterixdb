@@ -244,6 +244,12 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
+    public final void abort() {
+        // this call will reset the writers, releasing the 0th buffer back to the pool
+        columnMetadata.close();
+    }
+
+    @Override
     public void reset() {
     }
 

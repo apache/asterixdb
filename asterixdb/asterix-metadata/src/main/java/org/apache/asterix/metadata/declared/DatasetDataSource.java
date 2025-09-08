@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -139,6 +140,7 @@ public class DatasetDataSource extends DataSource {
                         addExternalProjectionInfo(projectionFiltrationInfo, edd.getProperties());
                 properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
+                setExternalCollectionCompilerProperties(metadataProvider, properties);
                 IExternalFilterEvaluatorFactory filterEvaluatorFactory = metadataProvider
                         .createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
                 ITypedAdapterFactory adapterFactory =
@@ -222,5 +224,14 @@ public class DatasetDataSource extends DataSource {
     @Override
     public boolean isScanAccessPathALeaf() {
         return dataset.getDatasetType() == DatasetType.EXTERNAL;
+    }
+
+    private void setExternalCollectionCompilerProperties(MetadataProvider metadataProvider,
+            Map<String, String> configuration) {
+        String fileSplits =
+                (String) metadataProvider.getConfig().get(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY);
+        if (fileSplits != null) {
+            configuration.put(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY, fileSplits);
+        }
     }
 }

@@ -726,7 +726,7 @@
                                 <goal>npm</goal>
                             </goals>
                             <configuration>
-                                <arguments>install azurite@3.31.0</arguments>
+                                <arguments>install azurite@3.35.0</arguments>
                             </configuration>
                         </execution>
                     </executions>
@@ -1195,6 +1195,11 @@
       <groupId>tech.allegro.schema.json2avro</groupId>
       <artifactId>converter</artifactId>
       <version>0.2.15</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client-runtime</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

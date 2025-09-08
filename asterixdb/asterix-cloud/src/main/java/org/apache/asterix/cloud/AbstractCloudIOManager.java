@@ -169,6 +169,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     private void cleanupLocalFiles() throws HyracksDataException {
         Set<CloudFile> cloudFiles = cloudClient.listObjects(bucket, STORAGE_ROOT_DIR_NAME, IoUtil.NO_OP_FILTER);
+        LOGGER.debug("+cleanupLocalFiles: cloud files: {}", cloudFiles);
         if (cloudFiles.isEmpty()) {
             LOGGER.warn("No files in the cloud. Deleting all local files in partitions {}...", partitions);
             for (FileReference partitionPath : partitionPaths) {

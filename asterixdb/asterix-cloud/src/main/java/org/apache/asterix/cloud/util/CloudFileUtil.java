@@ -64,7 +64,7 @@ public class CloudFileUtil {
                  * Delete local files that do not exist in cloud storage (the ground truth for valid files), or files
                  * that has not been downloaded completely.
                  */
-                logDeleteFile(file);
+                logDeleteFile(file, path);
                 localFilesIter.remove();
                 ioManager.delete(file);
             } else {
@@ -84,9 +84,9 @@ public class CloudFileUtil {
         }
     }
 
-    private static void logDeleteFile(FileReference fileReference) {
+    private static void logDeleteFile(FileReference fileReference, CloudFile path) {
         LOGGER.info(
                 "Deleting {} from the local cache as {} either doesn't exist in the cloud or it wasn't downloaded completely",
-                fileReference, fileReference.getRelativePath());
+                fileReference, path);
     }
 }

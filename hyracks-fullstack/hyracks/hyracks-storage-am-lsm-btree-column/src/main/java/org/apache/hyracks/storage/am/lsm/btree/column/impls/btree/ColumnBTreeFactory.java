@@ -26,18 +26,22 @@ import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 
 public class ColumnBTreeFactory extends TreeIndexFactory<ColumnBTree> {
-    public ColumnBTreeFactory(IIOManager ioManager, IBufferCache bufferCache,
+    private final IColumnBufferPool columnBufferPool;
+
+    public ColumnBTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IColumnBufferPool columnBufferPool,
             IPageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
         super(ioManager, bufferCache, freePageManagerFactory, interiorFrameFactory, leafFrameFactory, cmpFactories,
                 fieldCount);
+        this.columnBufferPool = columnBufferPool;
     }
 
     @Override
     public ColumnBTree createIndexInstance(FileReference file) throws HyracksDataException {
-        return new ColumnBTree(bufferCache, freePageManagerFactory.createPageManager(bufferCache), interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount, file);
+        return new ColumnBTree(bufferCache, columnBufferPool, freePageManagerFactory.createPageManager(bufferCache),
+                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
     }
 }

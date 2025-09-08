@@ -103,11 +103,15 @@
     <awsjavasdk.crt.version>0.33.3</awsjavasdk.crt.version>
 
     <parquet.version>1.15.2</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.779</hadoop-awsjavasdk.version>
-    <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>
-    <azureidentity.version>1.13.3</azureidentity.version>
-    <azuredatalakejavasdk.version>12.18.1</azuredatalakejavasdk.version>
+    <hadoop-awsjavasdk.version>1.12.788</hadoop-awsjavasdk.version>
+
+    <azureblobjavasdk.version>12.31.1</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.30.1</azurecommonjavasdk.version>
+    <azureidentity.version>1.17.0</azureidentity.version>
+    <azuredatalakejavasdk.version>12.24.1</azuredatalakejavasdk.version>
+    <azurecore.version>1.56.0</azurecore.version>
+    <azurecorehttpnetty.version>1.16.0</azurecorehttpnetty.version>
+
     <gcsjavasdk.version>2.45.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
@@ -636,12 +640,12 @@
               -DrunSlowAQLTests=${runSlowAQLTests}
               -Xdebug
               -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=${debug.suspend.flag}
-	      --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED 
-	      --add-opens java.management/sun.management=ALL-UNNAMED 
-	      --add-opens java.base/java.lang=ALL-UNNAMED 
-	      --add-opens java.base/java.nio=ALL-UNNAMED 
-	      --add-opens java.base/java.util=ALL-UNNAMED 
-	      --add-opens java.base/sun.nio.ch=ALL-UNNAMED 
+	      --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+	      --add-opens java.management/sun.management=ALL-UNNAMED
+	      --add-opens java.base/java.lang=ALL-UNNAMED
+	      --add-opens java.base/java.nio=ALL-UNNAMED
+	      --add-opens java.base/java.util=ALL-UNNAMED
+	      --add-opens java.base/sun.nio.ch=ALL-UNNAMED
 	      --add-opens java.base/java.io=ALL-UNNAMED
               ${coverageArgLine}
               ${extraSurefireArgLine}
@@ -1066,10 +1070,6 @@
             <artifactId>json-smart</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-          </exclusion>
-          <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
           </exclusion>
@@ -1100,10 +1100,6 @@
           <exclusion>
             <groupId>ch.qos.reload4j</groupId>
             <artifactId>reload4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml</groupId>
-            <artifactId>woodstox-core</artifactId>
           </exclusion>
           <exclusion>
             <groupId>dnsjava</groupId>
@@ -1262,6 +1258,16 @@
             <artifactId>reload4j</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.woodstox</groupId>
+        <artifactId>stax2-api</artifactId>
+        <version>4.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.woodstox</groupId>
+        <artifactId>woodstox-core</artifactId>
+        <version>7.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -1633,6 +1639,34 @@
         <artifactId>azure-storage-common</artifactId>
         <version>${azurecommonjavasdk.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-core</artifactId>
+        <version>${azurecore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-core-http-netty</artifactId>
+        <version>${azurecorehttpnetty.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-unix-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-kqueue</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver-dns-native-macos</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <!-- Azure Blob Storage end -->
       <!-- Google Cloud Storage start -->
       <dependency>
@@ -1702,14 +1736,8 @@
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
-        <artifactId>parquet-common</artifactId>
+        <artifactId>parquet-format-structures</artifactId>
         <version>${parquet.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
@@ -1721,6 +1749,39 @@
             <artifactId>slf4j-api</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-common</artifactId>
+        <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <!-- BEGIN: transitive from parquet, please validate with any update of ${parquet.version} -->
+      <dependency>
+        <groupId>io.airlift</groupId>
+        <artifactId>aircompressor</artifactId>
+        <version>2.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.luben</groupId>
+        <artifactId>zstd-jni</artifactId>
+        <version>1.5.6-6</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-pool</groupId>
+        <artifactId>commons-pool</artifactId>
+        <version>1.6</version>
+      </dependency>
+      <!-- END: transitive from parquet, please validate with any update of ${parquet.version} -->
+      <dependency>
+        <groupId>org.kitesdk</groupId>
+        <artifactId>kite-data-core</artifactId>
+        <version>1.1.0</version>
       </dependency>
       <!-- Hadoop AWS start -->
       <dependency>
@@ -1809,7 +1870,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-tcnative-boringssl-static</artifactId>
-        <version>2.0.71.Final</version>
+        <version>2.0.72.Final</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>

@@ -93,8 +93,9 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         IDiskCacheMonitoringService diskCacheService = storageManager.getDiskCacheMonitoringService(serviceCtx);
         return LSMColumnBTreeUtil.createLSMTree(config, ioManager, vbcs, file,
-                storageManager.getBufferCache(serviceCtx), typeTraits, cmpFactories, bloomFilterKeyFields,
-                bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
+                storageManager.getBufferCache(serviceCtx), storageManager.getColumnBufferPool(serviceCtx), typeTraits,
+                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, metadataPageManagerFactory, false,
                 serviceCtx.getTracer(), compressorDecompressorFactory, nullTypeTraits, nullIntrospector,

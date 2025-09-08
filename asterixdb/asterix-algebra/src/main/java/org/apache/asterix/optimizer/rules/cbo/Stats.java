@@ -277,9 +277,8 @@ public class Stats {
             AbstractFunctionCallExpression joinExpr, JoinOperator join) throws AlgebricksException {
         AbstractBinaryJoinOperator abjoin = join.getAbstractJoinOp();
         Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left, index1, joinExpr);
-        ILogicalOperator originalLeft, originalRight;
-        originalLeft = abjoin.getInputs().get(0).getValue();
-        originalRight = abjoin.getInputs().get(1).getValue();
+        ILogicalOperator originalLeft = abjoin.getInputs().get(0).getValue();
+        ILogicalOperator originalRight = abjoin.getInputs().get(1).getValue();
         abjoin.getInputs().get(0).setValue(leftOutput.getFirst());
         Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right, index2, joinExpr);
         abjoin.getInputs().get(1).setValue(rightOutput.getFirst());
@@ -290,7 +289,6 @@ public class Stats {
 
         abjoin.getInputs().get(0).setValue(originalLeft);
         abjoin.getInputs().get(1).setValue(originalRight);
-
         return sel;
     }
 

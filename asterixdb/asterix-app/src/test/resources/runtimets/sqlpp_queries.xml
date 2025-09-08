@@ -7462,7 +7462,7 @@
     <test-case FilePath="misc">
       <compilation-unit name="unsupported_parameter_value">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The given string: 4LS is not a byte unit string (e.g., 320KB or 1024)</expected-error>
+        <expected-error>The given string: 4LS is not a byte unit string (e.g., 320KiB or 1024)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -16800,6 +16800,11 @@
     <test-case FilePath="column">
       <compilation-unit name="pushdown/replicate">
         <output-dir compare="Text">pushdown/replicate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/same-datasource-diff-scan">
+        <output-dir compare="Text">pushdown/same-datasource-diff-scan</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">

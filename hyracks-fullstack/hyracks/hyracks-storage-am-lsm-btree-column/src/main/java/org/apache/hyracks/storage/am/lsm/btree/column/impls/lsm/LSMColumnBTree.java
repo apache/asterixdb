@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor.ICurs
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
 import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMColumnBTree extends LSMBTree {
@@ -56,6 +57,7 @@ public class LSMColumnBTree extends LSMBTree {
     private final IColumnManager columnManager;
     private final IColumnIndexDiskCacheManager diskCacheManager;
     private final ILSMDiskComponentFactory mergeComponentFactory;
+    private final IColumnBufferPool columnBufferPool;
     /**
      * This column metadata only used during flush and dataset bulkload operations. We cannot have more than one
      * thread to do a flush/dataset bulkload. Do not use it for search/scan. Instead, use the latest component
@@ -68,13 +70,14 @@ public class LSMColumnBTree extends LSMBTree {
     public LSMColumnBTree(NCConfig storageConfig, IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache diskBufferCache,
-            ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
-            ILSMDiskComponentFactory mergeComponentFactory, ILSMDiskComponentFactory bulkloadComponentFactory,
-            double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
-            int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic,
-            IColumnIndexDiskCacheManager diskCacheManager) throws HyracksDataException {
+            IColumnBufferPool columnBufferPool, ILSMIndexFileManager fileManager,
+            ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory mergeComponentFactory,
+            ILSMDiskComponentFactory bulkloadComponentFactory, double bloomFilterFalsePositiveRate, int fieldCount,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            ILSMPageWriteCallbackFactory pageWriteCallbackFactory, int[] btreeFields, ITracer tracer,
+            IColumnManager columnManager, boolean atomic, IColumnIndexDiskCacheManager diskCacheManager)
+            throws HyracksDataException {
         super(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null,
                 null, null, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
@@ -83,6 +86,7 @@ public class LSMColumnBTree extends LSMBTree {
         this.columnManager = columnManager;
         this.mergeComponentFactory = mergeComponentFactory;
         this.diskCacheManager = diskCacheManager;
+        this.columnBufferPool = columnBufferPool;
     }
 
     @Override
@@ -144,6 +148,10 @@ public class LSMColumnBTree extends LSMBTree {
     @Override
     public ICursorFactory getCursorFactory() {
         return CURSOR_FACTORY;
+    }
+
+    public IColumnBufferPool getColumnBufferPool() {
+        return columnBufferPool;
     }
 
     @Override

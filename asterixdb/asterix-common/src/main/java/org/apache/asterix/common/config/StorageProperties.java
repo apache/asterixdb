@@ -22,10 +22,13 @@ import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedDoubleType;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -71,7 +74,11 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_FORMAT(STRING, "row"),
         STORAGE_PARTITIONING(STRING, "dynamic"),
         STORAGE_PARTITIONS_COUNT(INTEGER, 8),
-        STORAGE_MAX_COMPONENT_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, StorageUtil.StorageUnit.TERABYTE));
+        STORAGE_MAX_COMPONENT_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, StorageUtil.StorageUnit.TERABYTE)),
+        STORAGE_COLUMN_BUFFER_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE)),
+        STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE(getRangedDoubleType(0.0, 100.0), 3.0d),
+        STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE(getRangedIntegerType(1, 50000), 8000),
+        STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT(LONG, TimeUnit.SECONDS.toMillis(120));
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -95,6 +102,10 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_COLUMN_MAX_TUPLE_COUNT:
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                 case STORAGE_COLUMN_MAX_LEAF_NODE_SIZE:
+                case STORAGE_COLUMN_BUFFER_SIZE:
+                case STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE:
+                case STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE:
+                case STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -163,6 +174,14 @@ public class StorageProperties extends AbstractProperties {
                             + " changed after any dataset has been created";
                 case STORAGE_MAX_COMPONENT_SIZE:
                     return "The resultant disk component after a merge must not exceed the specified maximum size.";
+                case STORAGE_COLUMN_BUFFER_SIZE:
+                    return "The size in bytes of each buffer in the column buffer pool.";
+                case STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE:
+                    return "The percentage of the JVM memory allocated to the column buffer pool. This controls the number of the column buffer relative to the total JVM memory.";
+                case STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE:
+                    return "The maximum number of buffers in the column buffer pool.";
+                case STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT:
+                    return "The maximum time in milliseconds to wait for acquiring a buffer from the column buffer pool.";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -233,6 +252,22 @@ public class StorageProperties extends AbstractProperties {
         return accessor.getDouble(Option.STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE);
     }
 
+    public int getColumnBufferSize() {
+        return accessor.getInt(Option.STORAGE_COLUMN_BUFFER_SIZE);
+    }
+
+    public double getColumnBufferPoolMemoryPercentage() {
+        return accessor.getDouble(Option.STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE);
+    }
+
+    public int getColumnBufferPoolMaxSize() {
+        return accessor.getInt(Option.STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE);
+    }
+
+    public long getColumnBufferAcquireTimeout() {
+        return accessor.getLong(Option.STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT);
+    }
+
     public int getBufferCacheNumPages() {
         return (int) (getBufferCacheSize() / (getBufferCachePageSize() + IBufferCache.RESERVED_HEADER_BYTES));
     }
@@ -248,6 +283,11 @@ public class StorageProperties extends AbstractProperties {
             int maxConcurrentMerges = getMaxConcurrentMerges(numPartitions);
             int maxConcurrentFlushes = getMaxConcurrentFlushes(numPartitions);
             int writeBufferSize = runtimeContext.getCloudProperties().getWriteBufferSize();
+
+            double columnBufferPoolSizePercentage =
+                    accessor.getDouble(Option.STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE);
+            long maxMemoryForColumnBuffers = (long) (MAX_HEAP_BYTES * (columnBufferPoolSizePercentage / 100));
+            jobExecutionMemory -= maxMemoryForColumnBuffers;
             jobExecutionMemory -= (long) (maxConcurrentFlushes + maxConcurrentMerges) * writeBufferSize;
 
         }

@@ -18,23 +18,28 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.delta;
 
-import io.delta.kernel.defaults.engine.DefaultExpressionHandler;
-import io.delta.kernel.expressions.Expression;
-import io.delta.kernel.expressions.ExpressionEvaluator;
-import io.delta.kernel.expressions.Predicate;
-import io.delta.kernel.expressions.PredicateEvaluator;
-import io.delta.kernel.types.DataType;
-import io.delta.kernel.types.StructType;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-public class DeltaExpressionHandler extends DefaultExpressionHandler {
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.JobConf;
 
-    @Override
-    public ExpressionEvaluator getEvaluator(StructType inputSchema, Expression expression, DataType outputType) {
-        return new DeltaExpressionEvaluator(inputSchema, expression, outputType);
+public class SerializableFileSplit extends FileSplit implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    public SerializableFileSplit(Path file, long start, long length, JobConf conf) {
+        super(file, start, length, conf);
     }
 
-    @Override
-    public PredicateEvaluator getPredicateEvaluator(StructType inputSchema, Predicate predicate) {
-        return new DeltaPredicateEvaluator(inputSchema, predicate);
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        this.write(out);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        this.readFields(in);
     }
 }

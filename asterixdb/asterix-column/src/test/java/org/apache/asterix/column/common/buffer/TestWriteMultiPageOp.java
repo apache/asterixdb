@@ -48,6 +48,16 @@ public class TestWriteMultiPageOp implements IColumnWriteMultiPageOp {
     }
 
     @Override
+    public ByteBuffer confiscateTemporary0thBuffer() {
+        return ByteBuffer.allocate(32 * 1024); // 32KB
+    }
+
+    @Override
+    public void releaseTemporary0thBuffer(ByteBuffer buffer) {
+
+    }
+
+    @Override
     public void persist() {
         //NoOp
     }

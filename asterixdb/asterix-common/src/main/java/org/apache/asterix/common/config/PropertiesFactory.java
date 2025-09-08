@@ -79,6 +79,11 @@ public class PropertiesFactory implements IPropertiesFactory {
     }
 
     @Override
+    public JacksonProperties newJacksonProperties() {
+        return new JacksonProperties(propertiesAccessor);
+    }
+
+    @Override
     public CloudProperties newCloudProperties() {
         return new CloudProperties(propertiesAccessor);
     }

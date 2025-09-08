@@ -45,6 +45,16 @@ public class NoOpWriteMultiPageOp implements IColumnWriteMultiPageOp {
     }
 
     @Override
+    public ByteBuffer confiscateTemporary0thBuffer() {
+        return null;
+    }
+
+    @Override
+    public void releaseTemporary0thBuffer(ByteBuffer buffer) {
+
+    }
+
+    @Override
     public void persist() throws HyracksDataException {
 
     }
