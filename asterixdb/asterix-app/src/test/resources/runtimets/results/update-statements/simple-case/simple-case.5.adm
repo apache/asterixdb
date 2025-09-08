@@ -1,0 +1,1 @@
+{ "UserTypes": { "userId": 10, "email": "mary.moore@example.com", "username": "marym", "isActive": false, "age": 32, "addresses": [ { "city": "Riverside", "zipcode": 92510 } ] } }

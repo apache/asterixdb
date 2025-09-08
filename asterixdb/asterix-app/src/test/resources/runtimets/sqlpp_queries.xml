@@ -15383,7 +15383,19 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="json">
+  <test-group name="update-statements">
+    <test-case FilePath="update-statements">
+      <compilation-unit name="simple-case">
+        <output-dir compare="Text">simple-case</output-dir>
+      </compilation-unit>
+    </test-case>
+      <test-case FilePath="update-statements">
+        <compilation-unit name="complex-case">
+          <output-dir compare="Text">complex-case</output-dir>
+        </compilation-unit>
+      </test-case>
+  </test-group>
+<test-group name="json">
     <test-case FilePath="json">
       <compilation-unit name="int01">
         <output-dir compare="Lossless-JSON">int01-losslessjson</output-dir>

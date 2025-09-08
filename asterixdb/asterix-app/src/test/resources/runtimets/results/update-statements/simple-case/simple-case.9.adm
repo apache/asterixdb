@@ -1,0 +1,1 @@
+{ "UserTypes": { "userId": 1, "email": "john.doe@example.com", "username": "johndoe", "isActive": true, "totaltax": 0.25, "totalcost": 25, "occupation": "teacher", "age": 23 } }

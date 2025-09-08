@@ -1,0 +1,1 @@
+{ "UserTypes": { "userId": 2, "email": "alice.manager@example.com", "username": "bob", "isActive": false, "roles": [ { "roleId": "role1", "roleName": "manager" }, { "roleId": "role2", "roleName": "manager" } ] } }

@@ -1,0 +1,116 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+INSERT INTO UserTypes (
+    [
+        {
+            "userId": 1,
+            "email": "john.doe@example.com",
+            "username": "johndoe",
+            "isActive": true,
+            "occupation": "teacher",
+            "age": 23
+        },
+        {
+            "userId": 2,
+            "email": "jane.smith@example.com",
+            "username": "janesmith",
+            "isActive": false,
+            "occupation": "firefighter"
+
+
+        },
+        {
+            "userId": 3,
+            "email": "michael.brown@example.com",
+            "username": "michaelb",
+            "isActive": true,
+            "age": "five",
+            "occupation":4
+
+        },
+        {
+            "userId": 4,
+            "email": "emily.davis@example.com",
+            "username": "emilyd",
+            "isActive": true,
+            "age": 23.1
+
+        },
+        {
+            "userId": 5,
+            "email": "chris.jones@example.com",
+            "username": "chrisj",
+            "isActive": false,
+            "age": "old"
+
+        },
+        {
+            "userId": 6,
+            "email": "patricia.garcia@example.com",
+            "username": "patriciag",
+            "isActive": true,
+            "age": "45"
+
+        },
+        {
+            "userId": 7,
+            "email": "linda.martinez@example.com",
+            "username": "lindam",
+            "isActive": false
+        },
+        {
+            "userId": 8,
+            "email": "robert.lee@example.com",
+            "username": "robertl",
+            "isActive": true,
+            "age": 31
+
+        },
+        {
+            "userId": 9,
+            "email": "james.wilson@example.com",
+            "username": "jamesw",
+            "isActive": true,
+            "age": "65"
+
+        },
+        {
+            "userId": 10,
+            "email": "mary.moore@example.com",
+            "username": "marym",
+            "isActive": false,
+            "age": "",
+            "addresses":[ {"city": "Riverside","zipcode" : 92510}]
+
+        },
+        {
+            "userId": 11,
+            "email": "jack.moore@example.com",
+            "username": "jk",
+            "isActive": true,
+            "age": "20",
+            "occupation": "firefighter",
+            "addresses":[ {"city": "San Jose, United States", "street" : "Santana Row","zipcode" : 95128},{"city": "Riverside","zipcode" : 92507}]
+        }
+    ]
+
+);

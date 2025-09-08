@@ -1,0 +1,11 @@
+{ "UserTypes": { "userId": 1, "email": "john.doe@example.com", "username": "johndoe", "isActive": true, "occupation": "teacher", "age": 23 } }
+{ "UserTypes": { "userId": 2, "email": "jane.smith@example.com", "username": "janesmith", "isActive": false, "occupation": "firefighter" } }
+{ "UserTypes": { "userId": 3, "email": "michael.brown@example.com", "username": "michaelb", "isActive": true, "age": "five", "occupation": 4 } }
+{ "UserTypes": { "userId": 4, "email": "emily.davis@example.com", "username": "emilyd", "isActive": true, "age": 23.1 } }
+{ "UserTypes": { "userId": 5, "email": "chris.jones@example.com", "username": "chrisj", "isActive": false, "age": "old" } }
+{ "UserTypes": { "userId": 6, "email": "patricia.garcia@example.com", "username": "patriciag", "isActive": true, "age": "45" } }
+{ "UserTypes": { "userId": 7, "email": "linda.martinez@example.com", "username": "lindam", "isActive": false } }
+{ "UserTypes": { "userId": 8, "email": "robert.lee@example.com", "username": "robertl", "isActive": true, "age": 31 } }
+{ "UserTypes": { "userId": 9, "email": "james.wilson@example.com", "username": "jamesw", "isActive": true, "age": "65" } }
+{ "UserTypes": { "userId": 10, "email": "mary.moore@example.com", "username": "marym", "isActive": false, "timeZone": "PT", "age": 32, "addresses": [ { "city": "Riverside", "zipcode": 92510 } ] } }
+{ "UserTypes": { "userId": 11, "email": "jack.moore@example.com", "username": "jk", "isActive": true, "age": "20", "occupation": "firefighter", "addresses": [ { "city": "San Jose, United States", "street": "Santana Row", "zipcode": 95128 }, { "city": "Riverside", "zipcode": 92507 } ] } }
