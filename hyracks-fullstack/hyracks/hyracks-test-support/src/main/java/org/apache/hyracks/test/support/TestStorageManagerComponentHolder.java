@@ -159,7 +159,8 @@ public class TestStorageManagerComponentHolder {
             return columnBufferPool;
         }
 
-        columnBufferPool = new ColumnBufferPool(4 * 1024, 500, 3.0, TimeUnit.MINUTES.toMillis(2));
+        columnBufferPool = new ColumnBufferPool(4 * 1024, 500, (long) (0.03 * Runtime.getRuntime().maxMemory()),
+                TimeUnit.MINUTES.toMillis(2));
         return columnBufferPool;
     }
 

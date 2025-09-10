@@ -38,6 +38,8 @@ public abstract class AbstractParquetDeltaBinaryPackingValuesWriter extends Abst
 
     public static final int DEFAULT_NUM_MINIBLOCKS = 4;
 
+    public static final int REQUIRED_TEMPORARY_BUFFERS = 1;
+
     protected final MultiTemporaryBufferBytesOutputStream outputStream;
 
     /**

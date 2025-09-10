@@ -117,4 +117,13 @@ public final class DoubleColumnValuesWriter extends AbstractColumnValuesWriter {
     protected ATypeTag getTypeTag() {
         return ATypeTag.DOUBLE;
     }
+
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(filtered);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        return ParquetPlainFixedLengthValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
+    }
 }

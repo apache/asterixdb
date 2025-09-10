@@ -79,6 +79,11 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
     }
 
     @Override
+    public boolean isWhispered() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return activeRuntimeId + ":" + ActivePartitionMessage.class.getSimpleName() + '-' + event + '(' + desc + ')';
     }

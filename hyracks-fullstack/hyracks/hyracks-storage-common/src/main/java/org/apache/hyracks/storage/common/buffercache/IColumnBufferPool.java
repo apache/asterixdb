@@ -20,6 +20,8 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
+
 /**
  * Interface for a buffer-based pool managing column buffer allocation.
  *
@@ -29,7 +31,7 @@ import java.nio.ByteBuffer;
  * - Buffers are acquired via getBuffer() and returned via recycle().
  * - The pool may block or fail to allocate if semaphore permits are exhausted.
  */
-public interface IColumnBufferPool {
+public interface IColumnBufferPool extends ILifeCycleComponent {
 
     /**
      * Reserve the specified number of buffers, blocking if necessary until available.

@@ -34,6 +34,9 @@ import org.apache.parquet.io.ParquetEncodingException;
  * Re-implementation of {@link DeltaLengthByteArrayValuesWriter}
  */
 public class ParquetDeltaLengthByteArrayValuesWriter extends AbstractParquetValuesWriter {
+    public static final int REQUIRED_TEMPORARY_BUFFERS =
+            ParquetDeltaBinaryPackingValuesWriterForInteger.REQUIRED_TEMPORARY_BUFFERS + 1; // 1 for outputStream
+
     private final ParquetDeltaBinaryPackingValuesWriterForInteger lengthWriter;
     private final MultiTemporaryBufferBytesOutputStream outputStream;
     private final LittleEndianDataOutputStream out;

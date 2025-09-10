@@ -103,4 +103,16 @@ public class StringColumnValuesWriter extends AbstractColumnValuesWriter {
         return ATypeTag.STRING;
     }
 
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(filtered);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        if (filtered) {
+            return ParquetDeltaByteArrayWriter.REQUIRED_TEMPORARY_BUFFERS;
+        } else {
+            return ParquetPlainVariableLengthValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
+        }
+    }
 }

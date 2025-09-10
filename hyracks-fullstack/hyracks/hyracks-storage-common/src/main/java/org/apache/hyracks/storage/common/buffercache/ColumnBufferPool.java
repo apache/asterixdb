@@ -25,9 +25,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,20 +36,21 @@ import org.apache.logging.log4j.Logger;
  *
  * NOTE: getBuffer() and recycle() are called very frequently and are designed to be as lightweight as possible.
  */
-public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent {
+public class ColumnBufferPool implements IColumnBufferPool {
     protected static final Logger LOGGER = LogManager.getLogger();
 
     private final BlockingQueue<ByteBuffer> bufferPool;
     private final AtomicLong totalAllocatedMemoryInBytes;
     private final AtomicLong totalPooledMemoryInBytes;
-    private final AtomicLong numAllocNew;
+    private final AtomicInteger numAllocNew;
+    private final AtomicInteger buffersAllocated;
 
     // Semaphore for buffer-based allocation
     private final Semaphore bufferSemaphore;
-    private final long maxBufferPoolMemoryLimit;
-    private final double columnBufferPoolMemoryPercentage;
+    private final long bufferPoolMemoryLimit;
+    private final long columnBufferPoolMaxMemory;
     private final int columnBufferInBytes;
-    private final int columnBufferPoolMaxSize;
+    private final int columnBufferPoolCapacity;
     private final int maxBuffers;
 
     // Timeout for buffer reservation in milliseconds
@@ -58,45 +59,43 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
     /**
      * @param columnBufferInBytes buffer size in bytes
      * @param columnBufferPoolMaxSize max number of buffers in pool
-     * @param columnBufferPoolMemoryPercentage max percentage of total memory for pool
+     * @param columnBufferPoolMaxMemory max memory for pool
      * @param reserveTimeoutMillis timeout in milliseconds for buffer reservation
      */
-    public ColumnBufferPool(int columnBufferInBytes, int columnBufferPoolMaxSize,
-            double columnBufferPoolMemoryPercentage, long reserveTimeoutMillis) {
+    public ColumnBufferPool(int columnBufferInBytes, int columnBufferPoolMaxSize, long columnBufferPoolMaxMemory,
+            long reserveTimeoutMillis) {
         this.totalAllocatedMemoryInBytes = new AtomicLong(0);
-        this.bufferPool = new ArrayBlockingQueue<>(columnBufferPoolMaxSize);
-        this.columnBufferPoolMemoryPercentage = columnBufferPoolMemoryPercentage;
-        this.columnBufferPoolMaxSize = columnBufferPoolMaxSize;
+        this.columnBufferPoolMaxMemory = columnBufferPoolMaxMemory;
         this.reserveTimeoutMillis = reserveTimeoutMillis;
-        this.maxBufferPoolMemoryLimit = getMaxBufferPoolMemoryLimit(columnBufferInBytes,
-                columnBufferPoolMemoryPercentage, columnBufferPoolMaxSize);
-        this.maxBuffers = (int) (maxBufferPoolMemoryLimit / columnBufferInBytes);
+        this.bufferPoolMemoryLimit =
+                getMaxBufferPoolMemoryLimit(columnBufferInBytes, columnBufferPoolMaxMemory, columnBufferPoolMaxSize);
+        this.maxBuffers = (int) (bufferPoolMemoryLimit / columnBufferInBytes);
         this.bufferSemaphore = new Semaphore(maxBuffers, true);
         this.columnBufferInBytes = columnBufferInBytes;
         this.totalPooledMemoryInBytes = new AtomicLong(0);
-        this.numAllocNew = new AtomicLong(0);
-        initializePool();
+        this.buffersAllocated = new AtomicInteger(0);
+        this.numAllocNew = new AtomicInteger(0);
+        this.columnBufferPoolCapacity = Math.min(maxBuffers, columnBufferPoolMaxSize);
+        this.bufferPool = new ArrayBlockingQueue<>(columnBufferPoolCapacity);
+        initializePool(columnBufferPoolCapacity);
         LOGGER.info(
-                "ColumnBufferPool initialized: columnBufferPoolMaxSize={}, maxBufferPoolMemoryLimit={}, maxBuffers={}, columnBufferInBytes={}, reserveTimeoutMillis={}",
-                columnBufferPoolMaxSize, maxBufferPoolMemoryLimit, maxBuffers, columnBufferInBytes,
-                reserveTimeoutMillis);
+                "ColumnBufferPool initialized: columnBufferPoolMaxSize={}, maxBufferPoolMemoryLimit={}, maxBuffers={}, columnBufferPoolCapacity={}, columnBufferInBytes={}, reserveTimeoutMillis={}",
+                columnBufferPoolMaxSize, columnBufferPoolMaxMemory, maxBuffers, columnBufferPoolCapacity,
+                columnBufferInBytes, reserveTimeoutMillis);
     }
 
     /**
      * Pre-allocate buffers for fast buffer access.
      * The number of buffers pre-allocated is the minimum of half the pool size and the memory limit.
      */
-    private void initializePool() {
-        int halfPoolSize = columnBufferPoolMaxSize / 2;
-        int numBuffersToAllocate = Math.min(halfPoolSize, maxBuffers);
-
-        for (int i = 0; i < numBuffersToAllocate; i++) {
+    private void initializePool(int bufferPoolCapacity) {
+        for (int i = 0; i < bufferPoolCapacity / 2; i++) {
             ByteBuffer buffer = ByteBuffer.allocate(columnBufferInBytes);
             bufferPool.add(buffer);
             totalPooledMemoryInBytes.addAndGet(columnBufferInBytes);
         }
-        LOGGER.info("ColumnBufferPool pre-allocated {} buffers ({} bytes each)", numBuffersToAllocate,
-                columnBufferInBytes);
+        LOGGER.info("ColumnBufferPool pre-allocated {} buffers having bufferPoolSize {} ({} bytes each)",
+                bufferPoolCapacity / 2, bufferPoolCapacity, columnBufferInBytes);
     }
 
     /**
@@ -112,8 +111,15 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
         }
         boolean acquired = bufferSemaphore.tryAcquire(requestedBuffers, reserveTimeoutMillis, TimeUnit.MILLISECONDS);
         if (!acquired) {
-            LOGGER.error("Failed to reserve {} buffers within {} ms ({} sec)", requestedBuffers, reserveTimeoutMillis,
-                    TimeUnit.MILLISECONDS.toSeconds(reserveTimeoutMillis));
+            LOGGER.error(
+                    "Failed to reserve {} buffers within {} ms ({} sec); "
+                            + "totalAllocatedMemoryInBytes={}, maxBufferPoolMemoryLimit={}, bufferPoolCapacity={}, columnBufferInBytes={}, "
+                            + "columnBufferPoolMaxMemory={}, numAllocNew={}, availableBuffers={}. "
+                            + "Consider increasing storageColumnBufferPoolMaxMemory (current: {}).",
+                    requestedBuffers, reserveTimeoutMillis, TimeUnit.MILLISECONDS.toSeconds(reserveTimeoutMillis),
+                    totalAllocatedMemoryInBytes.get(), bufferPoolMemoryLimit, columnBufferPoolCapacity,
+                    columnBufferInBytes, columnBufferPoolMaxMemory, numAllocNew.get(),
+                    bufferSemaphore.availablePermits(), columnBufferPoolMaxMemory);
             throw new IllegalStateException("Timeout while reserving column buffers (" + requestedBuffers + ") after "
                     + reserveTimeoutMillis + " ms");
         }
@@ -140,6 +146,7 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
      */
     @Override
     public ByteBuffer getBuffer() {
+        buffersAllocated.incrementAndGet();
         // Fast path: try to poll from pool
         ByteBuffer buffer = bufferPool.poll();
         if (buffer != null) {
@@ -165,7 +172,7 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
         if (buffer == null) {
             throw new IllegalStateException("buffer is null");
         }
-
+        buffersAllocated.decrementAndGet();
         // Try to return to pool; if full, discard
         if (bufferPool.offer(buffer)) {
             totalPooledMemoryInBytes.addAndGet(columnBufferInBytes);
@@ -184,28 +191,26 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
      * Throws if the limit would be exceeded.
      */
     private void ensureAvailableQuota() {
-        long spaceAcquiredByPool = (long) columnBufferPoolMaxSize * columnBufferInBytes;
-        long totalAllocated = totalAllocatedMemoryInBytes.get();
-        long totalIfAllocated = totalAllocated + spaceAcquiredByPool;
-        if (totalIfAllocated > maxBufferPoolMemoryLimit) {
+        if (buffersAllocated.get() > maxBuffers) {
+            long spaceAcquiredByPool = (long) columnBufferPoolCapacity * columnBufferInBytes;
+            long totalAllocated = totalAllocatedMemoryInBytes.get();
+            long totalIfAllocated = totalAllocated + spaceAcquiredByPool;
             LOGGER.error(
                     "Cannot allocate more buffers, memory limit reached. "
-                            + "totalAllocatedMemoryInBytes={}, maxBufferPoolMemoryLimit={}, columnBufferPoolMaxSize={}, columnBufferInBytes={}, "
-                            + "columnBufferPoolMemoryPercentage={}, totalIfAllocated={}, numAllocNew={}, availableBuffers={}. "
-                            + "Consider increasing storageColumnBufferPoolMemoryPercentage (current: {}).",
-                    totalAllocated, maxBufferPoolMemoryLimit, columnBufferPoolMaxSize, columnBufferInBytes,
-                    columnBufferPoolMemoryPercentage, totalIfAllocated, numAllocNew.get(),
-                    bufferSemaphore.availablePermits(), columnBufferPoolMemoryPercentage);
-            throw new IllegalStateException("Cannot allocate more buffers, maxBufferPoolMemoryLimit ("
-                    + maxBufferPoolMemoryLimit + ") reached.");
+                            + "totalAllocatedMemoryInBytes={}, maxBufferPoolMemoryLimit={}, columnBufferPoolCapacity={}, columnBufferInBytes={}, "
+                            + "columnBufferPoolMaxMemory={}, totalIfAllocated={}, numAllocNew={}, availableBuffers={}. "
+                            + "Consider increasing storageColumnBufferPoolMaxMemory (current: {}).",
+                    totalAllocated, bufferPoolMemoryLimit, columnBufferPoolCapacity, columnBufferInBytes,
+                    columnBufferPoolMaxMemory, totalIfAllocated, numAllocNew.get(), bufferSemaphore.availablePermits(),
+                    columnBufferPoolMaxMemory);
+            throw new IllegalStateException(
+                    "Cannot allocate more buffers, maxBufferPoolMemoryLimit (" + bufferPoolMemoryLimit + ") reached.");
         }
     }
 
-    private long getMaxBufferPoolMemoryLimit(int columnBufferInBytes, double columnBufferPoolMemoryPercentage,
+    private long getMaxBufferPoolMemoryLimit(int columnBufferInBytes, long columnBufferPoolMaxMemoryLimit,
             int columnBufferPoolMaxSize) {
-        long totalMemory = Runtime.getRuntime().totalMemory();
-        return (long) Math.max(totalMemory * (columnBufferPoolMemoryPercentage / 100),
-                columnBufferInBytes * columnBufferPoolMaxSize);
+        return Math.max(columnBufferPoolMaxMemoryLimit, (long) columnBufferInBytes * columnBufferPoolMaxSize);
     }
 
     @Override
@@ -225,7 +230,7 @@ public class ColumnBufferPool implements IColumnBufferPool, ILifeCycleComponent 
     public void dumpState(OutputStream os) throws IOException {
         long pooledBytes = totalPooledMemoryInBytes.get();
         long totalAllocatedBytes = totalAllocatedMemoryInBytes.get();
-        String buffer = "ColumnBufferPool State:\n" + "columnBufferPoolMaxSize: " + columnBufferPoolMaxSize + "\n"
+        String buffer = "ColumnBufferPool State:\n" + "columnBufferPoolCapacity: " + columnBufferPoolCapacity + "\n"
                 + "Max Buffers: " + maxBuffers + "\n" + "Total Pooled Memory (bytes): " + pooledBytes + "\n"
                 + "Total Allocated Memory (bytes): " + totalAllocatedBytes + "\n" + "Number of Buffers Allocated New: "
                 + numAllocNew.get() + "\n" + "Available Buffers: " + bufferSemaphore.availablePermits();

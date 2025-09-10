@@ -117,4 +117,13 @@ public final class FloatColumnValuesWriter extends AbstractColumnValuesWriter {
     protected ATypeTag getTypeTag() {
         return ATypeTag.FLOAT;
     }
+
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(filtered);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        return ParquetPlainFixedLengthValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
+    }
 }

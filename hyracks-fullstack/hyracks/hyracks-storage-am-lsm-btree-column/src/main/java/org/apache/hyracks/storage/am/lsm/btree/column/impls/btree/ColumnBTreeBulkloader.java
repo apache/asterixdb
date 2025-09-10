@@ -119,14 +119,11 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             writeFullLeafPage();
             confiscateNewLeafPage();
         }
-        if (tupleCount == 0) {
-            //Since we are writing the first tuple, we need to estimate the number of columns.
-            columnWriter.updateColumnMetadataForCurrentTuple(tuple);
-        }
         //Save the key of the last inserted tuple
         setMinMaxKeys(tuple);
         columnWriter.writeTuple(tuple);
         tupleCount++;
+        columnWriter.resetTemporaryBufferForCurrentTuple();
     }
 
     /**
@@ -136,9 +133,9 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private void ensureWritersInitialized() throws HyracksDataException {
         if (!writerInitialized) {
             writerInitialized = true;
-            int numberOfColumns = columnWriter.getAbsoluteNumberOfColumns(true);
-            reserveBuffers(numberOfColumns);
-            reservedBufferCount = numberOfColumns;
+            int requiredBuffers = columnWriter.getRequiredTemporaryBuffersCountIncludingCurrentTuple();
+            reserveBuffers(requiredBuffers);
+            reservedBufferCount = requiredBuffers;
             columnWriter.init(this);
         }
     }
@@ -183,8 +180,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             return true;
         }
         if (canCurrentTupleFit(tuple)) {
-            int requiredColumns = columnWriter.getAbsoluteNumberOfColumns(true);
-            return !ensureSufficientBuffers(requiredColumns);
+            int requiredBuffers = columnWriter.getRequiredTemporaryBuffersCountIncludingCurrentTuple();
+            return !ensureSufficientBuffers(requiredBuffers);
         }
         // Not enough space for the tuple.
         return true;
@@ -239,8 +236,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
      * @return false, as the first tuple always fits after setup.
      */
     private boolean handleFirstTuple() throws HyracksDataException {
-        int requiredColumns = columnWriter.getAbsoluteNumberOfColumns(true);
-        int additionalBuffersNeeded = requiredColumns - reservedBufferCount;
+        int requiredBuffers = columnWriter.getRequiredTemporaryBuffersCountIncludingCurrentTuple();
+        int additionalBuffersNeeded = requiredBuffers - reservedBufferCount;
         if (additionalBuffersNeeded > 0) {
             reserveBuffers(additionalBuffersNeeded);
             reservedBufferCount += additionalBuffersNeeded;

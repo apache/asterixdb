@@ -27,8 +27,8 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNI
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
-import static org.apache.hyracks.control.common.config.OptionTypes.getRangedDoubleType;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedLongByteUnit;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -76,7 +76,14 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_PARTITIONS_COUNT(INTEGER, 8),
         STORAGE_MAX_COMPONENT_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, StorageUtil.StorageUnit.TERABYTE)),
         STORAGE_COLUMN_BUFFER_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE)),
-        STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE(getRangedDoubleType(0.0, 100.0), 3.0d),
+        STORAGE_COLUMN_BUFFER_POOL_MAX_MEMORY(
+                getRangedLongByteUnit(0, MAX_HEAP_BYTES),
+                (Function<IApplicationConfig, Long>) config -> {
+                    if (MAX_HEAP_BYTES < SMALL_JVM_HEAP_SIZE) {
+                        return StorageUtil.getLongSizeInBytes(100, StorageUtil.StorageUnit.MEGABYTE);
+                    }
+                    return (long) (0.03 * MAX_HEAP_BYTES);
+                }),
         STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE(getRangedIntegerType(1, 50000), 8000),
         STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT(LONG, TimeUnit.SECONDS.toMillis(120));
 
@@ -86,6 +93,11 @@ public class StorageProperties extends AbstractProperties {
         <T> Option(IOptionType<T> interpreter, T defaultValue) {
             this.interpreter = interpreter;
             this.defaultValue = defaultValue;
+        }
+
+        <T> Option(IOptionType<T> interpreter, Function<IApplicationConfig, T> defaultOption) {
+            this.interpreter = interpreter;
+            this.defaultValue = defaultOption;
         }
 
         @Override
@@ -102,10 +114,6 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_COLUMN_MAX_TUPLE_COUNT:
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                 case STORAGE_COLUMN_MAX_LEAF_NODE_SIZE:
-                case STORAGE_COLUMN_BUFFER_SIZE:
-                case STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE:
-                case STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE:
-                case STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -176,7 +184,7 @@ public class StorageProperties extends AbstractProperties {
                     return "The resultant disk component after a merge must not exceed the specified maximum size.";
                 case STORAGE_COLUMN_BUFFER_SIZE:
                     return "The size in bytes of each buffer in the column buffer pool.";
-                case STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE:
+                case STORAGE_COLUMN_BUFFER_POOL_MAX_MEMORY:
                     return "The percentage of the JVM memory allocated to the column buffer pool. This controls the number of the column buffer relative to the total JVM memory.";
                 case STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE:
                     return "The maximum number of buffers in the column buffer pool.";
@@ -209,6 +217,7 @@ public class StorageProperties extends AbstractProperties {
     }
 
     public static final long MAX_HEAP_BYTES = Runtime.getRuntime().maxMemory();
+    public static final long SMALL_JVM_HEAP_SIZE = StorageUtil.getByteValue("8 GB");
     private static final int SYSTEM_RESERVED_DATASETS = 0;
 
     public StorageProperties(PropertiesAccessor accessor) {
@@ -256,8 +265,8 @@ public class StorageProperties extends AbstractProperties {
         return accessor.getInt(Option.STORAGE_COLUMN_BUFFER_SIZE);
     }
 
-    public double getColumnBufferPoolMemoryPercentage() {
-        return accessor.getDouble(Option.STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE);
+    public long getColumnBufferPoolMaxMemory() {
+        return accessor.getLong(Option.STORAGE_COLUMN_BUFFER_POOL_MAX_MEMORY);
     }
 
     public int getColumnBufferPoolMaxSize() {
@@ -284,10 +293,8 @@ public class StorageProperties extends AbstractProperties {
             int maxConcurrentFlushes = getMaxConcurrentFlushes(numPartitions);
             int writeBufferSize = runtimeContext.getCloudProperties().getWriteBufferSize();
 
-            double columnBufferPoolSizePercentage =
-                    accessor.getDouble(Option.STORAGE_COLUMN_BUFFER_POOL_MEMORY_PERCENTAGE);
-            long maxMemoryForColumnBuffers = (long) (MAX_HEAP_BYTES * (columnBufferPoolSizePercentage / 100));
-            jobExecutionMemory -= maxMemoryForColumnBuffers;
+            long columnBufferPoolMaxMemory = getColumnBufferPoolMaxMemory();
+            jobExecutionMemory -= columnBufferPoolMaxMemory;
             jobExecutionMemory -= (long) (maxConcurrentFlushes + maxConcurrentMerges) * writeBufferSize;
 
         }

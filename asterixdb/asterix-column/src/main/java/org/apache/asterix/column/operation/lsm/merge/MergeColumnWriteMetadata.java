@@ -48,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 public final class MergeColumnWriteMetadata extends AbstractColumnImmutableMetadata {
     private final Mutable<IColumnWriteMultiPageOp> multiPageOpRef;
     private final List<IColumnValuesWriter> columnWriters;
+    private final int requiredTemporaryBuffersCount;
     private final List<IColumnTupleIterator> componentsTuples;
 
     /**
@@ -55,10 +56,12 @@ public final class MergeColumnWriteMetadata extends AbstractColumnImmutableMetad
      */
     private MergeColumnWriteMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef, List<IColumnValuesWriter> columnWriters,
-            IValueReference serializedMetadata, List<IColumnTupleIterator> componentsTuples) {
+            int requiredTemporaryBuffersCount, IValueReference serializedMetadata,
+            List<IColumnTupleIterator> componentsTuples) {
         super(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata, columnWriters.size());
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriters = columnWriters;
+        this.requiredTemporaryBuffersCount = requiredTemporaryBuffersCount;
         this.componentsTuples = componentsTuples;
     }
 
@@ -103,10 +106,14 @@ public final class MergeColumnWriteMetadata extends AbstractColumnImmutableMetad
 
         IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
         List<IColumnValuesWriter> writers = new ArrayList<>();
-        FlushColumnMetadata.deserializeWriters(input, writers, writerFactory);
+        int requiredTemporaryBuffers = FlushColumnMetadata.deserializeWriters(input, writers, writerFactory);
 
         return new MergeColumnWriteMetadata(datasetType, metaType, numberOfPrimaryKeys, multiPageOpRef, writers,
-                serializedMetadata, componentsTuples);
+                requiredTemporaryBuffers, serializedMetadata, componentsTuples);
+    }
+
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffersCount;
     }
 
     public List<IColumnTupleIterator> getComponentsTuples() {

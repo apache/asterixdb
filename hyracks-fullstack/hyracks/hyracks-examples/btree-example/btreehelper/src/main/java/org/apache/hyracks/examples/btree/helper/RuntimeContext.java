@@ -69,7 +69,8 @@ public class RuntimeContext {
         this.ioManager = appCtx.getIoManager();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100, 10,
                 threadFactory, new HashMap<>(), DefaultBufferCacheReadContextProvider.DEFAULT);
-        columnBufferPool = new ColumnBufferPool(4 * 1024, 500, 3.0, TimeUnit.MINUTES.toMillis(2));
+        columnBufferPool = new ColumnBufferPool(4 * 1024, 500, (long) (0.03 * Runtime.getRuntime().maxMemory()),
+                TimeUnit.MINUTES.toMillis(2));
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();

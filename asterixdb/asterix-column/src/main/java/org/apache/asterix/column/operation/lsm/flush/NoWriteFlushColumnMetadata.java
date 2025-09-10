@@ -40,7 +40,14 @@ import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
+import org.apache.asterix.column.values.writer.BooleanColumnValuesWriter;
+import org.apache.asterix.column.values.writer.DoubleColumnValuesWriter;
+import org.apache.asterix.column.values.writer.FloatColumnValuesWriter;
+import org.apache.asterix.column.values.writer.LongColumnValuesWriter;
 import org.apache.asterix.column.values.writer.NoOpColumnValuesWriter;
+import org.apache.asterix.column.values.writer.NullMissingColumnValuesWriter;
+import org.apache.asterix.column.values.writer.StringColumnValuesWriter;
+import org.apache.asterix.column.values.writer.UUIDColumnValuesWriter;
 import org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary;
 import org.apache.asterix.om.dictionary.IFieldNamesDictionary;
 import org.apache.asterix.om.types.ARecordType;
@@ -59,14 +66,17 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
 
     private int numColumns;
+    private int buffersRequiredByCurrentTuple;
 
     public NoWriteFlushColumnMetadata(ARecordType datasetType, ARecordType metaType, int numPrimaryKeys,
             boolean metaContainsKeys, IColumnValuesWriterFactory columnWriterFactory,
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef, List<IColumnValuesWriter> writers,
-            IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
-            Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels, ArrayBackedValueStorage schemaStorage) {
+            int requiredTemporaryBuffers, IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root,
+            ObjectSchemaNode metaRoot, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
+            ArrayBackedValueStorage schemaStorage) {
         super(datasetType, metaType, numPrimaryKeys, metaContainsKeys, columnWriterFactory, multiPageOpRef, writers,
-                fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage);
+                requiredTemporaryBuffers, fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage);
+        buffersRequiredByCurrentTuple = 0;
         numColumns = 0;
     }
 
@@ -80,7 +90,7 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
 
         //ColumnWriter
         List<IColumnValuesWriter> writers = new ArrayList<>();
-        deserializeWriters(input, writers, columnWriterFactory);
+        int requiredTemporaryBuffers = deserializeWriters(input, writers, columnWriterFactory);
 
         //FieldNames
         IFieldNamesDictionary fieldNamesDictionary = AbstractFieldNamesDictionary.deserialize(input);
@@ -96,8 +106,8 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
         ArrayBackedValueStorage schemaStorage = new ArrayBackedValueStorage(serializedMetadata.getLength());
         schemaStorage.append(serializedMetadata);
         return new NoWriteFlushColumnMetadata(datasetType, metaType, numPrimaryKeys, metaContainsKeys,
-                columnWriterFactory, multiPageOpRef, writers, fieldNamesDictionary, root, metaRoot, definitionLevels,
-                schemaStorage);
+                columnWriterFactory, multiPageOpRef, writers, requiredTemporaryBuffers, fieldNamesDictionary, root,
+                metaRoot, definitionLevels, schemaStorage);
     }
 
     public void close() {
@@ -186,6 +196,8 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
                 if (columnIndex == numColumns) {
                     numColumns++;
                 }
+                boolean filtered = !primaryKey;
+                buffersRequiredByCurrentTuple += getBuffersRequiredByWriter(normalizedTypeTag, filtered);
                 IColumnValuesWriter writer = NoOpColumnValuesWriter.INSTANCE;
                 addColumn(columnIndex, writer);
                 return new PrimitiveSchemaNode(columnIndex, normalizedTypeTag, primaryKey);
@@ -193,6 +205,27 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
                 throw new IllegalStateException("Unsupported type " + childTypeTag);
 
         }
+    }
+
+    private int getBuffersRequiredByWriter(ATypeTag typeTag, boolean filtered) {
+        return switch (typeTag) {
+            case MISSING, NULL -> NullMissingColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case BOOLEAN -> BooleanColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case TINYINT, SMALLINT, INTEGER, BIGINT -> LongColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case FLOAT -> FloatColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case DOUBLE -> DoubleColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case STRING -> StringColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case UUID -> UUIDColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            default -> throw new UnsupportedOperationException(typeTag + " is not supported");
+        };
+    }
+
+    public void resetBufferCount() {
+        buffersRequiredByCurrentTuple = 0;
+    }
+
+    public int getRequiredTemporaryBuffersCountForCurrentTuple() {
+        return buffersRequiredByCurrentTuple;
     }
 
     @Override
