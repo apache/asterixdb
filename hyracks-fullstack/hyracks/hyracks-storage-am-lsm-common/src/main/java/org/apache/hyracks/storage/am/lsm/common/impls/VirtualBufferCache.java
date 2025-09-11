@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.common.buffercache.VirtualPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.storage.common.file.SynchronizedFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,7 +69,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     public VirtualBufferCache(ICacheMemoryAllocator allocator, int pageSize, int pageBudget) {
         this.allocator = allocator;
-        this.fileMapManager = new FileMapManager();
+        this.fileMapManager = new SynchronizedFileMapManager(new FileMapManager());
         this.pageSize = pageSize;
         if (pageBudget == 0) {
             throw new IllegalArgumentException("Page Budget Cannot be 0");
@@ -122,20 +123,13 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public int createFile(FileReference fileRef) throws HyracksDataException {
-        synchronized (fileMapManager) {
-            return fileMapManager.registerFile(fileRef);
-        }
+        return fileMapManager.registerFile(fileRef);
     }
 
     @Override
     public int openFile(FileReference fileRef) throws HyracksDataException {
         try {
-            synchronized (fileMapManager) {
-                if (fileMapManager.isMapped(fileRef)) {
-                    return fileMapManager.lookupFileId(fileRef);
-                }
-                return fileMapManager.registerFile(fileRef);
-            }
+            return fileMapManager.registerFileIfAbsent(fileRef);
         } finally {
             logStats();
         }
@@ -159,17 +153,17 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public void deleteFile(FileReference fileRef) throws HyracksDataException {
-        synchronized (fileMapManager) {
-            int fileId = fileMapManager.lookupFileId(fileRef);
-            deleteFile(fileId);
-        }
+        int fileId = fileMapManager.unregisterFile(fileRef);
+        reclaimPagesFromDeletedFile(fileId);
     }
 
     @Override
     public void deleteFile(int fileId) throws HyracksDataException {
-        synchronized (fileMapManager) {
-            fileMapManager.unregisterFile(fileId);
-        }
+        fileMapManager.unregisterFile(fileId);
+        reclaimPagesFromDeletedFile(fileId);
+    }
+
+    private void reclaimPagesFromDeletedFile(int fileId) {
         int reclaimedPages = 0;
         for (int i = 0; i < buckets.length; i++) {
             final CacheBucket bucket = buckets[i];
@@ -243,10 +237,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             }
             if (!newPage) {
                 int fileId = BufferedFileHandle.getFileId(dpid);
-                FileReference fileRef;
-                synchronized (fileMapManager) {
-                    fileRef = fileMapManager.lookupFileName(fileId);
-                }
+                FileReference fileRef = fileMapManager.lookupFileName(fileId);
                 throw HyracksDataException.create(ErrorCode.PAGE_DOES_NOT_EXIST_IN_FILE,
                         BufferedFileHandle.getPageId(dpid), fileRef);
             }
