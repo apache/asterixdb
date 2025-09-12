@@ -49,4 +49,23 @@ public interface IFileMapManager extends IFileMapProvider {
      */
     FileReference unregisterFile(int fileId) throws HyracksDataException;
 
+    /**
+     * Unregister a file mapping
+     *
+     * @param fileRef
+     *            - The file reference whose mapping is to be unregistered.
+     * @throws HyracksDataException
+     *             - If the file reference is not mapped currently in this manager.
+     * @return the file id
+     */
+    int unregisterFile(FileReference fileRef) throws HyracksDataException;
+
+    /**
+     * Register a new file name if it is not already registered.
+     *
+     * @param fileRef
+     *            - file reference to register or lookup
+     * @return the file id
+     */
+    int registerFileIfAbsent(FileReference fileRef);
 }
