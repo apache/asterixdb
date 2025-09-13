@@ -22,6 +22,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
 public class SynchronizedFileMapManager implements IFileMapManager {
+    private static final long serialVersionUID = -8380743754574440120L;
     private final IFileMapManager delegate;
 
     public SynchronizedFileMapManager(IFileMapManager fileMapManager) {
