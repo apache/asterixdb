@@ -799,7 +799,7 @@ public class AccessMethodUtils {
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree probeSubTree,
             OptimizableOperatorSubTree indexSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, AbstractFunctionCallExpression funcExpr,
-            List<Pair<FunctionIdentifier, Boolean>> funcIdentifiers) throws AlgebricksException {
+            List<Pair<FunctionIdentifier, Boolean>> funcIdentifiers, boolean isJoin) throws AlgebricksException {
         // index-only plan possible?
         boolean isIndexOnlyPlan = false;
 
@@ -826,7 +826,7 @@ public class AccessMethodUtils {
 
         if (analysisCtx.getIndexDatasetMap().get(chosenIndex).getDatasetType() == DatasetType.INTERNAL) {
             AccessMethodUtils.indexOnlyPlanCheck(afterJoinRefs, joinRef, indexSubTree, probeSubTree, chosenIndex,
-                    analysisCtx, context, indexOnlyPlanInfo);
+                    analysisCtx, context, indexOnlyPlanInfo, isJoin);
         } else {
             // We don't consider an index on an external dataset to be an index-only plan.
             isIndexOnlyPlan = false;
@@ -1469,23 +1469,8 @@ public class AccessMethodUtils {
             currentTopOp = newSelectOp;
 
         }
-        boolean includesJoin = false;
-        for (Mutable<ILogicalOperator> afterTopOpRef : afterTopOpRefs) {
-            if (afterTopOpRef.getValue().getOperatorTag() == LogicalOperatorTag.INNERJOIN
-                    || afterTopOpRef.getValue().getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
-                includesJoin = true;
-                break;
-            }
-        }
-        if (topOpRef.getValue().getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN
-                || topOpRef.getValue().getOperatorTag() == LogicalOperatorTag.INNERJOIN || includesJoin) {
-            return createFinalIndexOnlySearchPlanForJOIN(constantAssignVarUsedInTopOp, afterTopOpRefs, constAssignVars,
-                    origVarToOutputVarMap, pkVarsFromSIdxUnnestMapOp, skVarsFromSIdxUnnestMap, sourceLoc, context,
-                    currentTopOp, constAssignOp);
-        } else {
-            return createFinalIndexOnlySearchPlan(constantAssignVarUsedInTopOp, afterTopOpRefs, constAssignVars,
-                    origVarToOutputVarMap, pkVarsFromSIdxUnnestMapOp, sourceLoc, context, currentTopOp, constAssignOp);
-        }
+        return createFinalIndexOnlySearchPlan(constantAssignVarUsedInTopOp, afterTopOpRefs, constAssignVars,
+                origVarToOutputVarMap, pkVarsFromSIdxUnnestMapOp, sourceLoc, context, currentTopOp, constAssignOp);
 
     }
 
@@ -1625,14 +1610,14 @@ public class AccessMethodUtils {
 
     /**
      * Creates operators for completing the plan for a query using secondary indexes:
-      * Case A) Non-index-only plan:
-      *   sidx-search -> (for heterogeneous) select -> (optional) sort -> (optional) distinct -> pdix-search
-      * Case B) Index-only plan:
-      *   Two forms depending on the query type:
-      *   1. Single collection query:
-      *      sidx-search -> (for heterogeneous) select -> (optional) sort -> (optional) distinct
-      *   2. Join query:
-      *      sidx-search -> (for heterogeneous) select ->  sort -> select (with window function)
+     * Case A) Non-index-only plan:
+     *   sidx-search -> (for heterogeneous) select -> (optional) sort -> (optional) distinct -> pdix-search
+     * Case B) Index-only plan:
+     *   Two forms depending on the query type:
+     *   1. Single collection query:
+     *      sidx-search -> (for heterogeneous) select -> (optional) sort -> (optional) distinct
+     *   2. Join query:
+     *      sidx-search -> (for heterogeneous) select ->  sort -> select (with window function)
      */
     public static ILogicalOperator createRestOfIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
             Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
@@ -1993,8 +1978,8 @@ public class AccessMethodUtils {
     public static void indexOnlyPlanCheck(List<Mutable<ILogicalOperator>> afterTopRefs,
             Mutable<ILogicalOperator> topRef, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo)
-            throws AlgebricksException {
+            IOptimizationContext context, Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo,
+            boolean isJoin) throws AlgebricksException {
         // First, checks all cases that the index-only can't be applied. If so, we can stop here.
         Dataset dataset = indexSubTree.getDataset();
         // For an external dataset, primary index, we don't apply index-only plan optimization.
@@ -2014,7 +1999,7 @@ public class AccessMethodUtils {
         // an inverted index contains a part of a field value, not all of it.
         if (noIndexOnlyPlanOption || dataset.getDatasetType() == DatasetType.EXTERNAL || chosenIndex.isPrimaryIndex()
                 || chosenIndex.getIndexDetails().isOverridingKeyFieldTypes() || chosenIndex.isEnforced()
-                || isInvertedIndex(chosenIndex) || chosenIndex.getIndexType() == IndexType.ARRAY) {
+                || isInvertedIndex(chosenIndex) || chosenIndex.getIndexType() == IndexType.ARRAY || isJoin) {
             indexOnlyPlanInfo.setFirst(false);
             return;
         }

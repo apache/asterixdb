@@ -100,11 +100,11 @@ distribute result [$$227]
                                                               aggregate [$$191] <- [listify({"report": $$r, "shelters": $$181})]
                                                               -- AGGREGATE  |LOCAL|
                                                                 group by ([$$262 := $$234; $$263 := $$235]) decor ([$$u; $$242; $$243; $$244; $$233; $$252; $$sub; $$r]) {
-                                                                          aggregate [$$181] <- [listify({"location": $$290})]
+                                                                          aggregate [$$181] <- [listify({"location": $$232})]
                                                                           -- AGGREGATE  |LOCAL|
                                                                             select (not(is-missing($$236)))
                                                                             -- STREAM_SELECT  |LOCAL|
-                                                                              project ([$$290, $$236])
+                                                                              project ([$$236, $$232])
                                                                               -- STREAM_PROJECT  |LOCAL|
                                                                                 nested tuple source
                                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -122,27 +122,27 @@ distribute result [$$227]
                                                         -- STABLE_SORT [$$233(ASC), $$234(ASC), $$235(ASC)]  |PARTITIONED|
                                                           exchange
                                                           -- HASH_PARTITION_EXCHANGE [$$233]  |PARTITIONED|
-                                                            select ($$291) project: [$$r, $$290, $$236, $$234, $$235, $$u, $$242, $$243, $$244, $$233, $$252, $$sub, $$264, $$265]
+                                                            select (spatial-intersect($$232, $$244)) retain-untrue ($$236 <- missing)
                                                             -- STREAM_SELECT  |PARTITIONED|
-                                                              project ([$$233, $$sub, $$242, $$234, $$r, $$243, $$252, $$264, $$235, $$u, $$265, $$244, $$236, $$290, $$291])
-                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                window-aggregate [$$291] <- [win-mark-valid-tuple-impl($$285, $$286, $$287, $$288)] partition [$$236] order (ASC, $$285) (ASC, $$286) (ASC, $$287) (ASC, $$288)
-                                                                -- WINDOW_STREAM  |PARTITIONED|
+                                                              assign [$$232] <- [$$s.getField(1)] project: [$$233, $$sub, $$242, $$234, $$r, $$243, $$252, $$264, $$235, $$u, $$265, $$244, $$236, $$232]
+                                                              -- ASSIGN  |PARTITIONED|
+                                                                project ([$$233, $$sub, $$242, $$234, $$r, $$243, $$252, $$264, $$235, $$u, $$265, $$244, $$236, $$s])
+                                                                -- STREAM_PROJECT  |PARTITIONED|
                                                                   exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    order (ASC, $$236) (ASC, $$285) (ASC, $$286) (ASC, $$287) (ASC, $$288)
-                                                                    -- STABLE_SORT [$$236(ASC), $$285(ASC), $$286(ASC), $$287(ASC), $$288(ASC)]  |PARTITIONED|
+                                                                    left-outer-unnest-map [$$236, $$s] <- index-search("Shelters", 0, "Default", "channels", "Shelters", true, false, 1, $$289, 1, $$289, true, true, true)
+                                                                    -- BTREE_SEARCH  |PARTITIONED|
                                                                       exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        select (spatial-intersect($$290, $$244)) retain-untrue ($$236 <- missing)
-                                                                        -- STREAM_SELECT  |PARTITIONED|
-                                                                          assign [$$290] <- [create-point($$285, $$286)]
-                                                                          -- ASSIGN  |PARTITIONED|
-                                                                            project ([$$233, $$sub, $$242, $$234, $$r, $$243, $$252, $$264, $$235, $$u, $$265, $$244, $$285, $$286, $$287, $$288, $$236])
+                                                                        order (ASC, $$289)
+                                                                        -- STABLE_SORT [$$289(ASC)]  |PARTITIONED|
+                                                                          exchange
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            project ([$$233, $$sub, $$242, $$234, $$r, $$243, $$252, $$264, $$235, $$u, $$265, $$244, $$289])
                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                               exchange
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                left-outer-unnest-map [$$285, $$286, $$287, $$288, $$236] <- index-search("s_location", 1, "Default", "channels", "Shelters", true, true, 4, $$281, $$282, $$283, $$284)
+                                                                                left-outer-unnest-map [$$285, $$286, $$287, $$288, $$289] <- index-search("s_location", 1, "Default", "channels", "Shelters", true, true, 4, $$281, $$282, $$283, $$284)
                                                                                 -- RTREE_SEARCH  |PARTITIONED|
                                                                                   exchange
                                                                                   -- BROADCAST_EXCHANGE  |PARTITIONED|

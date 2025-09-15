@@ -192,7 +192,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         if (dataset.getDatasetType() == DatasetType.INTERNAL && !chosenIndex.isPrimaryIndex()) {
             AccessMethodUtils.indexOnlyPlanCheck(afterSelectRefs, selectRef, subTree, null, chosenIndex, analysisCtx,
-                    context, indexOnlyPlanInfo);
+                    context, indexOnlyPlanInfo, false);
             isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
         }
 
@@ -294,7 +294,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
 
         boolean canContinue = AccessMethodUtils.setIndexOnlyPlanInfo(afterJoinRefs, joinRef, probeSubTree, indexSubTree,
-                chosenIndex, analysisCtx, context, funcExpr, FUNC_IDENTIFIERS);
+                chosenIndex, analysisCtx, context, funcExpr, FUNC_IDENTIFIERS, true);
         if (!canContinue) {
             return false;
         }

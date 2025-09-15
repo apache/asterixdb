@@ -12,18 +12,18 @@ distribute result [$$33] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
           -- HYBRID_HASH_JOIN [$$34][$$37]  |PARTITIONED|
             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
-              select ($$42) project: [$$34] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-              -- STREAM_SELECT  |PARTITIONED|
-                project ([$$34, $$42]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- STREAM_PROJECT  |PARTITIONED|
-                  window-aggregate [$$42] <- [win-mark-valid-tuple-impl($$34)] partition [$$41] order (ASC, $$34) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- WINDOW_STREAM  |PARTITIONED|
+              project ([$$34]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  distinct ([$$41]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      order (ASC, $$41) (ASC, $$34) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- STABLE_SORT [$$41(ASC), $$34(ASC)]  |PARTITIONED|
+                      order (ASC, $$41) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STABLE_SORT [$$41(ASC)]  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- HASH_PARTITION_EXCHANGE [$$41]  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           select (gt($$34, 30)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_SELECT  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

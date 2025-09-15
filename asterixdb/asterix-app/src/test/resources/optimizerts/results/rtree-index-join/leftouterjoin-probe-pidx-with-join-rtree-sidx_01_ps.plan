@@ -10,7 +10,7 @@ distribute result [$$53]
         -- STABLE_SORT [$$64(ASC)]  |PARTITIONED|
           exchange
           -- RANGE_PARTITION_EXCHANGE [$$64(ASC)]  |PARTITIONED|
-            forward: shared-variable = $$81
+            forward: shared-variable = $$79
             -- FORWARD  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -19,11 +19,11 @@ distribute result [$$53]
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     group by ([$$64 := $$57]) decor ([$$56]) {
-                              aggregate [$$52] <- [listify({"tweetid2": $$58, "loc2": $$77})]
+                              aggregate [$$52] <- [listify({"tweetid2": $$58, "loc2": $$59})]
                               -- AGGREGATE  |LOCAL|
                                 select (not(is-missing($$58)))
                                 -- STREAM_SELECT  |LOCAL|
-                                  project ([$$58, $$77])
+                                  project ([$$58, $$59])
                                   -- STREAM_PROJECT  |LOCAL|
                                     nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -35,27 +35,27 @@ distribute result [$$53]
                         -- STABLE_SORT [$$57(ASC), $$58(ASC)]  |PARTITIONED|
                           exchange
                           -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-                            select ($$78) project: [$$56, $$58, $$77, $$57]
+                            select (spatial-intersect($$59, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$59, $$57]
                             -- STREAM_SELECT  |PARTITIONED|
-                              project ([$$56, $$58, $$77, $$57, $$78])
-                              -- STREAM_PROJECT  |PARTITIONED|
-                                window-aggregate [$$78] <- [win-mark-valid-tuple-impl($$72, $$73, $$74, $$75)] partition [$$58] order (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
-                                -- WINDOW_STREAM  |PARTITIONED|
+                              assign [$$59] <- [$$t2.getField(2)] project: [$$56, $$57, $$n, $$58, $$59]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$56, $$57, $$n, $$58, $$t2])
+                                -- STREAM_PROJECT  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    order (ASC, $$58) (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
-                                    -- STABLE_SORT [$$58(ASC), $$72(ASC), $$73(ASC), $$74(ASC), $$75(ASC)]  |PARTITIONED|
+                                    left-outer-unnest-map [$$58, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$76, 1, $$76, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        select (spatial-intersect($$77, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$77, $$57, $$72, $$73, $$74, $$75]
-                                        -- STREAM_SELECT  |PARTITIONED|
-                                          assign [$$77] <- [create-point($$72, $$73)]
-                                          -- ASSIGN  |PARTITIONED|
-                                            project ([$$57, $$56, $$n, $$72, $$73, $$74, $$75, $$58])
+                                        order (ASC, $$76)
+                                        -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$56, $$57, $$n, $$76])
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                left-outer-unnest-map [$$72, $$73, $$74, $$75, $$58] <- index-search("twmSndLocIx", 1, "Default", "test", "TweetMessages", true, true, 4, $$68, $$69, $$70, $$71)
+                                                left-outer-unnest-map [$$72, $$73, $$74, $$75, $$76] <- index-search("twmSndLocIx", 1, "Default", "test", "TweetMessages", true, true, 4, $$68, $$69, $$70, $$71)
                                                 -- RTREE_SEARCH  |PARTITIONED|
                                                   exchange
                                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -77,11 +77,11 @@ distribute result [$$53]
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                aggregate [$$81] <- [agg-range-map($$79, $$80)]
+                aggregate [$$79] <- [agg-range-map($$77, $$78)]
                 -- AGGREGATE  |UNPARTITIONED|
                   exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-                    aggregate [$$79, $$80] <- [agg-local-sampling($$64), agg-null-writer($$64)]
+                    aggregate [$$77, $$78] <- [agg-local-sampling($$64), agg-null-writer($$64)]
                     -- AGGREGATE  |PARTITIONED|
                       project ([$$64])
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -92,11 +92,11 @@ distribute result [$$53]
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               group by ([$$64 := $$57]) decor ([$$56]) {
-                                        aggregate [$$52] <- [listify({"tweetid2": $$58, "loc2": $$77})]
+                                        aggregate [$$52] <- [listify({"tweetid2": $$58, "loc2": $$59})]
                                         -- AGGREGATE  |LOCAL|
                                           select (not(is-missing($$58)))
                                           -- STREAM_SELECT  |LOCAL|
-                                            project ([$$58, $$77])
+                                            project ([$$58, $$59])
                                             -- STREAM_PROJECT  |LOCAL|
                                               nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -108,27 +108,27 @@ distribute result [$$53]
                                   -- STABLE_SORT [$$57(ASC), $$58(ASC)]  |PARTITIONED|
                                     exchange
                                     -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-                                      select ($$78) project: [$$56, $$58, $$77, $$57]
+                                      select (spatial-intersect($$59, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$59, $$57]
                                       -- STREAM_SELECT  |PARTITIONED|
-                                        project ([$$56, $$58, $$77, $$57, $$78])
-                                        -- STREAM_PROJECT  |PARTITIONED|
-                                          window-aggregate [$$78] <- [win-mark-valid-tuple-impl($$72, $$73, $$74, $$75)] partition [$$58] order (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
-                                          -- WINDOW_STREAM  |PARTITIONED|
+                                        assign [$$59] <- [$$t2.getField(2)] project: [$$56, $$57, $$n, $$58, $$59]
+                                        -- ASSIGN  |PARTITIONED|
+                                          project ([$$56, $$57, $$n, $$58, $$t2])
+                                          -- STREAM_PROJECT  |PARTITIONED|
                                             exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              order (ASC, $$58) (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
-                                              -- STABLE_SORT [$$58(ASC), $$72(ASC), $$73(ASC), $$74(ASC), $$75(ASC)]  |PARTITIONED|
+                                              left-outer-unnest-map [$$58, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$76, 1, $$76, true, true, true)
+                                              -- BTREE_SEARCH  |PARTITIONED|
                                                 exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  select (spatial-intersect($$77, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$77, $$57, $$72, $$73, $$74, $$75]
-                                                  -- STREAM_SELECT  |PARTITIONED|
-                                                    assign [$$77] <- [create-point($$72, $$73)]
-                                                    -- ASSIGN  |PARTITIONED|
-                                                      project ([$$57, $$56, $$n, $$72, $$73, $$74, $$75, $$58])
+                                                  order (ASC, $$76)
+                                                  -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                                    exchange
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      project ([$$56, $$57, $$n, $$76])
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          left-outer-unnest-map [$$72, $$73, $$74, $$75, $$58] <- index-search("twmSndLocIx", 1, "Default", "test", "TweetMessages", true, true, 4, $$68, $$69, $$70, $$71)
+                                                          left-outer-unnest-map [$$72, $$73, $$74, $$75, $$76] <- index-search("twmSndLocIx", 1, "Default", "test", "TweetMessages", true, true, 4, $$68, $$69, $$70, $$71)
                                                           -- RTREE_SEARCH  |PARTITIONED|
                                                             exchange
                                                             -- BROADCAST_EXCHANGE  |PARTITIONED|

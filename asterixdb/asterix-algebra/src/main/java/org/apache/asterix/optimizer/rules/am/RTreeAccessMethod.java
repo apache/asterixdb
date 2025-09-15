@@ -181,7 +181,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (isIndexOnlyPlan) {
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 AccessMethodUtils.indexOnlyPlanCheck(afterSelectRefs, selectRef, subTree, null, chosenIndex,
-                        analysisCtx, context, indexOnlyPlanInfo);
+                        analysisCtx, context, indexOnlyPlanInfo, false);
                 isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
             } else {
                 // An index on an external dataset can't be optimized for the index-only plan.
@@ -359,7 +359,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
 
         boolean canContinue = AccessMethodUtils.setIndexOnlyPlanInfo(afterJoinRefs, joinRef, probeSubTree, indexSubTree,
-                chosenIndex, analysisCtx, context, funcExpr, FUNC_IDENTIFIERS);
+                chosenIndex, analysisCtx, context, funcExpr, FUNC_IDENTIFIERS, true);
         if (!canContinue) {
             return false;
         }
