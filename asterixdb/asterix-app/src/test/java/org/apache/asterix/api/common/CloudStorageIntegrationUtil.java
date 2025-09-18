@@ -19,18 +19,25 @@
 package org.apache.asterix.api.common;
 
 import static org.apache.asterix.api.common.AsterixHyracksIntegrationUtil.LoggerHolder.LOGGER;
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 
 public class CloudStorageIntegrationUtil extends AsterixHyracksIntegrationUtil {
 
     public static final String RESOURCES_PATH = joinPath(getProjectPath().toString(), "src", "test", "resources");
     public static final String CONFIG_FILE = joinPath(RESOURCES_PATH, "cc-cloud-storage-main.conf");
+    public static final String CONFIG_FILE_TEMPLATE = joinPath(RESOURCES_PATH, "cc-cloud-storage-main.ftl");
 
     public static void main(String[] args) throws Exception {
         boolean cleanStart = Boolean.getBoolean("cleanup.start");
         LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
         final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
-        try {
+        try (S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart)) {
+            fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
+                    CONFIG_FILE);
             integrationUtil.run(cleanStart, Boolean.getBoolean("cleanup.shutdown"),
                     System.getProperty("external.lib", ""), CONFIG_FILE);
         } catch (Exception e) {

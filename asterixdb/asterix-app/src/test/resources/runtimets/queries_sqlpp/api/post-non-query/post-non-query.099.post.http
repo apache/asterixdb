@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-DROP DATASET ds;
-DROP TYPE openType;
+/*
+ * Description: testing passing a non-query statement using POST with readonly set to false
+ * Result: success
+ */
+-- extractstatus
+/query/service
+--body={"statement": "DROP TYPE t1;", "readonly": false}

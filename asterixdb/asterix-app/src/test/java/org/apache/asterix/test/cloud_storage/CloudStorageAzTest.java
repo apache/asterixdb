@@ -19,6 +19,7 @@
 package org.apache.asterix.test.cloud_storage;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
+import static org.apache.asterix.test.cloud_storage.CloudStorageGCSTest.S3_ONLY;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,7 +72,6 @@ public class CloudStorageAzTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         String endpointString = "http://127.0.0.1:15055/devstoreaccount1/" + CLOUD_STORAGE_BUCKET;
         final String accKey =
                 "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
@@ -120,7 +120,8 @@ public class CloudStorageAzTest {
     @Test
     public void test() throws Exception {
         List<TestCase.CompilationUnit> cu = tcCtx.getTestCase().getCompilationUnit();
-        Assume.assumeTrue(cu.size() > 1 || !EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription())));
+        Assume.assumeTrue(cu.size() > 1 || (!EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription()))
+                && !S3_ONLY.equals(getText(cu.get(0).getDescription()))));
         LangExecutionUtil.test(tcCtx);
     }
 

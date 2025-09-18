@@ -19,6 +19,9 @@
 package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.asterix.test.common.TestConstants.S3_ACCESS_KEY_ID_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.S3_REGION_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.ACCOUNT_KEY_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.ACCOUNT_NAME_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_KEY_DEFAULT;
@@ -288,6 +291,7 @@ public class TestExecutor {
     protected String deltaPath = null;
     public String stripSubstring = null;
     public String executorId = null;
+    private String s3mockTemplate = null;
 
     public TestExecutor() {
         this(Collections.singletonList(
@@ -2532,7 +2536,14 @@ public class TestExecutor {
 
     protected String setS3TemplateDefault(String str) {
         if (str.contains("%template%")) {
-            return str.replace("%template%", TestConstants.S3_TEMPLATE_DEFAULT);
+            String s3mockEndpoint = System.getProperty(TestConstants.S3_SERVICE_ENDPOINT_KEY);
+            if (s3mockEndpoint != null && s3mockTemplate == null) {
+                s3mockTemplate = "(\"accessKeyId\"=\"" + S3_ACCESS_KEY_ID_DEFAULT + "\"),\n" + "(\"secretAccessKey\"=\""
+                        + S3_SECRET_ACCESS_KEY_DEFAULT + "\"),\n" + "(\"region\"=\"" + S3_REGION_DEFAULT + "\"),\n"
+                        + "(\"serviceEndpoint\"=\"" + s3mockEndpoint + "\")";
+            }
+            return str.replace("%template%",
+                    s3mockTemplate == null ? TestConstants.S3_TEMPLATE_DEFAULT : s3mockTemplate);
         } else {
             return str.replace("%template_colons%", TestConstants.S3_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS);
         }

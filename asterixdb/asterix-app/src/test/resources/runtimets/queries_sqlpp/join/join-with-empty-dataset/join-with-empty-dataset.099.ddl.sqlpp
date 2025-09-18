@@ -17,5 +17,6 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+drop dataset ds1 if exists;
+drop dataset ds2 if exists;
+drop type openType if exists;

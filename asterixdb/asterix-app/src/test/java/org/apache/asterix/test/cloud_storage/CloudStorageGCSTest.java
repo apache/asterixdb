@@ -70,6 +70,7 @@ public class CloudStorageGCSTest {
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage-gcs.conf";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String EXCLUDED_TESTS = "MP";
+    public static final String S3_ONLY = "S3Only";
     public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:24443";
     private static final String MOCK_SERVER_PROJECT_ID = "asterixdb-gcs-test-project-id";
 
@@ -79,7 +80,6 @@ public class CloudStorageGCSTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
         cleanup(storage);
@@ -120,7 +120,8 @@ public class CloudStorageGCSTest {
     @Test
     public void test() throws Exception {
         List<TestCase.CompilationUnit> cu = tcCtx.getTestCase().getCompilationUnit();
-        Assume.assumeTrue(cu.size() > 1 || !EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription())));
+        Assume.assumeTrue(cu.size() > 1 || (!EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription()))
+                && !S3_ONLY.equals(getText(cu.get(0).getDescription()))));
         LangExecutionUtil.test(tcCtx);
     }
 

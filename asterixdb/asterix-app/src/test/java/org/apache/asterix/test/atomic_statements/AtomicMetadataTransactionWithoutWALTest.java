@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.test.atomic_statements;
 
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.CONFIG_FILE_TEMPLATE;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.InputStream;
@@ -36,6 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -55,7 +59,9 @@ public class AtomicMetadataTransactionWithoutWALTest {
     @Before
     public void setUp() throws Exception {
         boolean cleanStart = Boolean.getBoolean("cleanup.start");
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
+        S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
+        fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
+                CONFIG_FILE);
         integrationUtil.setGracefulShutdown(false);
         integrationUtil.init(true, CONFIG_FILE);
     }

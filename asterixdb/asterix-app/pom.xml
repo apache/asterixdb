@@ -1137,14 +1137,8 @@
     </dependency>
     <dependency>
       <groupId>com.adobe.testing</groupId>
-      <artifactId>s3mock</artifactId>
+      <artifactId>s3mock-testcontainers</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!-- Mock for AWS S3 -->
     <dependency>
@@ -1201,5 +1195,11 @@
       <artifactId>hadoop-client-runtime</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.31</version>
+      <scope>test</scope>
+   </dependency>
   </dependencies>
 </project>

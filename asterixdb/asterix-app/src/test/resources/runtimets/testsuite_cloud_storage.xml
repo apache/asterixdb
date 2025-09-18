@@ -76,6 +76,8 @@
     </test-case>
     <test-case FilePath="cloud_storage/storage-size/datasource-function">
       <compilation-unit name="external-collection">
+        <description>S3Only</description>
+        <placeholder name="adapter" value="S3" />
         <output-dir compare="Clean-JSON">external-collection</output-dir>
         <expected-error>Retrieving storage size is not applicable to type: EXTERNAL.</expected-error>
       </compilation-unit>

@@ -21,11 +21,11 @@ package org.apache.asterix.test.cloud_storage;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
+import static org.apache.asterix.test.cloud_storage.CloudStorageGCSTest.S3_ONLY;
 
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -83,7 +83,6 @@ public class GCSCloudStorageUnstableTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
@@ -111,7 +110,8 @@ public class GCSCloudStorageUnstableTest {
     @Test
     public void test() throws Exception {
         List<TestCase.CompilationUnit> cu = tcCtx.getTestCase().getCompilationUnit();
-        Assume.assumeTrue(cu.size() > 1 || !EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription())));
+        Assume.assumeTrue(cu.size() > 1 || (!EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription()))
+                && !S3_ONLY.equals(getText(cu.get(0).getDescription()))));
         LangExecutionUtil.test(tcCtx);
         for (NodeControllerService nc : ExecutionTestUtil.integrationUtil.ncs) {
             IDatasetLifecycleManager lifecycleManager =

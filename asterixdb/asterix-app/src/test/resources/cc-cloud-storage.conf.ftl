@@ -42,7 +42,7 @@ jvm.args=-Xmx4096m --add-opens=jdk.management/com.sun.management.internal=ALL-UN
 storage.buffercache.size=128MB
 storage.memorycomponent.globalbudget=512MB
 storage.max.columns.in.zeroth.segment=800
-storage.page.zero.writer=sparse
+storage.page.zero.writer=default
 
 [cc]
 address = 127.0.0.1
@@ -70,7 +70,7 @@ storage.partitioning=static
 cloud.storage.scheme=s3
 cloud.storage.bucket=cloud-storage-container
 cloud.storage.region=us-west-2
-cloud.storage.endpoint=http://127.0.0.1:8001
+cloud.storage.endpoint=${cloudUrl}
 cloud.storage.anonymous.auth=true
 cloud.storage.cache.policy=selective
 cloud.max.write.requests.per.second=2000
