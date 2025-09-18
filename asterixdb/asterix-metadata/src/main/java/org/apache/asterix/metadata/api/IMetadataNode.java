@@ -1019,4 +1019,6 @@ public interface IMetadataNode extends Remote, Serializable {
             throws AlgebricksException, RemoteException;
 
     List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException, RemoteException;
+
+    boolean isActive(TxnId txnId) throws RemoteException;
 }
