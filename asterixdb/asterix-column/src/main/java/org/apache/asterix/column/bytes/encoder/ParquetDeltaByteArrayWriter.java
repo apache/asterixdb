@@ -32,6 +32,10 @@ import org.apache.parquet.column.values.deltastrings.DeltaByteArrayWriter;
  * Re-implementation of {@link DeltaByteArrayWriter}
  */
 public class ParquetDeltaByteArrayWriter extends AbstractParquetValuesWriter {
+    public static final int REQUIRED_TEMPORARY_BUFFERS =
+            ParquetDeltaBinaryPackingValuesWriterForInteger.REQUIRED_TEMPORARY_BUFFERS
+                    + ParquetDeltaLengthByteArrayValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
+
     private static final IValueReference EMPTY_VALUE;
     private final ParquetDeltaBinaryPackingValuesWriterForInteger prefixLengthWriter;
     private final ParquetDeltaLengthByteArrayValuesWriter suffixWriter;

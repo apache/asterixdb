@@ -44,6 +44,7 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterPartitionRequ
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterResultPartitionLocationFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportDeployedJobSpecFailureFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportProfileFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportResultPartitionConsumedFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportResultPartitionWriteCompletionFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.SendApplicationMessageFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.ShutdownResponseFunction;
@@ -151,6 +152,12 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
         ReportResultPartitionWriteCompletionFunction fn =
                 new ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws Exception {
+        ReportResultPartitionConsumedFunction fn = new ReportResultPartitionConsumedFunction(jobId, rsId, partition);
         ipcHandle.send(-1, fn, null);
     }
 

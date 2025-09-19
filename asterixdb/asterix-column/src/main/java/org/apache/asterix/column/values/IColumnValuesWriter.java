@@ -134,4 +134,9 @@ public interface IColumnValuesWriter extends IValuesWriter {
      * @param output destination to which the writer should be serialized to
      */
     void serialize(DataOutput output) throws IOException;
+
+    /**
+     * Get the number of temporary buffers needed by this writer
+     */
+    int getRequiredTemporaryBuffersCount();
 }

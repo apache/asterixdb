@@ -73,6 +73,8 @@ public interface IClusterController {
 
     void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 
+    void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws Exception;
+
     void getNodeControllerInfos() throws Exception;
 
     void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception;

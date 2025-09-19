@@ -16808,6 +16808,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="pushdown/window_subquery">
+        <output-dir compare="Text">pushdown/window_subquery</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="select-count-one-field">
         <output-dir compare="Text">select-count-one-field</output-dir>
       </compilation-unit>

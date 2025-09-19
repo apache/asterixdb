@@ -38,7 +38,7 @@ import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.parquet.bytes.BytesInput;
 
-final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
+public final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
     private final AbstractParquetValuesWriter longWriter;
     private final ATypeTag typeTag;
 
@@ -118,5 +118,18 @@ final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
     @Override
     protected ATypeTag getTypeTag() {
         return typeTag;
+    }
+
+    @Override
+    public int getRequiredTemporaryBuffersCount() {
+        return requiredTemporaryBuffers(filtered);
+    }
+
+    public static int requiredTemporaryBuffers(boolean filtered) {
+        if (filtered) {
+            return ParquetDeltaBinaryPackingValuesWriterForLong.REQUIRED_TEMPORARY_BUFFERS;
+        } else {
+            return ParquetPlainFixedLengthValuesWriter.REQUIRED_TEMPORARY_BUFFERS;
+        }
     }
 }

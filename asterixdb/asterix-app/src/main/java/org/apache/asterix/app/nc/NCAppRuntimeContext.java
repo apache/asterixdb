@@ -148,7 +148,7 @@ import org.apache.logging.log4j.Logger;
 
 public class NCAppRuntimeContext implements INcApplicationContext {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final double INVALID_BUFFER_POOL_MEMORY_PERCENTAGE = 0.0;
+    public static final long INVALID_BUFFER_POOL_MAX_MEMORY = 0;
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCServiceContext ncServiceContext;
@@ -330,14 +330,13 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                     fileInfoMap, defaultContext);
         }
 
-        if (storageProperties.getColumnBufferPoolMemoryPercentage() <= INVALID_BUFFER_POOL_MEMORY_PERCENTAGE) {
-            LOGGER.info("Using FreeColumnBufferPool since column buffer pool size percentage is {}",
+        if (storageProperties.getColumnBufferPoolMaxMemory() <= INVALID_BUFFER_POOL_MAX_MEMORY) {
+            LOGGER.info("Using FreeColumnBufferPool since column buffer pool max memory is {}",
                     storageProperties.getColumnBufferSize());
             this.columnBufferPool = new FreeColumnBufferPool();
         } else {
             this.columnBufferPool = new ColumnBufferPool(storageProperties.getColumnBufferSize(),
-                    storageProperties.getColumnBufferPoolMaxSize(),
-                    storageProperties.getColumnBufferPoolMemoryPercentage(),
+                    storageProperties.getColumnBufferPoolMaxSize(), storageProperties.getColumnBufferPoolMaxMemory(),
                     storageProperties.getColumnBufferAcquireTimeout());
         }
 
@@ -363,7 +362,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         ILifeCycleComponentManager lccm = getServiceContext().getLifeCycleComponentManager();
         lccm.register((ILifeCycleComponent) virtualBufferCache);
         lccm.register((ILifeCycleComponent) bufferCache);
-        lccm.register((ILifeCycleComponent) columnBufferPool);
+        lccm.register(columnBufferPool);
         /*
          * LogManager must be stopped after RecoveryManager, DatasetLifeCycleManager, and ReplicationManager
          * to process any logs that might be generated during stopping these components

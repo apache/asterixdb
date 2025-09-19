@@ -65,9 +65,10 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         }
         IResultSet resultSet = getResultSet();
         ResultReader resultReader = new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId());
+        boolean printStarted = false;
+        ResponsePrinter printer = null;
         try {
             ResultJobRecord.Status status = resultReader.getStatus();
-
             final HttpResponseStatus httpStatus;
             if (status == null) {
                 httpStatus = HttpResponseStatus.NOT_FOUND;
@@ -79,6 +80,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                     case RUNNING:
                     case IDLE:
                     case FAILED:
+                    case REMOVED:
                         httpStatus = HttpResponseStatus.NOT_FOUND;
                         break;
                     default:
@@ -92,12 +94,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             }
             ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
-            ResponsePrinter printer = new ResponsePrinter(sessionOutput);
+            printer = new ResponsePrinter(sessionOutput);
             if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
                     || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON
                     || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON) {
                 final Stats stats = new Stats();
                 printer.begin();
+                printStarted = true;
                 printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
                 printer.printResults();
                 ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart,
@@ -112,6 +115,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 }
                 printer.printFooters();
                 printer.end();
+                printStarted = false;
             } else {
                 ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
             }
@@ -127,6 +131,10 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
+        } finally {
+            if (printStarted && printer != null) {
+                printer.end();
+            }
         }
         if (response.writer().checkError()) {
             LOGGER.warn("Error flushing output writer for \"" + strHandle + "\"");

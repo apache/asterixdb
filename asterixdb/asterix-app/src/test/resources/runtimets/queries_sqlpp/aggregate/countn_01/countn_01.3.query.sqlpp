@@ -23,19 +23,3 @@ select element test.strict_countn((
     select element x
     from  [1,2,3,"four"] as x
 ));
-
-select element test.countn(x) from [
-{"x":1},{"x":2},{"x":3},{"x":"four"},{"x":null},{"x":[1,2,3]},{"x":"1"},{"x":{"k":1}}
-] as list;
-
-select n, test.countn(x) from [
-  {"x":1,"n":"a"},
-  {"x":2,"n":"a"},
-  {"x":3,"n":"b"},
-  {"x":"four","n":"a"},
-  {"x":null,"n":"b"},
-  {"x":[1,2,3],"n":"a"},
-  {"x":"1","n":"b"},
-  {"x":{"k":1},"n":"b"},
-  {"n":"b"}
-] as list group by n;

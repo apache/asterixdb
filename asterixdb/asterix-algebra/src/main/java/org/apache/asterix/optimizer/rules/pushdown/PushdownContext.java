@@ -148,7 +148,7 @@ public class PushdownContext {
             if (defineDescriptor == null) {
                 // Log to track any definition that we may have missed
                 LOGGER.warn("Variable {} is not defined", variable);
-                return;
+                continue;
             }
 
             List<UseDescriptor> uses = useChain.get(variable);

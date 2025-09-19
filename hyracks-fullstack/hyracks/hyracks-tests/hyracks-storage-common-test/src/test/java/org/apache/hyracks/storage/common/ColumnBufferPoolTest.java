@@ -42,13 +42,13 @@ public class ColumnBufferPoolTest {
     private ColumnBufferPool columnBufferPool;
     private static final int COLUMN_BUFFER_GRANULE_BYTES = 4096; // 4KB
     private static final int POOL_SIZE = 10;
-    private static final double CAPPED_PERCENTAGE = 10.0; // 10% of runtime memory
+    private static final long COLUMN_BUFFER_MAX_MEMORY_LIMIT = getColumnBufferPoolMaxMemoryLimit(10); // 10% of runtime memory
     private static final long RESERVE_TIMEOUT_MILLIS = 5000; // 5 seconds timeout
 
     @Before
     public void setUp() {
-        columnBufferPool =
-                new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, CAPPED_PERCENTAGE, RESERVE_TIMEOUT_MILLIS);
+        columnBufferPool = new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, COLUMN_BUFFER_MAX_MEMORY_LIMIT,
+                RESERVE_TIMEOUT_MILLIS);
     }
 
     @After
@@ -103,7 +103,7 @@ public class ColumnBufferPoolTest {
     public void testReserveTimeout() throws InterruptedException {
         // Use a shorter timeout for this test
         ColumnBufferPool shortTimeoutPool =
-                new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, CAPPED_PERCENTAGE, 100); // 100ms timeout
+                new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, COLUMN_BUFFER_MAX_MEMORY_LIMIT, 100); // 100ms timeout
         try {
             // Reserve all credits
             int maxCredits = shortTimeoutPool.getMaxReservedBuffers();
@@ -208,7 +208,7 @@ public class ColumnBufferPoolTest {
     public void testMultipleThreadsConcurrentExecution() throws InterruptedException {
         // Use shorter timeout to make timeouts happen faster in test
         ColumnBufferPool testPool =
-                new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, CAPPED_PERCENTAGE, 500); // 500ms timeout
+                new ColumnBufferPool(COLUMN_BUFFER_GRANULE_BYTES, POOL_SIZE, COLUMN_BUFFER_MAX_MEMORY_LIMIT, 500); // 500ms timeout
 
         // Helper for timestamped log
         java.util.function.Consumer<String> logWithTimestamp = msg -> {
@@ -475,7 +475,7 @@ public class ColumnBufferPoolTest {
     @Test(expected = IllegalStateException.class)
     public void testMemoryQuotaEnforcement() throws InterruptedException {
         // Create a small pool to test quota enforcement
-        ColumnBufferPool smallPool = new ColumnBufferPool(1024, 2, 0.001, 1000); // Very small percentage
+        ColumnBufferPool smallPool = new ColumnBufferPool(1024, 2, getColumnBufferPoolMaxMemoryLimit(0.001), 1000); // Very small percentage
         try {
             int maxCredits = smallPool.getMaxReservedBuffers();
             smallPool.reserve(maxCredits);
@@ -510,5 +510,9 @@ public class ColumnBufferPoolTest {
     // Helper method to access maxCredits
     private int getMaxCredits() {
         return columnBufferPool.getMaxReservedBuffers();
+    }
+
+    private static long getColumnBufferPoolMaxMemoryLimit(double percentage) {
+        return (long) ((percentage / 100) * Runtime.getRuntime().maxMemory());
     }
 }

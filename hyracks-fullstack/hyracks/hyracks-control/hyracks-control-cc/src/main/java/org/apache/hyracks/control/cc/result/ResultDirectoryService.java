@@ -155,6 +155,18 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
+    public synchronized void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition)
+            throws HyracksDataException {
+        ResultJobRecord djr = getNonNullResultJobRecord(jobId);
+        djr.getDirectoryRecord(partition).readEOS();
+        djr.updateState();
+        if (djr.consumed()) {
+            sweep(jobId);
+        }
+        notifyAll();
+    }
+
+    @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         ResultJobRecord rjr = getResultJobRecord(jobId);
         if (logFailure(rjr)) {
