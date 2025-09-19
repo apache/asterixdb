@@ -17,11 +17,25 @@
  * under the License.
  */
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
 USE test;
 
-CREATE TYPE ColumnType2 AS {
-};
 
+INSERT INTO col2 (
+    [
+{"id": 1, "name": "aqay awil", "centuries" : []},
+    {"id": 2, "centuries" : []},
+    {"id":3 , "name": null, "centuries" : []}
+    ]
+);
 
+COPY (
+select * from col2
+    ) toWriter
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "parquet-null2")
+WITH {
+    %template_colons%,
+    %additionalProperties%
+    "format":"parquet",
+    "version" : "2"
+    };

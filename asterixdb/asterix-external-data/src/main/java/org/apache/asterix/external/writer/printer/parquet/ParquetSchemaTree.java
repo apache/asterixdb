@@ -38,6 +38,12 @@ import org.apache.parquet.schema.Types;
 public class ParquetSchemaTree {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final SchemaNode DEFAULT_SCHEMA_NODE_FOR_NULL = new SchemaNode();
+    private static final FlatType DEFAULT_TYPE_TAG_FOR_NULL = new FlatType(ATypeTag.STRING);
+    static {
+        DEFAULT_SCHEMA_NODE_FOR_NULL.setType(DEFAULT_TYPE_TAG_FOR_NULL);
+    }
+
     public static class SchemaNode {
         private AbstractType type;
 
@@ -179,12 +185,13 @@ public class ParquetSchemaTree {
     public static void buildParquetSchema(Types.Builder builder, SchemaNode schemaNode, String columnName)
             throws HyracksDataException {
         if (schemaNode.getType() == null) {
-            LOGGER.info(
-                    "Child type not set for record value with column name: " + LogRedactionUtil.userData(columnName));
-            throw new HyracksDataException(ErrorCode.EMPTY_TYPE_INFERRED);
+            buildFlat(builder, DEFAULT_TYPE_TAG_FOR_NULL, columnName);
+            return;
         }
         AbstractType typeClass = schemaNode.getType();
-        if (typeClass instanceof RecordType) {
+        if (typeClass == null) {
+            buildFlat(builder, DEFAULT_TYPE_TAG_FOR_NULL, columnName);
+        } else if (typeClass instanceof RecordType) {
             buildRecord(builder, (RecordType) schemaNode.getType(), columnName);
         } else if (typeClass instanceof ListType) {
             buildList(builder, (ListType) schemaNode.getType(), columnName);
@@ -206,10 +213,10 @@ public class ParquetSchemaTree {
         Types.BaseListBuilder<?, ?> childBuilder = getListChild(builder);
         SchemaNode child = type.child;
         if (child == null) {
-            LOGGER.info("Child type not set for list with column name: " + LogRedactionUtil.userData(columnName));
-            throw new HyracksDataException(ErrorCode.EMPTY_TYPE_INFERRED);
+            buildParquetSchema(childBuilder, DEFAULT_SCHEMA_NODE_FOR_NULL, columnName);
+        } else {
+            buildParquetSchema(childBuilder, child, columnName);
         }
-        buildParquetSchema(childBuilder, child, columnName);
     }
 
     private static void buildFlat(Types.Builder builder, FlatType type, String columnName) throws HyracksDataException {

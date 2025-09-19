@@ -113,12 +113,12 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
     @Override
     public ISchemaChecker.SchemaComparisonType visit(FlatLazyVisitablePointable currentValue,
             ParquetSchemaTree.SchemaNode schemaNode) throws HyracksDataException {
-        if (schemaNode.getType() == null) {
-            return SchemaComparisonType.GROWING;
-        }
         // SchemaNode.getTypeTag can never be MISSING here
         if (currentValue.getTypeTag() == ATypeTag.NULL) {
             return SchemaComparisonType.EQUIVALENT;
+        }
+        if (schemaNode.getType() == null) {
+            return SchemaComparisonType.GROWING;
         }
         if (!(schemaNode.getType() instanceof ParquetSchemaTree.FlatType inferredType)) {
             return ISchemaChecker.SchemaComparisonType.CONFLICTING;

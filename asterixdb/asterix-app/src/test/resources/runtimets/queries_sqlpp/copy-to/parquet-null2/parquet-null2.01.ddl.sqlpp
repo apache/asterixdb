@@ -22,6 +22,7 @@ CREATE DATAVERSE test;
 USE test;
 
 CREATE TYPE ColumnType2 AS {
-};
+    };
 
 
+CREATE DATASET col2 primary key(id:int);
