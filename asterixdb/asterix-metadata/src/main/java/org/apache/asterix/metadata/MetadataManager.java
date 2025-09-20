@@ -1351,6 +1351,15 @@ public abstract class MetadataManager implements IMetadataManager {
         }
     }
 
+    @Override
+    public boolean isActive(TxnId txnId) throws AlgebricksException {
+        try {
+            return metadataNode.isActive(txnId);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+    }
+
     private static class CCMetadataManagerImpl extends MetadataManager {
         private final MetadataProperties metadataProperties;
         private final ICcApplicationContext appCtx;
