@@ -1013,7 +1013,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             setSourceType(configuration, adapterName);
 
             // for iceberg table, add catalog properties to the configuration
-            addIcebergCatalogPropertiesIfNeeded(configuration);
+            addIcebergCatalogPropertiesIfNeeded(appCtx, configuration);
             return AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
                     configuration, itemType, null, warningCollector, filterEvaluatorFactory);
         } catch (AlgebricksException e) {
@@ -1023,7 +1023,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    private void addIcebergCatalogPropertiesIfNeeded(Map<String, String> configuration) throws AlgebricksException {
+    protected void addIcebergCatalogPropertiesIfNeeded(ICcApplicationContext appCtx, Map<String, String> configuration)
+            throws AlgebricksException {
         if (IcebergUtils.isIcebergTable(configuration)) {
             String catalogName = configuration.get(IcebergConstants.ICEBERG_CATALOG_NAME);
             IcebergCatalog catalog =

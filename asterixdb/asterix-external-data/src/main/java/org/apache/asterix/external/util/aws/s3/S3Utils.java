@@ -318,10 +318,9 @@ public class S3Utils {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 
-        // iceberg tables can be created without passing the bucket,
-        // only validate bucket presence if container is passed
+        // container is not needed for iceberg tables, skip validation
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        if (IcebergUtils.isIcebergTable(configuration) && container == null) {
+        if (IcebergUtils.isIcebergTable(configuration)) {
             return;
         }
 

@@ -1187,11 +1187,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return Optional.of(dataset);
     }
 
-    private void validateIfIcebergTable(Map<String, String> properties, MetadataTransactionContext mdTxnCtx,
+    protected void validateIfIcebergTable(Map<String, String> properties, MetadataTransactionContext mdTxnCtx,
             SourceLocation srcLoc) throws AlgebricksException {
         if (!IcebergUtils.isIcebergTable(properties)) {
             return;
         }
+        IcebergUtils.setDefaultFormat(properties);
 
         // ensure the specified catalog exists
         String catalogName = properties.get(IcebergConstants.ICEBERG_CATALOG_NAME);

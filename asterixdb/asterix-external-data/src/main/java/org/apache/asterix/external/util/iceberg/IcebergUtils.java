@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.asterix.common.config.CatalogConfig;
@@ -168,6 +169,8 @@ public class IcebergUtils {
             throw CompilationException.create(ErrorCode.UNSUPPORTED_ICEBERG_CATALOG_SOURCE, source);
         }
 
+        // remove null values to avoid failures in internal checks
+        catalogProperties.values().removeIf(Objects::isNull);
         return switch (catalogSource.get()) {
             case CatalogConfig.IcebergCatalogSource.AWS_GLUE -> GlueUtils.initializeCatalog(catalogProperties, namespace);
             case CatalogConfig.IcebergCatalogSource.BIGLAKE_METASTORE -> BiglakeMetastore.initializeCatalog(catalogProperties, namespace);
@@ -200,5 +203,15 @@ public class IcebergUtils {
         String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
         ARecordType projectedRecordType = ExternalDataUtils.getExpectedType(encoded);
         return projectedRecordType.getFieldNames();
+    }
+
+    /**
+     * Sets the default format to Parquet if the format is not provided for Iceberg tables
+     * @param configuration configuration
+     */
+    public static void setDefaultFormat(Map<String, String> configuration) {
+        if (IcebergUtils.isIcebergTable(configuration) && configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+            configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_PARQUET);
+        }
     }
 }
