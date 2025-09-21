@@ -18,8 +18,13 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.iceberg;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SCHEMA_ID_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.getProjectedFields;
-import static org.apache.asterix.external.util.iceberg.IcebergUtils.setSnapshot;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.snapshotIdExists;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -49,6 +54,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
+import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableScan;
 import org.apache.iceberg.catalog.Catalog;
@@ -56,6 +62,7 @@ import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.io.CloseableIterable;
+import org.apache.iceberg.util.SnapshotUtil;
 
 public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFactory<Record> {
 
@@ -130,13 +137,16 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
             Table table = catalog.loadTable(tableIdentifier);
             TableScan scan = table.newScan();
-            scan = setSnapshot(configuration, scan);
+            scan = setAndPinScanSnapshot(configurationCopy, table, scan);
+            long snapshotId = Long.parseLong(configurationCopy.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
+            Schema schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
+
             String[] projectedFields = getProjectedFields(configuration);
-            projectedSchema = table.schema();
+            projectedSchema = schemaAtSnapshot;
             if (projectedFields != null && projectedFields.length > 0) {
                 projectedSchema = projectedSchema.select(projectedFields);
             }
-            scan.project(projectedSchema);
+            scan = scan.project(projectedSchema);
             try (CloseableIterable<FileScanTask> tasks = scan.planFiles()) {
                 tasks.forEach(fileScanTasks::add);
             }
@@ -146,7 +156,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             throw ex;
         } catch (Exception ex) {
             throwable = ex;
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
+            throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
         } finally {
             try {
                 IcebergUtils.closeCatalog(catalog);
@@ -154,7 +164,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
                 if (throwable != null) {
                     throwable.addSuppressed(ex);
                 } else {
-                    throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
+                    throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
                 }
             }
         }
@@ -180,6 +190,54 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     @Override
     public Schema getProjectedSchema() {
         return projectedSchema;
+    }
+
+    /**
+     * Sets the snapshot id (or timestamp) if present and pin it to be used by both compile and runtime phases. If no
+     * snapshot is provided, the latest snapshot is used and pinned.
+     *
+     * @param configurationCopy configurationCopy
+     * @param table table
+     * @param scan scan
+     * @return table scan
+     * @throws CompilationException CompilationException
+     */
+    private TableScan setAndPinScanSnapshot(Map<String, String> configurationCopy, Table table, TableScan scan)
+            throws CompilationException {
+        long snapshot;
+        String snapshotIdStr = configurationCopy.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        String asOfTimestampStr = configurationCopy.get(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
+
+        if (snapshotIdStr != null) {
+            snapshot = Long.parseLong(snapshotIdStr);
+            if (!snapshotIdExists(table, snapshot)) {
+                throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshot);
+            }
+        } else if (asOfTimestampStr != null) {
+            try {
+                snapshot = SnapshotUtil.snapshotIdAsOfTime(table, Long.parseLong(asOfTimestampStr));
+                if (!snapshotIdExists(table, snapshot)) {
+                    throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshot);
+                }
+            } catch (IllegalArgumentException e) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+            }
+        } else {
+            if (table.currentSnapshot() == null) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "table " + table.name() + " has no snapshots");
+            }
+            snapshot = table.currentSnapshot().snapshotId();
+        }
+
+        scan = scan.useSnapshot(snapshot);
+        pinSnapshotId(configurationCopy, table, snapshot);
+        return scan;
+    }
+
+    private void pinSnapshotId(Map<String, String> configurationCopy, Table table, long snapshotId) {
+        Snapshot snapshot = table.snapshot(snapshotId);
+        configurationCopy.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, String.valueOf(snapshot.snapshotId()));
+        configurationCopy.put(ICEBERG_SCHEMA_ID_PROPERTY_KEY, Integer.toString(snapshot.schemaId()));
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {

@@ -35,10 +35,12 @@ import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
+import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.data.GenericDeleteFilter;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
 import org.apache.iceberg.io.CloseableIterable;
@@ -60,6 +62,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     private int nextTaskIndex = 0;
     private Catalog catalog;
     private FileIO tableFileIo;
+    private Schema schemaAtSnapshot;
     private CloseableIterable<Record> iterable;
     private Iterator<Record> recordsIterator;
 
@@ -91,8 +94,23 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         }
         Table table = catalog.loadTable(tableIdentifier);
         tableFileIo = table.io();
+
+        // we always have a snapshot id since we pin it at compile time
+        long snapshotId = getSnapshotId(configuration);
+        Snapshot snapshot = table.snapshot(snapshotId);
+        if (snapshot == null) {
+            // Snapshot might have been expired/GC'd between compile and runtime
+            throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshotId);
+        }
+
+        this.schemaAtSnapshot = table.schemas().get(snapshot.schemaId());
+        if (schemaAtSnapshot == null) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                    "Missing schemaId=" + snapshot.schemaId() + " for snapshotId=" + snapshotId);
+        }
     }
 
+    @Override
     public boolean hasNext() throws Exception {
         // iterator has more records
         if (recordsIterator != null && recordsIterator.hasNext()) {
@@ -138,11 +156,11 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     @Override
     public void close() throws IOException {
-        if (tableFileIo != null) {
-            tableFileIo.close();
-        }
         if (iterable != null) {
             iterable.close();
+        }
+        if (tableFileIo != null) {
+            tableFileIo.close();
         }
 
         try {
@@ -154,12 +172,12 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     @Override
     public void setController(AbstractFeedDataFlowController controller) {
-
+        // no-op
     }
 
     @Override
     public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
-
+        // no-op
     }
 
     @Override
@@ -170,8 +188,33 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     private void setNextRecordsIterator() {
         FileScanTask task = fileScanTasks.get(nextTaskIndex++);
         InputFile inFile = tableFileIo.newInputFile(task.file().location());
-        iterable = Parquet.read(inFile).project(projectedSchema).split(task.start(), task.length())
-                .createReaderFunc(fs -> GenericParquetReaders.buildReader(projectedSchema, fs)).build();
-        recordsIterator = iterable.iterator();
+
+        int deletesCount = (task.deletes() == null) ? 0 : task.deletes().size();
+        if (deletesCount == 0) {
+            // No deletes: read only projected schema
+            iterable = Parquet.read(inFile).project(projectedSchema).filter(task.residual())
+                    .split(task.start(), task.length())
+                    .createReaderFunc(fs -> GenericParquetReaders.buildReader(projectedSchema, fs)).build();
+            recordsIterator = iterable.iterator();
+            return;
+        }
+
+        // Has deletes: read required schema, then apply delete filter
+        GenericDeleteFilter deleteFilter =
+                new GenericDeleteFilter(tableFileIo, task, schemaAtSnapshot, projectedSchema);
+
+        Schema requiredSchema = deleteFilter.requiredSchema();
+        iterable =
+                Parquet.read(inFile).project(requiredSchema).filter(task.residual()).split(task.start(), task.length())
+                        .createReaderFunc(fs -> GenericParquetReaders.buildReader(requiredSchema, fs)).build();
+        recordsIterator = deleteFilter.filter(iterable).iterator();
+    }
+
+    private long getSnapshotId(Map<String, String> configuration) {
+        String snapshotStr = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        if (snapshotStr != null) {
+            return Long.parseLong(snapshotStr);
+        }
+        throw new IllegalStateException("Snapshot must've been pinned during compilation phase");
     }
 }

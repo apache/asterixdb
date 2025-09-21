@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNSUPPORTED_ICEBERG_DATA_FORMAT;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_AVRO_FORMAT;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_PARQUET_FORMAT;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_TABLE_FORMAT;
 
 import java.io.IOException;
@@ -39,7 +42,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.glue.GlueUtils;
 import org.apache.asterix.external.util.google.biglake_metastore.BiglakeMetastore;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.iceberg.TableScan;
+import org.apache.iceberg.Table;
 import org.apache.iceberg.aws.glue.GlueCatalog;
 import org.apache.iceberg.catalog.Catalog;
 
@@ -105,10 +108,37 @@ public class IcebergUtils {
     }
 
     public static void validateIcebergTableProperties(Map<String, String> properties) throws CompilationException {
+        // required table name
         String tableName = properties.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
         if (tableName == null || tableName.isEmpty()) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED,
                     IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
+        }
+
+        // required namespace
+        String namespace = properties.get(IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY);
+        if (namespace == null || namespace.isEmpty()) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED,
+                    IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY);
+        }
+
+        // validate snapshot id and timestamp
+        String snapshotId = properties.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        String snapshotTimestamp = properties.get(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
+        if (snapshotId != null && snapshotTimestamp != null) {
+            throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT,
+                    ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY, ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        }
+
+        try {
+            if (snapshotId != null) {
+                Long.parseLong(snapshotId);
+            } else if (snapshotTimestamp != null) {
+                Long.parseLong(snapshotTimestamp);
+            }
+        } catch (NumberFormatException e) {
+            throw new CompilationException(ErrorCode.INVALID_ICEBERG_SNAPSHOT_VALUE,
+                    snapshotId != null ? snapshotId : snapshotTimestamp);
         }
     }
 
@@ -186,17 +216,8 @@ public class IcebergUtils {
         }
     }
 
-    public static TableScan setSnapshot(Map<String, String> configuration, TableScan scan) {
-        String snapshot = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
-        if (snapshot != null) {
-            scan = scan.useSnapshot(Long.parseLong(snapshot));
-        } else {
-            String asOfTimestamp = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
-            if (asOfTimestamp != null) {
-                scan = scan.asOfTime(Long.parseLong(asOfTimestamp));
-            }
-        }
-        return scan;
+    public static boolean snapshotIdExists(Table table, long snapshot) {
+        return table.snapshot(snapshot) != null;
     }
 
     public static String[] getProjectedFields(Map<String, String> configuration) throws IOException {

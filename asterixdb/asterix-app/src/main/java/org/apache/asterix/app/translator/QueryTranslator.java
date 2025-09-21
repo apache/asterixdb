@@ -1193,6 +1193,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             return;
         }
         IcebergUtils.setDefaultFormat(properties);
+        IcebergUtils.validateIcebergTableProperties(properties);
 
         // ensure the specified catalog exists
         String catalogName = properties.get(IcebergConstants.ICEBERG_CATALOG_NAME);

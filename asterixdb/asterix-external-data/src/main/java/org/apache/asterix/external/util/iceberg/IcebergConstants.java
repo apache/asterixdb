@@ -30,6 +30,7 @@ public class IcebergConstants {
     public static final String ICEBERG_TABLE_NAME_PROPERTY_KEY = "tableName";
     public static final String ICEBERG_NAMESPACE_PROPERTY_KEY = "namespace";
     public static final String ICEBERG_SNAPSHOT_ID_PROPERTY_KEY = "snapshotId";
+    public static final String ICEBERG_SCHEMA_ID_PROPERTY_KEY = "schemaId";
     public static final String ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY = "snapshotTimestamp";
 
     public static final String ICEBERG_PROPERTY_PREFIX_INTERNAL = "catalog-property#";
