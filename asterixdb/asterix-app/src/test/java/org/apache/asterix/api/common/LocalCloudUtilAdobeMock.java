@@ -140,13 +140,4 @@ public class LocalCloudUtilAdobeMock {
             s3Mock = null;
         }
     }
-
-    public static S3Client getS3Client() {
-        S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(s3Mock.getHttpEndpoint());
-        builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
-                .endpointOverride(endpoint);
-        S3Client client = builder.build();
-        return client;
-    }
 }

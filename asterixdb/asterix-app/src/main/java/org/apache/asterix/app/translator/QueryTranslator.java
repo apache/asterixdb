@@ -120,6 +120,8 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
+import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -190,6 +192,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.util.LangDatasetUtil;
+import org.apache.asterix.lang.common.util.LangRecordParseUtil;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppQueryRewriter;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -200,6 +203,7 @@ import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -877,10 +881,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             return;
         }
 
+        String catalogName = null;
+        if (dd.getDatasetType().equals(DatasetType.EXTERNAL)) {
+            ExternalDetailsDecl edd = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
+            Map<String, String> properties = new HashMap<>(edd.getProperties());
+            LangRecordParseUtil.recordToMap(properties, ((DatasetDecl) stmt).getWithObjectNode());
+            catalogName = properties.get(IcebergConstants.ICEBERG_CATALOG_NAME);
+        }
+
         lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, datasetName,
                 itemTypeDatabase, itemTypeDataverseName, itemTypeName, itemTypeAnonymous, metaItemTypeDatabase,
                 metaItemTypeDataverseName, metaItemTypeName, metaItemTypeAnonymous, nodegroupName, compactionPolicy,
-                defaultCompactionPolicy, dd.getDatasetType(), dd.getDatasetDetailsDecl(), metadataProvider);
+                defaultCompactionPolicy, dd.getDatasetType(), dd.getDatasetDetailsDecl(), metadataProvider,
+                catalogName);
         try {
             doCreateDatasetStatement(metadataProvider, dd, stmtActiveNamespace, datasetName, itemTypeNamespace,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeNamespace, metaItemTypeName, hcc,
@@ -1061,6 +1074,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
+                    validateIfIcebergTable(properties, mdTxnCtx, sourceLoc);
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx, metadataProvider);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
@@ -1171,6 +1185,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         }
         return Optional.of(dataset);
+    }
+
+    private void validateIfIcebergTable(Map<String, String> properties, MetadataTransactionContext mdTxnCtx,
+            SourceLocation srcLoc) throws AlgebricksException {
+        if (!IcebergUtils.isIcebergTable(properties)) {
+            return;
+        }
+
+        // ensure the specified catalog exists
+        String catalogName = properties.get(IcebergConstants.ICEBERG_CATALOG_NAME);
+        Catalog catalog = MetadataManager.INSTANCE.getCatalog(mdTxnCtx, catalogName);
+        if (catalog == null) {
+            throw new CompilationException(ErrorCode.UNKNOWN_CATALOG, srcLoc, catalogName);
+        }
     }
 
     protected boolean isDatasetWithoutTypeSpec(DatasetDecl datasetDecl, ARecordType aRecordType,
@@ -2927,7 +2955,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, viewName,
                 itemTypeDatabaseName, viewItemTypeDataverseName, viewItemTypeName, viewItemTypeAnonymous, null, null,
-                null, false, null, null, true, DatasetType.VIEW, null, metadataProvider);
+                null, false, null, null, true, DatasetType.VIEW, null, metadataProvider, null);
         try {
             doCreateView(metadataProvider, cvs, databaseName, dataverseName, viewName, itemTypeDatabaseName,
                     viewItemTypeDataverseName, viewItemTypeName, stmtRewriter, requestParameters, creator);

@@ -32,7 +32,7 @@ CREATE CATALOG myRestCatalog
 TYPE Iceberg
 SOURCE REST
 WITH {
-    "warehouse": "s3://cbas-iceberg-playground/my-glue-catalog/warehouse/",
+    "warehouse": "s3://cbas-iceberg-playground/my-rest-catalog/warehouse/",
     "namespace": "pharmacy_namespace",
     "accessKeyId" : "myAccessKeyId",
     "secretAccessKey" : "mySecretAccessKey",
@@ -43,7 +43,7 @@ CREATE CATALOG myBiglakeMetastoreCatalog
 TYPE Iceberg
 SOURCE BIGLAKE_METASTORE
 WITH {
-    "warehouse": "s3://cbas-iceberg-playground/my-glue-catalog/warehouse/",
+    "warehouse": "s3://cbas-iceberg-playground/my-biglake-metastore-catalog/warehouse/",
     "namespace": "pharmacy_namespace",
     "accessKeyId" : "myAccessKeyId",
     "secretAccessKey" : "mySecretAccessKey",

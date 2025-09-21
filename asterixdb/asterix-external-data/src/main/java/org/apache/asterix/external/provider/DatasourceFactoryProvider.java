@@ -44,6 +44,7 @@ import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactor
 import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -124,8 +125,10 @@ public class DatasourceFactoryProvider {
             Map<String, Class<?>> formatClassMap = factories.get(adaptorName);
             String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
             if (isDeltaTable(configuration)) {
-                format = configuration.get(ExternalDataConstants.TABLE_FORMAT);
-                return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
+                return getDeltaInstance(configuration, formatClassMap);
+            }
+            if (IcebergUtils.isIcebergTable(configuration)) {
+                return getIcebergInstance(configuration, formatClassMap);
             }
             return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
         }
@@ -196,5 +199,17 @@ public class DatasourceFactoryProvider {
         if (factories.containsKey(key)) {
             throw new AsterixException(ErrorCode.PROVIDER_DATASOURCE_FACTORY_DUPLICATE_FORMAT_MAPPING, key);
         }
+    }
+
+    private static IRecordReaderFactory<?> getDeltaInstance(Map<String, String> configuration,
+            Map<String, Class<?>> formatClassMap) throws AsterixException {
+        String format = configuration.get(ExternalDataConstants.TABLE_FORMAT);
+        return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
+    }
+
+    private static IRecordReaderFactory<?> getIcebergInstance(Map<String, String> configuration,
+            Map<String, Class<?>> formatClassMap) throws AsterixException {
+        String format = IcebergUtils.getIcebergFormat(configuration);
+        return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
     }
 }

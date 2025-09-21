@@ -68,6 +68,8 @@ import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
@@ -87,6 +89,8 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
 import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.IcebergCatalog;
+import org.apache.asterix.metadata.entities.IcebergCatalogDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
@@ -1003,10 +1007,28 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     dataset.getDataverseName().getCanonicalForm());
             setExternalEntityId(configuration);
             setSourceType(configuration, adapterName);
+
+            // for iceberg table, add catalog properties to the configuration
+            addIcebergCatalogPropertiesIfNeeded(configuration);
             return AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
                     configuration, itemType, null, warningCollector, filterEvaluatorFactory);
+        } catch (AlgebricksException e) {
+            throw e;
         } catch (Exception e) {
             throw new AlgebricksException("Unable to create adapter", e);
+        }
+    }
+
+    private void addIcebergCatalogPropertiesIfNeeded(Map<String, String> configuration) throws AlgebricksException {
+        if (IcebergUtils.isIcebergTable(configuration)) {
+            String catalogName = configuration.get(IcebergConstants.ICEBERG_CATALOG_NAME);
+            IcebergCatalog catalog =
+                    (IcebergCatalog) MetadataManager.INSTANCE.getCatalog(getMetadataTxnContext(), catalogName);
+            IcebergCatalogDetails details = (IcebergCatalogDetails) catalog.getCatalogDetails();
+            for (Map.Entry<String, String> entry : details.getProperties().entrySet()) {
+                configuration.putIfAbsent(IcebergConstants.ICEBERG_PROPERTY_PREFIX_INTERNAL + entry.getKey(),
+                        entry.getValue());
+            }
         }
     }
 

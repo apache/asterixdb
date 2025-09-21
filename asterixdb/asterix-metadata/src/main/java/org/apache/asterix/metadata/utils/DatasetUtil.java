@@ -53,6 +53,7 @@ import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -877,6 +878,11 @@ public class DatasetUtil {
     public static boolean isDeltaTable(Dataset dataset) {
         return dataset.getDatasetType() == DatasetType.EXTERNAL && ExternalDataUtils
                 .isDeltaTable(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
+    }
+
+    public static boolean isIcebergTable(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL
+                && IcebergUtils.isIcebergTable(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
     }
 
     public static boolean isParquetFormat(Dataset dataset) {

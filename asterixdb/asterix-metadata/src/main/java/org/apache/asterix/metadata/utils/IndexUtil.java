@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.utils;
 
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.isParquetFormat;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.isIcebergTable;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
@@ -44,6 +45,7 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.filter.NoOpDeltaTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.input.filter.NoOpIcebergTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
@@ -353,43 +355,73 @@ public class IndexUtil {
             IVariableTypeEnvironment typeEnv, IProjectionFiltrationInfo projectionFiltrationInfo,
             Map<String, String> properties) throws AlgebricksException {
         if (isDeltaTable(properties)) {
-            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
-                return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
-            } else {
-                DeltaTableFilterBuilder builder = new DeltaTableFilterBuilder(
-                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
-                return builder.build();
-            }
-        } else if (isParquetFormat(properties)) {
-            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
-                return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
-            } else {
-                ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
-                ExternalDatasetProjectionFiltrationInfo pfi =
-                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
-                IExternalFilterEvaluatorFactory externalFilterEvaluatorFactory =
-                        NoOpExternalFilterEvaluatorFactory.INSTANCE;
-                if (!prefix.getPaths().isEmpty()) {
-                    ExternalFilterBuilder externalFilterBuilder =
-                            new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
-                    externalFilterEvaluatorFactory = externalFilterBuilder.build();
-                }
-                ParquetFilterBuilder builder = new ParquetFilterBuilder(
-                        (ParquetExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
-                return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory,
-                        builder.buildFilterPredicate());
-            }
+            return createDeltaFilter(projectionFiltrationInfo, context, typeEnv);
+        }
+        if (isIcebergTable(properties)) {
+            return createIcebergFilter(projectionFiltrationInfo, context, typeEnv);
+        }
+        if (isParquetFormat(properties)) {
+            return createParquetFilter(projectionFiltrationInfo, context, typeEnv, properties);
+        }
+        return createExternalFilter(projectionFiltrationInfo, context, typeEnv, properties);
+    }
+
+    private static IExternalFilterEvaluatorFactory createDeltaFilter(IProjectionFiltrationInfo projectionFiltrationInfo,
+            JobGenContext context, IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
         } else {
-            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
-                return NoOpExternalFilterEvaluatorFactory.INSTANCE;
-            } else {
-                ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
-                ExternalDatasetProjectionFiltrationInfo pfi =
-                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
-                ExternalFilterBuilder build = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
-                return build.build();
-            }
+            DeltaTableFilterBuilder builder = new DeltaTableFilterBuilder(
+                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+            return builder.build();
         }
     }
 
+    private static IExternalFilterEvaluatorFactory createIcebergFilter(
+            IProjectionFiltrationInfo projectionFiltrationInfo, JobGenContext context, IVariableTypeEnvironment typeEnv)
+            throws AlgebricksException {
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            return NoOpIcebergTableFilterEvaluatorFactory.INSTANCE;
+        } else {
+            //            IcebergTableFilterBuilder builder = new IcebergTableFilterBuilder(
+            //                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+            //            return builder.build();
+            return NoOpIcebergTableFilterEvaluatorFactory.INSTANCE;
+        }
+    }
+
+    private static IExternalFilterEvaluatorFactory createParquetFilter(
+            IProjectionFiltrationInfo projectionFiltrationInfo, JobGenContext context, IVariableTypeEnvironment typeEnv,
+            Map<String, String> properties) throws AlgebricksException {
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
+        } else {
+            ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
+            ExternalDatasetProjectionFiltrationInfo pfi =
+                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
+            IExternalFilterEvaluatorFactory externalFilterEvaluatorFactory =
+                    NoOpExternalFilterEvaluatorFactory.INSTANCE;
+            if (!prefix.getPaths().isEmpty()) {
+                ExternalFilterBuilder externalFilterBuilder = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
+                externalFilterEvaluatorFactory = externalFilterBuilder.build();
+            }
+            ParquetFilterBuilder builder = new ParquetFilterBuilder(
+                    (ParquetExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+            return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory, builder.buildFilterPredicate());
+        }
+    }
+
+    private static IExternalFilterEvaluatorFactory createExternalFilter(
+            IProjectionFiltrationInfo projectionFiltrationInfo, JobGenContext context, IVariableTypeEnvironment typeEnv,
+            Map<String, String> properties) throws AlgebricksException {
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            return NoOpExternalFilterEvaluatorFactory.INSTANCE;
+        } else {
+            ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
+            ExternalDatasetProjectionFiltrationInfo pfi =
+                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
+            ExternalFilterBuilder build = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
+            return build.build();
+        }
+    }
 }

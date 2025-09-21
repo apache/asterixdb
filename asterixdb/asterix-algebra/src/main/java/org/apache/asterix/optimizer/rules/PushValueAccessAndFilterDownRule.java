@@ -34,6 +34,7 @@ import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnValueAccessPu
 import org.apache.asterix.optimizer.rules.pushdown.processor.ConsolidateProjectionAndFilterExpressionsProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.DeltaTableFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ExternalDatasetFilterPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.IcebergTableFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.InlineAndNormalizeFilterExpressionsProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ParquetFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor;
@@ -121,6 +122,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         // Performs prefix pushdowns
         pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
         pushdownProcessorsExecutor.add(new DeltaTableFilterPushdownProcessor(pushdownContext, context));
+        pushdownProcessorsExecutor.add(new IcebergTableFilterPushdownProcessor(pushdownContext, context));
         pushdownProcessorsExecutor.add(new ParquetFilterPushdownProcessor(pushdownContext, context));
         pushdownProcessorsExecutor
                 .add(new ConsolidateProjectionAndFilterExpressionsProcessor(pushdownContext, context));

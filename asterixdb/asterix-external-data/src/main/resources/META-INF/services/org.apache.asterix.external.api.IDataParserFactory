@@ -24,3 +24,4 @@ org.apache.asterix.external.parser.factory.TweetParserFactory
 org.apache.asterix.external.parser.factory.NoOpDataParserFactory
 org.apache.asterix.external.parser.factory.AvroDataParserFactory
 org.apache.asterix.external.parser.factory.DeltaTableDataParserFactory
+org.apache.asterix.external.parser.factory.IcebergTableParquetDataParserFactory

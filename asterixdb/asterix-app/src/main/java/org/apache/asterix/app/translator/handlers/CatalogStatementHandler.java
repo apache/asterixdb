@@ -82,7 +82,7 @@ public class CatalogStatementHandler {
                 handleDrop();
                 return;
             default:
-                throw new IllegalStateException("Catalog handler handling non-catalog statements");
+                throw new IllegalStateException("Catalog statement handler handling non-catalog statement: " + kind);
         }
     }
 
@@ -250,7 +250,7 @@ public class CatalogStatementHandler {
     protected void validateIcebergCatalogProperties(CatalogCreateStatement statement,
             MetadataTransactionContext mdTxnCtx, MetadataProvider metadataProvider) throws AlgebricksException {
         IcebergCatalogCreateStatement icebergStatement = (IcebergCatalogCreateStatement) statement;
-        IcebergCatalogDetailsDecl details = (IcebergCatalogDetailsDecl) icebergStatement.getCatalogDetailsDecl();
+        IcebergCatalogDetailsDecl details = icebergStatement.getCatalogDetailsDecl();
         Map<String, String> allProperties = new HashMap<>(details.getProperties());
         LangRecordParseUtil.recordToMap(allProperties, icebergStatement.getWithObjectNode());
         IcebergUtils.validateCatalogProperties(allProperties);

@@ -16,23 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util.aws.glue;
-
-import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAME;
-import static org.apache.asterix.external.util.aws.AwsConstants.SERVICE_END_POINT_FIELD_NAME;
-import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProvider;
-import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
+package org.apache.asterix.external.util.google.biglake_metastore;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.awsclient.EnsureCloseAWSClientFactory;
-import org.apache.asterix.external.util.aws.AwsUtils;
-import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.aws.AwsProperties;
@@ -42,41 +34,11 @@ import org.apache.iceberg.catalog.Namespace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.glue.GlueClient;
-import software.amazon.awssdk.services.glue.GlueClientBuilder;
-
-public class GlueUtils {
+public class BiglakeMetastore {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private GlueUtils() {
+    private BiglakeMetastore() {
         throw new AssertionError("do not instantiate");
-    }
-
-    /**
-     * Builds the client using the provided configuration
-     *
-     * @param configuration properties
-     * @return client
-     * @throws CompilationException CompilationException
-     */
-    public static CloseableAwsClients buildClient(IApplicationContext appCtx, Map<String, String> configuration)
-            throws CompilationException {
-        CloseableAwsClients awsClients = new CloseableAwsClients();
-        String regionId = configuration.get(REGION_FIELD_NAME);
-        String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
-
-        Region region = validateAndGetRegion(regionId);
-        AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
-
-        GlueClientBuilder builder = GlueClient.builder();
-        builder.region(region);
-        builder.credentialsProvider(credentialsProvider);
-        AwsUtils.setEndpoint(builder, serviceEndpoint);
-
-        awsClients.setConsumingClient(builder.build());
-        return awsClients;
     }
 
     public static Catalog initializeCatalog(Map<String, String> catalogProperties, String namespace)

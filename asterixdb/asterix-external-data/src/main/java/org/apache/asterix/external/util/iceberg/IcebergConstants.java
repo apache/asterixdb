@@ -24,7 +24,20 @@ public class IcebergConstants {
     }
 
     public static final String ICEBERG_TABLE_FORMAT = "iceberg";
-    public static final String APACHE_ICEBERG_TABLE_FORMAT = "apache-iceberg";
+    public static final String ICEBERG_CATALOG_NAME = "catalogName";
     public static final String ICEBERG_SOURCE_PROPERTY_KEY = "catalogSource";
     public static final String ICEBERG_WAREHOUSE_PROPERTY_KEY = "warehouse";
+    public static final String ICEBERG_TABLE_NAME_PROPERTY_KEY = "tableName";
+    public static final String ICEBERG_NAMESPACE_PROPERTY_KEY = "namespace";
+    public static final String ICEBERG_SNAPSHOT_ID_PROPERTY_KEY = "snapshotId";
+    public static final String ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY = "snapshotTimestamp";
+
+    public static final String ICEBERG_PROPERTY_PREFIX_INTERNAL = "catalog-property#";
+
+    public static final String ICEBERG_PARQUET_FORMAT = "iceberg-parquet";
+    public static final String ICEBERG_AVRO_FORMAT = "iceberg-avro";
+
+    public class Aws {
+        public static final String S3_FILE_IO = "org.apache.iceberg.aws.s3.S3FileIO";
+    }
 }

@@ -18,14 +18,29 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.UNSUPPORTED_ICEBERG_DATA_FORMAT;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_AVRO_FORMAT;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_PARQUET_FORMAT;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_TABLE_FORMAT;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.asterix.common.config.CatalogConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.aws.glue.GlueUtils;
+import org.apache.asterix.external.util.google.biglake_metastore.BiglakeMetastore;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.iceberg.TableScan;
+import org.apache.iceberg.aws.glue.GlueCatalog;
+import org.apache.iceberg.catalog.Catalog;
 
 public class IcebergUtils {
 
@@ -86,5 +101,104 @@ public class IcebergUtils {
         if (property == null || property.isEmpty()) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, key);
         }
+    }
+
+    public static void validateIcebergTableProperties(Map<String, String> properties) throws CompilationException {
+        String tableName = properties.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
+        if (tableName == null || tableName.isEmpty()) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED,
+                    IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
+        }
+    }
+
+    /**
+     * Extracts and returns the iceberg catalog properties from the provided configuration
+     *
+     * @param configuration configuration
+     * @return catalog properties
+     */
+    public static Map<String, String> filterCatalogProperties(Map<String, String> configuration) {
+        Map<String, String> catalogProperties = new HashMap<>();
+        Iterator<Map.Entry<String, String>> iterator = configuration.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            if (entry.getKey().startsWith(IcebergConstants.ICEBERG_PROPERTY_PREFIX_INTERNAL)) {
+                catalogProperties.put(
+                        entry.getKey().substring(IcebergConstants.ICEBERG_PROPERTY_PREFIX_INTERNAL.length()),
+                        entry.getValue());
+                iterator.remove();
+            }
+        }
+        return catalogProperties;
+    }
+
+    /**
+     * Namespace can be null (not passed), or it can be passed for the catalog or the collection. If it is passed
+     * for both, namespace for the collection will be used, otherwise, the namespace for the catalog will be used.
+     *
+     * @param configuration configuration
+     * @return namespace
+     */
+    public static String getNamespace(Map<String, String> configuration) {
+        String namespace = configuration.get(IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY);
+        if (namespace != null) {
+            return namespace;
+        }
+
+        String catalogNamespaceProperty =
+                IcebergConstants.ICEBERG_PROPERTY_PREFIX_INTERNAL + IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY;
+        namespace = configuration.get(catalogNamespaceProperty);
+        return namespace;
+    }
+
+    public static String getIcebergFormat(Map<String, String> configuration) throws AsterixException {
+        String format = configuration.get(ExternalDataConstants.KEY_FORMAT).toLowerCase();
+        return switch (format) {
+            case ExternalDataConstants.FORMAT_PARQUET -> ICEBERG_PARQUET_FORMAT;
+            case ExternalDataConstants.FORMAT_AVRO -> ICEBERG_AVRO_FORMAT;
+            default -> throw AsterixException.create(UNSUPPORTED_ICEBERG_DATA_FORMAT, format);
+        };
+    }
+
+    public static Catalog initializeCatalog(Map<String, String> catalogProperties, String namespace)
+            throws CompilationException {
+        String source = catalogProperties.get(IcebergConstants.ICEBERG_SOURCE_PROPERTY_KEY);
+        Optional<CatalogConfig.IcebergCatalogSource> catalogSource = CatalogConfig.getIcebergCatalogSource(source);
+        if (catalogSource.isEmpty()) {
+            throw CompilationException.create(ErrorCode.UNSUPPORTED_ICEBERG_CATALOG_SOURCE, source);
+        }
+
+        return switch (catalogSource.get()) {
+            case CatalogConfig.IcebergCatalogSource.AWS_GLUE -> GlueUtils.initializeCatalog(catalogProperties, namespace);
+            case CatalogConfig.IcebergCatalogSource.BIGLAKE_METASTORE -> BiglakeMetastore.initializeCatalog(catalogProperties, namespace);
+            case CatalogConfig.IcebergCatalogSource.REST -> null;
+        };
+    }
+
+    public static void closeCatalog(Catalog catalog) throws CompilationException {
+        if (catalog != null) {
+            if (catalog instanceof GlueCatalog) {
+                GlueUtils.closeCatalog((GlueCatalog) catalog);
+            }
+        }
+    }
+
+    public static TableScan setSnapshot(Map<String, String> configuration, TableScan scan) {
+        String snapshot = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        if (snapshot != null) {
+            scan = scan.useSnapshot(Long.parseLong(snapshot));
+        } else {
+            String asOfTimestamp = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
+            if (asOfTimestamp != null) {
+                scan = scan.asOfTime(Long.parseLong(asOfTimestamp));
+            }
+        }
+        return scan;
+    }
+
+    public static String[] getProjectedFields(Map<String, String> configuration) throws IOException {
+        String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
+        ARecordType projectedRecordType = ExternalDataUtils.getExpectedType(encoded);
+        return projectedRecordType.getFieldNames();
     }
 }

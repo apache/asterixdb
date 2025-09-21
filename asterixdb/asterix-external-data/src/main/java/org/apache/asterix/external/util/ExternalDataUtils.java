@@ -41,13 +41,16 @@ import static org.apache.asterix.external.util.azure.blob.BlobUtils.validateAzur
 import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.validateAzureDataLakeProperties;
 import static org.apache.asterix.external.util.google.GCSUtils.configureHdfsJobConf;
 import static org.apache.asterix.external.util.google.GCSUtils.validateProperties;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.isIcebergTable;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import static org.msgpack.core.MessagePack.Code.ARRAY16;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -512,6 +515,9 @@ public class ExternalDataUtils {
                 configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
                 configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_DELTA);
             }
+            if (isIcebergTable(configuration)) {
+                return;
+            }
             prepareTableFormat(configuration);
         }
     }
@@ -613,7 +619,6 @@ public class ExternalDataUtils {
 
         // If the table is in S3
         if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
-
             conf.set(S3Constants.HADOOP_ACCESS_KEY_ID, configuration.get(AwsConstants.ACCESS_KEY_ID_FIELD_NAME));
             conf.set(S3Constants.HADOOP_SECRET_ACCESS_KEY,
                     configuration.get(AwsConstants.SECRET_ACCESS_KEY_FIELD_NAME));
@@ -1001,8 +1006,8 @@ public class ExternalDataUtils {
     }
 
     public static boolean supportsPushdown(Map<String, String> properties) {
-        //Currently, only Apache Parquet/Delta table format is supported
-        return isParquetFormat(properties) || isDeltaTable(properties);
+        //Currently, only Apache Parquet/Delta/Iceberg table format is supported
+        return isParquetFormat(properties) || isDeltaTable(properties) || isIcebergTable(properties);
     }
 
     /**
@@ -1251,5 +1256,31 @@ public class ExternalDataUtils {
             properties.put(fieldName, fieldValueStr);
         }
         return properties;
+    }
+
+    public static ARecordType getExpectedType(String encodedRequestedFields) throws IOException {
+        if (ALL_FIELDS_TYPE.getTypeName().equals(encodedRequestedFields)) {
+            //By default, return the entire records
+            return ALL_FIELDS_TYPE;
+        } else if (EMPTY_TYPE.getTypeName().equals(encodedRequestedFields)) {
+            //No fields were requested
+            return EMPTY_TYPE;
+        }
+        //A subset of the fields was requested
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] typeBytes = decoder.decode(encodedRequestedFields);
+        DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(typeBytes));
+        return ExternalDatasetProjectionFiltrationInfo.createTypeField(dataInputStream);
+    }
+
+    public static Map<String, FunctionCallInformation> getFunctionCallInformationMap(
+            String encodedFunctionCallInformation) throws IOException {
+        if (encodedFunctionCallInformation != null && !encodedFunctionCallInformation.isEmpty()) {
+            Base64.Decoder decoder = Base64.getDecoder();
+            byte[] functionCallInfoMapBytes = decoder.decode(encodedFunctionCallInformation);
+            DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(functionCallInfoMapBytes));
+            return ExternalDatasetProjectionFiltrationInfo.createFunctionCallInformationMap(dataInputStream);
+        }
+        return null;
     }
 }

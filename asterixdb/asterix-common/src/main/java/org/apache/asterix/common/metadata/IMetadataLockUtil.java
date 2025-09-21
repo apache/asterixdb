@@ -52,7 +52,7 @@ public interface IMetadataLockUtil {
             String metaItemTypeDatabase, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
             boolean metaItemTypeAnonymous, String nodeGroupName, String compactionPolicyName,
             boolean isDefaultCompactionPolicy, DatasetConfig.DatasetType datasetType, Object datasetDetails,
-            IMetadataProvider metadataProvider) throws AlgebricksException;
+            IMetadataProvider metadataProvider, String catalogName) throws AlgebricksException;
 
     void dropDatasetBegin(IMetadataLockManager lockManager, LockList locks, String database,
             DataverseName dataverseName, String datasetName) throws AlgebricksException;

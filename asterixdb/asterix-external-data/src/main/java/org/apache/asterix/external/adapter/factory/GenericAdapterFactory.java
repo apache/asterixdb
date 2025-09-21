@@ -31,11 +31,13 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
+import org.apache.asterix.external.api.IIcebergRecordReaderFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.parser.factory.IcebergParserFactory;
 import org.apache.asterix.external.provider.DataflowControllerProvider;
 import org.apache.asterix.external.provider.DatasourceFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
@@ -46,6 +48,7 @@ import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.external.util.NoOpFeedLogManager;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -144,12 +147,22 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
         dataSourceFactory.configure(serviceContext, configuration, warningCollector, filterEvaluatorFactory);
         ExternalDataUtils.validateDataParserParameters(configuration);
         dataParserFactory = createDataParserFactory(configuration);
+        setProjectedSchemaIfIcebergTable(configuration, dataSourceFactory, dataParserFactory);
         dataParserFactory.setRecordType(recordType);
         dataParserFactory.setMetaType(metaType);
         dataParserFactory.configure(configuration);
         ExternalDataCompatibilityUtils.validateCompatibility(dataSourceFactory, dataParserFactory);
         configureFeedLogManager(appCtx);
         nullifyExternalObjects();
+    }
+
+    private void setProjectedSchemaIfIcebergTable(Map<String, String> configuration,
+            IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory) {
+        if (IcebergUtils.isIcebergTable(configuration)) {
+            IIcebergRecordReaderFactory readerFactory = (IIcebergRecordReaderFactory) dataSourceFactory;
+            IcebergParserFactory parserFactory = (IcebergParserFactory) dataParserFactory;
+            parserFactory.setProjectedSchema(readerFactory.getProjectedSchema());
+        }
     }
 
     private void configureFeedLogManager(ICcApplicationContext appCtx)

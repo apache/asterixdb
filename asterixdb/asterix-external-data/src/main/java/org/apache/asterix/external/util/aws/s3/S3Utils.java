@@ -85,6 +85,7 @@ import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.AwsUtils;
 import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -317,6 +318,13 @@ public class S3Utils {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 
+        // iceberg tables can be created without passing the bucket,
+        // only validate bucket presence if container is passed
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        if (IcebergUtils.isIcebergTable(configuration) && container == null) {
+            return;
+        }
+
         validateIncludeExclude(configuration);
         try {
             // TODO(htowaileb): maybe something better, this will check to ensure type is supported before creation
@@ -330,7 +338,6 @@ public class S3Utils {
         S3Client s3Client = (S3Client) awsClients.getConsumingClient();
         S3Response response;
         boolean useOldApi = false;
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         String prefix = getPrefix(configuration);
 
         try {

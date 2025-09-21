@@ -480,6 +480,14 @@
       <artifactId>apache-client</artifactId>
     </dependency>
     <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>dynamodb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>kms</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-blob</artifactId>
     </dependency>
@@ -627,6 +635,19 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-cloud</artifactId>
       <version>0.3.10-SNAPSHOT</version>
+    </dependency>
+    <!-- Iceberg -->
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-aws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-parquet</artifactId>
     </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->

@@ -21,7 +21,6 @@ package org.apache.asterix.external.util;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
-import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.ByteArrayInputStream;
@@ -61,7 +60,6 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadS
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -456,18 +454,7 @@ public class HDFSUtils {
 
     public static ARecordType getExpectedType(Configuration configuration) throws IOException {
         String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS, "");
-        if (ALL_FIELDS_TYPE.getTypeName().equals(encoded)) {
-            //By default, return the entire records
-            return ALL_FIELDS_TYPE;
-        } else if (EMPTY_TYPE.getTypeName().equals(encoded)) {
-            //No fields were requested
-            return EMPTY_TYPE;
-        }
-        //A subset of the fields was requested
-        Base64.Decoder decoder = Base64.getDecoder();
-        byte[] typeBytes = decoder.decode(encoded);
-        DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(typeBytes));
-        return ExternalDatasetProjectionFiltrationInfo.createTypeField(dataInputStream);
+        return ExternalDataUtils.getExpectedType(encoded);
     }
 
     public static void setFunctionCallInformationMap(Map<String, FunctionCallInformation> funcCallInfoMap,
@@ -479,13 +466,7 @@ public class HDFSUtils {
     public static Map<String, FunctionCallInformation> getFunctionCallInformationMap(Configuration conf)
             throws IOException {
         String encoded = conf.get(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION, "");
-        if (!encoded.isEmpty()) {
-            Base64.Decoder decoder = Base64.getDecoder();
-            byte[] functionCallInfoMapBytes = decoder.decode(encoded);
-            DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(functionCallInfoMapBytes));
-            return ExternalDatasetProjectionFiltrationInfo.createFunctionCallInformationMap(dataInputStream);
-        }
-        return null;
+        return ExternalDataUtils.getFunctionCallInformationMap(encoded);
     }
 
     public static void setWarnings(List<Warning> warnings, Configuration conf) throws IOException {

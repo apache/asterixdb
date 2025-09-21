@@ -70,10 +70,10 @@ public class MetadataLockUtil implements IMetadataLockUtil {
             String metaItemTypeDatabase, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
             boolean metaItemTypeAnonymous, String nodeGroupName, String compactionPolicyName,
             boolean isDefaultCompactionPolicy, DatasetConfig.DatasetType datasetType, Object datasetDetails,
-            IMetadataProvider metadataProvider) throws AlgebricksException {
+            IMetadataProvider metadataProvider, String catalogName) throws AlgebricksException {
         createDatasetBeginPre(lockMgr, locks, database, dataverseName, itemTypeDatabase, itemTypeDataverseName,
                 itemTypeName, itemTypeAnonymous, metaItemTypeDatabase, metaItemTypeDataverseName, metaItemTypeName,
-                metaItemTypeAnonymous, nodeGroupName, compactionPolicyName, isDefaultCompactionPolicy);
+                metaItemTypeAnonymous, nodeGroupName, compactionPolicyName, isDefaultCompactionPolicy, catalogName);
         lockMgr.acquireDatasetWriteLock(locks, database, dataverseName, datasetName);
     }
 
@@ -81,7 +81,7 @@ public class MetadataLockUtil implements IMetadataLockUtil {
             DataverseName dataverseName, String itemTypeDatabase, DataverseName itemTypeDataverseName,
             String itemTypeName, boolean itemTypeAnonymous, String metaItemTypeDatabase,
             DataverseName metaItemTypeDataverseName, String metaItemTypeName, boolean metaItemTypeAnonymous,
-            String nodeGroupName, String compactionPolicyName, boolean isDefaultCompactionPolicy)
+            String nodeGroupName, String compactionPolicyName, boolean isDefaultCompactionPolicy, String catalogName)
             throws AlgebricksException {
         lockMgr.acquireDatabaseReadLock(locks, database);
         lockMgr.acquireDataverseReadLock(locks, database, dataverseName);
@@ -113,6 +113,9 @@ public class MetadataLockUtil implements IMetadataLockUtil {
         }
         if (!isDefaultCompactionPolicy) {
             lockMgr.acquireMergePolicyReadLock(locks, compactionPolicyName);
+        }
+        if (catalogName != null) {
+            lockMgr.acquireCatalogReadLock(locks, catalogName);
         }
     }
 

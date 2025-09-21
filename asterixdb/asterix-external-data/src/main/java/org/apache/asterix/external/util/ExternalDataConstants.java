@@ -255,6 +255,7 @@ public class ExternalDataConstants {
     public static final String DUMMY_DATABASE_NAME = "dbname";
     public static final String DUMMY_TYPE_NAME = "typeName";
     public static final String DUMMY_DATAVERSE_NAME = "a.b.c";
+    public static final String FORMAT_ICEBERG = "iceberg";
     public static final String FORMAT_APACHE_ICEBERG = "apache-iceberg";
     public static final String FORMAT_DELTA = "delta";
     public static final Set<String> ALL_FORMATS;
@@ -417,6 +418,16 @@ public class ExternalDataConstants {
 
     public static class DeltaOptions {
         private DeltaOptions() {
+        }
+
+        public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
+        public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
+        public static final String DATE_AS_INT = "date-to-int";
+        public static final String TIMEZONE = "timezone";
+    }
+
+    public static class IcebergOptions {
+        private IcebergOptions() {
         }
 
         public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";

@@ -32,6 +32,8 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
@@ -51,7 +53,12 @@ public class ParserFactoryProvider {
             //        ExternalDataUtils.getDataverse(configuration), parserFactoryName);
             throw new NotImplementedException();
         } else {
-            String parserFactoryKey = ExternalDataUtils.getParserFactory(configuration);
+            String parserFactoryKey;
+            if (IcebergUtils.isIcebergTable(configuration)) {
+                parserFactoryKey = IcebergConstants.ICEBERG_PARQUET_FORMAT;
+            } else {
+                parserFactoryKey = ExternalDataUtils.getParserFactory(configuration);
+            }
             parserFactory = ParserFactoryProvider.getDataParserFactory(parserFactoryKey);
         }
         return parserFactory;
