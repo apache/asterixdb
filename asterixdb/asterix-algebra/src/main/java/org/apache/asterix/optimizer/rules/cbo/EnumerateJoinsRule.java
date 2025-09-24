@@ -308,7 +308,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 modifyUnnestInfo = new ArrayList<>();
                 collectUnnestModificationInfo(null, root, cheapestPlanNode);
                 for (int k = 0; k < modifyUnnestInfo.size(); k++) {
-                    modifyTree(null, root, k);
+                    modifyTree(null, 0, root, k);
                     if (newRootAfterUnnest != null) {
                         root = newRootAfterUnnest;
                     }
@@ -384,7 +384,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private void modifyTree(ILogicalOperator parent, ILogicalOperator op, int k) {
+    private void modifyTree(ILogicalOperator parent, int index, ILogicalOperator op, int k) {
         if (modifyUnnestInfo.get(k).second == op) { // found the one to get rid off; this should be an OJ
             int size = modifyUnnestInfo.get(k).third.size();
             UnnestOperator uOp = (UnnestOperator) modifyUnnestInfo.get(k).third.get(size - 1); // UnnestOp is always at the end
@@ -394,20 +394,22 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 ILogicalOperator q = newRootAfterUnnest;
                 if (modifyUnnestInfo.get(k).third.size() > 1) {
                     for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
-                        q.getInputs().get(0).setValue(p);
+                        q.getInputs().get(index).setValue(p);
                         q = p;
                     }
                 }
             } else {
                 ILogicalOperator q = parent;
                 for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
-                    q.getInputs().get(0).setValue(p);
+                    q.getInputs().get(index).setValue(p);
                     q = p;
                 }
             }
         }
-        for (Mutable<ILogicalOperator> input : op.getInputs()) {
-            modifyTree(op, input.getValue(), k);
+        int size = op.getInputs().size();
+        for (int i = 0; i < size; i++) {
+            Mutable<ILogicalOperator> input = op.getInputs().get(i);
+            modifyTree(op, i, input.getValue(), k);
         }
     }
 
