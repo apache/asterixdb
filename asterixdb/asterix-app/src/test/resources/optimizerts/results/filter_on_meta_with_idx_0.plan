@@ -15,7 +15,7 @@ distribute result [$$34]
               order (ASC, $$50) (ASC, $$46) (ASC, $$47) (ASC, $$48) (ASC, $$49)
               -- STABLE_SORT [$$50(ASC), $$46(ASC), $$47(ASC), $$48(ASC), $$49(ASC)]  |PARTITIONED|
                 exchange
-                -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   select (spatial-intersect($$38, create-point($$46, $$47))) project: [$$t, $$50, $$46, $$47, $$48, $$49]
                   -- STREAM_SELECT  |PARTITIONED|
                     project ([$$t, $$38, $$46, $$47, $$48, $$49, $$50])

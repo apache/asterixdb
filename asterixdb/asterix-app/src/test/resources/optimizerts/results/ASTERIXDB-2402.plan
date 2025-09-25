@@ -133,7 +133,7 @@ distribute result [$$227]
                                                                     order (ASC, $$236) (ASC, $$288) (ASC, $$289) (ASC, $$290) (ASC, $$291)
                                                                     -- STABLE_SORT [$$236(ASC), $$288(ASC), $$289(ASC), $$290(ASC), $$291(ASC)]  |PARTITIONED|
                                                                       exchange
-                                                                      -- HASH_PARTITION_EXCHANGE [$$236]  |PARTITIONED|
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                         select (spatial-intersect($$293, $$244)) retain-untrue ($$236 <- missing)
                                                                         -- STREAM_SELECT  |PARTITIONED|
                                                                           assign [$$293] <- [create-point($$288, $$289)]

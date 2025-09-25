@@ -29,7 +29,7 @@ distribute result [$$37]
                             order (ASC, $$42) (ASC, $$44)
                             -- STABLE_SORT [$$42(ASC), $$44(ASC)]  |PARTITIONED|
                               exchange
-                              -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 select (eq($$43, $$44)) retain-untrue ($$42 <- missing)
                                 -- STREAM_SELECT  |PARTITIONED|
                                   exchange

@@ -31,7 +31,7 @@ distribute result [$$52] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-
                               order (ASC, $$54) (ASC, $$56) [cardinality: 2.0, doc-size: 15.0, op-cost: 0.0, total-cost: 2.0]
                               -- STABLE_SORT [$$54(ASC), $$56(ASC)]  |PARTITIONED|
                                 exchange [cardinality: 2.0, doc-size: 15.0, op-cost: 0.0, total-cost: 2.0]
-                                -- HASH_PARTITION_EXCHANGE [$$54]  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   select (eq($$55, $$56)) retain-untrue ($$54 <- missing) project: [$$53, $$54, $$56] [cardinality: 2.0, doc-size: 15.0, op-cost: 0.0, total-cost: 2.0]
                                   -- STREAM_SELECT  |PARTITIONED|
                                     exchange [cardinality: 2.0, doc-size: 15.0, op-cost: 0.0, total-cost: 2.0]

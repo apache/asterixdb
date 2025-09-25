@@ -18,20 +18,27 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.DataSourceIndex;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractScanPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
@@ -69,9 +76,38 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
         IDataSource<?> ds = idx.getDataSource();
+        List<LogicalVariable> scanVariables = new ArrayList<>();
+        if (idx instanceof DataSourceIndex) {
+            Index index = ((DataSourceIndex) idx).getIndex();
+            if (index.isSecondaryIndex() && ds instanceof DatasetDataSource) {
+                Dataset dataset = ((DatasetDataSource) ds).getDataset();
+                int numOfPrimaryKeys = dataset.getPrimaryKeys().size();
+                if (op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP
+                        || op.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP) {
+                    // Getting the primary keys vars from the Unnest Map or Left Outer Unnest Map operator.
+                    // Primary key Vars are always located at the end of the unnest variables list.
+                    // This check is unnecessary as the operator will always be
+                    // AbstractUnnestMapOperator in secondary index search cases.
+                    List<LogicalVariable> opVars = ((AbstractUnnestMapOperator) op).getScanVariables();
+                    int varsSize = opVars.size();
+                    scanVariables.addAll(opVars.subList(varsSize - numOfPrimaryKeys, varsSize));
+                    scanVariables.add(new LogicalVariable(-1));
+                    if (dataset.hasMetaPart()) {
+                        //if the dataset has a meta part, we add an additional variable for the meta item
+                        //By doing so we ensure that DataSource.getPrimaryKeyVariables will always pick
+                        //the correct pks.
+                        scanVariables.add(new LogicalVariable(-1));
+                    }
+                }
+            }
+        }
+        if (scanVariables.isEmpty()) {
+            AbstractScanOperator as = (AbstractScanOperator) op;
+            scanVariables.addAll(as.getScanVariables());
+        }
+
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
-        AbstractScanOperator as = (AbstractScanOperator) op;
-        deliveredProperties = dspp.computeDeliveredProperties(as.getScanVariables(), context);
+        deliveredProperties = dspp.computeDeliveredProperties(scanVariables, context);
     }
 
     protected int[] getKeyIndexes(List<LogicalVariable> keyVarList, IOperatorSchema[] inputSchemas) {

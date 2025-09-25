@@ -44,7 +44,7 @@ distribute result [$$41]
                                   order (ASC, $$45) (ASC, $$46)
                                   -- STABLE_SORT [$$45(ASC), $$46(ASC)]  |PARTITIONED|
                                     exchange
-                                    -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       select (eq($$47, $$46)) retain-untrue ($$45 <- missing)
                                       -- STREAM_SELECT  |PARTITIONED|
                                         exchange
@@ -107,7 +107,7 @@ distribute result [$$41]
                                             order (ASC, $$45) (ASC, $$46)
                                             -- STABLE_SORT [$$45(ASC), $$46(ASC)]  |PARTITIONED|
                                               exchange
-                                              -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 select (eq($$47, $$46)) retain-untrue ($$45 <- missing)
                                                 -- STREAM_SELECT  |PARTITIONED|
                                                   exchange

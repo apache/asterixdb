@@ -46,7 +46,7 @@ distribute result [$$53]
                                     order (ASC, $$58) (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
                                     -- STABLE_SORT [$$58(ASC), $$72(ASC), $$73(ASC), $$74(ASC), $$75(ASC)]  |PARTITIONED|
                                       exchange
-                                      -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         select (spatial-intersect($$77, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$77, $$57, $$72, $$73, $$74, $$75]
                                         -- STREAM_SELECT  |PARTITIONED|
                                           assign [$$77] <- [create-point($$72, $$73)]
@@ -119,7 +119,7 @@ distribute result [$$53]
                                               order (ASC, $$58) (ASC, $$72) (ASC, $$73) (ASC, $$74) (ASC, $$75)
                                               -- STABLE_SORT [$$58(ASC), $$72(ASC), $$73(ASC), $$74(ASC), $$75(ASC)]  |PARTITIONED|
                                                 exchange
-                                                -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   select (spatial-intersect($$77, $$n)) retain-untrue ($$58 <- missing) project: [$$56, $$58, $$77, $$57, $$72, $$73, $$74, $$75]
                                                   -- STREAM_SELECT  |PARTITIONED|
                                                     assign [$$77] <- [create-point($$72, $$73)]

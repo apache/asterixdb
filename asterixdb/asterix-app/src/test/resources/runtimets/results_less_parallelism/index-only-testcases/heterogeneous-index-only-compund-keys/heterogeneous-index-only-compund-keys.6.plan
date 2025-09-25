@@ -23,7 +23,7 @@ distribute result [$$34] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                       order (ASC, $$36) (ASC, $$39) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STABLE_SORT [$$36(ASC), $$39(ASC)]  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
                           select (gt($$39, 3)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_SELECT  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -42,7 +42,7 @@ distribute result [$$34] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
               -- ASSIGN  |PARTITIONED|
                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$37, $$o] <- test.Orders project ({cid:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  data-scan []<-[$$37, $$o] <- test.Orders [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

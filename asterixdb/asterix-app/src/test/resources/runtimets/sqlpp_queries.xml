@@ -6763,6 +6763,11 @@
         <output-dir compare="Text">simple-index-only-rtree</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-only-testcases">
+      <compilation-unit name="index-only-with-Meta">
+        <output-dir compare="Text">index-only-with-Meta</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="inverted-index-join">
     <test-case FilePath="inverted-index-join">
