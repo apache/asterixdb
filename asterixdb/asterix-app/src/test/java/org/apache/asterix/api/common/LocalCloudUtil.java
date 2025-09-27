@@ -21,19 +21,16 @@ package org.apache.asterix.api.common;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
-import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.findify.s3mock.S3Mock;
-import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -76,11 +73,7 @@ public class LocalCloudUtil {
         s3MockServer.start();
         LOGGER.info("S3 mock server started successfully");
 
-        S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_ENDPOINT); // endpoint pointing to S3 mock server
-        builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
-                .endpointOverride(endpoint);
-        S3Client client = builder.build();
+        S3Client client = LocalCloudUtilAdobeMock.getS3Client();
         client.createBucket(CreateBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
         LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
 
@@ -99,6 +92,22 @@ public class LocalCloudUtil {
         }
         client.close();
         return s3MockServer;
+    }
+
+    public static void recreateBucket(String bucketName, S3Client client) {
+        String verb = "Created";
+        try {
+            client.deleteBucket(DeleteBucketRequest.builder().bucket(bucketName).build());
+            verb = "Recreated";
+        } catch (Exception e) {
+            // ignore any failure
+        }
+        try {
+            client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
+            LOGGER.info("{} bucket {}", verb, bucketName);
+        } finally {
+            client.close();
+        }
     }
 
     public static void stopS3MockServer() {

@@ -21,8 +21,10 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.SequencedSet;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
@@ -61,7 +63,7 @@ public abstract class AbstractExecutionIT {
 
     private static final String EXTERNAL_LIBRARY_TEST_GROUP = "lib";
 
-    private static final List<String> badTestCases = new ArrayList<>();
+    private static final SequencedSet<String> badTestCases = new LinkedHashSet<>();
 
     private static String reportPath = new File(joinPath("target", "failsafe-reports")).getAbsolutePath();
 

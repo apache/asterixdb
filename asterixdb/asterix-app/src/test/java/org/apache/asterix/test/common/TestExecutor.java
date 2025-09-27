@@ -74,6 +74,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,6 +85,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Queue;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -2728,15 +2730,36 @@ public class TestExecutor {
         return stripLineComments(stripJavaComments(statement));
     }
 
-    public void cleanup(String testCase, List<String> badtestcases) throws Exception {
+    public final void cleanup(String testCase, SequencedSet<String> badtestcases) throws Exception {
+        cleanup(testCase, badtestcases, false);
+    }
+
+    public void cleanup(String testCase, SequencedSet<String> badtestcases, boolean skipClusterCleanup)
+            throws Exception {
+        if (skipClusterCleanup) {
+            return;
+        }
         try {
             List<Pair<String, DataverseName>> toBeDropped = new ArrayList<>();
             listUserDefinedDataverses(toBeDropped);
             if (!toBeDropped.isEmpty()) {
                 badtestcases.add(testCase);
-                LOGGER.info("Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
+                LOGGER.info("Last test leaked scopes. Dropping scopes: {}",
+                        toBeDropped.stream()
+                                .map(pair -> (pair.getFirst() == null ? "" : (pair.getFirst() + SqlppStatementUtil.DOT))
+                                        + pair.getSecond().getCanonicalForm())
+                                .collect(Collectors.joining(", ", "[", "]")));
+                // TODO(mblow): consider that dataverses can have references from views in other dataverses
                 for (Pair<String, DataverseName> dv : toBeDropped) {
                     dropDataverse(dv);
+                }
+            }
+            List<String> databases = listUserDefinedDatabases();
+            if (!databases.isEmpty()) {
+                LOGGER.info("Last test leaked databases. Dropping databases: " + databases);
+                badtestcases.add(testCase);
+                for (String db : databases) {
+                    dropDatabase(db);
                 }
             }
         } catch (Throwable th) {
@@ -2768,6 +2791,25 @@ public class TestExecutor {
         }
     }
 
+    protected List<String> listUserDefinedDatabases() throws Exception {
+        String query = "select value(DatabaseName) from Metadata.`Database` where Creator.Name != \"@sys\"";
+        URI uri = getEndpoint(Servlets.QUERY_SERVICE);
+        try {
+            InputStream resultStream = executeQueryService(query, OutputFormat.CLEAN_JSON, uri,
+                    constructQueryParameters(query, OutputFormat.CLEAN_JSON, new ArrayList<Parameter>()), false,
+                    StandardCharsets.UTF_8, code -> code == HttpStatus.SC_OK, false);
+            JsonNode result = extractResult(IOUtils.toString(resultStream, UTF_8));
+            List<String> databases = new ArrayList<>();
+            for (int i = 0; i < result.size(); i++) {
+                databases.add(result.get(i).asText());
+            }
+            return databases;
+        } catch (Exception e) {
+            // assuming databases are not enabled in this cluster
+            return Collections.emptyList();
+        }
+    }
+
     protected void dropDataverse(Pair<String, DataverseName> dv) throws Exception {
         StringBuilder dropStatement = new StringBuilder();
         dropStatement.append("drop dataverse ");
@@ -2783,8 +2825,18 @@ public class TestExecutor {
         ResultExtractor.extract(resultStream, UTF_8, OutputFormat.CLEAN_JSON);
     }
 
-    protected void listDatasets(DataverseName dataverseName, List<Pair<String, DatasetConfig.DatasetType>> outDatasets)
-            throws Exception {
+    protected void dropDatabase(String db) throws Exception {
+        StringBuilder dropStatement = new StringBuilder();
+        dropStatement.append("DROP DATABASE ");
+        SqlppStatementUtil.enclose(dropStatement, db);
+        dropStatement.append(";");
+        InputStream resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
+                OutputFormat.CLEAN_JSON, UTF_8);
+        ResultExtractor.extract(resultStream, UTF_8, OutputFormat.CLEAN_JSON);
+    }
+
+    protected void listDatasets(DataverseName dataverseName,
+            Collection<Pair<String, DatasetConfig.DatasetType>> outDatasets) throws Exception {
         String query = "select d.DatasetName, d.DatasetType from Metadata.`Dataset` d where d.DataverseName = '"
                 + dataverseName.getCanonicalForm() + "'";
         InputStream resultStream = executeQueryService(query, getEndpoint(Servlets.QUERY_SERVICE),

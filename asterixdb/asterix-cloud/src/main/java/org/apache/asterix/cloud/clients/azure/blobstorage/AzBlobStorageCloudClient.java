@@ -58,6 +58,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.http.rest.Response;
 import com.azure.core.util.BinaryData;
@@ -78,6 +79,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.http.client.HttpClient;
 
 public class AzBlobStorageCloudClient implements ICloudClient {
     private static final String BUCKET_ROOT_PATH = "";
@@ -402,6 +408,24 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         blobServiceClientBuilder.endpoint(getEndpoint(config));
         blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
         configCredentialsToAzClient(blobServiceClientBuilder, config);
+
+        // Disable SSL verification if the config property is set
+        if (config.isStorageDisableSSLVerify()) {
+            try {
+                // Create SSL context that trusts all certificates
+                SslContext sslContext =
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+
+                // Create a base Reactor Netty HttpClient with SSL verification disabled
+                HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
+
+                // Configure the Azure HTTP client with the base client
+                blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to disable SSL verification", e);
+            }
+        }
+
         return blobServiceClientBuilder.buildClient();
     }
 
