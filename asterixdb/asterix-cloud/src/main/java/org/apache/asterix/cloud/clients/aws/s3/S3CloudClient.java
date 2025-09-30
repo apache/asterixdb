@@ -73,6 +73,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -234,6 +235,22 @@ public final class S3CloudClient implements ICloudClient {
                     throw ex;
                 }
             }
+        }
+    }
+
+    @Override
+    public void deleteObject(String bucket, String path) throws HyracksDataException {
+        try {
+            if (path.isEmpty()) {
+                return;
+            }
+            guardian.checkWriteAccess(bucket, path);
+            profiler.objectDelete();
+            DeleteObjectRequest request =
+                    DeleteObjectRequest.builder().bucket(bucket).key(config.getPrefix() + path).build();
+            s3Client.deleteObject(request);
+        } catch (Exception ex) {
+            throw HyracksDataException.create(ex);
         }
     }
 

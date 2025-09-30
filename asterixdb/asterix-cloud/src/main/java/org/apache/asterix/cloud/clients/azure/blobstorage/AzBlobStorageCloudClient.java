@@ -259,6 +259,21 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     }
 
     @Override
+    public void deleteObject(String bucket, String path) throws HyracksDataException {
+        try {
+            if (path.isEmpty()) {
+                return;
+            }
+            guardian.checkWriteAccess(bucket, path);
+            profiler.objectDelete();
+            BlobClient blobClient = blobContainerClient.getBlobClient(config.getPrefix() + path);
+            blobClient.delete();
+        } catch (Exception ex) {
+            throw HyracksDataException.create(ex);
+        }
+    }
+
+    @Override
     public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         if (paths.isEmpty())
             return;
@@ -270,21 +285,25 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         for (List<String> batch : batchedBlobURLs) {
             PagedIterable<Response<Void>> responses = blobBatchClient.deleteBlobs(batch, null);
             Iterator<String> deletePathIter = paths.iterator();
-            String deletedPath = null;
-            try {
-                for (Response<Void> response : responses) {
-                    deletedPath = deletePathIter.next();
-                    // The response.getStatusCode() method returns:
-                    // - 202 (Accepted) if the delete operation is successful
-                    // - exception if the delete operation fails
-                    int statusCode = response.getStatusCode();
-                    if (statusCode != SUCCESS_RESPONSE_CODE) {
-                        LOGGER.warn("Failed to delete blob: {} with status code: {} while deleting {}", deletedPath,
-                                statusCode, paths.toString());
+            String deletedPath;
+            String failedDeletedPath = null;
+            for (Response<Void> response : responses) {
+                deletedPath = deletePathIter.next();
+                // The response.getStatusCode() method returns:
+                // - 202 (Accepted) if the delete operation is successful
+                // - exception if the delete operation fails
+                int statusCode = response.getStatusCode();
+                if (statusCode != SUCCESS_RESPONSE_CODE) {
+                    LOGGER.warn("Failed to delete blob: {} with status code: {} while deleting {}", deletedPath,
+                            statusCode, paths.toString());
+                    if (failedDeletedPath == null) {
+                        failedDeletedPath = deletedPath;
                     }
                 }
-            } catch (BlobStorageException e) {
-                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath, paths.toString());
+            }
+            if (failedDeletedPath != null) {
+                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE", failedDeletedPath,
+                        paths.toString());
             }
         }
     }

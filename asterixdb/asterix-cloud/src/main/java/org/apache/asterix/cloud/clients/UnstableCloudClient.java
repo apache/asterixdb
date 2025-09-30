@@ -106,6 +106,11 @@ public class UnstableCloudClient implements ICloudClient {
     }
 
     @Override
+    public void deleteObject(String bucket, String path) throws HyracksDataException {
+        cloudClient.deleteObject(bucket, path);
+    }
+
+    @Override
     public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         cloudClient.deleteObjects(bucket, paths);
     }
