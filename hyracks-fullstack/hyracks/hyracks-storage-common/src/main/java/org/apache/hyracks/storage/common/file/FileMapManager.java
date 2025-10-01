@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.common.file;
 
-import java.io.Serial;
 import java.util.Date;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -33,8 +32,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 @NotThreadSafe
 public class FileMapManager implements IFileMapManager {
-    @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final int NOT_FOUND = -1;
 
     private final Int2ObjectMap<FileReference> id2nameMap;
