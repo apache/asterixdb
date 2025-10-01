@@ -63,6 +63,17 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
                 <version>1.4.2</version>
@@ -135,76 +146,10 @@
                             <async>true</async>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>azurite</id>
-                        <phase>${azurite.stage}</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <!--suppress UnresolvedMavenProperty -->
-                            <executable>${project.build.directory}/npm/node_modules/.bin/azurite-blob</executable>
-                            <workingDirectory>${project.build.directory}</workingDirectory>
-                            <environmentVariables>
-                                <PATH>${project.build.directory}/npm/node</PATH>
-                            </environmentVariables>
-                            <arguments>
-                                <argument>--blobPort</argument>
-                                <argument>15055</argument>
-                                <argument>--location</argument>
-                                <argument>${project.build.directory}/azurite</argument>
-                                <argument>--debug</argument>
-                                <argument>${project.build.directory}/azurite/logs/azurite-debug.log</argument>
-                            </arguments>
-                            <async>true</async>
-                            <outputFile>${project.build.directory}/azurite/logs/azurite.log</outputFile>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>azurite-tests</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <version>1.13.4</version>
-                        <configuration>
-                            <nodeVersion>v14.15.4</nodeVersion>
-                            <npmVersion>6.14.11</npmVersion>
-                            <workingDirectory>target/npm</workingDirectory>
-                            <installDirectory>target/npm</installDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>install node and yarn</id>
-                                <goals>
-                                    <goal>install-node-and-npm</goal>
-                                </goals>
-                                <phase>${azurite.npm.install.stage}</phase>
-                            </execution>
-                            <execution>
-                                <id>azurite blob</id>
-                                <phase>${azurite.install.stage}</phase>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>install azurite@3.35.0</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.hyracks</groupId>
@@ -271,12 +216,27 @@
             <scope>test</scope>
         </dependency>
         <!-- aws s3 end -->
-
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob-batch</artifactId>
             <version>12.23.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.78.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>azure</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

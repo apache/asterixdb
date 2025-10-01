@@ -19,8 +19,11 @@
 package org.apache.asterix.test.cloud_storage;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+import static org.apache.asterix.cloud.azure.LSMAzBlobStorageTest.AZURITE_CONTAINER_VER;
 import static org.apache.asterix.test.cloud_storage.CloudStorageGCSTest.S3_ONLY;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +31,7 @@ import java.util.Objects;
 import java.util.Random;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
+import org.apache.asterix.cloud.azure.LSMAzBlobStorageTest;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -45,10 +49,17 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.testcontainers.azure.AzuriteContainer;
+import org.testcontainers.utility.MountableFile;
 
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.common.StorageSharedKeyCredential;
+
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.http.client.HttpClient;
 
 /**
  * Run tests in cloud deployment environment
@@ -62,9 +73,12 @@ public class CloudStorageAzTest {
     private final TestCaseContext tcCtx;
     private static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
     private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
-    private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage-azblob.conf";
+    private static final String CONFIG_FILE = "target/cc-cloud-storage-azblob.conf";
+    private static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage-azblob.ftl";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String EXCLUDED_TESTS = "MP";
+
+    private static AzuriteContainer azBlob;
 
     public CloudStorageAzTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -72,30 +86,38 @@ public class CloudStorageAzTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        String endpointString = "http://127.0.0.1:15055/devstoreaccount1/" + CLOUD_STORAGE_BUCKET;
-        final String accKey =
-                "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
-        final String accName = "devstoreaccount1";
-
-        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().endpoint(endpointString)
-                .credential(new StorageSharedKeyCredential(accName, accKey)).buildClient();
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
+        LSMAzBlobStorageTest.generateSelfSignedTLS();
+        MountableFile azureCert = MountableFile.forHostPath("target/azure_test.pfx");
+        azBlob = new AzuriteContainer(AZURITE_CONTAINER_VER).withSsl(azureCert, "password");
+        azBlob.start();
+        SslContext insecureSslContext =
+                SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+                .connectionString(azBlob.getConnectionString())
+                .httpClient(new NettyAsyncHttpClientBuilder(
+                        HttpClient.create().secure(sslSpec -> sslSpec.sslContext(insecureSslContext).build())).build())
+                .buildClient();
+        URI blobStore = URI.create(blobServiceClient.getAccountUrl());
+        String endpoint = blobStore.getScheme() + "://" + blobStore.getAuthority();
+        fillConfigTemplate(endpoint, CONFIG_FILE_TEMPLATE, CONFIG_FILE);
 
         cleanup(blobServiceClient);
         initialize(blobServiceClient);
 
-        //storage.close(); WHAT IS THIS FOR IN GCS
-
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
-        LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
+        LangExecutionUtil.setUp(CONFIG_FILE, testExecutor);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         LangExecutionUtil.tearDown();
         LocalCloudUtilAdobeMock.shutdownSilently();
+        azBlob.close();
+        azBlob.stop();
     }
 
     @Parameters(name = "CloudStorageAzBlobTest {index}: {0}")

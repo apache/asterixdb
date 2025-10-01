@@ -650,6 +650,11 @@
               ${coverageArgLine}
               ${extraSurefireArgLine}
             </argLine>
+            <environmentVariables>
+              <!-->Public/dummy test credentials for Azurite tests<!-->
+              <AZURE_STORAGE_ACCOUNT>devstoreaccount1</AZURE_STORAGE_ACCOUNT>
+              <AZURE_STORAGE_KEY>Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==</AZURE_STORAGE_KEY>
+            </environmentVariables>
             <includes>
               <include>${test.includes}</include>
             </includes>
@@ -1695,6 +1700,11 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>42.2.24</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>azure</artifactId>
+        <version>1.21.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>

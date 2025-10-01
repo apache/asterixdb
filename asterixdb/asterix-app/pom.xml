@@ -293,29 +293,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>azurite</id>
-            <phase>${azurite.stage}</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <!--suppress UnresolvedMavenProperty -->
-              <executable>${project.build.directory}/npm/node_modules/.bin/azurite-blob</executable>
-              <workingDirectory>${project.build.directory}</workingDirectory>
-              <environmentVariables>
-                <PATH>${project.build.directory}/npm/node</PATH>
-              </environmentVariables>
-              <arguments>
-                <argument>--blobPort</argument>
-                <argument>15055</argument>
-                <argument>--location</argument>
-                <argument>${project.build.directory}/azurite</argument>
-              </arguments>
-              <async>true</async>
-              <outputFile>${project.build.directory}/azurite/logs/azurite.log</outputFile>
-            </configuration>
-          </execution>
-          <execution>
             <id>fake-gcs-server</id>
             <phase>${gcs.stage}</phase>
             <goals>
@@ -697,43 +674,6 @@
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
-    <profile>
-        <id>azurite-tests</id>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>com.github.eirslett</groupId>
-                    <artifactId>frontend-maven-plugin</artifactId>
-                    <version>1.13.4</version>
-                    <configuration>
-                        <nodeVersion>v14.15.4</nodeVersion>
-                        <npmVersion>6.14.11</npmVersion>
-                        <workingDirectory>target/npm</workingDirectory>
-                        <installDirectory>target/npm</installDirectory>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>install node and yarn</id>
-                            <goals>
-                                <goal>install-node-and-npm</goal>
-                            </goals>
-                            <phase>${azurite.npm.install.stage}</phase>
-                        </execution>
-                        <execution>
-                            <id>azurite blob</id>
-                            <phase>${azurite.install.stage}</phase>
-                            <goals>
-                                <goal>npm</goal>
-                            </goals>
-                            <configuration>
-                                <arguments>install azurite@3.35.0</arguments>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
   </profiles>
   <dependencies>
     <dependency>
@@ -1061,6 +1001,18 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-cloud</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>azure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
       <scope>test</scope>
@@ -1201,5 +1153,17 @@
       <version>2.3.31</version>
       <scope>test</scope>
    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
+      <version>1.78.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
