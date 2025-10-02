@@ -30,8 +30,11 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.ISweepContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class SweepContext implements ISweepContext {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ICloudIOManager cloudIOManager;
     private final BufferCache bufferCache;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
@@ -57,10 +60,15 @@ public final class SweepContext implements ISweepContext {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void close() {
         if (handle != null) {
-            bufferCache.closeFile(handle.getFileId());
-            handle = null;
+            try {
+                bufferCache.closeFile(handle.getFileId());
+            } catch (Exception e) {
+                LOGGER.warn("failed to close file {}", handle.getFileId(), e);
+            } finally {
+                handle = null;
+            }
         }
     }
 

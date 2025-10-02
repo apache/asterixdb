@@ -27,14 +27,15 @@ import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueExcepti
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
+    private int arrayDelegateLevels;
     private boolean arrayDelegate;
-    private int arrayLevel;
 
     RepeatedPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValue) {
         super(level, info, reader, primitiveValue);
         this.arrayDelegate = false;
-        arrayLevel = 0;
+        this.arrayDelegateLevels = 0;
+
     }
 
     @Override
@@ -70,7 +71,7 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
     public void setAsDelegate(int arrayLevel) {
         // This assembler is responsible for adding null values
         this.arrayDelegate = true;
-        this.arrayLevel = arrayLevel;
+        this.arrayDelegateLevels |= (1 << arrayLevel);
     }
 
     private void next() throws HyracksDataException {
@@ -84,7 +85,7 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
              * (i.e., arrayDelegate is true)
              */
             addNullToAncestor(reader.getLevel());
-        } else if (reader.isMissing() && (arrayLevel == reader.getLevel() || reader.getLevel() + 1 == level)) {
+        } else if (reader.isMissing() && (isArrayDelegate(reader.getLevel()) || reader.getLevel() + 1 == level)) {
             /*
              * Add a missing item in either
              * - the array item is MISSING
@@ -94,6 +95,10 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
         } else if (reader.isValue()) {
             addValueToParent();
         }
+    }
+
+    private boolean isArrayDelegate(int level) {
+        return (arrayDelegateLevels & (1 << level)) != 0;
     }
 
     private ColumnarValueException createException() {

@@ -38,7 +38,7 @@ public interface ISweepContext {
     /**
      * Close the opened file
      */
-    void close() throws HyracksDataException;
+    void close();
 
     /**
      * Pin a page
