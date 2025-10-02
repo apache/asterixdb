@@ -121,6 +121,15 @@ public interface ICloudClient {
     void copy(String bucket, String srcPath, FileReference destPath) throws HyracksDataException;
 
     /**
+     * Deletes an object at the specified bucket and path
+     *
+     * @param bucket bucket
+     * @param path   path of object
+     * @throws HyracksDataException HyracksDataException
+     */
+    void deleteObject(String bucket, String path) throws HyracksDataException;
+
+    /**
      * Deletes all objects at the specified bucket and paths
      *
      * @param bucket bucket

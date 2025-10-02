@@ -24,8 +24,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.SequencedSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -135,7 +137,7 @@ public class NCServiceExecutionIT {
     private final TestCaseContext tcCtx;
     private static final TestExecutor testExecutor = new TestExecutor();
 
-    private static final List<String> badTestCases = new ArrayList<>();
+    private static final SequencedSet<String> badTestCases = new LinkedHashSet<>();
     private static HyracksVirtualCluster cluster;
     private final KillCommand killType;
     private static boolean clusterActive = false;
