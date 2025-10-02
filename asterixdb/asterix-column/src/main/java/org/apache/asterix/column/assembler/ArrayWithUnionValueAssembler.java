@@ -44,6 +44,11 @@ public class ArrayWithUnionValueAssembler extends ArrayValueAssembler {
         nonMissingValueAdded = true;
         numberOfAddedValues++;
         super.addValue(value);
+        if (numberOfAddedValues == numberOfUnionChildren) {
+            // Completed a chunk; since we saw a non-missing, just reset the counters
+            nonMissingValueAdded = false;
+            numberOfAddedValues = 0;
+        }
     }
 
     @Override
@@ -51,17 +56,23 @@ public class ArrayWithUnionValueAssembler extends ArrayValueAssembler {
         nonMissingValueAdded = true;
         numberOfAddedValues++;
         super.addNull(value);
+        if (numberOfAddedValues == numberOfUnionChildren) {
+            // Completed a chunk; since we saw a non-missing, just reset the counters
+            nonMissingValueAdded = false;
+            numberOfAddedValues = 0;
+        }
     }
 
     @Override
     void addMissing() throws HyracksDataException {
         numberOfAddedValues++;
-        if (nonMissingValueAdded && numberOfAddedValues >= numberOfUnionChildren) {
-            nonMissingValueAdded = false;
-            numberOfAddedValues = numberOfAddedValues % numberOfUnionChildren;
-        } else if (numberOfAddedValues == numberOfUnionChildren) {
-            super.addMissing();
+        if (numberOfAddedValues == numberOfUnionChildren) {
+            if (!nonMissingValueAdded) {
+                super.addMissing();
+            }
+            // Reset for the next chunk
             numberOfAddedValues = 0;
+            nonMissingValueAdded = false;
         }
     }
 }

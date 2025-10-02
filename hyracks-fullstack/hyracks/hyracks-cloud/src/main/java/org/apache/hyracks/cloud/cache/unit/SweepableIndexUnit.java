@@ -39,7 +39,7 @@ public final class SweepableIndexUnit extends AbstractIndexUnit {
     @Override
     public void drop() {
         // Signal that the index is being dropped so a sweeper thread does not sweep this index or stops sweeping
-        dropped.set(false);
+        dropped.set(true);
         // Wait for the sweep operation (if running) before allowing the index to be dropped
         waitForSweep();
     }
