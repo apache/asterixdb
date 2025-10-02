@@ -58,6 +58,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.http.rest.Response;
 import com.azure.core.util.BinaryData;
@@ -78,6 +79,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.http.client.HttpClient;
 
 public class AzBlobStorageCloudClient implements ICloudClient {
     private static final String BUCKET_ROOT_PATH = "";
@@ -253,6 +259,21 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     }
 
     @Override
+    public void deleteObject(String bucket, String path) throws HyracksDataException {
+        try {
+            if (path.isEmpty()) {
+                return;
+            }
+            guardian.checkWriteAccess(bucket, path);
+            profiler.objectDelete();
+            BlobClient blobClient = blobContainerClient.getBlobClient(config.getPrefix() + path);
+            blobClient.delete();
+        } catch (Exception ex) {
+            throw HyracksDataException.create(ex);
+        }
+    }
+
+    @Override
     public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         if (paths.isEmpty())
             return;
@@ -264,21 +285,25 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         for (List<String> batch : batchedBlobURLs) {
             PagedIterable<Response<Void>> responses = blobBatchClient.deleteBlobs(batch, null);
             Iterator<String> deletePathIter = paths.iterator();
-            String deletedPath = null;
-            try {
-                for (Response<Void> response : responses) {
-                    deletedPath = deletePathIter.next();
-                    // The response.getStatusCode() method returns:
-                    // - 202 (Accepted) if the delete operation is successful
-                    // - exception if the delete operation fails
-                    int statusCode = response.getStatusCode();
-                    if (statusCode != SUCCESS_RESPONSE_CODE) {
-                        LOGGER.warn("Failed to delete blob: {} with status code: {} while deleting {}", deletedPath,
-                                statusCode, paths.toString());
+            String deletedPath;
+            String failedDeletedPath = null;
+            for (Response<Void> response : responses) {
+                deletedPath = deletePathIter.next();
+                // The response.getStatusCode() method returns:
+                // - 202 (Accepted) if the delete operation is successful
+                // - exception if the delete operation fails
+                int statusCode = response.getStatusCode();
+                if (statusCode != SUCCESS_RESPONSE_CODE) {
+                    LOGGER.warn("Failed to delete blob: {} with status code: {} while deleting {}", deletedPath,
+                            statusCode, paths.toString());
+                    if (failedDeletedPath == null) {
+                        failedDeletedPath = deletedPath;
                     }
                 }
-            } catch (BlobStorageException e) {
-                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath, paths.toString());
+            }
+            if (failedDeletedPath != null) {
+                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE", failedDeletedPath,
+                        paths.toString());
             }
         }
     }
@@ -402,6 +427,24 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         blobServiceClientBuilder.endpoint(getEndpoint(config));
         blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
         configCredentialsToAzClient(blobServiceClientBuilder, config);
+
+        // Disable SSL verification if the config property is set
+        if (config.isStorageDisableSSLVerify()) {
+            try {
+                // Create SSL context that trusts all certificates
+                SslContext sslContext =
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+
+                // Create a base Reactor Netty HttpClient with SSL verification disabled
+                HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
+
+                // Configure the Azure HTTP client with the base client
+                blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to disable SSL verification", e);
+            }
+        }
+
         return blobServiceClientBuilder.buildClient();
     }
 

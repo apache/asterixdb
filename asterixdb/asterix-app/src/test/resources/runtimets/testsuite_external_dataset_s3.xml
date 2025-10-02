@@ -1197,6 +1197,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="path-style-access/boolean-value">
+        <output-dir compare="Text">path-style-access/boolean-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="path-style-access/non-boolean-value">
+        <output-dir compare="Text">path-style-access/non-boolean-value</output-dir>
+        <expected-error>ASX1173: Invalid value for parameter 'pathStyleAddressing', allowed value(s): true, false</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
       <compilation-unit name="cross-region/boolean-value">
         <output-dir compare="Text">cross-region/boolean-value</output-dir>
       </compilation-unit>
@@ -1204,7 +1215,7 @@
     <test-case FilePath="external-dataset/s3">
       <compilation-unit name="cross-region/non-boolean-value">
         <output-dir compare="Text">cross-region/non-boolean-value</output-dir>
-        <expected-error>c</expected-error>
+        <expected-error>ASX1173: Invalid value for parameter 'crossRegion', allowed value(s): true, false</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">

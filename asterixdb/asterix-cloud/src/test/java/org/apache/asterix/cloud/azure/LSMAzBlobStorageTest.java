@@ -63,7 +63,7 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         LOGGER.info("Az Blob Client created successfully");
         int writeBufferSize = StorageUtil.getIntSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
         AzBlobStorageClientConfig config = new AzBlobStorageClientConfig(MOCK_SERVER_REGION, MOCK_SERVER_HOSTNAME, "",
-                true, 0, PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize);
+                true, 0, PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, false);
         CLOUD_CLIENT = new AzBlobStorageCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 

@@ -29,9 +29,10 @@ import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 
 public class AzBlobStorageClientConfig {
-    private final int writeBufferSize;
     // Ref: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch?tabs=microsoft-entra-id
     static final int DELETE_BATCH_SIZE = 256;
+
+    private final int writeBufferSize;
     private final String region;
     private final String endpoint;
     private final String prefix;
@@ -42,15 +43,16 @@ public class AzBlobStorageClientConfig {
     private final long tokenAcquireTimeout;
     private final int writeMaxRequestsPerSeconds;
     private final int readMaxRequestsPerSeconds;
+    private final boolean storageDisableSSLVerify;
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, int writeBufferSize) {
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize);
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false);
     }
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int writeBufferSize) {
+            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -61,6 +63,7 @@ public class AzBlobStorageClientConfig {
         this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.writeBufferSize = writeBufferSize;
+        this.storageDisableSSLVerify = storageDisableSSLVerify;
     }
 
     public static AzBlobStorageClientConfig of(CloudProperties cloudProperties) {
@@ -68,7 +71,8 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
-                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize());
+                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
+                cloudProperties.isStorageDisableSSLVerify());
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -109,6 +113,10 @@ public class AzBlobStorageClientConfig {
 
     public boolean isAnonymousAuth() {
         return anonymousAuth;
+    }
+
+    public boolean isStorageDisableSSLVerify() {
+        return storageDisableSSLVerify;
     }
 
     public DefaultAzureCredential createCredentialsProvider() {

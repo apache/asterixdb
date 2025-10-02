@@ -23,7 +23,6 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import static org.apache.hyracks.cloud.util.CloudRetryableRequestUtil.runWithNoRetryOnInterruption;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -179,7 +178,7 @@ abstract class AbstractCloudExternalFileWriterFactory<T extends Throwable> imple
             }
         } finally {
             // Delete the written file
-            runWithNoRetryOnInterruption(() -> testClient.deleteObjects(bucket, Collections.singleton(finalPath)));
+            runWithNoRetryOnInterruption(() -> testClient.deleteObject(bucket, finalPath));
         }
     }
 }
