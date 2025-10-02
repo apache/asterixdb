@@ -724,6 +724,20 @@ public class TestExecutor {
 
     // For tests where you simply want the byte-for-byte output.
     private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
+        ensureParentDir(actualFile);
+        try (FileOutputStream out = new FileOutputStream(actualFile)) {
+            IOUtils.copy(resultStream, out);
+        }
+    }
+
+    private static void writeOutputToFile(File actualFile, String content) throws Exception {
+        ensureParentDir(actualFile);
+        try (FileOutputStream out = new FileOutputStream(actualFile)) {
+            IOUtils.write(content, out, UTF_8);
+        }
+    }
+
+    private static void ensureParentDir(File actualFile) {
         final File parentDir = actualFile.getParentFile();
         if (!parentDir.isDirectory()) {
             if (parentDir.exists()) {
@@ -731,9 +745,6 @@ public class TestExecutor {
             } else if (!parentDir.mkdirs()) {
                 LOGGER.warn("Unable to create actual file parent dir: " + parentDir);
             }
-        }
-        try (FileOutputStream out = new FileOutputStream(actualFile)) {
-            IOUtils.copy(resultStream, out);
         }
     }
 
@@ -1624,30 +1635,40 @@ public class TestExecutor {
             resultStream = ResultExtractor.extractStatus(resultStream, UTF_8);
         }
         if (handleVar != null) {
-            String handle = ResultExtractor.extractHandle(resultStream, UTF_8);
+            String result = IOUtils.toString(resultStream, UTF_8);
+            String handle = ResultExtractor.extractHandle(result);
             if (handle != null) {
                 variableCtx.put(handleVar, handle);
+                writeOutputToFile(actualResultFile, result);
+                matchExpectedResult(testFile, expectedResultFile, actualResultFile, resultStream, queryCount,
+                        numResultFiles, compare, statement);
             } else {
                 throw new Exception("no handle for test " + testFile.toString());
             }
         } else if (saveResponseVar != null) {
             variableCtx.put(saveResponseVar, IOUtils.toString(resultStream, UTF_8));
         } else {
-            if (expectedResultFile == null) {
-                if (testFile.getName().startsWith(DIAGNOSE)) {
-                    LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, UTF_8));
-                } else {
-                    LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, UTF_8));
-                    Assert.fail("no result file for " + testFile + "; queryCount: " + queryCount + ", filectxs.size: "
-                            + numResultFiles);
-                }
-            } else {
-                writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare, UTF_8,
-                        statement);
-            }
+            writeOutputToFile(actualResultFile, resultStream);
+            matchExpectedResult(testFile, expectedResultFile, actualResultFile, resultStream, queryCount,
+                    numResultFiles, compare, statement);
         }
         queryCount.increment();
+    }
+
+    private void matchExpectedResult(File testFile, File expectedResultFile, File actualResultFile,
+            InputStream resultStream, MutableInt queryCount, int numResultFiles, ComparisonEnum compare,
+            String statement) throws Exception {
+        if (expectedResultFile == null) {
+            if (testFile.getName().startsWith(DIAGNOSE)) {
+                LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, UTF_8));
+            } else {
+                LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, UTF_8));
+                Assert.fail("no result file for " + testFile + "; queryCount: " + queryCount + ", filectxs.size: "
+                        + numResultFiles);
+            }
+        } else {
+            runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare, UTF_8, statement);
+        }
     }
 
     protected Charset getResponseCharset(File expectedResultFile) {
@@ -2139,7 +2160,7 @@ public class TestExecutor {
             codes.add(Integer.parseInt(m.group(1)));
         }
         if (codes.isEmpty()) {
-            return code -> code == HttpStatus.SC_OK;
+            return code -> code == HttpStatus.SC_OK || code == HttpStatus.SC_ACCEPTED;
         } else {
             return codes::contains;
         }

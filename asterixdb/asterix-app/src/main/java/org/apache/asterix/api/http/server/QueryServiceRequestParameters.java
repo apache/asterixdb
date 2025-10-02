@@ -84,7 +84,8 @@ public class QueryServiceRequestParameters {
         MULTI_STATEMENT("multi-statement"),
         MAX_WARNINGS("max-warnings"),
         SQL_COMPAT("sql-compat"),
-        SOURCE("source");
+        SOURCE("source"),
+        INCLUDE_HOST("include-host");
 
         private final String str;
 
@@ -156,6 +157,7 @@ public class QueryServiceRequestParameters {
     private long timeout = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
     private long maxResultReads = 1L;
     private long maxWarnings = 0L;
+    private boolean includeHost = false;
 
     public String getHost() {
         return host;
@@ -208,6 +210,14 @@ public class QueryServiceRequestParameters {
 
     public void setTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    public boolean isIncludeHost() {
+        return includeHost;
+    }
+
+    public void setIncludeHost(boolean includeHost) {
+        this.includeHost = includeHost;
     }
 
     public boolean isPretty() {
@@ -531,6 +541,8 @@ public class QueryServiceRequestParameters {
         setClientType(parseIfExists(req, Parameter.CLIENT_TYPE.str(), valGetter, getClientType(), clientTypes::get));
         setSQLCompatMode(parseBoolean(req, Parameter.SQL_COMPAT.str(), valGetter, isSQLCompatMode()));
         setSource(valGetter.apply(req, Parameter.SOURCE.str()));
+        setIncludeHost(parseBoolean(req, Parameter.INCLUDE_HOST.str(), valGetter,
+                isIncludeHost() || getMode() == ResultDelivery.DEFERRED));
     }
 
     protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {

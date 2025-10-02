@@ -69,9 +69,10 @@ public interface IClusterController {
     void sendRealTimeApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
 
     void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata, boolean emptyResult,
-            int partition, int nPartitions, NetworkAddress networkAddress) throws Exception;
+            int partition, int nPartitions, NetworkAddress networkAddress, String nodeId) throws Exception;
 
-    void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
+    void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+            throws Exception;
 
     void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 

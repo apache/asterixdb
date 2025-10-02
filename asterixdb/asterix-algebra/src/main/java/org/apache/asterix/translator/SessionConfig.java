@@ -40,7 +40,7 @@ import org.apache.logging.log4j.Logger;
  * <li>It allows you to specify output format-specific parameters.
  */
 public class SessionConfig implements Serializable {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     /**
      * Used to specify the output format for the primary execution.
@@ -166,6 +166,8 @@ public class SessionConfig implements Serializable {
     private final boolean generateJobSpec;
     private final boolean optimize;
     private long maxWarnings;
+    private long timeout;
+    private boolean includeHost;
 
     // Flags.
     private final Map<String, Boolean> flags;
@@ -210,6 +212,7 @@ public class SessionConfig implements Serializable {
         this.planFormat = planFormat;
         this.clientType = ClientType.ASTERIX;
         this.hyracksJobFormat = jobFormat;
+        this.includeHost = false;
     }
 
     /**
@@ -265,6 +268,22 @@ public class SessionConfig implements Serializable {
 
     public void setMaxWarnings(long maxWarnings) {
         this.maxWarnings = maxWarnings;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setIncludeHost(boolean includeHost) {
+        this.includeHost = includeHost;
+    }
+
+    public boolean isIncludeHost() {
+        return includeHost;
     }
 
     /**

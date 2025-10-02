@@ -52,12 +52,15 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IFormattedException;
+import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ResultUtil {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -322,6 +325,24 @@ public class ResultUtil {
     public static SessionOutput.ResultAppender createResultStatusAppender() {
         return (app, status) -> app.append("\t\"").append(StatusPrinter.FIELD_NAME).append("\": \"").append(status)
                 .append("\"");
+    }
+
+    public static HttpResponseStatus getHttpStatusFromResultStatus(ResultJobRecord.Status status) {
+        if (status == null) {
+            return HttpResponseStatus.NOT_FOUND;
+        }
+        switch (status.getState()) {
+            case SUCCESS:
+                return HttpResponseStatus.OK;
+            case RUNNING:
+            case IDLE:
+            case FAILED:
+            case REMOVED:
+            case TIMEOUT:
+                return HttpResponseStatus.NOT_FOUND;
+            default:
+                return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        }
     }
 
     public static class ParseOnlyResult {

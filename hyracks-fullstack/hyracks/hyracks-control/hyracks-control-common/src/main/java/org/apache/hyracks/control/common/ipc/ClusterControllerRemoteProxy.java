@@ -142,16 +142,18 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata,
-            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws Exception {
+            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress, String nodeId)
+            throws Exception {
         RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(jobId, rsId, metadata,
-                emptyResult, partition, nPartitions, networkAddress);
+                emptyResult, partition, nPartitions, networkAddress, nodeId);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
-    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+            throws Exception {
         ReportResultPartitionWriteCompletionFunction fn =
-                new ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition);
+                new ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition, resultCount);
         ipcHandle.send(-1, fn, null);
     }
 

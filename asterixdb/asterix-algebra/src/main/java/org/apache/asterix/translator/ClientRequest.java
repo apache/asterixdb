@@ -75,6 +75,10 @@ public class ClientRequest extends BaseClientRequest {
         setRunning();
     }
 
+    public JobId getJobId() {
+        return jobId;
+    }
+
     public Thread getExecutor() {
         return executor;
     }

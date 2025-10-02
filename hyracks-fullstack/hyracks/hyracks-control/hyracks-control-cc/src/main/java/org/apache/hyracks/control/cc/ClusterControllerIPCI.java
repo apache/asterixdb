@@ -120,13 +120,13 @@ class ClusterControllerIPCI implements IIPCI {
                 ccs.getWorkQueue()
                         .schedule(new RegisterResultPartitionLocationWork(ccs, rrplf.getJobId(), rrplf.getResultSetId(),
                                 rrplf.getMetadata(), rrplf.getEmptyResult(), rrplf.getPartition(),
-                                rrplf.getNPartitions(), rrplf.getNetworkAddress()));
+                                rrplf.getNPartitions(), rrplf.getNetworkAddress(), rrplf.getNodeId()));
                 break;
             case REPORT_RESULT_PARTITION_WRITE_COMPLETION:
                 CCNCFunctions.ReportResultPartitionWriteCompletionFunction rrpwc =
                         (CCNCFunctions.ReportResultPartitionWriteCompletionFunction) fn;
                 ccs.getWorkQueue().schedule(new ReportResultPartitionWriteCompletionWork(ccs, rrpwc.getJobId(),
-                        rrpwc.getResultSetId(), rrpwc.getPartition()));
+                        rrpwc.getResultSetId(), rrpwc.getPartition(), rrpwc.getResultCount()));
                 break;
             case REPORT_RESULT_PARTITION_CONSUMED:
                 CCNCFunctions.ReportResultPartitionConsumedFunction rrpc =

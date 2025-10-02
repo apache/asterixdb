@@ -92,18 +92,21 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
         try {
             // Be sure to send the *public* network address to the CC
             ncs.getClusterController(jobId.getCcId()).registerResultPartitionLocation(jobId, rsId, metadata,
-                    emptyResult, partition, nPartitions, ncs.getResultNetworkManager().getPublicNetworkAddress());
+                    emptyResult, partition, nPartitions, ncs.getResultNetworkManager().getPublicNetworkAddress(),
+                    ncs.getId());
         } catch (Exception e) {
             throw HyracksException.create(e);
         }
     }
 
     @Override
-    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
+    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+            throws HyracksException {
         try {
             LOGGER.trace("Reporting partition write completion: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,
                     partition);
-            ncs.getClusterController(jobId.getCcId()).reportResultPartitionWriteCompletion(jobId, rsId, partition);
+            ncs.getClusterController(jobId.getCcId()).reportResultPartitionWriteCompletion(jobId, rsId, partition,
+                    resultCount);
         } catch (Exception e) {
             throw HyracksException.create(e);
         }

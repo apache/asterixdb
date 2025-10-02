@@ -21,6 +21,9 @@ package org.apache.asterix.app.result.fields;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.result.ResponseMetrics;
@@ -59,76 +62,130 @@ public class MetricsPrinter implements IResponseFieldPrinter {
     public static final String FIELD_NAME = "metrics";
     private final ResponseMetrics metrics;
     private final Charset resultCharset;
+    private final Set<Metrics> selectedMetrics;
 
     public MetricsPrinter(ResponseMetrics metrics, Charset resultCharset) {
+        this(metrics, resultCharset, null);
+    }
+
+    public MetricsPrinter(ResponseMetrics metrics, Charset resultCharset, Set<Metrics> selectedMetrics) {
         this.metrics = metrics;
         this.resultCharset = resultCharset;
+        this.selectedMetrics = selectedMetrics == null ? Set.of(Metrics.values()) : selectedMetrics;
     }
 
     @Override
     public void print(PrintWriter pw) {
         boolean useAscii = !StandardCharsets.UTF_8.equals(resultCharset)
                 && !"μ".contentEquals(resultCharset.decode(resultCharset.encode("μ")));
-        pw.print("\t\"");
-        pw.print(FIELD_NAME);
-        pw.print("\": {\n");
-        pw.print("\t");
-        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(metrics.getElapsedTime(), useAscii));
-        pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(),
-                Duration.formatNanos(metrics.getExecutionTime(), useAscii));
-        pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.COMPILE_TIME.str(), Duration.formatNanos(metrics.getCompileTime(), useAscii));
-        pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.QUEUE_WAIT_TIME.str(),
-                Duration.formatNanos(metrics.getQueueWaitTime(), useAscii));
-        pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), metrics.getResultCount(), true);
-        pw.print("\n\t");
-        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), metrics.getResultSize(), true);
-        pw.print("\n\t");
+
         final boolean hasErrors = metrics.getErrorCount() > 0;
         final boolean hasWarnings = metrics.getWarnCount() > 0;
         final boolean usedCache = !(Double.isNaN(metrics.getBufferCacheHitRatio()));
         final boolean madeCloudReadRequests = metrics.getCloudReadRequestsCount() > 0;
-        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), metrics.getProcessedObjects(),
-                usedCache || hasWarnings || hasErrors);
-        pw.print("\n");
+
+        // Entry representation with typed value
+        abstract class Entry {
+            final Metrics m;
+
+            Entry(Metrics m) {
+                this.m = m;
+            }
+
+            abstract void print(PrintWriter out, boolean more);
+        }
+        class StringEntry extends Entry {
+            final String v;
+
+            StringEntry(Metrics m, String v) {
+                super(m);
+                this.v = v;
+            }
+
+            @Override
+            void print(PrintWriter out, boolean more) {
+                ResultUtil.printField(out, m.str(), v, more);
+            }
+        }
+        class LongEntry extends Entry {
+            final long v;
+
+            LongEntry(Metrics m, long v) {
+                super(m);
+                this.v = v;
+            }
+
+            @Override
+            void print(PrintWriter out, boolean more) {
+                ResultUtil.printField(out, m.str(), v, more);
+            }
+        }
+
+        List<Entry> entries = new ArrayList<>();
+
+        if (isSelected(Metrics.ELAPSED_TIME))
+            entries.add(
+                    new StringEntry(Metrics.ELAPSED_TIME, Duration.formatNanos(metrics.getElapsedTime(), useAscii)));
+        if (isSelected(Metrics.EXECUTION_TIME))
+            entries.add(new StringEntry(Metrics.EXECUTION_TIME,
+                    Duration.formatNanos(metrics.getExecutionTime(), useAscii)));
+        if (isSelected(Metrics.COMPILE_TIME))
+            entries.add(
+                    new StringEntry(Metrics.COMPILE_TIME, Duration.formatNanos(metrics.getCompileTime(), useAscii)));
+        if (isSelected(Metrics.QUEUE_WAIT_TIME))
+            entries.add(new StringEntry(Metrics.QUEUE_WAIT_TIME,
+                    Duration.formatNanos(metrics.getQueueWaitTime(), useAscii)));
+        if (isSelected(Metrics.RESULT_COUNT))
+            entries.add(new LongEntry(Metrics.RESULT_COUNT, metrics.getResultCount()));
+        if (isSelected(Metrics.RESULT_SIZE))
+            entries.add(new LongEntry(Metrics.RESULT_SIZE, metrics.getResultSize()));
+        if (isSelected(Metrics.PROCESSED_OBJECTS_COUNT))
+            entries.add(new LongEntry(Metrics.PROCESSED_OBJECTS_COUNT, metrics.getProcessedObjects()));
+
         if (usedCache) {
-            pw.print("\t");
-            String pctValue = String.format("%.2f%%", metrics.getBufferCacheHitRatio() * 100);
-            ResultUtil.printField(pw, Metrics.BUFFERCACHE_HIT_RATIO.str(), pctValue, true);
-            pw.print("\n");
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.BUFFERCACHE_PAGEREAD_COUNT.str(), metrics.getBufferCachePageReadCount(),
-                    hasWarnings || hasErrors || madeCloudReadRequests);
-            pw.print("\n");
+            if (isSelected(Metrics.BUFFERCACHE_HIT_RATIO)) {
+                String pctValue = String.format("%.2f%%", metrics.getBufferCacheHitRatio() * 100);
+                entries.add(new StringEntry(Metrics.BUFFERCACHE_HIT_RATIO, pctValue));
+            }
+            if (isSelected(Metrics.BUFFERCACHE_PAGEREAD_COUNT)) {
+                entries.add(new LongEntry(Metrics.BUFFERCACHE_PAGEREAD_COUNT, metrics.getBufferCachePageReadCount()));
+            }
         }
+
         if (madeCloudReadRequests) {
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.REMOTE_STORAGE_REQUESTS_COUNT.str(), metrics.getCloudReadRequestsCount(),
-                    true);
-            pw.print("\n");
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.REMOTE_STORAGE_PAGES_READ_COUNT.str(), metrics.getCloudPagesReadCount(),
-                    true);
-            pw.print("\n");
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.REMOTE_PAGES_PERSISTED_COUNT.str(), metrics.getCloudPagesPersistedCount(),
-                    hasWarnings || hasErrors);
-            pw.print("\n");
+            if (isSelected(Metrics.REMOTE_STORAGE_REQUESTS_COUNT)) {
+                entries.add(new LongEntry(Metrics.REMOTE_STORAGE_REQUESTS_COUNT, metrics.getCloudReadRequestsCount()));
+            }
+            if (isSelected(Metrics.REMOTE_STORAGE_PAGES_READ_COUNT)) {
+                entries.add(new LongEntry(Metrics.REMOTE_STORAGE_PAGES_READ_COUNT, metrics.getCloudPagesReadCount()));
+            }
+            if (isSelected(Metrics.REMOTE_PAGES_PERSISTED_COUNT)) {
+                entries.add(new LongEntry(Metrics.REMOTE_PAGES_PERSISTED_COUNT, metrics.getCloudPagesPersistedCount()));
+            }
         }
-        if (hasWarnings) {
-            pw.print("\t");
-            ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), metrics.getWarnCount(), hasErrors);
-            pw.print("\n");
+
+        if (hasWarnings && isSelected(Metrics.WARNING_COUNT)) {
+            entries.add(new LongEntry(Metrics.WARNING_COUNT, metrics.getWarnCount()));
         }
-        if (hasErrors) {
+        if (hasErrors && isSelected(Metrics.ERROR_COUNT)) {
+            entries.add(new LongEntry(Metrics.ERROR_COUNT, metrics.getErrorCount()));
+        }
+
+        pw.print("\t\"");
+        pw.print(FIELD_NAME);
+        pw.print("\": {\n");
+        for (int i = 0; i < entries.size(); i++) {
+            Entry e = entries.get(i);
+            boolean hasMore = i < entries.size() - 1;
             pw.print("\t");
-            ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), metrics.getErrorCount(), false);
+            e.print(pw, hasMore);
             pw.print("\n");
         }
         pw.print("\t}");
+    }
+
+    private boolean isSelected(Metrics m) {
+        return selectedMetrics.contains(m);
     }
 
     @Override

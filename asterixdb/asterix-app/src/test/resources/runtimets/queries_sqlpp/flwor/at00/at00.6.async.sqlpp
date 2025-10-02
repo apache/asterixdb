@@ -23,6 +23,7 @@
  */
 
 -- handlevariable=status
+-- param include-host=true
 
 use test;
 

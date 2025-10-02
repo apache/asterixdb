@@ -46,18 +46,18 @@ import org.apache.logging.log4j.Logger;
 @NotThreadSafe
 public class ResultSetReader implements IResultSetReader {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final int NUM_READ_BUFFERS = 1;
-    private final IResultDirectory resultDirectory;
-    private final ClientNetworkManager netManager;
-    private final IHyracksCommonContext resultClientCtx;
-    private final JobId jobId;
-    private final ResultSetId resultSetId;
-    private ResultDirectoryRecord[] knownRecords;
-    private ResultInputChannelMonitor[] monitors;
-    private ResultInputChannelMonitor currentRecordMonitor;
-    private ResultNetworkInputChannel currentRecordChannel;
-    private int currentRecord;
+    protected static final Logger LOGGER = LogManager.getLogger();
+    protected static final int NUM_READ_BUFFERS = 1;
+    protected final IResultDirectory resultDirectory;
+    protected final ClientNetworkManager netManager;
+    protected final IHyracksCommonContext resultClientCtx;
+    protected final JobId jobId;
+    protected final ResultSetId resultSetId;
+    protected ResultDirectoryRecord[] knownRecords;
+    protected ResultInputChannelMonitor[] monitors;
+    protected ResultInputChannelMonitor currentRecordMonitor;
+    protected ResultNetworkInputChannel currentRecordChannel;
+    protected int currentRecord;
 
     public ResultSetReader(IResultDirectory resultDirectory, ClientNetworkManager netManager,
             IHyracksCommonContext resultClientCtx, JobId jobId, ResultSetId resultSetId) {
@@ -162,7 +162,7 @@ public class ResultSetReader implements IResultSetReader {
         return monitors[partition];
     }
 
-    private boolean hasNextRecord() throws HyracksDataException {
+    protected boolean hasNextRecord() throws HyracksDataException {
         currentRecord++;
         ResultDirectoryRecord record = getRecord(currentRecord);
         // skip empty records
@@ -177,7 +177,7 @@ public class ResultSetReader implements IResultSetReader {
         return true;
     }
 
-    private ResultDirectoryRecord getRecord(int recordNum) throws HyracksDataException {
+    protected ResultDirectoryRecord getRecord(int recordNum) throws HyracksDataException {
         try {
             while (knownRecords == null || knownRecords[recordNum] == null) {
                 knownRecords = resultDirectory.getResultLocations(jobId, resultSetId, knownRecords);
@@ -188,7 +188,18 @@ public class ResultSetReader implements IResultSetReader {
         }
     }
 
-    private void requestRecordData(ResultDirectoryRecord record) throws HyracksDataException {
+    public ResultDirectoryRecord[] getResultRecords() throws HyracksDataException {
+        while (knownRecords == null) {
+            try {
+                knownRecords = resultDirectory.getResultLocations(jobId, resultSetId, knownRecords);
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+        return knownRecords;
+    }
+
+    protected void requestRecordData(ResultDirectoryRecord record) throws HyracksDataException {
         currentRecordChannel = new ResultNetworkInputChannel(netManager, getSocketAddress(record), jobId, resultSetId,
                 currentRecord, NUM_READ_BUFFERS);
         currentRecordMonitor = getMonitor(currentRecord);
@@ -196,19 +207,19 @@ public class ResultSetReader implements IResultSetReader {
         currentRecordChannel.open(resultClientCtx);
     }
 
-    private boolean isFirstRead() {
+    protected boolean isFirstRead() {
         return currentRecord == -1;
     }
 
-    private boolean isLastRecord() {
+    protected boolean isLastRecord() {
         return knownRecords != null && currentRecord == knownRecords.length - 1;
     }
 
-    private boolean isLocalFailure() {
+    protected boolean isLocalFailure() {
         return currentRecordMonitor != null && !currentRecordMonitor.failed();
     }
 
-    private static class ResultInputChannelMonitor implements IInputChannelMonitor {
+    protected static class ResultInputChannelMonitor implements IInputChannelMonitor {
 
         private int availableFrames;
         private boolean eos;

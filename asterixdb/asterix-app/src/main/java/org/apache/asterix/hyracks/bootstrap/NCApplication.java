@@ -40,12 +40,12 @@ import java.util.Map;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.BasicAuthServlet;
+import org.apache.asterix.api.http.server.NCQueryResultApiServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
+import org.apache.asterix.api.http.server.NCQueryStatusApiServlet;
 import org.apache.asterix.api.http.server.NCUdfApiServlet;
 import org.apache.asterix.api.http.server.NCUdfRecoveryServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.QueryResultApiServlet;
-import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
 import org.apache.asterix.app.config.ConfigValidator;
@@ -269,8 +269,8 @@ public class NCApplication extends BaseNCApplication {
                 apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
                         getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
                 auth.getFirst(), auth.getSecond()));
-        apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
-        apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
+        apiServer.addServlet(new NCQueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
+        apiServer.addServlet(new NCQueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
     }
 

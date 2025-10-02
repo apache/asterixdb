@@ -19,6 +19,7 @@
 package org.apache.asterix.common.api;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
@@ -92,4 +93,11 @@ public interface IRequestTracker extends IJobLifecycleListener {
      * @return the total number of failed requests
      */
     long getTotalNumberOfFailedRequests();
+
+    void trackAsyncOrDeferredRequest(IClientRequest request);
+
+    void removeAsyncOrDeferredRequest(String requestId);
+
+    Optional<IClientRequest> getAsyncOrDeferredRequest(String requestId);
+
 }

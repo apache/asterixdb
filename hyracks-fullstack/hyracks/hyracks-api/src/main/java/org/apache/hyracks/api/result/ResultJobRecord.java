@@ -35,7 +35,8 @@ public class ResultJobRecord implements IResultStateRecord {
         RUNNING,
         SUCCESS,
         REMOVED,
-        FAILED
+        FAILED,
+        TIMEOUT
     }
 
     public static class Status implements Serializable {
@@ -85,15 +86,17 @@ public class ResultJobRecord implements IResultStateRecord {
     private Status status;
     private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
+    private long resultCount;
 
     public ResultJobRecord() {
         this.timestamp = System.nanoTime();
         this.status = new Status();
+        this.resultCount = 0;
     }
 
     private void updateState(State newStatus) {
         // FAILED is a stable status
-        if (status.state != State.FAILED) {
+        if (status.state != State.FAILED && status.state != State.TIMEOUT) {
             status.setState(newStatus);
         }
     }
@@ -111,8 +114,13 @@ public class ResultJobRecord implements IResultStateRecord {
         return jobEndTime - jobStartTime;
     }
 
-    public void success() {
+    public long getResultCount() {
+        return resultCount;
+    }
+
+    public void success(int resultCount) {
         updateState(State.SUCCESS);
+        this.resultCount = resultCount;
     }
 
     public void consume() {
@@ -126,6 +134,10 @@ public class ResultJobRecord implements IResultStateRecord {
     public void fail(List<Exception> exceptions) {
         updateState(State.FAILED);
         status.setExceptions(exceptions);
+    }
+
+    public void timeout() {
+        updateState(State.TIMEOUT);
     }
 
     @Override
@@ -176,11 +188,13 @@ public class ResultJobRecord implements IResultStateRecord {
     public synchronized void updateState() {
         int successCount = 0;
         int consumedCount = 0;
+        int resultCount = 0;
         ResultDirectoryRecord[] records = resultSetMetaData.getRecords();
         for (ResultDirectoryRecord record : records) {
             if (record != null) {
                 if (record.ready()) {
                     successCount++;
+                    resultCount += record.getResultCount();
                 }
                 if (record.hasReachedReadEOS()) {
                     consumedCount++;
@@ -190,7 +204,7 @@ public class ResultJobRecord implements IResultStateRecord {
         if (consumedCount == records.length) {
             consume();
         } else if (successCount == records.length) {
-            success();
+            success(resultCount);
         }
     }
 

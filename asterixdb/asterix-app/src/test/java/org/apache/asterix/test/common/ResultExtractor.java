@@ -119,7 +119,8 @@ public class ResultExtractor {
         TYPE("type"),
         ERRORS("errors"),
         PLANS("plans"),
-        WARNINGS("warnings");
+        WARNINGS("warnings"),
+        CREATED_AT("createdAt");
 
         private static final Map<String, ResultField> fields = new HashMap<>();
 
@@ -183,6 +184,10 @@ public class ResultExtractor {
 
     public static String extractHandle(InputStream resultStream, Charset responseCharset) throws Exception {
         String result = IOUtils.toString(resultStream, responseCharset);
+        return extractHandle(result);
+    }
+
+    public static String extractHandle(String result) throws Exception {
         ObjectNode resultJson = OBJECT_READER.readValue(result);
         final JsonNode handle = resultJson.get("handle");
         if (handle != null) {

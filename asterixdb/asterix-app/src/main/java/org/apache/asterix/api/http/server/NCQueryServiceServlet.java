@@ -84,7 +84,12 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         final IStatementExecutor.ResultDelivery delivery = resultProperties.getDelivery();
         ExecuteStatementResponseMessage responseMsg;
         MessageFuture responseFuture = ncMb.registerMessageFuture();
-        final String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
+        final String handleUrl;
+        if (!param.isIncludeHost()) {
+            handleUrl = getHandleUrl(param.getPath(), delivery);
+        } else {
+            handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
+        }
         try {
             long timeout = param.getTimeout();
             int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters

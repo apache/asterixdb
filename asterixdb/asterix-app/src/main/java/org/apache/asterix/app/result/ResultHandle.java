@@ -24,29 +24,68 @@ import org.apache.hyracks.api.result.ResultSetId;
 public class ResultHandle {
     private final JobId jobId;
     private final ResultSetId resultSetId;
+    private final String requestId;
+    private final int partition;
 
-    public ResultHandle(JobId jobId, ResultSetId resultSetId) {
+    public ResultHandle(JobId jobId, ResultSetId resultSetId, String requestId, int partition) {
         this.jobId = jobId;
         this.resultSetId = resultSetId;
+        this.requestId = requestId;
+        this.partition = partition;
     }
 
-    public ResultHandle(long jobId, long resultSetId) {
-        this(new JobId(jobId), new ResultSetId(resultSetId));
+    public ResultHandle(JobId jobId, ResultSetId resultSetId, String requestId) {
+        this(jobId, resultSetId, requestId, -1);
+    }
+
+    public ResultHandle(long jobId, long resultSetId, String requestId, int partition) {
+        this(new JobId(jobId), new ResultSetId(resultSetId), requestId, partition);
     }
 
     public static ResultHandle parse(String str) {
-        int dash = str.indexOf('-');
+        int start = 0;
+        while (start < str.length() && str.charAt(start) == '/') {
+            ++start;
+        }
+        str = str.substring(start);
+        String[] pathParts = str.split("/");
+
+        switch (pathParts.length) {
+            case 1:
+                // Format: jobId-resultSetId
+                return parseJobAndResultId(pathParts[0], null, -1);
+            case 2:
+                // Format: requestId/jobId-resultSetId
+                return parseJobAndResultId(pathParts[1], pathParts[0], -1);
+            case 3:
+                // Format: requestId/jobId-resultSetId/partition
+                try {
+                    int partition = Integer.parseInt(pathParts[2]);
+                    if (partition < 0) {
+                        return null;
+                    }
+                    return parseJobAndResultId(pathParts[1], pathParts[0], partition);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            default:
+                return null;
+        }
+    }
+
+    private static ResultHandle parseJobAndResultId(String jobResPart, String requestId, int partition) {
+        int dash = jobResPart.indexOf('-');
         if (dash < 1) {
             return null;
         }
-        int start = 0;
-        while (str.charAt(start) == '/') {
-            ++start;
-        }
-        String jobIdStr = str.substring(start, dash);
-        String resIdStr = str.substring(dash + 1);
+
+        String jobIdStr = jobResPart.substring(0, dash);
+        String resIdStr = jobResPart.substring(dash + 1);
+
         try {
-            return new ResultHandle(Long.parseLong(jobIdStr), Long.parseLong(resIdStr));
+            long jobId = Long.parseLong(jobIdStr);
+            long resultSetId = Long.parseLong(resIdStr);
+            return new ResultHandle(jobId, resultSetId, requestId, partition);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -60,8 +99,20 @@ public class ResultHandle {
         return resultSetId;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public int getPartition() {
+        return partition;
+    }
+
     @Override
     public String toString() {
-        return jobId.getId() + "-" + resultSetId.getId();
+        if (requestId == null) {
+            return jobId.getId() + "-" + resultSetId.getId();
+        } else {
+            return requestId + "/" + jobId.getId() + "-" + resultSetId.getId();
+        }
     }
 }

@@ -27,7 +27,7 @@ import org.apache.hyracks.api.result.IResultMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultMetadata implements IResultMetadata {
-    private static final long serialVersionUID = 1905367559307369036L;
+    private static final long serialVersionUID = 1905367559307369037L;
 
     private final SessionConfig.OutputFormat format;
     private long jobDuration;
@@ -43,6 +43,10 @@ public class ResultMetadata implements IResultMetadata {
     private long cloudReadRequestsCount;
     private long cloudPagesReadCount;
     private long cloudPagesPersistedCount;
+    private long resultCount;
+    private long compileTime;
+    private long createTime;
+    private long endTime;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -156,6 +160,38 @@ public class ResultMetadata implements IResultMetadata {
 
     public void setQueueWaitTimeInNanos(long queueWaitTimeInNanos) {
         this.queueWaitTimeInNanos = queueWaitTimeInNanos;
+    }
+
+    public void setResultCount(long resultCount) {
+        this.resultCount = resultCount;
+    }
+
+    public long getResultCount() {
+        return resultCount;
+    }
+
+    public long getCompileTime() {
+        return compileTime;
+    }
+
+    public void setCompileTime(long compileTime) {
+        this.compileTime = compileTime;
+    }
+
+    public long getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
     }
 
     @Override
