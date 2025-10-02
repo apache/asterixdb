@@ -245,12 +245,14 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         finalizer.finalizeBatchColumns(columnMetadata, presentColumnsIndexes, pageZeroWriter);
 
         //assertion logging
-        int presentColumnsCount = presentColumnsIndexes.cardinality();
-        int beforeTransformColumnCount = transformerForCurrentTuple.getBeforeTransformColumnsCount();
-        int currentTupleColumnsCount = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
-        if (beforeTransformColumnCount != presentColumnsCount || currentTupleColumnsCount != presentColumnsCount) {
-            LOGGER.debug("mismatch in column counts: beforeTransform={}, currentTuple={}, expected={}",
-                    beforeTransformColumnCount, currentTupleColumnsCount, presentColumnsCount);
+        if (LOGGER.isTraceEnabled()) {
+            int presentColumnsCount = presentColumnsIndexes.cardinality();
+            int beforeTransformColumnCount = transformerForCurrentTuple.getBeforeTransformColumnsCount();
+            int currentTupleColumnsCount = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+            if (beforeTransformColumnCount != presentColumnsCount || currentTupleColumnsCount != presentColumnsCount) {
+                LOGGER.trace("mismatch in column counts: beforeTransform={}, currentTuple={}, expected={}",
+                        beforeTransformColumnCount, currentTupleColumnsCount, presentColumnsCount);
+            }
         }
 
         writer.setPageZeroWriter(pageZeroWriter, toIndexArray(presentColumnsIndexes), numberOfColumns);
