@@ -74,7 +74,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     private final Set<ILSMIndex> flushingIndexes = Collections.synchronizedSet(new HashSet<>());
     private final Set<ILSMMemoryComponent> flushingComponents = Collections.synchronizedSet(new HashSet<>());
-    private volatile int flushPtr;
+    private int flushPtr;
 
     private final int filteredMemoryComponentMaxNumPages;
     private final int flushPageBudget;
@@ -87,7 +87,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         this.vbc = new VirtualBufferCache(allocator, storageProperties.getBufferCachePageSize(),
                 (int) (storageProperties.getMemoryComponentGlobalBudget()
                         / storageProperties.getMemoryComponentPageSize()));
-        this.flushPageBudget = (int) (storageProperties.getMemoryComponentGlobalBudget()
+        this.flushPageBudget = (int) ((double) storageProperties.getMemoryComponentGlobalBudget()
                 / storageProperties.getMemoryComponentPageSize()
                 * storageProperties.getMemoryComponentFlushThreshold());
         this.filteredMemoryComponentMaxNumPages = storageProperties.getFilteredMemoryComponentMaxNumPages();
@@ -145,7 +145,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                     }
                     if (primaryIndexes.isEmpty()) {
                         flushPtr = 0;
-                    } else if (flushPtr > pos) {
+                    } else if (flushPtr >= pos) {
                         // If the removed index is before flushPtr, we should decrement flushPtr by 1 so that
                         // it still points to the same index.
                         flushPtr = (flushPtr - 1) % primaryIndexes.size();
