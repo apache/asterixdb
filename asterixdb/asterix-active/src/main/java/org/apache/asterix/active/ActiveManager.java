@@ -192,6 +192,7 @@ public class ActiveManager {
                     + " this node before the cluster controller sent the stop request");
         } else {
             executor.execute(() -> {
+                Thread.currentThread().setName(runtimeId.toString());
                 try {
                     stopIfRunning(runtime, content.getTimeout(), content.getUnit());
                 } catch (Throwable th) {

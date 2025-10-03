@@ -19,6 +19,9 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,6 +66,8 @@ import org.apache.logging.log4j.Logger;
 
 public class LSMHarness implements ILSMHarness {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final DateTimeFormatter OP_THREAD_TIMESTAMP =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
     protected final ILSMIndex lsmIndex;
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -543,7 +548,9 @@ public class LSMHarness implements ILSMHarness {
     }
 
     public void doIo(ILSMIOOperation operation) {
+        String origName = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(threadName(operation));
             operation.getCallback().beforeOperation(operation);
             ILSMDiskComponent newComponent = operation.getIOOpertionType() == LSMIOOperationType.FLUSH
                     ? lsmIndex.flush(operation) : lsmIndex.merge(operation);
@@ -569,11 +576,20 @@ public class LSMHarness implements ILSMHarness {
                             lsmIndex, th);
                 }
             }
+            Thread.currentThread().setName(origName);
         }
         // if the operation failed, we need to cleanup files
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             operation.cleanup(lsmIndex.getBufferCache());
         }
+    }
+
+    private static String threadName(ILSMIOOperation operation) {
+        if (operation.getIOOpertionType() == LSMIOOperationType.NOOP) {
+            return String.valueOf(operation.getIOOpertionType());
+        }
+        return operation.getIOOpertionType() + ":" + operation.getTarget().getRelativePath() + "@"
+                + OP_THREAD_TIMESTAMP.format(ZonedDateTime.now());
     }
 
     @Override

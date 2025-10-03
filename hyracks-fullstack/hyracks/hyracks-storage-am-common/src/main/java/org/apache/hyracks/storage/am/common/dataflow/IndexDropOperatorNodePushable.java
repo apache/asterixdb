@@ -84,7 +84,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
                 return;
             } catch (HyracksDataException e) {
                 if (isIgnorable(e)) {
-                    LOGGER.debug("Ignoring exception on drop", e);
+                    LOGGER.debug("Ignoring exception on drop: {}", String.valueOf(e));
                     return;
                 }
                 if (canRetry(e)) {
