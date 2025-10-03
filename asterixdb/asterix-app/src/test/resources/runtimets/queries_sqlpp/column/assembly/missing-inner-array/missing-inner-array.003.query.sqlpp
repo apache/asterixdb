@@ -17,5 +17,5 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+USE test;
+SELECT * FROM ColumnDataset;

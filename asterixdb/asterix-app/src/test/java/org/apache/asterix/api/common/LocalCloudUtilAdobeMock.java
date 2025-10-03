@@ -18,89 +18,113 @@
  */
 package org.apache.asterix.api.common;
 
-import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_ENDPOINT;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.net.URI;
-import java.util.HashMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.adobe.testing.s3mock.S3MockApplication;
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
-// With adobe mock, the s3 objects will be found in /tmp or /var folder
+// This runs Adobe S3Mock in a docker container, with the bucket storage directory under target/s3mock.
 // Search for line "Successfully created {} as root folder" in the info log file
-// or else just call the aws cli on localhost:8001
-// eg: aws s3 ls --endpoint http://localhost:8001
+// A randomized port is chosen each time for the S3 endpoint, but it is always on localhost.
+// You can inspect the real port mapping (e.g. 45799 -> 9090) via 'docker ps'
+// Then to connect, normal S3 utilities work, such as aws s3 ls --endpoint http://localhost:45799
 public class LocalCloudUtilAdobeMock {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int MOCK_SERVER_PORT = 8001;
-    private static final int MOCK_SERVER_PORT_HTTPS = 8002;
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
+    public static final String S3MOCK_VERSION_TAG = "4.7.0";
     public static final String PLAYGROUND_BUCKET = "playground";
-    private static S3MockApplication s3Mock;
+    public static final String CLOUD_URL_KEY = "cloudUrl";
+    private static S3MockContainer s3Mock;
 
     private LocalCloudUtilAdobeMock() {
         throw new AssertionError("Do not instantiate");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         String cleanStartString = System.getProperty("cleanup.start", "true");
         boolean cleanStart = Boolean.parseBoolean(cleanStartString);
         // Change to 'true' if you want to delete "s3mock" folder on start
         startS3CloudEnvironment(cleanStart);
     }
 
-    public static S3MockApplication startS3CloudEnvironment(boolean cleanStart) {
+    public static S3MockContainer startS3CloudEnvironment(boolean cleanStart) throws IOException {
         return startS3CloudEnvironment(cleanStart, false);
     }
 
-    public static S3MockApplication startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer) {
+    public static S3MockContainer startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer)
+            throws IOException {
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(S3MockApplication.PROP_HTTP_PORT, MOCK_SERVER_PORT);
-        properties.put(S3MockApplication.PROP_HTTPS_PORT, MOCK_SERVER_PORT_HTTPS);
-        properties.put(S3MockApplication.PROP_SILENT, false);
-        LocalCloudUtil.stopS3MockServer();
-        s3Mock = S3MockApplication.start(properties);
-
+        s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart);
+        if (!cleanStart) {
+            Path s3MockDataDir = Path.of("target", "s3mock");
+            boolean existingData = s3MockDataDir.toFile().exists();
+            if (!existingData) {
+                Files.createDirectory(s3MockDataDir);
+            }
+            //be VERY careful with this path. the last component will be entirely deleted
+            //if RetainFilesOnExist is false
+            s3Mock.withVolumeAsRoot(s3MockDataDir.toAbsolutePath());
+        }
+        s3Mock.start();
         LOGGER.info("S3 mock server started successfully");
 
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_ENDPOINT); // endpoint pointing to S3 mock server
+        URI endpoint = URI.create(s3Mock.getHttpEndpoint()); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
-        S3Client client = builder.build();
-        if (cleanStart) {
-            try {
-                client.deleteBucket(DeleteBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
-                LOGGER.info("Deleted bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
-            } catch (Exception ex) {
-                // do nothing
-            }
-        }
-        client.createBucket(CreateBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
-        LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
-
+        S3Client client =
+                builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build()).build();
+        createIfNotExists(CLOUD_STORAGE_BUCKET, client);
         if (createPlaygroundContainer) {
-            client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_BUCKET).build());
-            LOGGER.info("Created bucket {}", PLAYGROUND_BUCKET);
+            createIfNotExists(PLAYGROUND_BUCKET, client);
         }
         client.close();
         return s3Mock;
+    }
+
+    public static void createIfNotExists(String bucketName, S3Client client) {
+        try {
+            client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
+        } catch (NoSuchBucketException nsbe) {
+            //i don't want to use exceptions as control flow, yet here we are
+            client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
+            LOGGER.info("Created bucket {}", bucketName);
+        }
+    }
+
+    public static void fillConfigTemplate(String cloudUrl, String templatePath, String configPath)
+            throws IOException, TemplateException {
+        try (FileReader tmplt = new FileReader(templatePath); Writer result = new FileWriter(configPath)) {
+            Template cfg = new Template("cc.conf", tmplt, new Configuration(Configuration.VERSION_2_3_31));
+            cfg.process(Map.of(CLOUD_URL_KEY, cloudUrl), result);
+        }
+
     }
 
     public static void shutdownSilently() {
@@ -108,6 +132,7 @@ public class LocalCloudUtilAdobeMock {
             try {
                 LOGGER.info("test cleanup, stopping S3 mock server");
                 s3Mock.stop();
+                s3Mock.close();
                 LOGGER.info("test cleanup, stopped S3 mock server");
             } catch (Exception ex) {
                 // do nothing
@@ -118,7 +143,7 @@ public class LocalCloudUtilAdobeMock {
 
     public static S3Client getS3Client() {
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_ENDPOINT);
+        URI endpoint = URI.create(s3Mock.getHttpEndpoint());
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();

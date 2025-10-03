@@ -17,5 +17,8 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+DROP DATASET customer IF EXISTS;
+DROP DATASET orders IF EXISTS;
+DROP TYPE cust_type IF EXISTS;
+DROP TYPE orders_type IF EXISTS;
+

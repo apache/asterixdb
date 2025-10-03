@@ -17,5 +17,12 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+ DROP DATAVERSE test IF EXISTS;
+ CREATE DATAVERSE test;
+
+ USE test;
+
+ CREATE DATASET ColumnDataset
+ PRIMARY KEY (uid:int) WITH {
+     "storage-format": {"format": "column"}
+ };

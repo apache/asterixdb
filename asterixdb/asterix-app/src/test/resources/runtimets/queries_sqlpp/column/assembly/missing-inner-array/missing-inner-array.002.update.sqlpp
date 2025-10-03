@@ -17,5 +17,15 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+USE test;
+UPSERT INTO ColumnDataset(
+   {
+        "uid": 1,
+        "key_0": [
+            [
+              []
+            ],
+            []
+        ]
+   }
+);

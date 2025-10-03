@@ -17,5 +17,6 @@
  * under the License.
  */
 
-DROP DATASET ds;
-DROP TYPE openType;
+//success
+
+drop dataset ds;

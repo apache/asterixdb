@@ -19,10 +19,9 @@
 package org.apache.asterix.test.atomic_statements;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
 import static org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter.CLIENT_ID;
-import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -38,7 +37,9 @@ import java.util.concurrent.Future;
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.TestDataUtil;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
@@ -49,27 +50,33 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
+
 public class AtomicStatementsCancellationTest {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private static final String TEST_CONFIG_FILE_NAME = "cc-cloud-storage.conf";
+    public static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage.conf.ftl";
+    public static final String CONFIG_FILE = "target/cc-cloud-storage.conf";
     private static final TestExecutor TEST_EXECUTOR = new TestExecutor();
 
-    private static final String TEST_CONFIG_PATH =
-            joinPath(System.getProperty("user.dir"), "src", "test", "resources");;
-    private static final String TEST_CONFIG_FILE_PATH = TEST_CONFIG_PATH + File.separator + TEST_CONFIG_FILE_NAME;
     private static final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
     private static final String DATASET_NAME = "ds_0";
     private static final int BATCH_SIZE = 20000;
     private static final int NUM_UPSERTS = 100;
+    public static final String MOCK_SERVER_HOSTNAME_FRAGMENT = "http://127.0.0.1:";
 
     @Before
     public void setUp() throws Exception {
         boolean cleanStart = true;
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
+        S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
+        fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
+                CONFIG_FILE);
+        System.setProperty(TestConstants.S3_SERVICE_ENDPOINT_KEY,
+                MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort());
         integrationUtil.setGracefulShutdown(true);
-        integrationUtil.init(true, TEST_CONFIG_FILE_PATH);
+        integrationUtil.init(true, CONFIG_FILE);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
         createDatasets();
     }
 

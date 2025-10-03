@@ -17,7 +17,5 @@
  * under the License.
  */
 
-//success
-
-create dataset ds primary key (id:string);
-SELECT id FROM ds OFFSET 1 LIMIT 5;
+DROP TYPE openType IF EXISTS;
+DROP DATASET ds IF EXISTS;

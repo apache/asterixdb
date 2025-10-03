@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.test.iceberg;
 
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.CONFIG_FILE;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.CONFIG_FILE_TEMPLATE;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import static org.apache.iceberg.hadoop.HadoopOutputFile.fromPath;
 import static org.apache.iceberg.types.Types.NestedField.required;
@@ -69,6 +73,8 @@ import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
+
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -91,13 +97,11 @@ public class IcebergTest {
 
     private static final String SUITE_TESTS = "testsuite_iceberg.xml";
     private static final String ONLY_TESTS = "testsuite_iceberg_only.xml";
-    private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
     static Runnable PREPARE_ICEBERG_TABLE_BUCKET;
 
     // Client and service endpoint
     private static S3Client client;
     private static final int MOCK_SERVER_PORT = 8001;
-    private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
     private static final String MOCK_SERVER_REGION = "us-west-2";
 
     protected TestCaseContext tcCtx;
@@ -129,18 +133,24 @@ public class IcebergTest {
     private static final String ICEBERG_TABLE_PATH_MODIFIED_DATA =
             "s3a://" + ICEBERG_CONTAINER + "/my-table-modified-data/";
 
+    private static S3MockContainer s3Mock;
+
     @BeforeClass
     public static void setUp() throws Exception {
         final TestExecutor testExecutor = new TestExecutor();
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
+        s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
-        LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
+        fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
+                CONFIG_FILE);
+        System.setProperty(TestConstants.S3_SERVICE_ENDPOINT_KEY,
+                MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort());
+        LangExecutionUtil.setUp(CONFIG_FILE, testExecutor);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
 
         // create the iceberg bucket
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
+        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort()); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();
@@ -180,7 +190,7 @@ public class IcebergTest {
     }
 
     private static void prepareIcebergConfiguration() {
-        CONF.set(S3Constants.HADOOP_SERVICE_END_POINT, MOCK_SERVER_HOSTNAME);
+        CONF.set(S3Constants.HADOOP_SERVICE_END_POINT, s3Mock.getHttpEndpoint());
         // switch to http
         CONF.set("fs.s3a.connection.ssl.enabled", "false");
         // forces URL style access which is required by the mock. Overwrites DNS based bucket access scheme.

@@ -18,12 +18,16 @@
  */
 package org.apache.asterix.test.cloud_storage;
 
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.createIfNotExists;
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -41,11 +45,12 @@ import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
+
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
 /**
  * Run tests in cloud deployment environment
@@ -59,14 +64,14 @@ public class CloudStorageTest {
     private final TestCaseContext tcCtx;
     public static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
     public static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
-    public static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
+    public static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage.conf.ftl";
+    public static final String CONFIG_FILE = "target/cc-cloud-storage.conf";
     public static final String DELTA_RESULT_PATH = "results_cloud";
     public static final String EXCLUDED_TESTS = "MP";
 
     public static final String PLAYGROUND_CONTAINER = "playground";
     public static final String MOCK_SERVER_REGION = "us-west-2";
-    public static final int MOCK_SERVER_PORT = 8001;
-    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
+    public static final String MOCK_SERVER_HOSTNAME_FRAGMENT = "http://127.0.0.1:";
 
     public CloudStorageTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -79,19 +84,23 @@ public class CloudStorageTest {
     }
 
     public static void setupEnv(TestExecutor testExecutor) throws Exception {
-        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
+        S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
+        fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
+                CONFIG_FILE);
+        System.setProperty(TestConstants.S3_SERVICE_ENDPOINT_KEY,
+                MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort());
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
-        LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
+        LangExecutionUtil.setUp(CONFIG_FILE, testExecutor);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
 
         // create the playground bucket and leave it empty, just for external collection-based tests
         S3ClientBuilder builder = S3Client.builder();
-        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
+        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort()); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         S3Client client = builder.build();
-        client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
+        createIfNotExists(PLAYGROUND_CONTAINER, client);
         client.close();
     }
 

@@ -238,6 +238,24 @@ public class ExceptionUtils {
         return throwable.getError().isPresent() && throwable.getError().get() == code;
     }
 
+    public static Throwable truncateStackOverflowStack(Throwable ex, int limit) {
+        if (ex instanceof StackOverflowError) {
+            StackTraceElement[] fullTrace = ex.getStackTrace();
+            if (fullTrace.length > limit * 2) {
+                StackOverflowError copy = new StackOverflowError(ex.getMessage());
+                // keep the cause if there was one
+                copy.initCause(ex.getCause());
+                StackTraceElement[] trimmedTrace = new StackTraceElement[limit + 1];
+                System.arraycopy(fullTrace, 0, trimmedTrace, 0, limit);
+                trimmedTrace[limit] = new StackTraceElement("...<truncated " + (fullTrace.length - limit) + " lines>",
+                        "..", null, -1);
+                copy.setStackTrace(trimmedTrace);
+                return copy;
+            }
+        }
+        return ex;
+    }
+
     /**
      * Checks if the specific type T exception is in the causes of the current throwable, and if so returns it,
      * otherwise returns null

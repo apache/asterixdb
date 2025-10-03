@@ -118,9 +118,8 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         }
         allMissing = false;
         try {
-            int actualLevel = BytesUtils.readZigZagVarInt(in);
-            maxLevel = ColumnValuesUtil.clearNullBit(nullBitMask, actualLevel);
-            nullBitMask = ColumnValuesUtil.getNullMask(actualLevel);
+            maxLevel = BytesUtils.readZigZagVarInt(in);
+            nullBitMask = ColumnValuesUtil.getNullMask(maxLevel);
 
             currentDefinitionLevels = definitionLevels.get(maxLevel);
             if (currentDefinitionLevels == null) {
