@@ -24,11 +24,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.declared.SampleDataSource;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -324,4 +332,86 @@ public class OperatorUtils {
 
         return distinctOp;
     }
+
+    // we need to switch the datasource from the dataset source to the corresponding sample datasource.
+    // Little tricky how this is done!
+    protected static SampleDataSource getSampleDataSource(DataSourceScanOperator scanOp, IOptimizationContext optCtx)
+            throws AlgebricksException {
+        DataSource ds = (DataSource) scanOp.getDataSource();
+        DataSourceId dsid = ds.getId();
+        MetadataProvider mdp = (MetadataProvider) optCtx.getMetadataProvider();
+        Index index = mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
+        DatasetDataSource dds = (DatasetDataSource) ds;
+        return new SampleDataSource(dds.getDataset(), index.getIndexName(), ds.getItemType(), ds.getMetaItemType(),
+                ds.getDomain());
+    }
+
+    protected static ILogicalOperator findDataSourceScanOperatorParent(ILogicalOperator op) {
+        ILogicalOperator parent = op;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
+                return parent;
+            }
+            parent = op;
+            op = op.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
+    public static boolean doAllDataSourcesHaveSamples(List<AbstractLeafInput> leafInputs, IOptimizationContext context)
+            throws AlgebricksException {
+        return doAllDataSourcesHaveSamples(leafInputs, context, true);
+    }
+
+    // check to see if every dataset has a sample. If not, CBO code cannot run. A warning message must be issued as well.
+    public static boolean doAllDataSourcesHaveSamples(List<AbstractLeafInput> leafInputs, IOptimizationContext context,
+            boolean handle) throws AlgebricksException {
+        if (!handle) {
+            return false;
+        }
+        int n = 0;
+        for (AbstractLeafInput li : leafInputs) {
+            DataSourceScanOperator scanOp = findDataSourceScanOperator(li.getOp());
+            if (scanOp == null) {
+                continue;
+            }
+
+            Index index = OperatorUtils.findSampleIndex(scanOp, context);
+            if (index == null) {
+                return false;
+            }
+            Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+            double origDatasetCard = idxDetails.getSourceCardinality();
+            // empty samples
+            if (origDatasetCard == 0) {
+                ExceptionUtil.warnEmptySamples(origDatasetCard, scanOp.getSourceLocation(), context);
+                return false;
+            }
+            n++;
+        }
+        return (leafInputs.size() == n);
+    }
+
+    public static DataSourceScanOperator findDataSourceScanOperator(ILogicalOperator op) {
+        ILogicalOperator scanOp = op;
+        while (scanOp != null && scanOp.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (scanOp.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
+                return (DataSourceScanOperator) scanOp;
+            }
+            scanOp = scanOp.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
+    protected static Index findSampleIndex(DataSourceScanOperator scanOp, IOptimizationContext context)
+            throws AlgebricksException {
+        DataSource ds = (DataSource) scanOp.getDataSource();
+        if (ds.getDatasourceType() != DataSource.Type.INTERNAL_DATASET) {
+            return null;
+        }
+        DataSourceId dsid = ds.getId();
+        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
+        return mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
+    }
+
 }

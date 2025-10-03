@@ -86,15 +86,19 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
             StructuralPropertiesVector[] requiredProp = new StructuralPropertiesVector[1];
             IPartitioningProperty partitioning;
             INodeDomain targetNodeDomain = ctx.getComputationNodeDomain();
-            String fullParallelAnnotation = getFullParallelAnnotation(sortOp, targetNodeDomain, ctx);
-            if (fullParallelAnnotation != null) {
+            boolean parallel = sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
+                    && targetNodeDomain.cardinality() != null && targetNodeDomain.cardinality() > 1;
+
+            RangeMap rm = (RangeMap) sortOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
+
+            if (parallel && rm != null) {
                 // partitioning requirement: input data is re-partitioned on sort columns (global ordering)
-                RangeMap rangeMap = getRangeMap(sortOp, fullParallelAnnotation);
-                partitioning = new OrderedPartitionedProperty(Arrays.asList(sortColumns), targetNodeDomain, rangeMap);
+                partitioning = new OrderedPartitionedProperty(Arrays.asList(sortColumns), targetNodeDomain, rm);
             } else {
                 // partitioning requirement: input data is unpartitioned (i.e. must be merged at one site)
                 partitioning = IPartitioningProperty.UNPARTITIONED;
             }
+
             // local requirement: each partition must be locally ordered
             requiredProp[0] = new StructuralPropertiesVector(partitioning, Collections.singletonList(orderProp));
             return new PhysicalRequirements(requiredProp, IPartitioningRequirementsCoordinator.NO_COORDINATION);
@@ -142,46 +146,6 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
-    }
-
-    /**
-     * When a non-null value is returned, the sort operator requires ORDERED_PARTITION (applicable to both static and
-     *  dynamic range versions).
-     * Conditions:
-     * 1. Execution mode == partitioned
-     * 2. Dynamic range map that was not disabled by some checks, or a static range map
-     * 3. User didn't disable it
-     * 4. User didn't provide static range map
-     * 5. Physical sort operator is not in-memory
-     * 6. There are at least two partitions in the cluster
-     * @param sortOp the sort operator
-     * @param clusterDomain the partitions specification of the cluster
-     * @param ctx optimization context
-     * @return annotation name (non-null) if the sort operator should be full parallel sort, {@code null} otherwise.
-     */
-    private String getFullParallelAnnotation(AbstractLogicalOperator sortOp, INodeDomain clusterDomain,
-            IOptimizationContext ctx) {
-        if (sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
-                && clusterDomain.cardinality() != null && clusterDomain.cardinality() > 1
-                && ctx.getPhysicalOptimizationConfig().getSortParallel()) {
-            if (sortOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
-                return OperatorAnnotations.USE_STATIC_RANGE;
-            } else if (sortOp.getAnnotations().get(OperatorAnnotations.USE_DYNAMIC_RANGE) != Boolean.FALSE) {
-                return OperatorAnnotations.USE_DYNAMIC_RANGE;
-            }
-        }
-        return null;
-    }
-
-    private RangeMap getRangeMap(ILogicalOperator sortOp, String fullParallelAnnotation) {
-        switch (fullParallelAnnotation) {
-            case OperatorAnnotations.USE_STATIC_RANGE:
-                return (RangeMap) sortOp.getAnnotations().get(fullParallelAnnotation);
-            case OperatorAnnotations.USE_DYNAMIC_RANGE:
-                return null;
-            default:
-                throw new IllegalStateException(fullParallelAnnotation);
-        }
     }
 
     @Override

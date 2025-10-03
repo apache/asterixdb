@@ -20,4 +20,7 @@
 -- param include-host=false
 use test;
 SET `compiler.sort.parallel` "true";
+
+// create samples to actually use parallel sort
+analyze dataset Test;
 Select * from Test order by val;

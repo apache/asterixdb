@@ -38,10 +38,8 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
-import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
@@ -1070,7 +1068,7 @@ public class JoinEnum {
                 jn.aliases = new ArrayList<>(Collections.singleton(findAlias(scanOp)));
                 jn.datasetNames = new ArrayList<>(Collections.singleton(id.getDatasourceName()));
                 Index.SampleIndexDetails idxDetails;
-                Index index = stats.findSampleIndex(scanOp, optCtx);
+                Index index = OperatorUtils.findSampleIndex(scanOp, optCtx);
                 if (index != null) {
                     idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
                 } else {
@@ -1216,32 +1214,6 @@ public class JoinEnum {
             }
         }
         return false;
-    }
-
-    // Since we need to switch the datasource to the sample, we need the parent, so we can do the necessary
-    // linked list manipulation.
-    protected ILogicalOperator findDataSourceScanOperatorParent(ILogicalOperator op) {
-        ILogicalOperator parent = op;
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
-                return parent;
-            }
-            parent = op;
-            op = op.getInputs().get(0).getValue();
-        }
-        return null;
-    }
-
-    // we need to switch the datascource from the dataset source to the corresponding sample datasource.
-    // Little tricky how this is done!
-    protected SampleDataSource getSampleDataSource(DataSourceScanOperator scanOp) throws AlgebricksException {
-        DataSource ds = (DataSource) scanOp.getDataSource();
-        DataSourceId dsid = ds.getId();
-        MetadataProvider mdp = (MetadataProvider) this.optCtx.getMetadataProvider();
-        Index index = mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
-        DatasetDataSource dds = (DatasetDataSource) ds;
-        return new SampleDataSource(dds.getDataset(), index.getIndexName(), ds.getItemType(), ds.getMetaItemType(),
-                ds.getDomain());
     }
 
     protected ILogicalOperator findASelectOp(ILogicalOperator op) {

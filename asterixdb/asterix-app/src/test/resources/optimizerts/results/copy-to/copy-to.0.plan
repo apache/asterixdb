@@ -5,54 +5,20 @@ distribute result []
     write ($$x) to path ["myPath"] 
     -- SINK_WRITE  |PARTITIONED|
       exchange
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$25(DESC) ]  |PARTITIONED|
         order (DESC, $$25)
         -- STABLE_SORT [$$25(DESC)]  |PARTITIONED|
           exchange
-          -- RANGE_PARTITION_EXCHANGE [$$25(DESC)]  |PARTITIONED|
-            forward: shared-variable = $$28
-            -- FORWARD  |PARTITIONED|
-              exchange
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                replicate
-                -- REPLICATE  |PARTITIONED|
-                  exchange
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$25] <- [$$x.getField("id")]
-                    -- ASSIGN  |PARTITIONED|
-                      project ([$$x])
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        exchange
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$24, $$x] <- test.OpenDataset
-                          -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              exchange
-              -- BROADCAST_EXCHANGE  |PARTITIONED|
-                aggregate [$$28] <- [agg-range-map($$26, $$27)]
-                -- AGGREGATE  |UNPARTITIONED|
-                  exchange
-                  -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-                    aggregate [$$26, $$27] <- [agg-local-sampling($$25), agg-null-writer($$25)]
-                    -- AGGREGATE  |PARTITIONED|
-                      exchange
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        replicate
-                        -- REPLICATE  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$25] <- [$$x.getField("id")]
-                            -- ASSIGN  |PARTITIONED|
-                              project ([$$x])
-                              -- STREAM_PROJECT  |PARTITIONED|
-                                exchange
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$24, $$x] <- test.OpenDataset
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                    exchange
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      empty-tuple-source
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            assign [$$25] <- [$$x.getField("id")]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$x])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$24, $$x] <- test.OpenDataset
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

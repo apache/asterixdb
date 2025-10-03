@@ -307,7 +307,7 @@ public class JoinNode {
             numArrayRefs = joinEnum.unnestOpsInfo.get(leafInputNumber - 1).size();
         }
 
-        DataSourceScanOperator scanOp = EnumerateJoinsRule.findDataSourceScanOperator(leafInput);
+        DataSourceScanOperator scanOp = OperatorUtils.findDataSourceScanOperator(leafInput);
         if (scanOp == null) {
             return; // what happens to the cards and sizes then? this may happen in case of in lists
         }
@@ -323,7 +323,7 @@ public class JoinNode {
             leafInput = op;
         }
 
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(leafInput);
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(leafInput);
         Mutable<ILogicalOperator> ref = new MutableObject<>(leafInput);
 
         OperatorPropertiesUtil.typeOpRec(ref, joinEnum.optCtx);
@@ -339,7 +339,7 @@ public class JoinNode {
             setColumnar(false);
         }
 
-        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        SampleDataSource sampledatasource = OperatorUtils.getSampleDataSource(scanOp, this.joinEnum.optCtx);
         DataSourceScanOperator deepCopyofScan =
                 (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
         deepCopyofScan.setDataSource(sampledatasource);

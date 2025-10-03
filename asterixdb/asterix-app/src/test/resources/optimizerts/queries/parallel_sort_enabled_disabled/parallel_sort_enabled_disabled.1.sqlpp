@@ -33,8 +33,6 @@ CREATE TYPE CustomerType AS {
 
 CREATE DATASET Customers(CustomerType) PRIMARY KEY c_custkey;
 
-SET `compiler.sort.parallel` "true";
-
 SELECT VALUE c
 FROM Customers c
 ORDER BY c.c_1;

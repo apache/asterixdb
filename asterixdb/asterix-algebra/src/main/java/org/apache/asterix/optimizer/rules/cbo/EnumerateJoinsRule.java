@@ -33,7 +33,6 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.CBOPlanStateTree;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.FakeIndexProvider;
@@ -231,7 +230,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (arrayUnnestPossible) {
             joinEnum.stats = new Stats(context, joinEnum);
             if (cboMode) {
-                if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
+                boolean handle = joinEnum.getStatsHandle() != null;
+                if (!OperatorUtils.doAllDataSourcesHaveSamples(leafInputs, context, handle)) {
                     if (adviseIndex) {
                         errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
                     }
@@ -300,7 +300,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 dataScanAndGroupByDistinctOps, rootGroupByDistinctOp, rootOrderByOp, resultAndJoinVars,
                 fakeLeafInputsMap, context, indexProvider, datasetRegistry);
         if (cboMode) {
-            if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
+            boolean handle = joinEnum.getStatsHandle() != null;
+            if (!OperatorUtils.doAllDataSourcesHaveSamples(leafInputs, context, handle)) {
                 if (adviseIndex) {
                     errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
                 }
@@ -413,7 +414,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private boolean everyLeafInputDoesNotHaveADataScanOperator(List<AbstractLeafInput> leafInputs) {
         for (AbstractLeafInput leafInput : leafInputs) {
-            DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput.getOp());
+            DataSourceScanOperator scanOp = OperatorUtils.findDataSourceScanOperator(leafInput.getOp());
             if (scanOp == null) {
                 return true;
             }
@@ -559,7 +560,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     private ILogicalOperator truncateInput(ILogicalOperator op) throws AlgebricksException {
-        ILogicalOperator dsOp = findDataSourceScanOperator(op);
+        ILogicalOperator dsOp = OperatorUtils.findDataSourceScanOperator(op);
         ILogicalOperator ds = OperatorManipulationUtil.bottomUpCopyOperators(dsOp);
         return ds;
     }
@@ -1414,7 +1415,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (selOp != null) {
             addCardCostAnnotations(selOp, plan);
         }
-        addCardCostAnnotations(findDataSourceScanOperator(leftInput), plan);
+        addCardCostAnnotations(OperatorUtils.findDataSourceScanOperator(leftInput), plan);
     }
 
     private void getJoinNode(JoinPlanNode plan, List<JoinOperator> allJoinOps) throws AlgebricksException {
@@ -1528,7 +1529,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             joinOp.getInputs().get(isLeft ? 0 : 1).setValue(leftInput);
             ILogicalOperator op = joinOp.getInputs().get(isLeft ? 0 : 1).getValue();
             context.computeAndSetTypeEnvironmentForOperator(op);
-            addCardCostAnnotations(findDataSourceScanOperator(leftInput), planNode);
+            addCardCostAnnotations(OperatorUtils.findDataSourceScanOperator(leftInput), planNode);
 
         } else if (planNode instanceof JoinPlanNode) {
 
@@ -1613,39 +1614,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    // check to see if every dataset has a sample. If not, CBO code cannot run. A warning message must be issued as well.
-    private boolean doAllDataSourcesHaveSamples(List<AbstractLeafInput> leafInputs, IOptimizationContext context)
-            throws AlgebricksException {
-        int n = 0;
-        for (AbstractLeafInput li : leafInputs) {
-            DataSourceScanOperator scanOp = findDataSourceScanOperator(li.getOp());
-            if (scanOp == null) {
-                continue;
-            }
-            Stats handle = joinEnum.getStatsHandle();
-            if (handle == null) {
-                continue;
-            }
-            Index index = handle.findSampleIndex(scanOp, context);
-            if (index == null) {
-                return false;
-            }
-            Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
-            double origDatasetCard = idxDetails.getSourceCardinality();
-            if (origDatasetCard == 0) {
-                ExceptionUtil.warnEmptySamples(origDatasetCard, scanOp.getSourceLocation(), context);
-                return false;
-            }
-            n++;
-        }
-
-        return (leafInputs.size() == n);
-    }
-
     private void errorOutIndexAdvisorSamplesNotFound(List<AbstractLeafInput> leafInputs, IOptimizationContext context)
             throws AlgebricksException {
         for (AbstractLeafInput li : leafInputs) {
-            DataSourceScanOperator scanOp = findDataSourceScanOperator(li.getOp());
+            DataSourceScanOperator scanOp = OperatorUtils.findDataSourceScanOperator(li.getOp());
             if (scanOp == null) {
                 // Scan Operator not found
                 continue;
@@ -1654,7 +1626,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (handle == null) {
                 continue;
             }
-            Index index = handle.findSampleIndex(scanOp, context);
+            Index index = OperatorUtils.findSampleIndex(scanOp, context);
             if (index == null) {
                 errorOutIndexAdvisorSampleNotFound(scanOp, context);
             }

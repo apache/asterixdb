@@ -18,7 +18,6 @@
  */
 
 USE test;
-SET `compiler.sort.parallel` "false";
 COPY (
    SELECT od.name, od.id
    FROM OpenDataset od

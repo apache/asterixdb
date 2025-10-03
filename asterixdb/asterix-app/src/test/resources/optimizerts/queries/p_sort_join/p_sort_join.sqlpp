@@ -39,8 +39,6 @@ create  dataset TestDS1(TestType) primary key id;
 
 create  dataset TestDS2(TestType) primary key id;
 
-set `compiler.sort.parallel` "true";
-
 select t1.id2 from
   ( select id, id2 from TestDS1 /*+ range [5] */ order by id2 ) t1
   join

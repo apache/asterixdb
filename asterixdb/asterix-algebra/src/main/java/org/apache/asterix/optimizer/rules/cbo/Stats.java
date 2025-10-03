@@ -31,8 +31,6 @@ import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
-import org.apache.asterix.metadata.declared.DataSourceId;
-import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.ADouble;
@@ -109,16 +107,6 @@ public class Stats {
     public Stats(IOptimizationContext context, JoinEnum joinE) {
         optCtx = context;
         joinEnum = joinE;
-    }
-
-    protected Index findSampleIndex(DataSourceScanOperator scanOp, IOptimizationContext context)
-            throws AlgebricksException {
-        DataSource ds = (DataSource) scanOp.getDataSource();
-        if (ds.getDatasourceType() != DataSource.Type.INTERNAL_DATASET)
-            return null;
-        DataSourceId dsid = ds.getId();
-        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
-        return mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
     }
 
     private double findJoinSelectivity(JoinCondition jc, JoinProductivityAnnotation anno,
@@ -391,14 +379,14 @@ public class Stats {
         }
         // must set all the Sel operators to be true, otherwise we will be multiplying the single table sels also here.
         storeSelectConditionsAndMakeThemTrue(selOp, null);
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(selOp);
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(selOp);
         DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
 
         // replace the dataScanSourceOperator with the sampling source
-        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        SampleDataSource sampledatasource = OperatorUtils.getSampleDataSource(scanOp, optCtx);
         scanOp.setDataSource(sampledatasource);
         parent.getInputs().get(0).setValue(scanOp);
         Pair<ILogicalOperator, Double> retVal = new Pair<>(selOp, sampleCard);
@@ -643,14 +631,14 @@ public class Stats {
         // replace the SelOp.condition with the new exp and replace it at the end
         // The Selop here is the start of the leafInput.
 
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(selOp);
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(selOp);
         DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
 
         if (scanOp == null) {
             return 1.0; // what happens to the cards and sizes then? this may happen in case of in lists
         }
 
-        Index index = findSampleIndex(scanOp, optCtx);
+        Index index = OperatorUtils.findSampleIndex(scanOp, optCtx);
         if (index == null) {
             return 1.0;
         }
@@ -661,7 +649,7 @@ public class Stats {
         ExceptionUtil.warnEmptySamples(sampleCard, scanOp.getSourceLocation(), optCtx);
 
         // replace the dataScanSourceOperator with the sampling source
-        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        SampleDataSource sampledatasource = OperatorUtils.getSampleDataSource(scanOp, optCtx);
         DataSourceScanOperator deepCopyofScan =
                 (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
         deepCopyofScan.setDataSource(sampledatasource);
@@ -842,7 +830,7 @@ public class Stats {
     }
 
     protected Index findIndex(RealLeafInput realLeafInput) throws AlgebricksException {
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(realLeafInput.getOp());
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(realLeafInput.getOp());
         if (parent == null) {
             return null;
         }
@@ -856,7 +844,7 @@ public class Stats {
         if (scanOp == null) {
             return null;
         }
-        Index index = findSampleIndex(scanOp, optCtx);
+        Index index = OperatorUtils.findSampleIndex(scanOp, optCtx);
         if (index == null) {
             return null;
         }
@@ -922,7 +910,7 @@ public class Stats {
         // no need to restore them either as this is dne on a copy of the logOp.
         storeSelectConditionsAndMakeThemTrue(newLogOp, null);
 
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(newLogOp);
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(newLogOp);
         DataSourceScanOperator scanOp;
         if (parent instanceof DataSourceScanOperator) {
             scanOp = (DataSourceScanOperator) parent;
@@ -932,7 +920,7 @@ public class Stats {
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
 
         // replace the dataScanSourceOperator with the sampling source
-        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        SampleDataSource sampledatasource = OperatorUtils.getSampleDataSource(scanOp, optCtx);
         DataSourceScanOperator deepCopyofScan =
                 (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
 
@@ -1087,13 +1075,13 @@ public class Stats {
 
         // distinct cardinality supported only for GroupByOp and DistinctOp
         if (tag == LogicalOperatorTag.DISTINCT || tag == LogicalOperatorTag.GROUP) {
-            ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(grpByDistinctOp);
+            ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(grpByDistinctOp);
             DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
             if (scanOp == null) {
                 return distinctCard; // this may happen in case of in lists
             }
 
-            Index index = findSampleIndex(scanOp, optCtx);
+            Index index = OperatorUtils.findSampleIndex(scanOp, optCtx);
             if (index == null) {
                 return distinctCard;
             }
@@ -1105,7 +1093,7 @@ public class Stats {
             if (!(dsType == DataSource.Type.INTERNAL_DATASET || dsType == DataSource.Type.EXTERNAL_DATASET)) {
                 return distinctCard; // Datasource must be of a dataset, not supported for other datasource types
             }
-            SampleDataSource sampleDataSource = joinEnum.getSampleDataSource(scanOp);
+            SampleDataSource sampleDataSource = OperatorUtils.getSampleDataSource(scanOp, optCtx);
 
             ILogicalOperator parentOfSelectOp = findParentOfSelectOp(grpByDistinctOp);
             SelectOperator selOp = (parentOfSelectOp == null) ? null
@@ -1260,7 +1248,7 @@ public class Stats {
     }
 
     private boolean setSampleDataSource(ILogicalOperator op, SampleDataSource sampleDataSource) {
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(op);
+        ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(op);
         DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
         if (scanOp == null) {
             return false;

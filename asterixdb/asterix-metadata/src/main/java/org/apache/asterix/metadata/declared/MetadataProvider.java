@@ -206,6 +206,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
     private final Set<EntityDetails> accessedEntities;
+    public static final long DEFAULT_MAX_RESULT_READS = 1; // keep in sync with ResultProperties.DEFAULT_MAX_READS
 
     public static MetadataProvider createWithDefaultNamespace(ICcApplicationContext appCtx) {
         java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
@@ -234,6 +235,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         config = new HashMap<>();
         accessedEntities = new HashSet<>();
         setDefaultNamespace(MetadataConstants.DEFAULT_NAMESPACE);
+        // Initialize a safe default for result reads. Some statement paths (e.g., INSERT without RETURNING,
+        // invoked by test) can build plans that include a ResultWriter on the NC.
+        maxResultReads = DEFAULT_MAX_RESULT_READS;
     }
 
     @SuppressWarnings("unchecked")

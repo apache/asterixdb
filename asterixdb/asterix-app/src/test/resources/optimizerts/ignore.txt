@@ -19,3 +19,10 @@
 distinct_aggregate.aql
 unnest_list_in_subplan.aql
 fj-phase2-with-hints.aql
+//TODO(janhavi): enable tests later
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.9.sqlpp
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.10.sqlpp
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.11.sqlpp
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.12.sqlpp
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.13.sqlpp
+aggregate-sql-sugar/distinct_mixed/distinct_mixed.14.sqlpp

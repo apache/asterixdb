@@ -23,7 +23,6 @@ public interface OperatorAnnotations {
     String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
     String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
     String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
-    String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
     // Boolean
     String CARDINALITY = "CARDINALITY"; // -->
     // Integer
