@@ -27,8 +27,8 @@ import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -67,7 +67,7 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
     @Override
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         S3ClientConfig config = S3ClientConfig.of(configuration, writeBufferSize);
-        return new S3CloudClient(config, S3AuthUtils.buildAwsS3Client(appCtx, configuration),
+        return new S3CloudClient(config, S3Utils.buildClient(appCtx, configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 

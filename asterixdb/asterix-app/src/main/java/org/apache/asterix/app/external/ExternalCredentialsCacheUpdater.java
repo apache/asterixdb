@@ -41,7 +41,7 @@ import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
+import org.apache.asterix.external.util.aws.AwsUtils;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -94,7 +94,7 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
             validateClusterState();
             try {
                 LOGGER.info("attempting to update AWS credentials for {}", key);
-                AwsCredentialsProvider newCredentials = S3AuthUtils.assumeRoleAndGetCredentials(configuration);
+                AwsCredentialsProvider newCredentials = AwsUtils.assumeRoleAndGetCredentials(configuration);
                 LOGGER.info("updated AWS credentials successfully for {}", key);
                 credentials = (AwsSessionCredentials) newCredentials.resolveCredentials();
                 appCtx.getExternalCredentialsCache().put(key, credentials);

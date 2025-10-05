@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.delta;
 
-import static org.apache.asterix.external.util.aws.s3.S3AuthUtils.configureAwsS3HdfsJobConf;
+import static org.apache.asterix.external.util.aws.s3.S3Utils.configureAwsS3HdfsJobConf;
 
 import java.util.Collections;
 import java.util.List;

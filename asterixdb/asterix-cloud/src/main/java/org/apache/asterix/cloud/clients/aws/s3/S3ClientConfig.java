@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
-import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.external.util.aws.AwsConstants;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -90,7 +90,7 @@ public final class S3ClientConfig {
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
         // Used to determine local vs. actual S3
-        String endPoint = configuration.getOrDefault(S3Constants.SERVICE_END_POINT_FIELD_NAME, "");
+        String endPoint = configuration.getOrDefault(AwsConstants.SERVICE_END_POINT_FIELD_NAME, "");
         // Disabled
         long profilerLogInterval = 0;
 
