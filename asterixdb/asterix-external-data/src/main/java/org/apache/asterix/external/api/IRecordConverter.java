@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.external.api;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.LongSupplier;
 
 @FunctionalInterface
-public interface IRecordConverter<I, O> {
+public interface IRecordConverter<I, O> extends Closeable {
 
-    public O convert(IRawRecord<? extends I> input) throws IOException;
+    O convert(IRawRecord<? extends I> input) throws IOException;
 
     /**
      * Configures the converter with information suppliers from the {@link IRecordReader} data source.
@@ -32,5 +33,9 @@ public interface IRecordConverter<I, O> {
      * @param lineNumber line number supplier
      */
     default void configure(LongSupplier lineNumber) {
+    }
+
+    default void close() {
+        // default no-op
     }
 }
