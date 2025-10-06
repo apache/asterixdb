@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
@@ -297,5 +298,14 @@ public class S3Utils {
         return S3Constants.HADOOP_S3_PROTOCOL + "://"
                 + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
                 + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
+    }
+
+    /**
+     * Generates a random external ID to be used in cross-account role assumption.
+     *
+     * @return external id
+     */
+    public static String generateExternalId() {
+        return UUID.randomUUID().toString();
     }
 }
