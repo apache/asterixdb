@@ -1799,21 +1799,15 @@
       <!-- Hadoop AWS end -->
       <!-- Hadoop Azure start -->
       <dependency>
-        <!-- Pick a newer Azure connector -->
-        <groupId>com.microsoft.azure</groupId>
-        <artifactId>azure-storage</artifactId>
-        <version>${hadoop-azuresdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-azure</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-storage</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- Hadoop Azure end -->
       <!-- Hadoop GCS start -->

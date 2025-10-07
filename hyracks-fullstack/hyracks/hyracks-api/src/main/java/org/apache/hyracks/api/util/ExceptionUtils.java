@@ -236,4 +236,22 @@ public class ExceptionUtils {
     public static boolean isErrorCode(HyracksDataException throwable, ErrorCode code) {
         return throwable.getError().isPresent() && throwable.getError().get() == code;
     }
+
+    public static Throwable truncateStackOverflowStack(Throwable ex, int limit) {
+        if (ex instanceof StackOverflowError) {
+            StackTraceElement[] fullTrace = ex.getStackTrace();
+            if (fullTrace.length > limit * 2) {
+                StackOverflowError copy = new StackOverflowError(ex.getMessage());
+                // keep the cause if there was one
+                copy.initCause(ex.getCause());
+                StackTraceElement[] trimmedTrace = new StackTraceElement[limit + 1];
+                System.arraycopy(fullTrace, 0, trimmedTrace, 0, limit);
+                trimmedTrace[limit] = new StackTraceElement("...<truncated " + (fullTrace.length - limit) + " lines>",
+                        "..", null, -1);
+                copy.setStackTrace(trimmedTrace);
+                return copy;
+            }
+        }
+        return ex;
+    }
 }

@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -901,4 +902,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
             throws AlgebricksException;
 
     long getMaxTxnId();
+
+    boolean isActive(TxnId txnId) throws AlgebricksException;
 }

@@ -520,7 +520,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     protected abstract void doResume(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running);
+    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running) throws HyracksDataException;
 
     @Override
     public final synchronized void stop(MetadataProvider metadataProvider)
