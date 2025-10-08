@@ -27,6 +27,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
     /**
+     * Indicates if the column is missing in the leaf
+     * @return
+     */
+    boolean areAllMissing();
+
+    /**
      * Reset the reader
      *
      * @param in         input stream that contains the values

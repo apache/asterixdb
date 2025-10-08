@@ -59,7 +59,7 @@ public abstract class AbstractNestedValueAssembler extends AbstractValueAssemble
     }
 
     @Override
-    final void addNullToAncestor(int nullLevel) throws HyracksDataException {
+    void addNullToAncestor(int nullLevel) throws HyracksDataException {
         AbstractNestedValueAssembler parent = getParent();
         if (nullLevel + 1 == level) {
             parent.start();
@@ -70,7 +70,7 @@ public abstract class AbstractNestedValueAssembler extends AbstractValueAssemble
     }
 
     @Override
-    final void addMissingToAncestor(int missingLevel) throws HyracksDataException {
+    void addMissingToAncestor(int missingLevel) throws HyracksDataException {
         AbstractNestedValueAssembler parent = getParent();
         if (missingLevel + 1 == level) {
             parent.start();
@@ -107,5 +107,11 @@ public abstract class AbstractNestedValueAssembler extends AbstractValueAssemble
         if (isDelegate()) {
             getParent().end();
         }
+
+        clearStateOnEnd();
+    }
+
+    public void clearStateOnEnd() {
+
     }
 }

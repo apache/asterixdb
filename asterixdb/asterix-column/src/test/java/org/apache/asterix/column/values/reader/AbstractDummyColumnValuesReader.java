@@ -86,6 +86,11 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
     }
 
     @Override
+    public boolean areAllMissing() {
+        return false;
+    }
+
+    @Override
     public final ATypeTag getTypeTag() {
         return typeTag;
     }

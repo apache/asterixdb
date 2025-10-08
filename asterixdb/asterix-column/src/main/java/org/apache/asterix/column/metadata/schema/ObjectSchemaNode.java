@@ -81,9 +81,10 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
             FlushColumnMetadata columnMetadata) throws HyracksDataException {
         int numberOfChildren = children.size();
         int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getOrCreateFieldNameIndex(fieldName);
+        boolean previouslyMissing = isEmptyObject;
         int childIndex = fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, nextIndex.apply(fieldNameIndex));
         AbstractSchemaNode currentChild = childIndex == numberOfChildren ? null : children.get(childIndex);
-        AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag);
+        AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag, previouslyMissing);
         if (currentChild == null) {
             children.add(childIndex, newChild);
             fieldNameIndexToChildIndexMap.put(fieldNameIndex, childIndex);
@@ -111,7 +112,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
             return null;
         }
         isEmptyObject = true;
-        AbstractSchemaNode emptyChild = columnMetadata.getOrCreateChild(null, ATypeTag.MISSING);
+        AbstractSchemaNode emptyChild = columnMetadata.getOrCreateChild(null, ATypeTag.MISSING, false);
         addChild(DUMMY_FIELD_NAME_INDEX, emptyChild);
         nextIndex = this::emptyColumnIndex;
         return emptyChild;

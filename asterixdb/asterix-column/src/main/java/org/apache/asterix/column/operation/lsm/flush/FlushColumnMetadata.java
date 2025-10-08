@@ -355,14 +355,20 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         return columnWriters.size();
     }
 
-    public AbstractSchemaNode getOrCreateChild(AbstractSchemaNode child, ATypeTag childTypeTag)
-            throws HyracksDataException {
+    public AbstractSchemaNode getOrCreateChild(AbstractSchemaNode child, ATypeTag childTypeTag,
+            boolean replaceObjectDummyField) throws HyracksDataException {
         AbstractSchemaNode currentChild = child;
         ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
         boolean newChild = currentChild == null;
-        if (currentChild == null || normalizedTypeTag != ATypeTag.MISSING && normalizedTypeTag != ATypeTag.NULL
-                && currentChild.getTypeTag() != ATypeTag.UNION
-                && getNormalizedTypeTag(currentChild.getTypeTag()) != normalizedTypeTag) {
+        if (currentChild == null
+                // special case(ASTERIXDB-3652): where initially the object has no child
+                // hence an empty object was added, see ColumnTransformer.
+                // but in later documents, object got a child with value NULL.
+                // we need to record both NULL with the dummy MISSING in the union to maintain the structure.
+                || (replaceObjectDummyField && normalizedTypeTag == ATypeTag.NULL)
+                || normalizedTypeTag != ATypeTag.MISSING && normalizedTypeTag != ATypeTag.NULL
+                        && currentChild.getTypeTag() != ATypeTag.UNION
+                        && getNormalizedTypeTag(currentChild.getTypeTag()) != normalizedTypeTag) {
             //Create a new child or union type if required type is different from the current child type
             int visitedBatchVersion = newChild ? -1 : currentChild.getVisitedBatchVersion();
             currentChild = createChild(child, childTypeTag);
@@ -449,6 +455,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         //Flush all definition levels from parent to the current node
         flushDefinitionLevels(level, parent, node, includeChildColumns);
         //Add null value (+2) to say that both the parent and the child are present
+        //A null is represented by the (childMask | (level which is not NULL))
+        //{ "x": { "a": NULL } } --> In here, the nullLevel stored will be nullMask(2) | 1 (level of x)
         definitionLevels.get(node).add(ColumnValuesUtil.getNullMask(level + 2) | level);
         node.incrementCounter();
     }

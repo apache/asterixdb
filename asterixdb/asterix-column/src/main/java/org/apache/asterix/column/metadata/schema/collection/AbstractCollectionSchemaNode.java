@@ -51,7 +51,7 @@ public abstract class AbstractCollectionSchemaNode extends AbstractSchemaNestedN
 
     public final AbstractSchemaNode getOrCreateItem(ATypeTag childTypeTag, FlushColumnMetadata columnMetadata)
             throws HyracksDataException {
-        AbstractSchemaNode newItem = columnMetadata.getOrCreateChild(item, childTypeTag);
+        AbstractSchemaNode newItem = columnMetadata.getOrCreateChild(item, childTypeTag, false);
         if (item == null) {
             newItem.getDeltaColumnsChanged();
             numberOfColumns += newItem.getNumberOfColumns();
