@@ -27,11 +27,11 @@ Since an index-only plan only searches a secondary-index to answer a query, it i
 a non-index-only plan that needs to search the primary index.
 However, this index-only plan can be turned off per query by setting the following parameter.
 
-*  **compiler.indexonly**: if this is set to false, the index-only-plan will not be applied; the default value is true.
+*  **compiler.index.covering**: if this is set to false, the index-only-plan will not be applied; the default value is true.
 
 ##### Example
 
-    set `compiler.indexonly` "false";
+    SET `compiler.index.covering` "false";
 
     SELECT o.order_date AS orderdate
     FROM orders o where o.order_date = "2020-05-01";

@@ -24,7 +24,7 @@
 
 use test;
 
-set `compiler.indexonly` "false";
+SET `compiler.index.covering` 'false';
 set `compiler.cbo` "false";
 
 

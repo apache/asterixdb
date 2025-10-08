@@ -20,6 +20,6 @@
 USE test;
 
 SET `compiler.sort.parallel` 'false';
-SET `compiler.indexonly` 'false';
+SET `compiler.index.covering` 'false';
 SELECT t1.id AS t1_id, t2.id AS t2_id
 FROM ds_outer_untyped t1 LEFT JOIN ds_inner_typed t2 ON int32(t1.c_int32) /* +indexnl */ = (t2.c_int32);

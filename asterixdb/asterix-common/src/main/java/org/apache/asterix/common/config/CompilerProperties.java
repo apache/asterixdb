@@ -102,7 +102,7 @@ public class CompilerProperties extends AbstractProperties {
                 POSITIVE_INTEGER,
                 AlgebricksConfig.SORT_SAMPLES_DEFAULT,
                 "The number of samples which parallel sorting should take from each partition"),
-        COMPILER_INDEXONLY(BOOLEAN, AlgebricksConfig.INDEX_ONLY_DEFAULT, "Enabling/disabling index-only plans"),
+        COMPILER_INDEX_COVERING(BOOLEAN, AlgebricksConfig.INDEX_ONLY_DEFAULT, "Enabling/disabling index-only plans"),
         COMPILER_INTERNAL_SANITYCHECK(
                 BOOLEAN,
                 AlgebricksConfig.SANITYCHECK_DEFAULT,
@@ -212,7 +212,7 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_SORT_SAMPLES_KEY = Option.COMPILER_SORT_SAMPLES.ini();
 
-    public static final String COMPILER_INDEXONLY_KEY = Option.COMPILER_INDEXONLY.ini();
+    public static final String COMPILER_INDEXONLY_KEY = Option.COMPILER_INDEX_COVERING.ini();
 
     public static final String COMPILER_INTERNAL_SANITYCHECK_KEY = Option.COMPILER_INTERNAL_SANITYCHECK.ini();
 
@@ -309,7 +309,7 @@ public class CompilerProperties extends AbstractProperties {
     }
 
     public boolean isIndexOnly() {
-        return accessor.getBoolean(Option.COMPILER_INDEXONLY);
+        return accessor.getBoolean(Option.COMPILER_INDEX_COVERING);
     }
 
     public boolean isSanityCheck() {

@@ -47,7 +47,7 @@
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,
-    "compiler\.indexonly" : true,
+    "compiler\.index.covering" : true,
     "compiler\.internal\.sanitycheck" : false,
     "compiler\.joinmemory" : 262144,
     "compiler\.max\.variable\.occurrences\.inlining" : 128,
