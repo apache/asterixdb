@@ -105,6 +105,33 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
     }
 
+    public static class IndexAccessInfo {
+        public final IAccessMethod accessMethod;
+        public final Index index;
+        public boolean isIndexOnlyPlan = false;
+
+        public IndexAccessInfo(IAccessMethod accessMethod, Index index) {
+            this.accessMethod = accessMethod;
+            this.index = index;
+        }
+
+        public boolean isIndexOnlyPlan() {
+            return isIndexOnlyPlan;
+        }
+
+        public void setIsIndexOnlyPlan(boolean isIndexOnlyPlan) {
+            this.isIndexOnlyPlan = isIndexOnlyPlan;
+        }
+
+        public IAccessMethod getAccessMethod() {
+            return accessMethod;
+        }
+
+        public Index getIndex() {
+            return index;
+        }
+    }
+
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
@@ -202,9 +229,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Simply picks the first index that it finds. TODO: Improve this decision
      * process by making it more systematic.
      */
-    protected Pair<IAccessMethod, Index> chooseBestIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
-            List<Pair<IAccessMethod, Index>> chosenIndexes) {
-        List<Pair<IAccessMethod, Index>> list = new ArrayList<>();
+    protected IntroduceSelectAccessMethodRule.IndexAccessInfo chooseBestIndex(
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, List<IndexAccessInfo> chosenIndexes) {
+        List<IntroduceSelectAccessMethodRule.IndexAccessInfo> list = new ArrayList<>();
         chooseAllIndexes(analyzedAMs, list);
         chosenIndexes.addAll(list);
         return list.isEmpty() ? null : list.get(0);
@@ -219,7 +246,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * LENGTH_PARTITIONED_WORD_INVIX || LENGTH_PARTITIONED_NGRAM_INVIX]
      */
     protected void chooseAllIndexes(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
-            List<Pair<IAccessMethod, Index>> result) {
+            List<IntroduceSelectAccessMethodRule.IndexAccessInfo> result) {
         // Use variables (fields) to the index types map to check which type of indexes are applied for the vars.
         Map<List<Pair<Integer, Integer>>, List<IndexType>> resultVarsToIndexTypesMap = new HashMap<>();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
@@ -265,13 +292,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         List<IndexType> appliedIndexTypes = resultVarsToIndexTypesMap.get(indexEntry.getValue());
                         if (!appliedIndexTypes.contains(indexType)) {
                             appliedIndexTypes.add(indexType);
-                            result.add(new Pair<>(chosenAccessMethod, chosenIndex));
+                            result.add(new IntroduceSelectAccessMethodRule.IndexAccessInfo(chosenAccessMethod,
+                                    chosenIndex));
                         }
                     } else {
                         List<IndexType> addedIndexTypes = new ArrayList<>();
                         addedIndexTypes.add(indexType);
                         resultVarsToIndexTypesMap.put(indexEntry.getValue(), addedIndexTypes);
-                        result.add(new Pair<>(chosenAccessMethod, chosenIndex));
+                        result.add(
+                                new IntroduceSelectAccessMethodRule.IndexAccessInfo(chosenAccessMethod, chosenIndex));
                     }
                 }
             }

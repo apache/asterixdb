@@ -147,7 +147,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         afterJoinRefs = new ArrayList<>();
         // Recursively checks the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        List<IndexAccessInfo> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
         boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, false, chosenIndexes, analyzedAMs);
 
@@ -166,7 +166,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            List<IndexAccessInfo> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
             IIndexProvider indexProvider) throws AlgebricksException {
         clear();
         setMetadataIndexDeclarations(context, indexProvider);
@@ -266,7 +266,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
      * if it is not already optimized.
      */
     protected boolean checkAndApplyJoinTransformation(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            boolean checkApplicableOnly, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            boolean checkApplicableOnly, List<IndexAccessInfo> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean joinFoundAndOptimizationApplied;
@@ -405,7 +405,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
                 // We are going to use indexes from the inner branch.
                 // If no index is available, then we stop here.
-                Pair<IAccessMethod, Index> chosenIndex = chooseBestIndex(analyzedAMs, chosenIndexes);
+                IndexAccessInfo chosenIndex = chooseBestIndex(analyzedAMs, chosenIndexes);
                 if (chosenIndex == null) {
                     context.addToDontApplySet(this, joinOp);
                     continueCheck = false;
@@ -422,7 +422,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     }
 
                     // Applies the plan transformation using chosen index.
-                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
+                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.getAccessMethod());
 
                     IAlgebricksConstantValue leftOuterMissingValue =
                             isLeftOuterJoin ? ((LeftOuterJoinOperator) joinOp).getMissingValue() : null;
@@ -449,7 +449,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                         isLeftOuterJoinWithSpecialGroupBy = false;
                     }
 
-                    Dataset indexDataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex.second);
+                    Dataset indexDataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex.getIndex());
 
                     // We assume that the left subtree is the outer branch and the right subtree
                     // is the inner branch. This assumption holds true since we only use an index
@@ -464,8 +464,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     }
 
                     // Finally, tries to apply plan transformation using the chosen index.
-                    boolean res = chosenIndex.first.applyJoinPlanTransformation(afterJoinRefs, joinRef, leftSubTree,
-                            rightSubTree, chosenIndex.second, analysisCtx, context, isLeftOuterJoin,
+                    boolean res = chosenIndex.getAccessMethod().applyJoinPlanTransformation(afterJoinRefs, joinRef,
+                            leftSubTree, rightSubTree, chosenIndex.getIndex(), analysisCtx, context, isLeftOuterJoin,
                             isLeftOuterJoinWithSpecialGroupBy, leftOuterMissingValue);
 
                     // If the plan transformation is successful, we don't need to traverse the plan
@@ -525,7 +525,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
     private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             IIntroduceAccessMethodRuleLocalRewrite<AbstractBinaryJoinOperator> rewriter, boolean checkApplicableOnly,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            List<IndexAccessInfo> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
             throws AlgebricksException {
         AbstractBinaryJoinOperator joinRewrite = rewriter.createOperator(joinOp, context);
         boolean transformationResult = false;

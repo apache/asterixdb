@@ -191,7 +191,7 @@ public class AdvisorConditionParser {
         return unnestFilterConditions;
     }
 
-    private static List<ScanFilterCondition> extractPrimitiveConditions(ILogicalOperator op,
+    public static List<ScanFilterCondition> extractPrimitiveConditions(ILogicalOperator op,
             IOptimizationContext context) throws AlgebricksException {
         List<ExprRef> filterExprRefs = new ArrayList<>();
         ILogicalOperator tempOp = op;

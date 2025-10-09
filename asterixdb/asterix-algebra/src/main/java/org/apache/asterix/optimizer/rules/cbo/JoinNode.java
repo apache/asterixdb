@@ -44,6 +44,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.cost.Cost;
 import org.apache.asterix.optimizer.cost.ICost;
+import org.apache.asterix.optimizer.rules.am.AbstractIntroduceAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.AccessMethodAnalysisContext;
 import org.apache.asterix.optimizer.rules.am.IAccessMethod;
 import org.apache.asterix.optimizer.rules.am.IOptimizableFuncExpr;
@@ -54,7 +55,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -110,7 +110,7 @@ public class JoinNode {
     private List<Integer> applicableJoinConditions;
     protected ILogicalOperator leafInput;
     protected Index.SampleIndexDetails idxDetails;
-    private List<Triple<Index, Double, AbstractFunctionCallExpression>> IndexCostInfo;
+    private List<IndexCostInfo> indexCostInfoList;
     // The triple above is : Index, selectivity, and the index expression
     protected static int NO_JN = -1;
     private static int NO_CARDS = -2;
@@ -657,10 +657,46 @@ public class JoinNode {
         return andExpr;
     }
 
+    static class IndexCostInfo {
+        private final Index index;
+        private double selectivity;
+        private final AbstractFunctionCallExpression afce;
+        private final boolean isIndexOnly;
+
+        public IndexCostInfo(Index index, double selectivity, AbstractFunctionCallExpression afce,
+                boolean isIndexOnly) {
+            this.index = index;
+            this.selectivity = selectivity;
+            this.afce = afce;
+            this.isIndexOnly = isIndexOnly;
+        }
+
+        public AbstractFunctionCallExpression getAfce() {
+            return afce;
+        }
+
+        public Index getIndex() {
+            return index;
+        }
+
+        public double getSelectivity() {
+            return selectivity;
+        }
+
+        public void setSelectivity(double selectivity) {
+            this.selectivity = selectivity;
+        }
+
+        public boolean isIndexOnly() {
+            return isIndexOnly;
+        }
+    }
+
     private void setSkipIndexAnnotationsForUnusedIndexes() {
-        for (int i = 0; i < IndexCostInfo.size(); i++) {
-            if (IndexCostInfo.get(i).second == -1.0) {
-                AbstractFunctionCallExpression afce = IndexCostInfo.get(i).third;
+
+        for (IndexCostInfo indexCostInfo : indexCostInfoList) {
+            if (indexCostInfo.getSelectivity() == -1.0) {
+                AbstractFunctionCallExpression afce = indexCostInfo.getAfce();
                 SkipSecondaryIndexSearchExpressionAnnotation skipAnno = joinEnum.findSkipIndexHint(afce);
                 Collection<String> indexNames = new HashSet<>();
                 if (skipAnno != null && skipAnno.getIndexNames() != null) {
@@ -669,9 +705,9 @@ public class JoinNode {
                 if (indexNames.isEmpty()) {
                     // this index has to be skipped, so find the corresponding expression
                     EnumerateJoinsRule.setAnnotation(afce, SkipSecondaryIndexSearchExpressionAnnotation
-                            .newInstance(Collections.singleton(IndexCostInfo.get(i).first.getIndexName())));
+                            .newInstance(Collections.singleton(indexCostInfo.getIndex().getIndexName())));
                 } else {
-                    indexNames.add(IndexCostInfo.get(i).first.getIndexName());
+                    indexNames.add(indexCostInfo.getIndex().getIndexName());
                     EnumerateJoinsRule.setAnnotation(afce,
                             SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames));
                 }
@@ -680,11 +716,12 @@ public class JoinNode {
     }
 
     private void costAndChooseIndexPlans(ILogicalOperator leafInput,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            List<IntroduceSelectAccessMethodRule.IndexAccessInfo> chosenIndexes) throws AlgebricksException {
         SelectOperator selOp;
         double sel;
 
-        List<Triple<Index, Double, AbstractFunctionCallExpression>> IndexCostInfo = new ArrayList<>();
+        List<IndexCostInfo> indexCostInfoList = new ArrayList<>();
         for (Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry : analyzedAMs.entrySet()) {
             AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
             Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
@@ -718,11 +755,15 @@ public class JoinNode {
                             chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY)
                                     || joinEnum.findUnnestOp(selOp));
                 }
-                IndexCostInfo.add(new Triple<>(chosenIndex, sel, afce));
+
+                boolean isIndexOnlyApplicable = chosenIndexes.stream()
+                        .filter(indexAccessInfo -> indexAccessInfo.getIndex().equals(chosenIndex)).findFirst()
+                        .map(AbstractIntroduceAccessMethodRule.IndexAccessInfo::isIndexOnlyPlan).orElse(false);
+                indexCostInfoList.add(new IndexCostInfo(chosenIndex, sel, afce, isIndexOnlyApplicable));
             }
         }
-        this.IndexCostInfo = IndexCostInfo;
-        if (IndexCostInfo.size() > 0) {
+        this.indexCostInfoList = indexCostInfoList;
+        if (!indexCostInfoList.isEmpty()) {
             buildIndexPlans();
         }
         setSkipIndexAnnotationsForUnusedIndexes();
@@ -733,30 +774,40 @@ public class JoinNode {
         PlanNode pn;
         double ic, dc, tc, oc; // for debugging
 
-        List<Triple<Index, Double, AbstractFunctionCallExpression>> mandatoryIndexesInfo = new ArrayList<>();
-        List<Triple<Index, Double, AbstractFunctionCallExpression>> optionalIndexesInfo = new ArrayList<>();
+        List<IndexCostInfo> mandatoryIndexesInfo = new ArrayList<>();
+        List<IndexCostInfo> optionalIndexesInfo = new ArrayList<>();
         double sel = 1.0;
 
-        for (int i = 0; i < IndexCostInfo.size(); i++) {
-            if (joinEnum.findUseIndexHint(IndexCostInfo.get(i).third)) {
-                mandatoryIndexesInfo.add(IndexCostInfo.get(i));
+        for (IndexCostInfo indexCostInfo : indexCostInfoList) {
+
+            if (joinEnum.findUseIndexHint(indexCostInfo.getAfce())) {
+                mandatoryIndexesInfo.add(indexCostInfo);
             } else {
-                optionalIndexesInfo.add(IndexCostInfo.get(i));
+                optionalIndexesInfo.add(indexCostInfo);
             }
+
         }
 
         ICost indexCosts = this.joinEnum.getCostHandle().zeroCost();
         ICost totalCost = this.joinEnum.getCostHandle().zeroCost();
         ICost dataScanCost;
 
+        boolean isIndexOnlyApplicable = true;
+        int numSecondaryIndexesUsed = 0;
+
         if (mandatoryIndexesInfo.size() > 0) {
             for (int i = 0; i < mandatoryIndexesInfo.size(); i++) {
-                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, mandatoryIndexesInfo.get(i).second);
-                if ((mandatoryIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this,
+                        mandatoryIndexesInfo.get(i).getSelectivity());
+                if ((mandatoryIndexesInfo.get(i).getIndex().getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                     cost = cost.costAdd(cost); // double the cost for arrays.
                 }
+
+                isIndexOnlyApplicable = isIndexOnlyApplicable && mandatoryIndexesInfo.get(i).isIndexOnly();
+                numSecondaryIndexesUsed += mandatoryIndexesInfo.get(i).getIndex().isPrimaryIndex() ? 0 : 1;
+
                 indexCosts = indexCosts.costAdd(cost); // a running tally
-                sel *= mandatoryIndexesInfo.get(i).second;
+                sel *= mandatoryIndexesInfo.get(i).getSelectivity();
             }
             dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
             totalCost = indexCosts.costAdd(dataScanCost); // this is the total cost of using the mandatory costs. This cost cannot be skipped.
@@ -764,28 +815,35 @@ public class JoinNode {
 
         ICost opCost = totalCost;
         if (optionalIndexesInfo.size() > 0) {
-            optionalIndexesInfo.sort(Comparator.comparingDouble(o -> o.second));
+            optionalIndexesInfo.sort(Comparator.comparingDouble(o -> o.getSelectivity()));
 
             for (int i = 0; i < optionalIndexesInfo.size(); i++) {
-                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, optionalIndexesInfo.get(i).second);
-                if ((optionalIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this,
+                        optionalIndexesInfo.get(i).getSelectivity());
+                if ((optionalIndexesInfo.get(i).getIndex().getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                     cost = cost.costAdd(cost); // double the cost for arrays.
                 }
                 indexCosts = indexCosts.costAdd(cost);
-                sel *= optionalIndexesInfo.get(i).second;
+                sel *= optionalIndexesInfo.get(i).getSelectivity();
                 dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
                 opCost = indexCosts.costAdd(dataScanCost);
                 tc = totalCost.computeTotalCost();
+
+                isIndexOnlyApplicable = isIndexOnlyApplicable && optionalIndexesInfo.get(i).isIndexOnly();
+                numSecondaryIndexesUsed += optionalIndexesInfo.get(i).getIndex().isPrimaryIndex() ? 0 : 1;
+
                 if (tc > 0.0) {
                     if (opCost.costGT(totalCost)) { // we can stop here since additional indexes are not useful
                         for (int j = i; j < optionalIndexesInfo.size(); j++) {
-                            optionalIndexesInfo.get(j).second = -1.0;
+                            optionalIndexesInfo.get(j).setSelectivity(-1.0);
                         }
                         opCost = totalCost;
                         break;
                     }
                 } else {
-                    totalCost = indexCosts.costAdd(dataScanCost);
+                    if (!isIndexOnlyApplicable || numSecondaryIndexesUsed > 1) {
+                        totalCost = indexCosts.costAdd(dataScanCost);
+                    }
                 }
             }
         }
@@ -793,7 +851,7 @@ public class JoinNode {
         // opCost is now the total cost of the indexes chosen along with the associated data scan cost.
         if (opCost.costGT(this.cheapestPlanCost) && level > joinEnum.cboFullEnumLevel) { // cheapest plan cost is the data scan cost.
             for (int j = 0; j < optionalIndexesInfo.size(); j++) {
-                optionalIndexesInfo.get(j).second = -1.0; // remove all indexes from consideration.
+                optionalIndexesInfo.get(j).setSelectivity(-1.0); // remove all indexes from consideration.
             }
         }
 
@@ -881,7 +939,7 @@ public class JoinNode {
     protected void addIndexAccessPlans(ILogicalOperator leafInput, IIndexProvider indexProvider)
             throws AlgebricksException {
         IntroduceSelectAccessMethodRule tmp = new IntroduceSelectAccessMethodRule();
-        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        List<IntroduceSelectAccessMethodRule.IndexAccessInfo> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
 
         while (combineDoubleSelectsBeforeSubPlans(leafInput));
@@ -894,7 +952,7 @@ public class JoinNode {
                     chosenIndexes, analyzedAMs, indexProvider);
             restoreSelExprs(selExprs, selOpers);
             if (index_access_possible) {
-                costAndChooseIndexPlans(leafInput, analyzedAMs);
+                costAndChooseIndexPlans(leafInput, analyzedAMs, chosenIndexes);
             }
         } else {
             restoreSelExprs(selExprs, selOpers);
@@ -943,8 +1001,9 @@ public class JoinNode {
     }
 
     private boolean nestedLoopsApplicable(ILogicalExpression joinExpr, boolean outerJoin,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
-            IIndexProvider indexProvider) throws AlgebricksException {
+            List<AbstractIntroduceAccessMethodRule.IndexAccessInfo> chosenIndexes,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IIndexProvider indexProvider)
+            throws AlgebricksException {
 
         if (joinExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
@@ -1006,7 +1065,8 @@ public class JoinNode {
     }
 
     private boolean NLJoinApplicable(JoinNode leftJn, JoinNode rightJn, boolean outerJoin,
-            ILogicalExpression nestedLoopJoinExpr, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            ILogicalExpression nestedLoopJoinExpr,
+            List<AbstractIntroduceAccessMethodRule.IndexAccessInfo> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IIndexProvider indexProvider)
             throws AlgebricksException {
 
@@ -1149,7 +1209,7 @@ public class JoinNode {
             return PlanNode.NO_PLAN;
         }
 
-        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        List<AbstractIntroduceAccessMethodRule.IndexAccessInfo> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
         if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr, chosenIndexes, analyzedAMs,
                 indexProvider)) {

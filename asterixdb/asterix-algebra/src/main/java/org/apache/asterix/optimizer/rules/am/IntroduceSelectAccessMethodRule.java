@@ -40,6 +40,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -167,7 +168,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         afterSelectRefs = new ArrayList<>();
         // Recursively check the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        List<IndexAccessInfo> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
         boolean planTransformed =
                 checkAndApplyTheSelectTransformation(opRef, context, false, chosenIndexes, analyzedAMs);
@@ -187,7 +188,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     }
 
     public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            List<IndexAccessInfo> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
             IIndexProvider indexProvider) throws AlgebricksException {
         clear();
         setMetadataIndexDeclarations(context, indexProvider);
@@ -247,7 +248,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      * intersects them using INTERSECT operator to guide to the common primary-index search.
      * This method assumes that there are two or more secondary indexes in the given path.
      */
-    private boolean intersectAllSecondaryIndexes(List<Pair<IAccessMethod, Index>> chosenIndexes,
+    private boolean intersectAllSecondaryIndexes(List<IndexAccessInfo> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
             throws AlgebricksException {
         if (chosenIndexes.size() == 1) {
@@ -258,22 +259,22 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         Mutable<ILogicalExpression> conditionRef = selectOp.getCondition();
 
         List<ILogicalOperator> subRoots = new ArrayList<>();
-        for (Pair<IAccessMethod, Index> pair : chosenIndexes) {
-            AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(pair.first);
+        for (IndexAccessInfo pair : chosenIndexes) {
+            AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(pair.getAccessMethod());
             boolean retainInput = AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
                     subTree.getDataSourceRef().getValue(), afterSelectRefs);
             boolean requiresBroadcast = subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
                     .getExecutionMode() == ExecutionMode.UNPARTITIONED;
-            ILogicalOperator subRoot = pair.first.createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
-                    subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.second, analysisCtx, retainInput, false,
-                    requiresBroadcast, context, null, null);
+            ILogicalOperator subRoot = pair.getAccessMethod().createIndexSearchPlan(afterSelectRefs, selectRef,
+                    conditionRef, subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.getIndex(), analysisCtx,
+                    retainInput, false, requiresBroadcast, context, null, null);
             if (subRoot == null) {
                 return false;
             }
             subRoots.add(subRoot);
         }
         // Connect each secondary index utilization plan to a common intersect operator.
-        Index idx = chosenIndexes.get(0).getSecond();
+        Index idx = chosenIndexes.get(0).getIndex();
         ILogicalOperator primaryUnnestOp = connectAll2ndarySearchPlanWithIntersect(subRoots, context, idx);
 
         subTree.getDataSourceRef().setValue(primaryUnnestOp);
@@ -288,10 +289,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      * null otherwise
      * @throws AlgebricksException
      */
-    private Pair<IAccessMethod, Index> fetchPrimaryIndexAmongChosenIndexes(
-            List<Pair<IAccessMethod, Index>> chosenIndexes) throws AlgebricksException {
-        Optional<Pair<IAccessMethod, Index>> primaryIndex =
-                chosenIndexes.stream().filter(pair -> pair.second.isPrimaryIndex()).findFirst();
+    private IndexAccessInfo fetchPrimaryIndexAmongChosenIndexes(List<IndexAccessInfo> chosenIndexes)
+            throws AlgebricksException {
+        Optional<IndexAccessInfo> primaryIndex =
+                chosenIndexes.stream().filter(pair -> pair.getIndex().isPrimaryIndex()).findFirst();
         if (primaryIndex.isPresent()) {
             return primaryIndex.get();
         }
@@ -382,7 +383,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         return true;
     }
 
-    protected void removeSmallerPrefixIndexes(List<Pair<IAccessMethod, Index>> indexes) throws CompilationException {
+    protected void removeSmallerPrefixIndexes(List<IndexAccessInfo> indexes) throws CompilationException {
         int len = indexes.size();
         int i, j;
         Index indexI, indexJ;
@@ -396,16 +397,16 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         for (i = 0; i < len - 1; i++) {
             if (include[i]) {
-                IAccessMethod ami = indexes.get(i).first;
-                indexI = indexes.get(i).second;
+                IAccessMethod ami = indexes.get(i).getAccessMethod();
+                indexI = indexes.get(i).getIndex();
                 DatasetConfig.IndexType typeI = indexI.getIndexType();
                 fieldNamesI = findKeyFieldNames(indexI);
 
                 for (j = i + 1; j < len; j++) {
                     if (include[j]) {
-                        IAccessMethod amj = indexes.get(j).first;
+                        IAccessMethod amj = indexes.get(j).getAccessMethod();
                         if (ami == amj) { // should be the same accessMethods
-                            indexJ = indexes.get(j).second;
+                            indexJ = indexes.get(j).getIndex();
                             DatasetConfig.IndexType typeJ = indexJ.getIndexType();
                             if (typeI == typeJ) {
                                 fieldNamesJ = findKeyFieldNames(indexJ);
@@ -438,7 +439,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      * if it is not already optimized.
      */
     protected boolean checkAndApplyTheSelectTransformation(Mutable<ILogicalOperator> opRef,
-            IOptimizationContext context, boolean checkApplicableOnly, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            IOptimizationContext context, boolean checkApplicableOnly, List<IndexAccessInfo> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean selectFoundAndOptimizationApplied;
@@ -554,6 +555,18 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     context.addToDontApplySet(this, selectRef.getValue());
                     return false;
                 }
+
+                for (IndexAccessInfo indexAccessInfo : chosenIndexes) {
+                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(indexAccessInfo.getAccessMethod());
+                    boolean isIndexOnlyPlan = false;
+                    boolean requireVerificationAfterSIdxSearch = false;
+                    Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo =
+                            new Quadruple<>(isIndexOnlyPlan, false, requireVerificationAfterSIdxSearch, false);
+                    AccessMethodUtils.indexOnlyPlanCheck(afterSelectRefs, selectRef, subTree, null,
+                            indexAccessInfo.getIndex(), analysisCtx, context, indexOnlyPlanInfo, false);
+                    indexAccessInfo.setIsIndexOnlyPlan(indexOnlyPlanInfo.getFirst());
+                }
+
                 if (checkApplicableOnly) {
                     return true;
                 }
@@ -561,23 +574,23 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 // Apply plan transformation using chosen index.
                 boolean res;
                 // Primary index applicable?
-                Pair<IAccessMethod, Index> chosenPrimaryIndex = fetchPrimaryIndexAmongChosenIndexes(chosenIndexes);
+                IndexAccessInfo chosenPrimaryIndex = fetchPrimaryIndexAmongChosenIndexes(chosenIndexes);
                 if (chosenPrimaryIndex != null) {
-                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenPrimaryIndex.first);
-                    res = chosenPrimaryIndex.first.applySelectPlanTransformation(afterSelectRefs, selectRef, subTree,
-                            chosenPrimaryIndex.second, analysisCtx, context);
+                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenPrimaryIndex.getAccessMethod());
+                    res = chosenPrimaryIndex.getAccessMethod().applySelectPlanTransformation(afterSelectRefs, selectRef,
+                            subTree, chosenPrimaryIndex.getIndex(), analysisCtx, context);
                     context.addToDontApplySet(this, selectRef.getValue());
                 } else if (chosenIndexes.size() == 1) {
                     // Index-only plan possible?
                     // Gets the analysis context for the given index.
-                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndexes.get(0).first);
+                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndexes.get(0).getAccessMethod());
 
                     // Finds the field name of each variable in the sub-tree.
                     fillFieldNamesInTheSubTree(subTree, context);
 
                     // Finally, try to apply plan transformation using chosen index.
-                    res = chosenIndexes.get(0).first.applySelectPlanTransformation(afterSelectRefs, selectRef, subTree,
-                            chosenIndexes.get(0).second, analysisCtx, context);
+                    res = chosenIndexes.get(0).getAccessMethod().applySelectPlanTransformation(afterSelectRefs,
+                            selectRef, subTree, chosenIndexes.get(0).getIndex(), analysisCtx, context);
                     context.addToDontApplySet(this, selectRef.getValue());
                 } else {
                     // Multiple secondary indexes applicable?
@@ -613,7 +626,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
     private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             IIntroduceAccessMethodRuleLocalRewrite<SelectOperator> rewriter, boolean checkApplicableOnly,
-            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            List<IndexAccessInfo> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
             throws AlgebricksException {
 
         SelectOperator selectRewrite = rewriter.createOperator(selectOp, context);
@@ -624,7 +637,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context,
                         checkApplicableOnly, chosenIndexes, analyzedAMs);
             } else {
-                List<Pair<IAccessMethod, Index>> chosenIndexes2 = new ArrayList<>();
+                List<IndexAccessInfo> chosenIndexes2 = new ArrayList<>();
                 Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs2 = null;
                 transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context,
                         checkApplicableOnly, chosenIndexes2, analyzedAMs2);

@@ -25,7 +25,6 @@ import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -286,9 +285,8 @@ public class PlanNode {
         numHintsUsed = 0;
     }
 
-    protected void setScanAndHintInfo(ScanMethod scanMethod,
-            List<Triple<Index, Double, AbstractFunctionCallExpression>> mandatoryIndexesInfo,
-            List<Triple<Index, Double, AbstractFunctionCallExpression>> optionalIndexesInfo) {
+    protected void setScanAndHintInfo(ScanMethod scanMethod, List<JoinNode.IndexCostInfo> mandatoryIndexesInfo,
+            List<JoinNode.IndexCostInfo> optionalIndexesInfo) {
         setScanMethod(scanMethod);
         if (mandatoryIndexesInfo.size() > 0) {
             indexHint = true;
@@ -298,9 +296,9 @@ public class PlanNode {
         // So seeing if only index is used.
         if (optionalIndexesInfo.size() + mandatoryIndexesInfo.size() == 1) {
             if (optionalIndexesInfo.size() == 1) {
-                indexUsed = optionalIndexesInfo.get(0).first;
+                indexUsed = optionalIndexesInfo.get(0).getIndex();
             } else {
-                indexUsed = mandatoryIndexesInfo.get(0).first;
+                indexUsed = mandatoryIndexesInfo.get(0).getIndex();
             }
         }
     }

@@ -39,7 +39,7 @@ public class AdvisorScanPlanNode extends AbstractAdvisorPlanNode {
         filter = AdvisorConditionParser.parseScanNode(op, context);
     }
 
-    private DataSourceScanOperator findDatascanOperator(ILogicalOperator op) {
+    public static DataSourceScanOperator findDatascanOperator(ILogicalOperator op) {
         while (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             op = op.getInputs().get(0).getValue();
         }
