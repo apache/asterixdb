@@ -1,16 +1,16 @@
-distribute result [$$51] [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1805.17]
+distribute result [$$51] [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 914.76]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1805.17]
+  exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 914.76]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1805.17]
+    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 914.76]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1805.17]
+      exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 914.76]
       -- SORT_MERGE_EXCHANGE [$$58(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
-        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1805.17]
+        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 914.76]
         -- STABLE_SORT [$$58(ASC), $$56(ASC), $$55(ASC)]  |PARTITIONED|
-          exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 575.0]
+          exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 575.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            join (eq($$55, $$58)) [cardinality: 166.67, doc-size: 15.0, op-cost: 160.0, total-cost: 575.0]
+            join (eq($$55, $$58)) [cardinality: 58.0, doc-size: 15.0, op-cost: 160.0, total-cost: 575.0]
             -- HYBRID_HASH_JOIN [$$58][$$55]  |PARTITIONED|
               exchange [cardinality: 10.0, doc-size: 10.0, op-cost: 0.0, total-cost: 105.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

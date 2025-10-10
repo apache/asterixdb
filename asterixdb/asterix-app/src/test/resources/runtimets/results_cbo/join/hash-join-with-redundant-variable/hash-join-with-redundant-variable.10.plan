@@ -1,20 +1,20 @@
-distribute result [$$51] [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1680.17]
+distribute result [$$51] [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 789.76]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1680.17]
+  exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 789.76]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1680.17]
+    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 789.76]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1680.17]
+      exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 789.76]
       -- SORT_MERGE_EXCHANGE [$$58(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
-        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 1680.17]
+        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 789.76]
         -- STABLE_SORT [$$58(ASC), $$56(ASC), $$55(ASC)]  |PARTITIONED|
-          exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
+          exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$58, $$56, $$55]) [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
+            project ([$$58, $$56, $$55]) [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 166.67, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
+              exchange [cardinality: 58.0, doc-size: 15.0, op-cost: 0.0, total-cost: 450.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (and(eq($$55, $$58), eq($$56, $$66))) [cardinality: 166.67, doc-size: 15.0, op-cost: 180.0, total-cost: 450.0]
+                join (and(eq($$55, $$58), eq($$56, $$66))) [cardinality: 58.0, doc-size: 15.0, op-cost: 180.0, total-cost: 450.0]
                 -- HYBRID_HASH_JOIN [$$55, $$66][$$58, $$56]  |PARTITIONED|
                   exchange [cardinality: 150.0, doc-size: 5.0, op-cost: 0.0, total-cost: 150.0]
                   -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|

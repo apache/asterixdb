@@ -19,6 +19,8 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.getBuiltinFunctionInfo;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -172,17 +174,44 @@ public class Stats {
                 return 0.5;
             }
 
-            boolean unnestOp1 = joinEnum.findUnnestOp(joinEnum.leafInputs.get(idx1 - 1));
-            boolean unnestOp2 = joinEnum.findUnnestOp(joinEnum.leafInputs.get(idx2 - 1));
-            boolean unnestOp = unnestOp1 || unnestOp2;
-            boolean okOp = acceptableOp(joinExpr.getFunctionIdentifier());
             ILogicalOperator leafInput1 = joinEnum.leafInputs.get(idx1 - 1);
             ILogicalOperator leafInput2 = joinEnum.leafInputs.get(idx2 - 1);
+            boolean unnestOp1 = joinEnum.findUnnestOp(leafInput1);
+            boolean unnestOp2 = joinEnum.findUnnestOp(leafInput2);
+            boolean unnestOp = unnestOp1 || unnestOp2;
+
             LogicalVariable var1 = exprUsedVars.get(0);
             LogicalVariable var2 = exprUsedVars.get(1);
+            // find if this join part of a composite join R.a = S.a and R.b = S.b and ...
+            List<Integer> compositeJoins = new ArrayList<>();
+            for (int i = 0; i < joinEnum.joinConditions.size(); i++) {
+                if (joinEnum.joinConditions.get(i).datasetBits == jc.datasetBits) {
+                    compositeJoins.add(i);
+                }
+            }
+            int size = compositeJoins.size();
+            if (size > 1) { // for composite joins, we will always resort to joining with samples
+                joinExpr = combineJoinExprs(compositeJoins);
+                double sels = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
+                        joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
+                if (sels == 0.0) {
+                    sels = 1.0 / Math.max(card1, card2);
+                }
+                for (int i = 0; i < compositeJoins.size(); i++) {
+                    joinEnum.joinConditions.get(compositeJoins.get(i)).selectivity = sels;
+                    // Later on we will make the selectivity of just one of these to be sels and the others
+                    // will have a selectivity of 1.0.
+                }
+                return sels;
+            }
+
+            boolean okOp = acceptableOp(joinExpr.getFunctionIdentifier());
             // If there are more than 2 variables, it is not a simple join like r.a op s.a
-            if (okOp && !unnestOp && (exprUsedVars.size() > 2
-                    || isJoinSelFromSamplesApplicable(leafInput1, leafInput2, index1, index2, var1, var2))) {
+            Index.SampleIndexDetails idxDetails1 = (Index.SampleIndexDetails) index1.getIndexDetails();
+            Index.SampleIndexDetails idxDetails2 = (Index.SampleIndexDetails) index2.getIndexDetails();
+            if (((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
+                    || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())
+                    || exprUsedVars.size() > 2) && !unnestOp && okOp) {
                 double sels = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
                         joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
                 if (sels == 0.0) {
@@ -190,10 +219,23 @@ public class Stats {
                 }
                 return sels;
             }
-            // Now we can handle only equi joins. We make all the uniform and independence assumptions here.
+            //At this point, a single join will be treated as an EQ join even if it is not. Not ideal but no other choice
+            // for example interval-overlap falls into this case. For some reason, joining samples with interval-overlap fails,
+            // so defaulting to this case.
             double seln = naiveJoinSelectivity(exprUsedVars, card1, card2, idx1, idx2, unnestOp1, unnestOp2);
             return seln;
         }
+
+    }
+
+    private AbstractFunctionCallExpression combineJoinExprs(List<Integer> compositeJoins) {
+        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        for (int i = 0; i < compositeJoins.size(); i++) {
+            JoinCondition jc = joinEnum.joinConditions.get(compositeJoins.get(i));
+            andExpr.getArguments().add(new MutableObject<>(jc.joinCondition));
+        }
+        return andExpr;
     }
 
     private boolean isJoinSelFromSamplesApplicable(ILogicalOperator leafInput1, ILogicalOperator leafInput2,
@@ -235,8 +277,12 @@ public class Stats {
         return numDistincts;
     }
 
+    //Goal is to keep expanding the list of ops here.
     private boolean acceptableOp(FunctionIdentifier functionIdentifier) {
         if (functionIdentifier.equals(AlgebricksBuiltinFunctions.NEQ)) {
+            return true;
+        }
+        if (functionIdentifier.equals(AlgebricksBuiltinFunctions.EQ)) {
             return true;
         }
         if (functionIdentifier.equals(AlgebricksBuiltinFunctions.LT)) {
@@ -423,8 +469,10 @@ public class Stats {
             }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
-            s = findJoinSelectivity(jc, jpa, afcExpr, jOp);
-            sel *= s;
+            if (jc.selectivity == -1.0) {
+                s = findJoinSelectivity(jc, jpa, afcExpr, jOp);
+                sel *= s;
+            }
         }
 
         List<LogicalVariable> usedVars = new ArrayList<>();
