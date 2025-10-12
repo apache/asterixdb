@@ -20,9 +20,13 @@ package org.apache.asterix.common.utils;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Set;
+
+import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSets;
 
 /**
  * A specialized bit set for storing partition IDs.
@@ -36,19 +40,27 @@ public class Partitions implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final int MAX_PARTITION_ID = Integer.MAX_VALUE - 1;
     private static final int MIN_PARTITION_ID = -1;
+    private static final Partitions EMPTY = new Partitions(IntSortedSets.EMPTY_SET);
     private static final short MINUS_ONE = (short) -1;
     private final IntSortedSet delegate;
 
     public Partitions() {
-        delegate = new IntSortedBitSet();
+        this(new IntSortedBitSet());
     }
 
     public Partitions(int initialMaxValue) {
-        delegate = new IntSortedBitSet(initialMaxValue + 1);
+        this(new IntSortedBitSet(initialMaxValue + 1));
     }
 
     public Partitions(IntSortedSet delegate) {
         this.delegate = delegate;
+    }
+
+    /**
+     * Returns an unmodifiable empty Partitions instance.
+     */
+    public static Partitions empty() {
+        return EMPTY;
     }
 
     /**
@@ -70,6 +82,27 @@ public class Partitions implements Serializable {
 
     public void clear() {
         delegate.clear();
+    }
+
+    public boolean addAll(Set<Integer> activePartitions) {
+        MutableBoolean retval = new MutableBoolean();
+        activePartitions.forEach(p -> {
+            if (add(p)) {
+                retval.setTrue();
+            }
+        });
+        return retval.booleanValue();
+    }
+
+    public int size() {
+        return delegate.size();
+    }
+
+    public boolean contains(int partitionNum) {
+        if (partitionNum > MAX_PARTITION_ID || partitionNum < MIN_PARTITION_ID) {
+            return false;
+        }
+        return delegate.contains((short) (partitionNum + 1));
     }
 
     @Override
@@ -107,4 +140,5 @@ public class Partitions implements Serializable {
         builder.append(']');
         return builder.toString();
     }
+
 }
