@@ -92,13 +92,11 @@ public class EntityDetails {
         String functionName = fs.getName();
         Integer functionArity = fs.getArity();
         DataverseName dataverseName = fs.getDataverseName();
-        String functionNameWithArity = getFunctionNameWithArity(functionName, functionArity);
         if (isBuiltInFunc) {
-            return new EntityDetails(databaseName, dataverseName, functionNameWithArity, EntityType.BUILT_IN_FUNCTION,
+            return new EntityDetails(databaseName, dataverseName, functionName, EntityType.BUILT_IN_FUNCTION,
                     functionArity);
         }
-        return new EntityDetails(databaseName, dataverseName, functionNameWithArity, EntityType.FUNCTION,
-                functionArity);
+        return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION, functionArity);
     }
 
     public static EntityDetails newSynonym(String databaseName, DataverseName dataverseName, String synonymName) {
