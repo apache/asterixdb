@@ -18,9 +18,15 @@
  */
 package org.apache.asterix.external.api;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 @FunctionalInterface
-public interface IRecordConverter<I, O> {
+public interface IRecordConverter<I, O> extends Closeable {
+
     O convert(IRawRecord<? extends I> input) throws IOException;
+
+    default void close() {
+        // default no-op
+    }
 }

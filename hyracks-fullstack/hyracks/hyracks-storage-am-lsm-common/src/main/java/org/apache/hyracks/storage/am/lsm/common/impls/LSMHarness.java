@@ -21,6 +21,9 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import static org.apache.hyracks.util.ExitUtil.EC_INCONSISTENT_STORAGE_REFERENCES;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -68,6 +71,8 @@ import org.apache.logging.log4j.Logger;
 
 public class LSMHarness implements ILSMHarness {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final DateTimeFormatter OP_THREAD_TIMESTAMP =
+            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
     protected final ILSMIndex lsmIndex;
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -144,9 +149,7 @@ public class LSMHarness implements ILSMHarness {
         int numEntered = 0;
         boolean entranceSuccessful = false;
         try {
-            final int componentsCount = components.size();
-            for (int i = 0; i < componentsCount; i++) {
-                final ILSMComponent component = components.get(i);
+            for (final ILSMComponent component : components) {
                 boolean isMutableComponent = numEntered == 0 && component.getType() == LSMComponentType.MEMORY;
                 if (!component.threadEnter(opType, isMutableComponent)) {
                     if (dumpState) {
@@ -268,7 +271,7 @@ public class LSMHarness implements ILSMHarness {
                 cleanupInactiveMemoryComponents(inactiveMemoryComponentsToBeCleanedUp);
             }
             if (opType == LSMOperationType.FLUSH && !failedOperation) {
-                ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
+                ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().getFirst();
                 // We must call flushed without synchronizing on opTracker to avoid deadlocks
                 flushingComponent.flushed();
             }
@@ -383,7 +386,7 @@ public class LSMHarness implements ILSMHarness {
         }
         getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
         try {
-            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().get(0);
+            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().getFirst();
             c.getMetadata().put(key, value);
             c.setModified();
         } finally {
@@ -407,7 +410,7 @@ public class LSMHarness implements ILSMHarness {
         }
         getAndEnterComponents(ctx, LSMOperationType.FORCE_MODIFICATION, false);
         try {
-            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().get(0);
+            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().getFirst();
             c.getMetadata().put(key, value);
             c.setModified();
         } finally {
@@ -427,7 +430,8 @@ public class LSMHarness implements ILSMHarness {
         try {
             lsmIndex.modify(ctx, tuple);
             // The mutable component is always in the first index.
-            AbstractLSMMemoryComponent mutableComponent = (AbstractLSMMemoryComponent) ctx.getComponentHolder().get(0);
+            AbstractLSMMemoryComponent mutableComponent =
+                    (AbstractLSMMemoryComponent) ctx.getComponentHolder().getFirst();
             mutableComponent.setModified();
         } catch (Exception e) {
             failedOperation = true;
@@ -547,7 +551,9 @@ public class LSMHarness implements ILSMHarness {
     }
 
     public void doIo(ILSMIOOperation operation) {
+        String origName = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(threadName(operation));
             operation.getCallback().beforeOperation(operation);
             ILSMDiskComponent newComponent = operation.getIOOperationType() == LSMIOOperationType.FLUSH
                     ? lsmIndex.flush(operation) : lsmIndex.merge(operation);
@@ -573,12 +579,21 @@ public class LSMHarness implements ILSMHarness {
                             th);
                 }
             }
+            Thread.currentThread().setName(origName);
         }
         // if the operation failed, we need to cleanup files
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             operation.cleanup(lsmIndex.getBufferCache());
             operation.getCallback().afterFailure(operation);
         }
+    }
+
+    private static String threadName(ILSMIOOperation operation) {
+        if (operation.getIOOperationType() == LSMIOOperationType.NOOP) {
+            return String.valueOf(operation.getIOOperationType());
+        }
+        return operation.getIOOperationType() + ":" + operation.getTarget().getRelativePath() + "@"
+                + OP_THREAD_TIMESTAMP.format(ZonedDateTime.now());
     }
 
     @Override
@@ -783,7 +798,7 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void deleteComponents(ILSMIndexOperationContext ctx, Predicate<ILSMComponent> predicate)
             throws HyracksDataException {
-        ILSMIOOperation ioOperation = null;
+        ILSMIOOperation ioOperation;
         // We need to always start the component delete from current memory component.
         // This will ensure Primary and secondary component id still matches after component delete
         if (!lsmIndex.isMemoryComponentsAllocated()) {
