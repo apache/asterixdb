@@ -136,7 +136,9 @@ public class Partitions implements Serializable {
                 builder.append(',');
             }
         }
-        IntUtil.appendCompact(iter, builder, MINUS_ONE);
+        if (iter.hasNext()) {
+            IntUtil.appendCompact(iter, builder, MINUS_ONE);
+        }
         builder.append(']');
         return builder.toString();
     }
