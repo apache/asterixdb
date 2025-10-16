@@ -39,6 +39,8 @@ import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProv
 import static org.apache.asterix.external.util.aws.AwsUtils.getAuthenticationType;
 import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ANONYMOUS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUMED_ROLE;
@@ -60,8 +62,6 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +79,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.AwsUtils;
+import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
 import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -86,7 +87,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.api.util.CleanupUtils;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -109,45 +109,33 @@ public class S3Utils {
     }
 
     /**
-     * Builds the S3 client using the provided configuration
+     * Builds the client using the provided configuration
      *
      * @param configuration properties
-     * @return S3 client
+     * @return client
      * @throws CompilationException CompilationException
      */
-    public static S3Client buildClient(IApplicationContext appCtx, Map<String, String> configuration)
+    public static CloseableAwsClients buildClient(IApplicationContext appCtx, Map<String, String> configuration)
             throws CompilationException {
+        CloseableAwsClients awsClients = new CloseableAwsClients();
         String regionId = configuration.get(REGION_FIELD_NAME);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
         Region region = validateAndGetRegion(regionId);
         boolean crossRegion = validateAndGetCrossRegion(configuration.get(CROSS_REGION_FIELD_NAME));
-        AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration);
+        AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
 
         S3ClientBuilder builder = S3Client.builder();
         builder.region(region);
         builder.crossRegionAccessEnabled(crossRegion);
         builder.credentialsProvider(credentialsProvider);
-
-        // Validate the service endpoint if present
-        if (serviceEndpoint != null) {
-            try {
-                URI uri = new URI(serviceEndpoint);
-                try {
-                    builder.endpointOverride(uri);
-                } catch (NullPointerException ex) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-                }
-            } catch (URISyntaxException ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex,
-                        String.format("Invalid service endpoint %s", serviceEndpoint));
-            }
-        }
+        AwsUtils.setEndpoint(builder, serviceEndpoint);
 
         boolean pathStyleAddressing =
                 validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
         builder.forcePathStyle(pathStyleAddressing);
-        return builder.build();
+        awsClients.setConsumingClient(builder.build());
+        return awsClients;
     }
 
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf conf,
@@ -293,7 +281,8 @@ public class S3Utils {
         }
 
         // Check if the bucket is present
-        S3Client s3Client = buildClient(appCtx, configuration);
+        CloseableAwsClients awsClients = buildClient(appCtx, configuration);
+        S3Client s3Client = (S3Client) awsClients.getConsumingClient();
         S3Response response;
         boolean useOldApi = false;
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -317,9 +306,7 @@ public class S3Utils {
         } catch (SdkException ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } finally {
-            if (s3Client != null) {
-                CleanupUtils.close(s3Client, null);
-            }
+            AwsUtils.closeClients(awsClients);
         }
 
         boolean isEmpty = useOldApi ? ((ListObjectsResponse) response).contents().isEmpty()
@@ -379,7 +366,8 @@ public class S3Utils {
         // Prepare to retrieve the objects
         List<S3Object> filesOnly;
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        S3Client s3Client = buildClient(appCtx, configuration);
+        CloseableAwsClients awsClients = buildClient(appCtx, configuration);
+        S3Client s3Client = (S3Client) awsClients.getConsumingClient();
         String prefix = getPrefix(configuration);
 
         try {
@@ -401,9 +389,7 @@ public class S3Utils {
         } catch (SdkException ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } finally {
-            if (s3Client != null) {
-                CleanupUtils.close(s3Client, null);
-            }
+            AwsUtils.closeClients(awsClients);
         }
 
         // Warn if no files are returned
@@ -522,58 +508,59 @@ public class S3Utils {
         }
     }
 
-    public static Map<String, List<String>> S3ObjectsOfSingleDepth(IApplicationContext appCtx,
-            Map<String, String> configuration, String container, String prefix)
-            throws CompilationException, HyracksDataException {
-        // create s3 client
-        S3Client s3Client = buildClient(appCtx, configuration);
-        // fetch all the s3 objects
-        return listS3ObjectsOfSingleDepth(s3Client, container, prefix);
-    }
-
     /**
      * Uses the latest API to retrieve the objects from the storage of a single level.
      *
-     * @param s3Client              S3 client
-     * @param container             container name
-     * @param prefix                definition prefix
+     * @param appCtx application context
+     * @param configuration configuration
+     * @param container container name
+     * @param prefix definition prefix
      */
-    private static Map<String, List<String>> listS3ObjectsOfSingleDepth(S3Client s3Client, String container,
-            String prefix) {
-        Map<String, List<String>> allObjects = new HashMap<>();
-        ListObjectsV2Iterable listObjectsInterable;
-        ListObjectsV2Request.Builder listObjectsBuilder =
-                ListObjectsV2Request.builder().bucket(container).prefix(prefix).delimiter("/");
+    public static Map<String, List<String>> listS3ObjectsOfSingleDepth(IApplicationContext appCtx,
+            Map<String, String> configuration, String container, String prefix) throws CompilationException {
+        CloseableAwsClients awsClients = buildClient(appCtx, configuration);
+        S3Client s3Client = (S3Client) awsClients.getConsumingClient();
+
+        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
+        listObjectsBuilder.bucket(container);
         listObjectsBuilder.prefix(prefix);
+        listObjectsBuilder.delimiter("/");
+        ListObjectsV2Request listObjectsV2Request = listObjectsBuilder.build();
+
+        Map<String, List<String>> allObjects = new HashMap<>();
         List<String> files = new ArrayList<>();
         List<String> folders = new ArrayList<>();
+
         // to skip the prefix as a file from the response
         boolean checkPrefixInFile = true;
-        listObjectsInterable = s3Client.listObjectsV2Paginator(listObjectsBuilder.build());
-        for (ListObjectsV2Response response : listObjectsInterable) {
-            // put all the files
-            for (S3Object object : response.contents()) {
-                String fileName = object.key();
-                fileName = fileName.substring(prefix.length(), fileName.length());
-                if (checkPrefixInFile) {
-                    if (prefix.equals(object.key()))
+        try {
+            ListObjectsV2Iterable listObjectsIterable = s3Client.listObjectsV2Paginator(listObjectsV2Request);
+            for (ListObjectsV2Response response : listObjectsIterable) {
+                // put all the files
+                for (S3Object object : response.contents()) {
+                    String fileName = object.key();
+                    fileName = fileName.substring(prefix.length());
+                    if (checkPrefixInFile && prefix.equals(object.key())) {
                         checkPrefixInFile = false;
-                    else {
+                    } else {
                         files.add(fileName);
                     }
-                } else {
-                    files.add(fileName);
+                }
+
+                // put all the folders
+                for (CommonPrefix object : response.commonPrefixes()) {
+                    String folderName = object.prefix();
+                    folderName = folderName.substring(prefix.length());
+                    folders.add(
+                            folderName.endsWith("/") ? folderName.substring(0, folderName.length() - 1) : folderName);
                 }
             }
-            // put all the folders
-            for (CommonPrefix object : response.commonPrefixes()) {
-                String folderName = object.prefix();
-                folderName = folderName.substring(prefix.length(), folderName.length());
-                folders.add(folderName.endsWith("/") ? folderName.substring(0, folderName.length() - 1) : folderName);
-            }
+        } finally {
+            AwsUtils.closeClients(awsClients);
         }
-        allObjects.put("files", files);
-        allObjects.put("folders", folders);
+
+        allObjects.put(FILES, files);
+        allObjects.put(FOLDERS, folders);
         return allObjects;
     }
 

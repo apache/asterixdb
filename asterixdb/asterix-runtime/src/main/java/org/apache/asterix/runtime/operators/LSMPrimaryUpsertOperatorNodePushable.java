@@ -553,7 +553,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     @Override
     public void close() throws HyracksDataException {
         traceLastRecordIn();
-        Throwable failure = CleanupUtils.close(frameOpCallbacks, null);
+        Throwable failure = CleanupUtils.close(null, frameOpCallbacks);
         failure = CleanupUtils.destroy(failure, cursors);
         failure = CleanupUtils.close(writer, failure);
         failure = closeIndexHelpers(failure);

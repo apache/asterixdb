@@ -62,4 +62,8 @@ public class S3Constants {
     public static final String HADOOP_INSTANCE_PROFILE = "org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider";
     public static final String HADOOP_SIMPLE = "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider";
     public static final String HADOOP_TEMPORARY = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
+
+    // browse API
+    public static final String FILES = "files";
+    public static final String FOLDERS = "folders";
 }
