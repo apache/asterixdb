@@ -495,19 +495,21 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
                     && SelectFromSubplanRewrite.isApplicableForRewriteCursory(indexProvider, selectOp)) {
+
+                // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
+                // this subplan to allow an array-index AM to be introduced. Again, this rewrite is to be used
+                // **solely** for the purpose of changing a DATA-SCAN into a non-index-only plan branch.
+                // the order of these rewrites was switched on Glenn's suggestion
+                if (rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite, checkApplicableOnly,
+                        chosenIndexes, analyzedAMs)) {
+                    return true;
+                }
+
                 // If there exists a composite atomic-array index, our conjuncts will be split across multiple
                 // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
                 // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.
 
                 if (rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite, checkApplicableOnly,
-                        chosenIndexes, analyzedAMs)) {
-                    return true;
-                }
-
-                // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
-                // this subplan to allow an array-index AM to be introduced. Again, this rewrite is to be used
-                // **solely** for the purpose of changing a DATA-SCAN into a non-index-only plan branch.
-                if (rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite, checkApplicableOnly,
                         chosenIndexes, analyzedAMs)) {
                     return true;
                 }
