@@ -143,7 +143,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         CCMessageBroker messageBroker = (CCMessageBroker) ccSrvContext.getMessageBroker();
         final RuntimeDataException rejectionReason = getRejectionReason(ccSrv, requestNodeId);
         if (rejectionReason != null) {
-            sendRejection(rejectionReason, messageBroker, requestMessageId, requestNodeId);
+            sendRejection(rejectionReason, messageBroker);
             return;
         }
         CCExtensionManager ccExtMgr = (CCExtensionManager) ccAppCtx.getExtensionManager();
@@ -195,11 +195,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Unexpected exception", e);
             responseMsg.setError(e);
         }
-        try {
-            messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARN, e.toString(), e);
-        }
+        sendResponseToNc(messageBroker, responseMsg);
     }
 
     protected IRequestParameters createRequestParameters(IStatementExecutor.StatementProperties statementProperties,
@@ -231,16 +227,30 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         return null;
     }
 
-    protected void sendRejection(Exception reason, CCMessageBroker messageBroker, long requestMessageId,
-            String requestNodeId) {
-        ExecuteStatementResponseMessage responseMsg =
-                new ExecuteStatementResponseMessage(requestMessageId, clientContextID, requestReference.getUuid());
-        responseMsg.setError(reason);
+    protected void sendRejection(Exception reason, CCMessageBroker messageBroker) {
+        ExecuteStatementResponseMessage responseMsg = createFailureMessage(reason);
         try {
             messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, e.toString(), e);
         }
+    }
+
+    private void sendResponseToNc(CCMessageBroker messageBroker, ExecuteStatementResponseMessage responseMsg) {
+        try {
+            messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
+        } catch (Exception e) {
+            LOGGER.error("unexpected exception sending message to node {}", requestNodeId, e);
+            ExecuteStatementResponseMessage failureMessage = createFailureMessage(new Exception(e.getMessage()));
+            messageBroker.sendMessageQuietly(failureMessage, requestNodeId);
+        }
+    }
+
+    private ExecuteStatementResponseMessage createFailureMessage(Exception reason) {
+        ExecuteStatementResponseMessage responseMsg =
+                new ExecuteStatementResponseMessage(requestMessageId, clientContextID, requestReference.getUuid());
+        responseMsg.setError(reason);
+        return responseMsg;
     }
 
     @Override

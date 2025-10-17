@@ -39,6 +39,14 @@ public interface ICCMessageBroker extends IMessageBroker {
     boolean sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
 
     /**
+     * Attempts to send {@code msg} to the specified {@code nodeId} without throwing exceptions
+     *
+     * @param msg
+     * @param nodeId
+     */
+    void sendMessageQuietly(INcAddressedMessage msg, String nodeId);
+
+    /**
      * Sends the passed message to the specified {@code nodeId}
      *
      * @param msg

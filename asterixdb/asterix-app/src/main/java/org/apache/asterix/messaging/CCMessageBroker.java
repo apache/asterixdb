@@ -70,6 +70,15 @@ public class CCMessageBroker implements ICCMessageBroker {
     }
 
     @Override
+    public void sendMessageQuietly(INcAddressedMessage msg, String nodeId) {
+        try {
+            sendMessage(msg, nodeId, false);
+        } catch (Exception e) {
+            LOGGER.warn("failed to send message to node {}", nodeId, e);
+        }
+    }
+
+    @Override
     public boolean sendRealTimeApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
         return sendMessage(msg, nodeId, true);
     }
