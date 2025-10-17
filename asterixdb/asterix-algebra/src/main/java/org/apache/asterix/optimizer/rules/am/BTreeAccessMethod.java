@@ -591,12 +591,24 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
         }
 
-        // determine cases when prefix search could be applied
-        for (int i = 1; i < lowKeyExprs.length; i++) {
-            if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null && lowKeyLimits[i] == null
-                    || highKeyLimits[0] == null && highKeyLimits[i] != null
-                    || highKeyLimits[0] != null && highKeyLimits[i] == null) {
-                numSecondaryKeys = i;
+        int numLowKeys = 0;
+        for (LimitType limitType : lowKeyLimits) {
+            if (limitType != null) {
+                numLowKeys++;
+            } else
+                break;
+        }
+
+        int numHighKeys = 0;
+        for (LimitType limitType : highKeyLimits) {
+            if (limitType != null) {
+                numHighKeys++;
+            } else
+                break;
+        }
+
+        for (int i = 0; i < lowKeyExprs.length; i++) {
+            if (lowKeyLimits[i] != null && i >= numLowKeys || highKeyLimits[i] != null && i >= numHighKeys) {
                 primaryIndexPostProccessingIsNeeded = true;
                 break;
             }
@@ -621,11 +633,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         // List of variables and expressions for the assign.
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<>();
         ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<>();
-        int numLowKeys = createKeyVarsAndExprs(numSecondaryKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, lowKeyConstAtRuntimeExpressions, lowKeyConstAtRuntimeExprVars);
-        int numHighKeys = createKeyVarsAndExprs(numSecondaryKeys, highKeyLimits, highKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, highKeyConstantAtRuntimeExpressions,
-                highKeyConstAtRuntimeExprVars);
+
+        numLowKeys = createKeyVarsAndExprs(numLowKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList, assignKeyExprList,
+                keyVarList, context, lowKeyConstAtRuntimeExpressions, lowKeyConstAtRuntimeExprVars);
+        numHighKeys =
+                createKeyVarsAndExprs(numHighKeys, highKeyLimits, highKeyExprs, assignKeyVarList, assignKeyExprList,
+                        keyVarList, context, highKeyConstantAtRuntimeExpressions, highKeyConstAtRuntimeExprVars);
 
         BTreeJobGenParams jobGenParams =
                 new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE, dataset.getDatabaseName(),

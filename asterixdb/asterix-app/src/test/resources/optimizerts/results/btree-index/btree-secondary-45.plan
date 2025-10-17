@@ -8,23 +8,23 @@ distribute result [$$emp]
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          unnest-map [$$18, $$emp] <- index-search("testdst", 0, "Default", "test", "testdst", false, false, 1, $$25, 1, $$25, true, true, true)
+          unnest-map [$$18, $$emp] <- index-search("testdst", 0, "Default", "test", "testdst", false, false, 1, $$26, 1, $$26, true, true, true)
           -- BTREE_SEARCH  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (ASC, $$25)
-              -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+              order (ASC, $$26)
+              -- STABLE_SORT [$$26(ASC)]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$25])
+                  project ([$$26])
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      unnest-map [$$23, $$24, $$25] <- index-search("sec_Idx", 0, "Default", "test", "testdst", false, false, 1, $$21, 1, $$22, true, true, true)
+                      unnest-map [$$24, $$25, $$26] <- index-search("sec_Idx", 0, "Default", "test", "testdst", false, false, 1, $$21, 2, $$22, $$23, false, false, true)
                       -- BTREE_SEARCH  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          assign [$$21, $$22] <- ["Julio", "Julio"]
+                          assign [$$21, $$22, $$23] <- ["Julio", "Julio", "Xu"]
                           -- ASSIGN  |PARTITIONED|
                             empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

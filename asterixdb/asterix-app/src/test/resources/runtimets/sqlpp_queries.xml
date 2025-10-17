@@ -6433,6 +6433,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-range">
+        <output-dir compare="Text">btree-index-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key">
         <output-dir compare="Text">btree-index-composite-key</output-dir>
       </compilation-unit>
