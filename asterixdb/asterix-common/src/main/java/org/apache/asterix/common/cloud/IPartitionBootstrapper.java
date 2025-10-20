@@ -19,9 +19,9 @@
 package org.apache.asterix.common.cloud;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
@@ -52,6 +52,6 @@ public interface IPartitionBootstrapper {
      * @param metadataPartition       metadata partition number
      * @param ensureCompleteBootstrap ensures the metadata catalog was fully bootstrapped
      */
-    void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions, boolean metadataNode,
+    void bootstrap(Partitions activePartitions, List<FileReference> currentOnDiskPartitions, boolean metadataNode,
             int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException;
 }

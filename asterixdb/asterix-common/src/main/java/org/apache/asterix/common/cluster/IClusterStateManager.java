@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.NcLocalCounters;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
@@ -65,7 +66,7 @@ public interface IClusterStateManager {
      * @param activePartitions
      * @throws HyracksDataException
      */
-    void updateNodeState(String nodeId, boolean active, NcLocalCounters ncLocalCounters, Set<Integer> activePartitions)
+    void updateNodeState(String nodeId, boolean active, NcLocalCounters ncLocalCounters, Partitions activePartitions)
             throws HyracksDataException;
 
     /**

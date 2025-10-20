@@ -19,13 +19,13 @@
 package org.apache.asterix.app.replication.message;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,15 +37,15 @@ import org.apache.logging.log4j.Logger;
 public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private final SystemState state;
     private final String nodeId;
     private final NodeStatus nodeStatus;
     private final Map<String, Object> secrets;
-    private final Set<Integer> activePartitions;
+    private final Partitions activePartitions;
 
     public RegistrationTasksRequestMessage(String nodeId, NodeStatus nodeStatus, SystemState state,
-            Map<String, Object> secretsEphemeral, Set<Integer> activePartitions) {
+            Map<String, Object> secretsEphemeral, Partitions activePartitions) {
         this.state = state;
         this.nodeId = nodeId;
         this.nodeStatus = nodeStatus;
@@ -54,7 +54,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
     }
 
     public static void send(CcId ccId, NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState,
-            Map<String, Object> secretsEphemeral, Set<Integer> activePartitions) throws HyracksDataException {
+            Map<String, Object> secretsEphemeral, Partitions activePartitions) throws HyracksDataException {
         try {
             RegistrationTasksRequestMessage msg = new RegistrationTasksRequestMessage(cs.getId(), nodeStatus,
                     systemState, secretsEphemeral, activePartitions);
@@ -92,7 +92,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
         return secrets;
     }
 
-    public Set<Integer> getActivePartitions() {
+    public Partitions getActivePartitions() {
         return activePartitions;
     }
 

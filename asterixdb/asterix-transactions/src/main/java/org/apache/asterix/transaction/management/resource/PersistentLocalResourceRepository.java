@@ -56,6 +56,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.storage.ResourceStorageStats;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -288,7 +289,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    public Map<Long, LocalResource> getResources(Predicate<LocalResource> filter, Set<Integer> partitions)
+    public Map<Long, LocalResource> getResources(Predicate<LocalResource> filter, Partitions partitions)
             throws HyracksDataException {
         beforeReadAccess();
         try {
@@ -427,12 +428,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    public Set<Integer> getAllPartitions() throws HyracksDataException {
+    public Partitions getAllPartitions() throws HyracksDataException {
         beforeReadAccess();
         try {
             return loadAndGetAllResources().values().stream().map(LocalResource::getResource)
                     .map(DatasetLocalResource.class::cast).map(DatasetLocalResource::getPartition)
-                    .collect(Collectors.toSet());
+                    .collect(Partitions.collector());
         } finally {
             afterReadAccess();
         }
@@ -479,7 +480,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public Map<Long, LocalResource> getPartitionResources(int partition) throws HyracksDataException {
         beforeReadAccess();
         try {
-            return getResources(r -> true, Collections.singleton(partition));
+            return getResources(r -> true, Partitions.singleton(partition));
         } finally {
             afterReadAccess();
         }
@@ -712,7 +713,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return null;
     }
 
-    public long getDatasetSize(DatasetCopyIdentifier datasetIdentifier, Set<Integer> nodePartitions)
+    public long getDatasetSize(DatasetCopyIdentifier datasetIdentifier, Partitions nodePartitions)
             throws HyracksDataException {
         beforeReadAccess();
         try {

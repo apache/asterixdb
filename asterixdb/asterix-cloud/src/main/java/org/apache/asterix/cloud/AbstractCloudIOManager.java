@@ -126,7 +126,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     @Override
-    public final void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions,
+    public final void bootstrap(Partitions activePartitions, List<FileReference> currentOnDiskPartitions,
             boolean metadataNode, int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException {
         partitions.clear();
         partitions.addAll(activePartitions);

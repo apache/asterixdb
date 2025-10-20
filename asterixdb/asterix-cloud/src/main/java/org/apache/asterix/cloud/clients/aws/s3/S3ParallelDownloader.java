@@ -181,7 +181,7 @@ class S3ParallelDownloader implements IParallelDownloader {
 
     private static S3AsyncClient createAsyncClient(S3ClientConfig config) {
         // CRT client is not supported by all local S3 providers, but provides a better performance with AWS S3
-        if (!config.isLocalS3Provider()) {
+        if (config.isCrtClientEnabled()) {
             return createS3CrtAsyncClient(config);
         }
         return createS3AsyncClient(config);

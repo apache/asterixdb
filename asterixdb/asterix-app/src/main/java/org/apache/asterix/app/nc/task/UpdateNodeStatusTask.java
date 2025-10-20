@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.app.nc.task;
 
-import java.util.Set;
-
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.storage.IReplicaManager;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -34,11 +33,11 @@ import org.apache.logging.log4j.Logger;
 public class UpdateNodeStatusTask implements INCLifecycleTask {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private final NodeStatus status;
-    private final Set<Integer> activePartitions;
+    private final Partitions activePartitions;
 
-    public UpdateNodeStatusTask(NodeStatus status, Set<Integer> activePartitions) {
+    public UpdateNodeStatusTask(NodeStatus status, Partitions activePartitions) {
         this.status = status;
         this.activePartitions = activePartitions;
     }

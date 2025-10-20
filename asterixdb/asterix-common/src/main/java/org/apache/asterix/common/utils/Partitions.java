@@ -21,38 +21,58 @@ package org.apache.asterix.common.utils;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSets;
 
 /**
- * A specialized bit set for storing partition IDs.
- * Partition IDs are in the range [-1, 32766] (inclusive).
- * The value -1 is used to represent the "unpartitioned" partition.
- * The value 32767 is reserved for the internal shift and cannot be used as a partition ID.
- * This class internally shifts the partition IDs by +1 to fit into an unsigned short range [0, 32767].
+ * A specialized data structure for efficiently storing partitions.
+ * Partitions are in the range [-1, 2_147_483_646] (inclusive).
+ * The value -1 is used to represent the "metadata" partition.
+ * The value 2_147_483_647 is reserved for the internal shift and cannot be used as a partition.
+ * This class internally shifts the partitions by +1 to fit into the signed int range [0, 2_147_483_647].
  */
-public class Partitions implements Serializable {
+public class Partitions implements IntIterable, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final int MAX_PARTITION_ID = Integer.MAX_VALUE - 1;
-    private static final int MIN_PARTITION_ID = -1;
+    private static final int DELTA = -1;
+    private static final int MAX_PARTITION = Integer.MAX_VALUE + DELTA;
+    private static final int MIN_PARTITION = DELTA;
+    private static final int DEFAULT_MAX_PARTITIONS = 128;
     private static final Partitions EMPTY = new Partitions(IntSortedSets.EMPTY_SET);
-    private static final short MINUS_ONE = (short) -1;
     private final IntSortedSet delegate;
 
     public Partitions() {
-        this(new IntSortedBitSet());
+        this(DEFAULT_MAX_PARTITIONS);
     }
 
-    public Partitions(int initialMaxValue) {
-        this(new IntSortedBitSet(initialMaxValue + 1));
+    public Partitions(int initialMaxPartition) {
+        this(new IntSortedBitSet(encodePartition(initialMaxPartition)));
     }
 
-    public Partitions(IntSortedSet delegate) {
+    public Partitions(Set<Integer> initialValues) {
+        this();
+        initialValues.forEach(this::add);
+    }
+
+    public Partitions(IntSet initialValues) {
+        this();
+        initialValues.forEach(this::add);
+    }
+
+    public Partitions(Partitions initialValues) {
+        this();
+        addAll(initialValues);
+    }
+
+    private Partitions(IntSortedSet delegate) {
         this.delegate = delegate;
     }
 
@@ -63,17 +83,43 @@ public class Partitions implements Serializable {
         return EMPTY;
     }
 
+    public static Partitions singleton(int partition) {
+        return new Partitions(IntSortedSets.singleton(encodePartition(partition)));
+    }
+
+    public static Collector<? super Integer, Partitions, Partitions> collector() {
+        return Collector.of(Partitions::new, Partitions::add, (l, r) -> {
+            l.addAll(r);
+            return l;
+        }, Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH);
+    }
+
     /**
-     * Adds a partition ID to the set. Partition ID must be in the range [-1, 32766].
-     * @param k the partition ID to add
-     * @return true if the partition ID was added, false if it was already present
-     * @throws IllegalArgumentException if the partition ID is out of range
+     * Adds a partition to the set. Partition must be in the range [-1, 2_147_483_646].
+     * @param partition the partition to add
+     * @return true if the partition was added, false if it was already present
+     * @throws IllegalArgumentException if the partition is out of range
      */
-    public boolean add(int k) {
-        if (k > MAX_PARTITION_ID || k < MIN_PARTITION_ID) {
-            throw new IllegalArgumentException("Partition number " + k + " out of range");
+    public boolean add(int partition) {
+        checkRange(partition);
+        return delegate.add(encodePartition(partition));
+    }
+
+    /**
+     * Removes a partition from the set. Partition must be in the range [-1, 2_147_483_646].
+     * @param partition the partition to remove
+     * @return true if the partition was added, false if it was already present
+     * @throws IllegalArgumentException if the partition is out of range
+     */
+    public boolean remove(int partition) {
+        checkRange(partition);
+        return delegate.remove(encodePartition(partition));
+    }
+
+    private static void checkRange(int partition) {
+        if (partition > MAX_PARTITION || partition < MIN_PARTITION) {
+            throw new IllegalArgumentException("Partition number " + partition + " out of range");
         }
-        return delegate.add((short) (k + 1));
     }
 
     public boolean isEmpty() {
@@ -94,15 +140,44 @@ public class Partitions implements Serializable {
         return retval.booleanValue();
     }
 
+    public boolean addAll(Partitions activePartitions) {
+        return delegate.addAll(activePartitions.delegate);
+    }
+
     public int size() {
         return delegate.size();
     }
 
-    public boolean contains(int partitionNum) {
-        if (partitionNum > MAX_PARTITION_ID || partitionNum < MIN_PARTITION_ID) {
+    public boolean contains(int partition) {
+        if (partition > MAX_PARTITION || partition < MIN_PARTITION) {
             return false;
         }
-        return delegate.contains((short) (partitionNum + 1));
+        return delegate.contains(encodePartition(partition));
+    }
+
+    @Override
+    public IntIterator iterator() {
+        return new IntIterator() {
+            private final IntIterator delegateIter = delegate.iterator();
+
+            @Override
+            public boolean hasNext() {
+                return delegateIter.hasNext();
+            }
+
+            @Override
+            public int nextInt() {
+                return decodePartition(delegateIter.nextInt());
+            }
+        };
+    }
+
+    public int getMinPartition() {
+        return decodePartition(delegate.getFirst());
+    }
+
+    public int getMaxPartition() {
+        return decodePartition(delegate.getLast());
     }
 
     @Override
@@ -130,17 +205,36 @@ public class Partitions implements Serializable {
         StringBuilder builder = new StringBuilder();
         builder.append('[');
         if (delegate.firstInt() == 0) {
-            builder.append(MINUS_ONE);
+            builder.append(DELTA);
             iter.nextInt(); // this is the zero we just printed
             if (iter.hasNext()) {
                 builder.append(',');
             }
         }
         if (iter.hasNext()) {
-            IntUtil.appendCompact(iter, builder, MINUS_ONE);
+            IntUtil.appendCompact(iter, builder, DELTA);
         }
         builder.append(']');
         return builder.toString();
     }
 
+    public void removeAll(Partitions masterPartitions) {
+        delegate.removeAll(masterPartitions.delegate);
+    }
+
+    public Partitions unmodifiable() {
+        return new Partitions(IntSortedSets.unmodifiable(delegate));
+    }
+
+    public IntStream stream() {
+        return delegate.intStream().map(Partitions::decodePartition);
+    }
+
+    private static int encodePartition(int partition) {
+        return partition - DELTA;
+    }
+
+    private static int decodePartition(int value) {
+        return value + DELTA;
+    }
 }

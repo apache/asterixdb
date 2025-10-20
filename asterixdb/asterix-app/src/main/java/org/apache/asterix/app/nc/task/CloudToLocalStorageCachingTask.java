@@ -18,13 +18,11 @@
  */
 package org.apache.asterix.app.nc.task;
 
-import java.util.Arrays;
-import java.util.Set;
-
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.transactions.Checkpoint;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,13 +35,12 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final long serialVersionUID = 1L;
-    private final Set<Integer> storagePartitions;
+    private static final long serialVersionUID = 2L;
+    private final Partitions storagePartitions;
     private final boolean metadataNode;
     private final int metadataPartitionId;
 
-    public CloudToLocalStorageCachingTask(Set<Integer> storagePartitions, boolean metadataNode,
-            int metadataPartitionId) {
+    public CloudToLocalStorageCachingTask(Partitions storagePartitions, boolean metadataNode, int metadataPartitionId) {
         this.storagePartitions = storagePartitions;
         this.metadataNode = metadataNode;
         this.metadataPartitionId = metadataPartitionId;
@@ -78,7 +75,6 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
 
     @Override
     public String toString() {
-        return "{ \"class\" : \"" + getClass().getSimpleName() + "\", \"partitions\" : "
-                + Arrays.toString(storagePartitions.toArray()) + " }";
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\", \"partitions\" : " + storagePartitions + " }";
     }
 }

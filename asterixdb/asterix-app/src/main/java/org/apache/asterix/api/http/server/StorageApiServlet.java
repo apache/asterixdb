@@ -24,16 +24,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.function.IntPredicate;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.common.storage.ResourceStorageStats;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -121,11 +120,11 @@ public class StorageApiServlet extends AbstractServlet {
         return getStatus(partition::equals);
     }
 
-    private JsonNode getStatus(Predicate<Integer> predicate) {
+    private JsonNode getStatus(IntPredicate predicate) {
         final ArrayNode status = OBJECT_MAPPER.createArrayNode();
         final IReplicaManager storageSubsystem = appCtx.getReplicaManager();
-        final Set<Integer> partitions =
-                storageSubsystem.getPartitions().stream().filter(predicate).collect(Collectors.toSet());
+        final Partitions partitions = storageSubsystem.getPartitions().stream().filter(predicate)
+                .collect(Partitions::new, Partitions::add, Partitions::addAll);
         for (Integer partition : partitions) {
             final ObjectNode partitionJson = OBJECT_MAPPER.createObjectNode();
             partitionJson.put("partition", partition);

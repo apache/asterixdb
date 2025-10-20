@@ -60,6 +60,7 @@ import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.replication.messaging.ReplicaFailedMessage;
 import org.apache.http.client.utils.URIBuilder;
@@ -172,7 +173,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     protected List<INCLifecycleTask> buildNCRegTasks(String nodeId, NodeStatus nodeStatus, SystemState state,
-            Set<Integer> activePartitions) {
+            Partitions activePartitions) {
         LOGGER.info(
                 "Building registration tasks for node {} with status {} and system state: {} and active partitions {}",
                 nodeId, nodeStatus, state, activePartitions);
@@ -217,9 +218,9 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     protected List<INCLifecycleTask> buildIdleNcRegTasks(String newNodeId, boolean metadataNode, SystemState state,
-            Set<Integer> activePartitions) {
+            Partitions activePartitions) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
-        Set<Integer> nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode, state);
+        Partitions nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode, state);
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
         // Add any cloud-related tasks
@@ -256,7 +257,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         return tasks;
     }
 
-    protected void addCloudTasks(List<INCLifecycleTask> tasks, Set<Integer> computePartitions, boolean metadataNode,
+    protected void addCloudTasks(List<INCLifecycleTask> tasks, Partitions computePartitions, boolean metadataNode,
             int metadataPartitionId) {
         IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
         if (!appCtx.isCloudDeployment()) {
@@ -265,7 +266,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
         StorageComputePartitionsMap map = clusterManager.getStorageComputeMap();
         map = map == null ? StorageComputePartitionsMap.computePartitionsMap(clusterManager) : map;
-        Set<Integer> storagePartitions = map.getStoragePartitions(computePartitions);
+        Partitions storagePartitions = map.getStoragePartitions(computePartitions);
         tasks.add(new CloudToLocalStorageCachingTask(storagePartitions, metadataNode, metadataPartitionId));
     }
 
@@ -322,7 +323,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         return true;
     }
 
-    protected Set<Integer> getNodeActivePartitions(String nodeId, Set<Integer> nodePartitions, boolean metadataNode,
+    protected Partitions getNodeActivePartitions(String nodeId, Partitions nodePartitions, boolean metadataNode,
             SystemState state) {
         if (metadataNode) {
             nodePartitions.add(clusterManager.getMetadataPartition().getPartitionId());

@@ -21,12 +21,13 @@ package org.apache.asterix.common.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.asterix.common.utils.Partitions;
 
 public class StorageComputePartitionsMap {
 
@@ -83,8 +84,8 @@ public class StorageComputePartitionsMap {
      * @param computePartitions the current active compute partitions
      * @return computePartitions's corresponding storage partitions
      */
-    public Set<Integer> getStoragePartitions(Set<Integer> computePartitions) {
-        Set<Integer> storagePartitions = new HashSet<>();
+    public Partitions getStoragePartitions(Partitions computePartitions) {
+        Partitions storagePartitions = new Partitions();
         for (Map.Entry<Integer, ComputePartition> entry : storageComputeMap.entrySet()) {
             ComputePartition computePartition = entry.getValue();
             if (computePartitions.contains(computePartition.getId())) {

@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.storage.IReplicaManager.PartitionSyncLock;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
@@ -48,7 +49,8 @@ public class ReplicaSynchronizer {
 
     public void sync(boolean register, boolean deltaRecovery) throws IOException {
         LOGGER.debug("starting replica sync process for replica {}", replica);
-        Object partitionLock = appCtx.getReplicaManager().getPartitionSyncLock(replica.getIdentifier().getPartition());
+        PartitionSyncLock partitionLock =
+                appCtx.getReplicaManager().getPartitionSyncLock(replica.getIdentifier().getPartition());
         synchronized (partitionLock) {
             LOGGER.trace("acquired partition replica lock");
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
