@@ -30,7 +30,7 @@ import com.azure.identity.DefaultAzureCredentialBuilder;
 
 public class AzBlobStorageClientConfig {
     // Ref: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch?tabs=microsoft-entra-id
-    static final int DELETE_BATCH_SIZE = 256;
+    static final int MAX_CONCURRENT_REQUESTS = 20;
 
     private final int writeBufferSize;
     private final String region;
