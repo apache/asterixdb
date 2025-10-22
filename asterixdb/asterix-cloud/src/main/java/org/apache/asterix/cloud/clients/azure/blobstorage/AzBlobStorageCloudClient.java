@@ -100,13 +100,13 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, ICloudGuardian guardian) {
-        this(config, buildClient(config), guardian);
+        this(config, buildClient(config), buildAsyncClient(config), guardian);
     }
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
-            ICloudGuardian guardian) {
+            BlobServiceAsyncClient asyncBlobServiceClient, ICloudGuardian guardian) {
         this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getBucket());
-        this.blobContainerAsyncClient = buildAsyncClient(config).getBlobContainerAsyncClient(config.getBucket());
+        this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getBucket());
         this.config = config;
         this.guardian = guardian;
         long profilerInterval = config.getProfilerLogInterval();

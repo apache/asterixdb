@@ -77,6 +77,7 @@ import com.azure.identity.ClientCertificateCredentialBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceAsyncClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
@@ -94,14 +95,24 @@ public class AzureUtils {
         throw new AssertionError("do not instantiate");
     }
 
+    public static BlobServiceClient buildAzureBlobClient(IApplicationContext appCtx, Map<String, String> configuration)
+            throws CompilationException {
+        return buildAzureBlobClient(BlobServiceClient.class, appCtx, configuration);
+    }
+
+    public static BlobServiceAsyncClient buildAzureBlobAsyncClient(IApplicationContext appCtx,
+            Map<String, String> configuration) throws CompilationException {
+        return buildAzureBlobClient(BlobServiceAsyncClient.class, appCtx, configuration);
+    }
+
     /**
      * Builds the Azure storage account using the provided configuration
      *
      * @param configuration properties
      * @return client
      */
-    public static BlobServiceClient buildAzureBlobClient(IApplicationContext appCtx, Map<String, String> configuration)
-            throws CompilationException {
+    private static <T> T buildAzureBlobClient(Class<T> type, IApplicationContext appCtx,
+            Map<String, String> configuration) throws CompilationException {
         String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
         String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
         String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
@@ -247,7 +258,11 @@ public class AzureUtils {
         }
 
         try {
-            return builder.buildClient();
+            if (type == BlobServiceClient.class) {
+                return type.cast(builder.buildClient());
+            } else {
+                return type.cast(builder.buildAsyncClient());
+            }
         } catch (Exception ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
