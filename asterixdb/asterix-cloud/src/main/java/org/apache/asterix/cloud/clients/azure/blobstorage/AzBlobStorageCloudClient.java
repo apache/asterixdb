@@ -19,8 +19,6 @@
 
 package org.apache.asterix.cloud.clients.azure.blobstorage;
 
-import static org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig.MAX_CONCURRENT_REQUESTS;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FilenameFilter;
@@ -299,7 +297,8 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         }
 
         try {
-            Flux.fromIterable(deleteMonos).flatMap(mono -> mono, MAX_CONCURRENT_REQUESTS).then().block();
+            Flux.fromIterable(deleteMonos).flatMap(mono -> mono, config.getRequestsMaxPendingHttpConnections()).then()
+                    .block();
         } catch (Exception ex) {
             throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE", ex, paths.toString());
         }
@@ -354,7 +353,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     @Override
     public IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager) {
-        return new AzureParallelDownloader(ioManager, blobContainerClient, profiler, config);
+        return new AzureParallelDownloader(ioManager, blobContainerAsyncClient, profiler, config);
     }
 
     @Override

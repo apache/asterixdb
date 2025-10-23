@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IODeviceHandle;
 
@@ -30,7 +29,7 @@ public class DefaultDeviceResolver implements IFileDeviceResolver {
     private AtomicInteger next = new AtomicInteger(0);
 
     @Override
-    public IODeviceHandle resolve(String relPath, List<IODeviceHandle> devices) throws HyracksDataException {
+    public IODeviceHandle resolve(String relPath, List<IODeviceHandle> devices) {
         int numDevices = devices.size();
         String path = relPath;
         // if number of devices is 1, we return the device

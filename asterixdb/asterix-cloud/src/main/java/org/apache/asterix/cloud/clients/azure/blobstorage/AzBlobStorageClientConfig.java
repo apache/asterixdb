@@ -46,18 +46,23 @@ public class AzBlobStorageClientConfig {
     private final int writeMaxRequestsPerSeconds;
     private final int readMaxRequestsPerSeconds;
     private final boolean storageDisableSSLVerify;
+    private final int requestsMaxHttpConnections;
+    private final int requestsMaxPendingHttpConnections;
+    private final int requestsHttpConnectionAcquireTimeout;
     private final AccessTier accessTier;
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, int writeBufferSize) {
         this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false,
-                null);
+                null, CloudProperties.MAX_HTTP_CONNECTIONS, CloudProperties.MAX_PENDING_HTTP_CONNECTIONS,
+                CloudProperties.HTTP_CONNECTION_ACQUIRE_TIMEOUT);
     }
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify,
-            AccessTier accessTier) {
+            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify, AccessTier accessTier,
+            int requestsMaxHttpConnections, int requestsMaxPendingHttpConnections,
+            int requestsHttpConnectionAcquireTimeout) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -69,6 +74,10 @@ public class AzBlobStorageClientConfig {
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.writeBufferSize = writeBufferSize;
         this.storageDisableSSLVerify = storageDisableSSLVerify;
+        this.requestsMaxHttpConnections = requestsMaxHttpConnections;
+        this.requestsMaxPendingHttpConnections =
+                getRequestsMaxPendingHttpConnections(requestsMaxPendingHttpConnections);
+        this.requestsHttpConnectionAcquireTimeout = requestsHttpConnectionAcquireTimeout;
         this.accessTier = accessTier;
     }
 
@@ -78,7 +87,9 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
-                cloudProperties.isStorageDisableSSLVerify(), INTERNAL_STORAGE_ACCESS_TIER);
+                cloudProperties.isStorageDisableSSLVerify(), INTERNAL_STORAGE_ACCESS_TIER,
+                cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.getRequestsMaxPendingHttpConnections(),
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout());
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -147,5 +158,24 @@ public class AzBlobStorageClientConfig {
 
     public AccessTier getAccessTier() {
         return accessTier;
+    }
+
+    public int getRequestsMaxHttpConnections() {
+        return requestsMaxHttpConnections;
+    }
+
+    public int getRequestsMaxPendingHttpConnections() {
+        return requestsMaxPendingHttpConnections;
+    }
+
+    public int getRequestsHttpConnectionAcquireTimeout() {
+        return requestsHttpConnectionAcquireTimeout;
+    }
+
+    private static int getRequestsMaxPendingHttpConnections(int requestsMaxPendingHttpConnections) {
+        if (requestsMaxPendingHttpConnections <= 0) {
+            throw new IllegalArgumentException("requestsMaxPendingHttpConnections must be greater than 0");
+        }
+        return requestsMaxPendingHttpConnections;
     }
 }

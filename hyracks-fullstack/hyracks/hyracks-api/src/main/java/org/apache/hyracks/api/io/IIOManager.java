@@ -181,7 +181,7 @@ public interface IIOManager extends Closeable {
      * @param path relative path
      * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code Path}
      */
-    FileReference resolve(String path) throws HyracksDataException;
+    FileReference resolve(String path);
 
     /**
      * Gets a file reference from an absolute path
