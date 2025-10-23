@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.clients.azure.blobstorage;
 
 import static org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig.MAX_CONCURRENT_REQUESTS;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -67,12 +68,14 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceAsyncClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.AccessTier;
 import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobListDetails;
 import com.azure.storage.blob.models.BlobRange;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.storage.common.StorageSharedKeyCredential;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -87,6 +90,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 public class AzBlobStorageCloudClient implements ICloudClient {
+
     private static final String BUCKET_ROOT_PATH = "";
     public static final String AZURITE_ENDPOINT = "http://127.0.0.1:15055/devstoreaccount1/";
     private static final String AZURITE_ACCOUNT_NAME = "devstoreaccount1";
@@ -98,6 +102,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     private final AzBlobStorageClientConfig config;
     private final IRequestProfilerLimiter profiler;
     private static final Logger LOGGER = LogManager.getLogger();
+    private final AccessTier accessTier;
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, ICloudGuardian guardian) {
         this(config, buildClient(config), buildAsyncClient(config), guardian);
@@ -109,6 +114,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getBucket());
         this.config = config;
         this.guardian = guardian;
+        this.accessTier = config.getAccessTier();
         long profilerInterval = config.getProfilerLogInterval();
         AzureRequestRateLimiter limiter = new AzureRequestRateLimiter(config);
         if (profilerInterval > 0) {
@@ -132,7 +138,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         ICloudBufferedWriter bufferedWriter = new AzBlobStorageBufferedWriter(blobContainerClient, profiler, guardian,
-                bucket, config.getPrefix() + path);
+                bucket, config.getPrefix() + path, config.getAccessTier());
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
     }
 
@@ -241,9 +247,10 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     public void write(String bucket, String path, byte[] data) {
         guardian.checkWriteAccess(bucket, path);
         profiler.objectWrite();
-        BinaryData binaryData = BinaryData.fromBytes(data);
         BlobClient blobClient = blobContainerClient.getBlobClient(config.getPrefix() + path);
-        blobClient.upload(binaryData, true);
+        BlobParallelUploadOptions options =
+                new BlobParallelUploadOptions(new ByteArrayInputStream(data)).setTier(accessTier);
+        blobClient.uploadWithResponse(options, null, null);
     }
 
     @Override
@@ -255,7 +262,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         profiler.objectCopy();
         guardian.checkWriteAccess(bucket, destPath.getRelativePath());
         BlobClient destBlobClient = blobContainerClient.getBlobClient(destPath.getFile().getPath());
-        destBlobClient.beginCopy(srcBlobUrl, null);
+        destBlobClient.beginCopy(srcBlobUrl, null, accessTier, null, null, null, null);
     }
 
     @Override

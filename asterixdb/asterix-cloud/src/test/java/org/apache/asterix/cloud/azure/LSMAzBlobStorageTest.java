@@ -117,7 +117,7 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         URI blobStore = URI.create(blobServiceClient.getAccountUrl());
         String endpoint = blobStore.getScheme() + "://" + blobStore.getAuthority() + "/devstoreaccount1";
         AzBlobStorageClientConfig config = new AzBlobStorageClientConfig(MOCK_SERVER_REGION, endpoint, "", false, 0,
-                PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, true);
+                PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, true, null);
         CLOUD_CLIENT = new AzBlobStorageCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 

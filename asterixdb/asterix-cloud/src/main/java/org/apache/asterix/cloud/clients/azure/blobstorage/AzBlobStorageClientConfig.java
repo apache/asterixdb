@@ -27,11 +27,13 @@ import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
 
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.storage.blob.models.AccessTier;
 
 public class AzBlobStorageClientConfig {
     // Ref: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch?tabs=microsoft-entra-id
     static final int MAX_CONCURRENT_REQUESTS = 20;
 
+    private static final AccessTier INTERNAL_STORAGE_ACCESS_TIER = AccessTier.HOT;
     private final int writeBufferSize;
     private final String region;
     private final String endpoint;
@@ -44,15 +46,18 @@ public class AzBlobStorageClientConfig {
     private final int writeMaxRequestsPerSeconds;
     private final int readMaxRequestsPerSeconds;
     private final boolean storageDisableSSLVerify;
+    private final AccessTier accessTier;
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, int writeBufferSize) {
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false);
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false,
+                null);
     }
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify) {
+            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify,
+            AccessTier accessTier) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -64,6 +69,7 @@ public class AzBlobStorageClientConfig {
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.writeBufferSize = writeBufferSize;
         this.storageDisableSSLVerify = storageDisableSSLVerify;
+        this.accessTier = accessTier;
     }
 
     public static AzBlobStorageClientConfig of(CloudProperties cloudProperties) {
@@ -72,7 +78,7 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
-                cloudProperties.isStorageDisableSSLVerify());
+                cloudProperties.isStorageDisableSSLVerify(), INTERNAL_STORAGE_ACCESS_TIER);
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -137,5 +143,9 @@ public class AzBlobStorageClientConfig {
 
     public int getWriteBufferSize() {
         return writeBufferSize;
+    }
+
+    public AccessTier getAccessTier() {
+        return accessTier;
     }
 }
