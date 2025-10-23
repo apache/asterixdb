@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+UPSERT INTO col1 ([
+{"id": 1, "city": "c1"},
+{"id": 2, "city": "c2"},
+{"id": 3, "city": "c2"},
+{"id": 4, "city": "c1"},
+{"id": 6, "city": "c1"},
+{"id": 7, "city": "c3"},
+{"id": 8, "city": "c4"}
+]
+);
+
+UPSERT INTO col2 ([
+{"id": 1, "city": "c1"},
+{"id": 2, "city": "c2"},
+{"id": 3, "city": "c2"},
+{"id": 4, "city": "c1"},
+{"id": 5, "city": "c3"},
+{"id": 6, "city": "c3"},
+{"id": 7, "city": "c5"}
+]
+);
+
+COPY (
+SELECT
+  city,
+  COUNT(col1_id) as nombre_col1,
+  COUNT(col2_id) as nombre_col2
+FROM (
+  SELECT col1.id as col1_id, col1.city as city, NULL as col2_id
+  FROM col1
+  UNION ALL
+  SELECT col2.id as col2_id, col2.city as city, NULL as col1_id
+  FROM col2
+) as combined_data
+GROUP BY city
+HAVING COUNT(col1_id) > 0
+AND COUNT(col2_id) > 0)
+AS b
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "union-all")
+WITH {
+    %template_colons%,
+    %additionalProperties%
+    "format":"json"
+}
