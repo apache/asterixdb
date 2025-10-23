@@ -20,16 +20,18 @@ package org.apache.asterix.common.external;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-public interface IExternalCredentialsCacheUpdater {
+public interface IExternalStatsTracker {
 
     /**
-     * Generates new credentials and caches them
+     * Resolves a name from the given configuration map
      *
-     * @param configuration configuration containing external collection details
+     * @param configuration The configuration map
+     * @return The resolved name
      */
-    Object generateAndCacheCredentials(Map<String, String> configuration)
-            throws HyracksDataException, CompilationException;
+    String resolveName(Map<String, String> configuration);
+
+    /**
+     * Increments the total AWS Assume Role failure count
+     */
+    void incrementAwsAssumeRoleFailure(String name, String roleArn);
 }

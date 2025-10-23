@@ -6046,7 +6046,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
-        metadataProvider.setExternalEntityId(details);
         validateAdapterSpecificProperties(details, srcLoc, appCtx);
     }
 
@@ -6057,7 +6056,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String adapterName = externalDetailsDecl.getAdapter();
         Map<String, String> properties = externalDetailsDecl.getProperties();
         properties.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapterName);
-        md.setExternalEntityId(properties);
         WriterValidationUtil.validateWriterConfiguration(adapterName, supportedAdapters, properties, sourceLocation);
         return properties;
     }
