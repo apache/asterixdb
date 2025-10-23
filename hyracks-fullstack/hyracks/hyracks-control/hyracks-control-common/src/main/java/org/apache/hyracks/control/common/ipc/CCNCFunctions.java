@@ -609,8 +609,10 @@ public class CCNCFunctions {
 
         private NetworkAddress networkAddress;
 
+        private String nodeId;
+
         public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, IResultMetadata metadata,
-                boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
+                boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress, String nodeId) {
             this.jobId = jobId;
             this.rsId = rsId;
             this.metadata = metadata;
@@ -618,6 +620,7 @@ public class CCNCFunctions {
             this.partition = partition;
             this.nPartitions = nPartitions;
             this.networkAddress = networkAddress;
+            this.nodeId = nodeId;
         }
 
         @Override
@@ -652,6 +655,10 @@ public class CCNCFunctions {
         public NetworkAddress getNetworkAddress() {
             return networkAddress;
         }
+
+        public String getNodeId() {
+            return nodeId;
+        }
     }
 
     public static class ReportResultPartitionWriteCompletionFunction extends Function {
@@ -663,10 +670,14 @@ public class CCNCFunctions {
 
         private final int partition;
 
-        public ReportResultPartitionWriteCompletionFunction(JobId jobId, ResultSetId rsId, int partition) {
+        private final int resultCount;
+
+        public ReportResultPartitionWriteCompletionFunction(JobId jobId, ResultSetId rsId, int partition,
+                int resultCount) {
             this.jobId = jobId;
             this.rsId = rsId;
             this.partition = partition;
+            this.resultCount = resultCount;
         }
 
         @Override
@@ -684,6 +695,10 @@ public class CCNCFunctions {
 
         public int getPartition() {
             return partition;
+        }
+
+        public int getResultCount() {
+            return resultCount;
         }
     }
 

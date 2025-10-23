@@ -166,7 +166,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         } catch (InterruptedException ex) {
             throw HyracksDataException.create(ex);
         } catch (IOException ex) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ExceptionUtils.getMessageOrToString(ex));
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex,
+                    ExceptionUtils.getMessageOrToString(ex));
         }
     }
 

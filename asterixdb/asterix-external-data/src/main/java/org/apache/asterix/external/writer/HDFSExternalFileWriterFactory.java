@@ -137,7 +137,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
                 doValidate(testFs);
             }
         } catch (IOException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SINK_ERROR, ExceptionUtils.getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SINK_ERROR, ex, ExceptionUtils.getMessageOrToString(ex));
         }
     }
 

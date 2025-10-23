@@ -23,6 +23,7 @@ import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,8 @@ import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
+import org.apache.asterix.common.utils.Datasets;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -500,12 +503,27 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     @Override
     public synchronized void asyncFlushMatchingIndexes(Predicate<ILSMIndex> indexPredicate)
             throws HyracksDataException {
+        // Key: PartitionsBitSet (immutable after insertion) -> datasets sharing that partition set
+        Map<Partitions, Datasets> grouped = new LinkedHashMap<>();
+
         for (DatasetResource dsr : datasets.values()) {
+            Partitions flushedPartitions;
+            flushedPartitions = new Partitions();
             for (PrimaryIndexOperationTracker opTracker : dsr.getOpTrackers()) {
                 synchronized (opTracker) {
                     asyncFlush(dsr, opTracker, indexPredicate);
+                    flushedPartitions.add(opTracker.partition);
                 }
             }
+            // only log datasets for which a flush was actually scheduled
+            if (!flushedPartitions.isEmpty()) {
+                grouped.computeIfAbsent(flushedPartitions, k -> new Datasets()).add(dsr.getDatasetID());
+                // IMPORTANT: do not modify flushedPartitions after this point as it is now part of the map key!
+            }
+        }
+
+        for (Map.Entry<Partitions, Datasets> e : grouped.entrySet()) {
+            LOGGER.info("Async flushed dataset(s) " + e.getValue() + " on partition(s) " + e.getKey());
         }
     }
 
@@ -515,7 +533,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         for (ILSMIndex lsmIndex : dsr.getDatasetInfo().getDatasetPartitionOpenIndexes(partition)) {
             LSMIOOperationCallback ioCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
             if (needsFlush(opTracker, lsmIndex, ioCallback) && indexPredicate.test(lsmIndex)) {
-                LOGGER.info("Async flushing {}", opTracker);
                 opTracker.setFlushOnExit(true);
                 opTracker.flushIfNeeded();
                 break;

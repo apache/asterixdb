@@ -1920,6 +1920,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 .filter(idx -> idx.isSecondaryIndex() && !idx.isSampleIndex()).collect(Collectors.toList());
     }
 
+    /**
+     * Returns true if the dataset has any (non-samples) secondary index.
+     */
+    public boolean hasSecondaryIndexes(Dataset ds) throws AlgebricksException {
+        return getDatasetIndexes(ds.getDatabaseName(), ds.getDataverseName(), ds.getDatasetName()).stream()
+                .anyMatch(idx -> idx.isSecondaryIndex() && !idx.isSampleIndex());
+    }
+
     public LockList getLocks() {
         return locks;
     }

@@ -38,6 +38,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.control.nc.result.ResultPartitionWriter;
 import org.apache.hyracks.dataflow.common.comm.io.FrameOutputStream;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -109,6 +110,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                                     frameOutputStream.getLength());
                         }
                     }
+                    ((ResultPartitionWriter) resultPartitionWriter).incrementResultCount();
                     frameOutputStream.reset();
                 }
             }

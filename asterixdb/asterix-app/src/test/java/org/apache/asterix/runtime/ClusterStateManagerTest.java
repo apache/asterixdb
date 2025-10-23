@@ -19,9 +19,7 @@
 package org.apache.asterix.runtime;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +35,7 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.common.utils.PartitioningScheme;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.asterix.runtime.utils.BulkTxnIdFactory;
@@ -277,8 +276,8 @@ public class ClusterStateManagerTest {
         return localCounters;
     }
 
-    private static Set<Integer> getNodeActivePartitions(String nodeId) {
-        Set<Integer> activePartitions = new HashSet<>();
+    private static Partitions getNodeActivePartitions(String nodeId) {
+        Partitions activePartitions = new Partitions();
         switch (nodeId) {
             case NC1:
                 activePartitions.add(0);

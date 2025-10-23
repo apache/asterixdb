@@ -242,7 +242,8 @@ public class HttpUtil {
                 try {
                     response.close();
                 } catch (IOException e) {
-                    LOGGER.debug("{} ignoring exception thrown on stream close due to interrupt", description, e);
+                    LOGGER.debug("{} ignoring exception thrown on stream close due to interrupt: {}", description,
+                            String.valueOf(e));
                 }
             });
             try {
@@ -251,7 +252,8 @@ public class HttpUtil {
                 LOGGER.warn("{} did not exit on stream close due to interrupt after 1s", description);
                 readFuture.cancel(true);
             } catch (ExecutionException ee) {
-                LOGGER.debug("ignoring exception awaiting aborted {} shutdown", description, ee);
+                LOGGER.debug("ignoring exception awaiting aborted {} shutdown: {}", description,
+                        String.valueOf(ee.getCause()));
             }
             throw ex;
         }

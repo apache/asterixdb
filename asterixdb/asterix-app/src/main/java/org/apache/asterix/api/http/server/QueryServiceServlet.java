@@ -26,22 +26,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
-import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ExecutionWarning;
 import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.fields.ClientContextIdPrinter;
-import org.apache.asterix.app.result.fields.ErrorsPrinter;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.ParseOnlyResultPrinter;
 import org.apache.asterix.app.result.fields.PlansPrinter;
@@ -60,7 +56,6 @@ import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.ApplicationConfigurator;
@@ -83,15 +78,12 @@ import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.IError;
-import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -153,56 +145,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         response.setStatus(HttpResponseStatus.OK);
     }
 
-    protected static class RequestExecutionState {
-        private long execStart = -1;
-        private long execEnd = -1;
-        private ResultStatus resultStatus = ResultStatus.FATAL;
-        private HttpResponseStatus httpResponseStatus = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-
-        public void setStatus(ResultStatus resultStatus, HttpResponseStatus httpResponseStatus) {
-            this.resultStatus = resultStatus;
-            this.httpResponseStatus = httpResponseStatus;
-        }
-
-        public ResultStatus getResultStatus() {
-            return resultStatus;
-        }
-
-        public HttpResponseStatus getHttpStatus() {
-            return httpResponseStatus;
-        }
-
-        void start() {
-            execStart = System.nanoTime();
-        }
-
-        void end() {
-            execEnd = System.nanoTime();
-        }
-
-        void finish() {
-            if (execStart == -1) {
-                execEnd = -1;
-            } else if (execEnd == -1) {
-                execEnd = System.nanoTime();
-            }
-        }
-
-        public long duration() {
-            return execEnd - execStart;
-        }
-
-        protected StringBuilder append(StringBuilder sb) {
-            return sb.append("ResultStatus: ").append(resultStatus.str()).append(" HTTPStatus: ")
-                    .append(String.valueOf(httpResponseStatus));
-        }
-
-        @Override
-        public String toString() {
-            return append(new StringBuilder()).toString();
-        }
-    }
-
     private static SessionOutput createSessionOutput(PrintWriter resultWriter) {
         SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
         SessionOutput.ResultDecorator resultPostfix = ResultUtil.createPostResultDecorator();
@@ -242,18 +184,20 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     /**
-     * Determines the URL for a result handle based on the host and the path of the incoming request and the result
+     * Determines the URI for a result handle based on the result
      * delivery mode. Usually there will be a "status" endpoint for ASYNC requests that exposes the status of the
      * execution and a "result" endpoint for DEFERRED requests that will deliver the result for a successful execution.
      *
-     * @param host
-     *            hostname used for this request
      * @param path
      *            servlet path for this request
      * @param delivery
      *            ResultDelivery mode for this request
      * @return a handle (URL) that allows a client to access further information for this request
      */
+    protected String getHandleUrl(String path, ResultDelivery delivery) {
+        return path + handlePath(delivery);
+    }
+
     protected String getHandleUrl(String host, String path, ResultDelivery delivery) {
         return "http://" + host + path + handlePath(delivery);
     }
@@ -363,16 +307,23 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     protected ResponseMetrics buildResponseFooters(long elapsedStart, long errorCount, Stats stats,
             RequestExecutionState executionState, Charset resultCharset, ResponsePrinter responsePrinter,
             ResultDelivery delivery) {
-        if (ResultDelivery.ASYNC != delivery) {
-            // in case of ASYNC delivery, the status is printed by query translator
-            responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
-        }
         final ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart, executionState.duration(),
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
                 stats.getTotalWarningsCount(), stats.getCompileTime(), stats.getQueueWaitTime(),
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
                 stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
-        responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
+        if (ResultDelivery.ASYNC != delivery) {
+            // in case of ASYNC delivery, the status is printed by query translator
+            responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
+            responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
+        } else {
+            // Only print selected metrics for async requests
+            responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset,
+                    Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.QUEUE_WAIT_TIME,
+                            MetricsPrinter.Metrics.COMPILE_TIME, MetricsPrinter.Metrics.WARNING_COUNT,
+                            MetricsPrinter.Metrics.ERROR_COUNT)));
+        }
+
         if (isPrintingProfile(stats)) {
             responsePrinter.addFooterPrinter(new ProfilePrinter(stats.getJobProfile()));
         }
@@ -436,63 +387,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings, executionState);
     }
 
-    protected boolean handleIFormattedException(IError error, IFormattedException ex,
-            RequestExecutionState executionState, QueryServiceRequestParameters param, IServletResponse response) {
-        if (error instanceof ErrorCode) {
-            switch ((ErrorCode) error) {
-                case INVALID_REQ_PARAM_VAL:
-                case INVALID_REQ_JSON_VAL:
-                case NO_STATEMENT_PROVIDED:
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-                    return true;
-                case REQUEST_TIMEOUT:
-                    logException(Level.INFO, "request execution timed out", param.getRequestId(),
-                            param.getClientContextID());
-                    executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
-                    return true;
-                case REJECT_NODE_UNREGISTERED:
-                case REJECT_BAD_CLUSTER_STATE:
-                    logException(Level.WARN, ex.getMessage(), param.getRequestId(), param.getClientContextID());
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
-                    return true;
-                default:
-                    // fall-through
-            }
-        } else if (error instanceof org.apache.hyracks.api.exceptions.ErrorCode) {
-            switch ((org.apache.hyracks.api.exceptions.ErrorCode) error) {
-                case JOB_REQUIREMENTS_EXCEED_CAPACITY:
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
-            QueryServiceRequestParameters param, IServletResponse response) {
-        if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof AlgebricksException) {
-            if (LOGGER.isDebugEnabled()) {
-                logException(Level.DEBUG, t.getMessage(), param.getRequestId(), param.getClientContextID(), t);
-            } else {
-                logException(Level.INFO, t.getMessage(), param.getRequestId(), param.getClientContextID());
-            }
-            executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-            return;
-        } else if (t instanceof IFormattedException) {
-            IFormattedException formattedEx = (IFormattedException) t;
-            Optional<IError> maybeError = formattedEx.getError();
-            if (maybeError.isPresent() && handleIFormattedException(maybeError.get(), (IFormattedException) t,
-                    executionState, param, response)) {
-                return;
-            }
-        }
-        logException(Level.WARN, "unexpected exception", param.getRequestId(), param.getClientContextID(), t);
-        executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-    }
-
     private void setSessionConfig(SessionOutput sessionOutput, QueryServiceRequestParameters param,
             ResultDelivery delivery) {
-        String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
+        String handleUrl = param.isIncludeHost() ? getHandleUrl(param.getHost(), param.getPath(), delivery)
+                : getHandleUrl(param.getPath(), delivery);
         sessionOutput.setHandleAppender(ResultUtil.createResultHandleAppender(handleUrl));
         SessionConfig sessionConfig = sessionOutput.config();
         SessionConfig.ClientType clientType = param.getClientType();
@@ -516,12 +414,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON
                         && format != SessionConfig.OutputFormat.LOSSLESS_ADM_JSON);
         sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, param.isCSVWithHeader());
-    }
-
-    protected void requestFailed(Throwable throwable, ResponsePrinter responsePrinter,
-            RequestExecutionState executionState) {
-        final ExecutionError executionError = ExecutionError.of(throwable);
-        responsePrinter.addResultPrinter(new ErrorsPrinter(Collections.singletonList(executionError)));
+        sessionConfig.setTimeout(param.getTimeout());
+        sessionConfig.setIncludeHost(param.isIncludeHost());
     }
 
     protected QueryServiceRequestParameters newQueryRequestParameters() {
@@ -559,13 +453,5 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     protected String getApplicationVersion() {
         return ApplicationConfigurator.getApplicationVersion(appCtx.getBuildProperties());
-    }
-
-    private void logException(Level lvl, String msg, String clientCtxId, String uuid) {
-        LOGGER.log(lvl, "handleException: {}: uuid={}, clientContextID={}", msg, uuid, clientCtxId);
-    }
-
-    private void logException(Level lvl, String msg, String clientCtxId, String uuid, Throwable t) {
-        LOGGER.log(lvl, "handleException: {}: uuid={}, clientContextID={}", msg, uuid, clientCtxId, t);
     }
 }

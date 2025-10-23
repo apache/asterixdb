@@ -28,11 +28,8 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetResultMetadataWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-
     private final JobId jobId;
-
     private final ResultSetId rsId;
-
     private final IResultCallback<IResultMetadata> callback;
 
     public GetResultMetadataWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,

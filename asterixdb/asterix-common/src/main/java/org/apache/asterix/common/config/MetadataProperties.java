@@ -24,10 +24,10 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -124,7 +124,7 @@ public class MetadataProperties extends AbstractProperties {
         return accessor.getClusterPartitions();
     }
 
-    public Set<Integer> getNodePartitions(String nodeId) {
+    public Partitions getNodePartitions(String nodeId) {
         return accessor.getNodePartitions(nodeId);
     }
 

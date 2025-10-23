@@ -18,6 +18,7 @@
  */
 
 -- handlevariable=status
+-- param include-host=true
 
 select count(*)
 from gargel

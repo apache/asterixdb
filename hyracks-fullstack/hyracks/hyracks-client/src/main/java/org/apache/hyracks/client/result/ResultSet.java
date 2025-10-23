@@ -73,6 +73,19 @@ public class ResultSet implements IResultSet, Closeable {
         return reader;
     }
 
+    @Override
+    public IResultSetReader createReader(JobId jobId, ResultSetId resultSetId, int partition)
+            throws HyracksDataException {
+        IResultSetReader reader = null;
+        try {
+            reader = new PartitionResultSetReader(resultDirectory, netManager, resultClientCtx, jobId, resultSetId,
+                    partition);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+        return reader;
+    }
+
     static class ResultClientContext extends FrameManager implements IHyracksCommonContext {
 
         ResultClientContext(int frameSize) {

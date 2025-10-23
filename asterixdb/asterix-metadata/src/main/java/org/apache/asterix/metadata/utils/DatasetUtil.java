@@ -484,9 +484,9 @@ public class DatasetUtil {
             primaryKeyFields[i] = i;
             pkFields[i] = fieldPermutation[i];
         }
-        boolean hasSecondaries = metadataProvider
-                .getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName())
-                .size() > 1;
+
+        boolean hasSecondaries = metadataProvider.hasSecondaryIndexes(dataset);
+
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                 storageComponentProvider, primaryIndex, IndexOperation.UPSERT, primaryKeyFields);

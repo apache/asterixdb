@@ -731,98 +731,62 @@ public class JoinNode {
     private void buildIndexPlans() {
         List<PlanNode> allPlans = joinEnum.getAllPlans();
         PlanNode pn;
-        ICost opCost, totalCost;
+        double ic, dc, tc, oc; // for debugging
+
         List<Triple<Index, Double, AbstractFunctionCallExpression>> mandatoryIndexesInfo = new ArrayList<>();
         List<Triple<Index, Double, AbstractFunctionCallExpression>> optionalIndexesInfo = new ArrayList<>();
         double sel = 1.0;
-        boolean mandatoryArrayIndexUsed = false;
-        boolean optionalArrayIndexUsed = false;
-        opCost = this.joinEnum.getCostHandle().zeroCost();
+
         for (int i = 0; i < IndexCostInfo.size(); i++) {
             if (joinEnum.findUseIndexHint(IndexCostInfo.get(i).third)) {
                 mandatoryIndexesInfo.add(IndexCostInfo.get(i));
-                mandatoryArrayIndexUsed = mandatoryArrayIndexUsed
-                        || (mandatoryIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY);
             } else {
                 optionalIndexesInfo.add(IndexCostInfo.get(i));
-                optionalArrayIndexUsed = optionalArrayIndexUsed
-                        || (optionalIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY);
             }
         }
 
-        List<ICost> indexCosts = new ArrayList<>(); // these are the costs associated with the index only
-        // First cost all the mandatory indexes. These will be in the plan regardless of the cost
+        ICost indexCosts = this.joinEnum.getCostHandle().zeroCost();
+        ICost totalCost = this.joinEnum.getCostHandle().zeroCost();
+        ICost dataScanCost;
+
         if (mandatoryIndexesInfo.size() > 0) {
             for (int i = 0; i < mandatoryIndexesInfo.size(); i++) {
-                indexCosts.add(joinEnum.getCostMethodsHandle().costIndexScan(this, mandatoryIndexesInfo.get(i).second));
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, mandatoryIndexesInfo.get(i).second);
+                if ((mandatoryIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
+                    cost = cost.costAdd(cost); // double the cost for arrays.
+                }
+                indexCosts = indexCosts.costAdd(cost); // a running tally
+                sel *= mandatoryIndexesInfo.get(i).second;
             }
-
-            opCost = this.joinEnum.getCostHandle().zeroCost();
-
-            for (int i = 0; i < mandatoryIndexesInfo.size(); i++) {
-                opCost = opCost.costAdd(indexCosts.get(i)); // opCost will have all the index scan costs
-                sel *= mandatoryIndexesInfo.get(i).second; // assuming selectivities are independent for now
-            }
-
-            // Now add the data Scan cost.
-            ICost dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
-            opCost = opCost.costAdd(dataScanCost); // opCost now has the total cost of all the mandatory indexes + data costs.
-            if (mandatoryArrayIndexUsed) {
-                opCost = opCost.costAdd(opCost);
-            }
+            dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
+            totalCost = indexCosts.costAdd(dataScanCost); // this is the total cost of using the mandatory costs. This cost cannot be skipped.
         }
 
-        ICost mandatoryIndexesCost = opCost; // This will be added at the end to the total cost irrespective of optimality.
-        //opCost = this.joinEnum.getCostHandle().zeroCost(); // compute cost for optional indexes and store in opCost.
-        // Now lets deal with the optional indexes. These are the ones without any hints on them.
-        List<ICost> dataCosts = new ArrayList<>(); // these are the costs associated with accessing the data records
-        indexCosts.clear();
+        ICost opCost = totalCost;
         if (optionalIndexesInfo.size() > 0) {
-            optionalIndexesInfo.sort(Comparator.comparingDouble(o -> o.second)); // sort on selectivity.
+            optionalIndexesInfo.sort(Comparator.comparingDouble(o -> o.second));
 
-            // find the costs using one index at a time first.
-
-            // sel is now the selectivity of all the previous mandatory indexes.
             for (int i = 0; i < optionalIndexesInfo.size(); i++) {
-                indexCosts.add(joinEnum.getCostMethodsHandle().costIndexScan(this, optionalIndexesInfo.get(i).second)); // I0; I1; I2; ...
-                // Now get the cost of the datascans involved with the multiplied selectivity
-                // dataCost (0) will contain the dataScan cost with the first index
-                //dataCost (1) will contain the dataScan cost with the first index and the 2nd index and so on.
-                sel *= optionalIndexesInfo.get(i).second; // assuming selectivities are independent for now
-                if (optionalIndexesInfo.get(i).first.isPrimaryIndex()) {
-                    dataCosts.add(joinEnum.getCostHandle().zeroCost());
-                } else {
-                    dataCosts.add(joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel)); // D0; D01; D012; ...
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, optionalIndexesInfo.get(i).second);
+                if ((optionalIndexesInfo.get(i).first.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
+                    cost = cost.costAdd(cost); // double the cost for arrays.
                 }
-            }
-
-            // At the of of the above loop, I0, I1, I2 ... have been computed
-            // Also D0, D01, D012 ... have been computed.
-
-            opCost = indexCosts.get(0).costAdd(dataCosts.get(0));
-            //opCost is now the cost of the first (and cheapest) optional index plus the corresponding data scan
-
-            //Intersect the first two and then the first three and so on.
-            //If the cost does not decrease, then stop
-
-            ICost newIdxCost = indexCosts.get(0); // I0
-            ICost currentCost;
-            for (int i = 1; i < optionalIndexesInfo.size(); i++) {
-                newIdxCost = newIdxCost.costAdd(indexCosts.get(i)); // I0 + I1; I0 + I1 + I2
-                currentCost = newIdxCost.costAdd(dataCosts.get(i)); // I0 + I1 + D01; I0 + I1 + I2 + D012
-                if (currentCost.costLT(opCost) || level <= joinEnum.cboFullEnumLevel) { // save this cost and try adding one more index
-                    opCost = currentCost;
-                } else {
-                    // set the selectivites of the indexes not picked to be -1.0, so we can set
-                    // the skp index annotations correctly
-                    for (int j = i; j < optionalIndexesInfo.size(); j++) {
-                        optionalIndexesInfo.get(j).second = -1.0;
+                indexCosts = indexCosts.costAdd(cost);
+                sel *= optionalIndexesInfo.get(i).second;
+                dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
+                opCost = indexCosts.costAdd(dataScanCost);
+                tc = totalCost.computeTotalCost();
+                if (tc > 0.0) {
+                    if (opCost.costGT(totalCost)) { // we can stop here since additional indexes are not useful
+                        for (int j = i; j < optionalIndexesInfo.size(); j++) {
+                            optionalIndexesInfo.get(j).second = -1.0;
+                        }
+                        opCost = totalCost;
+                        break;
                     }
-                    break; // can't get any cheaper.
+                } else {
+                    totalCost = indexCosts.costAdd(dataScanCost);
                 }
-            }
-            if (optionalArrayIndexUsed) {
-                opCost = opCost.costAdd(opCost);
             }
         }
 
@@ -832,9 +796,6 @@ public class JoinNode {
                 optionalIndexesInfo.get(j).second = -1.0; // remove all indexes from consideration.
             }
         }
-
-        totalCost = opCost.costAdd(mandatoryIndexesCost); // cost of all the indexes chosen
-        // Now check if any of the indexes were array indexes. If so double the cost
 
         boolean forceEnum = mandatoryIndexesInfo.size() > 0 || level <= joinEnum.cboFullEnumLevel;
         if (opCost.costLT(this.cheapestPlanCost) || forceEnum) {

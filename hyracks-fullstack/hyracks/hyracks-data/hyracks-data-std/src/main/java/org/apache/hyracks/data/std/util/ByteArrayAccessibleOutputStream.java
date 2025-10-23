@@ -125,4 +125,22 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
         ensureCapacity(bytesRequired);
         count = bytesRequired;
     }
+
+    /**
+     * Reset the stream and shrink the internal buffer if its size is larger than newSize.
+     * @param newSize
+     * @return true if the internal buffer was reallocated, false otherwise.
+     */
+    public boolean resetAndShrink(int newSize) {
+        reset();
+        if (buf.length > newSize) {
+            buf = new byte[newSize];
+            return true;
+        }
+        return false;
+    }
+
+    public int capacity() {
+        return buf.length;
+    }
 }

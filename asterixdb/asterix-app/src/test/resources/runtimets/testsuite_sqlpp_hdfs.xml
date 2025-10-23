@@ -255,7 +255,6 @@
         <expected-error>ASX1205: Invalid Parquet Writer Version provided '3'. Supported values: [1, 2]</expected-error>
         <expected-error>ASX0039: Expected integer value, got yvghc (in line 22, at column 6)</expected-error>
         <expected-error>ASX1209: Maximum value allowed for 'max-schemas' is 10. Found 15</expected-error>
-        <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
         <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
         <expected-error>ASX1204: 'rectangle' type not supported in parquet format</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>

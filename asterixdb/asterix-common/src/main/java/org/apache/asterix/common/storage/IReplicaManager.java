@@ -19,9 +19,9 @@
 package org.apache.asterix.common.storage;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.replication.IPartitionReplica;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicaManager {
@@ -54,14 +54,14 @@ public interface IReplicaManager {
      *
      * @return The list of partition
      */
-    Set<Integer> getPartitions();
+    Partitions getPartitions();
 
     /**
      * Sets the node active partitions
      *
      * @param activePartitions
      */
-    void setActivePartitions(Set<Integer> activePartitions);
+    void setActivePartitions(Partitions activePartitions);
 
     /**
      * Promotes a partition by making this node its master replica
@@ -87,7 +87,7 @@ public interface IReplicaManager {
      *
      * @return the synchronization lock
      */
-    Object getPartitionSyncLock(int partition);
+    PartitionSyncLock getPartitionSyncLock(int partition);
 
     /**
      * Gets the partition replicas matching {@code id}
@@ -110,4 +110,6 @@ public interface IReplicaManager {
      * @return true if the partition is originated by this node, otherwise false.
      */
     boolean isPartitionOrigin(int partition);
+
+    record PartitionSyncLock() {}
 }

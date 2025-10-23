@@ -18,6 +18,7 @@
  */
 
 -- handlevariable=status
+-- param include-host=true
 
 set `import-private-functions` `true`;
 select value inject_failure(sleep("result", 5000), true);

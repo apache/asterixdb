@@ -28,8 +28,10 @@ import static org.apache.hyracks.control.common.config.OptionTypes.getRangedInte
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.apache.asterix.common.cloud.CloudCachePolicy;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -70,7 +72,11 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, 120),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
-        CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false);
+        CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),
+        CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT(BOOLEAN, (Function<IApplicationConfig, Boolean>) app -> {
+            String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
+            return endpoint == null || endpoint.isEmpty();
+        });
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -78,6 +84,11 @@ public class CloudProperties extends AbstractProperties {
         <T> Option(IOptionType<T> interpreter, T defaultValue) {
             this.interpreter = interpreter;
             this.defaultValue = defaultValue;
+        }
+
+        <T> Option(IOptionType<T> interpreter, Function<IApplicationConfig, T> defaultOption) {
+            this.interpreter = interpreter;
+            this.defaultValue = defaultOption;
         }
 
         @Override
@@ -134,62 +145,55 @@ public class CloudProperties extends AbstractProperties {
                             + "all partitions upon booting, whereas 'lazy' caching will download a file upon"
                             + " request to open it. 'selective' caching will act as the 'lazy' policy; however, "
                             + " it allows to use the local disk(s) as a cache, where pages and indexes can be "
-                            + " cached or evicted according to the pressure imposed on the local disks."
-                            + " (default: 'selective')";
+                            + " cached or evicted according to the pressure imposed on the local disks";
                 case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
                     return "The percentage of the total disk space that should be allocated for data storage when the"
                             + " 'selective' caching policy is used. The remaining will act as a buffer for "
-                            + " query workspace (i.e., for query operations that require spilling to disk)."
-                            + " (default: 80% of the total disk space)";
+                            + " query workspace (i.e., for query operations that require spilling to disk)";
                 case CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE:
                     return "The percentage of the used storage space at which the disk sweeper starts freeing space by"
                             + " punching holes in stored indexes or by evicting them entirely, "
-                            + " when the 'selective' caching policy is used."
-                            + " (default: 90% of the allocated space for storage)";
+                            + " when the 'selective' caching policy is used";
                 case CLOUD_STORAGE_DISK_MONITOR_INTERVAL:
                     return "The disk monitoring interval time (in seconds): determines how often the system"
-                            + " checks for pressure on disk space when using the 'selective' caching policy."
-                            + " (default : 120 seconds)";
+                            + " checks for pressure on disk space when using the 'selective' caching policy";
                 case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
-                    return "The duration in minutes to consider an index is inactive. (default: 360 or 6 hours)";
+                    return "The duration in minutes to consider an index is inactive";
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
-                    return "Whether or not the debug mode is enabled when using the 'selective' caching policy."
-                            + "(default: false)";
+                    return "Whether or not the debug mode is enabled when using the 'selective' caching policy";
                 case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
                     return "For debugging only. Pressure size will be the current used space + the additional bytes"
                             + " provided by this configuration option instead of using "
-                            + " CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE."
-                            + " (default: 0. I.e., CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE will be used by default)";
+                            + " CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE";
                 case CLOUD_PROFILER_LOG_INTERVAL:
-                    return "The waiting time (in minutes) to log cloud request statistics. The minimum is 1 minute."
-                            + " Note: by default, the logging is disabled. Enabling it could perturb the performance of cloud requests";
+                    return "The waiting time (in minutes) to log cloud request statistics. The minimum is 1 minute"
+                            + " Note: enabling this logging may perturb the performance of cloud requests";
                 case CLOUD_ACQUIRE_TOKEN_TIMEOUT:
                     return "The waiting time (in milliseconds) if a requesting thread failed to acquire a token if the"
-                            + " rate limit of cloud requests exceeded (default: 100, min: 1, and max: 5000)";
+                            + " rate limit of cloud requests exceeded (min: 1, max: 5000)";
                 case CLOUD_MAX_WRITE_REQUESTS_PER_SECOND:
-                    return "The maximum number of write requests per second (default: 250, 0 means unlimited)";
+                    return "The maximum number of write requests per second (0 means unlimited)";
                 case CLOUD_MAX_READ_REQUESTS_PER_SECOND:
-                    return "The maximum number of read requests per second (default: 1500, 0 means unlimited)";
+                    return "The maximum number of read requests per second (0 means unlimited)";
                 case CLOUD_WRITE_BUFFER_SIZE:
-                    return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
+                    return "The write buffer size in bytes. (min: 5MiB)";
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
-                    return "The number of cloud reads for re-evaluating an eviction plan. (default: 50)";
+                    return "The number of cloud reads for re-evaluating an eviction plan";
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
-                    return "The maximum number of HTTP connections to use concurrently for cloud requests per node. (default: 1000)";
+                    return "The maximum number of HTTP connections to use concurrently for cloud requests per node";
                 case CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS:
-                    return "The maximum number of HTTP connections allowed to wait for a connection per node. (default: 10000)";
+                    return "The maximum number of HTTP connections allowed to wait for a connection per node";
                 case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
-                    return "The waiting time (in seconds) to acquire an HTTP connection before failing the request."
-                            + " (default: 120 seconds)";
+                    return "The waiting time (in seconds) to acquire an HTTP connection before failing the request";
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
-                    return "Indicates whether or not to force path style when accessing the cloud storage. (default:"
-                            + " false)";
+                    return "Indicates whether or not to force path style when accessing the cloud storage";
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
-                    return "Indicates whether or not to disable SSL certificate verification on the cloud storage. "
-                            + "(default: false)";
+                    return "Indicates whether or not to disable SSL certificate verification on the cloud storage";
                 case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
                     return "Indicates whether or not deleted objects may be contained in list operations for some time"
-                            + "after they are deleted. (default: false)";
+                            + "after they are deleted";
+                case CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT:
+                    return "Indicates whether or not to use the AWS CRT S3 client for async requests";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -205,6 +209,13 @@ public class CloudProperties extends AbstractProperties {
             return defaultValue;
         }
 
+        @Override
+        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
+            if (this == CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT) {
+                return "true when no custom endpoint is set, otherwise false";
+            }
+            return IOption.super.usageDefaultOverride(accessor, optionPrinter);
+        }
     }
 
     public String getStorageScheme() {
@@ -308,5 +319,9 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean isStorageListEventuallyConsistent() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT);
+    }
+
+    public boolean isS3EnableCrtClient() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT);
     }
 }

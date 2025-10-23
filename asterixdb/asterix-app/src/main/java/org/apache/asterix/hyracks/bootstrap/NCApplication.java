@@ -25,6 +25,7 @@ import static org.apache.asterix.common.utils.Servlets.QUERY_SERVICE;
 import static org.apache.asterix.common.utils.Servlets.QUERY_STATUS;
 import static org.apache.asterix.common.utils.Servlets.UDF;
 import static org.apache.asterix.common.utils.Servlets.UDF_RECOVERY;
+import static org.apache.hyracks.api.util.JavaSerializationUtils.registerReplacement;
 import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
 
 import java.io.File;
@@ -39,12 +40,12 @@ import java.util.Map;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.BasicAuthServlet;
+import org.apache.asterix.api.http.server.NCQueryResultApiServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
+import org.apache.asterix.api.http.server.NCQueryStatusApiServlet;
 import org.apache.asterix.api.http.server.NCUdfApiServlet;
 import org.apache.asterix.api.http.server.NCUdfRecoveryServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.QueryResultApiServlet;
-import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
 import org.apache.asterix.app.config.ConfigValidator;
@@ -102,6 +103,7 @@ import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.hyracks.api.util.JavaSerializationUtils.SerializableExceptionProxy;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -114,6 +116,8 @@ import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.azure.storage.blob.models.BlobStorageException;
 
 public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -141,6 +145,11 @@ public class NCApplication extends BaseNCApplication {
                 new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
         validateEnvironment();
         configurePersistedResourceRegistry();
+        registerSerializationReplacements();
+    }
+
+    private void registerSerializationReplacements() {
+        registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
     }
 
     @Override
@@ -260,8 +269,8 @@ public class NCApplication extends BaseNCApplication {
                 apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
                         getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
                 auth.getFirst(), auth.getSecond()));
-        apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
-        apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
+        apiServer.addServlet(new NCQueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
+        apiServer.addServlet(new NCQueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
     }
 

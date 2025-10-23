@@ -33,7 +33,6 @@ import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -152,17 +151,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             }
         }
 
-        List<Index> datasetIndexes =
-                mp.getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
-        boolean hasSecondaryIndex = false;
-        for (Index index : datasetIndexes) {
-            if (index.isSecondaryIndex()) {
-                hasSecondaryIndex = true;
-                break;
-            }
-        }
-
-        return hasSecondaryIndex;
+        return mp.hasSecondaryIndexes(dataset);
     }
 
     private boolean tryingToPushThroughSelectionWithSameDataSource(AssignOperator access, AbstractLogicalOperator op2) {

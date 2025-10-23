@@ -20,10 +20,10 @@
 package org.apache.asterix.cloud;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -48,7 +48,7 @@ public class LocalPartitionBootstrapper implements IPartitionBootstrapper {
     }
 
     @Override
-    public void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions,
+    public void bootstrap(Partitions activePartitions, List<FileReference> currentOnDiskPartitions,
             boolean metadataNode, int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException {
         for (FileReference onDiskPartition : currentOnDiskPartitions) {
             int partitionNum = StoragePathUtil.getPartitionNumFromRelativePath(onDiskPartition.getAbsolutePath());

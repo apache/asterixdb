@@ -23,6 +23,7 @@ USE test;
 
 CREATE COLLECTION TestCollection6(ColumnType1) PRIMARY KEY id;
 CREATE COLLECTION TestCollection7(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection8(ColumnType1) PRIMARY KEY id;
 
 
 

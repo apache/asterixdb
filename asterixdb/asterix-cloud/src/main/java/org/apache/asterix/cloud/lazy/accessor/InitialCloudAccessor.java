@@ -18,10 +18,9 @@
  */
 package org.apache.asterix.cloud.lazy.accessor;
 
-import java.util.Collections;
-
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.lazy.NoOpParallelCacher;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -35,7 +34,7 @@ public class InitialCloudAccessor extends ReplaceableCloudAccessor {
     };
 
     public InitialCloudAccessor(ICloudClient cloudClient, String bucket, IOManager localIoManager) {
-        super(cloudClient, bucket, localIoManager, Collections.emptySet(), NO_OP_REPLACER, NoOpParallelCacher.INSTANCE);
+        super(cloudClient, bucket, localIoManager, Partitions.empty(), NO_OP_REPLACER, NoOpParallelCacher.INSTANCE);
     }
 
     @Override

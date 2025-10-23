@@ -54,9 +54,11 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     private final NetworkAddress networkAddress;
 
+    private final String nodeId;
+
     public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
             IResultMetadata metadata, boolean emptyResult, int partition, int nPartitions,
-            NetworkAddress networkAddress) {
+            NetworkAddress networkAddress, String nodeId) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
@@ -65,13 +67,14 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
         this.partition = partition;
         this.nPartitions = nPartitions;
         this.networkAddress = networkAddress;
+        this.nodeId = nodeId;
     }
 
     @Override
     public void run() {
         try {
             ccs.getResultDirectoryService().registerResultPartitionLocation(jobId, rsId, metadata, emptyResult,
-                    partition, nPartitions, networkAddress);
+                    partition, nPartitions, networkAddress, nodeId);
         } catch (HyracksDataException e) {
             LOGGER.log(Level.WARN, "Failed to register partition location", e);
             // Should fail the job if exists on cc, otherwise, do nothing

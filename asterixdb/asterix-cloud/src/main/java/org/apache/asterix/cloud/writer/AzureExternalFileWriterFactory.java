@@ -68,7 +68,7 @@ public final class AzureExternalFileWriterFactory extends AbstractCloudExternalF
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(configuration, writeBufferSize);
         return new AzBlobStorageCloudClient(config, AzureUtils.buildAzureBlobClient(appCtx, configuration),
-                ICloudGuardian.NoOpCloudGuardian.INSTANCE);
+                AzureUtils.buildAzureBlobAsyncClient(appCtx, configuration), ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override

@@ -25,6 +25,7 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNEC
 import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.ACTIVE;
 import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.REBALANCE_REQUIRED;
 import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.SHUTTING_DOWN;
+import static org.apache.hyracks.api.util.JavaSerializationUtils.registerReplacement;
 import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
 
 import java.io.File;
@@ -120,6 +121,7 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.result.IJobResultCallback;
+import org.apache.hyracks.api.util.JavaSerializationUtils.SerializableExceptionProxy;
 import org.apache.hyracks.control.cc.BaseCCApplication;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -136,6 +138,8 @@ import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.azure.storage.blob.models.BlobStorageException;
 
 public class CCApplication extends BaseCCApplication {
 
@@ -154,6 +158,11 @@ public class CCApplication extends BaseCCApplication {
         ccServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
         validateEnvironment();
+        registerSerializationReplacements();
+    }
+
+    private void registerSerializationReplacements() {
+        registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
     }
 
     @Override

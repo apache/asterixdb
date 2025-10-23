@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -29,6 +27,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.utils.NcLocalCounters;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -74,7 +73,7 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
                 LOGGER.debug("returning local counters to cc: {}", localCounter);
             }
             // wrap the returned partitions in a hash set to make it serializable
-            Set<Integer> nodeActivePartitions = new HashSet<>(appCtx.getReplicaManager().getPartitions());
+            Partitions nodeActivePartitions = new Partitions(appCtx.getReplicaManager().getPartitions());
             NCLifecycleTaskReportMessage result =
                     new NCLifecycleTaskReportMessage(nodeId, success, localCounter, nodeActivePartitions);
             result.setException(exception);

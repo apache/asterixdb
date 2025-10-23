@@ -21,9 +21,9 @@ package org.apache.asterix.common.transactions;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
@@ -109,7 +109,7 @@ public interface IRecoveryManager {
      * @throws IOException
      * @throws ACIDException
      */
-    void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException;
+    void startLocalRecovery(Partitions partitions) throws IOException, ACIDException;
 
     /**
      * Gets the LSN used in {@code partitions} or 0 if no LSNs are found
@@ -118,7 +118,7 @@ public interface IRecoveryManager {
      * @return the maximum used LSN
      * @throws HyracksDataException
      */
-    long getPartitionsMaxLSN(Set<Integer> partitions) throws HyracksDataException;
+    long getPartitionsMaxLSN(Partitions partitions) throws HyracksDataException;
 
     /**
      * Replay the commited transactions' logs belonging to {@code partitions}. if {@code flush} is true,
@@ -128,7 +128,7 @@ public interface IRecoveryManager {
      * @param flush
      * @throws HyracksDataException
      */
-    void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException;
+    void replayReplicaPartitionLogs(Partitions partitions, boolean flush) throws HyracksDataException;
 
     /**
      * Ensures that {@code datasetPartitionIndexes} are consistent by performing component id level recovery

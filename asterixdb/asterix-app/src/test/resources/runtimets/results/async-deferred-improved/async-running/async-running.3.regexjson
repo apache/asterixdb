@@ -1,0 +1,8 @@
+{
+  "status":"success",
+  "handle": "R{.*}",
+  "resultCount": 1,
+  "partitions": "R{.*}",
+  "metrics": "R{.*}",
+  "createdAt": "R{.*}"
+}

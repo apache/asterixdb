@@ -35,7 +35,8 @@ import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmb
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.input.record.reader.stream.AvailableInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
+import org.apache.asterix.external.util.aws.AwsUtils;
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -96,7 +97,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 LOGGER.debug(() -> "Key " + userData(request.key()) + " was not found in bucket {}" + request.bucket());
                 return false;
             } catch (S3Exception ex) {
-                if (S3AuthUtils.isArnAssumedRoleExpiredToken(configuration, ex.awsErrorDetails().errorCode())) {
+                if (AwsUtils.isArnAssumedRoleExpiredToken(configuration, ex.awsErrorDetails().errorCode())) {
                     LOGGER.debug(() -> "Expired AWS assume role session, will attempt to refresh the session");
                     rebuildAwsS3Client(configuration);
                     LOGGER.debug(() -> "Successfully refreshed AWS assume role session");
@@ -120,7 +121,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
     }
 
     private boolean shouldRetry(String errorCode, int currentRetry) {
-        return currentRetry < MAX_RETRIES && S3AuthUtils.isRetryableError(errorCode);
+        return currentRetry < MAX_RETRIES && S3Utils.isRetryableError(errorCode);
     }
 
     @Override
@@ -148,7 +149,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
 
     private S3Client buildAwsS3Client(Map<String, String> configuration) throws HyracksDataException {
         try {
-            return S3AuthUtils.buildAwsS3Client(ncAppCtx, configuration);
+            return S3Utils.buildClient(ncAppCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

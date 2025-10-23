@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
-import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.external.util.aws.AwsConstants;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -47,18 +47,19 @@ public final class S3ClientConfig {
     private final boolean forcePathStyle;
     private final boolean disableSslVerify;
     private final boolean storageListEventuallyConsistent;
+    private final boolean enableCrtClient;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, int writeBufferSize) {
+            long profilerLogInterval, int writeBufferSize, boolean enableCrtClient) {
         this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false,
-                false, 0, 0);
+                false, 0, 0, enableCrtClient);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
             int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
             boolean disableSslVerify, boolean storageListEventuallyConsistent, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout) {
+            int requestsHttpConnectionAcquireTimeout, boolean enableCrtClient) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -74,6 +75,7 @@ public final class S3ClientConfig {
         this.forcePathStyle = forcePathStyle;
         this.disableSslVerify = disableSslVerify;
         this.storageListEventuallyConsistent = storageListEventuallyConsistent;
+        this.enableCrtClient = enableCrtClient;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
@@ -85,12 +87,12 @@ public final class S3ClientConfig {
                 cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify(),
                 cloudProperties.isStorageListEventuallyConsistent(),
                 cloudProperties.getRequestsMaxPendingHttpConnections(),
-                cloudProperties.getRequestsHttpConnectionAcquireTimeout());
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.isS3EnableCrtClient());
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
         // Used to determine local vs. actual S3
-        String endPoint = configuration.getOrDefault(S3Constants.SERVICE_END_POINT_FIELD_NAME, "");
+        String endPoint = configuration.getOrDefault(AwsConstants.SERVICE_END_POINT_FIELD_NAME, "");
         // Disabled
         long profilerLogInterval = 0;
 
@@ -99,7 +101,7 @@ public final class S3ClientConfig {
         String prefix = "";
         boolean anonymousAuth = false;
 
-        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize);
+        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, false);
     }
 
     public String getRegion() {
@@ -116,7 +118,7 @@ public final class S3ClientConfig {
 
     public boolean isLocalS3Provider() {
         // to workaround https://github.com/findify/s3mock/issues/187 in our S3Mock, we encode/decode keys
-        return isS3Mock();
+        return false; //isS3Mock();
     }
 
     public AwsCredentialsProvider createCredentialsProvider() {
@@ -167,8 +169,8 @@ public final class S3ClientConfig {
         return storageListEventuallyConsistent;
     }
 
-    private boolean isS3Mock() {
-        return endpoint != null && !endpoint.isEmpty();
+    public boolean isCrtClientEnabled() {
+        return enableCrtClient;
     }
 
 }

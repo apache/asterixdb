@@ -23,3 +23,5 @@ USE test;
 
 CREATE TYPE ColumnType2 AS {
 };
+
+

@@ -21,8 +21,8 @@ USE test;
 
 
 COPY (
-   select "123" as id
-) toWriter
+select "123" as id
+    ) toWriter
 TO %adapter%
 PATH (%pathprefix% "copy-to-result", "parquet-simple")
 TYPE ( {id:string} )

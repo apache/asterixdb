@@ -21,7 +21,6 @@ package org.apache.asterix.app.message;
 import static org.apache.hyracks.util.ExitUtil.EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -30,6 +29,7 @@ import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IIndex;
@@ -57,7 +57,7 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
         INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
-        Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
+        Partitions nodePartitions = appContext.getReplicaManager().getPartitions();
         Map<Long, LocalResource> localResources = localResourceRepository.getResources(lr -> true, nodePartitions);
         for (LocalResource resource : localResources.values()) {
             DatasetLocalResource lr = (DatasetLocalResource) resource.getResource();

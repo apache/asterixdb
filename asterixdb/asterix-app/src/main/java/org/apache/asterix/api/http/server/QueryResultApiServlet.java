@@ -25,18 +25,23 @@ import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.CreatedAtPrinter;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.ProfilePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.ResultMetadata;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
+import org.apache.asterix.utils.AsyncRequestsAPIUtil;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultJobRecord;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -54,71 +59,60 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
     }
 
     @Override
-    protected void get(IServletRequest request, IServletResponse response) throws Exception {
-        long elapsedStart = System.nanoTime();
+    protected void delete(IServletRequest request, IServletResponse response) throws Exception {
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
         final String strHandle = localPath(request);
-        final ResultHandle handle = ResultHandle.parse(strHandle);
+        final ResultHandle handle = parseAndValidateHandle(request, response);
         if (handle == null) {
+            return; // Response status already set in parseAndValidateHandle
+        } else if (handle.getPartition() != -1) {
+            // Can only discard entire result sets, not individual partitions
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
+        try {
+            discardResult(handle.getRequestId(), handle.getJobId(), handle.getResultSetId());
+            response.setStatus(HttpResponseStatus.ACCEPTED);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.NO_RESULT_SET)) {
+                LOGGER.log(Level.INFO, "No results found for handle: \"{}\"", strHandle);
+                response.setStatus(HttpResponseStatus.NOT_FOUND);
+                return;
+            }
+            LOGGER.log(Level.WARN, "unexpected exception thrown from discard result", e);
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARN, "unexpected exception thrown from discard result", e);
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected void discardResult(String requestId, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
+        AsyncRequestsAPIUtil.discardResultPartitions((ICcApplicationContext) appCtx, jobId, resultSetId, requestId);
+    }
+
+    @Override
+    protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, request);
+        final String strHandle = localPath(request);
+        final ResultHandle handle = parseAndValidateHandle(request, response);
+        if (handle == null) {
+            return; // Response status already set in parseAndValidateHandle
+        }
         IResultSet resultSet = getResultSet();
-        ResultReader resultReader = new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId());
-        boolean printStarted = false;
-        ResponsePrinter printer = null;
+        ResultReader resultReader = handle.getPartition() != -1
+                ? new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId(), handle.getPartition())
+                : new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId());
         try {
             ResultJobRecord.Status status = resultReader.getStatus();
-            final HttpResponseStatus httpStatus;
-            if (status == null) {
-                httpStatus = HttpResponseStatus.NOT_FOUND;
-            } else {
-                switch (status.getState()) {
-                    case SUCCESS:
-                        httpStatus = HttpResponseStatus.OK;
-                        break;
-                    case RUNNING:
-                    case IDLE:
-                    case FAILED:
-                    case REMOVED:
-                        httpStatus = HttpResponseStatus.NOT_FOUND;
-                        break;
-                    default:
-                        httpStatus = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-                        break;
-                }
-            }
+            final HttpResponseStatus httpStatus = ResultUtil.getHttpStatusFromResultStatus(status);
             response.setStatus(httpStatus);
             if (httpStatus != HttpResponseStatus.OK) {
                 return;
             }
             ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
-            printer = new ResponsePrinter(sessionOutput);
-            if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
-                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON
-                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON) {
-                final Stats stats = new Stats();
-                printer.begin();
-                printStarted = true;
-                printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
-                printer.printResults();
-                ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart,
-                        metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
-                        metadata.getTotalWarningsCount(), stats.getCompileTime(), stats.getQueueWaitTime(),
-                        stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(),
-                        stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(),
-                        stats.getCloudPagesPersistedCount());
-                printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
-                if (metadata.getJobProfile() != null) {
-                    printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
-                }
-                printer.printFooters();
-                printer.end();
-                printStarted = false;
-            } else {
-                ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
-            }
+            processResults(handle, resultReader, sessionOutput, metadata, request);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.NO_RESULT_SET)) {
                 LOGGER.log(Level.INFO, "No results for: \"" + strHandle + "\"");
@@ -126,19 +120,65 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 return;
             }
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            response.writer().println(e.getMessage());
-            LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
+            LOGGER.log(Level.WARN, "Error retrieving result for handle: \"{}\"", handle, e);
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
+            LOGGER.log(Level.WARN, "Error retrieving result for handle: \"{}\"", handle, e);
+        }
+        if (response.writer().checkError()) {
+            LOGGER.warn("Error flushing output writer for \"{}\"", strHandle);
+        }
+    }
+
+    private void processResults(ResultHandle handle, ResultReader resultReader, SessionOutput sessionOutput,
+            ResultMetadata metadata, IServletRequest request) throws HyracksDataException {
+        ResponsePrinter printer = new ResponsePrinter(sessionOutput);
+        final Stats stats = new Stats();
+        boolean printStarted = false;
+        try {
+            if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
+                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON
+                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON) {
+                printer.begin();
+                printStarted = true;
+                printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
+                printer.printResults();
+                ResponseMetrics metrics = buildMetrics(stats, metadata);
+                printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
+                if (metadata.getJobProfile() != null) {
+                    printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
+                }
+                if (handle.getRequestId() != null) {
+                    printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTime()));
+                }
+                printer.printFooters();
+                printer.end();
+                printStarted = false;
+            } else {
+                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, null);
+            }
         } finally {
-            if (printStarted && printer != null) {
+            if (printStarted) {
                 printer.end();
             }
         }
-        if (response.writer().checkError()) {
-            LOGGER.warn("Error flushing output writer for \"" + strHandle + "\"");
-        }
+    }
+
+    private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata) {
+        long endTime = System.currentTimeMillis();
+        stats.setProcessedObjects(metadata.getProcessedObjects());
+        stats.setQueueWaitTime(metadata.getQueueWaitTimeInNanos());
+        stats.setBufferCacheHitRatio(metadata.getBufferCacheHitRatio());
+        stats.setBufferCachePageReadCount(metadata.getBufferCachePageReadCount());
+        stats.setCloudReadRequestsCount(metadata.getCloudReadRequestsCount());
+        stats.setCloudPagesReadCount(metadata.getCloudPagesReadCount());
+        stats.setCloudPagesPersistedCount(metadata.getCloudPagesPersistedCount());
+        stats.updateTotalWarningsCount(metadata.getTotalWarningsCount());
+        return ResponseMetrics.of(endTime - metadata.getCreateTime(), metadata.getJobDuration(), stats.getCount(),
+                stats.getSize(), metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
+                metadata.getCompileTime(), stats.getQueueWaitTime(), stats.getBufferCacheHitRatio(),
+                stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(),
+                stats.getCloudPagesPersistedCount());
     }
 
     /**
@@ -206,5 +246,4 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         }
         return new SessionOutput(sessionConfig, response.writer(), resultPrefix, resultPostfix, appendHandle, null);
     }
-
 }
