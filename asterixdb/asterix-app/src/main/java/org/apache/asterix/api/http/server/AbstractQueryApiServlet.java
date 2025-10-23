@@ -161,6 +161,9 @@ public class AbstractQueryApiServlet extends AbstractServlet {
                     logException(Level.INFO, "request execution timed out", requestId, clientContextId);
                     executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
                     return true;
+                case REQUEST_CANCELLED:
+                    executionState.setStatus(ResultStatus.FAILED, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                    return true;
                 case REJECT_NODE_UNREGISTERED:
                 case REJECT_BAD_CLUSTER_STATE:
                     logException(Level.WARN, ex.getMessage(), requestId, clientContextId);

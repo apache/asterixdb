@@ -101,15 +101,12 @@ public class RequestTracker implements IRequestTracker {
     }
 
     @Override
-    public void cancel(String requestId) throws HyracksDataException {
+    public boolean cancel(String requestId) throws HyracksDataException {
         final IClientRequest request = runningRequests.get(requestId);
         if (request == null) {
-            return;
+            return false;
         }
-        if (!request.isCancellable()) {
-            throw new IllegalStateException("Request " + request.getId() + " cannot be cancelled");
-        }
-        cancel(request);
+        return cancel(request);
     }
 
     @Override
@@ -131,9 +128,12 @@ public class RequestTracker implements IRequestTracker {
         return Collections.unmodifiableCollection(new ArrayList<>(completedRequests.values()));
     }
 
-    private void cancel(IClientRequest request) throws HyracksDataException {
-        request.cancel(ccAppCtx);
-        untrack(request);
+    private boolean cancel(IClientRequest request) throws HyracksDataException {
+        boolean cancelled = request.cancel(ccAppCtx);
+        if (cancelled) {
+            untrack(request);
+        }
+        return cancelled;
     }
 
     private void untrack(IClientRequest request) {

@@ -61,8 +61,11 @@ public class CancelQueryRequest implements ICcAddressedMessage {
             } else {
                 try {
                     requestId = req.getId();
-                    requestTracker.cancel(requestId);
-                    status = RequestStatus.SUCCESS;
+                    if (requestTracker.cancel(requestId)) {
+                        status = RequestStatus.SUCCESS;
+                    } else {
+                        status = RequestStatus.REJECTED;
+                    }
                 } catch (Exception e) {
                     LOGGER.log(Level.WARN, "unexpected exception thrown from cancel", e);
                     status = RequestStatus.FAILED;
