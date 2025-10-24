@@ -42,6 +42,8 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.job.HyracksJobProperty;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
@@ -65,6 +67,10 @@ public class ExternalLibraryJobUtils {
                 createLibraryCommitJobSpec(namespace, libraryName, appCtx, splitsAndConstraint);
 
         JobSpecification abortJobSpec = createLibraryAbortJobSpec(namespace, libraryName, appCtx, splitsAndConstraint);
+
+        prepareJobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
+        commitJobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
+        abortJobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
 
         return new Triple<>(prepareJobSpec, commitJobSpec, abortJobSpec);
     }
@@ -110,7 +116,7 @@ public class ExternalLibraryJobUtils {
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
                 splitsAndConstraint.second);
         jobSpec.addRoot(opDesc);
-
+        jobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         return jobSpec;
     }
 

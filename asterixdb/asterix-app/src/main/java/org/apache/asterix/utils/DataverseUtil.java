@@ -23,6 +23,8 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
+import org.apache.hyracks.api.job.HyracksJobProperty;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.FileRemoveOperatorDescriptor;
 
@@ -47,6 +49,7 @@ public class DataverseUtil {
                 new FileRemoveOperatorDescriptor(jobSpec, pp.getSplitsProvider(), false, pp.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod, pp.getConstraints());
         jobSpec.addRoot(frod);
+        jobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         return jobSpec;
     }
 }

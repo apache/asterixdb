@@ -43,6 +43,7 @@ import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -98,7 +99,7 @@ public class ActiveStatsTest {
 
         // Mock JobSpecification
         JobSpecification jobSpec = Mockito.mock(JobSpecification.class);
-        Mockito.when(jobSpec.getProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME)).thenReturn(entityId);
+        Mockito.when(jobSpec.getProperty(AsterixJobProperty.ACTIVE_ENTITY)).thenReturn(entityId);
 
         // Mock MetadataProvider
         CCExtensionManager extensionManager = (CCExtensionManager) appCtx.getExtensionManager();

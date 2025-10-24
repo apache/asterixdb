@@ -63,6 +63,8 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.job.HyracksJobProperty;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
@@ -348,6 +350,7 @@ public class RebalanceUtil {
         spec.connect(new OneToOneConnectorDescriptor(spec), upsertOp, 0, commitOp, 0);
 
         // Executes the job.
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DML);
         JobUtils.forceRunJob(hcc, spec, true);
     }
 

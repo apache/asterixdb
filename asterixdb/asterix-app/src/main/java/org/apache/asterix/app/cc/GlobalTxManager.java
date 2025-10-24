@@ -32,6 +32,7 @@ import org.apache.asterix.common.cluster.IGlobalTxManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.transactions.IGlobalTransactionContext;
+import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTxInfo;
@@ -56,7 +57,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     private final Map<JobId, IGlobalTransactionContext> txnContextRepository = new ConcurrentHashMap<>();
     private final ICCServiceContext serviceContext;
     private final IOManager ioManager;
-    public static final String GlOBAL_TX_PROPERTY_NAME = "GlobalTxProperty";
 
     public GlobalTxManager(ICCServiceContext serviceContext, IOManager ioManager) {
         this.serviceContext = serviceContext;
@@ -242,7 +242,7 @@ public class GlobalTxManager implements IGlobalTxManager {
     @Override
     public void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
             throws HyracksException {
-        GlobalTxInfo globalTxInfo = (GlobalTxInfo) spec.getProperty(GlOBAL_TX_PROPERTY_NAME);
+        GlobalTxInfo globalTxInfo = (GlobalTxInfo) spec.getProperty(AsterixJobProperty.GLOBAL_TX);
         if (globalTxInfo != null) {
             beginTransaction(jobId, globalTxInfo.getNumNodes(), globalTxInfo.getNumPartitions(),
                     globalTxInfo.getDatasetIds());
