@@ -30,7 +30,7 @@
                     "partition-send-profile": [],
                     "counters": [
                         {
-                            "name": "R{ANID:ODID:[0-9]:0\\.1 - MicroOp Subplan(?:.|\n)+}",
+                            "name": "R{ANID:ODID:[0-9]:0\\.1 - MicroOp (?:.|\n)+}",
                             "run-time": "R{[0-9.]+}",
                             "runtime-id": "R{.+}",
                             "cardinality-out": "R{[0-9.]+}",
