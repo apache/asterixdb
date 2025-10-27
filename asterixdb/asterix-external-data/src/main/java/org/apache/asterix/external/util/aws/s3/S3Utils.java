@@ -19,6 +19,7 @@
 package org.apache.asterix.external.util.aws.s3;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
+import static org.apache.asterix.common.exceptions.ErrorCode.LONG_LIVED_CREDENTIALS_NEEDED_TO_ASSUME_ROLE;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableExists;
@@ -36,6 +37,7 @@ import static org.apache.asterix.external.util.aws.AwsConstants.SECRET_ACCESS_KE
 import static org.apache.asterix.external.util.aws.AwsConstants.SERVICE_END_POINT_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SESSION_TOKEN_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProvider;
+import static org.apache.asterix.external.util.aws.AwsUtils.buildStsUri;
 import static org.apache.asterix.external.util.aws.AwsUtils.getAuthenticationType;
 import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
@@ -45,7 +47,9 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ANONYMOUS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUMED_ROLE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_ARN;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_ENDPOINT;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_EXTERNAL_ID;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_REGION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_DURATION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY;
@@ -80,13 +84,14 @@ import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.AwsUtils;
 import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
-import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -104,6 +109,8 @@ import software.amazon.awssdk.services.s3.model.S3Response;
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 public class S3Utils {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private S3Utils() {
         throw new AssertionError("do not instantiate");
     }
@@ -152,16 +159,21 @@ public class S3Utils {
      */
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf jobConf,
             Map<String, String> configuration, int numberOfPartitions) throws CompilationException {
-        setHadoopCredentials(appCtx, jobConf, configuration);
-        String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
         Region region = validateAndGetRegion(configuration.get(REGION_FIELD_NAME));
-        jobConf.set(HADOOP_REGION, region.toString());
+        boolean crossRegion = validateAndGetCrossRegion(configuration.get(CROSS_REGION_FIELD_NAME));
+
+        // if region is set, hadoop will always try the specified region only, if bucket is not found, it will fail
+        // if we want to use cross-region, we do not set the endpoint, which will default to central region and will
+        // automatically detect the bucket
+        if (!crossRegion) {
+            jobConf.set(HADOOP_REGION, region.toString());
+        }
+        setHadoopCredentials(appCtx, jobConf, configuration, region.toString());
+
+        String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
         if (serviceEndpoint != null) {
             // Validation of the URL should be done at hadoop-aws level
             jobConf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
-        } else {
-            //Region is ignored and buckets could be found by the central endpoint
-            jobConf.set(HADOOP_SERVICE_END_POINT, Constants.CENTRAL_ENDPOINT);
         }
 
         boolean pathStyleAddressing =
@@ -187,7 +199,7 @@ public class S3Utils {
      * @param configuration external details configuration
      */
     private static void setHadoopCredentials(IApplicationContext appCtx, JobConf jobConf,
-            Map<String, String> configuration) throws CompilationException {
+            Map<String, String> configuration, String region) throws CompilationException {
         AwsUtils.AuthenticationType authenticationType = getAuthenticationType(configuration);
         switch (authenticationType) {
             case ANONYMOUS:
@@ -195,19 +207,35 @@ public class S3Utils {
                 break;
             case ARN_ASSUME_ROLE:
                 jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ASSUMED_ROLE);
-                jobConf.set(HADOOP_ASSUME_ROLE_ARN, configuration.get(ROLE_ARN_FIELD_NAME));
                 jobConf.set(HADOOP_ASSUME_ROLE_EXTERNAL_ID, configuration.get(EXTERNAL_ID_FIELD_NAME));
-                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_NAME, "parquet-" + UUID.randomUUID());
+                jobConf.set(HADOOP_ASSUME_ROLE_REGION, region);
+                jobConf.set(HADOOP_ASSUME_ROLE_ENDPOINT, buildStsUri(region));
+
+                String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
+                String sessionName = UUID.randomUUID().toString();
+                jobConf.set(HADOOP_ASSUME_ROLE_ARN, roleArn);
+                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_NAME, sessionName);
+                LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", roleArn, sessionName);
 
                 // hadoop accepts time 15m to 1h, we will base it on the provided configuration
                 int durationInSeconds = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
                 String hadoopDuration = getHadoopDuration(durationInSeconds);
                 jobConf.set(HADOOP_ASSUME_ROLE_SESSION_DURATION, hadoopDuration);
 
-                // TODO: this assumes basic keys always, also support if we use InstanceProfile to assume a role
-                jobConf.set(HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY, HADOOP_SIMPLE);
-                jobConf.set(HADOOP_ACCESS_KEY_ID, configuration.get(ACCESS_KEY_ID_FIELD_NAME));
-                jobConf.set(HADOOP_SECRET_ACCESS_KEY, configuration.get(SECRET_ACCESS_KEY_FIELD_NAME));
+                // credentials used to assume the role
+                AwsUtils.AuthenticationType assumeRoleCredsType = AwsUtils.getAuthenticationType(configuration, true);
+                switch (assumeRoleCredsType) {
+                    case INSTANCE_PROFILE:
+                        jobConf.set(HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY, HADOOP_INSTANCE_PROFILE);
+                        break;
+                    case ACCESS_KEYS:
+                        jobConf.set(HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY, HADOOP_SIMPLE);
+                        jobConf.set(HADOOP_ACCESS_KEY_ID, configuration.get(ACCESS_KEY_ID_FIELD_NAME));
+                        jobConf.set(HADOOP_SECRET_ACCESS_KEY, configuration.get(SECRET_ACCESS_KEY_FIELD_NAME));
+                        break;
+                    default:
+                        throw CompilationException.create(LONG_LIVED_CREDENTIALS_NEEDED_TO_ASSUME_ROLE);
+                }
                 break;
             case INSTANCE_PROFILE:
                 jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_INSTANCE_PROFILE);

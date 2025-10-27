@@ -83,8 +83,9 @@ public class AwsUtils {
                 SdkRequest req = context.request();
                 SdkResponse resp = context.response();
                 if (req instanceof AssumeRoleRequest assumeReq && resp instanceof AssumeRoleResponse assumeResp) {
-                    LOGGER.info("STS refresh success [Thread={}, Role={}, Expiry={}]", Thread.currentThread().getName(),
+                    LOGGER.debug("STS refresh success [Role={}, Session={}, Expiry={}]",
                             assumeReq.roleArn(),
+                            assumeReq.roleSessionName(),
                             assumeResp.credentials().expiration());
                 }
                 ExecutionInterceptor.super.afterExecution(context, executionAttributes);
@@ -140,6 +141,11 @@ public class AwsUtils {
     }
 
     public static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
+        return getAuthenticationType(configuration, false);
+    }
+
+    public static AuthenticationType getAuthenticationType(Map<String, String> configuration,
+            boolean credentialsToAssumeRole) {
         String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
         String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
@@ -147,7 +153,7 @@ public class AwsUtils {
 
         if (noAuth(configuration)) {
             return AuthenticationType.ANONYMOUS;
-        } else if (roleArn != null) {
+        } else if (roleArn != null && !credentialsToAssumeRole) {
             return AuthenticationType.ARN_ASSUME_ROLE;
         } else if (instanceProfile != null) {
             return AuthenticationType.INSTANCE_PROFILE;
@@ -214,10 +220,11 @@ public class AwsUtils {
         awsClients.setStsClient(stsClient);
 
         // build refresh role request
+        String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
         String sessionName = UUID.randomUUID().toString();
-        LOGGER.info("Assuming role with session name ({}) for ({})", sessionName, Thread.currentThread().getName());
+        LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", roleArn, sessionName);
         AssumeRoleRequest.Builder refreshRequestBuilder = AssumeRoleRequest.builder();
-        refreshRequestBuilder.roleArn(configuration.get(ROLE_ARN_FIELD_NAME));
+        refreshRequestBuilder.roleArn(roleArn);
         refreshRequestBuilder.externalId(configuration.get(EXTERNAL_ID_FIELD_NAME));
         refreshRequestBuilder.roleSessionName(sessionName);
         if (appCtx != null) {
@@ -333,6 +340,11 @@ public class AwsUtils {
      */
     public static String generateExternalId() {
         return UUID.randomUUID().toString();
+    }
+
+    public static String buildStsUri(String regionId) {
+        // hadoop expects the endpoint without scheme, it automatically prepends "https://"
+        return "sts." + regionId + ".amazonaws.com";
     }
 
     public static void closeClients(CloseableAwsClients clients) {

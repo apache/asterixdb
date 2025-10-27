@@ -31,16 +31,22 @@ public class S3Constants {
     /*
      * Hadoop-AWS
      */
+    // assume role
     public static final String HADOOP_ASSUME_ROLE_ARN = "fs.s3a.assumed.role.arn";
     public static final String HADOOP_ASSUME_ROLE_EXTERNAL_ID = "fs.s3a.assumed.role.external.id";
     public static final String HADOOP_ASSUME_ROLE_SESSION_NAME = "fs.s3a.assumed.role.session.name";
     public static final String HADOOP_ASSUME_ROLE_SESSION_DURATION = "fs.s3a.assumed.role.session.duration";
+    public static final String HADOOP_ASSUME_ROLE_ENDPOINT = "fs.s3a.assumed.role.sts.endpoint";
+    public static final String HADOOP_ASSUME_ROLE_REGION = "fs.s3a.assumed.role.sts.endpoint.region";
+
+    // basic keys
     public static final String HADOOP_ACCESS_KEY_ID = "fs.s3a.access.key";
     public static final String HADOOP_SECRET_ACCESS_KEY = "fs.s3a.secret.key";
     public static final String HADOOP_SESSION_TOKEN = "fs.s3a.session.token";
-    public static final String HADOOP_REGION = "fs.s3a.region";
+
+    // regions and endpoints
     public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
-    public static final String HADOOP_S3_FILESYSTEM_IMPLEMENTATION = "fs.s3a.impl";
+    public static final String HADOOP_REGION = "fs.s3a.endpoint.region";
 
     /*
      * Internal configurations
