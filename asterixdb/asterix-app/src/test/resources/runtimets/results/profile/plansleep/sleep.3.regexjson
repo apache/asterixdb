@@ -87,13 +87,13 @@
                     "runtime-id": "R{.+}",
                     "activity-stats": [
                       {
-                        "name": "Sort (Run Generation)",
+                        "name": "R{.+}",
                         "id": "ANID:0",
                         "min-time": "R{[0-9.]+}",
                         "max-time": "R{[0-9.]+}"
                       },
                       {
-                        "name": "Sort (Run Merge)",
+                        "name": "R{.+}",
                         "id": "ANID:1",
                         "min-time": "R{[0-9.]+}",
                         "max-time": "R{[0-9.]+}",
@@ -245,13 +245,13 @@
                                         "runtime-id": "R{.+}",
                                         "activity-stats": [
                                           {
-                                            "name": "Sort (Run Generation)",
+                                            "name": "R{.+}",
                                             "id": "ANID:0",
                                             "min-time": "R{[0-9.]+}",
                                             "max-time": "R{[0-9.]+}"
                                           },
                                           {
-                                            "name": "Sort (Run Merge)",
+                                            "name": "R{.+}",
                                             "id": "ANID:1",
                                             "min-time": "R{[0-9.]+}",
                                             "max-time": "R{[0-9.]+}",
@@ -327,13 +327,13 @@
                                                 "runtime-id": "R{.+}",
                                                 "activity-stats": [
                                                   {
-                                                    "name": "Sort (Run Generation)",
+                                                    "name": "R{.+}",
                                                     "id": "ANID:0",
                                                     "min-time": "R{[0-9.]+}",
                                                     "max-time": "R{[0-9.]+}"
                                                   },
                                                   {
-                                                    "name": "Sort (Run Merge)",
+                                                    "name": "R{.+}",
                                                     "id": "ANID:1",
                                                     "min-time": "R{[0-9.]+}",
                                                     "max-time": "R{[0-9.]+}",

@@ -66,5 +66,22 @@
         <output-dir compare="Text">subplan</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="long-description">
+        <output-dir compare="Text">long-description</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="long-description">
+        <parameter name="profile" value="counts" type="string"/>
+        <output-dir compare="Text">long-description</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="long-description">
+        <parameter name="profile" value="timings" type="string"/>
+        <output-dir compare="Text">long-description</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

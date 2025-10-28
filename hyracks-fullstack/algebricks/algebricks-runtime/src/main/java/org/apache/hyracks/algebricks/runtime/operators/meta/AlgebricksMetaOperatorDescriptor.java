@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
@@ -124,9 +125,8 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
         return base + "." + id + (subPlan >= 0 ? "." + subPlan : "") + (subPos >= 0 ? "." + subPos : "");
     }
 
-    private static IOperatorStats makeStatForRuntimeFact(IPushRuntimeFactory factory, String base, String baseId,
-            int pos, int subPlan, int subPos) {
-        return new OperatorStats(makeStatName(base, factory.toString(), pos, -1, subPlan, subPos),
+    private static IOperatorStats makeStatForRuntimeFact(String base, String baseId, int pos, int subPlan, int subPos) {
+        return new OperatorStats(makeStatName(base, UUID.randomUUID().toString(), pos, -1, subPlan, subPos),
                 makeId(baseId, pos, subPlan, subPos));
     }
 
@@ -146,12 +146,12 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                 for (AlgebricksPipeline p : pipelines) {
                     IPushRuntimeFactory[] subplanFactories = p.getRuntimeFactories();
                     for (int j = subplanFactories.length - 1; j > 0; j--) {
-                        microOpStats.put(subplanFactories[j], makeStatForRuntimeFact(subplanFactories[j], baseName,
-                                baseId, i, pipelines.indexOf(p), j));
+                        microOpStats.put(subplanFactories[j],
+                                makeStatForRuntimeFact(baseName, baseId, i, pipelines.indexOf(p), j));
                     }
                 }
             }
-            microOpStats.put(fact, makeStatForRuntimeFact(fact, baseName, baseId, i, -1, -1));
+            microOpStats.put(fact, makeStatForRuntimeFact(baseName, baseId, i, -1, -1));
         }
         for (SubplanRuntimeFactory sub : subplans) {
             sub.setStats(microOpStats);
