@@ -33,10 +33,10 @@ public class ReportResultPartitionWriteCompletionWork extends AbstractWork {
 
     private final int partition;
 
-    private final int resultCount;
+    private final long resultCount;
 
     public ReportResultPartitionWriteCompletionWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            int partition, int resultCount) {
+            int partition, long resultCount) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;

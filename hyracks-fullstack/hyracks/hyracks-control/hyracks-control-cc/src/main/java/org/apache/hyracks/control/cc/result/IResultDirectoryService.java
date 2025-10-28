@@ -40,7 +40,7 @@ public interface IResultDirectoryService extends IJobLifecycleListener, IResultM
             boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress, String nodeId)
             throws HyracksDataException;
 
-    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, long resultCount)
             throws HyracksDataException;
 
     public void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws HyracksDataException;

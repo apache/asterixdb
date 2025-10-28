@@ -670,10 +670,10 @@ public class CCNCFunctions {
 
         private final int partition;
 
-        private final int resultCount;
+        private final long resultCount;
 
         public ReportResultPartitionWriteCompletionFunction(JobId jobId, ResultSetId rsId, int partition,
-                int resultCount) {
+                long resultCount) {
             this.jobId = jobId;
             this.rsId = rsId;
             this.partition = partition;
@@ -697,7 +697,7 @@ public class CCNCFunctions {
             return partition;
         }
 
-        public int getResultCount() {
+        public long getResultCount() {
             return resultCount;
         }
     }

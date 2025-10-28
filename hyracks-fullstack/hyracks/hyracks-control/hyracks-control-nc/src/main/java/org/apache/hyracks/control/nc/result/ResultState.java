@@ -74,9 +74,7 @@ public class ResultState implements IStateObject {
 
     ResultState(ResultSetPartitionId resultSetPartitionId, boolean asyncMode, IIOManager ioManager,
             IWorkspaceFileFactory fileFactory, int frameSize, long maxReads) {
-        if (maxReads < -1) {
-            throw new IllegalArgumentException("maxReads must be >= -1");
-        }
+        validateMaxReads(maxReads);
         this.maxReads = maxReads;
         this.resultSetPartitionId = resultSetPartitionId;
         this.asyncMode = asyncMode;
@@ -90,6 +88,12 @@ public class ResultState implements IStateObject {
 
         fileRef = null;
         fileHandle = null;
+    }
+
+    private void validateMaxReads(long maxReads) {
+        if (maxReads != UNLIMITED_READS && maxReads < 1) {
+            throw new IllegalArgumentException("maxReads must be >= 1 or -1 for unlimited reads");
+        }
     }
 
     public synchronized void open() {

@@ -18,6 +18,5 @@
  */
 
 -- handlevariable=status
--- param include-host=true
 
 select value sleep("result", 5000);

@@ -155,7 +155,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public synchronized void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition,
-            int resultCount) throws HyracksDataException {
+            long resultCount) throws HyracksDataException {
         ResultJobRecord djr = getNonNullResultJobRecord(jobId);
         djr.getDirectoryRecord(partition).writeEOS();
         djr.getDirectoryRecord(partition).setResultCount(resultCount);

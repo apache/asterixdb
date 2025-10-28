@@ -71,7 +71,7 @@ public interface IClusterController {
     void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata, boolean emptyResult,
             int partition, int nPartitions, NetworkAddress networkAddress, String nodeId) throws Exception;
 
-    void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+    void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, long resultCount)
             throws Exception;
 
     void reportResultPartitionConsumed(JobId jobId, ResultSetId rsId, int partition) throws Exception;

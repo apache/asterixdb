@@ -17,7 +17,7 @@
  * under the License.
  */
 -- handlevariable=status
-
+-- param include-host=false
 use test;
 SET `compiler.sort.parallel` "true";
 Select * from Test order by val;

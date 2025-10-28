@@ -59,6 +59,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         }
     }
 
+    private static final Set<Metrics> ALL_METRICS = Set.of(Metrics.values());
     public static final String FIELD_NAME = "metrics";
     private final ResponseMetrics metrics;
     private final Charset resultCharset;
@@ -71,7 +72,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
     public MetricsPrinter(ResponseMetrics metrics, Charset resultCharset, Set<Metrics> selectedMetrics) {
         this.metrics = metrics;
         this.resultCharset = resultCharset;
-        this.selectedMetrics = selectedMetrics == null ? Set.of(Metrics.values()) : selectedMetrics;
+        this.selectedMetrics = selectedMetrics == null ? ALL_METRICS : selectedMetrics;
     }
 
     @Override

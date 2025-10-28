@@ -454,4 +454,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     protected String getApplicationVersion() {
         return ApplicationConfigurator.getApplicationVersion(appCtx.getBuildProperties());
     }
+
+    protected boolean isOldApi(IServletRequest request) {
+        return true;
+    }
 }
