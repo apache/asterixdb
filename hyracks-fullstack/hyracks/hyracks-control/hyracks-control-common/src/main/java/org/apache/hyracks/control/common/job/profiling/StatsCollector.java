@@ -67,7 +67,7 @@ public class StatsCollector implements IStatsCollector {
         for (IOperatorStats stats : operatorStatsMap.values()) {
             aggregatedStats.getInputTupleCounter().update(stats.getInputTupleCounter().get());
             aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
-            aggregatedStats.getPageReads().update(stats.getPageReads().get());
+            aggregatedStats.getPageReadCounter().update(stats.getPageReadCounter().get());
             aggregatedStats.coldReadCounter().update(stats.coldReadCounter().get());
             aggregatedStats.cloudReadRequestCounter().update(stats.cloudReadRequestCounter().get());
             aggregatedStats.cloudReadPageCounter().update(stats.cloudReadPageCounter().get());

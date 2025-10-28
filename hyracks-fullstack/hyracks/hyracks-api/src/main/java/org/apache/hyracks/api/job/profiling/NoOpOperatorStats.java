@@ -18,9 +18,12 @@
  */
 package org.apache.hyracks.api.job.profiling;
 
+import static org.apache.hyracks.api.job.profiling.OperatorStats.writeString;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serial;
 import java.util.Collections;
 import java.util.Map;
 
@@ -28,14 +31,16 @@ import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class NoOpOperatorStats implements IOperatorStats {
 
-    private static final long serialVersionUID = 9055940222300360256L;
+    @Serial
+    private static final long serialVersionUID = 9055940222300360257L;
 
     public static final NoOpOperatorStats INSTANCE = new NoOpOperatorStats();
     public static final String INVALID_ODID = "ODID:-1";
     public static final String NOOP_NAME = "NoOp";
 
     private static final ICounter NOOP_COUNTER = new ICounter() {
-        private static final long serialVersionUID = 1L;
+        @Serial
+        private static final long serialVersionUID = 2L;
 
         @Override
         public long update(long delta) {
@@ -60,7 +65,7 @@ public class NoOpOperatorStats implements IOperatorStats {
 
     @Override
     public void writeFields(DataOutput output) throws IOException {
-        output.writeUTF(NOOP_NAME);
+        writeString(output, NOOP_NAME);
         output.writeUTF(INVALID_ODID);
     }
 
@@ -85,7 +90,7 @@ public class NoOpOperatorStats implements IOperatorStats {
     }
 
     @Override
-    public ICounter getPageReads() {
+    public ICounter getPageReadCounter() {
         return NOOP_COUNTER;
     }
 

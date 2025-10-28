@@ -342,7 +342,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 if (appender.getTupleCount() > 0) {
                     appender.write(writer, true);
                 }
-                stats.getPageReads().update(ctx.getThreadStats().getPinnedPagesCount());
+                stats.getPageReadCounter().update(ctx.getThreadStats().getPinnedPagesCount());
                 stats.coldReadCounter().update(ctx.getThreadStats().getColdReadCount());
                 stats.cloudReadRequestCounter().update(ctx.getThreadStats().getCloudReadRequestCount());
                 stats.cloudReadPageCounter().update(ctx.getThreadStats().getCloudPageReadCount());

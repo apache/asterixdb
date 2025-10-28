@@ -136,8 +136,8 @@ public class TaskProfile extends AbstractProfile {
             if (!value.getOperatorId().equals(INVALID_ODID)) {
                 jpe.put("runtime-id", value.getOperatorId());
             }
-            if (value.getPageReads().get() > 0) {
-                jpe.put("pages-read", value.getPageReads().get());
+            if (value.getPageReadCounter().get() > 0) {
+                jpe.put("pages-read", value.getPageReadCounter().get());
                 jpe.put("pages-read-cold", value.coldReadCounter().get());
             }
             if (value.getTupleCounter().get() > 0) {

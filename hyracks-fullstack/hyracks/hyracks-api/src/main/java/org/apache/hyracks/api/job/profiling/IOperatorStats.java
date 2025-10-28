@@ -21,6 +21,7 @@ package org.apache.hyracks.api.job.profiling;
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.apache.hyracks.api.io.IWritable;
@@ -48,7 +49,7 @@ public interface IOperatorStats extends IWritable, Serializable {
     /**
      * @return A counter used to track the number of pages pinned by an operator
      */
-    ICounter getPageReads();
+    ICounter getPageReadCounter();
 
     /**
      * @return A counter used to track the number of pages read from disk by an operator
@@ -112,8 +113,15 @@ public interface IOperatorStats extends IWritable, Serializable {
 
     void updateFrom(IOperatorStats stats);
 
+    static String readString(DataInput input) throws IOException {
+        int length = input.readInt();
+        byte[] data = new byte[length];
+        input.readFully(data);
+        return new String(data, StandardCharsets.UTF_8);
+    }
+
     static IOperatorStats create(DataInput input) throws IOException {
-        String name = input.readUTF();
+        String name = readString(input);
         if (NoOpOperatorStats.NOOP_NAME.equals(name)) {
             return NoOpOperatorStats.INSTANCE;
         }
@@ -122,4 +130,5 @@ public interface IOperatorStats extends IWritable, Serializable {
         operatorStats.readFields(input);
         return operatorStats;
     }
+
 }

@@ -21,6 +21,8 @@ package org.apache.hyracks.api.job.profiling;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serial;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +30,8 @@ import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class OperatorStats implements IOperatorStats {
-    private static final long serialVersionUID = 6401830963361567128L;
+    @Serial
+    private static final long serialVersionUID = 6401830963361567130L;
     public final String operatorName;
 
     public final String operatorId;
@@ -92,7 +95,7 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
-    public ICounter getPageReads() {
+    public ICounter getPageReadCounter() {
         return pageReads;
     }
 
@@ -187,13 +190,13 @@ public class OperatorStats implements IOperatorStats {
     public void updateFrom(IOperatorStats stats) {
         tupleCounter.update(stats.getTupleCounter().get());
         timeCounter.update(stats.getTimeCounter().get());
-        pageReads.update(stats.getPageReads().get());
+        pageReads.update(stats.getPageReadCounter().get());
         updateIndexesStats(stats.getIndexesStats());
     }
 
     @Override
     public void writeFields(DataOutput output) throws IOException {
-        output.writeUTF(operatorName);
+        writeString(output, operatorName);
         output.writeUTF(operatorId);
         output.writeLong(tupleCounter.get());
         output.writeLong(timeCounter.get());
@@ -264,5 +267,11 @@ public class OperatorStats implements IOperatorStats {
                 + "\": " + frameCounter.get() + ", \"" + bytesRead.getName() + "\": " + bytesRead.get() + ", \""
                 + bytesWritten.getName() + "\": " + bytesWritten.get() + ", \"" + level.getName() + "\": " + level.get()
                 + ", \"indexStats\": \"" + indexesStats + "\" }";
+    }
+
+    public static void writeString(DataOutput output, String value) throws IOException {
+        byte[] data = value.getBytes(StandardCharsets.UTF_8);
+        output.writeInt(data.length);
+        output.write(data);
     }
 }

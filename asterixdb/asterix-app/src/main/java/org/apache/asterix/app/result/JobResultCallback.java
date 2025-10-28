@@ -91,7 +91,7 @@ public class JobResultCallback implements IJobResultCallback {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getInputTupleCounter().get();
-                    pagesRead += tp.getStatsCollector().getAggregatedStats().getPageReads().get();
+                    pagesRead += tp.getStatsCollector().getAggregatedStats().getPageReadCounter().get();
                     nonPagedReads += tp.getStatsCollector().getAggregatedStats().coldReadCounter().get();
                     cloudReadRequestsCount +=
                             tp.getStatsCollector().getAggregatedStats().cloudReadRequestCounter().get();

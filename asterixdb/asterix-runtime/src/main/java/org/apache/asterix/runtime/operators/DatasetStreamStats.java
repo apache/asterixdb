@@ -37,14 +37,14 @@ public final class DatasetStreamStats {
 
     public DatasetStreamStats(IOperatorStats opStats) {
         this.cardinality = opStats.getTupleCounter().get();
-        long totalTupleSize = opStats.getPageReads().get();
+        long totalTupleSize = opStats.getPageReadCounter().get();
         this.avgTupleSize = cardinality > 0 ? (int) (totalTupleSize / cardinality) : 0;
         this.indexesStats = opStats.getIndexesStats();
     }
 
     static void update(IOperatorStats opStats, long tupleCount, long tupleSize, Map<String, IndexStats> indexStats) {
         opStats.getTupleCounter().update(tupleCount);
-        opStats.getPageReads().update(tupleSize);
+        opStats.getPageReadCounter().update(tupleSize);
         opStats.updateIndexesStats(indexStats);
     }
 
