@@ -47,6 +47,7 @@ public class ResultMetadata implements IResultMetadata {
     private long compileTime;
     private long createTime;
     private long endTime;
+    private boolean resultSetOrdered;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -192,6 +193,14 @@ public class ResultMetadata implements IResultMetadata {
 
     public void setEndTime(long endTime) {
         this.endTime = endTime;
+    }
+
+    public boolean isResultSetOrdered() {
+        return resultSetOrdered;
+    }
+
+    public void setResultSetOrdered(boolean resultSetOrdered) {
+        this.resultSetOrdered = resultSetOrdered;
     }
 
     @Override

@@ -67,6 +67,7 @@ public class JobResultCallback implements IJobResultCallback {
         final ResultMetadata metadata = (ResultMetadata) resultSetMetaData.getMetadata();
         metadata.setJobDuration(resultJobRecord.getJobDuration());
         metadata.setResultCount(resultJobRecord.getResultCount());
+        metadata.setResultSetOrdered(resultJobRecord.isResultSetOrdered());
         aggregateJobStats(jobId, metadata);
     }
 

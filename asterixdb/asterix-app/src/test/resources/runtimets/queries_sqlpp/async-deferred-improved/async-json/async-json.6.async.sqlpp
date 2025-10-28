@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
+-- handlevariable=status
 
-public enum HyracksJobProperty implements IJobProperty {
-    JOB_KIND,
-    RESULT_SET_ORDERED
-}
+use test;
+SET `compiler.sort.parallel` "true";
+Select * from Test order by val;

@@ -110,10 +110,11 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
         printer.addResultPrinter(new ResultHandlePrinter(resHandle));
         if (uriMode) {
+            ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
             printer.addResultPrinter(new ResultCountPrinter(
                     ((ResultMetadata) (resultReader.getResultSetReader().getResultMetadata())).getResultCount()));
-            printer.addResultPrinter(
-                    new PartitionInfoPrinter(resultReader.getResultSetReader().getResultRecords(), resHandle));
+            printer.addResultPrinter(new PartitionInfoPrinter(resultReader.getResultSetReader().getResultRecords(),
+                    resHandle, metadata.isResultSetOrdered()));
         }
     }
 

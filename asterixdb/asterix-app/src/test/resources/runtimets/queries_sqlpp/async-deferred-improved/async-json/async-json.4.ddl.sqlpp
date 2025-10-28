@@ -16,9 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
 
-public enum HyracksJobProperty implements IJobProperty {
-    JOB_KIND,
-    RESULT_SET_ORDERED
-}
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type TestType as
+ closed {
+  id : integer,
+  val : double
+};
+
+create  dataset Test(TestType) primary key id;
+

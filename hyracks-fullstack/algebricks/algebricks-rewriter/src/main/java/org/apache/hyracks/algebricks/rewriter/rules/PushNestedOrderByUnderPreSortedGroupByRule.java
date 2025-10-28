@@ -114,7 +114,7 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
             // ++k;
         }
         // sort2.setSortColumns(sortColumns);
-        sort2.computeDeliveredProperties(order2, null);
+        sort2.computeDeliveredProperties(order2, context);
         // remove order1
         ILogicalOperator underOrder1 = order1.getInputs().get(0).getValue();
         opRef2.setValue(underOrder1);

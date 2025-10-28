@@ -36,6 +36,8 @@ import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.job.HyracksJobProperty;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.range.DynamicRangeMapSupplier;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMapSupplier;
@@ -131,5 +133,10 @@ abstract class AbstractRangeExchangePOperator extends AbstractExchangePOperator 
             i++;
         }
         return new Triple<>(sortFields, comps, nkcf);
+    }
+
+    @Override
+    protected void setJobSpecAnnotation(JobSpecification spec) {
+        spec.setProperty(HyracksJobProperty.RESULT_SET_ORDERED, true);
     }
 }

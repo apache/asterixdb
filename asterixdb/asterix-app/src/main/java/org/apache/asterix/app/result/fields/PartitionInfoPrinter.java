@@ -29,13 +29,16 @@ public class PartitionInfoPrinter implements IResponseFieldPrinter {
     public static final String FIELD_NAME = "partitions";
     public static final String HANDLE_FIELD_NAME = "handle";
     public static final String RESULT_COUNT_FIELD_NAME = "resultCount";
+    public static final String RESULTSET_ORDERED_FIELD_NAME = "resultSetOrdered";
 
     private final ResultDirectoryRecord[] resultRecords;
     private final String handlePrefix;
+    private final boolean resultSetOrdered;
 
-    public PartitionInfoPrinter(ResultDirectoryRecord[] resultRecords, String handlePrefix) {
+    public PartitionInfoPrinter(ResultDirectoryRecord[] resultRecords, String handlePrefix, boolean resultSetOrdered) {
         this.resultRecords = resultRecords;
         this.handlePrefix = handlePrefix;
+        this.resultSetOrdered = resultSetOrdered;
     }
 
     @Override
@@ -54,7 +57,9 @@ public class PartitionInfoPrinter implements IResponseFieldPrinter {
                 pw.print(",");
             }
         }
-        pw.print("]");
+        pw.print("],");
+        pw.print("\n\t");
+        ResultUtil.printField(pw, RESULTSET_ORDERED_FIELD_NAME, resultSetOrdered, false);
     }
 
     @Override

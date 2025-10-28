@@ -31,6 +31,7 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.HyracksJobProperty;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
@@ -83,7 +84,11 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
         if (jobResultLocations.get(jobId) != null) {
             throw HyracksDataException.create(ErrorCode.MORE_THAN_ONE_RESULT, jobId);
         }
-        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(), null));
+        Boolean partitionsOrdered = (Boolean) spec.getProperty(HyracksJobProperty.RESULT_SET_ORDERED);
+        if (partitionsOrdered == null) {
+            partitionsOrdered = false;
+        }
+        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(partitionsOrdered), null));
     }
 
     @Override

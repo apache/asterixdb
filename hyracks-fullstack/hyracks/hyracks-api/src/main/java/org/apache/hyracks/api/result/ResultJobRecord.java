@@ -87,11 +87,13 @@ public class ResultJobRecord implements IResultStateRecord {
     private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
     private long resultCount;
+    private boolean resultSetOrdered;
 
-    public ResultJobRecord() {
+    public ResultJobRecord(boolean resultSetOrdered) {
         this.timestamp = System.nanoTime();
         this.status = new Status();
         this.resultCount = 0;
+        this.resultSetOrdered = resultSetOrdered;
     }
 
     private void updateState(State newStatus) {
@@ -147,6 +149,10 @@ public class ResultJobRecord implements IResultStateRecord {
 
     public Status getStatus() {
         return status;
+    }
+
+    public boolean isResultSetOrdered() {
+        return resultSetOrdered;
     }
 
     @Override
