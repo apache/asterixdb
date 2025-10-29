@@ -58,6 +58,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
     private final IValueGetterFactory valueGetterFactory;
     private final Map<Integer, IColumnValuesReader> primaryKeyReaders;
     private AbstractValueAssembler rootAssembler;
+    private List<IColumnValuesReader> endOfGroupPrimitiveReaders;
 
     //Recursion info
     private final IntList delimiters;
@@ -72,6 +73,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         valueAssemblers = new ArrayList<>();
         delimiters = new IntArrayList();
         primaryKeyReaders = new HashMap<>();
+        this.endOfGroupPrimitiveReaders = new ArrayList<>();
         for (IColumnValuesReader reader : columnMetadata.getPrimaryKeyReaders()) {
             primaryKeyReaders.put(reader.getColumnIndex(), reader);
         }
@@ -92,11 +94,11 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
 
     @Override
     public AbstractValueAssembler visit(ObjectSchemaNode objectNode, AssemblerInfo info) throws HyracksDataException {
+        IntList childrenFieldNameIndexes = objectNode.getChildrenFieldNameIndexes();
+        int effectiveNumberOfChildren = childrenFieldNameIndexes.size();
         ObjectValueAssembler objectAssembler = new ObjectValueAssembler(level, info);
         level++;
-
         BitSet declaredFields = handleDeclaredFields(objectNode, info, objectAssembler);
-        IntList childrenFieldNameIndexes = objectNode.getChildrenFieldNameIndexes();
         int numberOfAddedChildren = declaredFields.cardinality();
         if (numberOfAddedChildren < childrenFieldNameIndexes.size()) {
             // Now handle any open fields
@@ -110,11 +112,17 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
                     //The last child should be a delegate
                     boolean delegate = numberOfAddedChildren == childrenFieldNameIndexes.size();
                     AssemblerInfo childInfo = new AssemblerInfo(childType, objectAssembler, delegate, fieldName);
+                    if (childNode instanceof UnionSchemaNode) {
+                        //UnionSchemaNode does not actually exist. We know the parent of the union could have items of multiple types.
+                        //Thus, the union's parent is the actual parent for all the union types
+                        effectiveNumberOfChildren += ((UnionSchemaNode) childNode).getChildren().size() - 1;
+                    }
                     childNode.accept(this, childInfo);
                 }
             }
         }
 
+        objectAssembler.setNumberOfEffectiveFields(effectiveNumberOfChildren);
         level--;
         return objectAssembler;
     }
@@ -163,6 +171,9 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         RepeatedPrimitiveValueAssembler previousDelegate = delegateAssembler;
         delegateAssembler = null;
 
+        List<IColumnValuesReader> previousEndOfGroupPrimitiveReaders = endOfGroupPrimitiveReaders;
+        endOfGroupPrimitiveReaders = new ArrayList<>();
+
         IAType itemDeclaredType = getChildType(itemNode, declaredType.getItemType());
         AssemblerInfo itemInfo = new AssemblerInfo(itemDeclaredType, arrayAssembler, false);
         itemNode.accept(this, itemInfo);
@@ -170,12 +181,12 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         // if delegateAssembler is null, that means no column will be accessed
         if (delegateAssembler != null) {
             // Set repeated assembler as a delegate (responsible for writing null values)
-            delegateAssembler.setAsDelegate(level - 1);
             IColumnValuesReader reader = delegateAssembler.getReader();
             int numberOfDelimiters = reader.getNumberOfDelimiters();
             // End of group assembler is responsible to finalize array/multiset builders
             EndOfRepeatedGroupAssembler endOfGroupAssembler =
-                    new EndOfRepeatedGroupAssembler(reader, arrayAssembler, numberOfDelimiters - delimiters.size());
+                    new EndOfRepeatedGroupAssembler(endOfGroupPrimitiveReaders, arrayAssembler, delimiters.size());
+            previousEndOfGroupPrimitiveReaders.addAll(endOfGroupPrimitiveReaders);
             valueAssemblers.add(endOfGroupAssembler);
         }
 
@@ -185,6 +196,8 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             // Return the delegate assembler to the previous one
             delegateAssembler = previousDelegate;
         }
+
+        endOfGroupPrimitiveReaders = previousEndOfGroupPrimitiveReaders;
         return arrayAssembler;
     }
 
@@ -216,6 +229,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
 
             assembler = new RepeatedPrimitiveValueAssembler(level, info, reader, valueGetter);
             setDelegate(reader, (RepeatedPrimitiveValueAssembler) assembler);
+            endOfGroupPrimitiveReaders.add(reader);
 
         } else {
             IColumnValuesReader reader;

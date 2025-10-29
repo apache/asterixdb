@@ -24,39 +24,79 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class ObjectValueAssembler extends AbstractNestedValueAssembler {
+
     private final RecordBuilder recordBuilder;
     private final ARecordType recordType;
 
+    private int effectiveFieldCount;
+    private int visitedCount;
+    private boolean hasNonMissingValue;
+    private boolean firstTime;
+    private boolean hasNullAncestor;
+    // These are used to know the highest level of null/missing ancestor to propagate
+    // because some of the fields may be allMissing (as in column was not present)
+    private int nullClampedLevel;
+    private int missingClampedLevel;
+
     ObjectValueAssembler(int level, AssemblerInfo info) {
         super(level, info);
-        recordBuilder = new RecordBuilder();
-        recordType = (ARecordType) info.getDeclaredType();
+        this.recordBuilder = new RecordBuilder();
+        this.recordType = (ARecordType) info.getDeclaredType();
+        clearState();
     }
 
     @Override
-    void reset() {
+    public void reset() {
         recordBuilder.reset(recordType);
         storage.reset();
+        if (firstTime) {
+            clearState();
+        }
     }
 
     @Override
     void addValue(AbstractValueAssembler value) throws HyracksDataException {
-        int valueIndex = value.getFieldIndex();
-        if (valueIndex >= 0) {
-            recordBuilder.addField(valueIndex, value.getValue());
-        } else {
-            recordBuilder.addField(value.getFieldName(), value.getValue());
+        visitedCount++;
+        hasNonMissingValue = true;
+        addField(value, value.getValue());
+
+        if (isChunkComplete()) {
+            finalizeChunk();
         }
     }
 
     @Override
     void addNull(AbstractValueAssembler value) throws HyracksDataException {
-        int valueIndex = value.getFieldIndex();
-        if (valueIndex >= 0) {
-            recordBuilder.addField(valueIndex, NULL);
-        } else {
-            recordBuilder.addField(value.getFieldName(), NULL);
+        visitedCount++;
+        hasNonMissingValue = true;
+        addField(value, NULL);
+
+        if (isChunkComplete()) {
+            finalizeChunk();
         }
+    }
+
+    @Override
+    void addMissing() throws HyracksDataException {
+        visitedCount++;
+        hasNonMissingValue = true;
+        if (isChunkComplete()) {
+            finalizeChunk();
+        }
+    }
+
+    @Override
+    void addNullToAncestor(int nullLevel) throws HyracksDataException {
+        handleAncestorAddition(nullLevel, true);
+    }
+
+    @Override
+    void addMissingToAncestor(int missingLevel) throws HyracksDataException {
+        handleAncestorAddition(missingLevel, false);
+    }
+
+    void setNumberOfEffectiveFields(int numberOfEffectiveFields) {
+        this.effectiveFieldCount = numberOfEffectiveFields;
     }
 
     @Override
@@ -64,10 +104,80 @@ public class ObjectValueAssembler extends AbstractNestedValueAssembler {
         storage.reset();
         recordBuilder.write(storage.getDataOutput(), true);
         getParent().addValue(this);
+        clearStateOnEnd();
     }
 
     @Override
     public IValueReference getValue() {
         return storage;
+    }
+
+    @Override
+    public void clearStateOnEnd() {
+        clearState();
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private void addField(AbstractValueAssembler value, IValueReference fieldValue) throws HyracksDataException {
+        int fieldIndex = value.getFieldIndex();
+        if (fieldIndex >= 0) {
+            recordBuilder.addField(fieldIndex, fieldValue);
+        } else {
+            recordBuilder.addField(value.getFieldName(), fieldValue);
+        }
+    }
+
+    private void handleAncestorAddition(int level, boolean isNull) throws HyracksDataException {
+        firstTime = false;
+        visitedCount++;
+
+        if (isNull) {
+            hasNullAncestor = true;
+            nullClampedLevel = Math.max(nullClampedLevel, level);
+        } else {
+            missingClampedLevel = Math.max(missingClampedLevel, level);
+        }
+
+        if (isChunkComplete() && !hasNonMissingValue) {
+            propagateToAncestor(); // propagate only if no values were seen
+        }
+
+        if (isChunkComplete()) {
+            finalizeChunk();
+        }
+    }
+
+    private boolean isChunkComplete() {
+        return visitedCount == effectiveFieldCount;
+    }
+
+    private void finalizeChunk() {
+        clearChunkState();
+        firstTime = true; // ready for next chunk
+    }
+
+    private void propagateToAncestor() throws HyracksDataException {
+        // propagate nulls preferentially
+        if (hasNullAncestor) {
+            super.addNullToAncestor(nullClampedLevel);
+        } else {
+            super.addMissingToAncestor(missingClampedLevel);
+        }
+    }
+
+    private void clearChunkState() {
+        visitedCount = 0;
+        hasNullAncestor = false;
+        hasNonMissingValue = false;
+        nullClampedLevel = 0;
+        missingClampedLevel = 0;
+    }
+
+    private void clearState() {
+        clearChunkState();
+        firstTime = true;
     }
 }

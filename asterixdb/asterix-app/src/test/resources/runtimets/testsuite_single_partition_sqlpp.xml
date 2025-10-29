@@ -85,6 +85,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-1">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-2">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-3">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="assembly/missing-inner-array">
         <output-dir compare="Text">assembly/missing-inner-array</output-dir>
       </compilation-unit>

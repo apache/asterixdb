@@ -27,15 +27,10 @@ import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueExcepti
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
-    private int arrayDelegateLevels;
-    private boolean arrayDelegate;
 
     RepeatedPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValue) {
         super(level, info, reader, primitiveValue);
-        this.arrayDelegate = false;
-        this.arrayDelegateLevels = 0;
-
     }
 
     @Override
@@ -51,7 +46,7 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
          * - We are in an array (i.e., the parent array assembler is active)
          * - The value is a delimiter (i.e., the last round)
          */
-        if (!state.isInGroup() || reader.isRepeatedValue() || reader.isDelimiter()) {
+        if (!state.isInGroup() || reader.isRepeatedValue() || reader.isDelimiter() || reader.areAllMissing()) {
             next();
         }
 
@@ -64,20 +59,15 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
         return NEXT_ASSEMBLER;
     }
 
-    public IColumnValuesReader getReader() {
-        return reader;
-    }
-
-    public void setAsDelegate(int arrayLevel) {
-        // This assembler is responsible for adding null values
-        this.arrayDelegate = true;
-        this.arrayDelegateLevels |= (1 << arrayLevel);
-    }
-
     private void next() throws HyracksDataException {
+        if (reader.areAllMissing()) {
+            // If all values are missing, we add missing to the ancestor at the lowest missing level
+            addMissingToAncestor(reader.getLevel());
+            return;
+        }
         if (!reader.next()) {
             throw createException();
-        } else if (reader.isNull() && (arrayDelegate || reader.getLevel() + 1 == level)) {
+        } else if (reader.isNull()) {
             /*
              * There are two cases here for where the null belongs to:
              * 1- If the null is an array item, then add it
@@ -85,7 +75,7 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
              * (i.e., arrayDelegate is true)
              */
             addNullToAncestor(reader.getLevel());
-        } else if (reader.isMissing() && (isArrayDelegate(reader.getLevel()) || reader.getLevel() + 1 == level)) {
+        } else if (reader.isMissing() && reader.getLevel() < level) {
             /*
              * Add a missing item in either
              * - the array item is MISSING
@@ -97,15 +87,10 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
         }
     }
 
-    private boolean isArrayDelegate(int level) {
-        return (arrayDelegateLevels & (1 << level)) != 0;
-    }
-
     private ColumnarValueException createException() {
         ColumnarValueException e = new ColumnarValueException();
         ObjectNode assemblerNode = e.createNode(getClass().getSimpleName());
         assemblerNode.put("isDelegate", isDelegate());
-        assemblerNode.put("isArrayDelegate", arrayDelegate);
 
         ObjectNode readerNode = assemblerNode.putObject("assemblerReader");
         reader.appendReaderInformation(readerNode);

@@ -39,6 +39,10 @@ import org.apache.hyracks.util.StorageUtil;
 
 public class CloudProperties extends AbstractProperties {
 
+    public static final int MAX_HTTP_CONNECTIONS = 1000;
+    public static final int MAX_PENDING_HTTP_CONNECTIONS = 10000;
+    public static final int HTTP_CONNECTION_ACQUIRE_TIMEOUT = 120;
+
     public CloudProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
@@ -67,9 +71,9 @@ public class CloudProperties extends AbstractProperties {
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
-        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, 1000),
-        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, 10000),
-        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, 120),
+        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_HTTP_CONNECTIONS),
+        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_PENDING_HTTP_CONNECTIONS),
+        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, HTTP_CONNECTION_ACQUIRE_TIMEOUT),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
         CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),

@@ -137,7 +137,6 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
                 primitiveNode.getColumnIndex(), needAllColumns)) {
             orderedColumns.add(columnSchemaMetadata.getWriter(primitiveNode.getColumnIndex()));
         }
-
         //Prepare for the next batch
         primitiveNode.setCounter(0);
         primitiveNode.setNumberOfVisitedColumnsInBatch(0);

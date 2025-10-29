@@ -118,6 +118,7 @@ public final class ColumnSweepPlanner {
         long accessTime = clock.getCurrentTime();
         lastAccess = accessTime;
         int numberOfColumns = projectionInfo.getNumberOfProjectedColumns();
+        resizeStatsArrays(numberOfColumns);
         boolean requireCloudAccess = false;
         for (int i = 0; i < numberOfColumns; i++) {
             int columnIndex = projectionInfo.getColumnIndex(i);
@@ -185,6 +186,9 @@ public final class ColumnSweepPlanner {
     }
 
     private void resizeStatsArrays(int numberOfColumns) {
+        if (numberOfColumns <= sizes.length) {
+            return;
+        }
         sizes = IntArrays.ensureCapacity(sizes, numberOfColumns);
         lastAccesses = LongArrays.ensureCapacity(lastAccesses, numberOfColumns);
         this.numberOfColumns = numberOfColumns - numberOfPrimaryKeys;

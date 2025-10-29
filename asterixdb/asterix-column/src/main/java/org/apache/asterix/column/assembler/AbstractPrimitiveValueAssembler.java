@@ -30,7 +30,7 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
      */
     public static final int NEXT_ASSEMBLER = -1;
     protected final IValueGetter primitiveValueGetter;
-    protected final IColumnValuesReader reader;
+    protected IColumnValuesReader reader;
 
     AbstractPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValueGetter) {

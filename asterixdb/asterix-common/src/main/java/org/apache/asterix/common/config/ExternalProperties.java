@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.LEVEL;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
@@ -56,15 +57,26 @@ public class ExternalProperties extends AbstractProperties {
         AZURE_REQUEST_TIMEOUT(POSITIVE_INTEGER, 120, "Timeout for Azure client requests in seconds"),
         AWS_ASSUME_ROLE_DURATION(
                 getRangedIntegerType(900, 43200),
-                900,
+                3600,
                 "AWS assuming role duration in seconds. "
                         + "Range from 900 seconds (15 mins) to 43200 seconds (12 hours)"),
-        AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE(
-                getRangedIntegerType(25, 90),
-                75,
-                "Percentage of duration passed before assume role credentials need to be refreshed, the value ranges "
-                        + "from 25 to 90, default is 75. For example, if the value is set to 65, this means the "
-                        + "credentials need to be refreshed if 65% of the total expiration duration is already passed"),
+        AWS_ASSUME_ROLE_STALE_TIME(
+                POSITIVE_INTEGER,
+                60,
+                "The amount of time (in seconds), relative to STS token expiration, that the cached credentials are "
+                        + "considered stale and must be updated"),
+        AWS_ASSUME_ROLE_PREFETCH_TIME(
+                POSITIVE_INTEGER,
+                300,
+                "the amount of time, relative to STS token expiration, that the cached credentials are considered "
+                        + "close to stale and should be updated. Prefetch updates will occur between the specified "
+                        + "time and the stale time of the provider."),
+        AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED(
+                BOOLEAN,
+                true,
+                "Whether the provider should fetch credentials asynchronously in the background. If this is true, "
+                        + "threads are less likely to block when credentials are loaded, but additional resources are "
+                        + "used to maintain the provider."),
         GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION(
                 getRangedIntegerType(60, 3600),
                 900,
@@ -98,7 +110,9 @@ public class ExternalProperties extends AbstractProperties {
                 case LIBRARY_DEPLOY_TIMEOUT:
                 case AZURE_REQUEST_TIMEOUT:
                 case AWS_ASSUME_ROLE_DURATION:
-                case AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE:
+                case AWS_ASSUME_ROLE_STALE_TIME:
+                case AWS_ASSUME_ROLE_PREFETCH_TIME:
+                case AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED:
                 case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
@@ -185,8 +199,16 @@ public class ExternalProperties extends AbstractProperties {
         return accessor.getInt(Option.AWS_ASSUME_ROLE_DURATION);
     }
 
-    public int getAwsRefreshAssumeRoleThresholdPercentage() {
-        return accessor.getInt(Option.AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE);
+    public int getAwsAssumeRoleStaleTime() {
+        return accessor.getInt(Option.AWS_ASSUME_ROLE_STALE_TIME);
+    }
+
+    public int getAwsAssumeRolePrefetchTime() {
+        return accessor.getInt(Option.AWS_ASSUME_ROLE_PREFETCH_TIME);
+    }
+
+    public boolean getAwsAssumeRoleAsyncRefreshEnabled() {
+        return accessor.getBoolean(Option.AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED);
     }
 
     public int getGcpImpersonateServiceAccountDuration() {

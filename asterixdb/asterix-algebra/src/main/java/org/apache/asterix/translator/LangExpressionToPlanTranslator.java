@@ -345,7 +345,9 @@ abstract class LangExpressionToPlanTranslator
             DelegateOperator delegateOperator = new DelegateOperator(new CommitOperator(true));
             delegateOperator.getInputs().add(new MutableObject<>(upsertOp));
             delegateOperator.setSourceLocation(sourceLoc);
-            return new ALogicalPlanImpl(new MutableObject<>(delegateOperator));
+            ALogicalPlanImpl plan = new ALogicalPlanImpl(new MutableObject<>(delegateOperator));
+            eliminateSharedOperatorReferenceForPlan(plan);
+            return plan;
         } else {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Unrecognized Statement Type",
                     stmt.getKind());
@@ -481,7 +483,9 @@ abstract class LangExpressionToPlanTranslator
         newTop.getInputs().add(new MutableObject<>(writeOperator));
 
         globalPlanRoots.add(new MutableObject<>(newTop));
-        return new ALogicalPlanImpl(globalPlanRoots);
+        ALogicalPlanImpl plan = new ALogicalPlanImpl(globalPlanRoots);
+        eliminateSharedOperatorReferenceForPlan(plan);
+        return plan;
     }
 
     private String getSeparator(String adapter, boolean isFileStore) {

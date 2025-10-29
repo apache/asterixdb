@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.active.ActiveManager;
-import org.apache.asterix.app.external.ExternalCredentialsCache;
-import org.apache.asterix.app.external.ExternalCredentialsCacheUpdater;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.cloud.CloudConfigurator;
 import org.apache.asterix.cloud.LocalPartitionBootstrapper;
@@ -221,8 +219,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         cacheManager = new CacheManager();
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
-        this.externalCredentialsCache = new ExternalCredentialsCache(this);
-        this.externalCredentialsCacheUpdater = new ExternalCredentialsCacheUpdater(this);
     }
 
     @Override
@@ -777,15 +773,5 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private int getResourceIdBlockSize() {
         return isCloudDeployment() ? storageProperties.getStoragePartitionsCount()
                 : ncServiceContext.getIoManager().getIODevices().size();
-    }
-
-    @Override
-    public IExternalCredentialsCache getExternalCredentialsCache() {
-        return externalCredentialsCache;
-    }
-
-    @Override
-    public IExternalCredentialsCacheUpdater getExternalCredentialsCacheUpdater() {
-        return externalCredentialsCacheUpdater;
     }
 }

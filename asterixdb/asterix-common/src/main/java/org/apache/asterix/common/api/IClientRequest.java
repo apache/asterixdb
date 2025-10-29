@@ -81,6 +81,13 @@ public interface IClientRequest {
     void markCancellable();
 
     /**
+     * Mark the request as not cancellable if it has not been cancelled yet.
+     *
+     * @return true if the request was marked as not cancellable. Otherwise, false without changing anything.
+     */
+    boolean markUncancellable();
+
+    /**
      * @return true if the request can be cancelled. Otherwise false.
      */
     boolean isCancellable();
@@ -91,7 +98,7 @@ public interface IClientRequest {
      * @param appCtx
      * @throws HyracksDataException
      */
-    void cancel(ICcApplicationContext appCtx) throws HyracksDataException;
+    boolean cancel(ICcApplicationContext appCtx) throws HyracksDataException;
 
     /**
      * @return A json string representation of this request

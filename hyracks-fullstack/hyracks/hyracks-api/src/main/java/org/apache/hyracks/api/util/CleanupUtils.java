@@ -100,11 +100,11 @@ public class CleanupUtils {
         }
     }
 
-    public static Throwable close(AutoCloseable[] closables, Throwable root) {
+    public static Throwable close(Throwable root, AutoCloseable... closables) {
         return close(closables, root, false);
     }
 
-    public static Throwable closeSilently(AutoCloseable[] closables, Throwable root) {
+    public static Throwable closeSilently(Throwable root, AutoCloseable... closables) {
         return close(closables, root, true);
     }
 

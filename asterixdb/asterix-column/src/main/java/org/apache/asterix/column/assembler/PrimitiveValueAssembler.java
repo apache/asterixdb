@@ -48,9 +48,9 @@ final class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
         // Do not call next on PK readers as they are maintained by the cursor
         if (!primaryKey && !reader.next()) {
             throw createException();
-        } else if (reader.isNull() && (isDelegate() || reader.getLevel() + 1 == level)) {
+        } else if (reader.isNull()) {
             addNullToAncestor(reader.getLevel());
-        } else if (reader.isMissing() && isDelegate() && reader.getLevel() < level) {
+        } else if (reader.isMissing()) {
             addMissingToAncestor(reader.getLevel());
         } else if (reader.isValue()) {
             addValueToParent();

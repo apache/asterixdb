@@ -35,6 +35,7 @@ import org.apache.asterix.cloud.AbstractLSMTest;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig;
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.util.StorageUtil;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -117,7 +118,8 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         URI blobStore = URI.create(blobServiceClient.getAccountUrl());
         String endpoint = blobStore.getScheme() + "://" + blobStore.getAuthority() + "/devstoreaccount1";
         AzBlobStorageClientConfig config = new AzBlobStorageClientConfig(MOCK_SERVER_REGION, endpoint, "", false, 0,
-                PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, true);
+                PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, true, null, CloudProperties.MAX_HTTP_CONNECTIONS,
+                CloudProperties.MAX_PENDING_HTTP_CONNECTIONS, CloudProperties.HTTP_CONNECTION_ACQUIRE_TIMEOUT);
         CLOUD_CLIENT = new AzBlobStorageCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 

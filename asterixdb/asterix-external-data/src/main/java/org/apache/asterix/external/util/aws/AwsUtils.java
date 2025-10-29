@@ -24,7 +24,6 @@ import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_P
 import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
-import static org.apache.asterix.external.util.aws.AwsConstants.ERROR_EXPIRED_TOKEN;
 import static org.apache.asterix.external.util.aws.AwsConstants.EXTERNAL_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.INSTANCE_PROFILE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAME;
@@ -33,6 +32,9 @@ import static org.apache.asterix.external.util.aws.AwsConstants.SECRET_ACCESS_KE
 import static org.apache.asterix.external.util.aws.AwsConstants.SESSION_TOKEN_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,10 +43,9 @@ import java.util.UUID;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.external.IExternalCredentialsCache;
-import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
-import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -52,15 +53,43 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.awscore.AwsClient;
+import software.amazon.awssdk.core.SdkClient;
+import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.interceptor.Context;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
+import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.services.sts.StsClientBuilder;
+import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider;
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest;
 import software.amazon.awssdk.services.sts.model.AssumeRoleResponse;
-import software.amazon.awssdk.services.sts.model.Credentials;
 
 public class AwsUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ExecutionInterceptor ASSUME_ROLE_INTERCEPTOR;
+
+    static {
+        ASSUME_ROLE_INTERCEPTOR = new ExecutionInterceptor() {
+            @Override
+            public void afterExecution(Context.AfterExecution context, ExecutionAttributes executionAttributes) {
+                SdkRequest req = context.request();
+                SdkResponse resp = context.response();
+                if (req instanceof AssumeRoleRequest assumeReq && resp instanceof AssumeRoleResponse assumeResp) {
+                    LOGGER.info("STS refresh success [Thread={}, Role={}, Expiry={}]", Thread.currentThread().getName(),
+                            assumeReq.roleArn(),
+                            assumeResp.credentials().expiration());
+                }
+                ExecutionInterceptor.super.afterExecution(context, executionAttributes);
+            }
+        };
+    }
 
     public enum AuthenticationType {
         ANONYMOUS,
@@ -74,19 +103,14 @@ public class AwsUtils {
         throw new AssertionError("do not instantiate");
     }
 
-    public static boolean isArnAssumedRoleExpiredToken(Map<String, String> configuration, String errorCode) {
-        return ERROR_EXPIRED_TOKEN.equals(errorCode)
-                && getAuthenticationType(configuration) == AuthenticationType.ARN_ASSUME_ROLE;
-    }
-
     public static AwsCredentialsProvider buildCredentialsProvider(IApplicationContext appCtx,
-            Map<String, String> configuration) throws CompilationException {
+            Map<String, String> configuration, CloseableAwsClients awsClients) throws CompilationException {
         AuthenticationType authenticationType = getAuthenticationType(configuration);
         switch (authenticationType) {
             case ANONYMOUS:
                 return AnonymousCredentialsProvider.create();
             case ARN_ASSUME_ROLE:
-                return getTrustAccountCredentials(appCtx, configuration);
+                return getTrustAccountCredentials(appCtx, configuration, awsClients);
             case INSTANCE_PROFILE:
                 return getInstanceProfileCredentials(configuration);
             case ACCESS_KEYS:
@@ -157,57 +181,49 @@ public class AwsUtils {
      * @throws CompilationException CompilationException
      */
     public static AwsCredentialsProvider getTrustAccountCredentials(IApplicationContext appCtx,
-            Map<String, String> configuration) throws CompilationException {
-        IExternalCredentialsCache cache = appCtx.getExternalCredentialsCache();
-        Object credentialsObject = cache.get(configuration.get(ExternalDataConstants.KEY_ENTITY_ID));
-        if (credentialsObject != null) {
-            return () -> (AwsSessionCredentials) credentialsObject;
-        }
-        IExternalCredentialsCacheUpdater cacheUpdater = appCtx.getExternalCredentialsCacheUpdater();
-        AwsSessionCredentials credentials;
-        try {
-            credentials = (AwsSessionCredentials) cacheUpdater.generateAndCacheCredentials(configuration);
-        } catch (HyracksDataException ex) {
-            throw new CompilationException(ErrorCode.FAILED_EXTERNAL_CROSS_ACCOUNT_AUTHENTICATION, ex, ex.getMessage());
+            Map<String, String> configuration, CloseableAwsClients awsClients) throws CompilationException {
+        AwsCredentialsProvider credentialsToAssumeRole = getCredentialsToAssumeRole(configuration);
+
+        // build sts client used for assuming role
+        ClientOverrideConfiguration.Builder clientConfigurationBuilder = ClientOverrideConfiguration.builder();
+        clientConfigurationBuilder.addExecutionInterceptor(ASSUME_ROLE_INTERCEPTOR);
+        ClientOverrideConfiguration clientConfiguration = clientConfigurationBuilder.build();
+
+        StsClientBuilder stsClientBuilder = StsClient.builder();
+        stsClientBuilder.credentialsProvider(credentialsToAssumeRole);
+        stsClientBuilder.region(validateAndGetRegion(configuration.get(REGION_FIELD_NAME)));
+        stsClientBuilder.overrideConfiguration(clientConfiguration);
+        StsClient stsClient = stsClientBuilder.build();
+        awsClients.setStsClient(stsClient);
+
+        // build refresh role request
+        String sessionName = UUID.randomUUID().toString();
+        LOGGER.info("Assuming role with session name ({}) for ({})", sessionName, Thread.currentThread().getName());
+        AssumeRoleRequest.Builder refreshRequestBuilder = AssumeRoleRequest.builder();
+        refreshRequestBuilder.roleArn(configuration.get(ROLE_ARN_FIELD_NAME));
+        refreshRequestBuilder.externalId(configuration.get(EXTERNAL_ID_FIELD_NAME));
+        refreshRequestBuilder.roleSessionName(sessionName);
+        if (appCtx != null) {
+            int duration = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
+            refreshRequestBuilder.durationSeconds(duration);
         }
 
-        return () -> credentials;
-    }
-
-    /**
-     * Assume role using provided credentials and return the new credentials
-     *
-     * @param configuration configuration
-     * @return return credentials from the assume role
-     * @throws CompilationException CompilationException
-     */
-    public static AwsCredentialsProvider assumeRoleAndGetCredentials(Map<String, String> configuration)
-            throws CompilationException {
-        String regionId = configuration.get(REGION_FIELD_NAME);
-        String arnRole = configuration.get(ROLE_ARN_FIELD_NAME);
-        String externalId = configuration.get(EXTERNAL_ID_FIELD_NAME);
-        Region region = validateAndGetRegion(regionId);
-
-        AssumeRoleRequest.Builder builder = AssumeRoleRequest.builder();
-        builder.roleArn(arnRole);
-        builder.roleSessionName(UUID.randomUUID().toString());
-        builder.durationSeconds(900); // TODO(htowaileb): configurable? Can be 900 to 43200 (15 mins to 12 hours)
-        if (externalId != null) {
-            builder.externalId(externalId);
+        // build credentials provider
+        StsAssumeRoleCredentialsProvider.Builder builder = StsAssumeRoleCredentialsProvider.builder();
+        builder.refreshRequest(refreshRequestBuilder.build());
+        builder.stsClient(stsClient);
+        if (appCtx != null) {
+            int staleTime = appCtx.getExternalProperties().getAwsAssumeRoleStaleTime();
+            int prefetchTime = appCtx.getExternalProperties().getAwsAssumeRolePrefetchTime();
+            boolean asyncCredentialsUpdate = appCtx.getExternalProperties().getAwsAssumeRoleAsyncRefreshEnabled();
+            builder.staleTime(Duration.ofSeconds(staleTime));
+            builder.prefetchTime(Duration.ofSeconds(prefetchTime));
+            builder.asyncCredentialUpdateEnabled(asyncCredentialsUpdate);
         }
-        AssumeRoleRequest request = builder.build();
-        AwsCredentialsProvider credentialsProvider = getCredentialsToAssumeRole(configuration);
 
-        // assume the role from the provided arn
-        try (StsClient stsClient =
-                StsClient.builder().region(region).credentialsProvider(credentialsProvider).build()) {
-            AssumeRoleResponse response = stsClient.assumeRole(request);
-            Credentials credentials = response.credentials();
-            return StaticCredentialsProvider.create(AwsSessionCredentials.create(credentials.accessKeyId(),
-                    credentials.secretAccessKey(), credentials.sessionToken()));
-        } catch (SdkException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-        }
+        StsAssumeRoleCredentialsProvider credentialsProvider = builder.build();
+        awsClients.setCredentialsProvider(credentialsProvider);
+        return credentialsProvider;
     }
 
     private static AwsCredentialsProvider getCredentialsToAssumeRole(Map<String, String> configuration)
@@ -266,6 +282,24 @@ public class AwsUtils {
         }
     }
 
+    public static <B extends SdkClientBuilder<B, C>, C extends SdkClient> void setEndpoint(B builder, String endpoint)
+            throws CompilationException {
+        // Validate the service endpoint if present
+        if (endpoint != null) {
+            try {
+                URI uri = new URI(endpoint);
+                try {
+                    builder.endpointOverride(uri);
+                } catch (NullPointerException ex) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+                }
+            } catch (URISyntaxException ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex,
+                        String.format("Invalid service endpoint %s", endpoint));
+            }
+        }
+    }
+
     private static String getNonNull(Map<String, String> configuration, String... fieldNames) {
         for (String fieldName : fieldNames) {
             if (configuration.get(fieldName) != null) {
@@ -282,5 +316,52 @@ public class AwsUtils {
      */
     public static String generateExternalId() {
         return UUID.randomUUID().toString();
+    }
+
+    public static void closeClients(CloseableAwsClients clients) {
+        if (clients == null) {
+            return;
+        }
+
+        AwsCredentialsProvider credentialsProvider = clients.getCredentialsProvider();
+        if (credentialsProvider instanceof StsAssumeRoleCredentialsProvider assumeRoleCredsProvider) {
+            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient(), assumeRoleCredsProvider);
+        } else {
+            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient());
+        }
+    }
+
+    public static class CloseableAwsClients {
+        private AwsClient consumingClient;
+        private StsClient stsClient;
+        private AwsCredentialsProvider credentialsProvider;
+
+        public CloseableAwsClients() {
+
+        }
+
+        public AwsClient getConsumingClient() {
+            return consumingClient;
+        }
+
+        public StsClient getStsClient() {
+            return stsClient;
+        }
+
+        public AwsCredentialsProvider getCredentialsProvider() {
+            return credentialsProvider;
+        }
+
+        public void setConsumingClient(AwsClient consumingClient) {
+            this.consumingClient = consumingClient;
+        }
+
+        public void setStsClient(StsClient stsClient) {
+            this.stsClient = stsClient;
+        }
+
+        public void setCredentialsProvider(AwsCredentialsProvider credentialsProvider) {
+            this.credentialsProvider = credentialsProvider;
+        }
     }
 }

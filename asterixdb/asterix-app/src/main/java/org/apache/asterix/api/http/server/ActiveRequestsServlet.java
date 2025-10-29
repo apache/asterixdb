@@ -72,9 +72,12 @@ public class ActiveRequestsServlet extends AbstractRequestsServlet {
         }
         try {
             // Cancels the on-going job.
-            requestTracker.cancel(req.getId());
-            // response: OK
-            response.setStatus(HttpResponseStatus.OK);
+            if (requestTracker.cancel(req.getId())) {
+                // response: OK
+                response.setStatus(HttpResponseStatus.OK);
+            } else {
+                response.setStatus(HttpResponseStatus.FORBIDDEN);
+            }
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "unexpected exception thrown from cancel", e);
             // response: INTERNAL SERVER ERROR

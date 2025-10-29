@@ -92,7 +92,7 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
         ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
         AbstractSchemaNode currentChild = children.get(normalizedTypeTag);
         //The parent of a union child should be the actual parent
-        AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, normalizedTypeTag);
+        AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, normalizedTypeTag, false);
         if (currentChild != newChild) {
             putChild(newChild, currentChild);
         } else {

@@ -55,7 +55,7 @@ public interface IRequestTracker extends IJobLifecycleListener {
      * @param requestId
      * @throws HyracksDataException
      */
-    void cancel(String requestId) throws HyracksDataException;
+    boolean cancel(String requestId) throws HyracksDataException;
 
     /**
      * Completes the request with id {@code requestId}

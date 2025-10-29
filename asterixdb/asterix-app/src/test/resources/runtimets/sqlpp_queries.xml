@@ -16633,6 +16633,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-1">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-2">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-3">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="filter/ASTERIXDB-3499">
         <output-dir compare="Text">filter/ASTERIXDB-3499</output-dir>
       </compilation-unit>
