@@ -1475,7 +1475,13 @@ public class TestExecutor {
                     //TODO: this is not right. URLEncoder does not properly encode paths.
                     String dataverse = URLEncoder.encode(command[1], StandardCharsets.US_ASCII.name());
                     String library = URLEncoder.encode(command[2], StandardCharsets.US_ASCII.name());
-                    URI path = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
+                    String basePath = "/admin/udf/" + dataverse + "/" + library;
+                    String path = "";
+                    switch (librarian.getSocketType()){
+                        case DOMAIN -> path = basePath;
+                        case LOOPBACK -> path = createEndpointURI(basePath).toString();
+                        default -> path = createEndpointURI(basePath).toString();
+                    }
                     if (command.length < 2) {
                         throw new Exception("invalid library command: " + line);
                     }
@@ -2739,6 +2745,11 @@ public class TestExecutor {
         }
         URI uri = URI.create("http://" + toHostPort(endpoint.getHostString(), endpoint.getPort()) + pathAndQuery);
         LOGGER.debug("Created endpoint URI: " + uri);
+        return uri;
+    }
+
+    protected URI createUDFDomainSockURI(String pathAndQuery) {
+        URI uri = URI.create("unix://target/tmp/asterix_nc1/udf.sock" + pathAndQuery);
         return uri;
     }
 

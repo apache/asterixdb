@@ -57,8 +57,8 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void install(URI path, String type, String libPath, Pair<String, String> credentials) throws Exception {
-        HttpClientContext hcCtx = createHttpClientContext(path, credentials);
+    public void install(String path, String type, String libPath, Pair<String, String> credentials) throws Exception {
+        HttpClientContext hcCtx = createHttpClientContext(URI.create(path), credentials);
         HttpPost post = new HttpPost(path);
         File lib = new File(libPath);
         MultipartEntityBuilder entity = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
@@ -70,8 +70,8 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException {
-        HttpClientContext hcCtx = createHttpClientContext(path, credentials);
+    public void uninstall(String path, Pair<String, String> credentials) throws IOException, AsterixException {
+        HttpClientContext hcCtx = createHttpClientContext(URI.create(path), credentials);
         HttpDelete del = new HttpDelete(path);
         HttpResponse response = hc.execute(del, hcCtx);
         handleResponse(response);
@@ -102,5 +102,10 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         if (resp != null) {
             throw new AsterixException(resp);
         }
+    }
+
+    @Override
+    public SocketType getSocketType() {
+        return SocketType.LOOPBACK;
     }
 }

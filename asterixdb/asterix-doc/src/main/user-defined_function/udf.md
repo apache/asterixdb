@@ -52,7 +52,7 @@ Now,restart the cluster if it was already started to allow the Cluster Controlle
 ## <a name="installingUDF">Installing a Java UDF Library</a>
 
 To install a UDF package to the cluster, we need to send a Multipart Form-data HTTP request to the `/admin/udf` endpoint
-of the CC at the normal API port (`19004` by default). Any suitable tool will do, but for the example here I will use
+of the cluster through the special UDF domain socket. Any suitable tool will do, but for the example here I will use
 `curl` which is widely available.
 
 For example, to install a library with the following criteria:
@@ -65,7 +65,7 @@ For example, to install a library with the following criteria:
 
 we would execute
 
-    curl -v -u admin:admin -X POST -F 'data=@./lib.zip' -F 'type=java' localhost:19004/admin/udf/udfs/testlib
+    curl -v -u admin:admin --unix-socket udf.sock -F 'data=@./lib.zip' -F 'type=java' localhost/admin/udf/udfs/testlib
 
 Any response other than `200` indicates an error in deployment.
 

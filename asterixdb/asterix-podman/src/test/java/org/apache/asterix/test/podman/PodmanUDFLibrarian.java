@@ -19,7 +19,6 @@
 package org.apache.asterix.test.podman;
 
 import java.io.IOException;
-import java.net.URI;
 
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -42,7 +41,7 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void install(URI path, String type, String libPath, Pair<String, String> credentials) throws Exception {
+    public void install(String path, String type, String libPath, Pair<String, String> credentials) throws Exception {
         Container.ExecResult curlResult = null;
         int retryCt = 0;
         while (retryCt < 10) {
@@ -50,7 +49,7 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
                 curlResult = asterix.execInContainer("curl", "--no-progress-meter", "-X", "POST", "-u",
                         credentials.first + ":" + credentials.second, "-F",
                         "data=@" + "/var/tmp/asterix-app/" + libPath, "-F", "type=" + type,
-                        "http://localhost:19004" + path.getRawPath());
+                        "http://localhost:19004" + path);
                 handleResponse(curlResult);
                 return;
             } catch (RuntimeException e) {
@@ -62,14 +61,19 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException {
+    public void uninstall(String path, Pair<String, String> credentials) throws IOException, AsterixException {
         try {
             Container.ExecResult curlResult = asterix.execInContainer("curl", "-X", "DELETE", "-u",
-                    credentials.first + ":" + credentials.second, "http://localhost:19004" + path.getPath());
+                    credentials.first + ":" + credentials.second, "http://localhost:19004" + path);
             handleResponse(curlResult);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    public SocketType getSocketType() {
+        return SocketType.LOOPBACK;
     }
 
     private void handleResponse(Container.ExecResult result) throws AsterixException, JsonProcessingException {

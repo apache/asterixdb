@@ -31,12 +31,18 @@ import static org.apache.hyracks.control.common.controllers.ControllerConfig.Opt
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.BasicAuthServlet;
@@ -44,6 +50,7 @@ import org.apache.asterix.api.http.server.NCQueryResultApiServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
 import org.apache.asterix.api.http.server.NCQueryStatusApiServlet;
 import org.apache.asterix.api.http.server.NCUdfApiServlet;
+import org.apache.asterix.api.http.server.NCUdfDSApiServlet;
 import org.apache.asterix.api.http.server.NCUdfRecoveryServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
@@ -98,6 +105,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -131,6 +139,7 @@ public class NCApplication extends BaseNCApplication {
     protected boolean startupCompleted;
     protected WebManager webManager;
     private HttpServer apiServer;
+    private HttpServer udfServer;
 
     @Override
     public void registerConfig(IConfigManager configManager) {
@@ -265,19 +274,38 @@ public class NCApplication extends BaseNCApplication {
         apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
                 parseCredentialMap(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
                         .getCredentialFilePath()));
-        Pair<Map<String, String>, Map<String, String>> auth = BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
-        apiServer
-                .addServlet(new BasicAuthServlet(apiServer.ctx(),
-                        new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
-                                apiServer.getScheme(), apiServer.getAddress().getPort()),
-                        auth.getFirst(), auth.getSecond()));
-        apiServer.addServlet(new BasicAuthServlet(
-                apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
-                        getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
-                auth.getFirst(), auth.getSecond()));
+        if (!getApplicationContext().isCloudDeployment()) {
+            Pair<Map<String, String>, Map<String, String>> auth =
+                    BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
+            apiServer.addServlet((new BasicAuthServlet(apiServer.ctx(),
+                    new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
+                            apiServer.getScheme(), externalProperties.getNcApiPort()),
+                    auth.getFirst(), auth.getSecond())));
+            apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
+                    new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY }, getApplicationContext()),
+                    auth.getFirst(), auth.getSecond()));
+        } else {
+            //UDF deployment server
+            IApplicationConfig appCfg = getApplicationContext().getServiceContext().getAppConfig();
+            Path udfSockPath = Path.of(appCfg.getString(NCConfig.Option.UDF_API_DS_PATH)).toAbsolutePath();
+            if (!Files.exists(udfSockPath.getParent())) {
+                Set<PosixFilePermission> noOthers = PosixFilePermissions.fromString("rwxr-x---");
+                FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(noOthers);
+                Files.createDirectories(udfSockPath.getParent(), permissions);
+            }
+            udfServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), udfSockPath, config);
+            Pair<Map<String, String>, Map<String, String>> auth =
+                    BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
+            udfServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
+                    new NCUdfDSApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext()),
+                    auth.getFirst(), auth.getSecond()));
+            webManager.add(udfServer);
+
+        }
         apiServer.addServlet(new NCQueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
         apiServer.addServlet(new NCQueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
+
     }
 
     protected List<AsterixExtension> getExtensions() throws Exception {

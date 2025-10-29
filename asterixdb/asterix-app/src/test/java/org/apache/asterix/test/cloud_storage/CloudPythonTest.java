@@ -21,11 +21,13 @@ package org.apache.asterix.test.cloud_storage;
 import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
 import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 import static org.apache.asterix.test.runtime.ExternalPythonFunctionIT.setNcEndpoints;
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
+import org.apache.asterix.app.external.CloudUDFLibrarian;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
@@ -48,7 +50,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 
 /**
- * Run tests in cloud deployment environment
+ * Run Python UDF tests in cloud deployment environment
  */
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -63,6 +65,7 @@ public class CloudPythonTest {
     public static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage.conf.ftl";
     public static final String CONFIG_FILE = "target/cc-cloud-storage.conf";
     private static final String EXCLUDED_TESTS = "MP";
+    private static final String dsPath = joinPath("/", "tmp", "asterixdb_udf", "asterix_nc1_udf.sock");
 
     public CloudPythonTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -78,7 +81,7 @@ public class CloudPythonTest {
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
-        LangExecutionUtil.setUp(CONFIG_FILE, testExecutor);
+        LangExecutionUtil.setUp(CONFIG_FILE, testExecutor, false, false, new CloudUDFLibrarian(dsPath));
         setNcEndpoints(testExecutor);
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
     }

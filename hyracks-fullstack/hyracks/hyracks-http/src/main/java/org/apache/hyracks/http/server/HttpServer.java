@@ -20,6 +20,10 @@ package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnixDomainSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,8 +56,11 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.FixedRecvByteBufAllocator;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.socket.DuplexChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerDomainSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpScheme;
@@ -70,6 +77,7 @@ public class HttpServer {
             new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
     protected static final int RECEIVE_BUFFER_SIZE = 4096;
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Class<InetSocketAddress> INSA = InetSocketAddress.class;
     private static final int FAILED = -1;
     private static final int STOPPED = 0;
     private static final int STARTING = 1;
@@ -85,7 +93,8 @@ public class HttpServer {
     private final ServletRegistry servlets;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
-    private final Set<InetSocketAddress> addresses;
+    private final Set<SocketAddress> addresses;
+    private final Set<SocketAddress> boundAddresses;
     private final ThreadPoolExecutor executor;
     // Mutable members
     private volatile int state = STOPPED;
@@ -93,6 +102,7 @@ public class HttpServer {
     private final List<Channel> channels;
     private Throwable cause;
     private HttpServerConfig config;
+    private Class<? extends ServerChannel> channelImpl = NioServerSocketChannel.class;
 
     private final GenericFutureListener<Future<Void>> channelCloseListener = f -> {
         // This listener is invoked from within a netty IO thread. Hence, we can never block it
@@ -118,14 +128,30 @@ public class HttpServer {
         this(bossGroup, workerGroup, Collections.singletonList(address), config, closeHandler);
     }
 
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Collection<InetSocketAddress> addresses,
-            HttpServerConfig config, IChannelClosedHandler closeHandler) {
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Path path, HttpServerConfig config) {
+        this(bossGroup, workerGroup, Collections.singletonList(UnixDomainSocketAddress.of(path)), config, null);
+    }
+
+    public static String getPortOrPath(SocketAddress addr) {
+        if (addr instanceof InetSocketAddress) {
+            return "port:" + ((InetSocketAddress) addr).getPort();
+        } else if (addr instanceof UnixDomainSocketAddress) {
+            return "path:" + ((UnixDomainSocketAddress) addr).getPath().toString();
+        } else {
+            return addr.toString();
+        }
+    }
+
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
+            Collection<? extends SocketAddress> addresses, HttpServerConfig config,
+            IChannelClosedHandler closeHandler) {
         if (addresses.isEmpty()) {
             throw new IllegalArgumentException("no addresses specified");
         }
         this.bossGroup = bossGroup;
         this.workerGroup = workerGroup;
         this.addresses = new LinkedHashSet<>(addresses);
+        this.boundAddresses = new LinkedHashSet<>(addresses);
         this.closedHandler = closeHandler;
         this.config = config;
         channels = new ArrayList<>();
@@ -133,13 +159,21 @@ public class HttpServer {
         servlets = new ServletRegistry();
         workQueue = new LinkedBlockingQueue<>(config.getRequestQueueSize());
         int numExecutorThreads = config.getThreadCount();
-        int[] ports = this.addresses.stream().mapToInt(InetSocketAddress::getPort).distinct().toArray();
+        int[] ports = addresses.stream().filter(INSA::isInstance).map(INSA::cast).mapToInt(InetSocketAddress::getPort)
+                .distinct().toArray();
         String desc;
         if (ports.length > 1) {
-            desc = this.addresses.stream().map(a -> a.getAddress().getHostAddress() + ":" + a.getPort())
+            desc = addresses.stream().filter(INSA::isInstance).map(INSA::cast)
+                    .map(a -> a.getAddress().getHostAddress() + ":" + a.getPort())
                     .collect(Collectors.joining(",", "[", "]"));
-        } else {
+        } else if (ports.length == 1) {
             desc = "port:" + ports[0];
+        } else {
+            List<String> paths = addresses.stream().filter(UnixDomainSocketAddress.class::isInstance)
+                    .map(UnixDomainSocketAddress.class::cast).map(UnixDomainSocketAddress::getPath)
+                    .map(Object::toString).distinct().toList();
+            desc = "paths: " + " [ " + String.join(" ],[ ", paths) + " ]";
+            channelImpl = NioServerDomainSocketChannel.class;
         }
         executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS, workQueue,
                 runnable -> new Thread(runnable, "HttpExecutor(" + desc + ")-" + threadId.getAndIncrement()));
@@ -278,18 +312,31 @@ public class HttpServer {
 
     private void bind() throws Exception {
         ServerBootstrap b = new ServerBootstrap();
-        b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+        b.group(bossGroup, workerGroup).channel(channelImpl)
                 .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(RECEIVE_BUFFER_SIZE))
                 .childOption(ChannelOption.AUTO_READ, Boolean.FALSE)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WRITE_BUFFER_WATER_MARK)
                 .handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(getChannelInitializer());
-        List<Pair<InetSocketAddress, ChannelFuture>> channelFutures = new ArrayList<>();
-        for (InetSocketAddress address : addresses) {
+        List<Pair<SocketAddress, ChannelFuture>> channelFutures = new ArrayList<>();
+        for (SocketAddress address : addresses) {
+            if(address instanceof UnixDomainSocketAddress udr){
+                Path udrPath = udr.getPath();
+                //if the socket can't be connected to, but:
+                // - the node exists
+                // - it is not a regular file
+                // - it is not a directory
+                // - and is 0 length
+                // then it should be safe to unlink
+                if(!sockAlive(udr) && Files.exists(udrPath) && !Files.isRegularFile(udrPath)  && !Files.isDirectory(udrPath) && udrPath.toFile().length() == 0){
+                    Files.deleteIfExists(udrPath);
+                }
+            }
             channelFutures.add(org.apache.commons.lang3.tuple.Pair.of(address, b.bind(address)));
+            boundAddresses.add(address);
         }
         Exception failure = null;
-        for (Pair<InetSocketAddress, ChannelFuture> addressFuture : channelFutures) {
+        for (Pair<SocketAddress, ChannelFuture> addressFuture : channelFutures) {
             try {
                 Channel channel = addressFuture.getRight().sync().channel();
                 channel.closeFuture().addListener(channelCloseListener);
@@ -384,6 +431,7 @@ public class HttpServer {
             LOGGER.log(Level.ERROR, "Error while shutting down http server executor", e);
         }
         closeChannels();
+        deleteDomainSockFiles();
     }
 
     public IServlet getServlet(FullHttpRequest request) {
@@ -394,7 +442,7 @@ public class HttpServer {
         return new HttpServerHandler<>(this, chunkSize);
     }
 
-    protected ChannelInitializer<SocketChannel> getChannelInitializer() {
+    protected ChannelInitializer<DuplexChannel> getChannelInitializer() {
         return new HttpServerInitializer(this);
     }
 
@@ -429,7 +477,7 @@ public class HttpServer {
     }
 
     @Deprecated // this returns an arbitrary (the first supplied if collection is ordered) address
-    public InetSocketAddress getAddress() {
+    public SocketAddress getAddress() {
         return addresses.iterator().next();
     }
 
@@ -443,4 +491,27 @@ public class HttpServer {
             channels.clear();
         }
     }
+
+    // Domain socket nodes exist outside the lifetime of the socket itself, so we should attempt to remove them on close
+    void deleteDomainSockFiles() {
+        for (UnixDomainSocketAddress address : boundAddresses.stream().filter(UnixDomainSocketAddress.class::isInstance)
+                .map(UnixDomainSocketAddress.class::cast).toList()) {
+            try {
+                Files.deleteIfExists(address.getPath());
+                LOGGER.info("Deleted domain socket file {}", address.getPath());
+            } catch (IOException e) {
+                LOGGER.warn("Failed to delete domain socket file {}", address.getPath(), e);
+            }
+        }
+    }
+
+    //the only real way to know if the file given to us in the config is an active socket is to attempt to connect to it
+    boolean sockAlive(UnixDomainSocketAddress addr) {
+        try (var chan = java.nio.channels.SocketChannel.open(addr)) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

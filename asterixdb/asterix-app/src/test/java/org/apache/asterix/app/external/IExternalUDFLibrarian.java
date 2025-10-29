@@ -19,13 +19,19 @@
 package org.apache.asterix.app.external;
 
 import java.io.IOException;
-import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public interface IExternalUDFLibrarian {
-    void install(URI path, String type, String libPath, Pair<String, String> credentials) throws Exception;
+    public enum SocketType {
+        LOOPBACK,
+        DOMAIN
+    }
 
-    void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException;
+    void install(String path, String type, String libPath, Pair<String, String> credentials) throws Exception;
+
+    void uninstall(String path, Pair<String, String> credentials) throws IOException, AsterixException;
+
+    SocketType getSocketType();
 }

@@ -29,33 +29,33 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
-import io.netty.handler.codec.http.HttpScheme;
-
 public class NCUdfRecoveryServlet extends AbstractNCUdfServlet {
-
-    ExternalLibraryManager libraryManager;
 
     public static final String GET_ALL_UDF_ENDPOINT = "/all";
 
-    public NCUdfRecoveryServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
-            HttpScheme httpServerProtocol, int httpServerPort) {
-        super(ctx, paths, appCtx, httpServerProtocol, httpServerPort);
+    public NCUdfRecoveryServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx) {
+        super(ctx, paths, appCtx);
     }
 
     @Override
     public void init() {
         appCtx = (INcApplicationContext) plainAppCtx;
         srvCtx = this.appCtx.getServiceContext();
-        this.libraryManager = (ExternalLibraryManager) appCtx.getLibraryManager();
     }
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         String localPath = localPath(request);
         if (localPath.equals(GET_ALL_UDF_ENDPOINT)) {
-            Path zippedLibs = libraryManager.zipAllLibs();
+            Path zippedLibs = ((ExternalLibraryManager) libraryManager).zipAllLibs();
             readFromFile(zippedLibs, response, HttpUtil.ContentType.APPLICATION_ZIP,
                     StandardOpenOption.DELETE_ON_CLOSE);
         }
+    }
+
+    @Override
+    protected boolean isRequestPermitted(IServletRequest request, IServletResponse response) {
+        //gated by system auth
+        return true;
     }
 }

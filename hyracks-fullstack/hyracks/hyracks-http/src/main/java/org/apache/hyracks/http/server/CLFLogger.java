@@ -30,6 +30,8 @@ import org.apache.logging.log4j.Logger;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioDomainSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
@@ -71,7 +73,11 @@ public class CLFLogger extends ChannelDuplexHandler {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
             try {
-                clientIp = ((NioSocketChannel) ctx.channel()).remoteAddress().getAddress().toString().substring(1);
+                if (ctx.channel() instanceof SocketChannel) {
+                    clientIp = ((NioSocketChannel) ctx.channel()).remoteAddress().getAddress().toString().substring(1);
+                } else if (ctx.channel() instanceof NioDomainSocketChannel) {
+                    clientIp = ctx.channel().remoteAddress().toString();
+                }
             } catch (Exception e) {
                 LOGGER.debug("ignoring {} obtaining client ip for {}", e, ctx.channel());
                 clientIp = "-";

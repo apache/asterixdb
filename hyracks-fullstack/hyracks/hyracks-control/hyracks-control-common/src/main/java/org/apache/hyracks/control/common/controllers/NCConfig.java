@@ -27,6 +27,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTE
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
+import static org.apache.hyracks.control.common.utils.ConfigurationUtil.JAVA_IO_TMPDIR;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -103,6 +104,11 @@ public class NCConfig extends ControllerConfig {
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
         PYTHON_ENV(STRING_ARRAY, (String[]) null),
         PYTHON_DS_PATH(STRING, (String) null),
+        UDF_API_DS_PATH(
+                STRING,
+                appConfig -> FileUtil.joinPath(System.getProperty(JAVA_IO_TMPDIR), "asterixdb_udf",
+                        appConfig.getString(NODE_ID) + "_udf.sock"),
+                "Defaults to temporary directory/asterixdb_udf/{$NODE_ID}_udf.sock. Path must be <100 characters"),
         LIBRARY_MAX_FILE_SIZE(POSITIVE_LONG_BYTE_UNIT, 250L * 1024 * 1024), //250MB
         LIBRARY_MAX_EXTRACTED_SIZE(POSITIVE_LONG_BYTE_UNIT, 1000L * 1024 * 1024), //1GB
         LIBRARY_MAX_ARCHIVE_ENTRIES(INTEGER, 4096),
@@ -244,6 +250,8 @@ public class NCConfig extends ControllerConfig {
                     return "Number of threads per partition used to write and read from storage";
                 case IO_QUEUE_SIZE:
                     return "Length of the queue used for requests to write and read";
+                case UDF_API_DS_PATH:
+                    return "Path and name for domain socket used to deploy UDFs to the cluster";
                 case PYTHON_CMD:
                     return "Absolute path to python interpreter";
                 case PYTHON_ADDITIONAL_PACKAGES:

@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.server;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.util.NetworkUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -112,6 +114,23 @@ public class BaseRequest implements IServletRequest {
     @Override
     public InetSocketAddress getLocalAddress() {
         return (InetSocketAddress) channel.localAddress();
+    }
+
+    @Override
+    public String getHostPort() {
+        return getPort(channel.localAddress());
+    }
+
+    @Override
+    public String getRemotePort() {
+        return getPort(channel.remoteAddress());
+    }
+
+    private String getPort(SocketAddress s) {
+        if (s instanceof InetSocketAddress) {
+            return NetworkUtil.toHostPort((InetSocketAddress) channel.localAddress());
+        }
+        return "0";
     }
 
     @Override

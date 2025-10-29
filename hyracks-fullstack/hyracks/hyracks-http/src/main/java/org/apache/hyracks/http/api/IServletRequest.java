@@ -114,5 +114,9 @@ public interface IServletRequest {
      */
     InetSocketAddress getLocalAddress();
 
+    String getHostPort();
+
+    String getRemotePort();
+
     Channel getChannel();
 }
