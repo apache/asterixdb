@@ -67,6 +67,11 @@ public class ARecordPrinterFactory implements IPrinterFactory {
             }
 
             @Override
+            public void initNewBatch() {
+                printVisitor.setFirstRecord(true);
+            }
+
+            @Override
             public void print(byte[] b, int start, int l, PrintStream ps) throws HyracksDataException {
                 recAccessor.set(b, start, l);
                 arg.first = ps;

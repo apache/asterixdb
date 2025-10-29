@@ -34,6 +34,12 @@ public interface IExternalPrinter {
     void open() throws HyracksDataException;
 
     /**
+     * Indicates the start of a new file
+     */
+    default void newFile() {
+    }
+
+    /**
      * Initialize the printer with a new stream
      *
      * @param outputStream to print to

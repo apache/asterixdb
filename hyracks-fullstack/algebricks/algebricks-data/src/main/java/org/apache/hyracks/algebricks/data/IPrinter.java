@@ -27,5 +27,8 @@ public interface IPrinter {
     default void init() throws HyracksDataException {
     }
 
+    default void initNewBatch() {
+    }
+
     void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException;
 }
