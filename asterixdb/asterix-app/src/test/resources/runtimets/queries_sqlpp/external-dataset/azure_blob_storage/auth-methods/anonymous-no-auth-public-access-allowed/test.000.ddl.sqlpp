@@ -27,7 +27,9 @@ create type test as open {
 
 drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
+%additional_Properties%
 ("endpoint"="%azure-endpoint%"),
 ("container"="public-access-container"),
-("format"="json")
+("format"="json"),
+("disableSslVerify"="true")
 );

@@ -28,7 +28,7 @@ CREATE EXTERNAL DATASET DatasetCopyWrong(ColumnType) USING %adapter%
   %template%,
   ("header"="false"),
   ("delimiter"=","),
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/csv/delimiter"),
   ("format" = "csv"),
   ("requireVersionChangeDetection"="false"),

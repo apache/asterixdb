@@ -20,13 +20,13 @@ package org.apache.asterix.external.util.aws.s3;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.LONG_LIVED_CREDENTIALS_NEEDED_TO_ASSUME_ROLE;
+import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableExists;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
-import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.ERROR_INTERNAL_ERROR;
 import static org.apache.asterix.external.util.aws.AwsConstants.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.aws.AwsConstants.ERROR_SLOW_DOWN;
@@ -39,7 +39,8 @@ import static org.apache.asterix.external.util.aws.AwsConstants.SESSION_TOKEN_FI
 import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProvider;
 import static org.apache.asterix.external.util.aws.AwsUtils.buildStsUri;
 import static org.apache.asterix.external.util.aws.AwsUtils.getAuthenticationType;
-import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetCrossRegion;
+import static org.apache.asterix.external.util.aws.AwsUtils.getCrossRegion;
+import static org.apache.asterix.external.util.aws.AwsUtils.getPathStyleAddressing;
 import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
@@ -95,6 +96,9 @@ import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.http.SdkHttpConfigurationOption;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
@@ -107,6 +111,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.S3Response;
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
+import software.amazon.awssdk.utils.AttributeMap;
 
 public class S3Utils {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -129,8 +134,10 @@ public class S3Utils {
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
         Region region = validateAndGetRegion(regionId);
-        boolean crossRegion = validateAndGetCrossRegion(configuration.get(CROSS_REGION_FIELD_NAME));
         AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
+
+        boolean crossRegion = getCrossRegion(configuration);
+        boolean disableSslVerify = getDisableSslVerify(configuration);
 
         S3ClientBuilder builder = S3Client.builder();
         builder.region(region);
@@ -138,11 +145,21 @@ public class S3Utils {
         builder.credentialsProvider(credentialsProvider);
         AwsUtils.setEndpoint(builder, serviceEndpoint);
 
-        boolean pathStyleAddressing =
-                validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
+        boolean pathStyleAddressing = getPathStyleAddressing(configuration);
         builder.forcePathStyle(pathStyleAddressing);
+        if (disableSslVerify) {
+            disableSslVerify(builder);
+        }
         awsClients.setConsumingClient(builder.build());
         return awsClients;
+
+    }
+
+    private static void disableSslVerify(S3ClientBuilder builder) {
+        AttributeMap.Builder attributeMapBuilder = AttributeMap.builder();
+        attributeMapBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
+        SdkHttpClient httpClient = ApacheHttpClient.builder().buildWithDefaults(attributeMapBuilder.build());
+        builder.httpClient(httpClient);
     }
 
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf conf,
@@ -160,7 +177,7 @@ public class S3Utils {
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf jobConf,
             Map<String, String> configuration, int numberOfPartitions) throws CompilationException {
         Region region = validateAndGetRegion(configuration.get(REGION_FIELD_NAME));
-        boolean crossRegion = validateAndGetCrossRegion(configuration.get(CROSS_REGION_FIELD_NAME));
+        boolean crossRegion = getCrossRegion(configuration);
 
         // if region is set, hadoop will always try the specified region only, if bucket is not found, it will fail
         // if we want to use cross-region, we do not set the endpoint, which will default to central region and will

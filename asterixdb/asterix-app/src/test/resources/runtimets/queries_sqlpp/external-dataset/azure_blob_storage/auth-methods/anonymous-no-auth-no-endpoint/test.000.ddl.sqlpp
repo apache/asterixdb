@@ -28,7 +28,9 @@ create type test as open {
 // bad case: no auth method and no endpoint provided
 drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
-("format"="json")
+("format"="json"),
+("disableSslVerify"="true")
 );

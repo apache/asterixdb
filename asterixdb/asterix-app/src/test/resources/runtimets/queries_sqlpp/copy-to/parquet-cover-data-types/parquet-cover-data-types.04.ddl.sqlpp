@@ -28,7 +28,7 @@ CREATE TYPE ColumnType2 AS {
 CREATE EXTERNAL DATASET TestDataset(ColumnType2) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/parquet-cover-data-types/"),
   ("include"="*.parquet"),
   ("requireVersionChangeDetection"="false"),

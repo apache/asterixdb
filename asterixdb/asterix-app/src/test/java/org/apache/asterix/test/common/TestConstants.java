@@ -18,7 +18,16 @@
  */
 package org.apache.asterix.test.common;
 
+import java.util.Set;
+import java.util.regex.Pattern;
+
 public class TestConstants {
+    // placeholders used to pass additional external properties in the external file, this might not be passed, in such cases, remove them from statement
+    private static final Set<String> EXTERNAL_PLACEHOLDERS =
+            Set.of("%additionalProperties%", "%additional_Properties%");
+    public static final Pattern REMOVE_PLACEHOLDERS_PATTERN =
+            Pattern.compile("(" + String.join("|", EXTERNAL_PLACEHOLDERS) + ")", Pattern.MULTILINE);
+
     // AWS S3 constants and placeholders
     public static final String S3_ACCESS_KEY_ID_PLACEHOLDER = "%accessKeyId%";
     public static final String S3_ACCESS_KEY_ID_DEFAULT = "dummyAccessKey";
@@ -59,10 +68,10 @@ public class TestConstants {
 
         // blob endpoint
         public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azure-endpoint%";
-        public static final String BLOB_ENDPOINT_DEFAULT = AZURITE_ENDPOINT;
+        public static String BLOB_ENDPOINT_DEFAULT = AZURITE_ENDPOINT;
 
-        public static final String MANAGED_IDENTITY_ID_PLACEHOLDER = "%azure-managedidentityid%";
-        public static final String MANAGED_IDENTITY_ID_DEFAULT = "myManagedIdentityId";
+        public static final String MANAGED_IDENTITY_PLACEHOLDER = "%azure-managedidentity%";
+        public static final String MANAGED_IDENTITY_DEFAULT = "myManagedIdentity";
 
         public static final String CLIENT_ID_PLACEHOLDER = "%azure-clientid%";
         public static final String CLIENT_ID_DEFAULT = "myClientId";
@@ -70,23 +79,17 @@ public class TestConstants {
         public static final String CLIENT_SECRET_PLACEHOLDER = "%azure-clientsecret%";
         public static final String CLIENT_SECRET_DEFAULT = "myClientSecret";
 
-        public static final String CLIENT_CERTIFICATE_PLACEHOLDER = "%azure-clientcertificate%";
-        public static final String CLIENT_CERTIFICATE_DEFAULT = "myClientCertificate";
-
-        public static final String CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER = "%azure-clientcertificatepassword%";
-        public static final String CLIENT_CERTIFICATE_PASSWORD_DEFAULT = "myClientCertificatePassword";
-
         public static final String TENANT_ID_PLACEHOLDER = "%azure-tenantid%";
         public static final String TENANT_ID_DEFAULT = "myTenantId";
 
         // azure template and default template
         public static final String TEMPLATE = "(\"accountName\"=\"" + AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
                 + "(\"accountKey\"=\"" + AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"endpoint\"=\""
-                + BLOB_ENDPOINT_PLACEHOLDER + "\")";
+                + BLOB_ENDPOINT_PLACEHOLDER + "\"),\n" + "(\"disableSslVerify\"=\"true\")";
         public static final String TEMPLATE_DEFAULT = TEMPLATE;
-        public static final String TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS =
-                "\"accountName\":\"" + AZURITE_ACCOUNT_NAME_DEFAULT + "\",\n" + "\"accountKey\":\""
-                        + AZURITE_ACCOUNT_KEY_DEFAULT + "\",\n" + "\"endpoint\":\"" + BLOB_ENDPOINT_PLACEHOLDER + "\"";
+        public static final String TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS = "\"accountName\":\""
+                + AZURITE_ACCOUNT_NAME_DEFAULT + "\",\n" + "\"accountKey\":\"" + AZURITE_ACCOUNT_KEY_DEFAULT + "\",\n"
+                + "\"endpoint\":\"" + BLOB_ENDPOINT_PLACEHOLDER + "\",\n" + "\"disableSslVerify\":\"true\"";
     }
 
     public static class HDFS {

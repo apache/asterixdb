@@ -23,7 +23,7 @@ USE test;
 CREATE EXTERNAL DATASET TestDataset2(ColumnType2) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/parquet-field-names2/"),
   ("include"="*.parquet"),
   ("requireVersionChangeDetection"="false"),

@@ -20,7 +20,7 @@ package org.apache.asterix.cloud.writer;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
+import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;

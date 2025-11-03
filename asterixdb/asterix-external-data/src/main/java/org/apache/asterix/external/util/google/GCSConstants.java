@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util.google.gcs;
+package org.apache.asterix.external.util.google;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 

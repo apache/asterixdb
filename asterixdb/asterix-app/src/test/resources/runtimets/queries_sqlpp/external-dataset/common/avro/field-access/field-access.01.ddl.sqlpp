@@ -34,7 +34,7 @@ CREATE TYPE AvroType as {
 CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*id_age.avro"),
   ("format" = "avro")
@@ -43,7 +43,7 @@ CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
 CREATE EXTERNAL DATASET AvroDataset2(AvroType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*id_age.avro"),
   ("format" = "avro")
@@ -52,7 +52,7 @@ CREATE EXTERNAL DATASET AvroDataset2(AvroType) USING %adapter%
 CREATE EXTERNAL DATASET AvroDataset3(AvroType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*id_name_comment.avro"),
   ("format" = "avro")
@@ -61,7 +61,7 @@ CREATE EXTERNAL DATASET AvroDataset3(AvroType) USING %adapter%
 CREATE EXTERNAL DATASET AvroDataset4(AvroType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*dummy_tweet.avro"),
   ("format" = "avro")

@@ -22,7 +22,7 @@ USE test;
 CREATE EXTERNAL DATASET DatasetCopyNull(ColumnType) USING %adapter%
 (
     %template%,
-    %additional_Properties%,
+    %additional_Properties%
 ("header"="true"),
 ("delimiter"="|"),
   ("definition"="copy-to-result/csv/null"),

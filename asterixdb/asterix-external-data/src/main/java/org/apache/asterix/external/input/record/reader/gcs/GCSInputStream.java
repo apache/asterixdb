@@ -35,7 +35,7 @@ import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmb
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.input.record.reader.stream.AvailableInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.google.gcs.GCSAuthUtils;
+import org.apache.asterix.external.util.google.GCSUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -140,7 +140,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
 
     private Storage buildClient(Map<String, String> configuration) throws HyracksDataException {
         try {
-            return GCSAuthUtils.buildClient(ncAppCtx, configuration);
+            return GCSUtils.buildClient(ncAppCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

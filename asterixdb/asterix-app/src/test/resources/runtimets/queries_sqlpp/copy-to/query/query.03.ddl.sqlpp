@@ -21,7 +21,7 @@ USE test;
 
 CREATE EXTERNAL DATASET CustomerCopy(OpenType) USING %adapter% (
     %template%,
-    %additional_Properties%,
+    %additional_Properties%
     ("definition"="copy-to-result/company-year/{company:string}/{year:int}"),
     ("embed-filter-values" = "false"),
     ("format"="json")

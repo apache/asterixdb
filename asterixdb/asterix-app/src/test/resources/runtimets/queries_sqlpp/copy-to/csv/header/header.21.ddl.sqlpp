@@ -28,7 +28,7 @@ CREATE EXTERNAL DATASET DatasetCopyCustomNull(ColumnType) USING %adapter%
   %template%,
   ("header"="true"),
   ("delimiter"="|"),
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/csv/custom/null"),
   ("format" = "csv"),
   ("requireVersionChangeDetection"="false"),

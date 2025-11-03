@@ -140,6 +140,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.file.datalake.models.DataLakeStorageException;
 
 public class CCApplication extends BaseCCApplication {
 
@@ -163,6 +164,7 @@ public class CCApplication extends BaseCCApplication {
 
     private void registerSerializationReplacements() {
         registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
+        registerReplacement(DataLakeStorageException.class, SerializableExceptionProxy::new);
     }
 
     @Override

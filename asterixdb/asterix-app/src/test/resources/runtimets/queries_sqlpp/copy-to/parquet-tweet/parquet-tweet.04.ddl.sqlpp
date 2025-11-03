@@ -25,7 +25,7 @@ USE test;
 CREATE EXTERNAL DATASET DummyTweetDatasetCopy(ColumnType2) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/parquet-tweet/"),
   ("include"="*.parquet"),
   ("requireVersionChangeDetection"="false"),

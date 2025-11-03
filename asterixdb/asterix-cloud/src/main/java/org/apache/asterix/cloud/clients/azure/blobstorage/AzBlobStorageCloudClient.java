@@ -19,6 +19,8 @@
 
 package org.apache.asterix.cloud.clients.azure.blobstorage;
 
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.disableSslVerify;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FilenameFilter;
@@ -49,7 +51,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
+import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -184,9 +186,10 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         BlobRange blobRange = new BlobRange(offset, rem);
         downloadBlob(blobClient, blobStream, blobRange);
         readBlobStreamIntoBuffer(buffer, blobStream);
-        if (buffer.remaining() != 0)
+        if (buffer.remaining() != 0) {
             throw new IllegalStateException("Expected buffer remaining = 0, found: " + buffer.remaining());
-        return ((int) rem - buffer.remaining());
+        }
+        return ((int) rem);
     }
 
     private void readBlobStreamIntoBuffer(ByteBuffer buffer, ByteArrayOutputStream byteArrayOutputStream)
@@ -343,7 +346,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     }
 
     @Override
-    public boolean isEmptyPrefix(String bucket, String path) throws HyracksDataException {
+    public boolean isEmptyPrefix(String bucket, String path) {
         profiler.objectsList();
         ListBlobsOptions listBlobsOptions = new ListBlobsOptions().setPrefix(config.getPrefix() + path);
         //MAX_VALUE below represents practically no timeout
@@ -426,6 +429,11 @@ public class AzBlobStorageCloudClient implements ICloudClient {
                 throw new RuntimeException("Failed to disable SSL verification", e);
             }
         }
+        boolean disableSslVerify = config.isStorageDisableSSLVerify();
+        if (disableSslVerify) {
+            disableSslVerify(blobServiceClientBuilder);
+        }
+
         return blobServiceClientBuilder;
     }
 

@@ -22,6 +22,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
+import static org.apache.asterix.external.util.ExternalDataUtils.validateAndGetBooleanProperty;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.EXTERNAL_ID_FIELD_NAME;
@@ -30,6 +31,7 @@ import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAM
 import static org.apache.asterix.external.util.aws.AwsConstants.ROLE_ARN_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SECRET_ACCESS_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SESSION_TOKEN_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.net.URI;
@@ -164,14 +166,14 @@ public class AwsUtils {
         }
     }
 
-    public static boolean validateAndGetCrossRegion(String crossRegion) throws CompilationException {
-        if (crossRegion == null) {
-            return false;
-        }
-        if (!"true".equalsIgnoreCase(crossRegion) && !"false".equalsIgnoreCase(crossRegion)) {
-            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CROSS_REGION_FIELD_NAME, "true, false");
-        }
-        return Boolean.parseBoolean(crossRegion);
+    public static boolean getCrossRegion(Map<String, String> configuration) throws CompilationException {
+        String crossRegionString = configuration.get(CROSS_REGION_FIELD_NAME);
+        return validateAndGetBooleanProperty(CROSS_REGION_FIELD_NAME, crossRegionString);
+    }
+
+    public static boolean getPathStyleAddressing(Map<String, String> configuration) throws CompilationException {
+        String pathStyleAccessString = configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME);
+        return validateAndGetBooleanProperty(PATH_STYLE_ADDRESSING_FIELD_NAME, pathStyleAccessString);
     }
 
     private static boolean noAuth(Map<String, String> configuration) {
@@ -354,9 +356,9 @@ public class AwsUtils {
 
         AwsCredentialsProvider credentialsProvider = clients.getCredentialsProvider();
         if (credentialsProvider instanceof StsAssumeRoleCredentialsProvider assumeRoleCredsProvider) {
-            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient(), assumeRoleCredsProvider);
+            CleanupUtils.nonThrowingClose(null, clients.getConsumingClient(), clients.getStsClient(), assumeRoleCredsProvider);
         } else {
-            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient());
+            CleanupUtils.nonThrowingClose(null, clients.getConsumingClient(), clients.getStsClient());
         }
     }
 

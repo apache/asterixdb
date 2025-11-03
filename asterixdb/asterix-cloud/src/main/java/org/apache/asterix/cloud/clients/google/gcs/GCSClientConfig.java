@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.STORAGE_PREFIX;
+import static org.apache.asterix.external.util.google.GCSConstants.ENDPOINT_FIELD_NAME;
+import static org.apache.asterix.external.util.google.GCSConstants.STORAGE_PREFIX;
 
 import java.io.IOException;
 import java.util.Map;

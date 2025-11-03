@@ -26,6 +26,7 @@ CREATE TYPE test AS {
 
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="external-filter/computed-field-between-static-parts-1/department/{name:zft}/students"),
     ("embed-filter-values" = "true"),

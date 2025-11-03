@@ -78,9 +78,9 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         PrivateKey privateKey = keyPair.getPrivate();
         long now = System.currentTimeMillis();
         Date startDate = new Date(now);
-        X500Name dnName = new X500Name("CN=asterixdb azure test");
-        BigInteger certSerialNumber = new BigInteger(Long.toString(now));
         Date endDate = new Date(now + 24 * 60 * 60 * 1000L); // 1 day validity
+        X500Name dnName = new X500Name("CN=localhost");
+        BigInteger certSerialNumber = new BigInteger(Long.toString(now));
         SubjectPublicKeyInfo subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(publicKey.getEncoded());
         X509v3CertificateBuilder certificateBuilder = new X509v3CertificateBuilder(dnName, certSerialNumber, startDate,
                 endDate, dnName, subjectPublicKeyInfo);

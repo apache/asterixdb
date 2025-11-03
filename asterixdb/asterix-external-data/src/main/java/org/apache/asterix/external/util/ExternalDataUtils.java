@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.metadata.MetadataConstants.DEFAULT_DATABASE;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_EMPTY_STRING_AS_NULL;
@@ -26,6 +27,7 @@ import static org.apache.asterix.common.utils.CSVConstants.KEY_FORCE_QUOTE;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.DISABLE_SSL_VERIFY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
@@ -33,10 +35,10 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.aws.s3.S3Utils.configureAwsS3HdfsJobConf;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureBlobProperties;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureDataLakeProperties;
-import static org.apache.asterix.external.util.google.gcs.GCSAuthUtils.configureHdfsJobConf;
-import static org.apache.asterix.external.util.google.gcs.GCSUtils.validateProperties;
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.validateAzureBlobProperties;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.validateAzureDataLakeProperties;
+import static org.apache.asterix.external.util.google.GCSUtils.configureHdfsJobConf;
+import static org.apache.asterix.external.util.google.GCSUtils.validateProperties;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
@@ -84,9 +86,9 @@ import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
-import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
-import org.apache.asterix.external.util.google.gcs.GCSConstants;
-import org.apache.asterix.external.util.google.gcs.GCSUtils;
+import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.asterix.external.util.google.GCSConstants;
+import org.apache.asterix.external.util.google.GCSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -1144,10 +1146,8 @@ public class ExternalDataUtils {
                 protocol = S3Constants.HADOOP_S3_PROTOCOL;
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-                protocol = AzureConstants.HADOOP_AZURE_BLOB_PROTOCOL;
-                break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
-                protocol = AzureConstants.HADOOP_AZURE_DATALAKE_PROTOCOL;
+                protocol = AzureConstants.HADOOP_AZURE_PROTOCOL;
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
                 protocol = GCSConstants.HADOOP_GCS_PROTOCOL;
@@ -1191,5 +1191,21 @@ public class ExternalDataUtils {
 
     public static boolean isGzipCompression(String compression) {
         return ExternalDataConstants.KEY_COMPRESSION_GZIP.equalsIgnoreCase(compression);
+    }
+
+    public static boolean getDisableSslVerify(Map<String, String> configuration) throws CompilationException {
+        String disableSslVerifyString = configuration.get(DISABLE_SSL_VERIFY_FIELD_NAME);
+        return validateAndGetBooleanProperty(DISABLE_SSL_VERIFY_FIELD_NAME, disableSslVerifyString);
+    }
+
+    public static boolean validateAndGetBooleanProperty(String propertyKey, String propertyValue)
+            throws CompilationException {
+        if (propertyValue == null) {
+            return false;
+        }
+        if (!"true".equalsIgnoreCase(propertyValue) && !"false".equalsIgnoreCase(propertyValue)) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, propertyKey, "true, false");
+        }
+        return "true".equalsIgnoreCase(propertyValue);
     }
 }

@@ -118,6 +118,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.file.datalake.models.DataLakeStorageException;
 
 public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -150,6 +151,7 @@ public class NCApplication extends BaseNCApplication {
 
     private void registerSerializationReplacements() {
         registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
+        registerReplacement(DataLakeStorageException.class, SerializableExceptionProxy::new);
     }
 
     @Override

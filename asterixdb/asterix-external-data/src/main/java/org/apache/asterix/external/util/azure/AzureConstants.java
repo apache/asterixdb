@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util.azure.blob_storage;
+package org.apache.asterix.external.util.azure;
 
 import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.http.policy.HttpLogOptions;
@@ -43,36 +43,54 @@ public class AzureConstants {
     /*
      * Asterix Configuration Keys
      */
-    public static final String MANAGED_IDENTITY_ID_FIELD_NAME = "managedIdentityId";
+    public static final String MANAGED_IDENTITY_FIELD_NAME = "managedIdentity";
     public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
     public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
     public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
     public static final String TENANT_ID_FIELD_NAME = "tenantId";
     public static final String CLIENT_ID_FIELD_NAME = "clientId";
     public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
-    public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
-    public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
-
-    // Specific Azure data lake property
-    /*
-    The behavior of Data Lake (true file system) is to read the files of the specified prefix only, example:
-    storage/myData/personal/file1.json
-    storage/myData/personal/file2.json
-    storage/myData/file3.json
-    If the prefix used is "myData", then only the file file3.json is read. However, if the property "recursive"
-    is set to "true" when creating the external dataset, then it goes recursively overall the paths, and the result
-    is file1.json, file2.json and file3.json.
-     */
-    public static final String RECURSIVE_FIELD_NAME = "recursive";
 
     /*
      * Hadoop-Azure
      */
-    //Used when accountName and accessKey are provided
-    public static final String HADOOP_AZURE_FS_ACCOUNT_KEY = "fs.azure.account.key";
-    //Used when a connectionString is provided
-    public static final String HADOOP_AZURE_FS_SAS = "fs.azure.sas";
-    public static final String HADOOP_AZURE_BLOB_PROTOCOL = "abfss";
-    public static final String HADOOP_AZURE_DATALAKE_PROTOCOL = "abfss";
+    public static final String HADOOP_AZURE_PROTOCOL = "abfss";
+
+    /*
+     * Hadoop-Azure
+     */
+    // placeholders that are replaceable
+    public static final String HADOOP_TENANT_ID_PLACEHOLDER = "{TENANT_ID}";
+
+    // auth type key
+    public static final String HADOOP_AUTH_TYPE = "fs.azure.account.auth.type";
+
+    // shared key auth
+    public static final String HADOOP_SHARED_KEY_AUTH_TYPE = "SharedKey";
+    public static final String HADOOP_FS_ACCOUNT_KEY_PREFIX = "fs.azure.account.key";
+
+    // shared access signature auth
+    public static final String HADOOP_SAS_AUTH_TYPE = "SAS";
+    public static final String HADOOP_FS_FIXED_SAS_PREFIX = "fs.azure.sas.fixed.token";
+
+    // OAuth
+    public static final String HADOOP_OAUTH_TYPE_OAUTH = "OAuth";
+    public static final String HADOOP_OAUTH_PROVIDER_TYPE = "fs.azure.account.oauth.provider.type";
+    public static final String HADOOP_CLIENT_ID = "fs.azure.account.oauth2.client.id";
+    public static final String HADOOP_OAUTH_ENDPOINT = "fs.azure.account.oauth2.client.endpoint";
+    public static final String HADOOP_OAUTH_ENDPOINT_VALUE =
+            "https://login.microsoftonline.com/" + HADOOP_TENANT_ID_PLACEHOLDER + "/oauth2/token";
+
+    // client secret auth
+    public static final String HADOOP_CLIENT_CREDENTIALS_AUTH_TYPE =
+            "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider";
+    public static final String HADOOP_CLIENT_SECRET = "fs.azure.account.oauth2.client.secret";
+
+    // managed identity auth
+    public static final String HADOOP_MANAGED_IDENTITY_AUTH_TYPE =
+            "org.apache.hadoop.fs.azurebfs.oauth2.MsiTokenProvider";
+    public static final String HADOOP_MANAGED_IDENTITY_ENDPOINT = "fs.azure.account.oauth2.msi.endpoint";
+    public static final String HADOOP_MANAGED_IDENTITY_ENDPOINT_VALUE =
+            "http://169.254.169.254/metadata/identity/oauth2/token";
 }

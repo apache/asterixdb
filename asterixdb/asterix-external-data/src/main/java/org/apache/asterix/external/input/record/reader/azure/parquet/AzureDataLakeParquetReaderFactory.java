@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.parquet;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureConstants.HADOOP_AZURE_DATALAKE_PROTOCOL;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureDatalakeClient;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.configureAzureHdfsJobConf;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.listDatalakePathItems;
+import static org.apache.asterix.external.util.azure.AzureConstants.HADOOP_AZURE_PROTOCOL;
+import static org.apache.asterix.external.util.azure.AzureUtils.configureAzureHdfsJobConf;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.buildClient;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.listDatalakePathItems;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,12 +29,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -57,18 +58,30 @@ public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws AlgebricksException, HyracksDataException {
         IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
-        DataLakeServiceClient dataLakeServiceClient = buildAzureDatalakeClient(appCtx, configuration);
 
-        //Get endpoint
+        // get endpoint
+        DataLakeServiceClient dataLakeServiceClient = buildClient(appCtx, configuration);
         String endPoint = extractEndPoint(dataLakeServiceClient.getAccountUrl());
 
-        //Get path
-        String path = buildPathURIs(configuration, warningCollector, dataLakeServiceClient, endPoint);
+        // get include/exclude matchers
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
+
+        // prepare prefix for computed field calculations
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
+        List<PathItem> filesOnly = listDatalakePathItems(dataLakeServiceClient, configuration, includeExcludeMatcher,
+                warningCollector, externalDataPrefix, evaluator);
+
+        // get path
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        String path = buildPathURIs(container, filesOnly, endPoint);
 
         //Put Azure configurations to AsterixDB's Hadoop configuration
         putAzureDataLakeConfToHadoopConf(configuration, path);
 
-        //Configure Hadoop Azure input splits
+        // configure Hadoop Azure input splits
         JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
@@ -103,25 +116,19 @@ public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
     }
 
     /**
-     * Build Azure Datalake Storage path-style for the requested files
+     * Build Azure Blob Storage path-style for the requested files
      *
-     * @param configuration    properties
-     * @param warningCollector warning collector
-     * @return Comma-delimited paths (e.g., "abfss://<container-name>@<accountName>.dfs.core.windows.net/file1.parquet,
-     * abfss://<container-name>@<accountName>.dfs.core.windows.net//file2.parquet")
-     * @throws CompilationException Compilation exception
+     * @param container container
+     * @param filesOnly files
+     * @param endPoint  endpoint
+     * @return Comma-delimited paths (e.g., "abfss://container@accountName.dfs.core.windows.net/file1.parquet,
+     * abfss://container@accountName.dfs.core.windows.net/file2.parquet")
      */
-    private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector,
-            DataLakeServiceClient dataLakeServiceClient, String endPoint) throws CompilationException {
-        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        List<PathItem> filesOnly =
-                listDatalakePathItems(dataLakeServiceClient, configuration, includeExcludeMatcher, warningCollector);
-
+    private static String buildPathURIs(String container, List<PathItem> filesOnly, String endPoint) {
         StringBuilder builder = new StringBuilder();
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
         if (!filesOnly.isEmpty()) {
-            appendFileURI(builder, container, endPoint, filesOnly.get(0));
+            appendFileURI(builder, container, endPoint, filesOnly.getFirst());
             for (int i = 1; i < filesOnly.size(); i++) {
                 builder.append(',');
                 appendFileURI(builder, container, endPoint, filesOnly.get(i));
@@ -138,7 +145,7 @@ public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
     }
 
     private static void appendFileURI(StringBuilder builder, String container, String endPoint, PathItem file) {
-        builder.append(HADOOP_AZURE_DATALAKE_PROTOCOL);
+        builder.append(HADOOP_AZURE_PROTOCOL);
         builder.append("://");
         builder.append(container);
         builder.append('@');

@@ -32,9 +32,8 @@ import org.apache.asterix.external.input.record.reader.abstracts.AbstractExterna
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.google.gcs.GCSAuthUtils;
-import org.apache.asterix.external.util.google.gcs.GCSConstants;
-import org.apache.asterix.external.util.google.gcs.GCSUtils;
+import org.apache.asterix.external.util.google.GCSConstants;
+import org.apache.asterix.external.util.google.GCSUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -77,7 +76,7 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
         // configure hadoop input splits
         JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         int numberOfPartitions = getPartitionConstraint().getLocations().length;
-        GCSAuthUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
+        GCSUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
         configureHdfsConf(conf, configuration);
         if (filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory) {
             FilterPredicate parquetFilterPredicate =

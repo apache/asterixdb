@@ -16,21 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.util.azure.datalake;
 
-drop dataverse test if exists;
-create dataverse test;
-use test;
+public class DatalakeConstants {
+    private DatalakeConstants() {
+        throw new AssertionError("do not instantiate");
+    }
 
-drop type test if exists;
-create type test as open {
-};
-
-drop dataset test if exists;
-CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
-("managedIdentityId"="%azure-managedidentityid%"),
-("clientId"="%azure-clientid%"),
-("endpoint"="%azure-endpoint%"),
-("container"="playground"),
-("definition"="json-data/reviews/single-line/json"),
-("format"="json")
-);
+    /*
+    The behavior of Data Lake (true file system) is to read the files of the specified prefix only, example:
+    storage/myData/personal/file1.json
+    storage/myData/personal/file2.json
+    storage/myData/file3.json
+    If the prefix used is "myData", then only the file file3.json is read. However, if the property "recursive"
+    is set to "true" when creating the external dataset, then it goes recursively over all the paths, and the result
+    is file1.json, file2.json and file3.json.
+     */
+    public static final String RECURSIVE_FIELD_NAME = "recursive";
+}

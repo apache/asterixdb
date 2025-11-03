@@ -26,6 +26,7 @@ CREATE TYPE test AS {
 
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="parquet-data/external-filter/computed-field-segment-pattern-mismatch-1/sales/{year:int}-{month:int}-{day:int}"),
     ("embed-filter-values" = "true"),
@@ -34,6 +35,7 @@ CREATE EXTERNAL DATASET test1(test) USING %adapter% (
 
 CREATE EXTERNAL DATASET test2(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="parquet-data/external-filter/computed-field-segment-pattern-mismatch-2/sales/foo-{year:int}-{month:int}-{day:int}"),
     ("embed-filter-values" = "true"),

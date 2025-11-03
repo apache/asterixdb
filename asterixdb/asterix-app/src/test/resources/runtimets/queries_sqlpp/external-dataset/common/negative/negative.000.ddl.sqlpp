@@ -28,6 +28,7 @@ CREATE TYPE test AS {id: int, year: int?, review: string, details: string?};
 DROP DATASET test IF EXISTS;
 CREATE EXTERNAL DATASET test(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="tsv-data/reviews")
 );

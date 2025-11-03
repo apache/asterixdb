@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.blob;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.listBlobItems;
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.listBlobItems;
 
 import java.util.Comparator;
 import java.util.List;

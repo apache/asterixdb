@@ -23,7 +23,7 @@ import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
+import org.apache.asterix.external.util.azure.AzureConstants;
 
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;

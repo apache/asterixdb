@@ -16,23 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.util.azure.blob;
 
-drop dataverse test if exists;
-create dataverse test;
-use test;
-
-drop type test if exists;
-create type test as open {
-};
-
-drop dataset test if exists;
-CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
-("clientId"="%azure-clientid%"),
-("clientSecret"="%azure-clientsecret%"),
-("clientCertificate"="%azure-clientcertificate%"),
-("tenantId"="%azure-tenantid%"),
-("endpoint"="%azure-endpoint%"),
-("container"="playground"),
-("definition"="json-data/reviews/single-line/json"),
-("format"="json")
-);
+public class BlobConstants {
+    private BlobConstants() {
+        throw new AssertionError("do not instantiate");
+    }
+}

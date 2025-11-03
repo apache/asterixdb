@@ -36,6 +36,7 @@ CREATE TYPE ParquetType as {
 CREATE EXTERNAL DATASET ParquetDataset(ParquetType) USING %adapter%
 (
   %template%,
+  %additional_Properties%
   ("container"="playground"),
   ("definition"="NOT_A_DEFINITION"),
   ("format" = "parquet")

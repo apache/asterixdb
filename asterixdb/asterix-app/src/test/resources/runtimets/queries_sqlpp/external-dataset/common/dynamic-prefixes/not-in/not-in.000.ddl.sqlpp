@@ -27,6 +27,7 @@ CREATE TYPE TestType AS {
 
 CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="external-filter/department/{department:string}"),
     ("embed-filter-values" = "false"),
@@ -35,6 +36,7 @@ CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
 
 CREATE EXTERNAL DATASET LastName(TestType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="external-filter/last-name/{name.last:string}"),
     ("embed-filter-values" = "false"),
