@@ -20,6 +20,7 @@ package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
@@ -77,9 +78,10 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
         CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),
-        CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT(BOOLEAN, (Function<IApplicationConfig, Boolean>) app -> {
+        CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT(INTEGER, -1),
+        CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, (Function<IApplicationConfig, String>) app -> {
             String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
-            return endpoint == null || endpoint.isEmpty();
+            return (endpoint == null || endpoint.isEmpty()) ? "crt" : "async";
         });
 
         private final IOptionType interpreter;
@@ -196,8 +198,10 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
                     return "Indicates whether or not deleted objects may be contained in list operations for some time"
                             + "after they are deleted";
-                case CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT:
-                    return "Indicates whether or not to use the AWS CRT S3 client for async requests";
+                case CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT:
+                    return "The read timeout (in seconds) for S3 sync client (-1 means SDK default)";
+                case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
+                    return "The S3 client to use for parallel downloads (crt, async or sync)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -215,8 +219,8 @@ public class CloudProperties extends AbstractProperties {
 
         @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
-            if (this == CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT) {
-                return "true when no custom endpoint is set, otherwise false";
+            if (this == CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE) {
+                return "crt if no custom endpoint is set; async otherwise";
             }
             return IOption.super.usageDefaultOverride(accessor, optionPrinter);
         }
@@ -325,7 +329,11 @@ public class CloudProperties extends AbstractProperties {
         return accessor.getBoolean(Option.CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT);
     }
 
-    public boolean isS3EnableCrtClient() {
-        return accessor.getBoolean(Option.CLOUD_STORAGE_S3_ENABLE_CRT_CLIENT);
+    public String getS3ParallelDownloaderClientType() {
+        return accessor.getString(Option.CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE).toUpperCase();
+    }
+
+    public int getS3ReadTimeoutInSeconds() {
+        return accessor.getInt(Option.CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT);
     }
 }

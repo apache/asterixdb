@@ -45,7 +45,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class AzureParallelDownloader implements IParallelDownloader {
-    public static final String STORAGE_SUB_DIR = "storage";
     private final IOManager ioManager;
     private final BlobContainerAsyncClient blobContainerAsyncClient;
     private final IRequestProfilerLimiter profiler;

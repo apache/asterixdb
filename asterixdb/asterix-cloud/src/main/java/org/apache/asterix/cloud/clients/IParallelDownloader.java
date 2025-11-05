@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
 public interface IParallelDownloader extends AutoCloseable {
+    String STORAGE_SUB_DIR = "storage";
 
     /**
      * Downloads files in all partitions

@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.app.config;
 
+import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.common.api.IConfigValidator;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.api.config.IOption;
@@ -30,7 +32,10 @@ public class ConfigValidator implements IConfigValidator {
         boolean valid = true;
         if (option == StorageProperties.Option.STORAGE_COMPRESSION_BLOCK) {
             valid = CompressionManager.isRegisteredScheme((String) value);
+        } else if (option == CloudProperties.Option.CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE) {
+            valid = S3ClientConfig.S3ParallelDownloaderClientType.validate((String) value);
         }
+
         if (!valid) {
             throw new IllegalArgumentException("Invalid value " + value + " for option " + option.name());
         }

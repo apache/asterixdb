@@ -47,19 +47,22 @@ public final class S3ClientConfig {
     private final boolean forcePathStyle;
     private final boolean disableSslVerify;
     private final boolean storageListEventuallyConsistent;
-    private final boolean enableCrtClient;
+    private final int s3ReadTimeoutInSeconds;
+    private final S3ParallelDownloaderClientType parallelDownloaderClientType;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, int writeBufferSize, boolean enableCrtClient) {
+            long profilerLogInterval, int writeBufferSize,
+            S3ParallelDownloaderClientType parallelDownloaderClientType) {
         this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false,
-                false, 0, 0, enableCrtClient);
+                false, 0, 0, -1, parallelDownloaderClientType);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
             int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
             boolean disableSslVerify, boolean storageListEventuallyConsistent, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout, boolean enableCrtClient) {
+            int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
+            S3ParallelDownloaderClientType parallelDownloaderClientType) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -75,7 +78,8 @@ public final class S3ClientConfig {
         this.forcePathStyle = forcePathStyle;
         this.disableSslVerify = disableSslVerify;
         this.storageListEventuallyConsistent = storageListEventuallyConsistent;
-        this.enableCrtClient = enableCrtClient;
+        this.s3ReadTimeoutInSeconds = s3ReadTimeoutInSeconds;
+        this.parallelDownloaderClientType = parallelDownloaderClientType;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
@@ -87,7 +91,26 @@ public final class S3ClientConfig {
                 cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify(),
                 cloudProperties.isStorageListEventuallyConsistent(),
                 cloudProperties.getRequestsMaxPendingHttpConnections(),
-                cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.isS3EnableCrtClient());
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
+                S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()));
+    }
+
+    public enum S3ParallelDownloaderClientType {
+        CRT,
+        ASYNC,
+        SYNC;
+
+        public static boolean validate(String clientType) {
+            if (clientType == null || clientType.isEmpty()) {
+                return false;
+            }
+            for (S3ParallelDownloaderClientType type : values()) {
+                if (type.name().equalsIgnoreCase(clientType)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -101,7 +124,8 @@ public final class S3ClientConfig {
         String prefix = "";
         boolean anonymousAuth = false;
 
-        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, false);
+        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize,
+                S3ParallelDownloaderClientType.ASYNC);
     }
 
     public String getRegion() {
@@ -169,8 +193,11 @@ public final class S3ClientConfig {
         return storageListEventuallyConsistent;
     }
 
-    public boolean isCrtClientEnabled() {
-        return enableCrtClient;
+    public S3ParallelDownloaderClientType getParallelDownloaderClientType() {
+        return parallelDownloaderClientType;
     }
 
+    public int getS3ReadTimeoutInSeconds() {
+        return s3ReadTimeoutInSeconds;
+    }
 }

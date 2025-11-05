@@ -181,7 +181,9 @@ class S3ParallelDownloader implements IParallelDownloader {
 
     private static S3AsyncClient createAsyncClient(S3ClientConfig config) {
         // CRT client is not supported by all local S3 providers, but provides a better performance with AWS S3
-        if (config.isCrtClientEnabled()) {
+        S3ClientConfig.S3ParallelDownloaderClientType parallelDownloaderClientType =
+                config.getParallelDownloaderClientType();
+        if (parallelDownloaderClientType == S3ClientConfig.S3ParallelDownloaderClientType.CRT) {
             return createS3CrtAsyncClient(config);
         }
         return createS3AsyncClient(config);
@@ -210,6 +212,10 @@ class S3ParallelDownloader implements IParallelDownloader {
         if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.CONNECTION_ACQUIRE_TIMEOUT,
                     Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
+        }
+        if (config.getS3ReadTimeoutInSeconds() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.READ_TIMEOUT,
+                    Duration.ofSeconds(config.getS3ReadTimeoutInSeconds()));
         }
         SdkAsyncHttpClient nettyHttpClient =
                 NettyNioAsyncHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());
