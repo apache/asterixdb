@@ -17,7 +17,16 @@
  * under the License.
  */
 
--- handlevariable=status
--- param timeout=1s
--- param include-host=false
-select sleep("should not return", 60000);
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type TestType as
+ closed {
+  id : integer,
+  val : double
+};
+
+create  dataset Test(TestType) primary key id;
+

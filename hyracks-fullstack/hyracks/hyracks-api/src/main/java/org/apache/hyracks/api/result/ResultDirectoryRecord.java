@@ -40,7 +40,7 @@ public class ResultDirectoryRecord implements Serializable {
 
     private boolean empty;
 
-    private int resultCount;
+    private long resultCount;
 
     private String nodeId;
 
@@ -71,7 +71,7 @@ public class ResultDirectoryRecord implements Serializable {
         this.empty = empty;
     }
 
-    public void setResultCount(int resultCount) {
+    public void setResultCount(long resultCount) {
         this.resultCount = resultCount;
     }
 
@@ -103,7 +103,7 @@ public class ResultDirectoryRecord implements Serializable {
         status = Status.FAILED;
     }
 
-    public int getResultCount() {
+    public long getResultCount() {
         return resultCount;
     }
 

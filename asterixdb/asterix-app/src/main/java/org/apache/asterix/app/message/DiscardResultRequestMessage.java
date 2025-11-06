@@ -20,7 +20,6 @@ package org.apache.asterix.app.message;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
-import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.utils.AsyncRequestsAPIUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
@@ -36,12 +35,9 @@ public class DiscardResultRequestMessage implements ICcAddressedMessage {
     private final JobId jobId;
     private final ResultSetId resultSetId;
     private final String requestId;
-    private final long ncReqId;
 
-    public DiscardResultRequestMessage(String nodeId, long ncReqId, JobId jobId, ResultSetId resultSetId,
-            String requestId) {
+    public DiscardResultRequestMessage(String nodeId, JobId jobId, ResultSetId resultSetId, String requestId) {
         this.nodeId = nodeId;
-        this.ncReqId = ncReqId;
         this.jobId = jobId;
         this.resultSetId = resultSetId;
         this.requestId = requestId;
@@ -49,14 +45,6 @@ public class DiscardResultRequestMessage implements ICcAddressedMessage {
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException {
-        CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         AsyncRequestsAPIUtil.discardResultPartitions((ICcApplicationContext) appCtx, jobId, resultSetId, requestId);
-        DiscardResultResponseMessage response = new DiscardResultResponseMessage(this.ncReqId);
-        try {
-            messageBroker.sendApplicationMessageToNC(response, nodeId);
-        } catch (Exception e) {
-            LOGGER.info("Failed to process request", e);
-            throw HyracksDataException.create(e);
-        }
     }
 }

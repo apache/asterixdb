@@ -97,7 +97,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private List<ILogicalExpression> assignJoinExprs; // These are the join expressions below the assign operator.
 
     // for the Array UNNEST optimization. The main list is for each leafInput.
+    // The second list is for each unnestOp within a leafInput
+    // The third is list of ops associated with each unnestOp. These are usually together in the leafInput. The unnestOp is always at the end
     private List<List<List<ILogicalOperator>>> unnestOpsInfo;
+
+    private final List<Boolean> realLeafInputs = new ArrayList(); // Eeach leafInput will be true and a fake dataset leafInput will be false.
+
+    // Both unnestOpsInfo and realLeafInputs will have the same size
+
     private boolean arrayUnnestPossible = false;
     // The Distinct operators for each DataSourceScan operator (if applicable)
     private HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
@@ -109,10 +116,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private ILogicalOperator rootOrderByOp;
 
     private List<LogicalVariable> resultAndJoinVars = new ArrayList();
-    private final List<Boolean> realLeafInputs = new ArrayList();
     private int numberOfFromTerms;
 
     private List<Triple<ILogicalOperator, ILogicalOperator, List<ILogicalOperator>>> modifyUnnestInfo;
+    // The first is the parent, the second is the current operator (LOJ), and the third is the third list from UnnestOpsInfo
+
     private final Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap = new HashMap();
     private ILogicalOperator newRootAfterUnnest = null;
 
@@ -211,6 +219,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (everyLeafInputDoesNotHaveADataScanOperator(leafInputs)) {
             return cleanUp();
         }
+
         if (LOGGER.isTraceEnabled()) {
             viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
         }
@@ -224,6 +233,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     return cleanUp();
                 }
             }
+            if (unnestOpsInfo.size() != realLeafInputs.size()) {
+                return cleanUp(); // this should never happen; But if it does, bail
+            }
             // Here on, we expect that changes can be made to the incoming plan and that optimization will proceed
             // without any hitch. Basically, we cannot go back now!!
             // now that we know it is safe to proceed with unnesting array optimization, we will remove
@@ -233,8 +245,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             //realInput 1 = false
             //realInput 2 = false
             //realInput 3 = true (KS2)
-            //realInput 4 = false
-            //Note: The Unnesting code may move UNNEST Ops from the leafInputs higher up in the plan.
+            // We do not see the array for KS2 and it appears above the join in this query.
             //The code is not designed to deal with UNNEST Ops that are not in the leafInputs.
             int i = -1;
             int j = -1;
@@ -255,6 +266,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 String viewNewPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
             }
             phase = 2;
+            // At this phase some unnestOps and Assign ops have been removed. It is possible
             init(phase);
             getJoinOpsAndLeafInputs(null, op, -1, phase);
         } else {
@@ -421,14 +433,18 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 ILogicalOperator q = newRootAfterUnnest;
                 if (modifyUnnestInfo.get(k).third.size() > 1) {
                     for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
-                        q.getInputs().get(index).setValue(p);
+                        q.getInputs().get(0).setValue(p);
                         q = p;
                     }
                 }
             } else {
                 ILogicalOperator q = parent;
-                for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
-                    q.getInputs().get(index).setValue(p);
+                ILogicalOperator p = modifyUnnestInfo.get(k).third.get(0);
+                q.getInputs().get(index).setValue(p); // index could be 1 here
+                q = p;
+                for (int j = 1; j < modifyUnnestInfo.get(k).third.size(); j++) {
+                    p = modifyUnnestInfo.get(k).third.get(j);
+                    q.getInputs().get(0).setValue(p); // subsequently these will be unary operators. So only 0th input will be valid
                     q = p;
                 }
             }
@@ -564,19 +580,20 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         for (ILogicalOperator op : unnestOps) {
             UnnestOperator unnestOp = (UnnestOperator) op;
             if (anyVarIsAJoinVar(unnestOp.getVariables())) {
-                unnestOpsInfo.add(new ArrayList<>()); // each leafInput must have one entry
                 //not possible to unnest this unnest op. If these variables participate in join predicates, then unnestOps cannot be moved above joins
                 continue;
             }
 
             Pair<Boolean, List<ILogicalOperator>> info = findAllAssociatedAssingOps(p, unnestOp);
             if (!info.first) {// something 'bad' happened, so this unnestOp cannot be unnested
-                unnestOpsInfo.add(new ArrayList<>()); // each leafInput must have one entry
                 //not possible to unnest this unnest op. If these variables participate in join predicates, then unnestOps cannot be moved above joins
                 continue;
             }
             count++; // found something unnestable
             bigList.add(info.second);
+        }
+        if (count == 0) {
+            unnestOpsInfo.add(new ArrayList<>());
         }
         if (count > 0) {
             arrayUnnestPossible = true;
@@ -592,12 +609,20 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             UnnestOperator unnestOp) throws AlgebricksException {
         Pair<Boolean, List<ILogicalOperator>> info = new Pair<>(true, new ArrayList<>());
         ILogicalOperator p = leafInput;
+        //boolean unnestOpSeen = false;
 
+        LogicalVariable unnestVar = unnestOp.getVariables().get(0);
         List<ILogicalOperator> ops = new ArrayList<>(); //Gather all AssignsOps, if any, associated wth this unnestOp
         while (p != null && p.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (p == unnestOp) {
+                break; // nothing below will be relevant to this UnnestOp
+            }
             if (p.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                 AssignOperator aOp = (AssignOperator) p;
-
+                if (anyVarIsAJoinVar(aOp.getVariables())) {
+                    info.first = false;
+                    return info;
+                }
                 ILogicalExpression a = aOp.getExpressions().get(0).getValue();
                 if (a.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression exp =
@@ -607,10 +632,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                         if (lexp.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                             VariableReferenceExpression varRef = (VariableReferenceExpression) lexp;
                             LogicalVariable var = varRef.getVariableReference();
-                            LogicalVariable unnestVar = unnestOp.getVariables().get(0);
+
                             if (unnestVar == var) {
                                 if ((anyVarIsAJoinVar(aOp.getVariables())
-                                        || assignVarPresentInLeafInput(aOp, leafInput))) {
+                                        || assignVarPresentInLeafInput(aOp, leafInput))) { // cant handle references inside arrays yet
                                     info.first = false;
                                     return info;
                                 } else {
@@ -620,17 +645,70 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                         }
                     }
                 }
+            } else if ((p.getOperatorTag() == LogicalOperatorTag.SELECT)
+                    && doesSelectBelongToThisUnnestOp(leafInput, (SelectOperator) p, unnestVar)) {
+                // Does this select belong to this UnnestOp
+                // select expressions can be problematic because computing selectivity correctly becomes an issue.
+                // so exclude them for now.
+                info.first = false; // Hence for now, dont allow select Ops.
+                return info;
             }
             p = p.getInputs().get(0).getValue();
         }
         ops.add(unnestOp); // the unnestOp will be the last (and may be the only op)
         info.second = ops;
 
-        /*
-        unnestOpsInfo.add(bigList); // one for each LeafInput. If empty, means that there are no array references in this leafInout
-        // also need to add some dummy entries for the fake leafInputs. Add as many as unnestOps. This will make the code in setCardsAndSizes happy
-         */
+        // one for each LeafInput. If empty, means that there are no array references in this leafInout
+        // also need to add some dummy entries for the fake leafInputs. Add as many as unnestOps.
+        // This will make the code in setCardsAndSizes happy
+
         return info;
+    }
+
+    private boolean doesSelectBelongToThisUnnestOp(ILogicalOperator leafInput, SelectOperator selOp,
+            LogicalVariable unnestVar) {
+
+        ILogicalExpression exp = selOp.getCondition().getValue();
+        if (exp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exp;
+            List<LogicalVariable> vars = new ArrayList<>();
+            expr.getUsedVariables(vars);
+            for (LogicalVariable assignVar : vars) {
+                AssignOperator aOp = findThisAssignOp(leafInput, assignVar);
+                if (aOp == null) {
+                    return false;
+                }
+                ILogicalExpression a = aOp.getExpressions().get(0).getValue();
+                if (a.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression assignExp =
+                            (AbstractFunctionCallExpression) aOp.getExpressions().get(0).getValue();
+                    if (assignExp.getKind() == AbstractFunctionCallExpression.FunctionKind.SCALAR) {
+                        ILogicalExpression lexp = assignExp.getArguments().get(0).getValue();
+                        if (lexp.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                            VariableReferenceExpression varRef = (VariableReferenceExpression) lexp;
+                            LogicalVariable var = varRef.getVariableReference();
+                            if (unnestVar == var) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private AssignOperator findThisAssignOp(ILogicalOperator p, LogicalVariable assignVar) {
+        while (p != null && p.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (p.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                AssignOperator aOp = (AssignOperator) p;
+                if (aOp.getVariables().get(0).equals(assignVar)) {
+                    return aOp;
+                }
+            }
+            p = p.getInputs().get(0).getValue();
+        }
+        return null;
     }
 
     private boolean assignVarPresentInLeafInput(AssignOperator aOp, ILogicalOperator leafInput)
@@ -672,6 +750,21 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             for (LogicalVariable lv : joinExprVars) {
                 if (lv.equals(var)) {
                     return true;
+                }
+            }
+        }
+        //Also check within internal Assigns. These can participate in joins as well.
+        for (AssignOperator aOp : this.assignOps) {
+            ILogicalExpression a = aOp.getExpressions().get(0).getValue();
+            if (a.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression assignExp =
+                        (AbstractFunctionCallExpression) aOp.getExpressions().get(0).getValue();
+                List<LogicalVariable> vars = new ArrayList<>();
+                assignExp.getUsedVariables(vars);
+                for (LogicalVariable lv : vars) {
+                    if (lv.equals(var)) {
+                        return true;
+                    }
                 }
             }
         }

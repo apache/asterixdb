@@ -16,20 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
-
-import java.util.Map;
-
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-public interface IExternalCredentialsCacheUpdater {
-
-    /**
-     * Generates new credentials and caches them
-     *
-     * @param configuration configuration containing external collection details
-     */
-    Object generateAndCacheCredentials(Map<String, String> configuration)
-            throws HyracksDataException, CompilationException;
-}
+-- handlevariable=status
+-- param include-host=false
+use test;
+SET `compiler.sort.parallel` "true";
+Select * from Test order by val;

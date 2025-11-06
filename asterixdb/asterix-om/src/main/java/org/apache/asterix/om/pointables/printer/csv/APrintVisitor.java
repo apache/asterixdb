@@ -31,6 +31,7 @@ import org.apache.asterix.om.pointables.printer.ARecordPrinter;
 import org.apache.asterix.om.pointables.printer.AbstractPrintVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -45,6 +46,7 @@ public class APrintVisitor extends AbstractPrintVisitor {
     private final Map<String, String> formatConfigs;
     private final Map<String, String> configuration;
     private AObjectPrinterFactory objectPrinterFactory;
+    private boolean firstRecord = true;
 
     public APrintVisitor(IEvaluatorContext context, ARecordType itemType, Map<String, String> formatConfigs,
             Map<String, String> configuration) {
@@ -75,5 +77,24 @@ public class APrintVisitor extends AbstractPrintVisitor {
             objectPrinterFactory = AObjectPrinterFactory.createInstance(itemType, formatConfigs, configuration);
         }
         return objectPrinterFactory.printFlatValue(typeTag, b, s, l, ps);
+    }
+
+    @Override
+    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+        ARecordPrinter printer = raccessorToPrinter.get(accessor);
+        if (printer == null) {
+            printer = createRecordPrinter(accessor);
+            raccessorToPrinter.put(accessor, printer);
+        }
+        boolean first = firstRecord;
+        if (firstRecord) {
+            firstRecord = false;
+        }
+        printer.printRecord(accessor, arg.getFirst(), this, first);
+        return null;
+    }
+
+    public void setFirstRecord(boolean firstRecord) {
+        this.firstRecord = firstRecord;
     }
 }

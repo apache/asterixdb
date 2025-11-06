@@ -58,7 +58,7 @@ public class ResultPartitionWriter implements IFrameWriter {
 
     private boolean failed = false;
 
-    private int resultCount;
+    private long resultCount;
 
     public ResultPartitionWriter(IHyracksTaskContext ctx, IResultPartitionManager manager, JobId jobId,
             ResultSetId rsId, boolean asyncMode, IResultMetadata metadata, int partition, int nPartitions,

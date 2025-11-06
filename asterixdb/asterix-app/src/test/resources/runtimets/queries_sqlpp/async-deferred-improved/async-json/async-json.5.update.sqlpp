@@ -16,30 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
 
-public interface IExternalCredentialsCache {
+use test;
 
-    /**
-     * Returns the cached credentials.
-     *
-     * @param key credentials key
-     * @return credentials if present and not expired/need refreshing, null otherwise
-     */
-    Object get(String key);
+UPSERT INTO Test { "id": 1, "val": 2.5 };
 
-    /**
-     * Deletes the cache for the provided entity
-     *
-     * @param key credentials key
-     */
-    void delete(String key);
+UPSERT INTO Test { "id": 2, "val": 3.5 };
 
-    /**
-     * Updates the credentials cache with the provided credentials for the specified name
-     *
-     * @param key credentials key
-     * @param credentials credentials to cache
-     */
-    void put(String key, Object credentials);
-}
+UPSERT INTO Test { "id": 3, "val": 4.5 };
+
+UPSERT INTO Test { "id": 4, "val": 5.5 };

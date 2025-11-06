@@ -82,6 +82,11 @@ public class ARecordPrinter {
         ps.print(endRecord);
     }
 
+    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor,
+            boolean firstRecord) throws HyracksDataException {
+        printRecord(recordAccessor, ps, visitor);
+    }
+
     protected void printField(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName,
             IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws HyracksDataException {
         itemVisitorArg.second = fieldTypeTag;

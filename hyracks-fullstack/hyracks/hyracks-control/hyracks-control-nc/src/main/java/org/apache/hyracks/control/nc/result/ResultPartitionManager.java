@@ -100,7 +100,7 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     }
 
     @Override
-    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, long resultCount)
             throws HyracksException {
         try {
             LOGGER.trace("Reporting partition write completion: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,

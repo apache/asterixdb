@@ -94,10 +94,26 @@ public interface IRequestTracker extends IJobLifecycleListener {
      */
     long getTotalNumberOfFailedRequests();
 
+    /**
+     * Starts tracking an asynchronous or deferred request
+     *
+     * @param request
+     */
     void trackAsyncOrDeferredRequest(IClientRequest request);
 
+    /**
+     * Removes an asynchronous or deferred request from tracking
+     *
+     * @param requestId
+     */
     void removeAsyncOrDeferredRequest(String requestId);
 
+    /**
+     * Gets an asynchronous or deferred request by {@code requestId}
+     *
+     * @param requestId
+     * @return an Optional of the client request
+     */
     Optional<IClientRequest> getAsyncOrDeferredRequest(String requestId);
 
 }

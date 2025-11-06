@@ -17,7 +17,7 @@
  * under the License.
  */
 
--- handlevariable=status
--- param timeout=1s
--- param include-host=false
-select sleep("should not return", 60000);
+-- polltimeoutsecs=10
+-- handlevariable=result
+
+$status

@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.api.job;
 
--- handlevariable=status
--- param timeout=1s
--- param include-host=false
-select sleep("should not return", 60000);
+public enum HyracksJobProperty implements IJobProperty {
+    JOB_KIND,
+    RESULT_SET_ORDERED
+}

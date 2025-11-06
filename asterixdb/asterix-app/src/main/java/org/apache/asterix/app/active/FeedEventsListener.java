@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.app.active;
 
+import static org.apache.asterix.common.utils.AsterixJobProperty.ACTIVE_ENTITY;
+import static org.apache.hyracks.api.job.HyracksJobProperty.JOB_KIND;
+
 import java.util.EnumSet;
 import java.util.List;
 
@@ -45,6 +48,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedEventsListener extends ActiveEntityEventsListener {
@@ -103,7 +107,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
             Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> jobInfo =
                     FeedOperations.buildStartFeedJob(mdProvider, feed, feedConnections, statementExecutor, hcc);
             JobSpecification feedJob = jobInfo.getLeft();
-            feedJob.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
+            feedJob.setProperty(ACTIVE_ENTITY, entityId);
+            feedJob.setProperty(JOB_KIND, JobKind.INGESTION);
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.
             // We will need to design general exception handling mechanism for feeds.
             setLocations(jobInfo.getRight());

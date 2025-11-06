@@ -16,8 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.external;
 
--- handlevariable=status
--- param timeout=1s
--- param include-host=false
-select sleep("should not return", 60000);
+import java.util.Map;
+
+public interface IExternalStatsTracker {
+
+    /**
+     * Resolves a name from the given configuration map
+     *
+     * @param configuration The configuration map
+     * @return The resolved name
+     */
+    String resolveName(Map<String, String> configuration);
+
+    /**
+     * Increments the total AWS Assume Role failure count
+     */
+    void incrementAwsAssumeRoleFailure(String name, String roleArn);
+}

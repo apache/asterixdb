@@ -1,9 +1,9 @@
 {
   "status":"success",
   "handle": "R{.*}",
-  "resultCount": 5,
+  "resultCount": 4,
   "partitions": "R{.*}",
-  "resultSetOrdered": false,
+  "resultSetOrdered": true,
   "metrics": "R{.*}",
   "createdAt": "R{.*}"
 }

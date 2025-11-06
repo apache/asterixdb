@@ -3,6 +3,7 @@
   "handle": "R{.*}",
   "resultCount": 1,
   "partitions": "R{.*}",
+  "resultSetOrdered": false,
   "metrics": "R{.*}",
   "createdAt": "R{.*}"
 }

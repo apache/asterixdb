@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.utils;
 
--- handlevariable=status
--- param timeout=1s
--- param include-host=false
-select sleep("should not return", 60000);
+import org.apache.hyracks.api.job.IJobProperty;
+
+public enum AsterixJobProperty implements IJobProperty {
+    ACTIVE_ENTITY,
+    GLOBAL_TX
+}

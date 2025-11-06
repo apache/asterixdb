@@ -476,6 +476,7 @@ public class QueryServiceRequestParameters {
         setHost(servlet.host(request));
         setPath(servlet.servletPath(request));
         setOptionalParams(optionalParams);
+        setIncludeHost(servlet.isOldApi(request));
         try {
             if (useRequestParameters(request)) {
                 setFromRequestParameters(request);
@@ -541,8 +542,7 @@ public class QueryServiceRequestParameters {
         setClientType(parseIfExists(req, Parameter.CLIENT_TYPE.str(), valGetter, getClientType(), clientTypes::get));
         setSQLCompatMode(parseBoolean(req, Parameter.SQL_COMPAT.str(), valGetter, isSQLCompatMode()));
         setSource(valGetter.apply(req, Parameter.SOURCE.str()));
-        setIncludeHost(parseBoolean(req, Parameter.INCLUDE_HOST.str(), valGetter,
-                isIncludeHost() || getMode() == ResultDelivery.DEFERRED));
+        setIncludeHost(parseBoolean(req, Parameter.INCLUDE_HOST.str(), valGetter, isIncludeHost()));
     }
 
     protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {

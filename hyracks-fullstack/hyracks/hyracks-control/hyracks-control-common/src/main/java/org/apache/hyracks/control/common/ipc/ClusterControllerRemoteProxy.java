@@ -150,7 +150,7 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, int resultCount)
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition, long resultCount)
             throws Exception {
         ReportResultPartitionWriteCompletionFunction fn =
                 new ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition, resultCount);

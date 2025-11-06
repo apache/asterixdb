@@ -18,6 +18,5 @@
  */
 
 -- handlevariable=status
--- param include-host=true
 
 select i, i * i as i2 from range(1, 5) i;

@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.app.message.DiscardResultRequestMessage;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
-import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.utils.AsyncRequestsAPIUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -48,10 +47,8 @@ public class NCQueryResultApiServlet extends QueryResultApiServlet {
     protected void discardResult(String requestId, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
         INCServiceContext serviceCtx = (INCServiceContext) appCtx.getServiceContext();
         INCMessageBroker messageBroker = (INCMessageBroker) serviceCtx.getMessageBroker();
-        MessageFuture messageFuture = messageBroker.registerMessageFuture();
-        long futureId = messageFuture.getFutureId();
         DiscardResultRequestMessage request =
-                new DiscardResultRequestMessage(serviceCtx.getNodeId(), futureId, jobId, resultSetId, requestId);
+                new DiscardResultRequestMessage(serviceCtx.getNodeId(), jobId, resultSetId, requestId);
         try {
             messageBroker.sendMessageToPrimaryCC(request);
         } catch (Exception e) {

@@ -32,7 +32,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractPrintVisitor implements IPrintVisitor {
-    private final Map<IVisitablePointable, ARecordPrinter> raccessorToPrinter = new HashMap<>();
+    protected final Map<IVisitablePointable, ARecordPrinter> raccessorToPrinter = new HashMap<>();
     private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<>();
 
     @Override

@@ -43,6 +43,7 @@ import java.util.UUID;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalStatsTracker;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -187,6 +188,22 @@ public class AwsUtils {
         // build sts client used for assuming role
         ClientOverrideConfiguration.Builder clientConfigurationBuilder = ClientOverrideConfiguration.builder();
         clientConfigurationBuilder.addExecutionInterceptor(ASSUME_ROLE_INTERCEPTOR);
+        clientConfigurationBuilder.addExecutionInterceptor(new ExecutionInterceptor() {
+            @Override
+            public void onExecutionFailure(Context.FailedExecution context, ExecutionAttributes executionAttributes) {
+                SdkRequest req = context.request();
+                if (req instanceof AssumeRoleRequest assumeReq) {
+                    String roleArn = assumeReq.roleArn();
+                    Throwable th = context.exception();
+                    LOGGER.info("encountered issue assuming role ({}): {}", roleArn, getMessageOrToString(th));
+
+                    IExternalStatsTracker externalStatsTracker = appCtx.getExternalStatsTracker();
+                    String name = externalStatsTracker.resolveName(configuration);
+                    externalStatsTracker.incrementAwsAssumeRoleFailure(name, roleArn);
+                }
+                ExecutionInterceptor.super.onExecutionFailure(context, executionAttributes);
+            }
+        });
         ClientOverrideConfiguration clientConfiguration = clientConfigurationBuilder.build();
 
         StsClientBuilder stsClientBuilder = StsClient.builder();

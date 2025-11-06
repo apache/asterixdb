@@ -75,7 +75,9 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltration
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.job.HyracksJobProperty;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpTupleProjectorFactory;
@@ -162,21 +164,27 @@ public class IndexUtil {
             Dataset dataset, SourceLocation sourceLoc) throws AlgebricksException {
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
-        return secondaryIndexHelper.buildDropJobSpec(EnumSet.noneOf(DropOption.class));
+        JobSpecification spec = secondaryIndexHelper.buildDropJobSpec(EnumSet.noneOf(DropOption.class));
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
+        return spec;
     }
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset, Set<DropOption> options, SourceLocation sourceLoc) throws AlgebricksException {
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
-        return secondaryIndexHelper.buildDropJobSpec(options);
+        JobSpecification spec = secondaryIndexHelper.buildDropJobSpec(options);
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
+        return spec;
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
-        return secondaryIndexHelper.buildCreationJobSpec();
+        JobSpecification spec = secondaryIndexHelper.buildCreationJobSpec();
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
+        return spec;
     }
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(Dataset dataset, Index index,
@@ -195,7 +203,9 @@ public class IndexUtil {
             secondaryIndexHelper = SecondaryTreeIndexOperationsHelper.createIndexOperationsHelper(dataset, index,
                     metadataProvider, sourceLoc);
         }
-        return secondaryIndexHelper.buildLoadingJobSpec();
+        JobSpecification spec = secondaryIndexHelper.buildLoadingJobSpec();
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DML);
+        return spec;
     }
 
     private static boolean supportsCorrelated(DatasetConfig.IndexType indexType) {
