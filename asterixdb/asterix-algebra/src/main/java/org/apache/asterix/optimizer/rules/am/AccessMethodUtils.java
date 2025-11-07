@@ -743,6 +743,9 @@ public class AccessMethodUtils {
             // We are optimizing a join query. Determine which variable feeds the secondary index.
             OptimizableOperatorSubTree opSubTree0 = optFuncExpr.getOperatorSubTree(0);
             int probeVarIndex = opSubTree0 == null || opSubTree0 == probeSubTree ? 0 : 1;
+            if (probeVarIndex >= optFuncExpr.getNumLogicalVars()) {
+                return null;
+            }
             LogicalVariable probeVar = optFuncExpr.getLogicalVar(probeVarIndex);
             VariableReferenceExpression probeExpr = new VariableReferenceExpression(probeVar);
             probeExpr.setSourceLocation(sourceLoc);
