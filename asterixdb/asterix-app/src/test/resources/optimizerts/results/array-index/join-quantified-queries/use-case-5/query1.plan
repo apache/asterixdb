@@ -1,0 +1,75 @@
+distribute result [$$50]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 10
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        assign [$$50] <- [{"date": $$57, "id": $$52, "forecast": $$55}] project: [$$50]
+        -- ASSIGN  |PARTITIONED|
+          limit 10
+          -- STREAM_LIMIT  |PARTITIONED|
+            select ($$45) project: [$$57, $$52, $$55]
+            -- STREAM_SELECT  |PARTITIONED|
+              subplan {
+                        aggregate [$$45] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          select (eq($$56, string-concat(ordered-list-constructor($$57, "03")))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STREAM_SELECT  |LOCAL|
+                            assign [$$56] <- [$$ff.getField("fv")] project: [$$57, $$56] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ASSIGN  |LOCAL|
+                              unnest $$ff <- scan-collection($$55) project: [$$57, $$ff] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- UNNEST  |LOCAL|
+                                project ([$$57, $$55]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                select (eq($$D1.getField("x"), $$52)) project: [$$57, $$52, $$55]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$55] <- [$$D1.getField("forecast")]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$57, $$52, $$D1])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$53, $$D1] <- index-search("D1", 0, "Default", "test", "D1", true, false, 1, $$62, 1, $$62, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$62, $$57, $$52])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                distinct ([$$62, $$63])
+                                -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    order (ASC, $$62) (ASC, $$63)
+                                    -- STABLE_SORT [$$62(ASC), $$63(ASC)]  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        project ([$$57, $$52, $$62, $$63])
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            unnest-map [$$61, $$62] <- index-search("idx_fv", 0, "Default", "test", "D1", true, true, 1, $$60, 1, $$60, true, true, true)
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange
+                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                running-aggregate [$$63] <- [create-query-uid()]
+                                                -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                  assign [$$60] <- [string-concat(ordered-list-constructor($$57, "03"))]
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    assign [$$57] <- [$$D2.getField("date")] project: [$$52, $$57]
+                                                    -- ASSIGN  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        data-scan []<-[$$52, $$D2] <- test.D2
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source
+                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
