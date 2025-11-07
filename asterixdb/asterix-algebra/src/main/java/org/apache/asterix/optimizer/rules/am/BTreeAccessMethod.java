@@ -416,6 +416,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
                     AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexedFieldType, probeSubTree,
                             SEARCH_KEY_ROUNDING_FUNCTION_COMPUTER);
+            if (returnedSearchKeyExpr == null) {
+                return null;
+            }
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
             ILogicalExpression searchKeyEQExpr = null;
             boolean realTypeConvertedToIntegerType = returnedSearchKeyExpr.third;

@@ -1,0 +1,69 @@
+distribute result [$$44]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 10
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        project ([$$44])
+        -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$44] <- [{"date": $$51, "sid": $$45, "forecast": $$49}]
+          -- ASSIGN  |PARTITIONED|
+            limit 10
+            -- STREAM_LIMIT  |PARTITIONED|
+              project ([$$51, $$45, $$49])
+              -- STREAM_PROJECT  |PARTITIONED|
+                select ($$39)
+                -- STREAM_SELECT  |PARTITIONED|
+                  subplan {
+                            aggregate [$$39] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (eq($$50, "aaaa")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                assign [$$50] <- [$$ff.getField("fv")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ASSIGN  |LOCAL|
+                                  unnest $$ff <- scan-collection($$49) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- UNNEST  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         }
+                  -- SUBPLAN  |PARTITIONED|
+                    project ([$$51, $$45, $$49])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (eq($$48, $$45))
+                        -- HYBRID_HASH_JOIN [$$45][$$48]  |PARTITIONED|
+                          exchange
+                          -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                            project ([$$51, $$45])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$51, $$45] <- [$$sales.getField("date"), $$sales.getField("sid")]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$sales])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan []<-[$$46, $$sales] <- TestYelp.sales
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
+                          -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+                            project ([$$49, $$48])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$49, $$48] <- [$$temp.getField("forecast"), $$temp.getField("x")]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$temp])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan []<-[$$47, $$temp] <- TestYelp.temp
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
