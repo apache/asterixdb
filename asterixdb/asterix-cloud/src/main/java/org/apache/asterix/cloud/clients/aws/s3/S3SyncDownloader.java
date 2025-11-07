@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.asterix.cloud.clients.IParallelDownloader;
+import org.apache.asterix.cloud.clients.AbstractParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -50,7 +50,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @ThreadSafe
-public class S3SyncDownloader implements IParallelDownloader {
+public class S3SyncDownloader extends AbstractParallelDownloader {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final String bucket;
@@ -126,14 +126,10 @@ public class S3SyncDownloader implements IParallelDownloader {
     }
 
     @Override
-    public Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload)
-            throws HyracksDataException {
+    public Set<FileReference> downloadDirectories(Collection<FileReference> toDownload)
+            throws IOException, ExecutionException, InterruptedException {
         Set<FileReference> failedFiles;
-        try {
-            failedFiles = downloadDirectoriesAndWait(toDownload);
-        } catch (IOException | InterruptedException | ExecutionException e) {
-            throw HyracksDataException.create(e);
-        }
+        failedFiles = downloadDirectoriesAndWait(toDownload);
         return failedFiles;
     }
 

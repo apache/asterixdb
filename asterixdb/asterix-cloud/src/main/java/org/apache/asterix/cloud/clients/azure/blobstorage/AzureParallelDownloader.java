@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.cloud.clients.IParallelDownloader;
+import org.apache.asterix.cloud.clients.AbstractParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -44,7 +44,7 @@ import com.azure.storage.blob.models.ListBlobsOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class AzureParallelDownloader implements IParallelDownloader {
+public class AzureParallelDownloader extends AbstractParallelDownloader {
     private final IOManager ioManager;
     private final BlobContainerAsyncClient blobContainerAsyncClient;
     private final IRequestProfilerLimiter profiler;
@@ -101,8 +101,7 @@ public class AzureParallelDownloader implements IParallelDownloader {
     }
 
     @Override
-    public Collection<FileReference> downloadDirectories(Collection<FileReference> directories)
-            throws HyracksDataException {
+    public Set<FileReference> downloadDirectories(Collection<FileReference> directories) throws HyracksDataException {
 
         Set<FileReference> failedFiles = new HashSet<>();
         List<Mono<Void>> directoryDownloads = new ArrayList<>();

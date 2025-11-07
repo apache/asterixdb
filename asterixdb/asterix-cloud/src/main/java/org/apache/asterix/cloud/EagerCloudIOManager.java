@@ -62,7 +62,7 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     protected void downloadPartitions(boolean metadataNode, int metadataPartition) throws HyracksDataException {
         IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager);
         LOGGER.info("Downloading all files located in {}", partitionPaths);
-        downloader.downloadDirectories(partitionPaths);
+        downloader.downloadDirectoriesWithRetry(partitionPaths);
         LOGGER.info("Finished downloading {}", partitionPaths);
     }
 
