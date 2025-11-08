@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
+import static org.apache.asterix.runtime.evaluators.functions.PointableHelper.NULL_REF;
+
 import java.io.IOException;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -41,15 +43,21 @@ public class ObjectConverter extends AbstractComplexConverter {
      * {@link IExternalFilterValueEmbedder} decides whether the object should be ignored entirely
      */
     private boolean ignore = false;
+    private final GroupType parquetType;
+    private final boolean[] isValueAdded;
 
     public ObjectConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
             ParquetConverterContext context) throws IOException {
         super(parent, index, parquetType, context);
+        this.parquetType = parquetType;
+        isValueAdded = new boolean[parquetType.getFieldCount()];
     }
 
     public ObjectConverter(AbstractComplexConverter parent, String stringFieldName, int index, GroupType parquetType,
             ParquetConverterContext context) throws IOException {
         super(parent, stringFieldName, index, parquetType, context);
+        this.parquetType = parquetType;
+        isValueAdded = new boolean[parquetType.getFieldCount()];
     }
 
     @Override
@@ -63,12 +71,33 @@ public class ObjectConverter extends AbstractComplexConverter {
         } else {
             ignore = checkValueEmbedder(valueEmbedder);
         }
+        for (int i = 0; i < parquetType.getFieldCount(); i++) {
+            isValueAdded[i] = false;
+        }
+
     }
 
     @Override
     public void end() {
         closeDirectRepeatedChildren();
         if (!ignore) {
+            IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
+            for (int i = 0; i < parquetType.getFieldCount(); i++) {
+                if (!isValueAdded[i]) {
+                    String childFieldName = parquetType.getFieldName(i);
+                    try {
+                        if (valueEmbedder.shouldEmbed(childFieldName, ATypeTag.NULL)) {
+                            builder.addField(context.getSerializedFieldName(childFieldName),
+                                    valueEmbedder.getEmbeddedValue());
+                        } else {
+                            builder.addField(context.getSerializedFieldName(childFieldName), NULL_REF);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
             writeToParent();
             context.getValueEmbedder().exitObject();
         }
@@ -92,6 +121,9 @@ public class ObjectConverter extends AbstractComplexConverter {
         }
         IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
         IValueReference fieldName = value.getFieldName();
+        String fieldNameStr = value.getStringFieldName();
+        int fieldIndex = parquetType.getFieldIndex(fieldNameStr);
+        isValueAdded[fieldIndex] = true;
         try {
             if (valueEmbedder.shouldEmbed(value.getStringFieldName(), value.getTypeTag())) {
                 builder.addField(fieldName, valueEmbedder.getEmbeddedValue());

@@ -1,4 +1,4 @@
-{ "ratings": [  ], "id": 2 }
+{ "ratings": [ null ], "id": 2, "rating": null }
 { "ratings": [  ], "rating": 1.0, "id": 5 }
 { "ratings": [ 1 ], "rating": 2.0, "id": 8 }
 { "ratings": [ 1, 2, 3 ], "rating": 3.0, "id": 10 }

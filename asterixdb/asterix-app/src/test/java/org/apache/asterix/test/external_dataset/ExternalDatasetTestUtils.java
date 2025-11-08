@@ -25,6 +25,7 @@ import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetT
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 import static org.apache.asterix.test.external_dataset.deltalake.DeltaTableGenerator.DELTA_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.PARQUET_BASEDIR;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -72,6 +73,7 @@ public class ExternalDatasetTestUtils {
     public static final String TSV_DEFINITION = "tsv-data/reviews/";
     public static final String MIXED_DEFINITION = "mixed-data/reviews/";
     public static final String PARQUET_DEFINITION = "parquet-data/reviews/";
+    public static final String PARQUET_NULL_TEST_DIRECTORY = "parquet-data/null-test/";
     public static final String AVRO_DEFINITION = "avro-data/reviews/";
 
     // This is used for a test to generate over 1000 number of files
@@ -397,6 +399,17 @@ public class ExternalDatasetTestUtils {
         loadData(generatedDataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "parquetTypes.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "friends.parquet", definition, definitionSegment, false, false);
+
+        loadData(PARQUET_BASEDIR, "", "array_of_primitives.parquet", PARQUET_NULL_TEST_DIRECTORY, definitionSegment,
+                false, false);
+        loadData(PARQUET_BASEDIR, "", "array_of_single_field_struct.parquet", PARQUET_NULL_TEST_DIRECTORY,
+                definitionSegment, false, false);
+        loadData(PARQUET_BASEDIR, "", "array_of_structs_with_nulls.parquet", PARQUET_NULL_TEST_DIRECTORY,
+                definitionSegment, false, false);
+        loadData(PARQUET_BASEDIR, "", "repeated_field.parquet", PARQUET_NULL_TEST_DIRECTORY, definitionSegment, false,
+                false);
+        loadData(PARQUET_BASEDIR, "", "repeated_struct.parquet", PARQUET_NULL_TEST_DIRECTORY, definitionSegment, false,
+                false);
 
         Collection<File> files =
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), PARQUET_FILTER);

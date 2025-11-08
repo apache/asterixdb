@@ -100,6 +100,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-null3">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <output-dir compare="Text">parquet-null3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="parquet-tweet">
         <placeholder name="adapter" value="S3" />
         <placeholder name="pathprefix" value="" />
@@ -522,6 +532,12 @@
         <compilation-unit name="common/parquet/ASTERIXDB-3540">
           <placeholder name="adapter" value="S3" />
           <output-dir compare="Clean-JSON">common/parquet/ASTERIXDB-3540</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset">
+        <compilation-unit name="common/parquet/null-in-array">
+          <placeholder name="adapter" value="S3" />
+          <output-dir compare="Clean-JSON">common/parquet/null-in-array</output-dir>
         </compilation-unit>
       </test-case>
       <test-case FilePath="external-dataset">

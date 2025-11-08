@@ -1,5 +1,5 @@
-{ "arr": [ [ 1, 2 ] ], "a": {  }, "id": 8, "nested": { "List": [ 100, 300 ] }, "obj_array": [ { "first": "first" }, {  }, { "first": "second" } ] }
-{ "arr": [ [ 1, 2 ], [  ] ], "a": {  }, "c": {  }, "f": [  ], "name": "Virat", "id": 10, "nested": { "List": [  ] }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
-{ "arr": [ [ 1, 2 ], [  ] ], "a": { "b": 1 }, "c": { "d": 1 }, "f": [ 1.0 ], "name": "Virat", "id": 28, "nested": { "A": "a", "List": [  ] }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
-{ "arr": [ [  ] ], "c": { "e": 1 }, "f": [ 2.0, 3.0 ], "id": 34, "nested": { "randomK": "randomV" }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
-{ "arr": [ [ 1, 2, 3 ] ], "a": { "b": 1 }, "c": { "d": 1, "e": 1 }, "f": [ 3.6, 4.0 ], "name": "Kohli", "id": 37, "nested": { "A": "a", "List": [ 1, 2, 3 ] }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
+{ "arr": [ [ 1, null, 2 ], null ], "a": { "b": null }, "id": 8, "nested": { "List": [ 100, null, 300 ], "A": null, "randomK": null }, "obj_array": [ { "first": "first" }, { "first": null }, { "first": "second" } ], "c": null, "f": null, "name": null }
+{ "arr": [ [ 1, 2 ], [  ] ], "a": { "b": null }, "c": { "d": null, "e": null }, "f": [  ], "name": "Virat", "id": 10, "nested": { "List": [  ], "A": null, "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
+{ "arr": [ [ 1, 2 ], [ null ] ], "a": { "b": 1 }, "c": { "d": 1, "e": null }, "f": [ 1.0, null ], "name": "Virat", "id": 28, "nested": { "A": "a", "List": [ null ], "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }
+{ "arr": [ [  ] ], "c": { "e": 1, "d": null }, "f": [ 2.0, null, 3.0 ], "id": 34, "nested": { "randomK": "randomV", "A": null, "List": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": null, "name": null }
+{ "arr": [ [ 1, 2, 3 ] ], "a": { "b": 1 }, "c": { "d": 1, "e": 1 }, "f": [ 3.6, 4.0 ], "name": "Kohli", "id": 37, "nested": { "A": "a", "List": [ 1, 2, 3 ], "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ] }

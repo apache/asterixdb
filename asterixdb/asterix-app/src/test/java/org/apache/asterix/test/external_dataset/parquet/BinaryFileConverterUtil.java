@@ -39,6 +39,7 @@ import tech.allegro.schema.json2avro.converter.JsonAvroConverter;
 public class BinaryFileConverterUtil {
     public static final String DEFAULT_PARQUET_SRC_PATH = "data/hdfs/parquet";
     public static final String BINARY_GEN_BASEDIR = "target" + File.separatorChar + "generated_bin_files";
+    public static final String PARQUET_BASEDIR = "data" + File.separatorChar + "parquet" + File.separatorChar + "01";
 
     //How many records should the schema inference method inspect to infer the schema for parquet files
     private static final int NUM_OF_RECORDS_SCHEMA = 20;

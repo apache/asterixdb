@@ -1,0 +1,10 @@
+{ "id": 1, "numbers": [ 10, null, 30 ] }
+{ "id": 2, "items": [ { "value": 10 }, { "value": null }, { "value": 30 } ] }
+{ "id": 3, "contacts": [ { "name": "Alice", "age": 30 }, { "name": "Bob", "age": 25 } ] }
+{ "id": 4, "contacts": [ { "name": "Charlie", "age": 35 }, null, { "name": "David", "age": 28 } ] }
+{ "id": 5, "contacts": [ { "name": "Eve", "age": null }, { "age": 40, "name": null } ] }
+{ "id": 6, "contacts": null }
+{ "id": 7, "contacts": [  ] }
+{ "id": 8, "contacts": [ { "name": "Frank", "age": 45 }, { "name": null, "age": null }, { "name": "Grace", "age": 50 } ] }
+{ "id": 9, "numbers": [ 5, 15, 25 ] }
+{ "id": 10, "contacts": [ { "name": "Alice", "age": 30 }, { "name": "Bob", "age": null }, { "name": null, "age": null }, { "age": 25, "name": null } ] }
