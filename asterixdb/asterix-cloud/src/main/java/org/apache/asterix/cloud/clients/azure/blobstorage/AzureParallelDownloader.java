@@ -35,6 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.util.ExponentialRetryPolicy;
 
 import com.azure.storage.blob.BlobAsyncClient;
 import com.azure.storage.blob.BlobContainerAsyncClient;
@@ -43,12 +44,14 @@ import com.azure.storage.blob.models.ListBlobsOptions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class AzureParallelDownloader extends AbstractParallelDownloader {
     private final IOManager ioManager;
     private final BlobContainerAsyncClient blobContainerAsyncClient;
     private final IRequestProfilerLimiter profiler;
     private final AzBlobStorageClientConfig config;
+    private final Retry retryPolicy;
 
     public AzureParallelDownloader(IOManager ioManager, BlobContainerAsyncClient blobContainerAsyncClient,
             IRequestProfilerLimiter profiler, AzBlobStorageClientConfig config) {
@@ -56,6 +59,7 @@ public class AzureParallelDownloader extends AbstractParallelDownloader {
         this.blobContainerAsyncClient = blobContainerAsyncClient;
         this.profiler = profiler;
         this.config = config;
+        this.retryPolicy = ReactiveExponentialRetryPolicy.retryPolicy(new ExponentialRetryPolicy());
     }
 
     @Override
@@ -96,8 +100,9 @@ public class AzureParallelDownloader extends AbstractParallelDownloader {
     }
 
     private void waitForFileDownloads(List<Mono<Void>> downloads) throws HyracksDataException {
-        runBlockingWithExceptionHandling(
-                () -> Flux.fromIterable(downloads).flatMap(mono -> mono, downloads.size()).then().block());
+        runBlockingWithExceptionHandling(() -> Flux.fromIterable(downloads)
+                .flatMapDelayError(mono -> mono.retryWhen(retryPolicy), downloads.size(), downloads.size()).then()
+                .block());
     }
 
     @Override
@@ -111,8 +116,9 @@ public class AzureParallelDownloader extends AbstractParallelDownloader {
             directoryDownloads.add(directoryTask);
         }
 
+        int concurrency = config.getRequestsMaxPendingHttpConnections();
         runBlockingWithExceptionHandling(() -> Flux.fromIterable(directoryDownloads)
-                .flatMap(mono -> mono, config.getRequestsMaxPendingHttpConnections()).then().block());
+                .flatMapDelayError(mono -> mono.retryWhen(retryPolicy), concurrency, concurrency).then().block());
 
         return failedFiles;
     }
