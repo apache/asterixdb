@@ -82,7 +82,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, (Function<IApplicationConfig, String>) app -> {
             String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
             return (endpoint == null || endpoint.isEmpty()) ? "crt" : "async";
-        });
+        }),
+        CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),;
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -202,6 +203,9 @@ public class CloudProperties extends AbstractProperties {
                     return "The read timeout (in seconds) for S3 sync client (-1 means SDK default)";
                 case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
                     return "The S3 client to use for parallel downloads (crt, async or sync)";
+                case CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER:
+                    return "Whether or not to use a round-robin DNS resolver for S3 client connections. Currently"
+                            + " only applicable when using the async S3 client for parallel downloads.";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -335,5 +339,9 @@ public class CloudProperties extends AbstractProperties {
 
     public int getS3ReadTimeoutInSeconds() {
         return accessor.getInt(Option.CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT);
+    }
+
+    public boolean useRoundRobinDnsResolver() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER);
     }
 }
