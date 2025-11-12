@@ -30,6 +30,7 @@ CREATE TYPE TestType AS {
 
 CREATE EXTERNAL DATASET Name(TestType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="parquet-data/external-filter/embed/name/{name:string}"),
     ("embed-filter-values" = "true"),

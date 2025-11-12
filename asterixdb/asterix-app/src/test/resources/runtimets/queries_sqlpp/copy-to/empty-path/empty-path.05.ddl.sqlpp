@@ -21,6 +21,7 @@ USE test;
 
 CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="emptybucket1"),
     ("embed-filter-values" = "false"),
     ("format"="json")
@@ -28,6 +29,7 @@ CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING %adapter% (
 
 CREATE EXTERNAL DATASET CustomerCopy2(OpenType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="emptybucket2"),
     ("embed-filter-values" = "false"),
     ("format"="json")

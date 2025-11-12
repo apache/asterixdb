@@ -104,8 +104,16 @@ public class CleanupUtils {
         return close(closables, root, false);
     }
 
+    public static void nonThrowingClose(Throwable root, AutoCloseable... closables) {
+        close(closables, root, false);
+    }
+
     public static Throwable closeSilently(Throwable root, AutoCloseable... closables) {
         return close(closables, root, true);
+    }
+
+    public static void nonThrowingCloseSilently(Throwable root, AutoCloseable... closables) {
+        close(closables, root, true);
     }
 
     /**

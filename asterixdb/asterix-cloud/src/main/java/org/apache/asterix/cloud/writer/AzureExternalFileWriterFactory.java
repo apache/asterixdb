@@ -27,8 +27,8 @@ import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClie
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
-import org.apache.asterix.external.util.azure.blob_storage.AzureUtils;
+import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.asterix.external.util.azure.blob.BlobUtils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -67,8 +67,8 @@ public final class AzureExternalFileWriterFactory extends AbstractCloudExternalF
     @Override
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(configuration, writeBufferSize);
-        return new AzBlobStorageCloudClient(config, AzureUtils.buildAzureBlobClient(appCtx, configuration),
-                AzureUtils.buildAzureBlobAsyncClient(appCtx, configuration), ICloudGuardian.NoOpCloudGuardian.INSTANCE);
+        return new AzBlobStorageCloudClient(config, BlobUtils.buildClient(appCtx, configuration),
+                BlobUtils.buildAsyncClient(appCtx, configuration), ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override

@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.parquet;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureConstants.HADOOP_AZURE_BLOB_PROTOCOL;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureBlobClient;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.configureAzureHdfsJobConf;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.listBlobItems;
+import static org.apache.asterix.external.util.azure.AzureConstants.HADOOP_AZURE_PROTOCOL;
+import static org.apache.asterix.external.util.azure.AzureUtils.configureAzureHdfsJobConf;
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.buildClient;
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.listBlobItems;
 
 import java.util.Collections;
 import java.util.List;
@@ -60,7 +60,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
         IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
 
         // get endpoint
-        BlobServiceClient blobServiceClient = buildAzureBlobClient(appCtx, configuration);
+        BlobServiceClient blobServiceClient = buildClient(appCtx, configuration);
         String endPoint = extractEndPoint(blobServiceClient.getAccountUrl());
 
         // get include/exclude matchers
@@ -121,14 +121,14 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
      * @param container container
      * @param filesOnly files
      * @param endPoint  endpoint
-     * @return Comma-delimited paths (e.g., "wasbs://container@accountName.blob.core.windows.net/file1.parquet,
-     * wasbs://container@accountName.blob.core.windows.net/file2.parquet")
+     * @return Comma-delimited paths (e.g., "abfss://container@accountName.dfs.core.windows.net/file1.parquet,
+     * abfss://container@accountName.blob.core.windows.net/file2.parquet")
      */
     private static String buildPathURIs(String container, List<BlobItem> filesOnly, String endPoint) {
         StringBuilder builder = new StringBuilder();
 
         if (!filesOnly.isEmpty()) {
-            appendFileURI(builder, container, endPoint, filesOnly.get(0));
+            appendFileURI(builder, container, endPoint, filesOnly.getFirst());
             for (int i = 1; i < filesOnly.size(); i++) {
                 builder.append(',');
                 appendFileURI(builder, container, endPoint, filesOnly.get(i));
@@ -145,7 +145,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
     }
 
     private static void appendFileURI(StringBuilder builder, String container, String endPoint, BlobItem file) {
-        builder.append(HADOOP_AZURE_BLOB_PROTOCOL);
+        builder.append(HADOOP_AZURE_PROTOCOL);
         builder.append("://");
         builder.append(container);
         builder.append('@');

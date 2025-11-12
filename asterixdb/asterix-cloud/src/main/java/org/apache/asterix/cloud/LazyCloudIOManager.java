@@ -156,7 +156,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             LOGGER.info("Downloading metadata partition {}, Current uncached files: {}", metadataPartition,
                     uncachedFiles);
             FileReference metadataDir = resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir);
-            downloader.downloadDirectories(Collections.singleton(metadataDir));
+            downloader.downloadDirectoriesWithRetry(Collections.singleton(metadataDir));
             uncachedFiles.removeIf(f -> f.getRelativePath().contains(partitionDir));
             LOGGER.info("Finished downloading metadata partition. Current uncached files: {}", uncachedFiles);
         }

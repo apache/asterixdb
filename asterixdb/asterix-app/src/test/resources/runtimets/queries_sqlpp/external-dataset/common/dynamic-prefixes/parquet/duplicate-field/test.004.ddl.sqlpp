@@ -21,6 +21,7 @@ USE test;
 
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="dynamic-prefix-at-start-container"),
     ("definition"="{month:int}/foo/{day:int}/{year:int}-{year:int}/"),
     ("embed-filter-values" = "true"),

@@ -31,6 +31,8 @@ import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.PrimitiveType;
 
 public class RepeatedConverter extends AbstractComplexConverter {
+    private boolean valueAdded;
+
     public RepeatedConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
             ParquetConverterContext context) throws IOException {
         super(parent, index, parquetType, context);
@@ -38,12 +40,16 @@ public class RepeatedConverter extends AbstractComplexConverter {
 
     @Override
     public void start() {
-        //NoOp
+        valueAdded = false;
     }
 
     @Override
     public void end() {
-        //NoOp
+        if (!valueAdded) {
+            context.serializeNull(getDataOutput());
+            parent.addValue(this);
+        }
+        valueAdded = false;
     }
 
     @Override
@@ -53,6 +59,7 @@ public class RepeatedConverter extends AbstractComplexConverter {
 
     @Override
     public void addValue(IFieldValue value) {
+        valueAdded = true;
         parent.addValue(value);
     }
 

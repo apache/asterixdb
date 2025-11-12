@@ -27,10 +27,12 @@ create type test as open {
 
 drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
+%additional_Properties%
 ("sharedAccessSignature"="%azure-sas%"),
 ("tenantId"="%azure-tenantid%"),
 ("endpoint"="%azure-endpoint%"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
-("format"="json")
+("format"="json"),
+("disableSslVerify"="true")
 );

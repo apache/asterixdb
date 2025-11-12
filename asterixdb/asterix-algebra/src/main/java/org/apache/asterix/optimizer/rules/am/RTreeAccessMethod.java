@@ -267,7 +267,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
                 AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, optFieldType, probeSubTree,
                         SEARCH_KEY_ROUNDING_FUNCTION_PROVIDER);
-
+        if (returnedSearchKeyExpr == null) {
+            return null;
+        }
         for (int i = 0; i < numSecondaryKeys; i++) {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
             AbstractFunctionCallExpression createMBR =

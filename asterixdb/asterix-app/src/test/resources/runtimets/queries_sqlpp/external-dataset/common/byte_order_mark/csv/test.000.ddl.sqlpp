@@ -27,6 +27,7 @@ create type test as { id: int, age: int };
 drop dataset test1 if exists;
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="bom-file-container"),
 ("format"="csv"),
 ("include"="*.csv"),

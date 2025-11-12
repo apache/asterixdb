@@ -19,6 +19,7 @@
 package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.asterix.test.common.TestConstants.REMOVE_PLACEHOLDERS_PATTERN;
 import static org.apache.asterix.test.common.TestConstants.S3_ACCESS_KEY_ID_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.S3_REGION_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT;
@@ -28,16 +29,12 @@ import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT
 import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_NAME_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PASSWORD_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_ID_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_ID_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.SAS_TOKEN_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE;
 import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE_DEFAULT;
@@ -939,6 +936,7 @@ public class TestExecutor {
             str = strip(str, stripSubstring);
         }
 
+        str = removeLeftoverExternalPlaceholders(str);
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", params)
                 : constructPostMethodUrl(str, uri, "statement", params);
         // Set accepted output response type
@@ -954,6 +952,10 @@ public class TestExecutor {
             checkResponse(response, responseCodeValidator);
         }
         return response.getEntity().getContent();
+    }
+
+    private String removeLeftoverExternalPlaceholders(String str) {
+        return REMOVE_PLACEHOLDERS_PATTERN.matcher(str).replaceAll("");
     }
 
     public InputStream executeQueryService(String str, TestFileContext ctx, OutputFormat fmt, URI uri,
@@ -2464,11 +2466,9 @@ public class TestExecutor {
         str = str.replace(ACCOUNT_NAME_PLACEHOLDER, AZURITE_ACCOUNT_NAME_DEFAULT);
         str = str.replace(ACCOUNT_KEY_PLACEHOLDER, AZURITE_ACCOUNT_KEY_DEFAULT);
         str = str.replace(SAS_TOKEN_PLACEHOLDER, sasToken);
-        str = str.replace(MANAGED_IDENTITY_ID_PLACEHOLDER, MANAGED_IDENTITY_ID_DEFAULT);
+        str = str.replace(MANAGED_IDENTITY_PLACEHOLDER, MANAGED_IDENTITY_DEFAULT);
         str = str.replace(CLIENT_ID_PLACEHOLDER, CLIENT_ID_DEFAULT);
         str = str.replace(CLIENT_SECRET_PLACEHOLDER, CLIENT_SECRET_DEFAULT);
-        str = str.replace(CLIENT_CERTIFICATE_PLACEHOLDER, CLIENT_CERTIFICATE_DEFAULT);
-        str = str.replace(CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER, CLIENT_CERTIFICATE_PASSWORD_DEFAULT);
         str = str.replace(TENANT_ID_PLACEHOLDER, TENANT_ID_DEFAULT);
         str = replaceExternalEndpoint(str);
 
@@ -2478,7 +2478,7 @@ public class TestExecutor {
     protected String applyAdapterSubstitution(String str, String adapter, List<Placeholder> placeholders) {
         if (adapter.equalsIgnoreCase("S3")) {
             str = applyS3Substitution(str, placeholders);
-        } else if (adapter.equalsIgnoreCase("AzureBlob")) {
+        } else if (adapter.equalsIgnoreCase("AzureBlob") || adapter.equalsIgnoreCase("AzureDatalake")) {
             str = applyAzureSubstitution(str, placeholders);
         } else if (adapter.equalsIgnoreCase("GCS")) {
             str = applyGCSSubstitution(str, placeholders);

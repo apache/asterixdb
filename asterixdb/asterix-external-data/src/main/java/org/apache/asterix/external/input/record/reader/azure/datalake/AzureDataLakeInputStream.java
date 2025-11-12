@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.datalake;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureDatalakeClient;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.buildClient;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
     private DataLakeServiceClient buildAzureClient(IApplicationContext appCtx, Map<String, String> configuration)
             throws HyracksDataException {
         try {
-            return buildAzureDatalakeClient(appCtx, configuration);
+            return buildClient(appCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

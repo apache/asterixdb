@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.asterix.cloud.clients.IParallelDownloader;
+import org.apache.asterix.cloud.clients.AbstractParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -57,7 +57,7 @@ import software.amazon.awssdk.transfer.s3.model.FileDownload;
 import software.amazon.awssdk.utils.AttributeMap;
 
 @ThreadSafe
-class S3ParallelDownloader implements IParallelDownloader {
+class S3ParallelDownloader extends AbstractParallelDownloader {
     private final String bucket;
     private final IOManager ioManager;
     private final S3AsyncClient s3AsyncClient;
@@ -84,17 +84,10 @@ class S3ParallelDownloader implements IParallelDownloader {
     }
 
     @Override
-    public Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload)
-            throws HyracksDataException {
-        Set<FileReference> failedFiles;
+    public Set<FileReference> downloadDirectories(Collection<FileReference> toDownload)
+            throws HyracksDataException, ExecutionException, InterruptedException {
         List<CompletableFuture<CompletedDirectoryDownload>> downloads = startDownloadingDirectories(toDownload);
-        try {
-            failedFiles = waitForDirectoryDownloads(downloads);
-        } catch (ExecutionException | InterruptedException e) {
-            throw HyracksDataException.create(e);
-        }
-
-        return failedFiles;
+        return waitForDirectoryDownloads(downloads);
     }
 
     @Override
@@ -181,7 +174,9 @@ class S3ParallelDownloader implements IParallelDownloader {
 
     private static S3AsyncClient createAsyncClient(S3ClientConfig config) {
         // CRT client is not supported by all local S3 providers, but provides a better performance with AWS S3
-        if (config.isCrtClientEnabled()) {
+        S3ClientConfig.S3ParallelDownloaderClientType parallelDownloaderClientType =
+                config.getParallelDownloaderClientType();
+        if (parallelDownloaderClientType == S3ClientConfig.S3ParallelDownloaderClientType.CRT) {
             return createS3CrtAsyncClient(config);
         }
         return createS3AsyncClient(config);
@@ -210,6 +205,10 @@ class S3ParallelDownloader implements IParallelDownloader {
         if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.CONNECTION_ACQUIRE_TIMEOUT,
                     Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
+        }
+        if (config.getS3ReadTimeoutInSeconds() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.READ_TIMEOUT,
+                    Duration.ofSeconds(config.getS3ReadTimeoutInSeconds()));
         }
         SdkAsyncHttpClient nettyHttpClient =
                 NettyNioAsyncHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());

@@ -329,7 +329,11 @@ public final class S3CloudClient implements ICloudClient {
 
     @Override
     public IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager) {
-        return new S3ParallelDownloader(bucket, ioManager, config, profiler);
+        S3ClientConfig.S3ParallelDownloaderClientType parallelDownloaderClientType = config.getParallelDownloaderClientType();
+        return switch (parallelDownloaderClientType) {
+            case CRT, ASYNC -> new S3ParallelDownloader(bucket, ioManager, config, profiler);
+            case SYNC -> new S3SyncDownloader(bucket, ioManager, config, profiler);
+        };
     }
 
     @Override
@@ -364,7 +368,7 @@ public final class S3CloudClient implements ICloudClient {
         return new S3BufferedWriter(s3Client, profiler, guardian, bucket, config.getPrefix() + path);
     }
 
-    private static CloseableAwsClients buildClient(S3ClientConfig config) {
+    public static CloseableAwsClients buildClient(S3ClientConfig config) {
         CloseableAwsClients awsClients = new CloseableAwsClients();
         S3ClientBuilder builder = S3Client.builder();
         AwsCredentialsProvider credentialsProvider = config.createCredentialsProvider();
@@ -384,6 +388,10 @@ public final class S3CloudClient implements ICloudClient {
         if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.CONNECTION_ACQUIRE_TIMEOUT,
                     Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
+        }
+        if (config.getS3ReadTimeoutInSeconds() > 0) {
+            customHttpConfigBuilder.put(SdkHttpConfigurationOption.READ_TIMEOUT,
+                    Duration.ofSeconds(config.getS3ReadTimeoutInSeconds()));
         }
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));

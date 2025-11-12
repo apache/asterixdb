@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.blob;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureBlobClient;
+import static org.apache.asterix.external.util.azure.blob.BlobUtils.buildClient;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
     private BlobServiceClient buildAzureClient(IApplicationContext appCtx, Map<String, String> configuration)
             throws HyracksDataException {
         try {
-            return buildAzureBlobClient(appCtx, configuration);
+            return buildClient(appCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

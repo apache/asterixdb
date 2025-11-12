@@ -27,7 +27,8 @@ CREATE TYPE t1 AS {};
 DROP DATASET ds1 IF EXISTS;
 CREATE EXTERNAL DATASET ds1(t1) USING %adapter% (
 %template%,
-("container"="playground"),
+%additional_Properties%
+("container"="malformed"),
 ("definition"="malformed-data"),
 ("format"="json")
 );

@@ -25,7 +25,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">partition</output-dir>
       </compilation-unit>
     </test-case>
@@ -35,7 +35,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">simple-write</output-dir>
       </compilation-unit>
     </test-case>
@@ -45,7 +45,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
@@ -55,18 +55,19 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">default-namespace</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Parquet writing doesn't work with Azurite emulator
+    <!-- Azurite does not support ABFSS (hadoop) for reading parquet, this is an issue with reading parquet only, writing is fine since we don't use hadoop to write.
+         In these tests, the writing works fine, but we try to read the parquet files back using hadoop ABFSS path, which Azurite does not support.
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-simple">
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-simple</output-dir>
       </compilation-unit>
     </test-case>
@@ -76,7 +77,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-tweet</output-dir>
       </compilation-unit>
     </test-case>
@@ -86,7 +87,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-partition-heterogeneous</output-dir>
       </compilation-unit>
     </test-case>
@@ -96,7 +97,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-utf8</output-dir>
       </compilation-unit>
     </test-case>
@@ -106,7 +107,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-heterogeneous</output-dir>
       </compilation-unit>
     </test-case>
@@ -116,7 +117,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-cover-data-types</output-dir>
       </compilation-unit>
     </test-case>
@@ -126,7 +127,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-field-names</output-dir>
       </compilation-unit>
     </test-case>
@@ -136,7 +137,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-empty-array</output-dir>
       </compilation-unit>
     </test-case>
@@ -146,8 +147,6 @@
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
-        <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">empty-path</output-dir>
       </compilation-unit>
     </test-case>
@@ -157,7 +156,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">order-by</output-dir>
       </compilation-unit>
     </test-case>
@@ -166,7 +165,7 @@
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">early-missing</output-dir>
         <expected-error>ASX0064: Path expression produced a value of type 'missing'. Path must be of type string</expected-error>
         <expected-error>ASX0064: Path expression produced a value of type 'null'. Path must be of type string</expected-error>
@@ -178,7 +177,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">long-path</output-dir>
         <expected-error>ASX0065: Length of the file path 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' exceeds the maximum length of '1024 bytes' allowed in AZUREBLOB</expected-error>
         <expected-warn>ASX0065: Length of the file path 'ford/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/' exceeds the maximum length of '1024 bytes' allowed in AZUREBLOB</expected-warn>
@@ -186,12 +185,12 @@
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="non-empty-folder">
-        <output-dir compare="Text">non-empty-folder</output-dir>
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">non-empty-folder</output-dir>
         <expected-error>ASX0062: Cannot write to a non-empty directory 'copy-to-result/duplicate-write'</expected-error>
       </compilation-unit>
     </test-case>
@@ -201,7 +200,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">runtime-missing</output-dir>
         <expected-warn>ASX0064: Path expression produced a value of type 'missing'. Path must be of type string (in line 24, at column 7)</expected-warn>
         <expected-warn>ASX0064: Path expression produced a value of type 'missing'. Path must be of type string (in line 31, at column 7)</expected-warn>
@@ -214,7 +213,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">supported-adapter-format-compression</output-dir>
         <expected-error>ASX1189: Unsupported writing format 'avro'. Supported formats: [csv, json, parquet]</expected-error>
         <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for json are [gzip]</expected-error>
@@ -226,7 +225,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-error-checks</output-dir>
         <expected-error>ASX0037: Type mismatch: expected value of type BINARY, but got the value of type bigint</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
@@ -240,12 +239,13 @@
         <expected-error>ASX1205: Invalid Parquet Writer Version provided '3'. Supported values: [1, 2]</expected-error>
         <expected-error>ASX0039: Expected integer value, got yvghc (in line 22, at column 6)</expected-error>
         <expected-error>ASX1209: Maximum value allowed for 'max-schemas' is 10. Found 15</expected-error>
-        <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
         <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
         <expected-error>ASX1204: 'rectangle' type not supported in parquet format</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
       </compilation-unit>
     </test-case>
@@ -255,7 +255,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">empty-over</output-dir>
         <expected-error>ASX1001: Syntax error: OVER-clause cannot be empty</expected-error>
       </compilation-unit>
@@ -266,7 +266,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">bad-max-objects-per-file</output-dir>
         <expected-error>Minimum value allowed for 'max-objects-per-file' is 1000. Found 2</expected-error>
         <expected-error>Expected integer value, got hello</expected-error>
@@ -278,7 +278,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">csv-error-checks</output-dir>
         <expected-error>ASX1079: Compilation error: TYPE/AS Expression is required for csv format</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name wrongDataType (in line 27, at column 4)</expected-error>
@@ -299,7 +299,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">simple-csv</output-dir>
       </compilation-unit>
     </test-case>
@@ -309,7 +309,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">quote-escape</output-dir>
       </compilation-unit>
     </test-case>
@@ -319,13 +319,10 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">delimiter</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- These 2 tests end up writing a 0 byte file (empty), and the emulator has a problem where it does not
-    set the contentRange value correctly in that case, leading to an NPE, tested on Azure servers and it worked
-    fine, keeping these 2 tests disabled
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="type-mismatch">
         <placeholder name="adapter" value="AZUREBLOB" />
@@ -333,7 +330,7 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">type-mismatch</output-dir>
       </compilation-unit>
     </test-case>
@@ -343,11 +340,10 @@
         <placeholder name="pathprefix" value="" />
         <placeholder name="path_prefix" value="" />
         <placeholder name="additionalProperties" value='"container":"playground",' />
-        <placeholder name="additional_Properties" value='("container"="playground")' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">header</output-dir>
       </compilation-unit>
     </test-case>
-    -->
   </test-group>
   <test-group name="authentication">
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/valid-auth-methods">
@@ -355,12 +351,13 @@
         <output-dir compare="Clean-JSON">account-name-and-account-key</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- new versions of SDK generate a SAS that is not compatible with Azurite, disabling this test
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/valid-auth-methods">
       <compilation-unit name="shared-access-signature">
         <output-dir compare="Clean-JSON">shared-access-signature</output-dir>
       </compilation-unit>
     </test-case>
-
+    -->
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods">
       <compilation-unit name="no-endpoint">
         <output-dir compare="Clean-JSON">no-endpoint</output-dir>
@@ -380,18 +377,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
-      <compilation-unit name="client-certificate-password-present">
-        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
-        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'accountKey' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
-      <compilation-unit name="client-certificate-present">
-        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
-        <expected-error>Parameter 'clientCertificate' is not allowed if 'accountKey' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
       <compilation-unit name="client-id-present">
         <output-dir compare="Clean-JSON">client-id-present</output-dir>
         <expected-error>Parameter 'clientId' is not allowed if 'accountKey' is provided</expected-error>
@@ -406,7 +391,7 @@
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
       <compilation-unit name="managed-identity-id-present">
         <output-dir compare="Clean-JSON">managed-identity-id-present</output-dir>
-        <expected-error>Parameter 'managedIdentityId' is not allowed if 'accountKey' is provided</expected-error>
+        <expected-error>Parameter 'managedIdentity' is not allowed if 'accountKey' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
@@ -419,18 +404,6 @@
       <compilation-unit name="tenant-id-present">
         <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
         <expected-error>Parameter 'tenantId' is not allowed if 'accountKey' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
-      <compilation-unit name="client-certificate-password-present">
-        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
-        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'sharedAccessSignature' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
-      <compilation-unit name="client-certificate-present">
-        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
-        <expected-error>Parameter 'clientCertificate' is not allowed if 'sharedAccessSignature' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
@@ -448,7 +421,7 @@
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
       <compilation-unit name="managed-identity-id-present">
         <output-dir compare="Clean-JSON">managed-identity-id-present</output-dir>
-        <expected-error>Parameter 'managedIdentityId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+        <expected-error>Parameter 'managedIdentity' is not allowed if 'sharedAccessSignature' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
@@ -458,51 +431,15 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
-      <compilation-unit name="client-certificate-password-present">
-        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
-        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'managedIdentityId' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
-      <compilation-unit name="client-certificate-present">
-        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
-        <expected-error>Parameter 'clientCertificate' is not allowed if 'managedIdentityId' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
-      <compilation-unit name="client-id-present">
-        <output-dir compare="Clean-JSON">client-id-present</output-dir>
-        <expected-error>Parameter 'clientId' is not allowed if 'managedIdentityId' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
       <compilation-unit name="client-secret-present">
         <output-dir compare="Clean-JSON">client-secret-present</output-dir>
-        <expected-error>Parameter 'clientSecret' is not allowed if 'managedIdentityId' is provided</expected-error>
+        <expected-error>Parameter 'clientSecret' is not allowed if 'managedIdentity' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
       <compilation-unit name="tenant-id-present">
         <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
-        <expected-error>Parameter 'tenantId' is not allowed if 'managedIdentityId' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
-      <compilation-unit name="client-secret-missing-and-client-certificate-missing">
-        <output-dir compare="Clean-JSON">client-secret-missing-and-client-certificate-missing</output-dir>
-        <expected-error>Parameter 'clientSecret' or 'clientCertificate' is required if 'clientId' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
-      <compilation-unit name="client-secret-present-client-certificate-password-present">
-        <output-dir compare="Clean-JSON">client-secret-present-client-certificate-password-present</output-dir>
-        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'clientSecret' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
-      <compilation-unit name="client-secret-present-client-certificate-present">
-        <output-dir compare="Clean-JSON">client-secret-present-client-certificate-present</output-dir>
-        <expected-error>The parameters 'clientSecret' and 'clientCertificate' cannot be provided at the same time</expected-error>
+        <expected-error>Parameter 'tenantId' is not allowed if 'managedIdentity' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
@@ -512,21 +449,15 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
-      <compilation-unit name="client-certificate-present">
-        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
-        <expected-error>Parameter 'clientCertificate' is not allowed if 'sharedAccessSignature' is provided</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
       <compilation-unit name="client-secret-present">
         <output-dir compare="Clean-JSON">client-secret-present</output-dir>
-        <expected-error>Parameter 'clientSecret' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+        <expected-error>ASX3119: Parameter 'clientId' is required if 'clientSecret' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
       <compilation-unit name="tenant-id-present">
         <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
-        <expected-error>Parameter 'tenantId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+        <expected-error>ASX3119: Parameter 'clientId' is required if 'tenantId' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
@@ -534,14 +465,12 @@
         <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-allowed</output-dir>
       </compilation-unit>
     </test-case>
-    <!--
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
       <compilation-unit name="anonymous-no-auth-public-access-not-allowed">
         <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-not-allowed</output-dir>
         <expected-error>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the signature.</expected-error>
       </compilation-unit>
     </test-case>
-    -->
   </test-group>
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
@@ -596,15 +525,227 @@
         <output-dir compare="Text">common/tsv/mixed</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Parquet Tests Start -->
-<!--    <test-case FilePath="external-dataset">-->
-<!--      <compilation-unit name="common/parquet/object-concat">-->
-<!--        <placeholder name="adapter" value="AZUREBLOB" />-->
-<!--        <output-dir compare="Text">common/parquet/object-concat</output-dir>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-    <!-- Parquet Tests End -->
-    <!-- Dynamic prefixes tests start -->
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/empty-string-definition">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/empty-string-definition</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/over-1000-objects">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/over-1000-objects</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/malformed-json">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/malformed-json</output-dir>
+        <expected-error>Parsing error at malformed-data/duplicate-fields.json line 1 field 'field': Duplicate field 'field'</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json.json line 1 field 'field': Unexpected character ('}' (code 125)): was expecting double-quote to start field name</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-json-2.json line 4 field 'array_f': Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-1.json line 3 field 'field2': Unrecognized token 'truee': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+        <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field 'array_f': Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/definition-does-not-exist">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/definition-does-not-exist</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/invalid-endpoint">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <placeholder name="endpoint" value="http://^invalid-endpoint^" />
+        <output-dir compare="Text">common/invalid-endpoint</output-dir>
+        <expected-error>The Azure Storage endpoint url is malformed.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/bucket-does-not-exist">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
+        <expected-error>External source error. com.azure.storage.blob.models.BlobStorageException: Status code 404</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/definition-points-to-nothing">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/no-files-returned/definition-points-to-nothing</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/exclude-all-files">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/no-files-returned/exclude-all-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/no-files-returned/include-no-files">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/no-files-returned/include-no-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <!-- Azurite does not support ABFSS (hadoop) for reading parquet, this is an issue with reading parquet only, writing is fine since we don't use hadoop to write
+  <test-group name="parquet">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/select-all-fields">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/select-all-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/select-count-one-field">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/multi-file-multi-schema">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/multi-file-multi-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/field-access-pushdown">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/ASTERIXDB-3540">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Clean-JSON">common/parquet/ASTERIXDB-3540</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/array-access-pushdown">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/array-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/missing-fields">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/missing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/string-standard-utf8">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/string-standard-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/object-concat">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/type-mismatch">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/type-mismatch</output-dir>
+        <expected-warn>ASX0002: Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is array (in line 31, at column 29)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function array-star expects its 1st input parameter to be of type array, but the actual input type is object (in line 31, at column 24)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is array (in line 31, at column 52)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/heterogeneous-access-pushdown">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/heterogeneous-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/pushdown-plans">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/pushdown-plans</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="parquet-anonymous-access">
+        <output-dir compare="Text">parquet-anonymous-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="parquet-temporary-access">
+        <output-dir compare="Text">parquet-temporary-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/invalid-type">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1161: Type 'ParquetType' contains declared fields, which is not supported for 'parquet' format</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/no-files">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/no-files</output-dir>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/invalid-parquet-files">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>20-records.json. Reason: not a Parquet file</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/unset-flags">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/parquet-types/unset-flags</output-dir>
+        <expected-warn>Parquet file(s) contain unsigned integer that is larger than the 'bigint' range</expected-warn>
+        <expected-warn>Parquet file(s) contain values of the temporal type 'datetime' that are adjusted to UTC. Recreate the external dataset and set the option 'timezone' to get the local-adjusted 'datetime' value</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/decimal">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/parquet-types/decimal</output-dir>
+        <expected-error>ASX0054: Parquet type 'required int32 decimal32_field (DECIMAL(5,4))' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+        <expected-warn>Parquet decimal precision loss: precision '22' is greater than the maximum supported precision '20'</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/temporal">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/parquet-types/temporal</output-dir>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/parquet-types/invalid-timezone">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/parquet-types/invalid-timezone</output-dir>
+        <expected-error>Provided timezone is invalid: 'invalid-timezone'</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/disable-json-parsing">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/parquet-types/disable-json-parsing</output-dir>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  -->
+  <test-group name="dynamic-prefixes">
     <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="one-field">
         <placeholder name="adapter" value="AZUREBLOB" />
@@ -657,7 +798,7 @@
         <output-dir compare="Text">views</output-dir>
       </compilation-unit>
     </test-case>
-    <!--
+    <!-- Azurite does not support ABFSS (hadoop) for reading parquet, this is an issue with reading parquet only, writing is fine since we don't use hadoop to write
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="computed-field-segment-pattern-mismatch">
         <placeholder name="adapter" value="AZUREBLOB" />
@@ -696,75 +837,6 @@
         <output-dir compare="Text">conflicted-fields</output-dir>
         <expected-error>A computed field cannot have more than one type. 'person.name' is both 'string' and 'object'.</expected-error>
         <expected-error>A computed field cannot have more than one type. 'person.name' is both 'string' and 'object'.</expected-error>
-      </compilation-unit>
-    </test-case>
-    <!-- Dynamic prefixes tests end -->
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/empty-string-definition">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/empty-string-definition</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/over-1000-objects">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/over-1000-objects</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/malformed-json">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/malformed-json</output-dir>
-        <expected-error>Parsing error at malformed-data/duplicate-fields.json line 1 field 'field': Duplicate field 'field'</expected-error>
-        <expected-error>Parsing error at malformed-data/malformed-json.json line 1 field 'field': Unexpected character ('}' (code 125)): was expecting double-quote to start field name</expected-error>
-        <expected-error>Parsing error at malformed-data/malformed-json-2.json line 4 field 'array_f': Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
-        <expected-error>Parsing error at malformed-data/malformed-jsonl-1.json line 3 field 'field2': Unrecognized token 'truee': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
-        <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field 'array_f': Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/definition-does-not-exist">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/definition-does-not-exist</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/invalid-endpoint">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <placeholder name="endpoint" value="http://^invalid-endpoint^" />
-        <output-dir compare="Text">common/invalid-endpoint</output-dir>
-        <expected-error>The Azure Storage endpoint url is malformed.</expected-error>
-      </compilation-unit>
-    </test-case>
-    <!--
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/bucket-does-not-exist">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
-        <expected-error>External source error. com.azure.storage.blob.models.BlobStorageException: Status code 404</expected-error>
-      </compilation-unit>
-    </test-case>
-    -->
-    <test-case FilePath="external-dataset" check-warnings="true">
-      <compilation-unit name="common/no-files-returned/definition-points-to-nothing">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/no-files-returned/definition-points-to-nothing</output-dir>
-        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
-        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset" check-warnings="true">
-      <compilation-unit name="common/no-files-returned/exclude-all-files">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/no-files-returned/exclude-all-files</output-dir>
-        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset" check-warnings="true">
-      <compilation-unit name="common/no-files-returned/include-no-files">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/no-files-returned/include-no-files</output-dir>
-        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

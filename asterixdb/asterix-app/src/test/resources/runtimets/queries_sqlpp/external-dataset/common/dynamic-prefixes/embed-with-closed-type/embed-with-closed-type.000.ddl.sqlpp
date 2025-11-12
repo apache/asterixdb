@@ -30,6 +30,7 @@ CREATE TYPE TestType AS CLOSED {
 
 CREATE EXTERNAL DATASET Sales(TestType) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="external-filter/embed-csv/sales/{day:int}-{month:int}-{year:int}"),
     ("embed-filter-values" = "true"),

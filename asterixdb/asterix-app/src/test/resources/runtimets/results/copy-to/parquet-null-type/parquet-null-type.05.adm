@@ -1,5 +1,5 @@
-{ "id": 8, "nested": { "List": [ 100, 300 ] }, "obj_array": [ { "first": "first" }, {  }, { "first": "second" } ], "a": {  }, "arr": [ [ 1, 2 ] ] }
-{ "id": 10, "name": "Virat", "nested": { "List": [  ] }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": {  }, "c": {  }, "f": [  ], "arr": [ [ 1, 2 ], [  ] ] }
-{ "id": 28, "name": "Virat", "nested": { "List": [  ], "A": "a" }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": { "b": 1 }, "c": { "d": 1 }, "f": [ 1.0 ], "arr": [ [ 1, 2 ], [  ] ] }
-{ "id": 34, "nested": { "randomK": "randomV" }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "c": { "e": 1 }, "f": [ 2.0, 3.0 ], "arr": [ [  ] ] }
-{ "id": 37, "name": "Kohli", "nested": { "List": [ 1, 2, 3 ], "A": "a" }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": { "b": 1 }, "c": { "d": 1, "e": 1 }, "f": [ 3.5999999046325684, 4.0 ], "arr": [ [ 1, 2, 3 ] ] }
+{ "id": 8, "nested": { "List": [ 100, null, 300 ], "A": null, "randomK": null }, "obj_array": [ { "first": "first" }, { "first": null }, { "first": "second" } ], "a": { "b": null }, "arr": [ [ 1, null, 2 ], null ], "name": null, "c": null, "f": null }
+{ "id": 10, "name": "Virat", "nested": { "List": [  ], "A": null, "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": { "b": null }, "c": { "d": null, "e": null }, "f": [  ], "arr": [ [ 1, 2 ], [  ] ] }
+{ "id": 28, "name": "Virat", "nested": { "List": [ null ], "A": "a", "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": { "b": 1 }, "c": { "d": 1, "e": null }, "f": [ 1.0, null ], "arr": [ [ 1, 2 ], [ null ] ] }
+{ "id": 34, "nested": { "randomK": "randomV", "List": null, "A": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "c": { "e": 1, "d": null }, "f": [ 2.0, null, 3.0 ], "arr": [ [  ] ], "name": null, "a": null }
+{ "id": 37, "name": "Kohli", "nested": { "List": [ 1, 2, 3 ], "A": "a", "randomK": null }, "obj_array": [ { "first": "first" }, { "first": "second" } ], "a": { "b": 1 }, "c": { "d": 1, "e": 1 }, "f": [ 3.5999999046325684, 4.0 ], "arr": [ [ 1, 2, 3 ] ] }

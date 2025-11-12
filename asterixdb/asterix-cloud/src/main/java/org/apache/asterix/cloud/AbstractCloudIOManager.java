@@ -192,7 +192,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     public void downloadLibrary(Collection<FileReference> libPath) throws HyracksDataException {
         try (IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager)) {
             LOGGER.info("Downloading all files located in {}", libPath);
-            downloader.downloadDirectories(libPath);
+            downloader.downloadDirectoriesWithRetry(libPath);
             LOGGER.info("Finished downloading {}", libPath);
         }
     }
@@ -202,7 +202,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             FileReference appDir = resolveAbsolutePath(
                     localIoManager.getWorkspacePath(0).getPath() + File.separator + APPLICATION_ROOT_DIR_NAME);
             LOGGER.info("Downloading all libraries in + {}", appDir);
-            downloader.downloadDirectories(Collections.singletonList(appDir));
+            downloader.downloadDirectoriesWithRetry(Collections.singletonList(appDir));
             LOGGER.info("Finished downloading all libraries");
         }
     }

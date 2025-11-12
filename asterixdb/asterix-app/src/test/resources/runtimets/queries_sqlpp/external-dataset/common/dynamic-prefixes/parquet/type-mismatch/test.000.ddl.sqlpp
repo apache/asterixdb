@@ -27,6 +27,7 @@ CREATE TYPE test AS {
 
 CREATE EXTERNAL DATASET test(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="playground"),
     ("definition"="parquet-data/external-filter/department/{name:bigint}"),
     ("embed-filter-values" = "false"),

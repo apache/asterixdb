@@ -101,6 +101,18 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
         return false;
     }
 
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public long getInitialDelay() {
+        return delay;
+    }
+
+    public long getMaxDelay() {
+        return maxDelay;
+    }
+
     private static boolean isUnstable() {
         return Boolean.getBoolean(CLOUD_UNSTABLE_MODE);
     }

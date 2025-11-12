@@ -21,6 +21,7 @@ USE test;
 
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
     %template%,
+    %additional_Properties%
     ("container"="dynamic-prefix-at-start-container"),
     ("definition"="{person.name:string}/{person.name.first:string}"),
     ("embed-filter-values" = "true"),

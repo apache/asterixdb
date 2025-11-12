@@ -46,7 +46,7 @@ CREATE TYPE datetimeDateTimeFormattedWithCommaType AS { id: bigint, name: string
 CREATE EXTERNAL DATASET datetimeNotFormattedDataset(datetimeNotFormattedType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-not-formatted"),
   ("format" = "csv")
@@ -55,7 +55,7 @@ CREATE EXTERNAL DATASET datetimeNotFormattedDataset(datetimeNotFormattedType) US
 CREATE EXTERNAL DATASET datetimeFormattedDataset(datetimeFormattedType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted"),
   ("format" = "csv")
@@ -64,7 +64,7 @@ CREATE EXTERNAL DATASET datetimeFormattedDataset(datetimeFormattedType) USING %a
 CREATE EXTERNAL DATASET datetimeDateFormattedDataset(datetimeDateFormattedType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-date-formatted"),
   ("format" = "csv")
@@ -73,7 +73,7 @@ CREATE EXTERNAL DATASET datetimeDateFormattedDataset(datetimeDateFormattedType) 
 CREATE EXTERNAL DATASET datatimeTimeFormattedDataset(datatimeTimeFormattedType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-time-formatted"),
   ("format" = "csv")
@@ -82,7 +82,7 @@ CREATE EXTERNAL DATASET datatimeTimeFormattedDataset(datatimeTimeFormattedType) 
 CREATE EXTERNAL DATASET datetimeFormattedDataset2(datetimeFormattedType2) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted-2"),
   ("format" = "csv")
@@ -91,7 +91,7 @@ CREATE EXTERNAL DATASET datetimeFormattedDataset2(datetimeFormattedType2) USING 
 CREATE EXTERNAL DATASET datetimeFormattedWithCommaDataset(datetimeFormattedWithCommaType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-formatted-with-comma"),
   ("format" = "csv")
@@ -100,7 +100,7 @@ CREATE EXTERNAL DATASET datetimeFormattedWithCommaDataset(datetimeFormattedWithC
 CREATE EXTERNAL DATASET datetimeDateTimeFormattedWithCommaDataset(datetimeDateTimeFormattedWithCommaType) USING %adapter%
 (
   %template%,
-  %additional_Properties%,
+  %additional_Properties%
   ("header"="true"),
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/datetime-date-time-formatted-with-comma"),
   ("format" = "csv")

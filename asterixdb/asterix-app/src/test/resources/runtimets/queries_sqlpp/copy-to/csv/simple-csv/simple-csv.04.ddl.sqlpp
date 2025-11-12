@@ -25,7 +25,7 @@ CREATE EXTERNAL DATASET DatasetCopy1(ColumnType) USING %adapter%
   ("header"="true"),
   ("delimiter"="|"),
   ("quote"="'"),
-  %additional_Properties%,
+  %additional_Properties%
   ("definition"="%path_prefix%copy-to-result/csv/simple-csv/1"),
   ("format" = "csv"),
   ("requireVersionChangeDetection"="false"),

@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
 public interface IParallelDownloader extends AutoCloseable {
+    String STORAGE_SUB_DIR = "storage";
 
     /**
      * Downloads files in all partitions
@@ -38,7 +39,7 @@ public interface IParallelDownloader extends AutoCloseable {
      * @param toDownload all files to be downloaded
      * @return file that failed to download
      */
-    Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload) throws HyracksDataException;
+    void downloadDirectoriesWithRetry(Collection<FileReference> toDownload) throws HyracksDataException;
 
     /**
      * Close the downloader and release all of its resources

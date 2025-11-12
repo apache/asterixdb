@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
+import static org.apache.asterix.external.util.google.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.cloud.clients.IParallelDownloader;
+import org.apache.asterix.cloud.clients.AbstractParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -51,7 +51,7 @@ import com.google.cloud.storage.transfermanager.TransferManager;
 import com.google.cloud.storage.transfermanager.TransferManagerConfig;
 import com.google.cloud.storage.transfermanager.TransferStatus;
 
-public class GCSParallelDownloader implements IParallelDownloader {
+public class GCSParallelDownloader extends AbstractParallelDownloader {
 
     private final String bucket;
     private final IOManager ioManager;
@@ -102,8 +102,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
     }
 
     @Override
-    public Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload)
-            throws HyracksDataException {
+    public Set<FileReference> downloadDirectories(Collection<FileReference> toDownload) {
         Set<FileReference> failedFiles = new HashSet<>();
         ParallelDownloadConfig.Builder config =
                 ParallelDownloadConfig.newBuilder().setBucketName(bucket).setStripPrefix(this.config.getPrefix());

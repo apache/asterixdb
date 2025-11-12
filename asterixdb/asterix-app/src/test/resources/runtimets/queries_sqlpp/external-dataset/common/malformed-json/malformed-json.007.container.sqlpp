@@ -17,4 +17,4 @@
  * under the License.
  */
 // create container with data
-playground malformed-data data/jsonl/malformed-jsonl-1.json
+malformed malformed-data data/jsonl/malformed-jsonl-1.json

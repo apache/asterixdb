@@ -28,6 +28,7 @@ create type test as open {
 drop dataset test1 if exists;
 CREATE EXTERNAL DATASET test1(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
 ("format"="json")
@@ -36,6 +37,7 @@ CREATE EXTERNAL DATASET test1(test) USING %adapter% (
 drop dataset test2 if exists;
 CREATE EXTERNAL DATASET test2(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines/json"),
 ("format"="json")
@@ -44,6 +46,7 @@ CREATE EXTERNAL DATASET test2(test) USING %adapter% (
 drop dataset test3 if exists;
 CREATE EXTERNAL DATASET test3(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines-with-arrays/json"),
 ("format"="json")
@@ -52,6 +55,7 @@ CREATE EXTERNAL DATASET test3(test) USING %adapter% (
 drop dataset test4 if exists;
 CREATE EXTERNAL DATASET test4(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines-with-nested-objects/json"),
 ("format"="json")
@@ -60,6 +64,7 @@ CREATE EXTERNAL DATASET test4(test) USING %adapter% (
 drop dataset test5 if exists;
 CREATE EXTERNAL DATASET test5(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/single-line/json-array-of-objects"),
 ("format"="json")
@@ -68,6 +73,7 @@ CREATE EXTERNAL DATASET test5(test) USING %adapter% (
 drop dataset test6 if exists;
 CREATE EXTERNAL DATASET test6(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data/reviews"),
 ("format"="json")
@@ -76,6 +82,7 @@ CREATE EXTERNAL DATASET test6(test) USING %adapter% (
 drop dataset test7 if exists;
 CREATE EXTERNAL DATASET test7(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("format"="json")
 );
@@ -83,6 +90,7 @@ CREATE EXTERNAL DATASET test7(test) USING %adapter% (
 drop dataset test8 if exists;
 CREATE EXTERNAL DATASET test8(test) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="json-data"),
 ("format"="json")

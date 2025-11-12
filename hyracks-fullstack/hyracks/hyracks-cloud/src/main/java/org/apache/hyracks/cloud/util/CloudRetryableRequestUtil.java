@@ -53,8 +53,8 @@ public class CloudRetryableRequestUtil {
     private static final int UNSTABLE_NUMBER_OF_RETRIES = 100;
     private static final int UNSTABLE_MAX_DELAY_BETWEEN_RETRIES_IN_MILLIS = 0;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int NUMBER_OF_RETRIES = getNumberOfRetries();
-    private static final long MAX_DELAY_BETWEEN_RETRIES = getMaxDelayBetweenRetries();
+    public static final int NUMBER_OF_RETRIES = getNumberOfRetries();
+    public static final long MAX_DELAY_BETWEEN_RETRIES = getMaxDelayBetweenRetries();
 
     private static final ICloudRetryPredicate RETRY_ALWAYS_PREDICATE = e -> true;
     private static final ICloudBeforeRetryRequest NO_OP_BEFORE_RETRY = () -> {

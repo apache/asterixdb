@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.external_dataset.microsoft;
 
+import static org.apache.asterix.api.common.LocalCloudUtilAdobeMock.fillConfigTemplate;
+import static org.apache.asterix.cloud.azure.LSMAzBlobStorageTest.AZURITE_CONTAINER_VER;
 import static org.apache.asterix.test.common.TestConstants.Azure.*;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.*;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
@@ -28,10 +30,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,6 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.asterix.cloud.azure.LSMAzBlobStorageTest;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils;
@@ -57,30 +63,38 @@ import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.testcontainers.azure.AzuriteContainer;
+import org.testcontainers.utility.MountableFile;
 
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.PublicAccessType;
-import com.azure.storage.common.StorageSharedKeyCredential;
 import com.azure.storage.common.sas.AccountSasPermission;
 import com.azure.storage.common.sas.AccountSasResourceType;
 import com.azure.storage.common.sas.AccountSasService;
 import com.azure.storage.common.sas.AccountSasSignatureValues;
+import com.azure.storage.common.sas.SasProtocol;
 
-// TODO(htowaileb): figure out why this test is failing after merge commit https://asterix-gerrit.ics.uci.edu/c/asterixdb/+/19644
-@Ignore("Disabling temporarily until figuring out why it fails")
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.http.client.HttpClient;
+
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AzureBlobStorageExternalDatasetTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final String CONFIG_FILE = "target/cc-cloud-storage-azblob.conf";
+    private static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage-azblob.ftl";
 
     // subclasses of this class MUST instantiate these variables before using them to avoid unexpected behavior
     static String SUITE_TESTS;
@@ -118,6 +132,8 @@ public class AzureBlobStorageExternalDatasetTest {
     private static BlobContainerClient mixedDataContainer;
     private static BlobContainerClient bomContainer;
 
+    private static AzuriteContainer azuriteContainer;
+
     protected TestCaseContext tcCtx;
 
     public AzureBlobStorageExternalDatasetTest(TestCaseContext tcCtx) {
@@ -127,6 +143,20 @@ public class AzureBlobStorageExternalDatasetTest {
     @BeforeClass
     public static void setUp() throws Exception {
         final TestExecutor testExecutor = new AzureTestExecutor();
+
+        LSMAzBlobStorageTest.generateSelfSignedTLS();
+        MountableFile azureCert = MountableFile.forHostPath("target/azure_test.pfx");
+        azuriteContainer = new AzuriteContainer(AZURITE_CONTAINER_VER).withSsl(azureCert, "password");
+        azuriteContainer.start();
+
+        BlobServiceClient blobServiceClient =
+                new BlobServiceClientBuilder().connectionString(azuriteContainer.getConnectionString()).buildClient();
+        URI blobStoreUri = URI.create(blobServiceClient.getAccountUrl());
+        String endpoint =
+                blobStoreUri.getScheme() + "://" + blobStoreUri.getAuthority() + "/" + AZURITE_ACCOUNT_NAME_DEFAULT;
+        BLOB_ENDPOINT_DEFAULT = endpoint;
+
+        fillConfigTemplate(endpoint, CONFIG_FILE_TEMPLATE, CONFIG_FILE);
         ExternalDatasetTestUtils.createBinaryFiles(PARQUET_RAW_DATA_PATH);
         createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         ExternalDatasetTestUtils.createAvroFiles(PARQUET_RAW_DATA_PATH);
@@ -140,6 +170,8 @@ public class AzureBlobStorageExternalDatasetTest {
     @AfterClass
     public static void tearDown() throws Exception {
         LangExecutionUtil.tearDown();
+        azuriteContainer.close();
+        azuriteContainer.stop();
     }
 
     @Parameters(name = "AzureBlobStorageExternalDatasetTest {index}: {0}")
@@ -173,11 +205,14 @@ public class AzureBlobStorageExternalDatasetTest {
         testExecutor.setNcEndPoints(ncEndPoints);
     }
 
-    private static void createBlobServiceClient() {
+    private static void createBlobServiceClient() throws Exception {
         LOGGER.info("Creating Azurite Blob Service client");
+        SslContext insecureSslContext =
+                SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
-        builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME_DEFAULT, AZURITE_ACCOUNT_KEY_DEFAULT));
-        builder.endpoint(AZURITE_ENDPOINT);
+        builder.connectionString(azuriteContainer.getConnectionString());
+        builder.httpClient(new NettyAsyncHttpClientBuilder(
+                HttpClient.create().secure(sslSpec -> sslSpec.sslContext(insecureSslContext).build())).build());
         blobServiceClient = builder.buildClient();
         LOGGER.info("Azurite Blob Service client created successfully");
 
@@ -216,11 +251,16 @@ public class AzureBlobStorageExternalDatasetTest {
     }
 
     private static String generateSasToken() {
-        OffsetDateTime expiry = OffsetDateTime.now().plus(1, ChronoUnit.YEARS);
+        OffsetDateTime expiry = Instant.now().plus(365, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC);
         AccountSasService service = AccountSasService.parse("b");
         AccountSasPermission permission = AccountSasPermission.parse("acdlpruw");
-        AccountSasResourceType type = AccountSasResourceType.parse("cos");
-        return blobServiceClient.generateAccountSas(new AccountSasSignatureValues(expiry, permission, service, type));
+        AccountSasResourceType type = AccountSasResourceType.parse("sco");
+
+        AccountSasSignatureValues signatureValues = new AccountSasSignatureValues(expiry, permission, service, type);
+        signatureValues.setProtocol(SasProtocol.HTTPS_HTTP);
+
+        String sas = blobServiceClient.generateAccountSas(signatureValues);
+        return sas.startsWith("?") ? sas : "?" + sas;
     }
 
     private static void loadPlaygroundData(String key, String content, boolean fromFile, boolean gzipped) {

@@ -18,8 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.datalake;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureDatalakeClient;
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.listDatalakePathItems;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.listDatalakePathItems;
 
 import java.util.Comparator;
 import java.util.List;
@@ -27,18 +26,19 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-import com.azure.storage.file.datalake.DataLakeServiceClient;
 import com.azure.storage.file.datalake.models.PathItem;
 
 public class AzureDataLakeInputStreamFactory extends AbstractExternalInputStreamFactory {
@@ -59,15 +59,18 @@ public class AzureDataLakeInputStreamFactory extends AbstractExternalInputStream
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
-
         IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
 
         // get include/exclude matchers
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
 
-        DataLakeServiceClient client = buildAzureDatalakeClient(appCtx, configuration);
-        List<PathItem> filesOnly =
-                listDatalakePathItems(client, configuration, includeExcludeMatcher, warningCollector);
+        // prepare prefix for computed field calculations
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(ctx, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
+        List<PathItem> filesOnly = listDatalakePathItems(appCtx, configuration, includeExcludeMatcher, warningCollector,
+                externalDataPrefix, evaluator);
 
         // Distribute work load amongst the partitions
         distributeWorkLoad(filesOnly, getPartitionsCount());

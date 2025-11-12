@@ -31,6 +31,7 @@ CREATE TYPE t3 AS {f1: bigint, f2: string, f3: string};
 DROP DATASET ds1 IF EXISTS;
 CREATE EXTERNAL DATASET ds1(t1) USING %adapter% (
 %template%,
+%additional_Properties%
 ("container"="playground"),
 ("definition"="data_dir"),
 ("format"="CSV"),

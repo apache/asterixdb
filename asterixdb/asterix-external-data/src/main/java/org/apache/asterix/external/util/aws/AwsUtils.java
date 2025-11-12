@@ -22,6 +22,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
+import static org.apache.asterix.external.util.ExternalDataUtils.validateAndGetBooleanProperty;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.EXTERNAL_ID_FIELD_NAME;
@@ -30,6 +31,7 @@ import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAM
 import static org.apache.asterix.external.util.aws.AwsConstants.ROLE_ARN_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SECRET_ACCESS_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SESSION_TOKEN_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.net.URI;
@@ -83,8 +85,9 @@ public class AwsUtils {
                 SdkRequest req = context.request();
                 SdkResponse resp = context.response();
                 if (req instanceof AssumeRoleRequest assumeReq && resp instanceof AssumeRoleResponse assumeResp) {
-                    LOGGER.info("STS refresh success [Thread={}, Role={}, Expiry={}]", Thread.currentThread().getName(),
+                    LOGGER.debug("STS refresh success [Role={}, Session={}, Expiry={}]",
                             assumeReq.roleArn(),
+                            assumeReq.roleSessionName(),
                             assumeResp.credentials().expiration());
                 }
                 ExecutionInterceptor.super.afterExecution(context, executionAttributes);
@@ -140,6 +143,11 @@ public class AwsUtils {
     }
 
     public static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
+        return getAuthenticationType(configuration, false);
+    }
+
+    public static AuthenticationType getAuthenticationType(Map<String, String> configuration,
+            boolean credentialsToAssumeRole) {
         String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
         String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
@@ -147,7 +155,7 @@ public class AwsUtils {
 
         if (noAuth(configuration)) {
             return AuthenticationType.ANONYMOUS;
-        } else if (roleArn != null) {
+        } else if (roleArn != null && !credentialsToAssumeRole) {
             return AuthenticationType.ARN_ASSUME_ROLE;
         } else if (instanceProfile != null) {
             return AuthenticationType.INSTANCE_PROFILE;
@@ -158,14 +166,14 @@ public class AwsUtils {
         }
     }
 
-    public static boolean validateAndGetCrossRegion(String crossRegion) throws CompilationException {
-        if (crossRegion == null) {
-            return false;
-        }
-        if (!"true".equalsIgnoreCase(crossRegion) && !"false".equalsIgnoreCase(crossRegion)) {
-            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CROSS_REGION_FIELD_NAME, "true, false");
-        }
-        return Boolean.parseBoolean(crossRegion);
+    public static boolean getCrossRegion(Map<String, String> configuration) throws CompilationException {
+        String crossRegionString = configuration.get(CROSS_REGION_FIELD_NAME);
+        return validateAndGetBooleanProperty(CROSS_REGION_FIELD_NAME, crossRegionString);
+    }
+
+    public static boolean getPathStyleAddressing(Map<String, String> configuration) throws CompilationException {
+        String pathStyleAccessString = configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME);
+        return validateAndGetBooleanProperty(PATH_STYLE_ADDRESSING_FIELD_NAME, pathStyleAccessString);
     }
 
     private static boolean noAuth(Map<String, String> configuration) {
@@ -214,10 +222,11 @@ public class AwsUtils {
         awsClients.setStsClient(stsClient);
 
         // build refresh role request
+        String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
         String sessionName = UUID.randomUUID().toString();
-        LOGGER.info("Assuming role with session name ({}) for ({})", sessionName, Thread.currentThread().getName());
+        LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", roleArn, sessionName);
         AssumeRoleRequest.Builder refreshRequestBuilder = AssumeRoleRequest.builder();
-        refreshRequestBuilder.roleArn(configuration.get(ROLE_ARN_FIELD_NAME));
+        refreshRequestBuilder.roleArn(roleArn);
         refreshRequestBuilder.externalId(configuration.get(EXTERNAL_ID_FIELD_NAME));
         refreshRequestBuilder.roleSessionName(sessionName);
         if (appCtx != null) {
@@ -335,6 +344,11 @@ public class AwsUtils {
         return UUID.randomUUID().toString();
     }
 
+    public static String buildStsUri(String regionId) {
+        // hadoop expects the endpoint without scheme, it automatically prepends "https://"
+        return "sts." + regionId + ".amazonaws.com";
+    }
+
     public static void closeClients(CloseableAwsClients clients) {
         if (clients == null) {
             return;
@@ -342,9 +356,9 @@ public class AwsUtils {
 
         AwsCredentialsProvider credentialsProvider = clients.getCredentialsProvider();
         if (credentialsProvider instanceof StsAssumeRoleCredentialsProvider assumeRoleCredsProvider) {
-            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient(), assumeRoleCredsProvider);
+            CleanupUtils.nonThrowingClose(null, clients.getConsumingClient(), clients.getStsClient(), assumeRoleCredsProvider);
         } else {
-            CleanupUtils.close(null, clients.getConsumingClient(), clients.getStsClient());
+            CleanupUtils.nonThrowingClose(null, clients.getConsumingClient(), clients.getStsClient());
         }
     }
 
