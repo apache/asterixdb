@@ -113,4 +113,10 @@ public class AzureUtils {
             conf.set(HADOOP_CLIENT_ID, clientId);
         }
     }
+
+    public static String extractEndPoint(String uri) {
+        //The URI is in the form http(s)://<accountName>.blob.core.windows.net
+        //We need to Remove the protocol (i.e., http(s)://) from the URI
+        return uri.substring(uri.indexOf("//") + "//".length());
+    }
 }

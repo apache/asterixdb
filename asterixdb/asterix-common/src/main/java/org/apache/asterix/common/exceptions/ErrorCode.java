@@ -450,6 +450,7 @@ public enum ErrorCode implements IError {
     PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT(3122),
     // Avro error
     UNSUPPORTED_TYPE_FOR_AVRO(3123),
+    EXTERNAL_COLLECTION_NOT_SUPPORTED(3124),
 
     // Lifecycle management errors
     DUPLICATE_PARTITION_ID(4000),

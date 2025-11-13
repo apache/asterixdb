@@ -23,6 +23,8 @@ import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_I
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getFirstNotNull;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
+import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_NAME_FIELD_NAME;
@@ -32,6 +34,7 @@ import static org.apache.asterix.external.util.azure.AzureConstants.ENDPOINT_FIE
 import static org.apache.asterix.external.util.azure.AzureConstants.MANAGED_IDENTITY_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.DEFAULT_RECUSRIVE_VALUE;
 import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.RECURSIVE_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
@@ -229,7 +232,8 @@ public class DatalakeUtils {
 
             // Get all objects in a container and extract the paths to files
             ListPathsOptions listOptions = new ListPathsOptions();
-            boolean recursive = Boolean.parseBoolean(configuration.get(RECURSIVE_FIELD_NAME));
+            boolean recursive = configuration.containsKey(RECURSIVE_FIELD_NAME)
+                    ? Boolean.parseBoolean(configuration.get(RECURSIVE_FIELD_NAME)) : DEFAULT_RECUSRIVE_VALUE;
             listOptions.setRecursive(recursive);
             listOptions.setPath(getPrefix(configuration, false, false));
             PagedIterable<PathItem> pathItems = fileSystemClient.listPaths(listOptions, null);
@@ -281,7 +285,9 @@ public class DatalakeUtils {
             IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
 
         // check if the format property is present
-        if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+        if (isDeltaTable(configuration)) {
+            validateDeltaTableProperties(configuration);
+        } else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 
