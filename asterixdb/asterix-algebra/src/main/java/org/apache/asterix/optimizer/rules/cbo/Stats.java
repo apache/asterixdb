@@ -39,6 +39,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
@@ -638,17 +639,6 @@ public class Stats {
         }
     }
 
-    protected void issueWarning(double sampleCard, DataSourceScanOperator scanOp) {
-        if (sampleCard == 0) {
-            sampleCard = 1;
-            IWarningCollector warningCollector = optCtx.getWarningCollector();
-            if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
-                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-            }
-        }
-    }
-
     protected double findSelectivityForThisPredicate(SelectOperator selOp, AbstractFunctionCallExpression exp,
             boolean arrayIndex) throws AlgebricksException {
         // replace the SelOp.condition with the new exp and replace it at the end
@@ -669,7 +659,7 @@ public class Stats {
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        issueWarning(sampleCard, scanOp);
+        ExceptionUtil.warnEmptySamples(sampleCard, scanOp.getSourceLocation(), optCtx);
 
         // replace the dataScanSourceOperator with the sampling source
         SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
@@ -874,7 +864,7 @@ public class Stats {
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        issueWarning(sampleCard, scanOp);
+        ExceptionUtil.warnEmptySamples(sampleCard, scanOp.getSourceLocation(), optCtx);
         return index;
     }
 

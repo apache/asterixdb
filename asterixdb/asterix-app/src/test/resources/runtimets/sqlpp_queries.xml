@@ -4302,9 +4302,10 @@
         <output-dir compare="Clean-JSON">create-dataset-4</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="ddl">
+    <test-case FilePath="ddl" check-warnings="true">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
+          <expected-warn>ASX1174: Sample has zero rows</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">

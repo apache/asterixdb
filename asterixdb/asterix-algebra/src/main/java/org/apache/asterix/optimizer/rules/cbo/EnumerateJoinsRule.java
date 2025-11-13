@@ -32,6 +32,7 @@ import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.CBOPlanStateTree;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.FakeIndexProvider;
@@ -1621,8 +1622,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (index == null) {
                 return false;
             }
+            Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+            double origDatasetCard = idxDetails.getSourceCardinality();
+            if (origDatasetCard == 0) {
+                ExceptionUtil.warnEmptySamples(origDatasetCard, scanOp.getSourceLocation(), context);
+                return false;
+            }
             n++;
         }
+
         return (leafInputs.size() == n);
     }
 

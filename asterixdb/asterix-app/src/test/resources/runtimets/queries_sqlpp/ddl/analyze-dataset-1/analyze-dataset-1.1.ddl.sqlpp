@@ -21,6 +21,8 @@
  * Description: Test ANALYZE DATASET statement
  */
 
+// param max-warnings:json=1
+
 set `import-private-functions` `true`;
 
 drop dataverse test if exists;
@@ -54,3 +56,6 @@ create dataset ds1(t1) primary key id;
 -- analyze on an empty dataset
 
 analyze dataset ds1;
+
+-- issue a warning for empty samples
+select * from ds1;

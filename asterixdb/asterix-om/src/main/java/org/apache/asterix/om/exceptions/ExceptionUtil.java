@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -170,6 +171,16 @@ public final class ExceptionUtil {
         if (warningCollector.shouldWarn()) {
             warningCollector.warn(
                     Warning.of(srcLoc, errorCode, fid.getName(), indexToPosition(argIdx), Double.toString(argValue)));
+        }
+    }
+
+    public static void warnEmptySamples(double sampleCard, SourceLocation sourceLocation, IOptimizationContext optCtx) {
+        if (sampleCard == 0) {
+            IWarningCollector warningCollector = optCtx.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(sourceLocation,
+                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+            }
         }
     }
 
