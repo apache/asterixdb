@@ -49,12 +49,13 @@ public final class S3ClientConfig {
     private final boolean storageListEventuallyConsistent;
     private final int s3ReadTimeoutInSeconds;
     private final S3ParallelDownloaderClientType parallelDownloaderClientType;
+    private final boolean roundRobinDnsResolver;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, int writeBufferSize,
-            S3ParallelDownloaderClientType parallelDownloaderClientType) {
+            long profilerLogInterval, int writeBufferSize, S3ParallelDownloaderClientType parallelDownloaderClientType,
+            boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false,
-                false, 0, 0, -1, parallelDownloaderClientType);
+                false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
@@ -62,7 +63,7 @@ public final class S3ClientConfig {
             int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
             boolean disableSslVerify, boolean storageListEventuallyConsistent, int requestsMaxPendingHttpConnections,
             int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
-            S3ParallelDownloaderClientType parallelDownloaderClientType) {
+            S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -80,6 +81,7 @@ public final class S3ClientConfig {
         this.storageListEventuallyConsistent = storageListEventuallyConsistent;
         this.s3ReadTimeoutInSeconds = s3ReadTimeoutInSeconds;
         this.parallelDownloaderClientType = parallelDownloaderClientType;
+        this.roundRobinDnsResolver = roundRobinDnsResolver;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
@@ -92,7 +94,8 @@ public final class S3ClientConfig {
                 cloudProperties.isStorageListEventuallyConsistent(),
                 cloudProperties.getRequestsMaxPendingHttpConnections(),
                 cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
-                S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()));
+                S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()),
+                cloudProperties.useRoundRobinDnsResolver());
     }
 
     public enum S3ParallelDownloaderClientType {
@@ -125,7 +128,7 @@ public final class S3ClientConfig {
         boolean anonymousAuth = false;
 
         return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize,
-                S3ParallelDownloaderClientType.ASYNC);
+                S3ParallelDownloaderClientType.ASYNC, false);
     }
 
     public String getRegion() {
@@ -199,5 +202,9 @@ public final class S3ClientConfig {
 
     public int getS3ReadTimeoutInSeconds() {
         return s3ReadTimeoutInSeconds;
+    }
+
+    public boolean useRoundRobinDnsResolver() {
+        return roundRobinDnsResolver;
     }
 }
