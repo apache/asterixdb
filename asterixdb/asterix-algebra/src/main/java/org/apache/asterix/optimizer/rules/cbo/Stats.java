@@ -24,6 +24,7 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.getBuiltinFunctio
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -130,8 +131,8 @@ public class Stats {
             return 1.0;
         }
 
-        int idx1 = jc.leftSide;
-        int idx2 = jc.rightSide;
+        AbstractLeafInput leaf1 = jc.getLeftSide(), leaf2 = jc.getRightSide();
+        int idx1 = joinEnum.leafInputToJoinIndexMap.get(leaf1), idx2 = joinEnum.leafInputToJoinIndexMap.get(leaf2);
 
         if (joinEnum.jnArray[idx1].getFake()) {
             return 1.0;
@@ -166,19 +167,17 @@ public class Stats {
                 return productivity / card1;
             }
         } else {
-            Index index1 = findIndex(joinEnum.leafInputs.get(idx1 - 1));
+            Index index1 = findIndex((RealLeafInput) leaf1);
             if (index1 == null) {
                 return 0.5;
             }
-            Index index2 = findIndex(joinEnum.leafInputs.get(idx2 - 1));
+            Index index2 = findIndex((RealLeafInput) leaf2);
             if (index2 == null) {
                 return 0.5;
             }
 
-            ILogicalOperator leafInput1 = joinEnum.leafInputs.get(idx1 - 1);
-            ILogicalOperator leafInput2 = joinEnum.leafInputs.get(idx2 - 1);
-            boolean unnestOp1 = joinEnum.findUnnestOp(leafInput1);
-            boolean unnestOp2 = joinEnum.findUnnestOp(leafInput2);
+            boolean unnestOp1 = joinEnum.findUnnestOp(leaf1.getOp());
+            boolean unnestOp2 = joinEnum.findUnnestOp(leaf2.getOp());
             boolean unnestOp = unnestOp1 || unnestOp2;
 
             LogicalVariable var1 = exprUsedVars.get(0);
@@ -186,15 +185,15 @@ public class Stats {
             // find if this join part of a composite join R.a = S.a and R.b = S.b and ...
             List<Integer> compositeJoins = new ArrayList<>();
             for (int i = 0; i < joinEnum.joinConditions.size(); i++) {
-                if (joinEnum.joinConditions.get(i).datasetBits == jc.datasetBits) {
+                if (Objects.equals(joinEnum.joinConditions.get(i).getDatasetSubset(), jc.getDatasetSubset())) {
                     compositeJoins.add(i);
                 }
             }
             int size = compositeJoins.size();
             if (size > 1) { // for composite joins, we will always resort to joining with samples
                 joinExpr = combineJoinExprs(compositeJoins);
-                double sels = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
-                        joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
+                double sels = findJoinSelFromSamples((RealLeafInput) leaf1, (RealLeafInput) leaf2, index1, index2,
+                        joinExpr, jOp);
                 if (sels == 0.0) {
                     sels = 1.0 / Math.max(card1, card2);
                 }
@@ -213,8 +212,8 @@ public class Stats {
             if (((idxDetails1.getSourceCardinality() < idxDetails1.getSampleCardinalityTarget())
                     || (idxDetails2.getSourceCardinality() < idxDetails2.getSampleCardinalityTarget())
                     || exprUsedVars.size() > 2) && !unnestOp && okOp) {
-                double sels = findJoinSelFromSamples(joinEnum.leafInputs.get(idx1 - 1),
-                        joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
+                double sels = findJoinSelFromSamples((RealLeafInput) joinEnum.leafInputs.get(idx1 - 1),
+                        (RealLeafInput) joinEnum.leafInputs.get(idx2 - 1), index1, index2, joinExpr, jOp);
                 if (sels == 0.0) {
                     sels = 1.0 / Math.max(card1, card2);
                 }
@@ -239,7 +238,7 @@ public class Stats {
         return andExpr;
     }
 
-    private boolean isJoinSelFromSamplesApplicable(ILogicalOperator leafInput1, ILogicalOperator leafInput2,
+    private boolean isJoinSelFromSamplesApplicable(AbstractLeafInput leafInput1, AbstractLeafInput leafInput2,
             Index index1, Index index2, LogicalVariable var1, LogicalVariable var2) throws AlgebricksException {
         Index.SampleIndexDetails details1 = (Index.SampleIndexDetails) index1.getIndexDetails();
         Index.SampleIndexDetails details2 = (Index.SampleIndexDetails) index2.getIndexDetails();
@@ -247,12 +246,12 @@ public class Stats {
                 && details2.getSourceCardinality() >= details2.getSampleCardinalityTarget()) {
             return false;
         }
-        double numDistinct1 = computeNumDistinct(leafInput1, var1, index1);
+        double numDistinct1 = computeNumDistinct(leafInput1.getOp(), var1, index1);
         if (numDistinct1 < 0) {
             return false;
         }
         double avgNumRowsPerValue1 = details1.getSourceCardinality() / numDistinct1;
-        double numDistinct2 = computeNumDistinct(leafInput2, var2, index2);
+        double numDistinct2 = computeNumDistinct(leafInput2.getOp(), var2, index2);
         if (numDistinct2 < 0) {
             return false;
         }
@@ -306,7 +305,7 @@ public class Stats {
 
     private double naiveJoinSelectivity(List<LogicalVariable> exprUsedVars, double card1, double card2, int idx1,
             int idx2, boolean unnestOp1, boolean unnestOp2) throws AlgebricksException {
-        ILogicalOperator leafInput;
+        AbstractLeafInput leafInput;
         LogicalVariable var;
 
         if (unnestOp1) {// we cannot choose teh side with an array as we need the unnesting scaling factor also.
@@ -326,11 +325,11 @@ public class Stats {
                 var = exprUsedVars.get(1);
             }
         }
-        Index index = findIndex(leafInput);
+        Index index = findIndex((RealLeafInput) leafInput);
         if (index == null) {
             return 1.0;
         }
-        List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput, var, index);
+        List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput.getOp(), var, index);
         if (result == null) {
             return 1.0;
         }
@@ -360,14 +359,14 @@ public class Stats {
         return 1.0 / numDistincts; // this is the expected selectivity for joins for Fk-PK and Fk-Fk joins
     }
 
-    private double findJoinSelFromSamples(ILogicalOperator left, ILogicalOperator right, Index index1, Index index2,
+    private double findJoinSelFromSamples(RealLeafInput left, RealLeafInput right, Index index1, Index index2,
             AbstractFunctionCallExpression joinExpr, JoinOperator join) throws AlgebricksException {
         AbstractBinaryJoinOperator abjoin = join.getAbstractJoinOp();
-        Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left, index1, joinExpr);
+        Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left.getOp(), index1, joinExpr);
         ILogicalOperator originalLeft = abjoin.getInputs().get(0).getValue();
         ILogicalOperator originalRight = abjoin.getInputs().get(1).getValue();
         abjoin.getInputs().get(0).setValue(leftOutput.getFirst());
-        Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right, index2, joinExpr);
+        Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right.getOp(), index2, joinExpr);
         abjoin.getInputs().get(1).setValue(rightOutput.getFirst());
         abjoin.getCondition().setValue(joinExpr);
         List<List<IAObject>> result = runSamplingQuery(optCtx, abjoin);
@@ -842,8 +841,8 @@ public class Stats {
         return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 
-    protected Index findIndex(ILogicalOperator logOp) throws AlgebricksException {
-        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(logOp);
+    protected Index findIndex(RealLeafInput realLeafInput) throws AlgebricksException {
+        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(realLeafInput.getOp());
         if (parent == null) {
             return null;
         }
@@ -911,13 +910,13 @@ public class Stats {
     //              data-scan []<-[$$37, $$ar, $$38] <- `travel-sample`.inventory.airport
     //                empty-tuple-source
 
-    protected List<List<IAObject>> runSamplingQueryDistinct(IOptimizationContext ctx, ILogicalOperator logOp,
+    protected List<List<IAObject>> runSamplingQueryDistinct(IOptimizationContext ctx, ILogicalOperator op,
             LogicalVariable var, Index index) throws AlgebricksException {
         LOGGER.info("***running sample query***");
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
 
-        ILogicalOperator newLogOp = OperatorManipulationUtil.bottomUpCopyOperators(logOp);
+        ILogicalOperator newLogOp = OperatorManipulationUtil.bottomUpCopyOperators(op);
 
         // by passing in null, all select expression will become true.
         // no need to restore them either as this is dne on a copy of the logOp.

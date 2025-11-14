@@ -19,6 +19,8 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
+import static org.apache.asterix.optimizer.rules.cbo.DatasetRegistry.isSubset;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -85,12 +87,12 @@ public class JoinNode {
     private static final Logger LOGGER = LogManager.getLogger();
     protected JoinEnum joinEnum;
     protected int jnArrayIndex;
-    protected int datasetBits; // this is bitmap of all the keyspaceBits present in this joinNode
+    public DatasetRegistry.DatasetSubset datasetSubset; // this is bitmap of all the keyspaceBits present in this joinNode
     protected List<Integer> datasetIndexes;
     protected List<String> datasetNames;
     protected List<String> aliases;
     protected int cheapestPlanIndex;
-    protected PlanNode cheapestPlanNode;
+    protected AbstractPlanNode cheapestPlanNode;
     private ICost cheapestPlanCost;
     protected double origCardinality; // without any selections
     protected double cardinality;
@@ -100,7 +102,7 @@ public class JoinNode {
                                          // in case of columnar we need to add sizes of individual fields.
     protected double projectionSizeAfterScan; // excludes fields only used for selections
     protected double distinctCardinality; // estimated distinct cardinality for this joinNode
-    protected List<Integer> planIndexesArray; // indexes into the PlanNode array in enumerateJoins
+    protected PlanRegistry planRegistry;
     protected int jnIndex;
     protected int level;
     protected int highestDatasetId;
@@ -108,11 +110,12 @@ public class JoinNode {
     private JoinNode leftJn;
     private int limitVal = -1; // only for single dataset joinNodes.
     private List<Integer> applicableJoinConditions;
-    protected ILogicalOperator leafInput;
+    protected AbstractLeafInput leafInput;
     protected Index.SampleIndexDetails idxDetails;
     private List<IndexCostInfo> indexCostInfoList;
     // The triple above is : Index, selectivity, and the index expression
     protected static int NO_JN = -1;
+    protected static JoinNode DUMMY_JN = new JoinNode(NO_JN);
     private static int NO_CARDS = -2;
     private int numVarsFromDisk = -1; // number of variables projected from disk
     private int numVarsAfterScan = -1; // number of variables after all selection fields have been removed and are needed for joins and final projects
@@ -125,9 +128,8 @@ public class JoinNode {
 
     private JoinNode(int i) {
         this.jnArrayIndex = i;
-        planIndexesArray = new ArrayList<>();
-        cheapestPlanIndex = PlanNode.NO_PLAN;
-        cheapestPlanNode = null;
+        planRegistry = new PlanRegistry();
+        cheapestPlanNode = DummyPlanNode.INSTANCE;
         size = 1; // for now, will be the size of the doc for this joinNode
     }
 
@@ -149,6 +151,10 @@ public class JoinNode {
         return cardinality;
     }
 
+    public PlanRegistry getPlanRegistry() {
+        return planRegistry;
+    }
+
     protected void setCardinality(double card, boolean setMinCard) {
         // Minimum cardinality for operators is MIN_CARD to prevent bad plans due to cardinality under estimation errors.
         cardinality = setMinCard ? Math.max(card, Cost.MIN_CARD) : card;
@@ -158,7 +164,7 @@ public class JoinNode {
         return origCardinality;
     }
 
-    public PlanNode getCheapestPlanNode() {
+    public AbstractPlanNode getCheapestPlanNode() {
         return cheapestPlanNode;
     }
 
@@ -301,7 +307,7 @@ public class JoinNode {
             numArrayRefs = joinEnum.unnestOpsInfo.get(leafInputNumber - 1).size();
         }
 
-        DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(leafInput);
+        DataSourceScanOperator scanOp = EnumerateJoinsRule.findDataSourceScanOperator(leafInput);
         if (scanOp == null) {
             return; // what happens to the cards and sizes then? this may happen in case of in lists
         }
@@ -434,17 +440,12 @@ public class JoinNode {
         parent.getInputs().get(0).setValue(op);
     }
 
-    /** one is a subset of two */
-    private boolean subset(int one, int two) {
-        return (one & two) == one;
-    }
-
     private void findApplicableJoinConditions() {
         List<JoinCondition> joinConditions = joinEnum.getJoinConditions();
 
         int i = 0;
         for (JoinCondition jc : joinConditions) {
-            if (subset(jc.datasetBits, this.datasetBits)) {
+            if (isSubset(jc.getDatasetSubset(), this.datasetSubset)) {
                 this.applicableJoinConditions.add(i);
             }
             i++;
@@ -456,20 +457,21 @@ public class JoinNode {
         JoinNode leftJn = this.leftJn;
         JoinNode rightJn = this.rightJn;
         // find the new table being added. This assume only zig zag trees for now.
-        int newTableBits = 0;
+        DatasetRegistry.DatasetSubset newTableBits = joinEnum.datasetRegistry.new DatasetSubset();
         if (leftJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = leftJn.datasetBits;
+            newTableBits = leftJn.datasetSubset;
         } else if (rightJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = rightJn.datasetBits;
+            newTableBits = rightJn.datasetSubset;
         }
 
-        if (LOGGER.isTraceEnabled() && newTableBits == 0) {
+        if (LOGGER.isTraceEnabled() && newTableBits.size() == 0) {
             LOGGER.trace("newTable Bits == 0");
         }
 
         // All the new join predicates will have these bits turned on
         for (int idx : this.applicableJoinConditions) {
-            if ((joinEnum.joinConditions.get(idx).datasetBits & newTableBits) > 0) {
+            if (joinEnum.datasetRegistry.intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), newTableBits)
+                    .size() > 0) {
                 newJoinConditions.add(idx);
             }
         }
@@ -620,23 +622,21 @@ public class JoinNode {
         return redundantSel;
     }
 
-    protected int addSingleDatasetPlans() {
-        List<PlanNode> allPlans = joinEnum.allPlans;
+    protected AbstractPlanNode addSingleDatasetPlans() {
         ICost opCost;
-        PlanNode pn;
+        ScanPlanNode pn;
         opCost = joinEnum.getCostMethodsHandle().costFullScan(this);
         boolean forceEnum = level <= joinEnum.cboFullEnumLevel;
-        if (this.cheapestPlanIndex == PlanNode.NO_PLAN || opCost.costLT(this.cheapestPlanCost) || forceEnum) {
+        if (this.cheapestPlanNode == DummyPlanNode.INSTANCE || opCost.costLT(this.cheapestPlanCost) || forceEnum) {
             // for now just add one plan
-            pn = new PlanNode(allPlans.size(), joinEnum, this, datasetNames.get(0), leafInput);
-            pn.setScanMethod(PlanNode.ScanMethod.TABLE_SCAN);
+            pn = new ScanPlanNode(datasetNames.get(0), leafInput.getOp(), this);
+            pn.setScanMethod(ScanPlanNode.ScanMethod.TABLE_SCAN);
             pn.setScanCosts(opCost);
-            planIndexesArray.add(pn.allPlansIndex);
-            allPlans.add(pn);
+            planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
-            return pn.allPlansIndex;
+            return pn;
         }
-        return PlanNode.NO_PLAN;
+        return DummyPlanNode.INSTANCE;
     }
 
     private AbstractFunctionCallExpression buildExpr(List<IOptimizableFuncExpr> exprs,
@@ -770,8 +770,7 @@ public class JoinNode {
     }
 
     private void buildIndexPlans() {
-        List<PlanNode> allPlans = joinEnum.getAllPlans();
-        PlanNode pn;
+        ScanPlanNode pn;
         double ic, dc, tc, oc; // for debugging
 
         List<IndexCostInfo> mandatoryIndexesInfo = new ArrayList<>();
@@ -857,11 +856,10 @@ public class JoinNode {
 
         boolean forceEnum = mandatoryIndexesInfo.size() > 0 || level <= joinEnum.cboFullEnumLevel;
         if (opCost.costLT(this.cheapestPlanCost) || forceEnum) {
-            pn = new PlanNode(allPlans.size(), joinEnum, this, datasetNames.get(0), leafInput);
-            pn.setScanAndHintInfo(PlanNode.ScanMethod.INDEX_SCAN, mandatoryIndexesInfo, optionalIndexesInfo);
+            pn = new ScanPlanNode(datasetNames.get(0), leafInput.getOp(), this);
+            pn.setScanAndHintInfo(ScanPlanNode.ScanMethod.INDEX_SCAN, mandatoryIndexesInfo, optionalIndexesInfo);
             pn.setScanCosts(totalCost);
-            planIndexesArray.add(pn.allPlansIndex);
-            allPlans.add(pn);
+            planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
         }
     }
@@ -965,11 +963,11 @@ public class JoinNode {
     // In the dependency list, S will the second entry in the quadruple.
     // So R must be on the left side and S must be on the right side.
 
-    private boolean nullExtendingSide(int bits, boolean outerJoin) {
+    private boolean nullExtendingSide(DatasetRegistry.DatasetSubset bits, boolean outerJoin) {
         if (outerJoin) {
-            for (Quadruple<Integer, Integer, JoinOperator, Integer> qu : joinEnum.outerJoinsDependencyList) {
+            for (Quadruple<DatasetRegistry.DatasetSubset, DatasetRegistry.DatasetSubset, JoinOperator, Integer> qu : joinEnum.outerJoinsDependencyList) {
                 if (qu.getThird().getOuterJoin()) {
-                    if (qu.getSecond() == bits) {
+                    if (DatasetRegistry.equals(qu.getSecond(), bits)) {
                         return true;
                     }
                 }
@@ -979,7 +977,7 @@ public class JoinNode {
     }
 
     private boolean hashJoinApplicable(JoinNode leftJn, boolean outerJoin, ILogicalExpression hashJoinExpr) {
-        if (nullExtendingSide(leftJn.datasetBits, outerJoin)) {
+        if (nullExtendingSide(leftJn.datasetSubset, outerJoin)) {
             return false;
         }
 
@@ -1013,12 +1011,12 @@ public class JoinNode {
         if (usedVarList.size() != 2 && outerJoin) {
             return false;
         }
-        ILogicalOperator joinLeafInput0 = null;
-        ILogicalOperator joinLeafInput1 = null;
+        RealLeafInput joinLeafInput0 = null;
+        RealLeafInput joinLeafInput1 = null;
         // Find which joinLeafInput these vars belong to.
         // go through the leaf inputs and see where these variables came from
         for (LogicalVariable usedVar : usedVarList) {
-            ILogicalOperator joinLeafInput = joinEnum.findLeafInput(Collections.singletonList(usedVar));
+            RealLeafInput joinLeafInput = joinEnum.findLeafInput(Collections.singletonList(usedVar));
             if (joinLeafInput0 == null) {
                 joinLeafInput0 = joinLeafInput;
             } else if (joinLeafInput1 == null && joinLeafInput != joinLeafInput0) {
@@ -1037,7 +1035,7 @@ public class JoinNode {
             return false;
         }
 
-        ILogicalOperator innerLeafInput = this.leafInput;
+        RealLeafInput innerLeafInput = (RealLeafInput) this.leafInput;
 
         // This must equal one of the two joinLeafInputsHashMap found above. check for sanity!!
         if (innerLeafInput != joinLeafInput0 && innerLeafInput != joinLeafInput1) {
@@ -1045,12 +1043,12 @@ public class JoinNode {
         }
 
         if (innerLeafInput == joinLeafInput0) { // skip the Select Operator with condition(TRUE) on top
-            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput1.getInputs().get(0).getValue());
+            joinEnum.localJoinOp.getInputs().getFirst().setValue(joinLeafInput1.getOp().getInputs().get(0).getValue());
         } else {
-            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput0.getInputs().get(0).getValue());
+            joinEnum.localJoinOp.getInputs().getFirst().setValue(joinLeafInput0.getOp().getInputs().get(0).getValue());
         }
 
-        joinEnum.localJoinOp.getInputs().get(1).setValue(innerLeafInput.getInputs().get(0).getValue());
+        joinEnum.localJoinOp.getInputs().get(1).setValue(innerLeafInput.getOp().getInputs().get(0).getValue());
 
         // We will always use the first join Op to provide the joinOp input for invoking rewritePre
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinEnum.localJoinOp;
@@ -1073,7 +1071,7 @@ public class JoinNode {
         if (leftJn.fake || rightJn.fake) {
             return false;
         }
-        if (nullExtendingSide(leftJn.datasetBits, outerJoin)) {
+        if (nullExtendingSide(leftJn.datasetSubset, outerJoin)) {
             return false;
         }
 
@@ -1100,25 +1098,24 @@ public class JoinNode {
             return false;
         }
 
-        if (nullExtendingSide(leftJn.datasetBits, outerJoin)) {
+        if (nullExtendingSide(leftJn.datasetSubset, outerJoin)) {
             return false;
         }
 
         return true;
     }
 
-    protected int buildHashJoinPlan(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            HashJoinExpressionAnnotation hintHashJoin, boolean outerJoin) {
-        List<PlanNode> allPlans = joinEnum.allPlans;
+    protected AbstractPlanNode buildHashJoinPlan(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, HashJoinExpressionAnnotation hintHashJoin, boolean outerJoin) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
-        PlanNode pn;
+        JoinPlanNode pn;
         ICost hjCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
         this.leftJn = leftJn;
         this.rightJn = rightJn;
 
         if (!hashJoinApplicable(leftJn, outerJoin, hashJoinExpr)) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         boolean forceEnum = hintHashJoin != null || joinEnum.forceJoinOrderMode
@@ -1129,29 +1126,27 @@ public class JoinNode {
             hjCost = joinEnum.getCostMethodsHandle().costHashJoin(this);
             leftExchangeCost = joinEnum.getCostMethodsHandle().computeHJProbeExchangeCost(this);
             rightExchangeCost = joinEnum.getCostMethodsHandle().computeHJBuildExchangeCost(this);
-            childCosts = allPlans.get(leftPlan.allPlansIndex).totalCost
-                    .costAdd(allPlans.get(rightPlan.allPlansIndex).totalCost);
+            childCosts = leftPlan.getTotalCost().costAdd(rightPlan.getTotalCost());
             totalCost = hjCost.costAdd(leftExchangeCost).costAdd(rightExchangeCost).costAdd(childCosts);
-            if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
-                pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-                pn.setJoinAndHintInfo(PlanNode.JoinMethod.HYBRID_HASH_JOIN, hashJoinExpr, null,
+            if (this.cheapestPlanNode == DummyPlanNode.INSTANCE || totalCost.costLT(this.cheapestPlanCost)
+                    || forceEnum) {
+                pn = new JoinPlanNode(this, leftPlan, rightPlan, outerJoin);
+                pn.setJoinAndHintInfo(JoinPlanNode.JoinMethod.HYBRID_HASH_JOIN, hashJoinExpr, null,
                         HashJoinExpressionAnnotation.BuildSide.RIGHT, hintHashJoin);
                 pn.setJoinCosts(hjCost, totalCost, leftExchangeCost, rightExchangeCost);
-                planIndexesArray.add(pn.allPlansIndex);
-                allPlans.add(pn);
+                planRegistry.addPlan(pn);
                 setCheapestPlan(pn, forceEnum);
-                return pn.allPlansIndex;
+                return pn;
             }
         }
-        return PlanNode.NO_PLAN;
+        return DummyPlanNode.INSTANCE;
     }
 
-    private int buildBroadcastHashJoinPlan(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            BroadcastExpressionAnnotation hintBroadcastHashJoin, boolean outerJoin) {
-        List<PlanNode> allPlans = joinEnum.allPlans;
+    private AbstractPlanNode buildBroadcastHashJoinPlan(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, BroadcastExpressionAnnotation hintBroadcastHashJoin, boolean outerJoin) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
-        PlanNode pn;
+        JoinPlanNode pn;
         ICost bcastHjCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         this.leftJn = leftJn;
@@ -1162,7 +1157,7 @@ public class JoinNode {
         //}
 
         if (!hashJoinApplicable(leftJn, outerJoin, hashJoinExpr)) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         boolean forceEnum = hintBroadcastHashJoin != null || joinEnum.forceJoinOrderMode
@@ -1173,50 +1168,48 @@ public class JoinNode {
             bcastHjCost = joinEnum.getCostMethodsHandle().costBroadcastHashJoin(this);
             leftExchangeCost = joinEnum.getCostHandle().zeroCost();
             rightExchangeCost = joinEnum.getCostMethodsHandle().computeBHJBuildExchangeCost(this);
-            childCosts = allPlans.get(leftPlan.allPlansIndex).totalCost
-                    .costAdd(allPlans.get(rightPlan.allPlansIndex).totalCost);
+            childCosts = leftPlan.getTotalCost().costAdd(rightPlan.getTotalCost());
             totalCost = bcastHjCost.costAdd(rightExchangeCost).costAdd(childCosts);
-            if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
-                pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-                pn.setJoinAndHintInfo(PlanNode.JoinMethod.BROADCAST_HASH_JOIN, hashJoinExpr, null,
+            if (this.cheapestPlanNode == DummyPlanNode.INSTANCE || totalCost.costLT(this.cheapestPlanCost)
+                    || forceEnum) {
+                pn = new JoinPlanNode(this, leftPlan, rightPlan, outerJoin);
+                pn.setJoinAndHintInfo(JoinPlanNode.JoinMethod.BROADCAST_HASH_JOIN, hashJoinExpr, null,
                         HashJoinExpressionAnnotation.BuildSide.RIGHT, hintBroadcastHashJoin);
                 pn.setJoinCosts(bcastHjCost, totalCost, leftExchangeCost, rightExchangeCost);
-                planIndexesArray.add(pn.allPlansIndex);
-                allPlans.add(pn);
+                planRegistry.addPlan(pn);
                 setCheapestPlan(pn, forceEnum);
-                return pn.allPlansIndex;
+                return pn;
             }
         }
-        return PlanNode.NO_PLAN;
+        return DummyPlanNode.INSTANCE;
     }
 
-    private int buildNLJoinPlan(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression nestedLoopJoinExpr,
-            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin, IIndexProvider indexProvider)
-            throws AlgebricksException {
+    private AbstractPlanNode buildNLJoinPlan(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression nestedLoopJoinExpr, IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin,
+            IIndexProvider indexProvider) throws AlgebricksException {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
         // Build a nested loops plan, first check if it is possible
         // left right order must be preserved and right side should be a single data set
-        List<PlanNode> allPlans = joinEnum.allPlans;
-        PlanNode pn;
+        JoinPlanNode pn;
         ICost nljCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
 
         if (leftJn.fake || rightJn.fake) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         List<AbstractIntroduceAccessMethodRule.IndexAccessInfo> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
         if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr, chosenIndexes, analyzedAMs,
                 indexProvider)) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
         if (chosenIndexes.isEmpty()) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint = new Pair<>(null, null);
@@ -1241,43 +1234,41 @@ public class JoinNode {
             }
         }
         if (exprAndHint.first == null) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
         leftExchangeCost = joinEnum.getCostMethodsHandle().computeNLJOuterExchangeCost(this);
         rightExchangeCost = joinEnum.getCostHandle().zeroCost();
-        childCosts = allPlans.get(leftPlan.allPlansIndex).totalCost;
+        childCosts = leftPlan.getTotalCost();
         totalCost = nljCost.costAdd(leftExchangeCost).costAdd(childCosts);
         boolean forceEnum =
                 hintNLJoin != null || joinEnum.forceJoinOrderMode || outerJoin || level <= joinEnum.cboFullEnumLevel;
-        if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
-            pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-            pn.setJoinAndHintInfo(PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN, nestedLoopJoinExpr, exprAndHint, null,
+        if (this.cheapestPlanNode == DummyPlanNode.INSTANCE || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
+            pn = new JoinPlanNode(this, leftPlan, rightPlan, outerJoin);
+            pn.setJoinAndHintInfo(JoinPlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN, nestedLoopJoinExpr, exprAndHint, null,
                     hintNLJoin);
             pn.setJoinCosts(nljCost, totalCost, leftExchangeCost, rightExchangeCost);
-            planIndexesArray.add(pn.allPlansIndex);
-            allPlans.add(pn);
+            planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
-            return pn.allPlansIndex;
+            return pn;
         }
-        return PlanNode.NO_PLAN;
+        return DummyPlanNode.INSTANCE;
     }
 
-    private int buildCPJoinPlan(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            ILogicalExpression nestedLoopJoinExpr, boolean outerJoin) {
+    private AbstractPlanNode buildCPJoinPlan(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, ILogicalExpression nestedLoopJoinExpr, boolean outerJoin) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
         if (leftJn.fake || rightJn.fake) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         // Now build a cartesian product nested loops plan
-        List<PlanNode> allPlans = joinEnum.allPlans;
-        PlanNode pn;
+        JoinPlanNode pn;
         ICost cpCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         if (!CPJoinApplicable(leftJn, outerJoin)) {
-            return PlanNode.NO_PLAN;
+            return DummyPlanNode.INSTANCE;
         }
 
         this.leftJn = leftJn;
@@ -1304,59 +1295,55 @@ public class JoinNode {
         cpCost = joinEnum.getCostMethodsHandle().costCartesianProductJoin(this);
         leftExchangeCost = joinEnum.getCostHandle().zeroCost();
         rightExchangeCost = joinEnum.getCostMethodsHandle().computeCPRightExchangeCost(this);
-        childCosts =
-                allPlans.get(leftPlan.allPlansIndex).totalCost.costAdd(allPlans.get(rightPlan.allPlansIndex).totalCost);
+        childCosts = leftPlan.getTotalCost().costAdd(rightPlan.getTotalCost());
         totalCost = cpCost.costAdd(rightExchangeCost).costAdd(childCosts);
         boolean forceEnum = joinEnum.forceJoinOrderMode || outerJoin || level <= joinEnum.cboFullEnumLevel;
-        if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
-            pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-            pn.setJoinAndHintInfo(PlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN,
+        if (this.cheapestPlanNode == DummyPlanNode.INSTANCE || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
+            pn = new JoinPlanNode(this, leftPlan, rightPlan, outerJoin);
+            pn.setJoinAndHintInfo(JoinPlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN,
                     Objects.requireNonNullElse(cpJoinExpr, ConstantExpression.TRUE), null, null, null);
             pn.setJoinCosts(cpCost, totalCost, leftExchangeCost, rightExchangeCost);
-            planIndexesArray.add(pn.allPlansIndex);
-            allPlans.add(pn);
+            planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
-            return pn.allPlansIndex;
+            return pn;
         }
-        return PlanNode.NO_PLAN;
+        return DummyPlanNode.INSTANCE;
     }
 
     protected void addMultiDatasetPlans(JoinNode leftJn, JoinNode rightJn, IIndexProvider indexProvider)
             throws AlgebricksException {
-        PlanNode leftPlan, rightPlan;
 
         if (level > joinEnum.cboFullEnumLevel) {
             // FOR JOIN NODE LEVELS GREATER THAN THE LEVEL SPECIFIED FOR FULL ENUMERATION,
             // DO NOT DO FULL ENUMERATION => PRUNE
-            if (leftJn.cheapestPlanIndex == PlanNode.NO_PLAN || rightJn.cheapestPlanIndex == PlanNode.NO_PLAN) {
+            if (leftJn.cheapestPlanNode == DummyPlanNode.INSTANCE
+                    || rightJn.cheapestPlanNode == DummyPlanNode.INSTANCE) {
                 return;
             }
-            leftPlan = joinEnum.allPlans.get(leftJn.cheapestPlanIndex);
-            rightPlan = joinEnum.allPlans.get(rightJn.cheapestPlanIndex);
+
+            AbstractPlanNode leftPlan = leftJn.cheapestPlanNode, rightPlan = rightJn.cheapestPlanNode;
 
             addMultiDatasetPlans(leftPlan, rightPlan, indexProvider);
         } else {
             // FOR JOIN NODE LEVELS LESS THAN OR EQUAL TO THE LEVEL SPECIFIED FOR FULL ENUMERATION,
             // DO FULL ENUMERATION => DO NOT PRUNE
-            for (int leftPlanIndex : leftJn.planIndexesArray) {
-                leftPlan = joinEnum.allPlans.get(leftPlanIndex);
-                for (int rightPlanIndex : rightJn.planIndexesArray) {
-                    rightPlan = joinEnum.allPlans.get(rightPlanIndex);
+            for (AbstractPlanNode leftPlan : leftJn.getPlanRegistry().getAllPlans()) {
+                for (AbstractPlanNode rightPlan : rightJn.getPlanRegistry().getAllPlans()) {
                     addMultiDatasetPlans(leftPlan, rightPlan, indexProvider);
                 }
             }
         }
     }
 
-    protected void addMultiDatasetPlans(PlanNode leftPlan, PlanNode rightPlan, IIndexProvider indexProvider)
-            throws AlgebricksException {
+    protected void addMultiDatasetPlans(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            IIndexProvider indexProvider) throws AlgebricksException {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
 
-        if (leftJn.planIndexesArray.size() == 0 || rightJn.planIndexesArray.size() == 0) {
+        if (leftJn.getPlanRegistry().size() == 0 || rightJn.getPlanRegistry().size() == 0) {
             return;
         }
 
@@ -1364,7 +1351,7 @@ public class JoinNode {
             return; // no card available, so do not add this plan
         }
 
-        if (leftJn.cheapestPlanIndex == PlanNode.NO_PLAN || rightJn.cheapestPlanIndex == PlanNode.NO_PLAN) {
+        if (leftJn.cheapestPlanNode == DummyPlanNode.INSTANCE || rightJn.cheapestPlanNode == DummyPlanNode.INSTANCE) {
             return;
         }
 
@@ -1429,13 +1416,14 @@ public class JoinNode {
         this.rightJn = rightJn;
     }
 
-    private boolean buildHintedHJPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            HashJoinExpressionAnnotation hintHashJoin, boolean outerJoin, List<Integer> newJoinConditions) {
+    private boolean buildHintedHJPlans(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, HashJoinExpressionAnnotation hintHashJoin, boolean outerJoin,
+            List<Integer> newJoinConditions) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
 
-        int hjPlan, commutativeHjPlan;
-        hjPlan = commutativeHjPlan = PlanNode.NO_PLAN;
+        AbstractPlanNode hjPlan, commutativeHjPlan;
+        hjPlan = commutativeHjPlan = DummyPlanNode.INSTANCE;
         boolean build = (hintHashJoin.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.BUILD);
         boolean probe = (hintHashJoin.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.PROBE);
         boolean validBuildOrProbeObject = false;
@@ -1462,12 +1450,13 @@ public class JoinNode {
         return handleHints(hjPlan, commutativeHjPlan, hintHashJoin, newJoinConditions);
     }
 
-    private boolean buildHintedBcastHJPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            BroadcastExpressionAnnotation hintBroadcastHashJoin, boolean outerJoin, List<Integer> newJoinConditions) {
+    private boolean buildHintedBcastHJPlans(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, BroadcastExpressionAnnotation hintBroadcastHashJoin, boolean outerJoin,
+            List<Integer> newJoinConditions) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
-        int bcastHjPlan, commutativeBcastHjPlan;
-        bcastHjPlan = commutativeBcastHjPlan = PlanNode.NO_PLAN;
+        AbstractPlanNode bcastHjPlan, commutativeBcastHjPlan;
+        bcastHjPlan = commutativeBcastHjPlan = DummyPlanNode.INSTANCE;
         boolean validBroadcastObject = false;
         String broadcastObject = hintBroadcastHashJoin.getName();
         if (broadcastObject != null
@@ -1495,11 +1484,11 @@ public class JoinNode {
         return handleHints(bcastHjPlan, commutativeBcastHjPlan, hintBroadcastHashJoin, newJoinConditions);
     }
 
-    private boolean buildHintedNLJPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression nestedLoopJoinExpr,
-            IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin, List<Integer> newJoinConditions,
-            IIndexProvider indexProvider) throws AlgebricksException {
-        int nljPlan, commutativeNljPlan;
-        nljPlan = commutativeNljPlan = PlanNode.NO_PLAN;
+    private boolean buildHintedNLJPlans(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression nestedLoopJoinExpr, IndexedNLJoinExpressionAnnotation hintNLJoin, boolean outerJoin,
+            List<Integer> newJoinConditions, IIndexProvider indexProvider) throws AlgebricksException {
+        AbstractPlanNode nljPlan, commutativeNljPlan;
+        nljPlan = commutativeNljPlan = DummyPlanNode.INSTANCE;
         nljPlan = buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin, indexProvider);
 
         // The indexnl hint may have been removed during applicability checking
@@ -1520,9 +1509,9 @@ public class JoinNode {
         return handleHints(nljPlan, commutativeNljPlan, hintNLJoin, newJoinConditions);
     }
 
-    private boolean handleHints(int plan, int commutativePlan, IExpressionAnnotation hint,
+    private boolean handleHints(AbstractPlanNode plan, AbstractPlanNode commutativePlan, IExpressionAnnotation hint,
             List<Integer> newJoinConditions) {
-        if (plan != PlanNode.NO_PLAN || commutativePlan != PlanNode.NO_PLAN) {
+        if (plan != DummyPlanNode.INSTANCE || commutativePlan != DummyPlanNode.INSTANCE) {
             // The hint has been applied to produce a valid plan.
             joinEnum.joinHints.put(hint, null);
             return true;
@@ -1539,9 +1528,9 @@ public class JoinNode {
         return true;
     }
 
-    private void buildAllNonHintedPlans(PlanNode leftPlan, PlanNode rightPlan, ILogicalExpression hashJoinExpr,
-            ILogicalExpression nestedLoopJoinExpr, boolean outerJoin, IIndexProvider indexProvider)
-            throws AlgebricksException {
+    private void buildAllNonHintedPlans(AbstractPlanNode leftPlan, AbstractPlanNode rightPlan,
+            ILogicalExpression hashJoinExpr, ILogicalExpression nestedLoopJoinExpr, boolean outerJoin,
+            IIndexProvider indexProvider) throws AlgebricksException {
 
         buildHashJoinPlan(leftPlan, rightPlan, hashJoinExpr, null, outerJoin);
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
@@ -1595,25 +1584,23 @@ public class JoinNode {
         }
     }
 
-    private PlanNode findCheapestPlan() {
-        List<PlanNode> allPlans = joinEnum.allPlans;
+    private AbstractPlanNode findCheapestPlan() {
         ICost cheapestCost = joinEnum.getCostHandle().maxCost();
-        PlanNode cheapestPlanNode = null;
+        AbstractPlanNode cheapestPlanNode = DummyPlanNode.INSTANCE;
         int numHintsUsedInCheapestPlan = 0;
 
-        for (int planIndex : this.planIndexesArray) {
-            PlanNode plan = allPlans.get(planIndex);
+        for (AbstractPlanNode plan : planRegistry.getAllPlans()) {
             if (plan.numHintsUsed > numHintsUsedInCheapestPlan) {
                 // "plan" has used more hints than "cheapestPlan", "plan" wins!
                 cheapestPlanNode = plan;
-                cheapestCost = plan.totalCost;
+                cheapestCost = plan.getTotalCost();
                 numHintsUsedInCheapestPlan = plan.numHintsUsed;
             } else if (plan.numHintsUsed == numHintsUsedInCheapestPlan) {
                 // Either both "plan" and "cheapestPlan" are hinted, or both are non-hinted.
                 // Cost is the decider.
-                if (plan.totalCost.costLT(cheapestCost)) {
+                if (plan.getTotalCost().costLT(cheapestCost)) {
                     cheapestPlanNode = plan;
-                    cheapestCost = plan.totalCost;
+                    cheapestCost = plan.getTotalCost();
                 }
             } else {
                 // This is the case where "plan" has used fewer hints than "cheapestPlan".
@@ -1623,18 +1610,16 @@ public class JoinNode {
         return cheapestPlanNode;
     }
 
-    private void setCheapestPlan(PlanNode pn, boolean forceEnum) {
-        PlanNode cheapestPlan = forceEnum ? findCheapestPlan() : pn;
-        cheapestPlanCost = cheapestPlan.totalCost;
-        cheapestPlanIndex = cheapestPlan.allPlansIndex;
-        cheapestPlanNode = cheapestPlan;
+    private void setCheapestPlan(AbstractPlanNode pn, boolean forceEnum) {
+        AbstractPlanNode cheapestPlanNode = forceEnum ? findCheapestPlan() : pn;
+        this.cheapestPlanNode = cheapestPlanNode;
+        this.cheapestPlanCost = cheapestPlanNode.getTotalCost();
     }
 
     @Override
     public String toString() {
         NumberFormat scientificFormat = new DecimalFormat("0.###E0");
         DecimalFormat formatter = new DecimalFormat("#,###.00");
-        List<PlanNode> allPlans = joinEnum.getAllPlans();
         StringBuilder sb = new StringBuilder(128);
         if (IsBaseLevelJoinNode()) {
             sb.append("Printing Scan Node ");
@@ -1644,8 +1629,10 @@ public class JoinNode {
         }
         sb.append(jnArrayIndex).append('\n');
         sb.append("datasetNames (aliases) ");
-        for (int j = 0; j < datasetNames.size(); j++) {
-            sb.append(datasetNames.get(j)).append('(').append(aliases.get(j)).append(')').append(' ');
+        if(datasetNames!=null) {
+            for (int j = 0; j < datasetNames.size(); j++) {
+                sb.append(datasetNames.get(j)).append('(').append(aliases.get(j)).append(')').append(' ');
+            }
         }
         sb.append('\n');
         sb.append("datasetIndexes ");
@@ -1653,7 +1640,7 @@ public class JoinNode {
             sb.append(j).append(datasetIndexes.get(j)).append(' ');
         }
         sb.append('\n');
-        sb.append("datasetBits ").append(datasetBits).append('\n');
+        sb.append("datasetBits ").append(datasetSubset).append('\n');
         sb.append("jnIndex ").append(jnIndex).append('\n');
         sb.append("level ").append(level).append('\n');
         sb.append("highestDatasetId ").append(highestDatasetId).append('\n');
@@ -1670,47 +1657,49 @@ public class JoinNode {
         }
         sb.append("size ").append(dumpDouble(size));
         sb.append("outputSize(sizeVarsAfterScan) ").append(dumpDouble(sizeVarsAfterScan));
-        if (planIndexesArray.size() == 0) {
+        if (planRegistry.size() == 0) {
             sb.append("No plans considered for this join node").append('\n');
         } else {
-            for (int j = 0; j < planIndexesArray.size(); j++) {
-                int k = planIndexesArray.get(j);
-                PlanNode pn = allPlans.get(k);
-                sb.append("\nPrinting Plan ").append(k).append('\n');
-                sb.append("planIndexesArray [").append(j).append("] ").append(k).append('\n');
+            for (int j = 0; j < planRegistry.size(); j++) {
+                AbstractPlanNode pn = planRegistry.getAllPlans().get(j);
+                sb.append("\nPrinting Plan ").append(pn).append('\n');
+                sb.append("Plan Registry [").append(j).append("] ").append(pn).append('\n');
                 if (IsBaseLevelJoinNode()) {
-                    if (pn.IsScanNode()) {
-                        if (pn.getScanOp() == PlanNode.ScanMethod.TABLE_SCAN) {
+                    if (pn instanceof  ScanPlanNode scanPlanNode) {
+                        if (scanPlanNode.getScanOp() == ScanPlanNode.ScanMethod.TABLE_SCAN) {
                             sb.append("DATA_SOURCE_SCAN").append('\n');
                         } else {
                             sb.append("INDEX_SCAN").append('\n');
                         }
                     }
                 } else {
-                    sb.append(pn.joinMethod().getFirst()).append('\n');
+                    JoinPlanNode joinPlanNode = (JoinPlanNode) pn;
+                    sb.append(joinPlanNode.joinMethod().getFirst()).append('\n');
                     sb.append("Join expr ");
-                    if (pn.joinExpr != null) {
-                        sb.append(pn.joinExpr).append('\n');
-                        sb.append("outer join " + pn.outerJoin).append('\n');
+                    if (joinPlanNode.getJoinExpr() != null) {
+                        sb.append(joinPlanNode.getJoinExpr()).append('\n');
+                        sb.append("outer join " + joinPlanNode.outerJoin).append('\n');
                     } else {
                         sb.append("null").append('\n');
                     }
                 }
                 sb.append("operator cost ").append(dumpCost(pn.getOpCost()));
                 sb.append("total cost ").append(dumpCost(pn.getTotalCost()));
-                sb.append("jnIndexes ").append(pn.jnIndexes[0]).append(" ").append(pn.jnIndexes[1]).append('\n');
+//                sb.append("jnIndexes ").append(pn.jnIndexes[0]).append(" ").append(pn.jnIndexes[1]).append('\n');
                 if (IsHigherLevelJoinNode()) {
-                    PlanNode leftPlan = pn.getLeftPlanNode();
-                    PlanNode rightPlan = pn.getRightPlanNode();
-                    sb.append("planIndexes ").append(leftPlan.getIndex()).append(" ").append(rightPlan.getIndex())
-                            .append('\n');
-                    sb.append(dumpLeftRightPlanCosts(pn));
+                    JoinPlanNode joinPlanNode  = (JoinPlanNode) pn;
+                    AbstractPlanNode     leftPlan = joinPlanNode.getLeftPlan();
+                    AbstractPlanNode rightPlan = joinPlanNode.getRightPlan();
+//                    sb.append("Left & Right Plans ").append(leftPlan).append(" ").append(rightPlan)
+//                            .append('\n');
+//                    sb.append(dumpLeftRightPlanCosts(pn));
+//                  TODO(preetham) : Revisit printing left and right plan details
                 }
             }
-            if (cheapestPlanIndex != PlanNode.NO_PLAN) {
+            if (cheapestPlanNode != DummyPlanNode.INSTANCE) {
                 sb.append("\nCheapest plan for JoinNode ").append(jnArrayIndex).append(" is ").append(cheapestPlanIndex)
                         .append(", cost is ")
-                        .append(dumpDouble(allPlans.get(cheapestPlanIndex).getTotalCost().computeTotalCost()));
+                        .append(dumpDouble(cheapestPlanNode.getTotalCost().computeTotalCost()));
             }
         }
         sb.append("-----------------------------------------------------------------").append('\n');
@@ -1735,10 +1724,10 @@ public class JoinNode {
         return sb.toString();
     }
 
-    protected String dumpLeftRightPlanCosts(PlanNode pn) {
+    protected String dumpLeftRightPlanCosts(JoinPlanNode pn) {
         StringBuilder sb = new StringBuilder(128);
-        PlanNode leftPlan = pn.getLeftPlanNode();
-        PlanNode rightPlan = pn.getRightPlanNode();
+        AbstractPlanNode leftPlan = pn.getLeftPlan();
+        AbstractPlanNode rightPlan = pn.getRightPlan();
         ICost leftPlanTotalCost = leftPlan.getTotalCost();
         ICost rightPlanTotalCost = rightPlan.getTotalCost();
 
@@ -1748,18 +1737,17 @@ public class JoinNode {
     }
 
     protected void printCostOfAllPlans(StringBuilder sb) {
-        List<PlanNode> allPlans = joinEnum.allPlans;
         ICost minCost = joinEnum.getCostHandle().maxCost();
-        int lowestCostPlanIndex = 0;
-        for (int planIndex : planIndexesArray) {
-            ICost planCost = allPlans.get(planIndex).totalCost;
-            sb.append("plan ").append(planIndex).append(" cost is ").append(dumpDouble(planCost.computeTotalCost()));
+        AbstractPlanNode lowestCostPlan = DummyPlanNode.INSTANCE;
+        for (AbstractPlanNode plan : planRegistry.getAllPlans()) {
+            ICost planCost = plan.getTotalCost();
+            sb.append("plan ").append(plan).append(" cost is ").append(dumpDouble(planCost.computeTotalCost()));
             if (planCost.costLT(minCost)) {
                 minCost = planCost;
-                lowestCostPlanIndex = planIndex;
+                lowestCostPlan = plan;
             }
         }
-        sb.append("END Cheapest Plan is ").append(lowestCostPlanIndex).append(", Cost is ")
+        sb.append("END Cheapest Plan is ").append(lowestCostPlan).append(", Cost is ")
                 .append(dumpDouble(minCost.computeTotalCost()));
     }
 }

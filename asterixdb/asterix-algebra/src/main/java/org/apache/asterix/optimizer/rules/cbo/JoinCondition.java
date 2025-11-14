@@ -37,13 +37,13 @@ public class JoinCondition {
     protected boolean deleted = false;
     protected int numberOfVars = 0; // how many variables
     protected int componentNumber = 0; // for identifying if join graph is connected
-    protected int datasetBits;
+    private DatasetRegistry.DatasetSubset datasetSubset;
     // used for triangle detection; we strictly do not mean left and right here.
     // first and second sides would be more appropriate
-    protected int leftSide;
-    protected int rightSide;
-    protected int leftSideBits;
-    protected int rightSideBits;
+    private AbstractLeafInput leftSide;
+    private AbstractLeafInput rightSide;
+    private DatasetRegistry.DatasetSubset leftSideBits;
+    private DatasetRegistry.DatasetSubset rightSideBits;
     protected int numLeafInputs;
     protected double selectivity = -1.0; // This must be changed obviously
     protected comparisonOp comparisonType;
@@ -58,5 +58,49 @@ public class JoinCondition {
 
     protected ILogicalExpression getJoinCondition() {
         return joinCondition;
+    }
+
+    public void setJoinCondition(ILogicalExpression joinCondition) {
+        this.joinCondition = joinCondition;
+    }
+
+    public DatasetRegistry.DatasetSubset getDatasetSubset() {
+        return datasetSubset;
+    }
+
+    public void setDatasetSubset(DatasetRegistry.DatasetSubset datasetSubset) {
+        this.datasetSubset = datasetSubset;
+    }
+
+    public AbstractLeafInput getLeftSide() {
+        return leftSide;
+    }
+
+    public void setLeftSide(AbstractLeafInput leftSide) {
+        this.leftSide = leftSide;
+    }
+
+    public AbstractLeafInput getRightSide() {
+        return rightSide;
+    }
+
+    public void setRightSide(AbstractLeafInput rightSide) {
+        this.rightSide = rightSide;
+    }
+
+    public DatasetRegistry.DatasetSubset getLeftSideBits() {
+        return leftSideBits;
+    }
+
+    public void setLeftSideBits(DatasetRegistry.DatasetSubset leftSideBits) {
+        this.leftSideBits = leftSideBits;
+    }
+
+    public DatasetRegistry.DatasetSubset getRightSideBits() {
+        return rightSideBits;
+    }
+
+    public void setRightSideBits(DatasetRegistry.DatasetSubset rightSideBits) {
+        this.rightSideBits = rightSideBits;
     }
 }

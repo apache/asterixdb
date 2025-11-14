@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
@@ -35,7 +36,6 @@ import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnot
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -105,10 +105,10 @@ public class JoinEnum {
     private static final boolean CBO_CP_ENUM_DEFAULT = true;
     protected List<JoinCondition> joinConditions; // "global" list of join conditions
     protected Map<IExpressionAnnotation, Warning> joinHints;
-    protected List<PlanNode> allPlans; // list of all plans
+    protected Map<AbstractLeafInput, Integer> leafInputToJoinIndexMap;
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
-    protected List<ILogicalOperator> leafInputs;
+    protected List<AbstractLeafInput> leafInputs;
 
     // The Distinct operators for each DataScan operator (if applicable)
     protected HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
@@ -120,14 +120,14 @@ public class JoinEnum {
     protected ILogicalOperator rootOrderByOp;
     protected List<ILogicalExpression> singleDatasetPreds;
     protected List<AssignOperator> assignOps;
-    List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
-    HashMap<LogicalVariable, Integer> varLeafInputIds;
+    List<Quadruple<DatasetRegistry.DatasetSubset, DatasetRegistry.DatasetSubset, JoinOperator, Integer>> outerJoinsDependencyList;
+    HashMap<LogicalVariable, AbstractLeafInput> varLeafInputIds;
     protected List<List<List<ILogicalOperator>>> unnestOpsInfo;
     protected List<JoinOperator> allJoinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
     protected boolean outerJoin;
-    protected List<Triple<Integer, Integer, Boolean>> buildSets;
+    protected List<Triple<DatasetRegistry.DatasetSubset, Integer, Boolean>> buildSets;
     protected int allTabsJnNum; // keeps track of the join Node where all the tables have been joined
     protected int maxBits; // the joinNode where the dataset bits are the highest is where all the tables have been joined
 
@@ -146,23 +146,24 @@ public class JoinEnum {
     List<LogicalVariable> resultAndJoinVars;
     Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap;
     IIndexProvider indexProvider;
+    public DatasetRegistry datasetRegistry;
 
     public JoinEnum() {
     }
 
     protected void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
-            List<ILogicalOperator> leafInputs, List<JoinOperator> allJoinOps, List<AssignOperator> assignOps,
-            List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
-            List<Triple<Integer, Integer, Boolean>> buildSets, HashMap<LogicalVariable, Integer> varLeafInputIds,
+            List<AbstractLeafInput> leafInputs, List<JoinOperator> allJoinOps, List<AssignOperator> assignOps,
+            List<Quadruple<DatasetRegistry.DatasetSubset, DatasetRegistry.DatasetSubset, JoinOperator, Integer>> outerJoinsDependencyList,
+            List<Triple<DatasetRegistry.DatasetSubset, Integer, Boolean>> buildSets,
+            HashMap<LogicalVariable, AbstractLeafInput> varLeafInputIds,
             List<List<List<ILogicalOperator>>> unnestOpsInfo,
             HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps,
             ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, List<LogicalVariable> resultAndJoinVars,
             Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap, IOptimizationContext context,
-            IIndexProvider indexProvider) throws AsterixException {
+            IIndexProvider indexProvider, DatasetRegistry datasetRegistry) throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
-        this.allPlans = new ArrayList<>();
         this.numberOfTerms = numberOfFromTerms;
         this.cboMode = cboMode;
         this.cboTestMode = cboTestMode;
@@ -190,6 +191,8 @@ public class JoinEnum {
         this.allTabsJnNum = 1; // keeps track of where the final join Node will be. In case of bushy plans, this may not always be the last join nod     e.
         this.maxBits = 1;
         this.indexProvider = indexProvider;
+        this.datasetRegistry = datasetRegistry;
+        leafInputToJoinIndexMap = new HashMap<>();
     }
 
     protected void initCostHandleAndJoinNodes(IOptimizationContext context) {
@@ -226,10 +229,6 @@ public class JoinEnum {
         return joinConditions;
     }
 
-    public List<PlanNode> getAllPlans() {
-        return allPlans;
-    }
-
     protected JoinNode[] getJnArray() {
         return jnArray;
     }
@@ -246,14 +245,14 @@ public class JoinEnum {
         return stats;
     }
 
-    protected ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
+    protected RealLeafInput findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
         Set<LogicalVariable> vars = new HashSet<>();
-        for (ILogicalOperator op : leafInputs) {
+        for (AbstractLeafInput leafInput : leafInputs) {
             vars.clear();
             // this is expensive to do. So store this once and reuse
-            VariableUtilities.getLiveVariables(op, vars);
+            VariableUtilities.getLiveVariables(leafInput.getOp(), vars);
             if (vars.containsAll(logicalVars)) {
-                return op;
+                return (RealLeafInput) leafInput;
             }
         }
 
@@ -519,7 +518,8 @@ public class JoinEnum {
             }
             if (!fixed) {
                 // now comes the hard part. Need to look thru all the assigns in the leafInputs
-                for (ILogicalOperator op : leafInputs) {
+                for (AbstractLeafInput leafInput : leafInputs) {
+                    ILogicalOperator op = leafInput.getOp();
                     while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
                         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                             AssignOperator aOp = (AssignOperator) op;
@@ -552,7 +552,8 @@ public class JoinEnum {
             usedVars.clear();
             joinExpr.getUsedVariables(usedVars);
             // We only set these for join predicates that have exactly two tables
-            jc.leftSideBits = jc.rightSideBits = JoinCondition.NO_JC;
+            jc.setRightSideBits(null);
+            jc.setLeftSideBits(null);
             if (((AbstractFunctionCallExpression) joinExpr).getFunctionIdentifier()
                     .equals(AlgebricksBuiltinFunctions.EQ)) {
                 jc.comparisonType = JoinCondition.comparisonOp.OP_EQ;
@@ -561,25 +562,28 @@ public class JoinEnum {
             }
             jc.numberOfVars = usedVars.size();
 
-            List<Integer> leafInputNumbers = new ArrayList<>(jc.numberOfVars);
+            List<AbstractLeafInput> leafInputNumbers = new ArrayList<>(jc.numberOfVars);
             for (int i = 0; i < jc.numberOfVars; i++) {
-                int idx = varLeafInputIds.get(usedVars.get(i));
+                AbstractLeafInput idx = varLeafInputIds.get(usedVars.get(i));
                 if (!leafInputNumbers.contains(idx)) {
                     leafInputNumbers.add(idx);
                 }
             }
             jc.numLeafInputs = leafInputNumbers.size();
+            jc.setDatasetSubset(datasetRegistry.new DatasetSubset());
             for (int i = 0; i < jc.numLeafInputs; i++) {
-                int side = leafInputNumbers.get(i);
-                int bits = 1 << (side - 1);
+                AbstractLeafInput side = leafInputNumbers.get(i);
+                //                int bits = 1 << (side - 1);
+                DatasetRegistry.DatasetSubset bits = datasetRegistry.new DatasetSubset();
+                bits.addDataset(side);
                 if (i == 0) {
-                    jc.leftSide = side;
-                    jc.leftSideBits = bits;
+                    jc.setLeftSide(side);
+                    jc.setLeftSideBits(bits);
                 } else if (i == 1) {
-                    jc.rightSide = side;
-                    jc.rightSideBits = bits;
+                    jc.setRightSide(side);
+                    jc.setRightSideBits(bits);
                 }
-                jc.datasetBits |= bits;
+                jc.getDatasetSubset().addDataset(side);
             }
         }
     }
@@ -636,14 +640,7 @@ public class JoinEnum {
         if (varLeafInputIds.get(var1) == varLeafInputIds.get(var2)) {
             return null; // must be from different datasets to make a join expression
         }
-        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
-        VariableReferenceExpression e1 = new VariableReferenceExpression(var1);
-        arguments.add(new MutableObject<>(e1));
-        VariableReferenceExpression e2 = new VariableReferenceExpression(var2);
-        arguments.add(new MutableObject<>(e2));
-        ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), arguments);
-        return expr;
+        return EnumerateJoinsRule.makeNewEQJoinExpr(var1, var2);
     }
 
     private boolean notFound(LogicalVariable var1, LogicalVariable var2) {
@@ -703,7 +700,8 @@ public class JoinEnum {
                         continue;
                     }
                     if (jcJ.comparisonType == JoinCondition.comparisonOp.OP_EQ && (jcJ.usedVars.size() == 2)
-                            && (jcJ.numLeafInputs == 2) && (jcI.datasetBits == jcJ.datasetBits)) {
+                            && (jcJ.numLeafInputs == 2)
+                            && Objects.equals(jcI.getDatasetSubset(), jcJ.getDatasetSubset())) {
                         JCs.add(jcJ);
                     }
                 }
@@ -739,29 +737,29 @@ public class JoinEnum {
             rightVars.add(jc.usedVars.get(1));
         }
         double sel = -1.0;
-        ILogicalOperator leftLeafInput = leafInputs.get(jCs.get(0).leftSide - 1);
-        DataSourceScanOperator leftScanOp = findDataSourceScanOperator(leftLeafInput);
+        ILogicalOperator leftLeafInput = jCs.get(0).getLeftSide().getOp();
+        DataSourceScanOperator leftScanOp = EnumerateJoinsRule.findDataSourceScanOperator(leftLeafInput);
         boolean leftPrimary = false;
         if (leftScanOp.getVariables().containsAll(leftVars)
                 && leftScanOp.getVariables().size() == leftVars.size() + 1) {
             // this is the primary side
             leftPrimary = true;
-            sel = 1.0 / jnArray[jCs.get(0).leftSide].getOrigCardinality();
+            sel = 1.0 / jnArray[leafInputToJoinIndexMap.get(jCs.get(0).getLeftSide())].getOrigCardinality();
         }
         boolean rightPrimary = false;
-        ILogicalOperator rightLeafInput = leafInputs.get(jCs.get(0).rightSide - 1);
-        DataSourceScanOperator rightScanOp = findDataSourceScanOperator(rightLeafInput);
+        AbstractLeafInput rightLeafInput = jCs.get(0).getRightSide();
+        DataSourceScanOperator rightScanOp = EnumerateJoinsRule.findDataSourceScanOperator(rightLeafInput.getOp());
         if (rightScanOp.getVariables().containsAll(rightVars)
                 && rightScanOp.getVariables().size() == rightVars.size() + 1) {
             // this is the primary side
             rightPrimary = true;
-            sel = 1.0 / jnArray[jCs.get(0).rightSide].getOrigCardinality();
+            sel = 1.0 / jnArray[leafInputToJoinIndexMap.get(jCs.get(0).getRightSide())].getOrigCardinality();
         }
 
         if (leftPrimary && rightPrimary) {
             // this is the subset case. The join cardinality will be the smaller side. So selectvity will be 1/biggerCard
-            sel = 1.0 / Math.max(jnArray[jCs.get(0).leftSide].getOrigCardinality(),
-                    jnArray[jCs.get(0).rightSide].getOrigCardinality());
+            sel = 1.0 / Math.max(jnArray[leafInputToJoinIndexMap.get(jCs.get(0).getLeftSide())].getOrigCardinality(),
+                    jnArray[leafInputToJoinIndexMap.get(jCs.get(0).getRightSide())].getOrigCardinality());
         }
         return sel;
     }
@@ -774,10 +772,10 @@ public class JoinEnum {
         return false;
     }
 
-    private double smallerDatasetSize(int datasetBits) {
+    private double smallerDatasetSize(DatasetRegistry.DatasetSubset datasetBits) {
         double size = Cost.MAX_CARD;
         for (JoinNode jn : this.jnArray)
-            if ((jn.datasetBits & datasetBits) > 0) {
+            if (jn.datasetSubset != null && datasetRegistry.intersection(jn.datasetSubset, datasetBits).size() != 0) {
                 if (jn.origCardinality < size) {
                     size = jn.origCardinality;
                 }
@@ -786,8 +784,10 @@ public class JoinEnum {
     }
 
     private boolean verticesMatch(JoinCondition jc1, JoinCondition jc2) {
-        return jc1.leftSideBits == jc2.leftSideBits || jc1.leftSideBits == jc2.rightSideBits
-                || jc1.rightSideBits == jc2.leftSideBits || jc1.rightSideBits == jc2.rightSideBits;
+        return jc1.getLeftSideBits().equals(jc2.getLeftSideBits())
+                || jc1.getLeftSideBits().equals(jc2.getRightSideBits())
+                || jc1.getRightSideBits().equals(jc2.getLeftSideBits())
+                || jc1.getRightSideBits().equals(jc2.getRightSideBits());
     }
 
     private void markComponents(int startingJoinCondition) {
@@ -861,10 +861,11 @@ public class JoinEnum {
     }
 
     private boolean isThisCombinationPossible(JoinNode leftJn, JoinNode rightJn) {
-        for (Quadruple<Integer, Integer, JoinOperator, Integer> tr : outerJoinsDependencyList) {
+        for (Quadruple<DatasetRegistry.DatasetSubset, DatasetRegistry.DatasetSubset, JoinOperator, Integer> tr : outerJoinsDependencyList) {
             if (tr.getThird().getOuterJoin()) {
-                if (rightJn.datasetBits == tr.getSecond()) { // A dependent table(s) is being joined. Find if other table(s) is present
-                    if (!((leftJn.datasetBits & tr.getFirst()) > 0)) {
+                if (DatasetRegistry.equals(rightJn.datasetSubset, tr.getSecond())) { // A dependent table(s) is being joined. Find if other table(s) is present
+
+                    if (datasetRegistry.intersection(leftJn.datasetSubset, tr.getFirst()).size() == 0) {
                         return false; // required table not found
                     }
                 }
@@ -872,10 +873,10 @@ public class JoinEnum {
         }
 
         if (leftJn.level == 1) { // if we are at a higher level, there is nothing to check as these tables have been joined already in leftJn
-            for (Quadruple<Integer, Integer, JoinOperator, Integer> tr : outerJoinsDependencyList) {
+            for (Quadruple<DatasetRegistry.DatasetSubset, DatasetRegistry.DatasetSubset, JoinOperator, Integer> tr : outerJoinsDependencyList) {
                 if (tr.getThird().getOuterJoin()) {
-                    if (leftJn.datasetBits == tr.getSecond()) { // A dependent table(s) is being joined. Find if other table(s) is present
-                        if (!((rightJn.datasetBits & tr.getFirst()) > 0)) {
+                    if (DatasetRegistry.equals(leftJn.datasetSubset, tr.getSecond())) { // A dependent table(s) is being joined. Find if other table(s) is present
+                        if (datasetRegistry.intersection(rightJn.datasetSubset, tr.getFirst()).size() == 0) {
                             return false; // required table not found
                         }
                     }
@@ -885,13 +886,13 @@ public class JoinEnum {
         return true;
     }
 
-    private int findBuildSet(int jbits, int numbTabs) {
+    private int findBuildSet(DatasetRegistry.DatasetSubset jbits, int numbTabs) {
         int i;
         if (buildSets.isEmpty()) {
             return -1;
         }
         for (i = 0; i < buildSets.size(); i++) {
-            if ((buildSets.get(i).third) && (buildSets.get(i).first & jbits) > 0) {
+            if ((buildSets.get(i).third) && datasetRegistry.intersection(buildSets.get(i).first, jbits).size() > 0) {
                 return i;
             }
         }
@@ -927,17 +928,17 @@ public class JoinEnum {
                 }
                 JoinNode jnJ = jnArray[j];
                 jnJ.jnArrayIndex = j;
-                if ((jnI.datasetBits & jnJ.datasetBits) > 0) {
+                if (datasetRegistry.intersection(jnI.datasetSubset, jnJ.datasetSubset).size() > 0) {
                     // these already have some common table
                     continue;
                 }
                 //System.out.println("Before1 i = " + i + " j = " + j); // will put these in trace statements soon
                 //System.out.println("Before1 Jni Dataset bits = " + jnI.datasetBits + " Jni Dataset bits = " + jnJ.datasetBits);
                 // first check if the new table is part of a buildSet.
-                k = findBuildSet(jnJ.datasetBits, jnI.level + jnJ.level);
+                k = findBuildSet(jnJ.datasetSubset, jnI.level + jnJ.level);
                 //System.out.println("Buildset " + k);
                 if (k > -1) {
-                    if ((jnI.datasetBits & buildSets.get(k).first) == 0) { // i should also be part of the buildSet
+                    if (datasetRegistry.intersection(jnI.datasetSubset, buildSets.get(k).first).size() == 0) { // i should also be part of the buildSet
                         continue;
                     }
                 }
@@ -949,12 +950,12 @@ public class JoinEnum {
                 }
                 //System.out.println("After i = " + i + " j = " + j); //put these in trace statements
                 //System.out.println("After Jni Dataset bits = " + jnI.datasetBits + " Jni Dataset bits = " + jnJ.datasetBits);
-                int newBits = jnI.datasetBits | jnJ.datasetBits;
-                if ((k > 0) && (newBits == buildSets.get(k).first)) { // This buildSet is no longer needed.
+                DatasetRegistry.DatasetSubset newBits = datasetRegistry.union(jnI.datasetSubset, jnJ.datasetSubset);
+                if ((k > 0) && (newBits.equals(buildSets.get(k).first))) { // This buildSet is no longer needed.
                     buildSets.get(k).third = false;
                 }
-                JoinNode jnNewBits = jnArray[newBits];
-                jnNewBits.jnArrayIndex = newBits;
+                JoinNode jnNewBits = jnArray[Math.toIntExact(newBits.getBitset())];
+                jnNewBits.jnArrayIndex = Math.toIntExact(newBits.getBitset());
                 // visiting this join node for the first time
                 if (jnNewBits.jnIndex == 0) {
                     jnNumber++;
@@ -964,9 +965,9 @@ public class JoinEnum {
                     // if these bits are turned on, we get 19. Then jn[19].jn_index will equal 33.
                     // Then jn[33].highestKeyspaceId will equal 5
                     // if this joinNode ever gets removed, then set jn[19].highestKeyspaceId = 0
-                    jn.datasetBits = newBits;
-                    if (newBits > maxBits) {
-                        maxBits = newBits;
+                    jn.datasetSubset = newBits;
+                    if (newBits.getBitset() > maxBits) {
+                        maxBits = Math.toIntExact(newBits.getBitset());
                         allTabsJnNum = jnNumber;
                     }
                     jnNewBits.jnIndex = addPlansToThisJn = jnNumber;
@@ -1053,18 +1054,17 @@ public class JoinEnum {
     private int initializeBaseLevelJoinNodes() throws AlgebricksException {
         // join nodes have been allocated in the JoinEnum
         // add a dummy Plan Node; we do not want planNode at position 0 to be a valid plan
-        PlanNode pn = new PlanNode(0, this);
-        allPlans.add(pn);
 
         boolean noCards = false;
         // initialize the level 1 join nodes
         for (int i = 1; i <= numberOfTerms; i++) {
             JoinNode jn = jnArray[i];
             jn.jnArrayIndex = i;
-            jn.datasetBits = 1 << (i - 1);
             jn.datasetIndexes = new ArrayList<>(Collections.singleton(i));
-            ILogicalOperator leafInput = leafInputs.get(i - 1);
-            DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
+            AbstractLeafInput leafInput = leafInputs.get(i - 1);
+            ILogicalOperator leafInputOp = leafInput.getOp();
+            leafInputToJoinIndexMap.put(leafInputs.get(i - 1), i);
+            DataSourceScanOperator scanOp = EnumerateJoinsRule.findDataSourceScanOperator(leafInput.getOp());
             if (scanOp != null) {
                 DataSourceId id = (DataSourceId) scanOp.getDataSource().getId();
                 jn.aliases = new ArrayList<>(Collections.singleton(findAlias(scanOp)));
@@ -1084,7 +1084,7 @@ public class JoinEnum {
                     jn.size = 500;
                 } else {
                     if (idxDetails == null) {
-                        return PlanNode.NO_PLAN;
+                        return AbstractPlanNode.NO_PLAN;
                     }
                     jn.setOrigCardinality(idxDetails.getSourceCardinality(), false);
                     jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
@@ -1092,17 +1092,18 @@ public class JoinEnum {
                     jn.setSizeVarsAfterScan(10); // dummy value
                 }
                 // multiply by the respective predicate selectivities
-                jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInput, false), false);
+                jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInputOp, false), false);
             } else {
                 // could be unnest or assign
                 jn.datasetNames = new ArrayList<>(Collections.singleton("unnestOrAssign"));
                 jn.aliases = new ArrayList<>(Collections.singleton("unnestOrAssign"));
-                double card = findInListCard(leafInput);
+                double card = findInListCard(leafInputOp);
                 jn.setOrigCardinality(card, false);
                 jn.setCardinality(card, false);
                 // just a guess
                 jn.size = 10;
             }
+            jn.datasetSubset = datasetRegistry.new DatasetSubset(leafInputs.get(i - 1));
 
             if (jn.origCardinality >= Cost.MAX_CARD) {
                 noCards = true;
@@ -1112,20 +1113,9 @@ public class JoinEnum {
             jn.level = 1;
         }
         if (noCards) {
-            return PlanNode.NO_PLAN;
+            return AbstractPlanNode.NO_PLAN;
         }
         return numberOfTerms;
-    }
-
-    protected DataSourceScanOperator findDataSourceScanOperator(ILogicalOperator op) {
-        ILogicalOperator origOp = op;
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
-                return (DataSourceScanOperator) op;
-            }
-            op = op.getInputs().get(0).getValue();
-        }
-        return null;
     }
 
     // Most of this work is done in the very first line by calling initializeBaseLevelJoinNodes().
@@ -1134,11 +1124,11 @@ public class JoinEnum {
     // so some of the checks can be removed.
     private int enumerateBaseLevelJoinNodes() throws AlgebricksException {
         int lastBaseLevelJnNum = initializeBaseLevelJoinNodes(); // initialize the level 1 join nodes
-        if (lastBaseLevelJnNum == PlanNode.NO_PLAN) {
-            return PlanNode.NO_PLAN;
+        if (lastBaseLevelJnNum == AbstractPlanNode.NO_PLAN) {
+            return AbstractPlanNode.NO_PLAN;
         }
 
-        int dataScanPlan;
+        AbstractPlanNode dataScanPlan;
         JoinNode[] jnArray = this.getJnArray();
         int limit = -1;
         if (this.numberOfTerms == 1) {
@@ -1147,8 +1137,8 @@ public class JoinEnum {
         for (int i = 1; i <= this.numberOfTerms; i++) {
             JoinNode jn = jnArray[i];
             Index.SampleIndexDetails idxDetails = jn.getIdxDetails();
-            ILogicalOperator leafInput = this.leafInputs.get(i - 1);
-            DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
+            ILogicalOperator leafInput = this.leafInputs.get(i - 1).getOp();
+            DataSourceScanOperator scanOp = EnumerateJoinsRule.findDataSourceScanOperator(leafInput);
             if (scanOp != null && fakeLeafInputsMap.get(scanOp) != null) {
                 jn.setFake();
             }
@@ -1159,8 +1149,8 @@ public class JoinEnum {
             if (!cboTestMode) {
                 if (idxDetails == null) {
                     dataScanPlan = jn.addSingleDatasetPlans();
-                    if (dataScanPlan == PlanNode.NO_PLAN) {
-                        return PlanNode.NO_PLAN;
+                    if (dataScanPlan == DummyPlanNode.INSTANCE) {
+                        return AbstractPlanNode.NO_PLAN;
                     }
                     continue;
                 }
@@ -1186,8 +1176,8 @@ public class JoinEnum {
             }
 
             dataScanPlan = jn.addSingleDatasetPlans();
-            if (dataScanPlan == PlanNode.NO_PLAN) {
-                return PlanNode.NO_PLAN;
+            if (dataScanPlan == DummyPlanNode.INSTANCE) {
+                return AbstractPlanNode.NO_PLAN;
             }
             // We may not add any index plans, so need to check for NO_PLAN
             jn.addIndexAccessPlans(EnumerateJoinsRule.removeTrue(leafInput), indexProvider);
@@ -1294,16 +1284,16 @@ public class JoinEnum {
             exp.getUsedVariables(vars);
             if (vars.size() == 1) { // just being really safe. If samples have size 0, there are issues.
                 double sel;
-                ILogicalOperator leafInput = findLeafInput(vars);
+                RealLeafInput leafInput = findLeafInput(vars);
                 SelectOperator selOp;
-                if (leafInput.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                    selOp = getStatsHandle().findSelectOpWithExpr(leafInput, exp);
+                if (leafInput.getOp().getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+                    selOp = getStatsHandle().findSelectOpWithExpr(leafInput.getOp(), exp);
                     if (selOp == null) {
-                        selOp = (SelectOperator) leafInput;
+                        selOp = (SelectOperator) leafInput.getOp();
                     }
                 } else {
                     selOp = new SelectOperator(new MutableObject<>(exp));
-                    selOp.getInputs().add(new MutableObject<>(leafInput));
+                    selOp.getInputs().add(new MutableObject<>(leafInput.getOp()));
                 }
                 sel = getStatsHandle().findSelectivityForThisPredicate(selOp, (AbstractFunctionCallExpression) exp,
                         findUnnestOp(selOp));
@@ -1329,7 +1319,7 @@ public class JoinEnum {
     }
 
     // main entry point in this file
-    protected int enumerateJoins() throws AlgebricksException {
+    protected AbstractPlanNode enumerateJoins() throws AlgebricksException {
         // create a localJoinOp for use in calling existing nested loops code.
         InnerJoinOperator dummyInput = new InnerJoinOperator(null, null, null);
         localJoinOp = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
@@ -1339,8 +1329,8 @@ public class JoinEnum {
         addTCSelectionPredicates();
         keepOnlyOneSelectivityHint();
         int lastBaseLevelJnNum = enumerateBaseLevelJoinNodes();
-        if (lastBaseLevelJnNum == PlanNode.NO_PLAN) {
-            return PlanNode.NO_PLAN;
+        if (lastBaseLevelJnNum == AbstractPlanNode.NO_PLAN) {
+            return DummyPlanNode.INSTANCE;
         }
 
         IPlanPrettyPrinter pp = optCtx.getPrettyPrinter();
@@ -1376,7 +1366,7 @@ public class JoinEnum {
             LOGGER.trace(dumpJoinNodes(lastJnNum));
         }
 
-        return lastJn.cheapestPlanIndex;
+        return lastJn.cheapestPlanNode;
     }
 
     private void keepOnlyOneSelectivityHint() {
@@ -1402,8 +1392,9 @@ public class JoinEnum {
     // R.a = S.a and R.a op operand ==> S.a op operand
     private void addTCSelectionPredicates() throws AlgebricksException {
         List<SelectOperator> existingSelOps = new ArrayList<>();
-        for (ILogicalOperator leafInput : this.leafInputs) {
-            ILogicalOperator li = leafInput.getInputs().get(0).getValue(); // skip the true on the top
+        for (AbstractLeafInput leafInput : this.leafInputs) {
+            ILogicalOperator op = leafInput.getOp();
+            ILogicalOperator li = op.getInputs().get(0).getValue(); // skip the true on the top
             List<SelectOperator> selOps = findAllSimpleSelOps(li); // variable op operand
             existingSelOps.addAll(selOps);
         }
@@ -1470,8 +1461,8 @@ public class JoinEnum {
 
     private void addSelOpToLeafInput(JoinCondition jc, LogicalVariable var, SelectOperator newSelOp)
             throws AlgebricksException {
-        int l = varLeafInputIds.get(var); // get the corresponding leafInput using the map
-        ILogicalOperator parent = leafInputs.get(l - 1);
+        AbstractLeafInput l = varLeafInputIds.get(var); // get the corresponding leafInput using the map
+        ILogicalOperator parent = l.getOp();
         ILogicalOperator child = parent.getInputs().get(0).getValue();
         parent.getInputs().get(0).setValue(newSelOp);
         newSelOp.getInputs().add(new MutableObject<>(child));
