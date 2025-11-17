@@ -304,6 +304,9 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
 
     private static LikePattern processPattern(String pattern, StringBuilder likePatternStr) {
         // note: similar logic is applied in StringLikeDescriptor
+        if (pattern.equals(String.valueOf(PERCENT))) {
+            return null;
+        }
         LikePattern likePattern = EQUAL;
         for (int i = 0, length = pattern.length(); i < length; i++) {
             char c = pattern.charAt(i);
