@@ -576,6 +576,14 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         public int getSourceIndicator() {
             return sourceIndicator;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof ArrayIndexElement && Objects.equals(unnestList, ((ArrayIndexElement) obj).unnestList)
+                    && Objects.equals(projectList, ((ArrayIndexElement) obj).projectList)
+                    && Objects.equals(typeList, ((ArrayIndexElement) obj).typeList)
+                    && sourceIndicator == ((ArrayIndexElement) obj).sourceIndicator;
+        }
     }
 
     public static class SampleIndexDetails extends AbstractIndexDetails {

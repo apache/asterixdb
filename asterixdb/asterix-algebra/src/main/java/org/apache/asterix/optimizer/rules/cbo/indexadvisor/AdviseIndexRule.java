@@ -142,13 +142,12 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                         && actualIndex.getIndexDetails() instanceof Index.ValueIndexDetails valueIndexDetails) {
                     indexAdvisor.addPresentAdviseString(getCreateIndexClause(actualIndex.getIndexName(),
                             valueIndexDetails.getKeyFieldNames(), databaseName, dataverse, datasetName));
-                    return;
+                } else {
+                    indexAdvisor.addRecommendedAdviseString(getCreateIndexClause(
+                            getIndexName(((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames()),
+                            ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), databaseName,
+                            dataverse, datasetName));
                 }
-
-                indexAdvisor.addRecommendedAdviseString(getCreateIndexClause(
-                        getIndexName(((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames()),
-                        ((Index.ValueIndexDetails) fakeIndex.getIndexDetails()).getKeyFieldNames(), databaseName,
-                        dataverse, datasetName));
 
             } else if (fakeIndex.getIndexDetails() instanceof Index.ArrayIndexDetails fakeArrayIndexDetails) {
                 Index actualIndex = lookupArrayIndex(databaseName, dataverse, datasetName,
@@ -157,11 +156,12 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                         && actualIndex.getIndexDetails() instanceof Index.ArrayIndexDetails arrayIndexDetails) {
                     indexAdvisor.addPresentAdviseString(getCreateArrayIndexClause(actualIndex.getIndexName(),
                             arrayIndexDetails, databaseName, dataverse, datasetName));
-                }
+                } else {
 
-                indexAdvisor.addRecommendedAdviseString(
-                        getCreateArrayIndexClause(getArrayIndexName(fakeArrayIndexDetails.getElementList()),
-                                fakeArrayIndexDetails, databaseName, dataverse, datasetName));
+                    indexAdvisor.addRecommendedAdviseString(
+                            getCreateArrayIndexClause(getArrayIndexName(fakeArrayIndexDetails.getElementList()),
+                                    fakeArrayIndexDetails, databaseName, dataverse, datasetName));
+                }
             }
 
         }
@@ -224,7 +224,7 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                 builder.append(" ");
             }
 
-            if (projectList.isEmpty() || (projectList.size() == 1 && projectList.getFirst().isEmpty())) {
+            if (projectList.isEmpty() || (projectList.size() == 1 && projectList.getFirst() == null)) {
                 builder.append(": ");
                 builder.append(typeList.getFirst());
             } else {

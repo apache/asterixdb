@@ -100,7 +100,7 @@ public class FakeIndexProvider implements IIndexProvider {
                     }
                 } else {
                     List<List<String>> projectListWrapper = new ArrayList<>();
-                    projectListWrapper.add(projectList);
+                    projectListWrapper.add(projectList.isEmpty() ? null : projectList);
                     List<IAType> typeList = new ArrayList<>();
                     typeList.add(iaType);
 
