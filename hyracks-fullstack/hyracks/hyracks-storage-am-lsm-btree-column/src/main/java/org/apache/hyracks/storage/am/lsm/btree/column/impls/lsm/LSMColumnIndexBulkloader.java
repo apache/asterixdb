@@ -40,6 +40,7 @@ public class LSMColumnIndexBulkloader extends LSMIndexBulkLoader {
     public void end() throws HyracksDataException {
         ColumnUtil.putColumnsMetadataValue(columnMetadata.serializeColumnsMetadata(), componentMetadata);
         super.end();
+        columnMetadata.swapSerializedColumnsMetadata();
     }
 
     @Override

@@ -24,6 +24,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_P
 import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
 import static org.apache.asterix.external.util.ExternalDataUtils.getFirstNotNull;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_NAME_FIELD_NAME;
@@ -305,9 +306,11 @@ public class BlobUtils {
      */
     public static void validateAzureBlobProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
-
-        // check if the format property is present
-        if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+        if (isDeltaTable(configuration)) {
+            throw new CompilationException(ErrorCode.EXTERNAL_COLLECTION_NOT_SUPPORTED, "delta-table",
+                    "azure blob storage");
+        } else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+            // check if the format property is present
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 

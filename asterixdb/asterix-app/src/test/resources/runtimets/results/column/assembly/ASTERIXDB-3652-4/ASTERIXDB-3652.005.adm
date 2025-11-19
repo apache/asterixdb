@@ -1,0 +1,2 @@
+{ "name": "A", "public_likes": [  ] }
+{ "name": "B", "public_likes": [ "A", "B" ] }

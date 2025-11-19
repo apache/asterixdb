@@ -86,11 +86,6 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
     }
 
     @Override
-    public boolean areAllMissing() {
-        return false;
-    }
-
-    @Override
     public final ATypeTag getTypeTag() {
         return typeTag;
     }
@@ -173,5 +168,15 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
         node.put("valueCount", valueCount);
         node.put("level", level);
         node.put("maxLevel", maxLevel);
+    }
+
+    @Override
+    public void registerCurrentTuple(int tupleIndex) {
+
+    }
+
+    @Override
+    public boolean isColumnMissingForCurrentTuple(int tupleIndex) {
+        return false;
     }
 }

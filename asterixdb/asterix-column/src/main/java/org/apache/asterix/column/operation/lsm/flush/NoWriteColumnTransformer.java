@@ -110,7 +110,7 @@ public class NoWriteColumnTransformer
         if (pointable.getNumberOfChildren() == 0) {
             // Set as empty object
             AbstractSchemaNode missingChild = objectNode.setEmptyObject(columnMetadata);
-            if (!objectNode.isMissingInitiallyInBatch() && objectNode.isEmptyObject()) {
+            if (!objectNode.isMissingInitiallyInBatch() && objectNode.isEmptyMissingObject()) {
                 objectNode.needAllColumns(true); // to include the missing column, while finalizing the batch.
                 objectNode.setMissingInitiallyInBatch(true);
                 if (missingChild != null) {

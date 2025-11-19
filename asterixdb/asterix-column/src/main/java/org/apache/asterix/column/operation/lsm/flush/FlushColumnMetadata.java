@@ -82,10 +82,12 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     private final IColumnValuesWriterFactory columnWriterFactory;
     protected final List<IColumnValuesWriter> columnWriters;
     private final ArrayBackedValueStorage serializedMetadata;
+    private final ArrayBackedValueStorage tempSerializedMetadata;
     private final PathInfoSerializer pathInfoSerializer;
     protected final IntArrayList nullWriterIndexes;
     private final boolean metaContainsKeys;
     private boolean changed;
+    private boolean schemaEvolved;
     protected int level;
     protected int repeated;
     protected int requiredTemporaryBuffersCount;
@@ -125,8 +127,11 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         }
 
         serializedMetadata = new ArrayBackedValueStorage();
+        tempSerializedMetadata = new ArrayBackedValueStorage();
+        schemaEvolved = false;
         changed = true;
         serializeColumnsMetadata();
+        swapSerializedColumnsMetadata();
     }
 
     public FlushColumnMetadata(ARecordType datasetType, ARecordType metaType, int numPrimaryKeys,
@@ -153,6 +158,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         //Add definition levels for the root
         addDefinitionLevelsAndGet(root);
         this.serializedMetadata = serializedMetadata;
+        this.tempSerializedMetadata = new ArrayBackedValueStorage();
+        this.schemaEvolved = false;
         changed = false;
     }
 
@@ -178,17 +185,20 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
             try {
                 serializeChanges();
                 logSchema(root, metaRoot, fieldNamesDictionary);
+                schemaEvolved = true;
                 changed = false;
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
+        } else if (!schemaEvolved) {
+            return serializedMetadata;
         }
-        return serializedMetadata;
+        return tempSerializedMetadata;
     }
 
     private void serializeChanges() throws IOException {
-        serializedMetadata.reset();
-        DataOutput output = serializedMetadata.getDataOutput();
+        tempSerializedMetadata.reset();
+        DataOutput output = tempSerializedMetadata.getDataOutput();
 
         int writersOffsetPointer = reserveInt(output);
         int fieldNamesOffsetPointer = reserveInt(output);
@@ -222,15 +232,24 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         pathInfoSerializer.serialize(output, getNumberOfColumns());
     }
 
+    @Override
+    public void swapSerializedColumnsMetadata() {
+        if (schemaEvolved) {
+            ArrayBackedValueStorage.swap(serializedMetadata, tempSerializedMetadata);
+            tempSerializedMetadata.reset();
+            schemaEvolved = false;
+        }
+    }
+
     private int reserveInt(DataOutput output) throws IOException {
-        int offset = serializedMetadata.getLength();
+        int offset = tempSerializedMetadata.getLength();
         output.writeInt(-1);
         return offset;
     }
 
     private void setOffset(int pointer) {
-        int offset = serializedMetadata.getLength();
-        IntegerPointable.setInteger(serializedMetadata.getByteArray(), pointer, offset);
+        int offset = tempSerializedMetadata.getLength();
+        IntegerPointable.setInteger(tempSerializedMetadata.getByteArray(), pointer, offset);
     }
 
     public static FlushColumnMetadata create(ARecordType datasetType, ARecordType metaType, int numPrimaryKeys,
@@ -283,6 +302,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
                 serializedMetadata.getStartOffset(), serializedMetadata.getLength()));
         try {
             abort(input);
+            schemaEvolved = false;
+            changed = false;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

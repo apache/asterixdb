@@ -98,5 +98,9 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
      *
      * @return the index of the next value
      */
-    public abstract int next(AssemblerState state) throws HyracksDataException;
+    public abstract int next(int tupleIndex, AssemblerState state) throws HyracksDataException;
+
+    public void notifyCurrentTuple(int tupleIndex) {
+        reader.registerCurrentTuple(tupleIndex);
+    }
 }

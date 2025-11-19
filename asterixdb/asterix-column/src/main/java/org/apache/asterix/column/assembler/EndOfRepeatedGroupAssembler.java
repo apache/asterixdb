@@ -47,11 +47,12 @@ public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler
         // NoOp
     }
 
-    private IColumnValuesReader getNonMissingReader() {
+    private IColumnValuesReader getNonMissingReader(int tupleIndex) {
         IColumnValuesReader nonMissingReader = null;
         for (IColumnValuesReader r : readers) {
-            if (!r.areAllMissing()) {
+            if (!r.isColumnMissingForCurrentTuple(tupleIndex)) {
                 nonMissingReader = r;
+                break;
             }
         }
         if (nonMissingReader == null) {
@@ -61,9 +62,9 @@ public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler
     }
 
     @Override
-    public int next(AssemblerState state) throws HyracksDataException {
-        if (reader.areAllMissing()) {
-            reader = getNonMissingReader();
+    public int next(int tupleIndex, AssemblerState state) throws HyracksDataException {
+        if (reader.isColumnMissingForCurrentTuple(tupleIndex)) {
+            reader = getNonMissingReader(tupleIndex);
             this.delimiterIndex = reader.getNumberOfDelimiters() - numDelimiters;
         }
         // Get the current delimiter index from the reader

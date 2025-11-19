@@ -235,6 +235,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ARRAY_SYMDIFFN =
             FunctionConstants.newAsterix("array-symdiffn", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_STAR = FunctionConstants.newAsterix("array-star", 1);
+    public static final FunctionIdentifier ARRAY_STAR_FIELD = FunctionConstants.newAsterix("array-star-field", 2);
     public static final FunctionIdentifier ARRAY_SLICE_WITHOUT_END_POSITION =
             FunctionConstants.newAsterix("array-slice", 2);
     public static final FunctionIdentifier ARRAY_SLICE_WITH_END_POSITION =
@@ -2041,6 +2042,7 @@ public class BuiltinFunctions {
         addFunction(ARRAY_SYMDIFF, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SYMDIFFN, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_STAR, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_STAR_FIELD, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SLICE_WITH_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
         addFunction(ARRAY_SLICE_WITHOUT_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
         addFunction(ARRAY_EXCEPT, ArrayExceptTypeComputer.INSTANCE, true);

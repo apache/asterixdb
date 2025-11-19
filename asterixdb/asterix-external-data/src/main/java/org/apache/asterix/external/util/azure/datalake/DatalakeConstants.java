@@ -33,4 +33,5 @@ public class DatalakeConstants {
     is file1.json, file2.json and file3.json.
      */
     public static final String RECURSIVE_FIELD_NAME = "recursive";
+    public static final boolean DEFAULT_RECUSRIVE_VALUE = true;
 }

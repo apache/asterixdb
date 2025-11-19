@@ -51,6 +51,7 @@ public class AzureConstants {
     public static final String CLIENT_ID_FIELD_NAME = "clientId";
     public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
+    public static final String ACCOUNT_URL = "accountURL";
 
     /*
      * Hadoop-Azure

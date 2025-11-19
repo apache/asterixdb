@@ -100,6 +100,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-4">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3652-5">
+        <output-dir compare="Text">assembly/ASTERIXDB-3652-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="assembly/missing-inner-array">
         <output-dir compare="Text">assembly/missing-inner-array</output-dir>
       </compilation-unit>

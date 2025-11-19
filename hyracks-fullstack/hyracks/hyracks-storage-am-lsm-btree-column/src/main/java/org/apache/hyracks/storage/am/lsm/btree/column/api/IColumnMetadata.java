@@ -42,4 +42,10 @@ public interface IColumnMetadata {
      * abort in case of an error. This should clean up any artifact
      */
     void abort() throws HyracksDataException;
+
+    /**
+     * make the temporary schema the persistent schema
+     * This happens after the flush is successful.
+     */
+    void swapSerializedColumnsMetadata();
 }

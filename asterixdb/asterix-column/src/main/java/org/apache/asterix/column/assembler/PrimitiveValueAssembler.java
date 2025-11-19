@@ -44,7 +44,7 @@ final class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     }
 
     @Override
-    public int next(AssemblerState state) throws HyracksDataException {
+    public int next(int tupleIndex, AssemblerState state) throws HyracksDataException {
         // Do not call next on PK readers as they are maintained by the cursor
         if (!primaryKey && !reader.next()) {
             throw createException();

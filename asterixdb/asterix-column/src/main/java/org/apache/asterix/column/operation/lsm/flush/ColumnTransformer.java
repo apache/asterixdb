@@ -130,7 +130,7 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         if (pointable.getNumberOfChildren() == 0) {
             // Set as empty object
             objectNode.setEmptyObject(columnMetadata);
-            if (!objectNode.isMissingInitiallyInBatch() && objectNode.isEmptyObject()) {
+            if (!objectNode.isMissingInitiallyInBatch() && objectNode.isEmptyMissingObject()) {
                 objectNode.needAllColumns(true);
                 objectNode.setMissingInitiallyInBatch(true);
                 PrimitiveSchemaNode missingNode = (PrimitiveSchemaNode) objectNode.getChildren().get(0);

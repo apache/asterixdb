@@ -39,15 +39,16 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
     }
 
     @Override
-    public int next(AssemblerState state) throws HyracksDataException {
+    public int next(int tupleIndex, AssemblerState state) throws HyracksDataException {
         /*
          * Move to the next value if one of the following is true
          * - It is the first time we access this assembler (i.e., the first round)
          * - We are in an array (i.e., the parent array assembler is active)
          * - The value is a delimiter (i.e., the last round)
          */
-        if (!state.isInGroup() || reader.isRepeatedValue() || reader.isDelimiter() || reader.areAllMissing()) {
-            next();
+        if (!state.isInGroup() || reader.isRepeatedValue() || reader.isDelimiter()
+                || reader.isColumnMissingForCurrentTuple(tupleIndex)) {
+            next(tupleIndex);
         }
 
         if (isDelegate()) {
@@ -59,8 +60,8 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
         return NEXT_ASSEMBLER;
     }
 
-    private void next() throws HyracksDataException {
-        if (reader.areAllMissing()) {
+    private void next(int tupleIndex) throws HyracksDataException {
+        if (reader.isColumnMissingForCurrentTuple(tupleIndex)) {
             // If all values are missing, we add missing to the ancestor at the lowest missing level
             addMissingToAncestor(reader.getLevel());
             return;
@@ -75,7 +76,7 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
              * (i.e., arrayDelegate is true)
              */
             addNullToAncestor(reader.getLevel());
-        } else if (reader.isMissing() && reader.getLevel() < level) {
+        } else if ((reader.isMissing() && reader.getLevel() < level)) {
             /*
              * Add a missing item in either
              * - the array item is MISSING

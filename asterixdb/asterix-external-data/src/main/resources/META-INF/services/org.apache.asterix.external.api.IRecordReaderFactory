@@ -30,3 +30,4 @@ org.apache.asterix.external.input.record.reader.azure.parquet.AzureBlobParquetRe
 org.apache.asterix.external.input.record.reader.azure.parquet.AzureDataLakeParquetReaderFactory
 org.apache.asterix.external.input.record.reader.gcs.parquet.GCSParquetReaderFactory
 org.apache.asterix.external.input.record.reader.gcs.delta.GCSDeltaReaderFactory
+org.apache.asterix.external.input.record.reader.azure.delta.AzureDeltaReaderFactory
