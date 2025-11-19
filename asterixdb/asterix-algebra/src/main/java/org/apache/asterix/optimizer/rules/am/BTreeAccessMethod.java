@@ -595,16 +595,18 @@ public class BTreeAccessMethod implements IAccessMethod {
         for (LimitType limitType : lowKeyLimits) {
             if (limitType != null) {
                 numLowKeys++;
-            } else
+            } else {
                 break;
+            }
         }
 
         int numHighKeys = 0;
         for (LimitType limitType : highKeyLimits) {
             if (limitType != null) {
                 numHighKeys++;
-            } else
+            } else {
                 break;
+            }
         }
 
         for (int i = 0; i < lowKeyExprs.length; i++) {

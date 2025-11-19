@@ -40,7 +40,6 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -119,8 +118,7 @@ public class FakeIndexProvider implements IIndexProvider {
     }
 
     private void addSingleDataSourceIndexes(List<AdvisorScanPlanNode> scanPlanNodes) {
-        Map<DatasetFullyQualifiedName, Pair<DataSourceScanOperator, Set<List<String>>>> singleDataSourceFieldNamesMap =
-                new HashMap<>();
+        Map<DataSourceScanOperator, Set<List<String>>> singleDataSourceFieldNamesMap = new HashMap<>();
         for (AdvisorScanPlanNode scanPlanNode : scanPlanNodes) {
             DataSourceScanOperator scanOperator = scanPlanNode.getScanOperator();
 
@@ -138,26 +136,34 @@ public class FakeIndexProvider implements IIndexProvider {
                 }
 
             }
-            singleDataSourceFieldNamesMap.put(fullyQualifiedName, new Pair<>(scanOperator, datasetFieldNames));
+            singleDataSourceFieldNamesMap.put(scanOperator, datasetFieldNames);
 
         }
-        for (Map.Entry<DatasetFullyQualifiedName, Pair<DataSourceScanOperator, Set<List<String>>>> entry : singleDataSourceFieldNamesMap
-                .entrySet()) {
-            DatasetFullyQualifiedName qualifiedName = entry.getKey();
-            Set<List<String>> fieldNames = entry.getValue().getSecond();
-            DataSourceScanOperator scanOperator = entry.getValue().getFirst();
-
-            if (((DatasetDataSource) scanOperator.getDataSource()).getDataset().getDatasetDetails()
-                    .getDatasetType() != DatasetConfig.DatasetType.INTERNAL) {
+        for (Map.Entry<DataSourceScanOperator, Set<List<String>>> entry : singleDataSourceFieldNamesMap.entrySet()) {
+            DataSourceScanOperator scanOperator = entry.getKey();
+            Set<List<String>> fieldNames = entry.getValue();
+            if (!(scanOperator.getDataSource() instanceof DatasetDataSource dataSource)) {
                 continue;
             }
+
+            if (dataSource.getDataset().getDatasetDetails().getDatasetType() != DatasetConfig.DatasetType.INTERNAL) {
+                continue;
+            }
+
+            DatasetFullyQualifiedName qualifiedName = dataSource.getDataset().getDatasetFullyQualifiedName();
 
             List<List<String>> primaryKeys =
                     ((InternalDatasetDetails) ((DatasetDataSource) scanOperator.getDataSource()).getDataset()
                             .getDatasetDetails()).getPrimaryKey();
 
-            Map<String, Index> datasetIndexes = new HashMap<>();
-            filterIndexesMap.put(qualifiedName, datasetIndexes);
+            Map<String, Index> datasetIndexes;
+
+            if (filterIndexesMap.containsKey(qualifiedName)) {
+                datasetIndexes = filterIndexesMap.get(qualifiedName);
+            } else {
+                datasetIndexes = new HashMap<>();
+                filterIndexesMap.put(qualifiedName, datasetIndexes);
+            }
 
             String primaryKeyName = ((DataSourceId) scanOperator.getDataSource().getId()).getDatasourceName();
 

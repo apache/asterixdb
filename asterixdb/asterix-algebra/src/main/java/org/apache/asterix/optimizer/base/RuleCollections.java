@@ -337,12 +337,12 @@ public final class RuleCollections {
         accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
         accessMethod.add(new PushSimilarityFunctionsBelowJoin());
         accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
-        accessMethod.add(new AdviseIndexRule());
         return accessMethod;
     }
 
     public static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
         List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<>();
+        planCleanupRules.add(new AdviseIndexRule());
         planCleanupRules.add(new SwitchInnerJoinBranchRule());
         planCleanupRules.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN));
         planCleanupRules.add(new ExtractCommonExpressionsRule());
