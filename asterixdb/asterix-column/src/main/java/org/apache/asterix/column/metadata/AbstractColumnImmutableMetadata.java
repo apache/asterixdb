@@ -39,6 +39,11 @@ public abstract class AbstractColumnImmutableMetadata extends AbstractColumnMeta
     }
 
     @Override
+    public final void swapSerializedColumnsMetadata() {
+        // since the metadata is immutable
+    }
+
+    @Override
     public final void abort() throws HyracksDataException {
         //NoOp as the metadata is immutable
     }
