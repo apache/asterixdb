@@ -204,6 +204,7 @@ public class NullMissingTest {
         functionsRequiringTypes.add(BuiltinFunctions.ARRAY_SORT);
         functionsRequiringTypes.add(BuiltinFunctions.ARRAY_DISTINCT);
         functionsRequiringTypes.add(BuiltinFunctions.ARRAY_EXCEPT);
+        functionsRequiringTypes.add(BuiltinFunctions.ARRAY_STAR_FIELD);
         functionsRequiringTypes.add(BuiltinFunctions.EQ);
         functionsRequiringTypes.add(BuiltinFunctions.LT);
         functionsRequiringTypes.add(BuiltinFunctions.GT);
