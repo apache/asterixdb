@@ -25,7 +25,6 @@ import java.util.Comparator;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -132,7 +131,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
         this.bufferAccessor1 = bufferManager.createTuplePointerAccessor();
         this.bufferAccessor2 = bufferManager.createTuplePointerAccessor();
         this.topK = topK;
-        this.outputFrame = new VSizeFrame(ctx);
+        this.outputFrame = ctx.allocateVSizeFrame();
         this.outputAppender = new FrameTupleAppender();
         this.sortFields = sortFields;
 

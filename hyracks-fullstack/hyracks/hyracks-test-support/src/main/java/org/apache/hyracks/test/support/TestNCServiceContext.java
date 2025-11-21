@@ -21,18 +21,22 @@ package org.apache.hyracks.test.support;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Function;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServerContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.IVSizeFrameFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IJobSerializerDeserializer;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -43,11 +47,7 @@ public class TestNCServiceContext implements INCServiceContext {
     private final ILifeCycleComponentManager lccm;
     private final IIOManager ioManager;
     private final String nodeId;
-    private NodeControllerService ncs;
-
-    private Serializable distributedState;
-    private Object appCtx;
-
+    private final NodeControllerService ncs;
     private final IMemoryManager mm;
 
     public TestNCServiceContext(IIOManager ioManager, String nodeId) throws Exception {
@@ -85,7 +85,7 @@ public class TestNCServiceContext implements INCServiceContext {
 
     @Override
     public Serializable getDistributedState() {
-        return distributedState;
+        return null;
     }
 
     @Override
@@ -156,8 +156,28 @@ public class TestNCServiceContext implements INCServiceContext {
     }
 
     @Override
+    public IFrameProfiler getFrameProfiler() {
+        return null;
+    }
+
+    @Override
+    public void setFrameProfiler(IFrameProfiler frameProfiler) {
+        // do nothing
+    }
+
+    @Override
+    public IVSizeFrameFactory getVSizeFrameFactoryForKind(JobKind jobKind) {
+        return IVSizeFrameFactory.DEFAULT;
+    }
+
+    @Override
+    public void setVSizeFrameFactoryProvider(Function<JobKind, IVSizeFrameFactory> provider) {
+        // do nothing
+    }
+
+    @Override
     public Object getApplicationContext() {
-        return appCtx;
+        return null;
     }
 
     @Override

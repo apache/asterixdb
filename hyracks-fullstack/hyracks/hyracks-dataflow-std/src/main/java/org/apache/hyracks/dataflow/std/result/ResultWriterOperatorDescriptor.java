@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -70,7 +69,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             throws HyracksDataException {
         final IResultPartitionManager resultPartitionManager = ctx.getResultPartitionManager();
 
-        final IFrame frame = new VSizeFrame(ctx);
+        final IFrame frame = ctx.allocateVSizeFrame();
 
         final FrameOutputStream frameOutputStream = new FrameOutputStream(ctx.getInitialFrameSize());
         frameOutputStream.reset(frame, true);

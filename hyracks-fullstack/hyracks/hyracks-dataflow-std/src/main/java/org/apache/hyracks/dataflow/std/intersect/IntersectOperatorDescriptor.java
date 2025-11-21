@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -206,7 +205,7 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
                 comparators[i] = comparatorFactory[i].createBinaryComparator();
             }
 
-            appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
 
             refAccessor = new FrameTupleAccessor[inputArity];
             for (int i = 0; i < inputArity; i++) {

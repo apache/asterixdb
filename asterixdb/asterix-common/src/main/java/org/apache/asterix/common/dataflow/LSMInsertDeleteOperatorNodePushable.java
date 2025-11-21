@@ -27,7 +27,6 @@ import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.messaging.AtomicJobPreparedMessage;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -97,7 +96,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
         lastFlushedTupleIdx = 0;
         flushedPartialTuples = false;
         accessor = new FrameTupleAccessor(inputRecDesc);
-        writeBuffer = new VSizeFrame(ctx);
+        writeBuffer = ctx.allocateVSizeFrame();
         appender = new FrameTupleAppender(writeBuffer);
         try {
             INcApplicationContext runtimeCtx =

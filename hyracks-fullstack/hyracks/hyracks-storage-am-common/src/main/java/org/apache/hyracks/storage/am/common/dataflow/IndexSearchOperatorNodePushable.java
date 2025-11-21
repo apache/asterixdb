@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IIntrospectingOperator;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
@@ -131,7 +130,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             byte[] searchCallbackProceedResultTrueValue, ITupleProjectorFactory projectorFactory,
             ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         this.ctx = ctx;
-        this.appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+        appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
         //TODO(partitioning) partitionsMap should not be null
         this.partitions = partitionsMap != null ? partitionsMap[partition] : new int[] { partition };
         for (int i = 0; i < partitions.length; i++) {

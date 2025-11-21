@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputSourcePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -44,7 +43,7 @@ public class EmptyTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory {
         return new IPushRuntime[] { new AbstractOneInputSourcePushRuntime() {
 
             private final ArrayTupleBuilder tb = new ArrayTupleBuilder(0);
-            private final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            private final FrameTupleAppender appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
 
             @Override
             public void open() throws HyracksDataException {

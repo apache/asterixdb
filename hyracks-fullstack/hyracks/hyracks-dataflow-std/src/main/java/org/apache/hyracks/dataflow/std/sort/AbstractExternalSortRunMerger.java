@@ -215,7 +215,7 @@ public abstract class AbstractExternalSortRunMerger {
         if (first) {
             first = false;
             inFrames = new ArrayList<>(maxMergeWidth);
-            outputFrame = new VSizeFrame(ctx);
+            outputFrame = ctx.allocateVSizeFrame();
             partialRuns = new ArrayList<>(maxMergeWidth);
         }
     }

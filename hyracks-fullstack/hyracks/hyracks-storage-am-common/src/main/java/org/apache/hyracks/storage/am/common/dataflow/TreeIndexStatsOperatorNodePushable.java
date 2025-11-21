@@ -22,7 +22,6 @@ import java.io.DataOutput;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -79,7 +78,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
                     treeIndex.getInteriorFrameFactory().createFrame(),
                     treeIndex.getPageManager().createMetadataFrame());
             // Write the stats output as a single string field.
-            FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            FrameTupleAppender appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
             DataOutput dos = tb.getDataOutput();
             tb.reset();

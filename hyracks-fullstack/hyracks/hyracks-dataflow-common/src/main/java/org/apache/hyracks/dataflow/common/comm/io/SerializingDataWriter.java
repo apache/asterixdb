@@ -19,7 +19,6 @@
 package org.apache.hyracks.dataflow.common.comm.io;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOpenableDataWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -47,7 +46,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         tb = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
         this.recordDescriptor = recordDescriptor;
         this.frameWriter = frameWriter;
-        tupleAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+        tupleAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
         open = false;
     }
 

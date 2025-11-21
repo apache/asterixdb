@@ -45,12 +45,12 @@ public class FixedSizeFrame implements IFrame {
     }
 
     @Override
-    public void ensureFrameSize(int frameSize) throws HyracksDataException {
+    public boolean ensureFrameSize(int frameSize) throws HyracksDataException {
         throw new HyracksDataException("FixedSizeFrame doesn't support capacity changes");
     }
 
     @Override
-    public void resize(int frameSize) throws HyracksDataException {
+    public boolean resize(int frameSize) throws HyracksDataException {
         throw new HyracksDataException("FixedSizeFrame doesn't support capacity changes");
     }
 

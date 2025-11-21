@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -137,7 +136,7 @@ abstract class AbstractPartitionDataWriter implements IFrameWriter {
     }
 
     protected void allocateFrames(int i) throws HyracksDataException {
-        appenders[i].reset(new VSizeFrame(ctx), true);
+        appenders[i].reset(ctx.allocateVSizeFrame(), true);
         allocatedFrames[i] = true;
     }
 

@@ -23,7 +23,6 @@ import java.util.BitSet;
 import java.util.Random;
 
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -33,7 +32,7 @@ public class FeedFrameUtil {
     public static ByteBuffer removeBadTuple(IHyracksTaskContext ctx, int tupleIndex, FrameTupleAccessor fta)
             throws HyracksDataException {
         FrameTupleAppender appender = new FrameTupleAppender();
-        IFrame slicedFrame = new VSizeFrame(ctx);
+        IFrame slicedFrame = ctx.allocateVSizeFrame();
         appender.reset(slicedFrame, true);
         int totalTuples = fta.getTupleCount();
         for (int ti = 0; ti < totalTuples; ti++) {
@@ -48,7 +47,7 @@ public class FeedFrameUtil {
             throws HyracksDataException {
         NChooseKIterator it = new NChooseKIterator(fta.getTupleCount(), sampleSize);
         FrameTupleAppender appender = new FrameTupleAppender();
-        IFrame sampledFrame = new VSizeFrame(ctx);
+        IFrame sampledFrame = ctx.allocateVSizeFrame();
         appender.reset(sampledFrame, true);
         int nextTupleIndex = 0;
         while (it.hasNext()) {

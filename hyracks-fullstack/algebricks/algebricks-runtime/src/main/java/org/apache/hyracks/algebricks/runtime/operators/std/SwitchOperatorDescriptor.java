@@ -28,7 +28,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
@@ -115,7 +114,7 @@ public class SwitchOperatorDescriptor extends AbstractReplicateOperatorDescripto
             final IScalarEvaluator eval = branchingExprEvalFactory.createScalarEvaluator(evalCtx);
             final MutableBoolean hasFailed = new MutableBoolean(false);
             for (int i = 0; i < outputArity; i++) {
-                appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
+                appenders[i] = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
             }
 
             return new AbstractUnaryInputOperatorNodePushable() {
