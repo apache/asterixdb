@@ -134,15 +134,17 @@ public class ACSVRecordPrinter extends ARecordPrinter {
             }
 
             boolean isNullable = false;
+            boolean isMissable = false;
             IAType expectedIAType = expectedFieldTypes.get(expectedFieldNames.indexOf(actualFieldName));
             ATypeTag expectedType = expectedIAType.getTypeTag();
             if (expectedType.equals(ATypeTag.UNION)) {
                 AUnionType unionType = (AUnionType) expectedIAType;
                 expectedType = unionType.getActualType().getTypeTag();
                 isNullable = unionType.isNullableType();
+                isMissable = unionType.isMissableType();
             }
 
-            if (actualValueType.equals(ATypeTag.MISSING)) {
+            if (actualValueType.equals(ATypeTag.MISSING) && !isMissable) {
                 warnMismatchType("field '" + actualFieldName + "' cannot be missing");
                 return false;
             }
@@ -150,6 +152,11 @@ public class ACSVRecordPrinter extends ARecordPrinter {
             if ((actualValueType.equals(ATypeTag.NULL) && !isNullable)) {
                 warnMismatchType("field '" + actualFieldName + "' is required, found 'null'");
                 return false;
+            }
+
+            if (actualValueType.equals(ATypeTag.MISSING)) {
+                recordSchemaDetails.put(actualFieldName, ATypeTag.MISSING);
+                continue;
             }
 
             if (actualValueType.equals(ATypeTag.NULL)) {
