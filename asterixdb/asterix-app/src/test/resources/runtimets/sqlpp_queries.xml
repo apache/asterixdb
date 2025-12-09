@@ -9841,7 +9841,6 @@
         <expected-error>ASX1105: Operation not supported on primary index ds1</expected-error>
         <expected-error>ASX1026: The given function expression query-index("test", "ds1", "pk_idx") cannot utilize index</expected-error>
         <expected-error>ASX1026: The given function expression query-index("test", "ds1", "sample_idx_1_ds1") cannot utilize index</expected-error>
-        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "ds1_array_idx") cannot utilize index</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -15506,6 +15505,11 @@
     <test-case FilePath="limit">
       <compilation-unit name="push-limit-to-external-scan-select">
         <output-dir compare="Text">push-limit-to-external-scan-select</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
+      <compilation-unit name="push-limit-to-join-primary-lookup">
+        <output-dir compare="Text">push-limit-to-join-primary-lookup</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="limit">

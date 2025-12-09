@@ -1,0 +1,210 @@
+distribute result [$$166] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_LIMIT  |LOCAL|
+      project ([$$166]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_PROJECT  |LOCAL|
+        assign [$$166] <- [{"am_pm_ratio": $#1}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ASSIGN  |LOCAL|
+          limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STREAM_LIMIT  |LOCAL|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              order (topK: 100) (ASC, $#1) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STABLE_SORT [topK: 100] [$#1(ASC)]  |LOCAL|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  project ([$#1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_PROJECT  |LOCAL|
+                    assign [$#1] <- [numeric-divide(numeric-multiply($$196, 1.0), $$183)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |LOCAL|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                        join (true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- NESTED_LOOP  |LOCAL|
+                          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                            aggregate [$$196] <- [agg-sql-sum($$197)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                            -- AGGREGATE  |LOCAL|
+                              aggregate [$$197] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                              -- AGGREGATE  |LOCAL|
+                                limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                -- STREAM_LIMIT  |UNPARTITIONED|
+                                  project ([]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                    -- SORT_MERGE_EXCHANGE [$$173(ASC) ]  |PARTITIONED|
+                                      limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                      -- STREAM_LIMIT  |PARTITIONED|
+                                        project ([$$173]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          select (and(ge($$167, 5000), le($$167, 5200))) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1.3E7]
+                                          -- STREAM_SELECT  |PARTITIONED|
+                                            project ([$$173, $$167]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                            -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$167] <- [$$web_page.getField(10)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                              -- ASSIGN  |PARTITIONED|
+                                                project ([$$173, $$web_page]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    unnest-map [$$173, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$181, 1, $$181, true, true, true) limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        order (ASC, $$181) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- STABLE_SORT [$$181(ASC)]  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- HASH_PARTITION_EXCHANGE [$$181]  |PARTITIONED|
+                                                            project ([$$181]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                              select (and(ge($$168, 6), le($$168, 7))) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 9000000.0]
+                                                              -- STREAM_SELECT  |PARTITIONED|
+                                                                project ([$$181, $$168]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                  assign [$$168] <- [$$time_dim.getField(3)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- ASSIGN  |PARTITIONED|
+                                                                    project ([$$181, $$time_dim]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        unnest-map [$$172, $$time_dim] <- index-search("time_dim", 0, "tpcds", "time_dim", true, true, 1, $$184, 1, $$184, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            order (ASC, $$184) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- STABLE_SORT [$$184(ASC)]  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- HASH_PARTITION_EXCHANGE [$$184]  |PARTITIONED|
+                                                                                project ([$$181, $$184]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                  select (eq($$household_demographics.getField(3), 8)) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 5000000.0]
+                                                                                  -- STREAM_SELECT  |PARTITIONED|
+                                                                                    project ([$$181, $$184, $$household_demographics]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        unnest-map [$$171, $$household_demographics] <- index-search("household_demographics", 0, "tpcds", "household_demographics", true, true, 1, $$186, 1, $$186, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            order (ASC, $$186) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                            -- STABLE_SORT [$$186(ASC)]  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- HASH_PARTITION_EXCHANGE [$$186]  |PARTITIONED|
+                                                                                                project ([$$181, $$184, $$186]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                  assign [$$181, $$184, $$186] <- [$$ws1.getField(12), $$ws1.getField(1), $$ws1.getField(10)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ASSIGN  |PARTITIONED|
+                                                                                                    project ([$$ws1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                      assign [$$ws1] <- [$$ws2] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                      -- ASSIGN  |PARTITIONED|
+                                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                          replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                          -- REPLICATE  |PARTITIONED|
+                                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                              project ([$$ws2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                  data-scan []<-[$$174, $$175, $$ws2] <- tpcds.web_sales [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                            aggregate [$$183] <- [agg-sql-sum($$198)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                            -- AGGREGATE  |LOCAL|
+                              aggregate [$$198] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                              -- AGGREGATE  |LOCAL|
+                                limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                -- STREAM_LIMIT  |UNPARTITIONED|
+                                  project ([]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                    -- SORT_MERGE_EXCHANGE [$$178(ASC) ]  |PARTITIONED|
+                                      limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                      -- STREAM_LIMIT  |PARTITIONED|
+                                        project ([$$178]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.3E7]
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          select (and(ge($$179, 5000), le($$179, 5200))) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1.3E7]
+                                          -- STREAM_SELECT  |PARTITIONED|
+                                            project ([$$178, $$179]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                            -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$179] <- [$$web_page.getField(10)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                              -- ASSIGN  |PARTITIONED|
+                                                project ([$$178, $$web_page]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    unnest-map [$$178, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$190, 1, $$190, true, true, true) limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        order (ASC, $$190) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- STABLE_SORT [$$190(ASC)]  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- HASH_PARTITION_EXCHANGE [$$190]  |PARTITIONED|
+                                                            project ([$$190]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                              select (and(ge($$180, 14), le($$180, 15))) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 9000000.0]
+                                                              -- STREAM_SELECT  |PARTITIONED|
+                                                                project ([$$190, $$180]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                  assign [$$180] <- [$$time_dim.getField(3)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- ASSIGN  |PARTITIONED|
+                                                                    project ([$$190, $$time_dim]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        unnest-map [$$177, $$time_dim] <- index-search("time_dim", 0, "tpcds", "time_dim", true, true, 1, $$188, 1, $$188, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            order (ASC, $$188) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- STABLE_SORT [$$188(ASC)]  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- HASH_PARTITION_EXCHANGE [$$188]  |PARTITIONED|
+                                                                                project ([$$190, $$188]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                  select (eq($$household_demographics.getField(3), 8)) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 5000000.0]
+                                                                                  -- STREAM_SELECT  |PARTITIONED|
+                                                                                    project ([$$190, $$188, $$household_demographics]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        unnest-map [$$176, $$household_demographics] <- index-search("household_demographics", 0, "tpcds", "household_demographics", true, true, 1, $$192, 1, $$192, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            order (ASC, $$192) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                            -- STABLE_SORT [$$192(ASC)]  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- HASH_PARTITION_EXCHANGE [$$192]  |PARTITIONED|
+                                                                                                project ([$$190, $$192, $$188]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                  assign [$$190, $$192, $$188] <- [$$ws2.getField(12), $$ws2.getField(10), $$ws2.getField(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ASSIGN  |PARTITIONED|
+                                                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                      replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                      -- REPLICATE  |PARTITIONED|
+                                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                          project ([$$ws2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                              data-scan []<-[$$174, $$175, $$ws2] <- tpcds.web_sales [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

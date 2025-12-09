@@ -1,0 +1,46 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description: Tests that LIMIT is pushed down to index-search in indexnl join
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE TYPE openType AS OPEN {
+  id:string
+};
+
+CREATE DATASET ds1(openType) PRIMARY KEY id;
+CREATE DATASET ds2(openType) PRIMARY KEY id;
+
+SELECT
+    ds1.field1,
+    ds1.field2,
+    ds1.field3,
+    ds1.field4,
+    comp_field,
+    ds2.fieldX
+FROM ds1 AS ds1
+JOIN ds2 AS ds2
+    ON ds2.id /*+ indexnl */ = (ds1.field2 || ":" || TO_STRING(ds1.field3) || ":" || ds1.field4)
+    LET comp_field = (REPLACE(ds1.field1, "-", "") || "03")
+LIMIT 2;

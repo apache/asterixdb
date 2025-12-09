@@ -24,10 +24,12 @@ USE test;
 CREATE TYPE t1 AS { id: int };
 CREATE TYPE t2 AS { id: int, age: int };
 CREATE TYPE t3 AS { id: int, age: int?, dept: string? };
+CREATE TYPE t4 AS { id: int, ages: [int]};
 
 CREATE DATASET ds1(t1) PRIMARY KEY id;
 CREATE DATASET ds2(t2) PRIMARY KEY id;
 CREATE DATASET ds3(t3) PRIMARY KEY id;
+CREATE DATASET ds4(t4) PRIMARY KEY id;
 
 CREATE INDEX ds1_age ON ds1(age: int);
 CREATE INDEX ds1_dept ON ds1(dept: string);
@@ -43,3 +45,6 @@ CREATE INDEX ds3_age ON ds3(age);
 CREATE INDEX ds3_dept ON ds3(dept);
 CREATE INDEX ds3_age_dept ON ds3(age, dept);
 CREATE INDEX ds3_dept_age ON ds3(dept, age);
+
+CREATE INDEX ds4_array_idx1 ON ds4(UNNEST ages) EXCLUDE UNKNOWN KEY;
+CREATE INDEX ds4_array_idx2 ON ds4(UNNEST ages_op1 : int) EXCLUDE UNKNOWN KEY;
