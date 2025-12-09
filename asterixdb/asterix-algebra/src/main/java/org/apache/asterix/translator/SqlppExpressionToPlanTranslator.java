@@ -77,7 +77,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
@@ -729,14 +728,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(SetExpression setexpr, Mutable<ILogicalOperator> tupSource)
-            throws CompilationException {
-        return new Pair<>(null, null);
-    }
-
-    @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(ChangeExpression changeExpr,
             Mutable<ILogicalOperator> tupSource) throws CompilationException {
+        // ChangeExpression is rewritten to SelectExpression before translation
         return new Pair<>(null, null);
     }
 

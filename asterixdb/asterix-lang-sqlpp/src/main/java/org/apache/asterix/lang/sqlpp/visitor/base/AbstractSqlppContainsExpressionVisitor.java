@@ -63,7 +63,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -182,12 +181,8 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
 
     @Override
     public Boolean visit(ChangeExpression changeExpr, T arg) throws CompilationException {
+        // Change expressions are changed to select expressions before getting to this visitor.
         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, changeExpr.getSourceLocation());
-    }
-
-    @Override
-    public Boolean visit(SetExpression setexpr, T arg) throws CompilationException {
-        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setexpr.getSourceLocation());
     }
 
     @Override

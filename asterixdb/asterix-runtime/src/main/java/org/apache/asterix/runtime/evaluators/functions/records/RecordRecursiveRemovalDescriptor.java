@@ -34,12 +34,12 @@ import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
-public class RecursiveRemovalDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class RecordRecursiveRemovalDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new RecursiveRemovalDescriptor();
+            return new RecordRecursiveRemovalDescriptor();
         }
 
         @Override

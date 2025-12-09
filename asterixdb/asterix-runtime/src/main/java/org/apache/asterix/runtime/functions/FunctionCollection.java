@@ -572,6 +572,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeIgnore
 import org.apache.asterix.runtime.evaluators.functions.records.RecordNamesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPutDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordRecursiveRemovalDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRenameDescriptor;
@@ -579,7 +580,6 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordReplaceDesc
 import org.apache.asterix.runtime.evaluators.functions.records.RecordTransformDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordUnwrapDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordValuesDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.records.RecursiveRemovalDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateDescriptor;
@@ -1240,7 +1240,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RecordMergeDescriptor.FACTORY);
         fc.add(RecordMergeIgnoreDuplicatesDescriptor.FACTORY);
         fc.add(RecordTransformDescriptor.FACTORY);
-        fc.add(RecursiveRemovalDescriptor.FACTORY);
+        fc.add(RecordRecursiveRemovalDescriptor.FACTORY);
         fc.add(RecordAddFieldsDescriptor.FACTORY);
         fc.add(RecordRemoveFieldsDescriptor.FACTORY);
         fc.add(RecordLengthDescriptor.FACTORY);

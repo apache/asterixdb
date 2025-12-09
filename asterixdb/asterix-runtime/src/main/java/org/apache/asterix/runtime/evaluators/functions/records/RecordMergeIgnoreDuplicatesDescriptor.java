@@ -84,8 +84,7 @@ public class RecordMergeIgnoreDuplicatesDescriptor extends AbstractScalarFunctio
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), true, false, false,
-                        false);
+                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), true);
             }
         };
     }

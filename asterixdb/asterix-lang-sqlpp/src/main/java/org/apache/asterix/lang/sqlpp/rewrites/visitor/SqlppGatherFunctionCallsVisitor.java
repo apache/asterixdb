@@ -45,7 +45,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -196,12 +195,18 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
         if (changeExpr.getPriorExpr() != null) {
             changeExpr.getPriorExpr().accept(this, arg);
         }
-        if (changeExpr.hasSetExpr()) {
-            changeExpr.getSetExpr().accept(this, arg);
+        if (changeExpr.hasPathValueExprs()) {
+            for (Expression pathExpr : changeExpr.getPathExprs()) {
+                pathExpr.accept(this, arg);
+            }
+            for (Expression valueExpr : changeExpr.getValueExprs()) {
+                valueExpr.accept(this, arg);
+            }
         }
-        if (changeExpr.getPathExpr() != null) {
-            changeExpr.getPathExpr().accept(this, arg);
+        if (changeExpr.getChangeTargetExpr() != null) {
+            changeExpr.getChangeTargetExpr().accept(this, arg);
         }
+
         if (changeExpr.getChangeSeq() != null) {
             changeExpr.getChangeSeq().accept(this, arg);
         }
@@ -219,17 +224,6 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
         }
         if (changeExpr.getDataRemovalRecord() != null) {
             changeExpr.getDataRemovalRecord().accept(this, arg);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(SetExpression setExpression, Void arg) throws CompilationException {
-        for (Expression pathExpr : setExpression.getPathExprList()) {
-            pathExpr.accept(this, arg);
-        }
-        for (Expression valueExpr : setExpression.getValueExprList()) {
-            valueExpr.accept(this, arg);
         }
         return null;
     }

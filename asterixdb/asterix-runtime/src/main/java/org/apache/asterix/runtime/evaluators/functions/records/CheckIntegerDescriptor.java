@@ -38,7 +38,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * This runtime function checks if the input is either of type bigint or can be casted to bigint.
- * If the input is not one of these types, throw a data transform exception;
+ * <p>If the input is not one of these types, throw a data transform exception;
  * Otherwise, just return it as is;
  */
 public class CheckIntegerDescriptor extends AbstractScalarFunctionDynamicDescriptor {

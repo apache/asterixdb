@@ -61,7 +61,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -311,20 +310,16 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     @Override
     public Boolean visit(ChangeExpression changeExpr, ILangExpression arg) throws CompilationException {
         return (changeExpr.getPriorExpr() != null && changeExpr.getPriorExpr().accept(this, arg))
-                || (changeExpr.hasSetExpr() && changeExpr.getSetExpr().accept(this, arg))
-                || (changeExpr.getPathExpr() != null && changeExpr.getPathExpr().accept(this, arg))
+                || (changeExpr.getChangeTargetExpr() != null && changeExpr.getChangeTargetExpr().accept(this, arg))
                 || (changeExpr.getChangeSeq() != null && changeExpr.getChangeSeq().accept(this, arg))
                 || (changeExpr.getCondition() != null && changeExpr.getCondition().accept(this, arg))
                 || (changeExpr.getPosExpr() != null && changeExpr.getPosExpr().accept(this, arg))
                 || (changeExpr.getSourceExpr() != null && changeExpr.getSourceExpr().accept(this, arg))
                 || (changeExpr.getDataTransformRecord() != null
                         && changeExpr.getDataTransformRecord().accept(this, arg))
+                || (changeExpr.getValueExprs() != null && visitExprList(changeExpr.getValueExprs(), arg))
+                || (changeExpr.getPathExprs() != null && visitExprList(changeExpr.getPathExprs(), arg))
                 || (changeExpr.getDataRemovalRecord() != null && changeExpr.getDataRemovalRecord().accept(this, arg));
-    }
-
-    @Override
-    public Boolean visit(SetExpression setexpr, ILangExpression arg) throws CompilationException {
-        return visitExprList(setexpr.getPathExprList(), arg) || visitExprList(setexpr.getValueExprList(), arg);
     }
 
     @Override

@@ -38,16 +38,18 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * Validates that the input is either an ordered or unordered list.
- *
- * This check is specifically used in nested `UPDATE` statements, where the value
- * being updated in the inner update must also be a list. For example:
- *   UPDATE Orders AS o
- *     (UPDATE o.b1 AS o1
- *      SET o1.v1 = 1);
- * In this case,b1 should be a list. If it is an empty list, the return value
+ * <p>This check is specifically used in nested {@code UPDATE} statements, where the value
+ * being updated in the inner update must also be a list.
+ * <p><b>Example:</b>
+ * <pre>
+ * UPDATE Orders AS o
+ *   (UPDATE o.b1 AS o1
+ *    SET o1.v1 = 1);
+ * </pre>
+ * <p>In this case, {@code b1} should be a list. If it is an empty list, the return value
  * from this function will still include the empty list.
- * If the input is not an ordered or unordered list, a `DataTransformException` is thrown.
- * Otherwise, the input is returned unchanged.
+ * <p>If the input is not an ordered or unordered list, a {@code DataTransformException}
+ * is thrown. Otherwise, the input is returned unchanged.
  */
 public class CheckListDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

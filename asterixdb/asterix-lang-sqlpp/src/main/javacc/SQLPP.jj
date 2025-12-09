@@ -207,7 +207,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression.UpdateType;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
@@ -2999,14 +2998,14 @@ UpdateStatement UpdateStatement() throws ParseException:
   (<WHERE> condition = Expression())?
   (<RETURNING> returnExpression = Expression())?
   {
-    Namespace namespace = nameComponents.first != null ? nameComponents.first : defaultNamespace;
+    Namespace namespace = nameComponents.first != null ? nameComponents.first : (defaultNamespace != null ? defaultNamespace : MetadataConstants.DEFAULT_NAMESPACE);
     String datasetName = nameComponents.second.getValue();
-    String databaseName = namespace != null ? namespace.getDatabaseName() : null;
-    DataverseName dataverseName = namespace != null ? namespace.getDataverseName() : null;
+    String databaseName = namespace.getDatabaseName();
+    DataverseName dataverseName = namespace.getDataverseName();
 
     List<Expression> datasetArgs = new ArrayList<Expression>();
     datasetArgs.add(new LiteralExpr(new StringLiteral(databaseName)));
-    datasetArgs.add(new LiteralExpr(new StringLiteral(dataverseName!=null?dataverseName.getCanonicalForm():null)));
+    datasetArgs.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
     datasetArgs.add(new LiteralExpr(new StringLiteral(datasetName)));
     CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), datasetArgs);
     callExpression.setSourceLocation(getSourceLocation(startToken));
@@ -3043,7 +3042,7 @@ UpdateStatement UpdateStatement() throws ParseException:
     query.setBody(selectExpression);
     query.setSourceLocation(getSourceLocation(startToken));
 
-    UpdateStatement stmt = new UpdateStatement(nameComponents.first, nameComponents.second.getValue(), query,
+    UpdateStatement stmt = new UpdateStatement(namespace, nameComponents.second.getValue(), query,
             aliasVar, getVarCounter(), returnExpression);
     return addSourceLocation(stmt, startToken);
   }
@@ -3060,7 +3059,7 @@ Expression ChangeSequence(Expression seedExpr) throws ParseException:
   {
     listConstructor = new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, new ArrayList<Expression>(Collections.singletonList(seedExpr)));
   }
-  changeExpr = Change()
+  changeExpr = ChangeExpression()
   {
   changeExpr.setPriorExpr(listConstructor);
   }
@@ -3071,16 +3070,15 @@ Expression ChangeSequence(Expression seedExpr) throws ParseException:
 }
 
 
-ChangeExpression Change() throws ParseException:
+ChangeExpression ChangeExpression() throws ParseException:
 {
-  SetExpression setexp = null;
   ChangeExpression modifyexp = null;
 }
 {
   (
     (<LEFTPAREN>
       (
-        setexp = SetExpression()
+        modifyexp = SetExpression()
         |
         modifyexp = UpdateExpression()
         |
@@ -3090,12 +3088,9 @@ ChangeExpression Change() throws ParseException:
       )
     <RIGHTPAREN>)
     |
-    setexp = SetExpression()
+    modifyexp = SetExpression()
   )
   {
-   if(modifyexp == null){
-   modifyexp= new ChangeExpression(setexp);
-   }
     return modifyexp;
   }
 }
@@ -3107,14 +3102,14 @@ Expression ChangeSequenceInner(Expression inputExpr) throws ParseException:
 }
 {
   { startToken = token; }
-  newChange = Change()
+  newChange = ChangeExpression()
   {
     newChange.setPriorExpr(inputExpr);
     return addSourceLocation(newChange, startToken);
   }
 }
 
-SetExpression SetExpression() throws ParseException:
+ChangeExpression SetExpression() throws ParseException:
 {
   Token startToken = null;
   Expression pathExpr;
@@ -3135,8 +3130,8 @@ SetExpression SetExpression() throws ParseException:
     valueList.add(valueExpr);
   })*
   {
-    SetExpression setExpr = new SetExpression(pathList, valueList);
-    return addSourceLocation(setExpr, startToken);
+    ChangeExpression changeExpr = new ChangeExpression(valueList,pathList);
+    return addSourceLocation(changeExpr, startToken);
   }
 }
 

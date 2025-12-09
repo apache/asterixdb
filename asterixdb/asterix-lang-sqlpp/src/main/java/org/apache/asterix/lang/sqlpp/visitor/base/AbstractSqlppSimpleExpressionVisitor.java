@@ -68,7 +68,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -414,8 +413,8 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(ChangeExpression changeExpr, ILangExpression arg) throws CompilationException {
-        if (changeExpr.hasPathExpr()) {
-            changeExpr.setPathExpr(visit(changeExpr.getPathExpr(), arg));
+        if (changeExpr.hasChangeTargetExpr()) {
+            changeExpr.setChangeTargetExpr(visit(changeExpr.getChangeTargetExpr(), arg));
         }
         if (changeExpr.hasCondition()) {
             changeExpr.setCondition(visit(changeExpr.getCondition(), arg));
@@ -426,8 +425,9 @@ public class AbstractSqlppSimpleExpressionVisitor
         if (changeExpr.hasPriorExpr()) {
             changeExpr.setPriorExpr(visit(changeExpr.getPriorExpr(), arg));
         }
-        if (changeExpr.hasSetExpr()) {
-            changeExpr.setSetExpr(visit(changeExpr.getSetExpr(), arg));
+        if (changeExpr.hasPathValueExprs()) {
+            changeExpr.setValueExprs(visit(changeExpr.getValueExprs(), arg));
+            changeExpr.setPathExprs(visit(changeExpr.getPathExprs(), arg));
         }
         if (changeExpr.hasDataRemovalRecord()) {
             changeExpr.setDataRemovalRecord(visit(changeExpr.getDataRemovalRecord(), arg));
@@ -436,13 +436,6 @@ public class AbstractSqlppSimpleExpressionVisitor
             changeExpr.setDataTransformRecord(visit(changeExpr.getDataTransformRecord(), arg));
         }
         return changeExpr;
-    }
-
-    @Override
-    public Expression visit(SetExpression setexpr, ILangExpression arg) throws CompilationException {
-        setexpr.setValueExprList(visit(setexpr.getValueExprList(), arg));
-        setexpr.setPathExprList(visit(setexpr.getPathExprList(), arg));
-        return setexpr;
     }
 
     @Override

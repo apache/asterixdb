@@ -33,22 +33,24 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-/*-- Original UPDATE statement
-UPDATE users SET name = "John", age = 25 WHERE id = 1
-
--- Step 1: The SetExpression (name = "John", age = 25) is converted to a RecordConstructor
--- containing the field-value pairs. This record constructor is annotated with
--- isTransformRecordAnnotation to mark it as a transformation record:
-{"name": "John", "age": 25}
-
--- Step 2: RECORD_TRANSFORM merges the transformation record with the source record
-record-transform(
-    {"name": "John", "age": 25},  -- ← Transformation record (first argument)
-    originalUserRecord            -- ← Source record from the dataset (second argument)
-)
--- Result: The source record is updated with new values, preserving other fields
-*/
-
+/**
+ * Original UPDATE statement
+ * UPDATE users SET name = "John", age = 25 WHERE id = 1
+ * <p>Step 1: The SetExpression (name = "John", age = 25) is converted to a RecordConstructor
+ * containing the field-value pairs. This record constructor is annotated with
+ * isTransformRecordAnnotation to mark it as a transformation record:
+ * <pre>
+ * {"name": "John", "age": 25}
+ * </pre>
+ * <p> Step 2: RECORD_TRANSFORM merges the transformation record with the source record
+ * <pre>
+ * record-transform(
+ *     {"name": "John", "age": 25},  -- ← Transformation record (first argument)
+ *     originalUserRecord            -- ← Source record from the dataset (second argument)
+ * )
+ * </pre>
+ * Result: The source record is updated with new values, preserving other fields
+ */
 @MissingNullInOutFunction
 public class RecordTransformDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

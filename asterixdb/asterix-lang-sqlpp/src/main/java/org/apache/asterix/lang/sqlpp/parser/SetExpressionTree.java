@@ -36,28 +36,42 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Organizes field assignments from SET clauses into a tree structure.
- * This class takes a flat list of field assignments (e.g., u.name = "John", u.age = 30, u.address.city = "NYC")
- * and organizes them into a hierarchical tree where each field path becomes a node. For example, u.address.city
- * creates: root → "address" → "city" with value "NYC".
- * The tree serves two main purposes:
- *   Conflict detection: Prevents setting both a field and its nested child in the same SET clause.
- *      For example, setting both u.name and u.name.first would conflict because a node cannot have both
- *      a value and children.
- *      Record constructor creation: Builds two RecordConstructor expressions by walking the tree:
- *                Transformation record: contains all fields with normal values (for updates/adds)
- *                Deletion record: contains fields set to MISSING (for removal)
- * Example:
+ *
+ * <p>This class takes a flat list of field assignments (e.g., {@code u.name = "John"},
+ * {@code u.age = 30}, {@code u.address.city = "NYC"}) and organizes them into a hierarchical
+ * tree where each field path becomes a node. For example, {@code u.address.city} creates:
+ * {@code root → "address" → "city"} with value {@code "NYC"}.
+ * <p>The tree serves two main purposes:
+ * <ul>
+ *   <li><b>Conflict detection:</b> Prevents setting both a field and its nested child
+ *       in the same SET clause. For example, setting both {@code u.name} and {@code u.name.first}
+ *       would conflict because a node cannot have both a value and children.</li>
+ *   <li><b>Record constructor creation:</b> Builds two {@code RecordConstructor} expressions
+ *       by walking the tree:
+ *       <ul>
+ *         <li><b>Transformation record:</b> contains all fields with normal values (for updates/adds)</li>
+ *         <li><b>Deletion record:</b> contains fields set to {@code MISSING} (for removal)</li>
+ *       </ul>
+ *   </li>
+ * </ul>
+ *
+ * <p><b>Example:</b>
+ * <pre>
  * SET u.name = "John", u.age = 30, u.address.city = "NYC", u.tempField = MISSING
- * Creates a tree structure:
- *   root
- *   ├── name → "John"
- *   ├── age → 30
- *   ├── address
- *   │   └── city → "NYC"
- *   └── tempField → MISSING
- **/
+ * </pre>
+ *
+ * <p>Creates a tree structure:
+ * <pre>
+ * root
+ * ├── name → "John"
+ * ├── age → 30
+ * ├── address
+ * │   └── city → "NYC"
+ * └── tempField → MISSING
+ * </pre>
+ */
 public class SetExpressionTree {
-    private Node root;
+    private final Node root;
 
     public SetExpressionTree() {
         root = new Node("init", null);
@@ -88,10 +102,6 @@ public class SetExpressionTree {
         return createRecordConstructorInner(root);
     }
 
-    public void resetExpressionTree() {
-        root = new Node("init", null);
-    }
-
     private Node accessOrCreatePath(FieldAccessor path, Node node) throws CompilationException {
         Expression leadingExpr = path.getExpr();
 
@@ -101,7 +111,7 @@ public class SetExpressionTree {
         if (node.hasExpression()) {
             throw new CompilationException(ErrorCode.UPDATE_ATTEMPT_ON_CONFLICTING_PATHS, path.getSourceLocation());
         }
-        return node.retrieveChild(path.getIdent().getValue(), true);
+        return node.retrieveChild(path.getIdent().getValue());
     }
 
     private Pair<Expression, Expression> createRecordConstructorInner(Node node) {
@@ -136,7 +146,7 @@ public class SetExpressionTree {
         return new Pair<>(setRecord, deletionRecord);
     }
 
-    private class Node {
+    private static class Node {
         private final String name;
         private Expression expr;
         List<Node> children;
@@ -152,7 +162,7 @@ public class SetExpressionTree {
         }
 
         boolean hasChildren() {
-            return children.size() > 0;
+            return !children.isEmpty();
         }
 
         Expression getExpression() {
@@ -163,20 +173,16 @@ public class SetExpressionTree {
             this.expr = expr;
         }
 
-        private Node retrieveChild(String childName, boolean createIfEmpty) {
+        private Node retrieveChild(String childName) {
             for (Node child : children) {
                 if (child.name.equals(childName)) {
                     return child;
                 }
             }
-
             // If not found and createIfEmpty is true, create and add the child node
-            if (createIfEmpty) {
-                Node newChild = new Node(childName, null); // New child node with no expression
-                children.add(newChild);
-                return newChild;
-            }
-            return null;
+            Node newChild = new Node(childName, null); // New child node with no expression
+            children.add(newChild);
+            return newChild;
         }
     }
 

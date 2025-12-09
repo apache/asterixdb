@@ -30,15 +30,21 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 /**
- * Type computer for record-transform function used in UPDATE SET operations.
- * Computes the output record type after updating/adding fields to an input record.
- * Function: record-transform(transformationRecord, originalRecord)
- * - transformationRecord (t0): Record with new/updated field values. Can be MISSING.
- * - originalRecord (t1): Original record type to be updated.
- * Delegates to RecordMergeTypeComputer with MERGE_ON_TRANSFORM_RECORDS flag to merge
- * transformation fields into the original record. Updates existing fields and adds new ones.
- * Edge cases:
- * - If either argument is not a record: return t1 if t0 can be MISSING, otherwise return t0.
+ * Type computer for {@code record-transform} function used in UPDATE SET operations.
+ * <p>Computes the output record type after updating/adding fields to an input record.
+ * <p><b>Function signature:</b> {@code record-transform(transformationRecord, originalRecord)}
+ * <ul>
+ *   <li><b>transformationRecord (t0):</b> Record with new/updated field values.
+ *       Can be {@code MISSING}.</li>
+ *   <li><b>originalRecord (t1):</b> Original record type to be updated.</li>
+ * </ul>
+ * <p>Delegates to {@code RecordMergeTypeComputer} with {@code MERGE_ON_TRANSFORM_RECORDS} flag
+ * to merge transformation fields into the original record. Updates existing fields and adds new ones.
+ * <p><b>Edge cases:</b>
+ * <ul>
+ *   <li>If either argument is not a record: return {@code t1} if {@code t0} can be {@code MISSING},
+ *       otherwise return {@code t0}.</li>
+ * </ul>
  */
 public class RecordTransformTypeComputer implements IResultTypeComputer {
 

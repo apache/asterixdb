@@ -23,21 +23,21 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 /**
  * Annotation that marks record constructors that represent transformation records
  * used in UPDATE statements.
- * Transform records are records that specify the changes to be applied
+ * <p>Transform records are records that specify the changes to be applied
  * to existing records. Transform records are meant to be merged with source records
  * using the RECORD_TRANSFORM function.
- *
- * Example:
+ * <p>Example:
+ * <pre>
  * UPDATE users AS u
  * SET u.name = "John", u.age = 30
  * WHERE u.id = 1
- *
- * The transformation creates a transform record: {"name": "John", "age": 30}
+ * </pre>
+ * <p>The transformation creates a transform record: {"name": "John", "age": 30}
  * This record constructor is annotated with isTransformRecordAnnotation to indicate
  * it's a transformation record (not a regular data record).
  * This annotation prevents optimization rules from closing the transform records
  * and keeps them as OPEN record constructors since they are partial by design.
- * */
+ */
 
 public class isTransformRecordAnnotation implements IExpressionAnnotation {
     public static final IExpressionAnnotation INSTANCE = new isTransformRecordAnnotation();

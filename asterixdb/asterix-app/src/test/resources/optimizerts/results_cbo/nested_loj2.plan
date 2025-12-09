@@ -1,64 +1,64 @@
-distribute result [$$80] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$75] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$80] <- [{"cust": $$c, "orders": $$78}] project: [$$80] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+    assign [$$75] <- [{"cust": $$c, "orders": $$73}] project: [$$75] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
-      project ([$$78, $$c]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+      project ([$$73, $$c]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
         exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$$92 := $$81]) decor ([$$c]) {
-                    aggregate [$$78] <- [listify({"order": $$o, "items": $$72})] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          group by ([$$87 := $$76]) decor ([$$c]) {
+                    aggregate [$$73] <- [listify({"order": $$o, "items": $$67})] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
-                      group by ([$$90 := $$82]) decor ([$$81; $$85; $$c; $$o]) {
-                                aggregate [$$72] <- [listify($$l)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      group by ([$$85 := $$77]) decor ([$$80; $$c; $$o; $$76]) {
+                                aggregate [$$67] <- [listify($$l)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- AGGREGATE  |LOCAL|
-                                  select (not(is-missing($$89))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  select (not(is-missing($$84))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |LOCAL|
-                                    project ([$$l, $$89]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    project ([$$l, $$84]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- STREAM_PROJECT  |LOCAL|
                                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$82]  |LOCAL|
-                        select (not(is-missing($$91))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$77]  |LOCAL|
+                        select (not(is-missing($$86))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_SELECT  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                  } [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-          -- PRE_CLUSTERED_GROUP_BY[$$81]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$76]  |PARTITIONED|
             exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (ASC, $$81) (ASC, $$82) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-              -- STABLE_SORT [$$81(ASC), $$82(ASC)]  |PARTITIONED|
+              order (ASC, $$76) (ASC, $$77) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+              -- STABLE_SORT [$$76(ASC), $$77(ASC)]  |PARTITIONED|
                 exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$c, $$o, $$l, $$89, $$82, $$81, $$85, $$91]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                  project ([$$c, $$o, $$l, $$84, $$77, $$80, $$76, $$86]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      left outer join (eq($$83, $$82)) [cardinality: 9.223372036854776E16, doc-size: -3.0, op-cost: 5.00004E11, total-cost: 5.00015E11]
-                      -- HYBRID_HASH_JOIN [$$82][$$83]  |PARTITIONED|
+                      left outer join (eq($$78, $$77)) [cardinality: 9.223372036854776E16, doc-size: -3.0, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                      -- HYBRID_HASH_JOIN [$$77][$$78]  |PARTITIONED|
                         exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          left outer join (eq($$85, $$81)) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 2000000.0, total-cost: 6000000.0]
-                          -- HYBRID_HASH_JOIN [$$81][$$85]  |PARTITIONED|
+                          left outer join (eq($$80, $$76)) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 2000000.0, total-cost: 6000000.0]
+                          -- HYBRID_HASH_JOIN [$$76][$$80]  |PARTITIONED|
                             exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$81, $$c] <- tpch.Customers [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                              data-scan []<-[$$76, $$c] <- tpch.Customers [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- HASH_PARTITION_EXCHANGE [$$85]  |PARTITIONED|
-                              assign [$$91, $$85] <- [true, $$o.getField(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- HASH_PARTITION_EXCHANGE [$$80]  |PARTITIONED|
+                              assign [$$86, $$80] <- [true, $$o.getField(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ASSIGN  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$82, $$o] <- tpch.Orders [cardinality: 1000000.0, doc-size: -1.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                  data-scan []<-[$$77, $$o] <- tpch.Orders [cardinality: 1000000.0, doc-size: -1.0, op-cost: 1000000.0, total-cost: 1000000.0]
                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -66,13 +66,13 @@ distribute result [$$80] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, 
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
-                          assign [$$89] <- [true] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          assign [$$84] <- [true] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
-                            project ([$$83, $$l]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            project ([$$78, $$l]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$83, $$84, $$l] <- tpch.LineItems [cardinality: 1000000.0, doc-size: -1.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                data-scan []<-[$$78, $$79, $$l] <- tpch.LineItems [cardinality: 1000000.0, doc-size: -1.0, op-cost: 1000000.0, total-cost: 1000000.0]
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

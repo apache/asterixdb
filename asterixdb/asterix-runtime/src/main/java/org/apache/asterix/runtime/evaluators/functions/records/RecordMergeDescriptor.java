@@ -75,8 +75,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), false, false, true,
-                        false);
+                return new RecordMergeEvaluator(ctx, args, argTypes, sourceLoc, getIdentifier(), false);
             }
         };
     }

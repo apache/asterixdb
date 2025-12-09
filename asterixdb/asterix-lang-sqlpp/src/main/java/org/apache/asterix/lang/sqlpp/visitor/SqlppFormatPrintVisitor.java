@@ -48,7 +48,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -356,34 +355,24 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     }
 
     @Override
-    public Void visit(SetExpression setexpr, Integer step) throws CompilationException {
-        int setsize = setexpr.getPathExprList().size();
-        if (setsize == 0) {
-            return null;
-        }
-        out.print(skip(step) + "SET ");
-        List<Expression> pathlist = setexpr.getPathExprList();
-        List<Expression> valuelist = setexpr.getValueExprList();
-        // Print first path-value pair
-        pathlist.get(0).accept(this, step + 1);
-        out.print(" = ");
-        valuelist.get(0).accept(this, step + 1);
-        // Print remaining path-value pairs with proper comma separation
-        for (int i = 1; i < valuelist.size(); ++i) {
-            out.print(", ");
-            pathlist.get(i).accept(this, step + 1);
-            out.print(" = ");
-            valuelist.get(i).accept(this, step + 1);
-        }
-        return null;
-    }
-
-    @Override
     public Void visit(ChangeExpression changeExpr, Integer step) throws CompilationException {
         out.print(skip(step) + "(");
 
-        if (changeExpr.hasSetExpr()) {
-            changeExpr.getSetExpr().accept(this, step + 1);
+        if (changeExpr.hasPathValueExprs()) {
+            out.print(skip(step) + "SET ");
+            List<Expression> pathlist = changeExpr.getPathExprs();
+            List<Expression> valuelist = changeExpr.getValueExprs();
+            // Print first path-value pair
+            pathlist.get(0).accept(this, step + 1);
+            out.print(" = ");
+            valuelist.get(0).accept(this, step + 1);
+            // Print remaining path-value pairs with proper comma separation
+            for (int i = 1; i < valuelist.size(); ++i) {
+                out.print(", ");
+                pathlist.get(i).accept(this, step + 1);
+                out.print(" = ");
+                valuelist.get(i).accept(this, step + 1);
+            }
         } else {
             // Handle different update types
             ChangeExpression.UpdateType type = changeExpr.getType();
@@ -391,7 +380,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 switch (type) {
                     case UPDATE:
                         out.print("UPDATE ");
-                        changeExpr.getPathExpr().accept(this, step + 1);
+                        changeExpr.getChangeTargetExpr().accept(this, step + 1);
                         if (changeExpr.getAliasVar() != null) {
                             out.print(" AS ");
                             changeExpr.getAliasVar().accept(this, step + 1);
@@ -410,7 +399,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
                     case DELETE:
                         out.print("DELETE FROM ");
-                        changeExpr.getPathExpr().accept(this, step + 1);
+                        changeExpr.getChangeTargetExpr().accept(this, step + 1);
                         if (changeExpr.getAliasVar() != null) {
                             out.print(" AS ");
                             changeExpr.getAliasVar().accept(this, step + 1);
@@ -427,7 +416,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
                     case INSERT:
                         out.print("INSERT INTO ");
-                        changeExpr.getPathExpr().accept(this, step + 1);
+                        changeExpr.getChangeTargetExpr().accept(this, step + 1);
                         if (changeExpr.getAliasVar() != null) {
                             out.print(" AS ");
                             changeExpr.getAliasVar().accept(this, step + 1);

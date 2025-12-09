@@ -35,17 +35,25 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 /**
- * Type computer for record-remove-recursive function used in UPDATE REMOVE operations.
- * Computes the output record type after removing specified fields from an input record.
- * Function: record-remove-recursive(removalSpec, originalRecord)
- * - removalSpec (t0): Record with MISSING fields indicating what to remove. Must be OBJECT.
- * - originalRecord (t1): Original record type. Can be OBJECT, UNION (nullable), or ANY.
- * Delegates to RecordMergeTypeComputer with HANDLE_DELETIONS flag to remove fields marked as MISSING.
- * Type handling:
- * - OBJECT: Compute removal directly
- * - UNION: Compute removal on inner record type, preserve union structure
- *   (e.g., (record|null) becomes (updatedRecord|null) where updatedRecord has fields removed)
- * - ANY: Return ANY unchanged
+ * Type computer for {@code record-remove-recursive} function used in UPDATE REMOVE operations.
+ * <p>Computes the output record type after removing specified fields from an input record.
+ * <p><b>Function signature:</b> {@code record-remove-recursive(removalSpec, originalRecord)}
+ * <ul>
+ *   <li><b>removalSpec (t0):</b> Record with {@code MISSING} fields indicating what to remove.
+ *       Must be {@code OBJECT}.</li>
+ *   <li><b>originalRecord (t1):</b> Original record type. Can be {@code OBJECT},
+ *       {@code UNION} (nullable), or {@code ANY}.</li>
+ * </ul>
+ * <p>Delegates to {@code RecordMergeTypeComputer} with {@code HANDLE_DELETIONS} flag
+ * to remove fields marked as {@code MISSING}.
+ * <p><b>Type handling:</b>
+ * <ul>
+ *   <li><b>OBJECT:</b> Compute removal directly</li>
+ *   <li><b>UNION:</b> Compute removal on inner record type, preserve union structure
+ *       (e.g., {@code (record|null)} becomes {@code (updatedRecord|null)} where
+ *       {@code updatedRecord} has fields removed)</li>
+ *   <li><b>ANY:</b> Return {@code ANY} unchanged</li>
+ * </ul>
  */
 public class RecordRemoveRecursiveTypeComputer implements IResultTypeComputer {
 

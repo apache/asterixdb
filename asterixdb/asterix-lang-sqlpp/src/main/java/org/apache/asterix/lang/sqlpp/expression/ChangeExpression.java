@@ -32,28 +32,34 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * An UPDATE statement consists of one or more ChangeExpressions.
- * Each ChangeExpression represents a single change operation (SET, UPDATE, DELETE, or INSERT).
+ *
+ * <p>Each ChangeExpression represents a single change operation (SET, UPDATE, DELETE, or INSERT).
  * Multiple ChangeExpressions can be chained to perform a sequence of updates.
  * Each ChangeExpression transforms the data produced by its predecessor (priorExpr)
  * and passes the result to the next one through changeSeq.
- * Example:
+ *
+ * <p>Example:
+ * <pre>
  *   UPDATE UserTypes AS u
  *     SET u.totalcost = 25
  *     SET u.totaltax  = u.totalcost * 1 / 100
  *   WHERE u.age = 23;
- * This produces two ChangeExpressions:
+ * </pre>
+ *
+ * <p>This produces two ChangeExpressions:
  *      The first performs a SET operation on totalcost
  *      The second performs a SET operation on totaltax, using the
  *      updated totalcost from the previous change.
  */
 
 public class ChangeExpression extends AbstractExpression {
-    private Expression setExpr;
+    private List<Expression> valueExprs;
+    private List<Expression> pathExprs;
     private Expression priorExpr;
-    private SetExpressionTree exprTree;
+    private final SetExpressionTree exprTree;
     private Expression dataTransformRecord;
     private Expression dataRemovalRecord;
-    private Expression pathExpr;
+    private Expression changeTargetExpr;
     private final VariableExpr aliasVar;
     private final VariableExpr posVar;
     private Expression changeSeq;
@@ -68,13 +74,13 @@ public class ChangeExpression extends AbstractExpression {
         UPDATE
     }
 
-    public ChangeExpression(Expression pathExpr, VariableExpr aliasVar, VariableExpr posVar, Expression changeSeq,
-            Expression condition, UpdateType type, Expression posExpr, Expression sourceExpr) {
+    public ChangeExpression(Expression changeTargetExpr, VariableExpr aliasVar, VariableExpr posVar,
+            Expression changeSeq, Expression condition, UpdateType type, Expression posExpr, Expression sourceExpr) {
         this.exprTree = new SetExpressionTree();
         //Needed when returning results from update.
         this.dataTransformRecord = null;
         this.dataRemovalRecord = null;
-        this.pathExpr = pathExpr;
+        this.changeTargetExpr = changeTargetExpr;
         this.aliasVar = aliasVar;
         this.posVar = posVar;
         this.changeSeq = changeSeq;
@@ -82,12 +88,14 @@ public class ChangeExpression extends AbstractExpression {
         this.type = type;
         this.posExpr = posExpr;
         this.sourceExpr = sourceExpr;
-        this.setExpr = null;
+        this.valueExprs = null;
+        this.pathExprs = null;
     }
 
-    public ChangeExpression(Expression setExpr) {
+    public ChangeExpression(List<Expression> valueExprs, List<Expression> pathExprs) {
         this(null, null, null, null, null, null, null, null);
-        this.setExpr = setExpr;
+        this.valueExprs = valueExprs;
+        this.pathExprs = pathExprs;
     }
 
     @Override
@@ -100,10 +108,6 @@ public class ChangeExpression extends AbstractExpression {
         return Kind.UPDATE_CHANGE_EXPRESSION;
     }
 
-    public Expression getSetExpr() {
-        return this.setExpr;
-    }
-
     public Expression getDataTransformRecord() {
         return this.dataTransformRecord;
     }
@@ -112,20 +116,28 @@ public class ChangeExpression extends AbstractExpression {
         return this.dataRemovalRecord;
     }
 
-    public void setSetExpr(Expression setexpr) {
-        this.setExpr = setexpr;
+    public List<Expression> getValueExprs() {
+        return valueExprs;
     }
 
-    public boolean hasSetExpr() {
-        return setExpr != null;
+    public void setValueExprs(List<Expression> valueExprs) {
+        this.valueExprs = valueExprs;
+    }
+
+    public List<Expression> getPathExprs() {
+        return pathExprs;
+    }
+
+    public void setPathExprs(List<Expression> pathExprs) {
+        this.pathExprs = pathExprs;
     }
 
     public Expression getPriorExpr() {
         return priorExpr;
     }
 
-    public Expression getPathExpr() {
-        return pathExpr;
+    public Expression getChangeTargetExpr() {
+        return changeTargetExpr;
     }
 
     public VariableExpr getAliasVar() {
@@ -152,8 +164,8 @@ public class ChangeExpression extends AbstractExpression {
         return sourceExpr;
     }
 
-    public void setPathExpr(Expression pathExpr) {
-        this.pathExpr = pathExpr;
+    public void setChangeTargetExpr(Expression changeTargetExpr) {
+        this.changeTargetExpr = changeTargetExpr;
     }
 
     public void setChangeSeq(Expression changeSeq) {
@@ -166,6 +178,10 @@ public class ChangeExpression extends AbstractExpression {
 
     public void setPriorExpr(Expression priorExpr) {
         this.priorExpr = priorExpr;
+    }
+
+    public boolean hasPathValueExprs() {
+        return pathExprs != null && valueExprs != null;
     }
 
     public void setDataTransformRecord(Expression dataTransformRecord) {
@@ -188,8 +204,8 @@ public class ChangeExpression extends AbstractExpression {
         return this.priorExpr != null;
     }
 
-    public boolean hasPathExpr() {
-        return this.pathExpr != null;
+    public boolean hasChangeTargetExpr() {
+        return this.changeTargetExpr != null;
     }
 
     public boolean hasChangeSeq() {
@@ -205,34 +221,33 @@ public class ChangeExpression extends AbstractExpression {
     }
 
     public void populateExprTree() throws CompilationException {
-        if (!hasSetExpr()) {
+        if (getPathExprs() == null || getPathExprs().isEmpty()) {
             return;
         }
-        List<Expression> currValueList = ((SetExpression) getSetExpr()).getValueExprList();
-        List<Expression> currPathList = ((SetExpression) getSetExpr()).getPathExprList();
+        List<Expression> currValueList = getValueExprs();
+        List<Expression> currPathList = getPathExprs();
         for (int i = 0; i < currValueList.size(); i++) {
             exprTree.insertPath(currPathList.get(i), currValueList.get(i)); // throws exception if collides with a path
 
         }
     }
 
-    public boolean createTransformationRecords() {
+    public void createTransformationRecords() {
         if (exprTree.isEmpty()) {
-            return false;
+            return;
         }
         Pair<Expression, Expression> result = exprTree.createRecordConstructor();
         if (result.first == null && result.second == null) {
-            return false;
+            return;
         }
         dataTransformRecord = result.first;
         dataRemovalRecord = result.second;
-        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(setExpr, dataTransformRecord, dataRemovalRecord, exprTree, priorExpr, pathExpr, aliasVar,
-                posVar, changeSeq, condition, type, posExpr, sourceExpr);
+        return Objects.hash(pathExprs, valueExprs, dataTransformRecord, dataRemovalRecord, exprTree, priorExpr,
+                changeTargetExpr, aliasVar, posVar, changeSeq, condition, type, posExpr, sourceExpr);
     }
 
     @Override
@@ -241,15 +256,14 @@ public class ChangeExpression extends AbstractExpression {
         if (this == object) {
             return true;
         }
-        if (!(object instanceof ChangeExpression)) {
+        if (!(object instanceof ChangeExpression other)) {
             return false;
         }
-        ChangeExpression other = (ChangeExpression) object;
-        return Objects.equals(setExpr, other.setExpr) && Objects.equals(priorExpr, other.priorExpr)
-                && Objects.equals(exprTree, other.exprTree)
+        return Objects.equals(pathExprs, other.pathExprs) && Objects.equals(valueExprs, other.valueExprs)
+                && Objects.equals(priorExpr, other.priorExpr) && Objects.equals(exprTree, other.exprTree)
                 && Objects.equals(dataTransformRecord, other.dataTransformRecord)
                 && Objects.equals(dataRemovalRecord, other.dataRemovalRecord)
-                && Objects.equals(pathExpr, other.pathExpr) && Objects.equals(aliasVar, other.aliasVar)
+                && Objects.equals(changeTargetExpr, other.changeTargetExpr) && Objects.equals(aliasVar, other.aliasVar)
                 && Objects.equals(posVar, other.posVar) && Objects.equals(changeSeq, other.changeSeq)
                 && Objects.equals(condition, other.condition) && type == other.type
                 && Objects.equals(posExpr, other.posExpr) && Objects.equals(sourceExpr, other.sourceExpr);

@@ -70,7 +70,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -534,14 +533,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         return copy;
     }
 
-    /** Placeholder visitors as the rewrite visitors will eventually rewrite these constructs to other forms*/
-    @Override
-    public ILangExpression visit(SetExpression setexpr, Void arg) throws CompilationException {
-        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setexpr.getSourceLocation());
-    }
-
     @Override
     public ILangExpression visit(ChangeExpression changeExpr, Void arg) throws CompilationException {
+        // Change expressions are changed to select expressions before getting to this visitor.
         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, changeExpr.getSourceLocation());
     }
 

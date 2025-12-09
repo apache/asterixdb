@@ -50,7 +50,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
@@ -242,11 +241,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(ChangeExpression changeExpr, Void arg) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(SetExpression setexpr, Void arg) throws CompilationException {
+        // ChangeExpression is changed to select expression before coming to this visitor.
         return false;
     }
 

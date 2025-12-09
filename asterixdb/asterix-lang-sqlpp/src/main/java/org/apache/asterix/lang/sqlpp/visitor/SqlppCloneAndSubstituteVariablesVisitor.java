@@ -53,7 +53,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.SetExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -413,13 +412,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ChangeExpression changeExpr,
             VariableSubstitutionEnvironment env) throws CompilationException {
+        // ChangeExpression is changed to select expression before getting to this visitor.
         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, changeExpr.getSourceLocation());
-    }
-
-    @Override
-    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SetExpression setexpr,
-            VariableSubstitutionEnvironment env) throws CompilationException {
-        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setexpr.getSourceLocation());
     }
 
     @Override
