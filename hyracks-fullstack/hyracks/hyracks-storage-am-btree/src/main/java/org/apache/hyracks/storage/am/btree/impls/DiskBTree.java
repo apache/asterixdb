@@ -122,10 +122,10 @@ public class DiskBTree extends BTree {
             while (!ctx.getInteriorFrame().isLeaf()) {
                 // walk down the tree until we find the leaf
                 childPageId = ctx.getInteriorFrame().getChildPageId(ctx.getPred());
+                ICachedPage nextPage =
+                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), childPageId), false);
                 bufferCache.unpin(currentPage);
-                pageId = childPageId;
-
-                currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), childPageId), false);
+                currentPage = nextPage;
                 ctx.getInteriorFrame().setPage(currentPage);
             }
 
