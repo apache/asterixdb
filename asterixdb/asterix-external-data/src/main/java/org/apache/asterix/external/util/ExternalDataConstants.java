@@ -153,7 +153,9 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
+    public static final String KEY_ADAPTER_NAME_AZURE_BLOB_ALIAS = "AZURE_BLOB";
     public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE = "AZUREDATALAKE";
+    public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE_ALIAS = "AZURE_DATALAKE";
     public static final String KEY_ADAPTER_NAME_GCS = "GCS";
     public static final String KEY_ADAPTER_NAME_HDFS = "HDFS";
 
