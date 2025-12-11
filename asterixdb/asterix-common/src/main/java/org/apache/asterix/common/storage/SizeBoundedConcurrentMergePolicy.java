@@ -20,6 +20,7 @@ package org.apache.asterix.common.storage;
 
 import static org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicy.Range.isRangeMergable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -134,13 +135,14 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
      * but in case the components in the range does not contribute enough to exceed maxComponentSize then the candidate
      * range will be [leftBoundary, endComponentIndex] which satisfies both 1 & 2.
      *</p>
-     * @param diskComponents The disk components within an Index
+     * @param inputDiskComponents The disk components within an Index
      * @param localMinMergeComponentCount The min count of contiguous components required to call a mergable range.
      * @param countFlag if enabled, will count all the components that can be merged, else will return on first found range
      * @return MergableSolution
      */
-    private MergableSolution getMergableIndexesRange(List<ILSMDiskComponent> diskComponents,
+    private MergableSolution getMergableIndexesRange(List<ILSMDiskComponent> inputDiskComponents,
             int localMinMergeComponentCount, boolean countFlag) {
+        List<ILSMDiskComponent> diskComponents = new ArrayList<>(inputDiskComponents);
         int numComponents = diskComponents.size();
         int candidateComponentsCount = 0;
         for (; candidateComponentsCount < numComponents; candidateComponentsCount++) {
