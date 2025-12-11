@@ -52,6 +52,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.asterix.external.util.azure.AzureUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -344,4 +345,20 @@ public class BlobUtils {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
+
+    public static String getEndpointFromClient(Map<String, String> configuration) throws CompilationException {
+        String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
+        if (endpoint == null) {
+            throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
+        }
+
+        BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+        try {
+            builder.endpoint(endpoint);
+        } catch (Exception ex) {
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+        }
+        return AzureUtils.extractEndPoint(builder.buildClient().getAccountUrl());
+    }
+
 }

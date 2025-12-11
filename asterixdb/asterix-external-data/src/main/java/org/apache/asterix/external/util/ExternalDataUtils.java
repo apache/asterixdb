@@ -94,6 +94,8 @@ import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.asterix.external.util.azure.blob.BlobUtils;
+import org.apache.asterix.external.util.azure.datalake.DatalakeUtils;
 import org.apache.asterix.external.util.google.GCSConstants;
 import org.apache.asterix.external.util.google.GCSUtils;
 import org.apache.asterix.object.base.AdmArrayNode;
@@ -1151,26 +1153,32 @@ public class ExternalDataUtils {
         return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
     }
 
-    public static String getProtocolContainerPair(Map<String, String> configurations) {
+    public static String getProtocolContainerPair(Map<String, String> configurations) throws CompilationException {
         String container = configurations.getOrDefault(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME, "");
         String type = configurations.getOrDefault(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, "");
         String protocol;
         switch (type) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
                 protocol = S3Constants.HADOOP_S3_PROTOCOL;
-                break;
+                return protocol + "://" + container + "/";
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB_ALIAS:
                 protocol = AzureConstants.HADOOP_AZURE_PROTOCOL;
-                break;
+                String blobEndpoint = BlobUtils.getEndpointFromClient(configurations);
+                return protocol + "://" + container + "@" + blobEndpoint + "/";
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE_ALIAS:
+                protocol = AzureConstants.HADOOP_AZURE_PROTOCOL;
+                String dataLakeEndpoint = DatalakeUtils.getEndpointFromClient(configurations);
+                return protocol + "://" + container + "@" + dataLakeEndpoint + "/";
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
                 protocol = GCSConstants.HADOOP_GCS_PROTOCOL;
-                break;
+                return protocol + "://" + container + "/";
             case ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS:
                 String path = getDefinitionOrPath(configurations);
                 String[] nodePathPair = path.trim().split("://");
                 protocol = nodePathPair[0];
-                break;
+                return protocol + "://" + container + "/";
             case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
                 // Remove trailing slashes as prefixes/paths in hdfs start with a slash (absolute paths)
                 return configurations.get(ExternalDataConstants.KEY_HDFS_URL).replaceAll("/+$", "");
@@ -1178,7 +1186,6 @@ public class ExternalDataUtils {
                 return "";
         }
 
-        return protocol + "://" + container + "/";
     }
 
     public static void validateType(Map<String, String> properties, ARecordType itemType) throws CompilationException {
