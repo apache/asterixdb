@@ -30,7 +30,7 @@ ParenthesizedExpr ::= ("(" Expr ")") | Subquery
 
 FunctionCall ::= OrdinaryFunctionCall | AggregateFunctionCall | WindowFunctionCall
 
-OrdinaryFunctionCall ::= (DataverseName ".")? Identifier "(" Expr ("," Expr)* ")"
+OrdinaryFunctionCall ::= (DataverseName ".")? Identifier "(" (Expr ("," Expr)*)? ")"
 
 AggregateFunctionCall ::= Identifier "(" ("DISTINCT")? Expr ")" ("FILTER" "(" "WHERE" Expr ")")?
 
@@ -91,13 +91,11 @@ GroupAsClause ::= "GROUP AS" Variable
 
 HavingClause ::= "HAVING" Expr
 
-Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
-
 UnionOption ::= "UNION ALL" (QueryBlock | Subquery)
 
 WithClause ::= "WITH" Variable "AS" Expr ("," Variable "AS" Expr)*
 
-OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? ( "," Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? )*
+OrderByClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? ( "," Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? )*
 
 LimitClause ::= "LIMIT" Expr OffsetClause?
 
@@ -262,8 +260,8 @@ InsertStmnt ::= "INSERT" "INTO" QualifiedName ("AS" Variable)? Query ("RETURNING
 UpsertStmnt ::= "UPSERT" "INTO" QualifiedName ("AS" Variable)? Query ("RETURNING" Expr)?
 
 
-CopyStmnt ::= "COPY" "INTO"? QualifiedName ("AS" Variable)? "FROM" Identifier "AT" QualifiedName ("PATH" StringLiteral)? (WITH ObjectConstructor)?
+CopyStmnt ::= "COPY" "INTO"? QualifiedName ("AS" Variable)? "FROM" Identifier "AT" QualifiedName ("PATH" StringLiteral)? ("WITH" ObjectConstructor)?
 
-CopyToStmnt ::= "COPY" ( QualifiedName | "(" Query ")" ) "TO" AdapterName "PATH" ParenthesizedArrayConstructor ("OVER" "(" ("PARTITION" "BY" Expr ("AS" Variable)? ("," Expr ("AS" Variable)? )? )? OrderbyClause ")" )? WITH ObjectConstructor
+CopyToStmnt ::= "COPY" ( QualifiedName | "(" Query ")" ) "TO" AdapterName "PATH" ParenthesizedArrayConstructor ("OVER" "(" ("PARTITION" "BY" Expr ("AS" Variable)? ("," Expr ("AS" Variable)? )? )? OrderByClause ")" )? "WITH" ObjectConstructor
 
 DeleteStmnt ::= "DELETE" "FROM" QualifiedName (("AS")? Variable)? ("WHERE" Expr)?
