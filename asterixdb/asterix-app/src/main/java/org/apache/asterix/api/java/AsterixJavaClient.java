@@ -70,12 +70,10 @@ public class AsterixJavaClient {
     private ICcApplicationContext appCtx;
     private Map<String, IAObject> statementParams;
     private ExecutionPlans executionPlans;
-    private final boolean addAnalyzeForOptimizerTests;
 
     public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
             PrintWriter writer, ILangCompilationProvider compilationProvider,
-            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider storageComponentProvider,
-            boolean addAnalyzeForOptimizerTests) {
+            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider storageComponentProvider) {
         this.appCtx = appCtx;
         this.hcc = hcc;
         this.queryText = queryText;
@@ -85,7 +83,6 @@ public class AsterixJavaClient {
         this.storageComponentProvider = storageComponentProvider;
         apiFramework = new APIFramework(compilationProvider);
         parserFactory = compilationProvider.getParserFactory();
-        this.addAnalyzeForOptimizerTests = addAnalyzeForOptimizerTests;
     }
 
     public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
@@ -94,7 +91,7 @@ public class AsterixJavaClient {
         this(appCtx, hcc, queryText,
                 // This is a commandline client and so System.out is appropriate
                 new PrintWriter(System.out, true), // NOSONAR
-                compilationProvider, statementExecutorFactory, storageComponentProvider, false);
+                compilationProvider, statementExecutorFactory, storageComponentProvider);
     }
 
     public void setStatementParameters(Map<String, IAObject> statementParams) {
@@ -102,14 +99,21 @@ public class AsterixJavaClient {
     }
 
     public void compile() throws Exception {
-        compile(true, false, true, false, false, false, false, addAnalyzeForOptimizerTests);
+        compile(true, false, true, false, false, false, false);
     }
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,
             boolean printOptimizedPlan, boolean printPhysicalOpsOnly, boolean generateBinaryRuntime, boolean printJob,
-            boolean addAnalyzeForOptimizerTests) throws Exception {
+            PlanFormat pformat) throws Exception {
         compile(optimize, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly,
-                generateBinaryRuntime, printJob, PlanFormat.STRING, addAnalyzeForOptimizerTests);
+                generateBinaryRuntime, printJob, pformat, false);
+    }
+
+    public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,
+            boolean printOptimizedPlan, boolean printPhysicalOpsOnly, boolean generateBinaryRuntime, boolean printJob)
+            throws Exception {
+        compile(optimize, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printPhysicalOpsOnly,
+                generateBinaryRuntime, printJob, PlanFormat.STRING, false);
     }
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,

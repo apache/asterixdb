@@ -86,9 +86,9 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
         try (PrintWriter plan = new PrintWriter(actualFile)) {
             AsterixJavaClient asterix = new AsterixJavaClient(
                     (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc, new StringReader(query),
-                    plan, provider, statementExecutorFactory, storageComponentProvider, false);
+                    plan, provider, statementExecutorFactory, storageComponentProvider);
             asterix.setStatementParameters(queryParams);
-            asterix.compile(true, false, !optimized, optimized, false, false, false, PlanFormat.JSON, false);
+            asterix.compile(true, false, !optimized, optimized, false, false, false, PlanFormat.JSON);
             ExecutionPlans executionPlans = asterix.getExecutionPlans();
             planStr = optimized ? executionPlans.getOptimizedLogicalPlan() : executionPlans.getLogicalPlan();
             plan.write(planStr);

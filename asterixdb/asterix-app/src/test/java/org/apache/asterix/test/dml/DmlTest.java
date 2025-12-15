@@ -69,9 +69,9 @@ public class DmlTest {
                 new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
                         integrationUtil.getHyracksClientConnection(), loadReader, ERR,
                         new SqlppCompilationProvider(new NamespaceResolver(false)),
-                        new DefaultStatementExecutorFactory(), new StorageComponentProvider(), false);
+                        new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         try {
-            asterixLoad.compile(true, false, false, false, false, true, false, false);
+            asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {
             throw new Exception("Compile ERROR for " + LOAD_FOR_ENLIST_FILE + ": " + e.getMessage(), e);
         } finally {

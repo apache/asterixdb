@@ -67,7 +67,7 @@ public class AsterixClientDriver {
         FileReader reader = new FileReader(filename);
         AsterixJavaClient q = new AsterixJavaClient(null, hcc, reader, compilationProvider,
                 new DefaultStatementExecutorFactory(), new StorageComponentProvider());
-        q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime, false);
+        q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }
 

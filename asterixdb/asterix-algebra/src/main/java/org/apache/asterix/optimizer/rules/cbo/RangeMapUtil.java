@@ -230,7 +230,6 @@ public final class RangeMapUtil {
             List<OrderColumn> partitionFields) throws AlgebricksException {
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
-        // copySchema is false because we will re-compute schema later
         ILogicalOperator newRoot = OperatorManipulationUtil.bottomUpCopyOperators(logicalOperator);
         replaceAllScansWithSamples(newRoot, newCtx);
         OperatorPropertiesUtil.typeOpRec(new MutableObject<>(newRoot), newCtx);

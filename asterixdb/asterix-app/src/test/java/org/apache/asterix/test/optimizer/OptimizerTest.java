@@ -83,7 +83,7 @@ public class OptimizerTest extends AbstractOptimizerTest {
         try (PrintWriter plan = new PrintWriter(actualFile)) {
             AsterixJavaClient asterix = new AsterixJavaClient(
                     (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc, new StringReader(query),
-                    plan, provider, statementExecutorFactory, storageComponentProvider, true);
+                    plan, provider, statementExecutorFactory, storageComponentProvider);
             asterix.setStatementParameters(queryParams);
             asterix.compile(true, false, true, true, false, false, false, SessionConfig.PlanFormat.STRING, false);
             ExecutionPlans executionPlans = asterix.getExecutionPlans();
