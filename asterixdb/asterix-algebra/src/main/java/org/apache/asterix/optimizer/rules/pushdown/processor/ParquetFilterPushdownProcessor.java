@@ -79,5 +79,6 @@ public class ParquetFilterPushdownProcessor extends ColumnFilterPushdownProcesso
         } else {
             scanDefDesc.setRowGroupFilterExpression(inlinedExpr);
         }
+        scanDefDesc.getFilterPaths().putAll(paths);
     }
 }

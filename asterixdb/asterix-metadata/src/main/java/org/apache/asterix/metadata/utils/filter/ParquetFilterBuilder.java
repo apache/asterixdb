@@ -52,9 +52,6 @@ import org.apache.parquet.filter2.predicate.FilterPredicate;
 import org.apache.parquet.filter2.predicate.Operators;
 import org.apache.parquet.io.api.Binary;
 
-import io.delta.kernel.expressions.Column;
-import io.delta.kernel.expressions.Predicate;
-
 public class ParquetFilterBuilder extends AbstractFilterBuilder {
 
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
@@ -71,11 +68,8 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
             try {
                 parquetFilterPredicate = createFilterExpression(filterExpression);
             } catch (Exception e) {
-                LOGGER.error("Error creating Parquet row-group filter expression ", e);
+                LOGGER.error("Error creating Parquet row-group filter expression ", e.getMessage());
             }
-        }
-        if (parquetFilterPredicate != null && !(parquetFilterPredicate instanceof Predicate)) {
-            parquetFilterPredicate = null;
         }
         return parquetFilterPredicate;
     }
