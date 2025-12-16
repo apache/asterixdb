@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OperatorUtils {
@@ -363,9 +364,20 @@ public class OperatorUtils {
         return doAllDataSourcesHaveSamples(leafInputs, context, true);
     }
 
+    public static boolean getCBOMode(IOptimizationContext context) {
+        PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
+        return physOptConfig.getCBOMode();
+    }
+
+    public static boolean getCBOTestMode(IOptimizationContext context) {
+        PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
+        return physOptConfig.getCBOTestMode();
+    }
+
     // check to see if every dataset has a sample. If not, CBO code cannot run. A warning message must be issued as well.
     public static boolean doAllDataSourcesHaveSamples(List<AbstractLeafInput> leafInputs, IOptimizationContext context,
             boolean handle) throws AlgebricksException {
+        boolean cboTestMode = getCBOTestMode(context);
         if (!handle) {
             return false;
         }
@@ -381,9 +393,10 @@ public class OperatorUtils {
                 return false;
             }
             Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
-            double origDatasetCard = idxDetails.getSourceCardinality();
             // empty samples
-            if (origDatasetCard == 0) {
+            double origDatasetCard = idxDetails.getSourceCardinality();
+            // Skip empty sample check in cboTestMode so tests can run range map computation
+            if (origDatasetCard == 0 && !cboTestMode) {
                 ExceptionUtil.warnEmptySamples(origDatasetCard, scanOp.getSourceLocation(), context);
                 return false;
             }

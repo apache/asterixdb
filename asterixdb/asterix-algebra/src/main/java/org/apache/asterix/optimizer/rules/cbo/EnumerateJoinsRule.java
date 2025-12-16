@@ -74,7 +74,6 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -155,8 +154,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
 
-        boolean cboMode = getCBOMode(context);
-        boolean cboTestMode = getCBOTestMode(context);
+        boolean cboMode = OperatorUtils.getCBOMode(context);
+        boolean cboTestMode = OperatorUtils.getCBOTestMode(context);
 
         if (!(cboMode || cboTestMode)) {
             return false;
@@ -884,16 +883,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 }
             }
         }
-    }
-
-    public static boolean getCBOMode(IOptimizationContext context) {
-        PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
-        return physOptConfig.getCBOMode();
-    }
-
-    public static boolean getCBOTestMode(IOptimizationContext context) {
-        PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
-        return physOptConfig.getCBOTestMode();
     }
 
     /**
