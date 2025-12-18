@@ -44,6 +44,7 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IIcebergRecordReaderFactory;
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.external.input.filter.IcebergTableFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
@@ -61,6 +62,7 @@ import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.data.Record;
+import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.util.SnapshotUtil;
 
@@ -146,7 +148,12 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             if (projectedFields != null && projectedFields.length > 0) {
                 projectedSchema = projectedSchema.select(projectedFields);
             }
-            scan = scan.project(projectedSchema);
+            scan.project(projectedSchema);
+            Expression filterExpression =
+                    ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
+            if (filterExpression != null) {
+                scan = scan.filter(filterExpression);
+            }
             try (CloseableIterable<FileScanTask> tasks = scan.planFiles()) {
                 tasks.forEach(fileScanTasks::add);
             }

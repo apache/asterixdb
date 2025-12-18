@@ -57,6 +57,7 @@ import org.apache.asterix.metadata.utils.filter.ColumnFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ColumnRangeFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.DeltaTableFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ExternalFilterBuilder;
+import org.apache.asterix.metadata.utils.filter.IcebergTableFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ParquetFilterBuilder;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -383,10 +384,9 @@ public class IndexUtil {
         if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
             return NoOpIcebergTableFilterEvaluatorFactory.INSTANCE;
         } else {
-            //            IcebergTableFilterBuilder builder = new IcebergTableFilterBuilder(
-            //                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
-            //            return builder.build();
-            return NoOpIcebergTableFilterEvaluatorFactory.INSTANCE;
+            IcebergTableFilterBuilder builder = new IcebergTableFilterBuilder(
+                    (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+            return builder.build();
         }
     }
 
