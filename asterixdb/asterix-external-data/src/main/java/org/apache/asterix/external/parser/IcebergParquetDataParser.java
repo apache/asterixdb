@@ -206,14 +206,14 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             NestedField field = schema.fields().get(i);
             String fieldName = field.name();
             Type fieldType = field.type();
-            ATypeTag typeTag =
-                    getTypeTag(fieldType, structLike.get(i, fieldType.typeId().javaClass()) == null, parserContext);
+            Object sourceValue = structLike.get(i, Object.class);
+            ATypeTag typeTag = getTypeTag(fieldType, sourceValue == null, parserContext);
             IValueReference value;
             if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
                 value = valueEmbedder.getEmbeddedValue();
             } else {
                 valueBuffer.reset();
-                parseValue(fieldType, structLike.get(i, fieldType.typeId().javaClass()), valueBuffer.getDataOutput());
+                parseValue(fieldType, sourceValue, valueBuffer.getDataOutput());
                 value = valueBuffer;
             }
 
