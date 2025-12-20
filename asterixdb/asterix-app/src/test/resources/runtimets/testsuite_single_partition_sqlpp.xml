@@ -279,6 +279,12 @@
         <output-dir compare="Text">pushdown/ASTERIXDB-3540</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="pushdown/ASTERIXDB-3680">
+        <output-dir compare="Text">pushdown/ASTERIXDB-3680</output-dir>
+        <expected-warn>ASX0002: Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is bigint (in line 24, at column 11)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="column">
       <compilation-unit name="pushdown/heterogeneous-access-pushdown">
         <output-dir compare="Text">pushdown/heterogeneous-access-pushdown</output-dir>

@@ -158,6 +158,9 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
 
     private boolean notInUnion(IAType requestedType, UnionSchemaNode unionNode) {
         for (AbstractSchemaNode unionChildNode : unionNode.getChildren().values()) {
+            if (unionChildNode.getTypeTag() == ATypeTag.MISSING) {
+                continue;
+            }
             warn(requestedType, unionChildNode);
         }
         return !unionNode.getChildren().containsKey(requestedType.getTypeTag());
