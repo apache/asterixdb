@@ -63,3 +63,10 @@ UPSERT INTO ds3 ([
 {"id":13, "age": null              },
 {"id":14,              "dept": null}
 ]);
+
+UPSERT INTO ds4 ([
+{"id":1, "ages": [1,9,2,3], "ages_op1": [111,999,222,333]},
+{"id":2, "ages": [1,9,2,3], "ages_op1": null},
+{"id":3, "ages": [1,9,2,3]},
+{"id":4, "ages": [1,9,2,7], "ages_op1": [11,99,null,77]}
+]);

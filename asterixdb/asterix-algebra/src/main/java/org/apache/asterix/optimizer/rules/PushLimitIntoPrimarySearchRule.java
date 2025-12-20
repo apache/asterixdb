@@ -142,6 +142,16 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
             case UNNEST_MAP:
                 UnnestMapOperator unnestMap = (UnnestMapOperator) child;
                 if (isUnnestMapPushable(unnestMap, selectedVariables)) {
+                    // set only the limit if the unnest-map is propagating the input vars.
+                    // when the unnest-map op is propagating the input vars, currently the index-search runtime fails to
+                    // evaluate the select-condition because at the time the select-condition is evaluated, the tuple
+                    // has only the index-search vars while the select-condition expects the tuple to have both the
+                    // input vars + index-search vars. the index-search runtime needs to be fixed to construct the
+                    // complete tuple vars first, then evaluate the select-condition.
+                    if (unnestMap.propagatesInput()) {
+                        unnestMap.setOutputLimit(outputLimit);
+                        return true;
+                    }
                     unnestMap.setSelectCondition(selectConditionRef);
                     unnestMap.setOutputLimit(outputLimit);
                     changed = true;
@@ -180,7 +190,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
             return false;
         }
         ILogicalExpression unnestExpr = op.getExpressionRef().getValue();
-        if (op.propagatesInput() || unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
