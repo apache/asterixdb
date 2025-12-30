@@ -42,15 +42,9 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/catalog/negative">
-      <compilation-unit name="missing-warehouse">
-        <output-dir compare="Text">missing-warehouse</output-dir>
-        <expected-error>ASX0049: Parameter(s) warehouse must be specified</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
       <compilation-unit name="missing-source-type">
         <output-dir compare="Text">missing-source-type</output-dir>
-        <expected-error>ASX1229: Iceberg catalog source required</expected-error>
+        <expected-error>ASX0049: Parameter(s) catalogSource must be specified</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/catalog/negative">

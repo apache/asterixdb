@@ -196,22 +196,24 @@ public class AwsUtils {
         // build sts client used for assuming role
         ClientOverrideConfiguration.Builder clientConfigurationBuilder = ClientOverrideConfiguration.builder();
         clientConfigurationBuilder.addExecutionInterceptor(ASSUME_ROLE_INTERCEPTOR);
-        clientConfigurationBuilder.addExecutionInterceptor(new ExecutionInterceptor() {
-            @Override
-            public void onExecutionFailure(Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-                SdkRequest req = context.request();
-                if (req instanceof AssumeRoleRequest assumeReq) {
-                    String roleArn = assumeReq.roleArn();
-                    Throwable th = context.exception();
-                    LOGGER.info("encountered issue assuming role ({}): {}", roleArn, getMessageOrToString(th));
+        if (appCtx != null) {
+            clientConfigurationBuilder.addExecutionInterceptor(new ExecutionInterceptor() {
+                @Override
+                public void onExecutionFailure(Context.FailedExecution context, ExecutionAttributes executionAttributes) {
+                    SdkRequest req = context.request();
+                    if (req instanceof AssumeRoleRequest assumeReq) {
+                        String roleArn = assumeReq.roleArn();
+                        Throwable th = context.exception();
+                        LOGGER.info("encountered issue assuming role ({}): {}", roleArn, getMessageOrToString(th));
 
-                    IExternalStatsTracker externalStatsTracker = appCtx.getExternalStatsTracker();
-                    String name = externalStatsTracker.resolveName(configuration);
-                    externalStatsTracker.incrementAwsAssumeRoleFailure(name, roleArn);
+                        IExternalStatsTracker externalStatsTracker = appCtx.getExternalStatsTracker();
+                        String name = externalStatsTracker.resolveName(configuration);
+                        externalStatsTracker.incrementAwsAssumeRoleFailure(name, roleArn);
+                    }
+                    ExecutionInterceptor.super.onExecutionFailure(context, executionAttributes);
                 }
-                ExecutionInterceptor.super.onExecutionFailure(context, executionAttributes);
-            }
-        });
+            });
+        }
         ClientOverrideConfiguration clientConfiguration = clientConfigurationBuilder.build();
 
         StsClientBuilder stsClientBuilder = StsClient.builder();
@@ -229,10 +231,11 @@ public class AwsUtils {
         refreshRequestBuilder.roleArn(roleArn);
         refreshRequestBuilder.externalId(configuration.get(EXTERNAL_ID_FIELD_NAME));
         refreshRequestBuilder.roleSessionName(sessionName);
+        int duration = AwsConstants.ASSUME_ROLE_DURATION_DEFAULT;
         if (appCtx != null) {
-            int duration = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
-            refreshRequestBuilder.durationSeconds(duration);
+            duration = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
         }
+        refreshRequestBuilder.durationSeconds(duration);
 
         // build credentials provider
         StsAssumeRoleCredentialsProvider.Builder builder = StsAssumeRoleCredentialsProvider.builder();

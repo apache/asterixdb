@@ -1030,10 +1030,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IcebergCatalog catalog =
                     (IcebergCatalog) MetadataManager.INSTANCE.getCatalog(getMetadataTxnContext(), catalogName);
             IcebergCatalogDetails details = (IcebergCatalogDetails) catalog.getCatalogDetails();
-            for (Map.Entry<String, String> entry : details.getProperties().entrySet()) {
-                configuration.putIfAbsent(IcebergConstants.ICEBERG_PROPERTY_PREFIX_INTERNAL + entry.getKey(),
-                        entry.getValue());
-            }
+            IcebergUtils.putCatalogProperties(configuration, details.getProperties());
         }
     }
 

@@ -18,10 +18,14 @@
  */
 package org.apache.asterix.external.util.aws;
 
+import java.util.List;
+
 public class AwsConstants {
     private AwsConstants() {
         throw new AssertionError("do not instantiate");
     }
+
+    public static final int ASSUME_ROLE_DURATION_DEFAULT = 3600;
 
     // Authentication specific parameters
     public static final String REGION_FIELD_NAME = "region";
@@ -33,6 +37,10 @@ public class AwsConstants {
     public static final String ROLE_ARN_FIELD_NAME = "roleArn";
     public static final String EXTERNAL_ID_FIELD_NAME = "externalId";
     public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
+
+    public static final List<String> authParams = java.util.Arrays.asList(REGION_FIELD_NAME, CROSS_REGION_FIELD_NAME,
+            INSTANCE_PROFILE_FIELD_NAME, ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME,
+            SESSION_TOKEN_FIELD_NAME, ROLE_ARN_FIELD_NAME, EXTERNAL_ID_FIELD_NAME, SERVICE_END_POINT_FIELD_NAME);
 
     // AWS specific error codes
     public static final String ERROR_INTERNAL_ERROR = "InternalError";

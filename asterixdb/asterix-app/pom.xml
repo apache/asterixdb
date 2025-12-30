@@ -1138,6 +1138,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.projectnessie.nessie</groupId>
+      <artifactId>nessie-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectnessie.nessie</groupId>
+      <artifactId>nessie-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>tech.allegro.schema.json2avro</groupId>
       <artifactId>converter</artifactId>
       <version>0.2.15</version>

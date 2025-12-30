@@ -165,6 +165,10 @@ public class JavaSerializationUtils {
             setStackTrace(t.getStackTrace());
         }
 
+        public SerializableExceptionProxy(Object o) {
+            this(new RuntimeException(String.valueOf(o)));
+        }
+
         @Override
         public String toString() {
             return type + ": " + getMessage();

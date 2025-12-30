@@ -55,6 +55,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -101,20 +102,26 @@ public class GCSUtils {
         throw new AssertionError("do not instantiate");
     }
 
+    public static Storage buildClient(IApplicationContext appCtx, Map<String, String> configuration)
+            throws CompilationException {
+        return buildClient(appCtx, configuration, null);
+    }
+
     /**
      * Builds the client using the provided configuration
      *
      * @param appCtx application context
      * @param configuration properties
+     * @param scopes scopes
      * @return Storage client
      * @throws CompilationException CompilationException
      */
-    public static Storage buildClient(IApplicationContext appCtx, Map<String, String> configuration)
-            throws CompilationException {
+    public static Storage buildClient(IApplicationContext appCtx, Map<String, String> configuration,
+            List<String> scopes) throws CompilationException {
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
         boolean disableSslVerify = getDisableSslVerify(configuration);
 
-        Credentials credentials = buildCredentials(appCtx, configuration);
+        Credentials credentials = buildCredentials(appCtx, configuration, scopes);
         StorageOptions.Builder builder = StorageOptions.newBuilder();
         builder.setCredentials(credentials);
         if (disableSslVerify) {
@@ -145,13 +152,13 @@ public class GCSUtils {
         }
     }
 
-    private static Credentials buildCredentials(IApplicationContext appCtx, Map<String, String> configuration) throws CompilationException {
+    public static Credentials buildCredentials(IApplicationContext appCtx, Map<String, String> configuration, List<String> scopes) throws CompilationException {
         AuthenticationType authenticationType = getAuthenticationType(configuration);
         return switch (authenticationType) {
             case ANONYMOUS -> NoCredentials.getInstance();
-            case IMPERSONATE_SERVICE_ACCOUNT -> getImpersonatedServiceAccountCredentials(appCtx, configuration);
-            case APPLICATION_DEFAULT_CREDENTIALS -> getApplicationDefaultCredentials(configuration);
-            case SERVICE_ACCOUNT_KEY_JSON_CREDENTIALS -> getServiceAccountKeyCredentials(configuration);
+            case IMPERSONATE_SERVICE_ACCOUNT -> getImpersonatedServiceAccountCredentials(appCtx, configuration, scopes);
+            case APPLICATION_DEFAULT_CREDENTIALS -> getApplicationDefaultCredentials(configuration, scopes);
+            case SERVICE_ACCOUNT_KEY_JSON_CREDENTIALS -> getServiceAccountKeyCredentials(configuration, scopes);
             case BAD_AUTHENTICATION -> throw new CompilationException(ErrorCode.NO_VALID_AUTHENTICATION_PARAMS_PROVIDED);
         };
     }
@@ -184,54 +191,71 @@ public class GCSUtils {
      *
      * @param appCtx application context
      * @param configuration configuration
+     * @param scopes scopes
      * @return returns the cached credentials if valid, otherwise, generates new credentials
      * @throws CompilationException CompilationException
      */
     private static GoogleCredentials getImpersonatedServiceAccountCredentials(IApplicationContext appCtx,
-            Map<String, String> configuration) throws CompilationException {
-        GoogleCredentials sourceCredentials = getCredentialsToImpersonateServiceAccount(configuration);
+            Map<String, String> configuration, List<String> scopes) throws CompilationException {
+        GoogleCredentials sourceCredentials = getCredentialsToImpersonateServiceAccount(configuration, scopes);
         String impersonateServiceAccount = configuration.get(IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME);
-        int duration = appCtx.getExternalProperties().getGcpImpersonateServiceAccountDuration();
+        int duration = GCSConstants.IMPERSONATE_SERVICE_ACCOUNT_DURATION_DEFAULT;
+        if (appCtx != null) {
+            duration = appCtx.getExternalProperties().getGcpImpersonateServiceAccountDuration();
+        }
 
         // Create impersonated credentials
-        return ImpersonatedCredentials.create(sourceCredentials, impersonateServiceAccount, null,
-                READ_WRITE_SCOPE_PERMISSION, duration);
+        GoogleCredentials credentials = ImpersonatedCredentials.create(sourceCredentials, impersonateServiceAccount,
+                null, READ_WRITE_SCOPE_PERMISSION, duration);
+        if (scopes != null && !scopes.isEmpty()) {
+            credentials = credentials.createScoped(scopes);
+        }
+        return credentials;
     }
 
-    private static GoogleCredentials getCredentialsToImpersonateServiceAccount(Map<String, String> configuration)
-            throws CompilationException {
+    private static GoogleCredentials getCredentialsToImpersonateServiceAccount(Map<String, String> configuration,
+            List<String> scopes) throws CompilationException {
         String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
 
         if (applicationDefaultCredentials != null) {
-            return getApplicationDefaultCredentials(configuration);
+            return getApplicationDefaultCredentials(configuration, scopes);
         } else if (jsonCredentials != null) {
-            return getServiceAccountKeyCredentials(configuration);
+            return getServiceAccountKeyCredentials(configuration, scopes);
         } else {
             throw new CompilationException(
                     ErrorCode.NO_VALID_AUTHENTICATION_PARAMS_PROVIDED_TO_IMPERSONATE_SERVICE_ACCOUNT);
         }
     }
 
-    private static GoogleCredentials getApplicationDefaultCredentials(Map<String, String> configuration)
-            throws CompilationException {
+    private static GoogleCredentials getApplicationDefaultCredentials(Map<String, String> configuration,
+            List<String> scopes) throws CompilationException {
         try {
             String notAllowed = getNonNull(configuration, JSON_CREDENTIALS_FIELD_NAME);
             if (notAllowed != null) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed,
                         APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
             }
-            return GoogleCredentials.getApplicationDefault();
+
+            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+            if (scopes != null && !scopes.isEmpty()) {
+                credentials = credentials.createScoped(scopes);
+            }
+            return credentials;
         } catch (Exception ex) {
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
-    private static GoogleCredentials getServiceAccountKeyCredentials(Map<String, String> configuration)
-            throws CompilationException {
+    private static GoogleCredentials getServiceAccountKeyCredentials(Map<String, String> configuration,
+            List<String> scopes) throws CompilationException {
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
         try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
-            return GoogleCredentials.fromStream(credentialsStream);
+            GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+            if (scopes != null && !scopes.isEmpty()) {
+                credentials = credentials.createScoped(scopes);
+            }
+            return credentials;
         } catch (IOException ex) {
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } catch (Exception ex) {
@@ -354,6 +378,11 @@ public class GCSUtils {
         // check if the format property is present
         else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+        }
+
+        // container is not needed for iceberg tables, skip validation
+        if (IcebergUtils.isIcebergTable(configuration)) {
+            return;
         }
 
         validateIncludeExclude(configuration);

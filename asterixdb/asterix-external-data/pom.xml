@@ -643,7 +643,23 @@
     </dependency>
     <dependency>
       <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
       <artifactId>iceberg-aws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-gcp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-nessie</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-bundled-guava</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.iceberg</groupId>

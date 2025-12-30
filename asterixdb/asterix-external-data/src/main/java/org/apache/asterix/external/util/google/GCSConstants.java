@@ -20,6 +20,7 @@ package org.apache.asterix.external.util.google;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
+import java.util.List;
 import java.util.concurrent.CancellationException;
 
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -41,11 +42,15 @@ public class GCSConstants {
 
     // Key max length
     public static final int MAX_KEY_LENGTH_IN_BYTES = 1024;
+    public static final int IMPERSONATE_SERVICE_ACCOUNT_DURATION_DEFAULT = 900;
 
     public static final String APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME = "applicationDefaultCredentials";
     public static final String IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME = "impersonateServiceAccount";
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
+    public static final List<String> authParams = java.util.Arrays.asList(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME,
+            IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME, JSON_CREDENTIALS_FIELD_NAME, ENDPOINT_FIELD_NAME);
+
     public static final String STORAGE_PREFIX = "prefix";
 
     // hadoop internal configuration

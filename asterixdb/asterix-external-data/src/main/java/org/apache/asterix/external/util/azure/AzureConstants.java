@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.util.azure;
 
+import java.util.List;
+
 import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.http.policy.HttpLogOptions;
 
@@ -52,6 +54,9 @@ public class AzureConstants {
     public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
     public static final String ACCOUNT_URL = "accountURL";
+    public static final List<String> authParams = java.util.Arrays.asList(MANAGED_IDENTITY_FIELD_NAME,
+            ACCOUNT_NAME_FIELD_NAME, ACCOUNT_KEY_FIELD_NAME, SHARED_ACCESS_SIGNATURE_FIELD_NAME, TENANT_ID_FIELD_NAME,
+            CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, ENDPOINT_FIELD_NAME, ACCOUNT_URL);
 
     /*
      * Hadoop-Azure

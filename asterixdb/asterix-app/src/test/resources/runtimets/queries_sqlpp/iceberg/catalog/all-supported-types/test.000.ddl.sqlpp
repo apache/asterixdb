@@ -21,19 +21,34 @@ CREATE CATALOG myGlueCatalog
 TYPE Iceberg
 SOURCE AWS_GLUE
 WITH {
-    "warehouse": "s3://cbas-iceberg-playground/my-glue-catalog/warehouse/",
-    "namespace": "pharmacy_namespace",
     "accessKeyId" : "myAccessKeyId",
     "secretAccessKey" : "mySecretAccessKey",
     "region" : "us-west-2"
 };
 
-CREATE CATALOG myRestCatalog
+CREATE CATALOG myGlueRestCatalog
 TYPE Iceberg
-SOURCE REST
+SOURCE AWS_GLUE_REST
 WITH {
-    "warehouse": "s3://cbas-iceberg-playground/my-rest-catalog/warehouse/",
-    "namespace": "pharmacy_namespace",
+    "uri": "https://glue.eu-central-1.amazonaws.com/iceberg",
+    "sigv4SigningRegion": "eu-central-1",
+    "accessKeyId" : "myAccessKeyId",
+    "secretAccessKey" : "mySecretAccessKey",
+    "region" : "us-west-2"
+};
+
+CREATE CATALOG myS3TablesCatalog
+TYPE Iceberg
+SOURCE S3_TABLES
+WITH {
+    //"uri": "https://s3tables.eu-central-1.amazonaws.com/iceberg",
+    //"warehouse": "arn:aws:s3tables:eu-central-1:381798774328:bucket/cbas-s3tables-playground-eu",
+    //"sigv4SigningName": "s3tables",
+    //"sigv4SigningRegion": "eu-central-1",
+    "uri": "https://glue.eu-central-1.amazonaws.com/iceberg",
+    "warehouse": "381798774328:s3tablescatalog/cbas-s3tables-playground-eu",
+    "sigv4SigningName": "glue",
+    "sigv4SigningRegion": "eu-central-1",
     "accessKeyId" : "myAccessKeyId",
     "secretAccessKey" : "mySecretAccessKey",
     "region" : "us-west-2"
@@ -43,9 +58,31 @@ CREATE CATALOG myBiglakeMetastoreCatalog
 TYPE Iceberg
 SOURCE BIGLAKE_METASTORE
 WITH {
-    "warehouse": "s3://cbas-iceberg-playground/my-biglake-metastore-catalog/warehouse/",
-    "namespace": "pharmacy_namespace",
-    "accessKeyId" : "myAccessKeyId",
-    "secretAccessKey" : "mySecretAccessKey",
-    "region" : "us-west-2"
+    "warehouse": "gs://cbas-iceberg-playground-bahrain/",
+    "uri": "https://biglake.googleapis.com/iceberg/v1/restcatalog",
+    "quotaProjectId": "rnd-analytics-development-100",
+    "jsonCredentials": "myJsonCredentials"
+};
+
+CREATE CATALOG myNessieCatalog
+TYPE Iceberg
+SOURCE NESSIE
+WITH {
+    "uri": "http://localhost:19120/api/v2",
+    "warehouse": "s3://cbas-iceberg-playground-eu/nessie/warehouse",
+    "oauthTokenUri": "http://host.docker.internal:8085/realms/iceberg",
+    "oauthClientId": "nessie",
+    "oauthClientSecret": "oauthClientSecretValue",
+    "oauthAllowedScopes": "openid"
+};
+
+CREATE CATALOG myNessieRestCatalog
+TYPE Iceberg
+SOURCE NESSIE_REST
+WITH {
+    "uri": "http://localhost:19120/iceberg/main%7Cwarehouse",
+    "oauthTokenUri": "http://host.docker.internal:8085/realms/iceberg",
+    "oauthClientId": "nessie",
+    "oauthClientSecret": "oauthClientSecretValue",
+    "oauthAllowedScopes": "openid"
 };

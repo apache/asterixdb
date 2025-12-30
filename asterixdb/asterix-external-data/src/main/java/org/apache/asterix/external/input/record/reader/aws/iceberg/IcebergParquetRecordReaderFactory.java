@@ -28,6 +28,7 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,13 +71,14 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
     private static final long serialVersionUID = 1L;
     private static final List<String> RECORD_READER_NAMES =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3);
+            Arrays.asList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3, ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
 
     private final List<FileScanTask> fileScanTasks = new ArrayList<>();
     private final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
 
     private Schema projectedSchema;
-    private Map<String, String> configurationCopy;
+    private Map<String, String> originalConfiguration;
+    private Map<String, String> catalogProperties;
 
     private transient AlgebricksAbsolutePartitionConstraint partitionConstraint;
 
@@ -107,7 +109,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         try {
             int partition = context.getPartition();
             return new IcebergFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getFileScanTasks(),
-                    projectedSchema, new HashMap<>(configurationCopy));
+                    projectedSchema, new HashMap<>(originalConfiguration));
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -121,7 +123,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
-        this.configurationCopy = new HashMap<>(configuration);
+        this.originalConfiguration = new HashMap<>(configuration);
         this.partitionConstraint = ((ICcApplicationContext) ctx.getApplicationContext()).getDataPartitioningProvider()
                 .getClusterLocations();
 
@@ -131,7 +133,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             String namespace = IcebergUtils.getNamespace(configuration);
             String tableName = configuration.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
 
-            catalog = IcebergUtils.initializeCatalog(IcebergUtils.filterCatalogProperties(configuration), namespace);
+            catalogProperties = IcebergUtils.filterCatalogProperties(configuration);
+            catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
             TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(namespace), tableName);
             if (!catalog.tableExists(tableIdentifier)) {
                 throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
@@ -139,8 +142,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
             Table table = catalog.loadTable(tableIdentifier);
             TableScan scan = table.newScan();
-            scan = setAndPinScanSnapshot(configurationCopy, table, scan);
-            long snapshotId = Long.parseLong(configurationCopy.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
+            scan = setAndPinScanSnapshot(originalConfiguration, table, scan);
+            long snapshotId = Long.parseLong(originalConfiguration.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
             Schema schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
 
             String[] projectedFields = getProjectedFields(configuration);
@@ -166,7 +169,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
         } finally {
             try {
-                IcebergUtils.closeCatalog(catalog);
+                IcebergUtils.closeAndCleanup(catalog, catalogProperties);
             } catch (Exception ex) {
                 if (throwable != null) {
                     throwable.addSuppressed(ex);

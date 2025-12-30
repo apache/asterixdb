@@ -120,6 +120,9 @@
 
     <icebergjavasdk.version>1.10.0</icebergjavasdk.version>
 
+    <!-- match with Nessie version used in Iceberg -->
+    <nessieproject.version>0.104.5</nessieproject.version>
+
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
@@ -1985,6 +1988,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-common</artifactId>
+        <version>${icebergjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
         <artifactId>iceberg-api</artifactId>
         <version>${icebergjavasdk.version}</version>
       </dependency>
@@ -2001,6 +2009,31 @@
       <dependency>
         <groupId>org.apache.iceberg</groupId>
         <artifactId>iceberg-aws</artifactId>
+        <version>${icebergjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-gcp</artifactId>
+        <version>${icebergjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-nessie</artifactId>
+        <version>${icebergjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.projectnessie.nessie</groupId>
+        <artifactId>nessie-model</artifactId>
+        <version>${nessieproject.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.projectnessie.nessie</groupId>
+        <artifactId>nessie-client</artifactId>
+        <version>${nessieproject.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-bundled-guava</artifactId>
         <version>${icebergjavasdk.version}</version>
       </dependency>
     </dependencies>

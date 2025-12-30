@@ -56,9 +56,10 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     private final List<FileScanTask> fileScanTasks;
     private final Schema projectedSchema;
-    private final Map<String, String> configuration;
+    private final Map<String, String> originalConfiguration;
     private final IRawRecord<Record> record;
 
+    private Map<String, String> catalogProperties;
     private int nextTaskIndex = 0;
     private Catalog catalog;
     private FileIO tableFileIo;
@@ -70,9 +71,8 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             Map<String, String> configuration) throws HyracksDataException {
         this.fileScanTasks = fileScanTasks;
         this.projectedSchema = projectedSchema;
-        this.configuration = configuration;
+        this.originalConfiguration = configuration;
         this.record = new GenericRecord<>();
-
         try {
             initializeTable();
         } catch (CompilationException e) {
@@ -85,9 +85,10 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             return;
         }
 
-        String namespace = IcebergUtils.getNamespace(configuration);
-        String tableName = configuration.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
-        catalog = IcebergUtils.initializeCatalog(IcebergUtils.filterCatalogProperties(configuration), namespace);
+        String namespace = IcebergUtils.getNamespace(originalConfiguration);
+        String tableName = originalConfiguration.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
+        catalogProperties = IcebergUtils.filterCatalogProperties(originalConfiguration);
+        catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
         TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(namespace), tableName);
         if (!catalog.tableExists(tableIdentifier)) {
             throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
@@ -96,7 +97,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         tableFileIo = table.io();
 
         // we always have a snapshot id since we pin it at compile time
-        long snapshotId = getSnapshotId(configuration);
+        long snapshotId = getSnapshotId(originalConfiguration);
         Snapshot snapshot = table.snapshot(snapshotId);
         if (snapshot == null) {
             // Snapshot might have been expired/GC'd between compile and runtime
@@ -164,7 +165,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         }
 
         try {
-            IcebergUtils.closeCatalog(catalog);
+            IcebergUtils.closeAndCleanup(catalog, catalogProperties);
         } catch (CompilationException e) {
             throw HyracksDataException.create(e);
         }

@@ -116,6 +116,8 @@ import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.projectnessie.client.http.HttpClientException;
+import org.projectnessie.error.BaseNessieClientServerException;
 
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.file.datalake.models.DataLakeStorageException;
@@ -152,6 +154,8 @@ public class NCApplication extends BaseNCApplication {
     private void registerSerializationReplacements() {
         registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
         registerReplacement(DataLakeStorageException.class, SerializableExceptionProxy::new);
+        registerReplacement(BaseNessieClientServerException.class, SerializableExceptionProxy::new);
+        registerReplacement(HttpClientException.class, SerializableExceptionProxy::new);
     }
 
     @Override

@@ -158,6 +158,7 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE_ALIAS = "AZURE_DATALAKE";
     public static final String KEY_ADAPTER_NAME_GCS = "GCS";
     public static final String KEY_ADAPTER_NAME_HDFS = "HDFS";
+    public static final String KEY_ADAPTER_NAME_HTTP_ADAPTER = "http";
 
     public static final Set<String> EXTERNAL_READ_ADAPTERS = Set.of(KEY_ADAPTER_NAME_TWITTER_PUSH,
             KEY_ADAPTER_NAME_PUSH_TWITTER, KEY_ADAPTER_NAME_TWITTER_PULL, KEY_ADAPTER_NAME_PULL_TWITTER,

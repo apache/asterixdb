@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.util.iceberg.rest;
 
-CREATE CATALOG myGlueCatalog
-TYPE Iceberg
-SOURCE AWS_GLUE
-WITH {
-    "namespace": "pharmacy_namespace",
-    "accessKeyId" : "myAccessKeyId",
-    "secretAccessKey" : "mySecretAccessKey",
-    "region" : "us-west-2"
-};
+public class RestConstants {
+    private RestConstants() {
+        throw new AssertionError("do not instantiate");
+    }
+
+    public static final String ICEBERG_BEARER_TOKEN_PROPERTY_NAME = "token";
+    public static final String ICEBERG_OAUTH2_SERVER_URI_PROPERTY_NAME = "oauth2-server-uri";
+    public static final String ICEBERG_CREDENTIAL_PROPERTY_NAME = "credential";
+    public static final String ICEBERG_SCOPE_PROPERTY_NAME = "scope";
+
+}

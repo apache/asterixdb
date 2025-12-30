@@ -16,10 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.util.http;
 
-DROP CATALOG myGlueCatalog;
-DROP CATALOG myGlueRestCatalog;
-DROP CATALOG myS3TablesCatalog;
-DROP CATALOG myNessieCatalog;
-DROP CATALOG myNessieRestCatalog;
-DROP CATALOG myBiglakeMetastoreCatalog;
+public class HttpConstants {
+
+    private HttpConstants() {
+        throw new AssertionError("do not instantiate");
+    }
+
+    public static final String USERNAME_FIELD_NAME = "username";
+    public static final String PASSWORD_FIELD_NAME = "password";
+    public static final String BEARER_TOKEN_FIELD_NAME = "bearerToken";
+    public static final String OAUTH_TOKEN_URI_FIELD_NAME = "oauthTokenUri";
+    public static final String OAUTH_CLIENT_ID_FIELD_NAME = "oauthClientId";
+    public static final String OAUTH_CLIENT_SECRET_FIELD_NAME = "oauthClientSecret";
+    public static final String OAUTH_ALLOWED_SCOPES_FIELD_NAME = "oauthAllowedScopes";
+    public static final String ENDPOINT_FIELD_NAME = "endpoint";
+}

@@ -30,7 +30,11 @@ public class CatalogConfig {
     public enum IcebergCatalogSource {
         REST,
         AWS_GLUE,
-        BIGLAKE_METASTORE
+        AWS_GLUE_REST,
+        S3_TABLES,
+        BIGLAKE_METASTORE,
+        NESSIE,
+        NESSIE_REST
     }
 
     public static Optional<IcebergCatalogSource> getIcebergCatalogSource(String source) {
