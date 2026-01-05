@@ -59,6 +59,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.LikeFunctionCallVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SelectExcludeRewriteSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
@@ -191,7 +192,10 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites window expression aggregations.
         rewriteWindowAggregationSugar();
 
-        // Rewrites like/not-like expressions.
+        // Rewrites like/not-like/in/not-in/concat/between/not-between operators into function calls.
+        // For LIKE operators: if the pattern expression is not a constant value, we keep it as an operator
+        // to allow other rewrites (e.g., inlining UDFs and WITH clauses) to process it first.
+        // The LIKE operator is then converted to a function call in rewritLikeOperator().
         rewriteOperatorExpression();
 
         // Normalizes CASE expressions and rewrites simple ones into switch-case()
@@ -224,6 +228,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Must run after inlineDeclaredUdfs() because we only maintain deterministic modifiers for built-in
         // and external UDFs, therefore need to inline SQL++ UDFs to check the deterministic property.
         inlineWithExpressions();
+
+        rewritLikeOperator();
 
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter().get());
@@ -292,6 +298,12 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites like/not-like/in/not-in operators into function call expressions.
         OperatorExpressionVisitor operatorExpressionVisitor = new OperatorExpressionVisitor(context);
         rewriteTopExpr(operatorExpressionVisitor, null);
+    }
+
+    protected void rewritLikeOperator() throws CompilationException {
+        // Rewrites like operators into function call expression.
+        LikeFunctionCallVisitor likeFunctionCallVisitor = new LikeFunctionCallVisitor(context);
+        rewriteTopExpr(likeFunctionCallVisitor, null);
     }
 
     protected void inlineColumnAlias() throws CompilationException {

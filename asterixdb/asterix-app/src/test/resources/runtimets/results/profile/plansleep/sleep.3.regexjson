@@ -2,7 +2,7 @@
   "optimizedLogicalPlan": {
     "operator": "distribute-result",
     "expressions": [
-      "$$51"
+      "$$55"
     ],
     "operatorId": "1.1",
     "runtime-id": "R{.+}",
@@ -33,7 +33,7 @@
           {
             "operator": "project",
             "variables": [
-              "$$51"
+              "$$55"
             ],
             "operatorId": "1.3",
             "runtime-id": "R{.+}",
@@ -66,7 +66,7 @@
                 "min-cardinality": "R{[0-9.]+}",
                 "max-cardinality": "R{[0-9.]+}",
                 "total-cardinality": "R{[0-9.]+}",
-                "physical-operator": "SORT_MERGE_EXCHANGE [$$52(ASC) ]",
+                "physical-operator": "SORT_MERGE_EXCHANGE [$$56(ASC) ]",
                 "execution-mode": "PARTITIONED",
                 "optimizer-estimates": {
                   "cardinality": "R{[0-9.]+}",
@@ -80,7 +80,7 @@
                     "order-by-list": [
                       {
                         "order": "ASC",
-                        "expression": "$$52"
+                        "expression": "$$56"
                       }
                     ],
                     "operatorId": "1.5",
@@ -108,7 +108,7 @@
                         "tuple-bytes": "175 bytes"
                       }
                     ],
-                    "physical-operator": "STABLE_SORT [$$52(ASC)]",
+                    "physical-operator": "STABLE_SORT [$$56(ASC)]",
                     "execution-mode": "PARTITIONED",
                     "optimizer-estimates": {
                       "cardinality": "R{[0-9.]+}",
@@ -133,14 +133,14 @@
                           {
                             "operator": "assign",
                             "variables": [
-                              "$$52"
+                              "$$56"
                             ],
                             "expressions": [
                               "sleep($$city, 1700)"
                             ],
                             "project-variables": [
-                              "$$51",
-                              "$$52"
+                              "$$55",
+                              "$$56"
                             ],
                             "operatorId": "1.7",
                             "runtime-id": "R{.+}",
@@ -167,14 +167,14 @@
                               {
                                 "operator": "assign",
                                 "variables": [
-                                  "$$51"
+                                  "$$55"
                                 ],
                                 "expressions": [
-                                  "{\"customers\": $$55, \"city\": $$city}"
+                                  "{\"customers\": $$59, \"city\": $$city}"
                                 ],
                                 "project-variables": [
                                   "$$city",
-                                  "$$51"
+                                  "$$55"
                                 ],
                                 "operatorId": "1.8",
                                 "runtime-id": "R{.+}",
@@ -216,17 +216,17 @@
                                         "group-by-list": [
                                           {
                                             "variable": "$$city",
-                                            "expression": "$$59"
+                                            "expression": "$$63"
                                           }
                                         ],
                                         "subplan": [
                                           {
                                             "operator": "aggregate",
                                             "variables": [
-                                              "$$55"
+                                              "$$59"
                                             ],
                                             "expressions": [
-                                              "agg-sql-sum($$58)"
+                                              "agg-sql-sum($$62)"
                                             ],
                                             "operatorId": "1.9.1",
                                             "physical-operator": "AGGREGATE",
@@ -266,7 +266,7 @@
                                             "tuple-bytes": "89 bytes"
                                           }
                                         ],
-                                        "physical-operator": "SORT_GROUP_BY[$$59]",
+                                        "physical-operator": "SORT_GROUP_BY[$$63]",
                                         "execution-mode": "PARTITIONED",
                                         "optimizer-estimates": {
                                           "cardinality": "R{[0-9.]+}",
@@ -284,7 +284,7 @@
                                             "min-cardinality": 3,
                                             "max-cardinality": 3,
                                             "total-cardinality": 3,
-                                            "physical-operator": "HASH_PARTITION_EXCHANGE [$$59]",
+                                            "physical-operator": "HASH_PARTITION_EXCHANGE [$$63]",
                                             "execution-mode": "PARTITIONED",
                                             "optimizer-estimates": {
                                               "cardinality": "R{[0-9.]+}",
@@ -297,15 +297,15 @@
                                                 "operator": "group-by",
                                                 "group-by-list": [
                                                   {
-                                                    "variable": "$$59",
-                                                    "expression": "$$53"
+                                                    "variable": "$$63",
+                                                    "expression": "$$57"
                                                   }
                                                 ],
                                                 "subplan": [
                                                   {
                                                     "operator": "aggregate",
                                                     "variables": [
-                                                      "$$58"
+                                                      "$$62"
                                                     ],
                                                     "expressions": [
                                                       "agg-sql-count(1)"
@@ -348,7 +348,7 @@
                                                     "tuple-bytes": "89 bytes"
                                                   }
                                                 ],
-                                                "physical-operator": "SORT_GROUP_BY[$$53]",
+                                                "physical-operator": "SORT_GROUP_BY[$$57]",
                                                 "execution-mode": "PARTITIONED",
                                                 "optimizer-estimates": {
                                                   "cardinality": "R{[0-9.]+}",
@@ -373,13 +373,13 @@
                                                       {
                                                         "operator": "assign",
                                                         "variables": [
-                                                          "$$53"
+                                                          "$$57"
                                                         ],
                                                         "expressions": [
                                                           "$$c.getField(3).getField(2)"
                                                         ],
                                                         "project-variables": [
-                                                          "$$53"
+                                                          "$$57"
                                                         ],
                                                         "operatorId": "1.14",
                                                         "runtime-id": "R{.+}",
@@ -471,7 +471,7 @@
                                                                       {
                                                                         "operator": "data-scan",
                                                                         "variables": [
-                                                                          "$$54",
+                                                                          "$$58",
                                                                           "$$c"
                                                                         ],
                                                                         "data-source": "test.Customers",
