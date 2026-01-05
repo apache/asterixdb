@@ -18,8 +18,7 @@
  */
 package org.apache.hyracks.algebricks.runtime.base;
 
-public interface IProfiledPushRuntime extends IPushRuntime {
+import org.apache.hyracks.api.dataflow.ILazyTimeContainingWriter;
 
-    public void computeTimings();
-
+public interface IProfiledPushRuntime extends IPushRuntime, ILazyTimeContainingWriter {
 }

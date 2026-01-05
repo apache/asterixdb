@@ -24,5 +24,4 @@ import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 public interface ISelfProfilingNodePushable extends IStatsContainingNodePushable {
     void addStats(IOperatorStats stats) throws HyracksDataException;
-
 }

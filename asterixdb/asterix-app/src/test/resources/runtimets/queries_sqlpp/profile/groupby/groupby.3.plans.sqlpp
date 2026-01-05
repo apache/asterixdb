@@ -17,21 +17,22 @@
  * under the License.
  */
 
-package org.apache.hyracks.dataflow.std.group;
+use multitask;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
-
-    protected SourceLocation sourceLoc;
-
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
-}
+select element {'timebin':bin,'subgroups':(
+        select element {'subgid':subgid,'item_count':multitask.count(i)}
+        from  logs as i
+        where multitask.`interval-covers`(bin,multitask.`interval-start-from-time`(i.time,multitask.`duration-from-ms`(i.duration)))
+        group by sleep(i.app,500) as subgid
+        order by subgid,multitask.count(i)
+    )}
+from  multitask.`overlap-bins`(multitask.interval(multitask.strict_min((
+    select element i.time
+    from  logs as i
+)),multitask.strict_max((
+    select element (i.time + multitask.`duration-from-ms`((i.duration * 1000)))
+    from  logs as i
+))),multitask.time('00:00:00.000'),multitask.`day_time_duration`('PT1M')) as bin
+order by multitask.`get-interval-start`(bin)
+;

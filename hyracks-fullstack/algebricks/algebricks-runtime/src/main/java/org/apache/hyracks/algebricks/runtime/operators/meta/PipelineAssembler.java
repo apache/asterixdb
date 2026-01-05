@@ -18,23 +18,31 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.meta;
 
+import static org.apache.hyracks.dataflow.std.util.ProfilingUtils.profiling;
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.INestedTupleSourceRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.ProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
+import org.apache.hyracks.api.dataflow.ITimedWriter;
+import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -85,6 +93,9 @@ public class PipelineAssembler {
         RecordDescriptor[] recordDescriptors = pipeline.getRecordDescriptors();
         for (int i = runtimeFactories.length - 1; i >= 0; i--) {
             start = (enforce && !profile) ? EnforceFrameWriter.enforce(start) : start;
+            if (profile && !(start instanceof ITimedWriter)) {
+                start = new ProfiledFrameWriter(start);
+            }
             IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
             IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
             for (int j = 0; j < newRuntimes.length; j++) {
@@ -93,12 +104,15 @@ public class PipelineAssembler {
                 boolean shouldProfile = profile && !(runtimeFactory instanceof EmptyTupleSourceRuntimeFactory)
                         && microOpStats.containsKey(runtimeFactory);
                 if (shouldProfile) {
-                    ProfiledPushRuntime profiled;
-                    if (j == 0) {
-                        profiled = (ProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                    IProfiledPushRuntime profiled;
+                    if (runtimeFactory instanceof NestedTupleSourceRuntimeFactory) {
+                        profiled = new NestedTupleSourceRuntimeFactory.ProfiledNestedTupleSourceRuntime(
+                                (INestedTupleSourceRuntime) newRuntimes[j], microOpStats.get(runtimeFactory), true);
+                    } else if (j == 0) {
+                        profiled = (IProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
                                 microOpStats.get(runtimeFactory));
                     } else {
-                        profiled = (ProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                        profiled = (IProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
                                 microOpStats.get(runtimeFactory), false);
                     }
                     newRuntimes[j] = profiled;
@@ -134,16 +148,30 @@ public class PipelineAssembler {
     }
 
     public List<IProfiledPushRuntime> getProfiledPushRuntimes() {
+        return filterProfiledRt(runtimeMap);
+    }
+
+    private static List<IProfiledPushRuntime> filterProfiledRt(Map<IPushRuntimeFactory, IPushRuntime[]> runtimeMap) {
         return runtimeMap.values().stream().flatMap(Arrays::stream).filter(f -> f instanceof IProfiledPushRuntime)
                 .map(f -> (IProfiledPushRuntime) f).collect(Collectors.toList());
     }
 
-    //TODO: refactoring is needed
     public static IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer,
             IHyracksTaskContext ctx, Map<IPushRuntimeFactory, IPushRuntime> outRuntimeMap) throws HyracksDataException {
+        return assemblePipeline(subplan, writer, ctx, outRuntimeMap, Collections.emptyMap()).getLeft();
+    }
+
+    //TODO: refactoring is needed
+    public static Pair<IFrameWriter, List<IProfiledPushRuntime>> assemblePipeline(AlgebricksPipeline subplan,
+            IFrameWriter writer, IHyracksTaskContext ctx, Map<IPushRuntimeFactory, IPushRuntime> outRuntimeMap,
+            Map<IPushRuntimeFactory, IOperatorStats> microOpStats) throws HyracksDataException {
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
-        boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
+        boolean profile = profiling(ctx);
+        Map<IPushRuntimeFactory, IPushRuntime[]> runtimeMap = Collections.emptyMap();
+        if (profile) {
+            runtimeMap = new HashMap<>();
+        }
         // plug the operators
         IFrameWriter start = writer;
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();
@@ -152,7 +180,31 @@ public class PipelineAssembler {
             start = (enforce && !profile) ? EnforceFrameWriter.enforce(start) : start;
             IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
             IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
-            IPushRuntime newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntimes[0]) : newRuntimes[0];
+            if (profile) {
+                for (int j = 0; j < newRuntimes.length; j++) {
+                    //ETS is wrapped externally, and doesn't need the micro-op wrapper since it isn't a pipeline
+                    //we also want to avoid any instances of NoOp stats in the pipeline that snuck in somehow
+                    boolean shouldProfile = !(runtimeFactory instanceof EmptyTupleSourceRuntimeFactory)
+                            && microOpStats.containsKey(runtimeFactory);
+                    if (shouldProfile) {
+                        IProfiledPushRuntime profiled;
+                        if (runtimeFactory instanceof NestedTupleSourceRuntimeFactory) {
+                            profiled = new NestedTupleSourceRuntimeFactory.ProfiledNestedTupleSourceRuntime(
+                                    (INestedTupleSourceRuntime) newRuntimes[j], microOpStats.get(runtimeFactory), true);
+                        } else if (j == 0) {
+                            profiled = (IProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                                    microOpStats.get(runtimeFactory));
+                        } else {
+                            profiled = (IProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                                    microOpStats.get(runtimeFactory), false);
+                        }
+                        newRuntimes[j] = profiled;
+                    }
+                    newRuntimes[j].setOutputFrameWriter(0, start, recordDescriptors[i]);
+                }
+                runtimeMap.put(runtimeFactory, newRuntimes);
+            }
+            IPushRuntime newRuntime = newRuntimes[0];
             newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);
             if (i > 0) {
                 newRuntime.setInputRecordDescriptor(0, recordDescriptors[i - 1]);
@@ -165,7 +217,11 @@ public class PipelineAssembler {
             }
             start = newRuntime;
         }
-        return start;
+        if (profile) {
+            return Pair.of(start, filterProfiledRt(runtimeMap));
+        } else {
+            return Pair.of(start, Collections.emptyList());
+        }
     }
 
     public static IPushRuntime linkPipeline(AlgebricksPipeline pipeline, PipelineAssembler[] pipelineAssemblers,

@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -191,8 +193,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         private final OperatorDescriptorId odId;
         private final int id;
         private final int microId;
-        private final int subPipe;
-        private final int subId;
+        private final int[] subIds;
 
         ExtendedActivityId(String str) {
             if (str.startsWith(ANID_START)) {
@@ -206,12 +207,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 } else {
                     this.microId = -1;
                 }
-                if (parts.length >= 4) {
-                    this.subPipe = Integer.parseInt(parts[2]);
-                    this.subId = Integer.parseInt(parts[3]);
+                if (parts.length >= 3) {
+                    subIds = new int[parts.length - 2];
+                    for (int i = 2, j = 0; j < subIds.length; i++, j++) {
+                        subIds[j] = Integer.parseInt(parts[i]);
+                    }
                 } else {
-                    this.subPipe = -1;
-                    this.subId = -1;
+                    subIds = new int[] {};
                 }
             } else {
                 throw new IllegalArgumentException("Unable to parse: " + str);
@@ -229,7 +231,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
 
         private List<?> values() {
-            return List.of(odId, id, microId, subPipe, subId);
+            List<?> ids = List.of(odId, id, microId);
+            List<?> subIdList = Arrays.asList(subIds);
+            return Stream.concat(ids.stream(), subIdList.stream()).toList();
         }
 
         @Override
@@ -255,8 +259,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             if (microId > 0) {
                 catenateId(sb, microId);
             }
-            if (subId > 0) {
-                catenateId(sb, subPipe);
+            for (int subId : subIds) {
                 catenateId(sb, subId);
             }
             return sb.toString();

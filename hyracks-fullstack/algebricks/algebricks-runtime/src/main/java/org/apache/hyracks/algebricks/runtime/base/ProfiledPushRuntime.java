@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.dataflow.ILazyTimeContainingWriter;
 import org.apache.hyracks.api.dataflow.ITimedWriter;
 import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -52,8 +53,8 @@ public class ProfiledPushRuntime extends ProfiledFrameWriter implements IProfile
     @Override
     public void computeTimings() {
         //mainly to push through to subplans
-        if (wrapped instanceof IProfiledPushRuntime) {
-            ((IProfiledPushRuntime) wrapped).computeTimings();
+        if (wrapped instanceof ILazyTimeContainingWriter) {
+            ((ILazyTimeContainingWriter) wrapped).computeTimings();
         }
         long ownTime = getTotalTime();
         //for micro union all. accumulate the time of each input into the counter.

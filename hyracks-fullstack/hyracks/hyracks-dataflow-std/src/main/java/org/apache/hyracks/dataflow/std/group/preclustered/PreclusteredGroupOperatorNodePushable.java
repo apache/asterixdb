@@ -18,17 +18,23 @@
  */
 package org.apache.hyracks.dataflow.std.group.preclustered;
 
+import static org.apache.hyracks.dataflow.std.util.ProfilingUtils.profiling;
+
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.ISelfProfilingNodePushable;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable
+        implements ISelfProfilingNodePushable {
     private final IHyracksTaskContext ctx;
     private final int[] groupFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
@@ -37,6 +43,7 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     private final RecordDescriptor outRecordDescriptor;
     private final boolean groupAll;
     private final int frameLimit;
+    private IOperatorStats stats = NoOpOperatorStats.INSTANCE;
 
     private PreclusteredGroupWriter pgw;
 
@@ -61,7 +68,7 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDescriptor,
-                outRecordDescriptor, writer, false, groupAll, frameLimit);
+                outRecordDescriptor, writer, false, groupAll, frameLimit, stats);
         pgw.open();
     }
 
@@ -81,7 +88,26 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     }
 
     @Override
+    public void deinitialize() throws HyracksDataException {
+        super.deinitialize();
+        if (profiling(ctx)) {
+            pgw.computeTimings();
+        }
+    }
+
+    @Override
     public void flush() throws HyracksDataException {
         pgw.flush();
     }
+
+    @Override
+    public void addStats(IOperatorStats stats) throws HyracksDataException {
+        this.stats = stats;
+    }
+
+    @Override
+    public IOperatorStats getStats() {
+        return stats;
+    }
+
 }

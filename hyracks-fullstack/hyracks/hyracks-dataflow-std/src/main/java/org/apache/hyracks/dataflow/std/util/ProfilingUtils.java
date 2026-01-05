@@ -16,22 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.dataflow.std.util;
 
-package org.apache.hyracks.dataflow.std.group;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.job.JobFlag;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+public class ProfilingUtils {
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
-
-    protected SourceLocation sourceLoc;
-
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
+    public static boolean profiling(IHyracksTaskContext ctx) {
+        return ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
     }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
 }

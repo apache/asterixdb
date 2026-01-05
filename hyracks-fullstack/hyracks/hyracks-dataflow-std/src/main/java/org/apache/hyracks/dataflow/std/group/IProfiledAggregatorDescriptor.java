@@ -16,22 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.dataflow.std.group;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.dataflow.ILazyTimeContainingWriter;
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
-
-    protected SourceLocation sourceLoc;
-
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
+public interface IProfiledAggregatorDescriptor extends IAggregatorDescriptor, ILazyTimeContainingWriter {
 }

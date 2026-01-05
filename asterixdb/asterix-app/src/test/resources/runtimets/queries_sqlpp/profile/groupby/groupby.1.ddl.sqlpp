@@ -16,22 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
 
-package org.apache.hyracks.dataflow.std.group;
+drop  dataverse multitask if exists;
+create  dataverse multitask;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+use multitask;
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
 
-    protected SourceLocation sourceLoc;
+create type multitask.LogType as
+ closed {
+  row_id : integer,
+  time : time,
+  duration : integer,
+  app : string
+};
 
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
+create  dataset logs(LogType) primary key row_id;
 
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
-}

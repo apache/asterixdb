@@ -229,12 +229,14 @@
                                               "agg-sql-sum($$55)"
                                             ],
                                             "operatorId": "1.9.1",
+                                            "runtime-id": "R{.+}",
                                             "physical-operator": "AGGREGATE",
                                             "execution-mode": "LOCAL",
                                             "inputs": [
                                               {
                                                 "operator": "nested-tuple-source",
                                                 "operatorId": "1.9.2",
+                                                "runtime-id": "R{.+}",
                                                 "physical-operator": "NESTED_TUPLE_SOURCE",
                                                 "execution-mode": "LOCAL"
                                               }
@@ -311,12 +313,14 @@
                                                       "agg-sql-count(1)"
                                                     ],
                                                     "operatorId": "1.11.1",
+                                                    "runtime-id": "R{.+}",
                                                     "physical-operator": "AGGREGATE",
                                                     "execution-mode": "LOCAL",
                                                     "inputs": [
                                                       {
                                                         "operator": "nested-tuple-source",
                                                         "operatorId": "1.11.2",
+                                                        "runtime-id": "R{.+}",
                                                         "physical-operator": "NESTED_TUPLE_SOURCE",
                                                         "execution-mode": "LOCAL"
                                                       }

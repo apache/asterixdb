@@ -22,6 +22,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 public abstract class AbstractAccumulatingAggregatorDescriptorFactory extends AbstractAggregatorDescriptorFactory {
 
@@ -38,8 +39,23 @@ public abstract class AbstractAccumulatingAggregatorDescriptorFactory extends Ab
                 memoryBudget);
     }
 
+    @Override
+    public IProfiledAggregatorDescriptor createProfiledAggregator(IHyracksTaskContext ctx,
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int[] keyFields,
+            int[] keyFieldsInPartialResults, IFrameWriter writer, long memoryBudget, IOperatorStats stats)
+            throws HyracksDataException {
+        return createProfiledAggregator(ctx, inRecordDescriptor, outRecordDescriptor, keyFields,
+                keyFieldsInPartialResults, memoryBudget, stats);
+    }
+
     abstract protected IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int[] keyFields,
             final int[] keyFieldsInPartialResults, long memoryBudget) throws HyracksDataException;
 
+    public IProfiledAggregatorDescriptor createProfiledAggregator(IHyracksTaskContext ctx,
+            RecordDescriptor inRecordDesc, RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys,
+            long memoryBudget, IOperatorStats stats) throws HyracksDataException {
+        return new NoOpProfiledAggregator(
+                createAggregator(ctx, inRecordDesc, outRecordDescriptor, keys, partialKeys, memoryBudget));
+    }
 }

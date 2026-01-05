@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.api.util;
 
-package org.apache.hyracks.dataflow.std.group;
+import java.util.function.BiConsumer;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
-    protected SourceLocation sourceLoc;
+@FunctionalInterface
+public interface HyracksThrowingBiConsumer<V, U> {
+    void accept(V value1, U value2) throws HyracksDataException;
 
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
+    @SuppressWarnings("Duplicates")
+    static <T, U> BiConsumer<T, U> asUnchecked(HyracksThrowingBiConsumer<T, U> consumer) {
+        return (input1, input2) -> {
+            try {
+                consumer.accept(input1, input2);
+            } catch (HyracksDataException e) {
+                throw new UncheckedExecutionException(e);
+            }
+        };
     }
 
 }

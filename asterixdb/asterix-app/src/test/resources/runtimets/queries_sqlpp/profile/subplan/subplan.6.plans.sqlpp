@@ -17,21 +17,12 @@
  * under the License.
  */
 
-package org.apache.hyracks.dataflow.std.group;
+-- compareunorderedarray=true
+use test;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
-
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
-
-    protected SourceLocation sourceLoc;
-
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
-}
+SELECT CASE WHEN (ANY i IN elements3 SATISFIES i > 1) THEN "a" ELSE "" END AS f
+FROM test3
+LET
+elements0 = test3.elements,
+elements2 = (FROM elements0 AS o SELECT CASE WHEN (ANY i IN o.elements1 SATISFIES i > sleep(2,100)) THEN "b" ELSE "" END AS a),
+elements3 = (FROM elements2 SELECT a);

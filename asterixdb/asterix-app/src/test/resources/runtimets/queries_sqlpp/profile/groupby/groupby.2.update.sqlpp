@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use multitask;
+
+
+insert into logs
+select element {'row_id':1,'time':multitask.time('10:27:12'),'duration':5,'app':'Facebook'};
+insert into logs
+select element {'row_id':2,'time':multitask.time('10:27:18'),'duration':6,'app':'Email'};
+insert into logs
+select element {'row_id':3,'time':multitask.time('10:27:25'),'duration':26,'app':'Facebook'};
+insert into logs
+select element {'row_id':4,'time':multitask.time('10:27:52'),'duration':19,'app':'Email'};
+insert into logs
+select element {'row_id':5,'time':multitask.time('10:28:12'),'duration':47,'app':'Facebook'};
+insert into logs
+select element {'row_id':6,'time':multitask.time('10:29:00'),'duration':33,'app':'Email'};
+insert into logs
+select element {'row_id':7,'time':multitask.time('10:29:10'),'duration':18,'app':'Facebook'};
+insert into logs
+select element {'row_id':8,'time':multitask.time('10:29:29'),'duration':159,'app':'Facebook'};
+insert into logs
+select element {'row_id':9,'time':multitask.time('11:07:15'),'duration':30,'app':'Email'};
+insert into logs
+select element {'row_id':10,'time':multitask.time('11:07:47'),'duration':31,'app':'Email'};

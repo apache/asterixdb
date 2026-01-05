@@ -16,22 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.algebricks.runtime.base;
 
-package org.apache.hyracks.dataflow.std.group;
+import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
-    private static final long serialVersionUID = 1L;
-
-    protected SourceLocation sourceLoc;
-
-    public SourceLocation getSourceLocation() {
-        return sourceLoc;
-    }
-
-    public void setSourceLocation(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-    }
-
+public interface INestedTupleSourceRuntime extends IPushRuntime {
+    void writeTuple(ByteBuffer inputBuffer, int tIndex) throws HyracksDataException;
 }
