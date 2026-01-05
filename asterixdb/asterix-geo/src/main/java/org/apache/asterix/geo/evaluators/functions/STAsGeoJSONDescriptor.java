@@ -36,23 +36,22 @@ public class STAsGeoJSONDescriptor extends AbstractSTSingleGeometryDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = STAsGeoJSONDescriptor::new;
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ObjectMapper mapper;
+    private static final ObjectMapper GEO_JSON_MAPPER = createObjectMapper();
 
-    public STAsGeoJSONDescriptor() {
-        mapper = new ObjectMapper();
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JtsModule());
+        return mapper;
     }
 
     @Override
     protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        String geoJson = null;
         try {
-            mapper.registerModule(new JtsModule());
-            geoJson = mapper.writeValueAsString(geometry);
+            return GEO_JSON_MAPPER.writeValueAsString(geometry);
         } catch (JsonProcessingException e) {
-            LOGGER.debug("JSON Processing exception during STAsGeoJSON function");
-            throw HyracksDataException.create(ErrorCode.PARSING_ERROR);
+            LOGGER.debug("JSON Processing exception during STAsGeoJSON function", e);
+            throw HyracksDataException.create(ErrorCode.PARSING_ERROR, "STAsGeoJSON", e.getMessage());
         }
-        return geoJson;
     }
 
     @Override

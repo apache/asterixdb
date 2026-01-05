@@ -47,6 +47,13 @@ public class PrintTools {
 
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
     private static final long CHRONON_OF_DAY = TimeUnit.DAYS.toMillis(1);
+    private static final ObjectMapper GEO_JSON_MAPPER = createGeoJsonMapper();
+
+    private static ObjectMapper createGeoJsonMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JtsModule());
+        return mapper;
+    }
 
     public static void printDateString(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
         long chrononTime = getDateChronon(b, s + 1);
@@ -517,10 +524,8 @@ public class PrintTools {
         if (geometry == null) {
             return "";
         }
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JtsModule());
         try {
-            return mapper.writeValueAsString(geometry);
+            return GEO_JSON_MAPPER.writeValueAsString(geometry);
         } catch (JsonProcessingException e) {
             return "";
         }

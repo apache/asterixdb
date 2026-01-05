@@ -30,6 +30,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AGeometry implements IAObject {
 
+    private static final ObjectMapper GEO_JSON_MAPPER = createObjectMapper();
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JtsModule());
+        return mapper;
+    }
+
     protected Geometry geometry;
 
     public AGeometry(Geometry geometry) {
@@ -67,15 +75,11 @@ public class AGeometry implements IAObject {
 
     @Override
     public ObjectNode toJSON() {
-        ObjectMapper om = new ObjectMapper();
-        om.registerModule(new JtsModule());
-        ObjectNode json;
         try {
-            String geoJson = om.writeValueAsString(geometry);
-            json = (ObjectNode) om.readTree(geoJson);
+            String geoJson = GEO_JSON_MAPPER.writeValueAsString(geometry);
+            return (ObjectNode) GEO_JSON_MAPPER.readTree(geoJson);
         } catch (IOException e) {
-            return om.createObjectNode();
+            return GEO_JSON_MAPPER.createObjectNode();
         }
-        return json;
     }
 }
