@@ -20,24 +20,24 @@ use test;
 
 
 
-LOAD DATASET customer USING localfs ((`path`=`asterix_nc1://target/data/ch2/customer-0-0.json`),(`format`=`json`));
+LOAD DATASET customer USING localfs ((`path`=`asterix_nc1://target/data/ch2/customer/customer-0-0.json`),(`format`=`json`));
 
-LOAD DATASET district USING localfs ((`path`=`asterix_nc1://target/data/ch2/district-0-0.json`),(`format`=`json`));
+LOAD DATASET district USING localfs ((`path`=`asterix_nc1://target/data/ch2/district/district-0-0.json`),(`format`=`json`));
 
-LOAD DATASET history USING localfs ((`path`=`asterix_nc1://target/data/ch2/history-0-0.json`),(`format`=`json`));
+LOAD DATASET history USING localfs ((`path`=`asterix_nc1://target/data/ch2/history/history-0-0.json`),(`format`=`json`));
 
-LOAD DATASET item USING localfs ((`path`=`asterix_nc1://target/data/ch2/item-0-0.json`),(`format`=`json`));
+LOAD DATASET item USING localfs ((`path`=`asterix_nc1://target/data/ch2/item/item-0-0.json`),(`format`=`json`));
 
-LOAD DATASET nation USING localfs ((`path`=`asterix_nc1://target/data/ch2/nation-0-0.json`),(`format`=`json`));
+LOAD DATASET nation USING localfs ((`path`=`asterix_nc1://target/data/ch2/nation/nation-0-0.json`),(`format`=`json`));
 
-LOAD DATASET neworder USING localfs ((`path`=`asterix_nc1://target/data/ch2/neworder-0-0.json`),(`format`=`json`));
+LOAD DATASET neworder USING localfs ((`path`=`asterix_nc1://target/data/ch2/neworder/neworder-0-0.json`),(`format`=`json`));
 
-LOAD DATASET orders USING localfs ((`path`=`asterix_nc1://target/data/ch2/orders-0-0.json`),(`format`=`json`));
+LOAD DATASET orders USING localfs ((`path`=`asterix_nc1://target/data/ch2/orders/orders-0-0.json`),(`format`=`json`));
 
-LOAD DATASET region USING localfs ((`path`=`asterix_nc1://target/data/ch2/region-0-0.json`),(`format`=`json`));
+LOAD DATASET region USING localfs ((`path`=`asterix_nc1://target/data/ch2/region/region-0-0.json`),(`format`=`json`));
 
-LOAD DATASET stock USING localfs ((`path`=`asterix_nc1://target/data/ch2/stock-0-0.json`),(`format`=`json`));
+LOAD DATASET stock USING localfs ((`path`=`asterix_nc1://target/data/ch2/stock/stock-0-0.json`),(`format`=`json`));
 
-LOAD DATASET supplier USING localfs ((`path`=`asterix_nc1://target/data/ch2/supplier-0-0.json`),(`format`=`json`));
+LOAD DATASET supplier USING localfs ((`path`=`asterix_nc1://target/data/ch2/supplier/supplier-0-0.json`),(`format`=`json`));
 
-LOAD DATASET warehouse USING localfs ((`path`=`asterix_nc1://target/data/ch2/warehouse-0-0.json`),(`format`=`json`));
+LOAD DATASET warehouse USING localfs ((`path`=`asterix_nc1://target/data/ch2/warehouse/warehouse-0-0.json`),(`format`=`json`));
