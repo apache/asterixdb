@@ -38,7 +38,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -65,10 +64,8 @@ import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.active.FeedEventsListener;
 import org.apache.asterix.app.external.ExternalLibraryJobUtils;
-import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.app.result.fields.ErrorsPrinter;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
@@ -87,7 +84,6 @@ import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -5604,11 +5600,36 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         switch (resultDelivery) {
             case ASYNC:
                 MutableBoolean printed = new MutableBoolean(false);
-                executorService.submit(() -> asyncCreateAndRunJob(hcc, compiler, locker, resultDelivery,
-                        requestParameters, cancellable, resultSetId, printed, metadataProvider, atomicStmt, jobKind));
+                MutableBoolean exceptionThrown = new MutableBoolean(false);
+                Future<?> f = executorService.submit(() -> {
+                    try {
+                        asyncCreateAndRunJob(hcc, compiler, locker, resultDelivery, requestParameters, cancellable,
+                                resultSetId, printed, metadataProvider, atomicStmt, jobKind, exceptionThrown);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
                 synchronized (printed) {
                     while (!printed.booleanValue()) {
                         printed.wait();
+                    }
+                }
+                if (exceptionThrown.booleanValue()) {
+                    try {
+                        f.get();
+                    } catch (Exception e) {
+                        Throwable cause = e.getCause();
+                        // Unwrap RuntimeException wrapper if present
+                        if (cause instanceof RuntimeException && cause.getCause() != null) {
+                            cause = cause.getCause();
+                        }
+                        if (cause instanceof Exception) {
+                            throw (Exception) cause;
+                        } else if (cause instanceof Error) {
+                            throw (Error) cause;
+                        } else {
+                            throw HyracksDataException.create(e);
+                        }
                     }
                 }
                 break;
@@ -5669,7 +5690,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
             ResultDelivery resultDelivery, IRequestParameters requestParameters, boolean cancellable,
             ResultSetId resultSetId, MutableBoolean printed, MetadataProvider metadataProvider, Statement atomicStmt,
-            JobKind jobKind) {
+            JobKind jobKind, MutableBoolean exceptionThrown) throws Exception {
         Mutable<JobId> jobId = new MutableObject<>(JobId.INVALID);
         final CompletableFuture<JobId> jobIdFuture = new CompletableFuture<>();
         Future<?> jobSubmitFuture = executorService.submit(() -> {
@@ -5688,6 +5709,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }, requestParameters, cancellable, appCtx, metadataProvider, atomicStmt, jobKind);
             } catch (Exception e) {
                 jobIdFuture.completeExceptionally(e);
+                synchronized (printed) {
+                    exceptionThrown.setTrue();
+                }
                 throw new RuntimeException(e);
             }
         });
@@ -5700,10 +5724,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             cancelIfStarted(hcc, jobIdFuture);
             jobSubmitFuture.cancel(true);
         } catch (ExecutionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            handleAsyncJobException(cause, jobId.get(), resultDelivery);
-        } catch (Exception e) {
-            handleAsyncJobException(e, jobId.get(), resultDelivery);
+            Throwable cause = e.getCause();
+            // Unwrap RuntimeException wrapper if present
+            if (cause instanceof RuntimeException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            } else if (cause instanceof Error) {
+                throw (Error) cause;
+            } else {
+                throw HyracksDataException.create(e);
+            }
         } finally {
             synchronized (printed) {
                 if (printed.isFalse()) {
@@ -5721,22 +5753,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ClusterControllerService controllerService =
                 (ClusterControllerService) appCtx.getServiceContext().getControllerService();
         controllerService.getResultDirectoryService().reportJobTimeout(jobId);
-    }
-
-    private void handleAsyncJobException(Throwable e, JobId jobId, ResultDelivery resultDelivery) {
-        if (Objects.equals(JobId.INVALID, jobId)) {
-            // compilation failed
-            responsePrinter.addResultPrinter(new StatusPrinter(AbstractQueryApiServlet.ResultStatus.FAILED));
-            responsePrinter.addResultPrinter(new ErrorsPrinter(Collections.singletonList(ExecutionError.of(e))));
-            try {
-                responsePrinter.printResults();
-            } catch (HyracksDataException ex) {
-                LOGGER.error("failed to print result", ex);
-            }
-        } else {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR,
-                    resultDelivery.name() + " job with id " + jobId + " " + "failed", e);
-        }
     }
 
     private void cancelIfStarted(IHyracksClientConnection hcc, CompletableFuture<JobId> jobIdFuture) {

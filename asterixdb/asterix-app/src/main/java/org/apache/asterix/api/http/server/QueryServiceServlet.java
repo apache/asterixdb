@@ -258,7 +258,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 executeStatement(request, requestRef, statement, sessionOutput, resultProperties, statementProperties,
                         stats, param, executionState, param.getOptionalParams(), statementParams, responsePrinter,
                         warnings);
-                executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
+                if (delivery == ResultDelivery.ASYNC && !isOldApi(request)) {
+                    executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.ACCEPTED);
+                } else {
+                    executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
+                }
+                response.setStatus(executionState.getHttpStatus());
             }
             errorCount = 0;
         } catch (Exception | org.apache.asterix.lang.sqlpp.parser.TokenMgrError e) {
@@ -313,10 +318,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
                 stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
         if (ResultDelivery.ASYNC != delivery) {
-            // in case of ASYNC delivery, the status is printed by query translator
             responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
         } else {
+            // in case of ASYNC mode and compilation/parsing error, we need to print the statust
+            if (executionState.getResultStatus() == ResultStatus.FATAL) {
+                responsePrinter.addFooterPrinter(new StatusPrinter(ResultStatus.FATAL));
+            }
             // Only print selected metrics for async requests
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset,
                     Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.QUEUE_WAIT_TIME,

@@ -130,7 +130,11 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             }
         }
         // if the was no error, we can set the result status to success
-        executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
+        if (delivery == IStatementExecutor.ResultDelivery.ASYNC && !isOldApi(request)) {
+            executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.ACCEPTED);
+        } else {
+            executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
+        }
         updateStatsFromCC(stats, responseMsg);
         if (param.isSignature() && delivery != IStatementExecutor.ResultDelivery.ASYNC && !param.isParseOnly()) {
             responsePrinter.addResultPrinter(SignaturePrinter.newInstance(responseMsg.getExecutionPlans()));
