@@ -20,6 +20,7 @@ package org.apache.hyracks.api.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -34,8 +35,44 @@ import org.apache.hyracks.api.comm.IJavaSerializationProvider;
 
 public class JavaSerializationUtils {
     private static IJavaSerializationProvider serProvider = DefaultJavaSerializationProvider.INSTANCE;
+    private static final int MAX_UTF_BYTES = 65535;
+    private static final int SAFE_CHAR_LIMIT = MAX_UTF_BYTES / 3;
 
     private JavaSerializationUtils() {
+    }
+
+    /**
+     * This is to be used when small strings are the usual case. For strings whose modified UTF-8 bytes count is larger
+     * than 65535, then it truncates the string to a one that is less than 65535.
+     */
+    public static void writeTruncatedUTF(DataOutput out, String s) throws IOException {
+        if (s.length() <= SAFE_CHAR_LIMIT) {
+            out.writeUTF(s);
+            return;
+        }
+        truncateToUTFLimit(out, s);
+    }
+
+    private static void truncateToUTFLimit(DataOutput out, String s) throws IOException {
+        int modifiedUtf8Len = 0;
+        int i = 0;
+        while (i < s.length()) {
+            int c = s.charAt(i);
+            int bytes;
+            if (c >= 0x0001 && c <= 0x007F) {
+                bytes = 1;
+            } else if (c <= 0x07FF) {
+                bytes = 2;
+            } else {
+                bytes = 3;
+            }
+            modifiedUtf8Len += bytes;
+            if (modifiedUtf8Len > MAX_UTF_BYTES) {
+                break;
+            }
+            i++;
+        }
+        out.writeUTF(i == s.length() ? s : s.substring(0, i));
     }
 
     public static byte[] serialize(Serializable jobSpec) throws IOException {
