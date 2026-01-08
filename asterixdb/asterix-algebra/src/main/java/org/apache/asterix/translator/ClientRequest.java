@@ -43,6 +43,7 @@ public class ClientRequest extends BaseClientRequest {
     protected static final int MAX_STATEMENT_LENGTH =
             StorageUtil.getIntSizeInBytes(64, StorageUtil.StorageUnit.KILOBYTE);
     protected final long creationTime = System.nanoTime();
+    protected final long creationSystemTime = System.currentTimeMillis();
     protected final Thread executor;
     protected final String statement;
     protected final String clientContextId;
@@ -101,6 +102,10 @@ public class ClientRequest extends BaseClientRequest {
 
     public long getCreationTime() {
         return creationTime;
+    }
+
+    public long getCreationSystemTime() {
+        return creationSystemTime;
     }
 
     @Override

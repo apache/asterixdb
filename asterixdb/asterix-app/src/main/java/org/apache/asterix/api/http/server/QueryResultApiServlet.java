@@ -20,6 +20,7 @@ package org.apache.asterix.api.http.server;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
@@ -165,7 +166,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
     }
 
     private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata) {
-        long endTime = System.currentTimeMillis();
+        long endTime = System.nanoTime();
         stats.setProcessedObjects(metadata.getProcessedObjects());
         stats.setQueueWaitTime(metadata.getQueueWaitTimeInNanos());
         stats.setBufferCacheHitRatio(metadata.getBufferCacheHitRatio());
@@ -174,11 +175,11 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         stats.setCloudPagesReadCount(metadata.getCloudPagesReadCount());
         stats.setCloudPagesPersistedCount(metadata.getCloudPagesPersistedCount());
         stats.updateTotalWarningsCount(metadata.getTotalWarningsCount());
-        return ResponseMetrics.of(endTime - metadata.getCreateTime(), metadata.getJobDuration(), stats.getCount(),
-                stats.getSize(), metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
-                metadata.getCompileTime(), stats.getQueueWaitTime(), stats.getBufferCacheHitRatio(),
-                stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(),
-                stats.getCloudPagesPersistedCount());
+        return ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTime()),
+                metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
+                metadata.getTotalWarningsCount(), metadata.getCompileTime(), stats.getQueueWaitTime(),
+                stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
+                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
     }
 
     /**

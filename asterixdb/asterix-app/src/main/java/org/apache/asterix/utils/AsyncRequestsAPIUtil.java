@@ -134,7 +134,7 @@ public class AsyncRequestsAPIUtil {
         MessageFuture messageFuture = messageBroker.registerMessageFuture();
         long futureId = messageFuture.getFutureId();
         ClientInfoRequestMessage clientInfoRequestMessage =
-                new ClientInfoRequestMessage(serviceCtx.getNodeId(), futureId, jobId, requestId);
+                new ClientInfoRequestMessage(serviceCtx.getNodeId(), futureId, jobId, requestId, false);
         try {
             messageBroker.sendMessageToPrimaryCC(clientInfoRequestMessage);
             ClientInfoResponseMessage responseMessage =

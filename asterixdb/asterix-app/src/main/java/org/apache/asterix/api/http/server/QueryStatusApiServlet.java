@@ -20,8 +20,10 @@ package org.apache.asterix.api.http.server;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.asterix.app.result.ResponseMetrics;
@@ -35,13 +37,18 @@ import org.apache.asterix.app.result.fields.ResultCountPrinter;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.ClientRequest;
 import org.apache.asterix.translator.ResultMetadata;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.ResultJobRecord;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -91,7 +98,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
         printer.printResults();
         if (uriMode) {
-            printMetricsAndFooters(printer, resultReader, request);
+            printMetricsAndFooters(printer, resultReader, request, handle.getRequestId(), handle.getJobId(), resultStatus);
         }
         printer.end();
         if (response.writer().checkError()) {
@@ -165,33 +172,61 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private void printMetricsAndFooters(ResponsePrinter printer, ResultReader resultReader, IServletRequest request)
-            throws HyracksDataException {
+    private void printMetricsAndFooters(ResponsePrinter printer, ResultReader resultReader, IServletRequest request,
+            String requestId, JobId jobId, ResultStatus status) throws HyracksDataException {
         ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
-        if (metadata != null) {
-            final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
-            stats.setProcessedObjects(metadata.getProcessedObjects());
-            stats.setQueueWaitTime(metadata.getQueueWaitTimeInNanos());
-            stats.setBufferCacheHitRatio(metadata.getBufferCacheHitRatio());
-            stats.setBufferCachePageReadCount(metadata.getBufferCachePageReadCount());
-            stats.setCloudReadRequestsCount(metadata.getCloudReadRequestsCount());
-            stats.setCloudPagesReadCount(metadata.getCloudPagesReadCount());
-            stats.setCloudPagesPersistedCount(metadata.getCloudPagesPersistedCount());
-            stats.updateTotalWarningsCount(metadata.getTotalWarningsCount());
-            long endTime = System.currentTimeMillis();
-            ResponseMetrics metrics =
-                    ResponseMetrics.of(endTime - metadata.getCreateTime(), metadata.getJobDuration(), stats.getCount(),
-                            stats.getSize(), metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
-                            metadata.getCompileTime(), stats.getQueueWaitTime(), stats.getBufferCacheHitRatio(),
-                            stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
-                            stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
-            printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
-                    Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
-                            MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME,
-                            MetricsPrinter.Metrics.WARNING_COUNT, MetricsPrinter.Metrics.ERROR_COUNT,
-                            MetricsPrinter.Metrics.PROCESSED_OBJECTS_COUNT)));
-            printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTime()));
+        if (metadata != null && status != ResultStatus.QUEUED && status != ResultStatus.RUNNING) {
+            printMetricsWithResultMetadata(printer, request, metadata);
+        } else {
+            printMetricsWithoutResultMetadata(printer, request, requestId, jobId, status);
         }
         printer.printFooters();
+    }
+
+    public void printMetricsWithResultMetadata(ResponsePrinter printer, IServletRequest request,
+            ResultMetadata metadata) {
+        long endTime = System.currentTimeMillis();
+        ResponseMetrics metrics = ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTime()),
+                metadata.getJobDuration(), 0, 0, metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
+                metadata.getCompileTime(), metadata.getQueueWaitTimeInNanos(), 0, 0, 0, 0, 0);
+        printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
+                Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
+                        MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME,
+                        MetricsPrinter.Metrics.WARNING_COUNT, MetricsPrinter.Metrics.ERROR_COUNT,
+                        MetricsPrinter.Metrics.PROCESSED_OBJECTS_COUNT)));
+        printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTime()));
+    }
+
+    public void printMetricsWithoutResultMetadata(ResponsePrinter printer, IServletRequest request, String requestId,
+            JobId jobId, ResultStatus status) throws HyracksDataException {
+        try {
+            ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+            JobRun run = ccs.getJobManager().get(jobId);
+            Optional<IClientRequest> clientRequest =
+                    ((ICcApplicationContext) appCtx).getRequestTracker().getAsyncOrDeferredRequest(requestId);
+
+            long requestCreateTime = ((ClientRequest) clientRequest.get()).getCreationSystemTime();
+            printMetrics(printer, request, status, requestCreateTime, run.getCreateTime(), run.getStartTime(),
+                    run.getQueueWaitTimeInMillis());
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    protected void printMetrics(ResponsePrinter printer, IServletRequest request, ResultStatus status,
+            long requestCreateTime, long jobCreateTime, long jobStartTime, long queueWaitTime) {
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = TimeUnit.MILLISECONDS.toNanos(currentTime - requestCreateTime);
+        long compileTime = TimeUnit.MILLISECONDS.toNanos(jobCreateTime - requestCreateTime);
+        long executionTime =
+                status == ResultStatus.RUNNING ? TimeUnit.MILLISECONDS.toNanos(currentTime - jobStartTime) : 0;
+
+        ResponseMetrics metrics = ResponseMetrics.of(elapsedTime, executionTime, 0, 0, 0, 0, 0, compileTime,
+                queueWaitTime, 0, 0, 0, 0, 0);
+
+        printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
+                Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
+                        MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME)));
+        printer.addFooterPrinter(new CreatedAtPrinter(requestCreateTime));
     }
 }

@@ -29,10 +29,26 @@ public class ClientInfoResponseMessage implements INcAddressedMessage {
     private static final long serialVersionUID = 1L;
     private final long reqId;
     private final boolean validRequestId;
+    // All time are in millis
+    private final long requestCreateTime;
+    private final long jobCreateTime;
+    private final long jobStartTime;
+    private final long jobEndTime;
+    private final long jobQueueWaitTime;
 
     public ClientInfoResponseMessage(long reqId, boolean validRequestId) {
+        this(reqId, validRequestId, 0, 0, 0, 0, 0);
+    }
+
+    public ClientInfoResponseMessage(long reqId, boolean validRequestId, long requestCreateTime, long jobCreateTime,
+            long jobStartTime, long jobEndTime, long jobQueueWaitTime) {
         this.reqId = reqId;
         this.validRequestId = validRequestId;
+        this.requestCreateTime = requestCreateTime;
+        this.jobStartTime = jobStartTime;
+        this.jobCreateTime = jobCreateTime;
+        this.jobEndTime = jobEndTime;
+        this.jobQueueWaitTime = jobQueueWaitTime;
     }
 
     @Override
@@ -46,5 +62,25 @@ public class ClientInfoResponseMessage implements INcAddressedMessage {
 
     public boolean isValidRequestId() {
         return validRequestId;
+    }
+
+    public long getRequestCreateTime() {
+        return requestCreateTime;
+    }
+
+    public long getJobCreateTime() {
+        return jobCreateTime;
+    }
+
+    public long getJobStartTime() {
+        return jobStartTime;
+    }
+
+    public long getJobEndTime() {
+        return jobEndTime;
+    }
+
+    public long getJobQueueWaitTime() {
+        return jobQueueWaitTime;
     }
 }

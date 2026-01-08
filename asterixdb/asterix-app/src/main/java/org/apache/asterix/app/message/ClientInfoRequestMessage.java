@@ -27,6 +27,8 @@ import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.translator.ClientRequest;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,12 +40,15 @@ public class ClientInfoRequestMessage implements ICcAddressedMessage {
     private final JobId jobId;
     private final String requestId;
     private final long ncReqId;
+    private final boolean metricsRequired;
 
-    public ClientInfoRequestMessage(String nodeId, long ncReqId, JobId jobId, String requestId) {
+    public ClientInfoRequestMessage(String nodeId, long ncReqId, JobId jobId, String requestId,
+            boolean metricsRequired) {
         this.nodeId = nodeId;
         this.ncReqId = ncReqId;
         this.jobId = jobId;
         this.requestId = requestId;
+        this.metricsRequired = metricsRequired;
     }
 
     @Override
@@ -51,11 +56,19 @@ public class ClientInfoRequestMessage implements ICcAddressedMessage {
         CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         Optional<IClientRequest> clientRequest = appCtx.getRequestTracker().getAsyncOrDeferredRequest(requestId);
         ClientInfoResponseMessage response;
-        if (clientRequest.isEmpty()) {
+        if (clientRequest.isEmpty() || !jobId.equals(((ClientRequest) clientRequest.get()).getJobId())) {
             response = new ClientInfoResponseMessage(ncReqId, false);
         } else {
-            response = new ClientInfoResponseMessage(ncReqId,
-                    jobId.equals(((ClientRequest) clientRequest.get()).getJobId()));
+            if (metricsRequired) {
+                ClusterControllerService ccs =
+                        (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+                JobRun run = ccs.getJobManager().get(jobId);
+                response = new ClientInfoResponseMessage(ncReqId, true,
+                        ((ClientRequest) clientRequest.get()).getCreationSystemTime(), run.getCreateTime(),
+                        run.getStartTime(), run.getEndTime(), run.getQueueWaitTimeInMillis());
+            } else {
+                response = new ClientInfoResponseMessage(ncReqId, true);
+            }
         }
         try {
             messageBroker.sendApplicationMessageToNC(response, nodeId);

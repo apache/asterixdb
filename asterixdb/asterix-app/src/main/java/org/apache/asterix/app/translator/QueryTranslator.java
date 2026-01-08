@@ -5570,6 +5570,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 org.apache.asterix.translator.ResultMetadata resultMetadata =
                         new org.apache.asterix.translator.ResultMetadata(sessionConfig.fmt());
+                resultMetadata.setCreateTime(System.currentTimeMillis());
                 final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
                         requestParameters, resultMetadata);
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.

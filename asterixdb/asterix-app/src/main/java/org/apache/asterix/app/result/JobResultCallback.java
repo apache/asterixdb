@@ -108,7 +108,6 @@ public class JobResultCallback implements IJobResultCallback {
                 }
             }
             metadata.setEndTime(System.currentTimeMillis());
-            metadata.setCreateTime(run.getCreateTime());
             metadata.setQueueWaitTimeInNanos(TimeUnit.MILLISECONDS.toNanos(run.getQueueWaitTimeInMillis()));
         }
         metadata.setProcessedObjects(processedObjects);
