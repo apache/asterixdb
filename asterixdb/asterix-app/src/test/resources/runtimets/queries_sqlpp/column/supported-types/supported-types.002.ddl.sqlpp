@@ -19,7 +19,7 @@
 
 USE test;
 
-CREATE DATASET ColumnUnsupportedType
+CREATE DATASET ColumnSupportedTypeWithDate
 PRIMARY KEY (birthdate: datetime) WITH {
     "storage-format": {"format": "column"}
 }

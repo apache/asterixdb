@@ -28,12 +28,13 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 
-abstract class AbstractFixedLengthColumnKeyValueReader extends AbstractValueReader implements IColumnKeyValueReader {
+public abstract class AbstractFixedLengthColumnKeyValueReader extends AbstractValueReader
+        implements IColumnKeyValueReader {
     protected final IPointable value;
     private ByteBuffer buffer;
     private int startOffset;
 
-    AbstractFixedLengthColumnKeyValueReader() {
+    protected AbstractFixedLengthColumnKeyValueReader() {
         value = new VoidPointable();
     }
 

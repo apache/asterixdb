@@ -24,9 +24,14 @@ import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ADate;
+import org.apache.asterix.om.base.ADateTime;
+import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.ATime;
+import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -39,7 +44,8 @@ public class ConstantColumnRangeFilterValueAccessorFactory implements IColumnRan
     private final String stringValue;
 
     static {
-        SUPPORTED_CONSTANT_TYPES = Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.DOUBLE, ATypeTag.STRING);
+        SUPPORTED_CONSTANT_TYPES = Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.DOUBLE, ATypeTag.STRING,
+                ATypeTag.DATE, ATypeTag.TIME, ATypeTag.DATETIME, ATypeTag.DAYTIMEDURATION, ATypeTag.YEARMONTHDURATION);
     }
 
     private ConstantColumnRangeFilterValueAccessorFactory(String stringValue, long normalizedValue, ATypeTag typeTag) {
@@ -77,6 +83,26 @@ public class ConstantColumnRangeFilterValueAccessorFactory implements IColumnRan
             case STRING:
                 stringValue = ((AString) value).getStringValue();
                 normalizedValue = normalize(stringValue);
+                break;
+            case DATE:
+                normalizedValue = ((ADate) value).getChrononTimeInDays();
+                stringValue = Long.toString(normalizedValue);
+                break;
+            case TIME:
+                normalizedValue = ((ATime) value).getChrononTime();
+                stringValue = Long.toString(normalizedValue);
+                break;
+            case DATETIME:
+                normalizedValue = ((ADateTime) value).getChrononTime();
+                stringValue = Long.toString(normalizedValue);
+                break;
+            case DAYTIMEDURATION:
+                normalizedValue = ((ADayTimeDuration) value).getMilliseconds();
+                stringValue = Long.toString(normalizedValue);
+                break;
+            case YEARMONTHDURATION:
+                normalizedValue = ((AYearMonthDuration) value).getMonths();
+                stringValue = Long.toString(normalizedValue);
                 break;
             default:
                 return null;

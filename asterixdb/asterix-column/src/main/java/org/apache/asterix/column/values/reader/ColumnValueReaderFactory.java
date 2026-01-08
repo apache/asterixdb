@@ -37,6 +37,18 @@ import org.apache.asterix.column.values.reader.value.key.LevelKeyReader;
 import org.apache.asterix.column.values.reader.value.key.LongKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.StringKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.UUIDKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.temporal.DateKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.temporal.DateTimeKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.temporal.DayTimeDurationKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.temporal.TimeKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.temporal.YearMonthDurationKeyValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.DateTimeValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.DateValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.DayTimeDurationValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.DurationValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.IntervalValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.TimeValueReader;
+import org.apache.asterix.column.values.reader.value.temporal.YearMonthDurationValueReader;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
@@ -79,6 +91,20 @@ public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
             case INTEGER:
             case BIGINT:
                 return primaryKey ? new LongKeyValueReader(typeTag) : new LongValueReader();
+            case DATE:
+                return primaryKey ? new DateKeyValueReader() : new DateValueReader();
+            case TIME:
+                return primaryKey ? new TimeKeyValueReader() : new TimeValueReader();
+            case YEARMONTHDURATION:
+                return primaryKey ? new YearMonthDurationKeyValueReader() : new YearMonthDurationValueReader();
+            case DATETIME:
+                return primaryKey ? new DateTimeKeyValueReader() : new DateTimeValueReader();
+            case DAYTIMEDURATION:
+                return primaryKey ? new DayTimeDurationKeyValueReader() : new DayTimeDurationValueReader();
+            case DURATION:
+                return new DurationValueReader();
+            case INTERVAL:
+                return new IntervalValueReader();
             case FLOAT:
                 return primaryKey ? new FloatKeyValueReader() : new FloatValueReader();
             case DOUBLE:

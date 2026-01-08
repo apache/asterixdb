@@ -24,7 +24,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 public abstract class AbstractFixedLengthValueGetter implements IValueGetter {
     protected final VoidPointable value;
 
-    AbstractFixedLengthValueGetter(ATypeTag typeTag, int nonTaggedLength) {
+    public AbstractFixedLengthValueGetter(ATypeTag typeTag, int nonTaggedLength) {
         //+1 for the type tag
         byte[] storage = new byte[1 + nonTaggedLength];
         storage[0] = typeTag.serialize();

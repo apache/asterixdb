@@ -1,0 +1,3 @@
+{ "id": year-month-duration("P1Y"), "name": "ymd-1", "age": 10 }
+{ "id": year-month-duration("P2Y1M"), "name": "ymd-2", "age": 20 }
+{ "id": year-month-duration("P10Y11M"), "name": "ymd-3", "age": 30 }

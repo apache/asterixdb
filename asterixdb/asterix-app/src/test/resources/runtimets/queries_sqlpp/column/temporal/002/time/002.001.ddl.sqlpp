@@ -16,21 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.assembler.value;
 
-import org.apache.asterix.column.values.IColumnValuesReader;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
+DROP DATAVERSE test if exists;
+CREATE DATAVERSE test;
+USE test;
 
-class Int32ValueGetter extends AbstractFixedLengthValueGetter {
-    Int32ValueGetter() {
-        super(ATypeTag.INTEGER, Integer.BYTES);
+CREATE DATASET ColumnDatasetTime
+PRIMARY KEY(id: time)
+WITH {
+    "storage-format": {
+        "format": "column"
     }
+};
 
-    @Override
-    public IValueReference getValue(IColumnValuesReader reader) {
-        IntegerPointable.setInteger(value.getByteArray(), value.getStartOffset() + 1, (int) reader.getLong());
-        return value;
-    }
-}

@@ -471,12 +471,40 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="temporal/001">
+        <output-dir compare="Text">temporal/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="temporal/002/date">
+        <output-dir compare="Text">temporal/002/date</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="temporal/002/time">
+        <output-dir compare="Text">temporal/002/time</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="temporal/002/datetime">
+        <output-dir compare="Text">temporal/002/datetime</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="temporal/002/daytimeduration">
+        <output-dir compare="Text">temporal/002/daytimeduration</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="temporal/002/yearmonthduration">
+        <output-dir compare="Text">temporal/002/yearmonthduration</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="supported-types">
         <output-dir compare="Text">supported-types</output-dir>
-        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
-        <expected-error>ASX0067: Type(s) '[datetime, date, time, duration]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
-        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
-        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[point]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, datetime, date, time, duration, interval, yearmonthduration, daytimeduration, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[point]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, datetime, date, time, duration, interval, yearmonthduration, daytimeduration, uuid]</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

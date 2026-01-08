@@ -1,0 +1,3 @@
+{ "id": day-time-duration("PT30M"), "name": "dtd-1", "age": 10 }
+{ "id": day-time-duration("PT2H3M4S"), "name": "dtd-2", "age": 20 }
+{ "id": day-time-duration("PT2H14M"), "name": "dtd-3", "age": 30 }

@@ -1,0 +1,3 @@
+{ "id": datetime("2000-01-01T00:00:00.000"), "name": "datetime-1", "age": 10 }
+{ "id": datetime("2010-07-22T00:00:00.000"), "name": "datetime-2", "age": 20 }
+{ "id": datetime("2025-12-31T23:59:59.999"), "name": "datetime-3", "age": 30 }

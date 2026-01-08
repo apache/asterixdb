@@ -44,8 +44,18 @@ public class ColumnValuesWriterFactory implements IColumnValuesWriterFactory {
             case SMALLINT:
             case INTEGER:
             case BIGINT:
+            case DATETIME:
+            case DAYTIMEDURATION:
                 return new LongColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered,
                         typeTag);
+            case DATE:
+            case TIME:
+            case YEARMONTHDURATION:
+                return new IntColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered, typeTag);
+            case DURATION:
+                return new DurationColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
+            case INTERVAL:
+                return new IntervalColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
             case FLOAT:
                 return new FloatColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
             case DOUBLE:

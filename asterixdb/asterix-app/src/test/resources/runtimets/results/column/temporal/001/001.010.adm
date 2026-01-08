@@ -1,0 +1,1 @@
+{ "id": "2", "myDate": date("2010-05-05"), "myTime": time("18:12:12.039"), "myDatetime": datetime("2001-04-22T00:00:00.000"), "myDuration": duration("P122YT12M"), "myInterval": interval(time("19:23:37.000"), time("23:30:21.000")), "myYearMonthDuration": year-month-duration("P10Y11M"), "myDayTimeDuration": day-time-duration("PT2H14M") }

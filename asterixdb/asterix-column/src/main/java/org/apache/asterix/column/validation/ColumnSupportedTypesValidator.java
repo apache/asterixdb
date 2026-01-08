@@ -44,8 +44,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * @see ColumnValueReaderFactory
  */
 public class ColumnSupportedTypesValidator implements IATypeVisitor<Void, Set<ATypeTag>> {
-    private static final Set<ATypeTag> SUPPORTED_PRIMITIVE_TYPES =
-            Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING, ATypeTag.UUID);
+    private static final Set<ATypeTag> SUPPORTED_PRIMITIVE_TYPES = Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT,
+            ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING, ATypeTag.UUID, ATypeTag.DATE, ATypeTag.DATETIME,
+            ATypeTag.TIME, ATypeTag.DURATION, ATypeTag.INTERVAL, ATypeTag.YEARMONTHDURATION, ATypeTag.DAYTIMEDURATION);
     private static final String SUPPORTED_TYPES_STRING =
             SUPPORTED_PRIMITIVE_TYPES.stream().sorted().collect(Collectors.toList()).toString();
     private static final ColumnSupportedTypesValidator VALIDATOR = new ColumnSupportedTypesValidator();

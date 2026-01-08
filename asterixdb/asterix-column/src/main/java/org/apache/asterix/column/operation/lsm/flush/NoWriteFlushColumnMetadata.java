@@ -42,7 +42,9 @@ import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.BooleanColumnValuesWriter;
 import org.apache.asterix.column.values.writer.DoubleColumnValuesWriter;
+import org.apache.asterix.column.values.writer.DurationColumnValuesWriter;
 import org.apache.asterix.column.values.writer.FloatColumnValuesWriter;
+import org.apache.asterix.column.values.writer.IntervalColumnValuesWriter;
 import org.apache.asterix.column.values.writer.LongColumnValuesWriter;
 import org.apache.asterix.column.values.writer.NoOpColumnValuesWriter;
 import org.apache.asterix.column.values.writer.NullMissingColumnValuesWriter;
@@ -190,6 +192,13 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
             case BIGINT:
             case STRING:
             case UUID:
+            case DATE:
+            case TIME:
+            case DATETIME:
+            case DURATION:
+            case DAYTIMEDURATION:
+            case YEARMONTHDURATION:
+            case INTERVAL:
                 int columnIndex = nullWriterIndexes.isEmpty() ? columnWriters.size() : nullWriterIndexes.removeInt(0);
                 boolean primaryKey = columnIndex < getNumberOfPrimaryKeys();
                 ATypeTag normalizedTypeTag = primaryKey ? childTypeTag : getNormalizedTypeTag(childTypeTag);
@@ -211,7 +220,9 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
         return switch (typeTag) {
             case MISSING, NULL -> NullMissingColumnValuesWriter.requiredTemporaryBuffers(filtered);
             case BOOLEAN -> BooleanColumnValuesWriter.requiredTemporaryBuffers(filtered);
-            case TINYINT, SMALLINT, INTEGER, BIGINT -> LongColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case TINYINT, SMALLINT, INTEGER, BIGINT, DATE, TIME, DATETIME, YEARMONTHDURATION, DAYTIMEDURATION -> LongColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case DURATION -> DurationColumnValuesWriter.requiredTemporaryBuffers(filtered);
+            case INTERVAL ->  IntervalColumnValuesWriter.requiredTemporaryBuffers(filtered);
             case FLOAT -> FloatColumnValuesWriter.requiredTemporaryBuffers(filtered);
             case DOUBLE -> DoubleColumnValuesWriter.requiredTemporaryBuffers(filtered);
             case STRING -> StringColumnValuesWriter.requiredTemporaryBuffers(filtered);

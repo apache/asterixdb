@@ -65,8 +65,13 @@ public final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
             case SMALLINT:
                 return ShortPointable.getShort(byteArray, offset);
             case INTEGER:
+            case DATE:
+            case YEARMONTHDURATION:
+            case TIME:
                 return IntegerPointable.getInteger(byteArray, offset);
             case BIGINT:
+            case DATETIME:
+            case DAYTIMEDURATION:
                 return LongPointable.getLong(byteArray, offset);
             default:
                 throw new IllegalAccessError(typeTag + " is not of type integer");

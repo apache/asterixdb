@@ -20,5 +20,5 @@
 USE test;
 
 INSERT INTO ColumnUnsupportedType (
-    {"birthdate": datetime("2022-01-01T00:00:00")}
+    {"birthdate": datetime("2022-01-01T00:00:00"), "point": point("29.72,75.8")}
 )

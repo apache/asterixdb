@@ -1,0 +1,20 @@
+distribute result [$$22] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$22] <- [{"ColumnDataset": $$ColumnDataset}] project: [$$22] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      select (and(lt($$23, datetime: { 2009-06-01T00:00:00.000 }), gt($$23, datetime: { 1999-01-01T10:21:12.000 }))) project: [$$ColumnDataset] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_SELECT  |PARTITIONED|
+        assign [$$23] <- [$$ColumnDataset.getField("myDatetime")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ASSIGN  |PARTITIONED|
+          project ([$$ColumnDataset]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STREAM_PROJECT  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              data-scan []<-[$$24, $$ColumnDataset] <- test.ColumnDataset filter on: and(lt($$ColumnDataset.getField("myDatetime"), datetime: { 2009-06-01T00:00:00.000 }), gt($$ColumnDataset.getField("myDatetime"), datetime: { 1999-01-01T10:21:12.000 })) range-filter on: and(lt($$ColumnDataset.getField("myDatetime"), datetime: { 2009-06-01T00:00:00.000 }), gt($$ColumnDataset.getField("myDatetime"), datetime: { 1999-01-01T10:21:12.000 })) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -18,6 +18,13 @@
  */
 package org.apache.asterix.column.assembler.value;
 
+import org.apache.asterix.column.assembler.value.temporal.DateTimeValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.DateValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.DayTimeDurationValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.DurationValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.IntervalValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.TimeValueGetter;
+import org.apache.asterix.column.assembler.value.temporal.YearMonthDurationValueGetter;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class ValueGetterFactory implements IValueGetterFactory {
@@ -40,7 +47,7 @@ public class ValueGetterFactory implements IValueGetterFactory {
             case SMALLINT:
                 return new Int16ValueGetter();
             case INTEGER:
-                return new Int32ValueGetter();
+                return new IntValueGetter();
             case BIGINT:
                 return new Int64ValueGetter();
             case FLOAT:
@@ -51,6 +58,20 @@ public class ValueGetterFactory implements IValueGetterFactory {
                 return new StringValueGetter();
             case UUID:
                 return new UUIDValueGetter();
+            case DATE:
+                return new DateValueGetter();
+            case TIME:
+                return new TimeValueGetter();
+            case DATETIME:
+                return new DateTimeValueGetter();
+            case DURATION:
+                return new DurationValueGetter();
+            case INTERVAL:
+                return new IntervalValueGetter();
+            case DAYTIMEDURATION:
+                return new DayTimeDurationValueGetter();
+            case YEARMONTHDURATION:
+                return new YearMonthDurationValueGetter();
             default:
                 throw new UnsupportedOperationException(typeTag + " is not supported");
         }

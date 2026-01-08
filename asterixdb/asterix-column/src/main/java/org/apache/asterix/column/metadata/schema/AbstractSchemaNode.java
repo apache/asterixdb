@@ -103,6 +103,13 @@ public abstract class AbstractSchemaNode {
             case DOUBLE:
             case STRING:
             case UUID:
+            case DATE:
+            case TIME:
+            case DATETIME:
+            case INTERVAL:
+            case DURATION:
+            case DAYTIMEDURATION:
+            case YEARMONTHDURATION:
                 return new PrimitiveSchemaNode(typeTag, input);
             default:
                 throw new UnsupportedEncodingException(typeTag + " is not supported");

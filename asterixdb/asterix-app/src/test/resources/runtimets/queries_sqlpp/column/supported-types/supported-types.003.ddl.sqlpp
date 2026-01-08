@@ -19,7 +19,7 @@
 
 USE test;
 
-CREATE DATASET ColumnUnsupportedType(InvalidType)
+CREATE DATASET ColumnUnsupportedPointDataset(InvalidType)
 PRIMARY KEY uid WITH {
     "storage-format": {"format": "column"}
 }

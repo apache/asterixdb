@@ -55,7 +55,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * dataset contains a pair of normalized min-max values. The range filter expression can be utilized to filter out
  * mega leaf nodes that do not satisfy the range filter expression.
  */
-public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProcessor {
+public final class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProcessor {
     private final Map<String, FunctionCallInformation> sourceInformationMap;
 
     public ColumnRangeFilterPushdownProcessor(PushdownContext pushdownContext, IOptimizationContext context) {

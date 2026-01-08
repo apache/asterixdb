@@ -26,5 +26,6 @@ CREATE TYPE InvalidType AS {
     birthdate: datetime,
     created_time: time,
     created_date: date,
-    online_since: duration
+    online_since: duration,
+    point: Point
 };

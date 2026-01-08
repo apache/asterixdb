@@ -605,6 +605,13 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
             case BIGINT:
             case STRING:
             case UUID:
+            case DATE:
+            case TIME:
+            case DURATION:
+            case DATETIME:
+            case INTERVAL:
+            case YEARMONTHDURATION:
+            case DAYTIMEDURATION:
                 int columnIndex = nullWriterIndexes.isEmpty() ? columnWriters.size() : nullWriterIndexes.removeInt(0);
                 boolean primaryKey = columnIndex < getNumberOfPrimaryKeys();
                 ATypeTag normalizedTypeTag = primaryKey ? childTypeTag : getNormalizedTypeTag(childTypeTag);

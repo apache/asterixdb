@@ -117,7 +117,7 @@ public class ParquetDeltaBinaryPackingValuesWriterForInteger extends AbstractPar
             if (delta > maxDeltaInCurrentBlock) {
                 maxDeltaInCurrentBlock = delta;
                 estimatedElementSize =
-                        (64 - Long.numberOfLeadingZeros(maxDeltaInCurrentBlock - minDeltaInCurrentBlock));
+                        (32 - Integer.numberOfLeadingZeros(maxDeltaInCurrentBlock - minDeltaInCurrentBlock));
                 estimatedSize = estimatedElementSize * deltaValuesToFlush;
             } else {
                 estimatedSize += estimatedElementSize;

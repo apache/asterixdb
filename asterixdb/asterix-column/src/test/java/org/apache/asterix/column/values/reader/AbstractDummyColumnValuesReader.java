@@ -126,6 +126,11 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
     }
 
     @Override
+    public int getInt() {
+        return -1;
+    }
+
+    @Override
     public final double getDouble() {
         return -1.0;
     }
