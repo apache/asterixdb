@@ -392,6 +392,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
+        boolean stmtWithAsyncSupportUsed = false;
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -521,6 +522,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
                                 requestParameters, stmtParams, stats);
+                        stmtWithAsyncSupportUsed = true;
                         break;
                     case INSERT:
                     case UPDATE:
@@ -530,6 +532,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
                             metadataProvider.setMaxResultReads(maxResultReads);
+                            stmtWithAsyncSupportUsed = true;
                         }
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
@@ -575,6 +578,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
                                 requestParameters, stmtParams, stmtRewriter);
+                        stmtWithAsyncSupportUsed = true;
                         break;
                     case ANALYZE:
                         handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -610,7 +614,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw ex;
         } finally {
             // async queries are completed after their job completes
-            if (ResultDelivery.ASYNC != resultDelivery) {
+            if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery || !stmtWithAsyncSupportUsed) {
                 appCtx.getRequestTracker().complete(requestParameters.getRequestReference().getUuid());
             }
             Thread.currentThread().setName(threadName);
