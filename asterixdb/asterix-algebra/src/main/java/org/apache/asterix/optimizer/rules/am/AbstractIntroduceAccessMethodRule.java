@@ -287,8 +287,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         // 2) functions that take keyword as an argument, e.g. edit_distance_check() when the threshold is 1
                         || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordIndexChosen
                                 && isSameFullTextConfigInIndexAndQuery(analysisCtx, chosenIndex.getIndexDetails()))) {
-
-                    if (resultVarsToIndexTypesMap.containsKey(indexEntry.getValue())) {
+                    // For Btrees and Rtrees we need to keep all the indexes to be able to find the covering ones.
+                    // therefore we add them without needing to check their index type.
+                    if ((chosenAccessMethod == RTreeAccessMethod.INSTANCE && indexType == IndexType.RTREE)
+                            || (chosenAccessMethod == BTreeAccessMethod.INSTANCE && indexType == IndexType.BTREE)) {
+                        result.add(
+                                new IntroduceSelectAccessMethodRule.IndexAccessInfo(chosenAccessMethod, chosenIndex));
+                    }
+                    // this if seems to be needed for ngram indexes. todo: can we remove this for other types as well?
+                    else if (resultVarsToIndexTypesMap.containsKey(indexEntry.getValue())) {
                         List<IndexType> appliedIndexTypes = resultVarsToIndexTypesMap.get(indexEntry.getValue());
                         if (!appliedIndexTypes.contains(indexType)) {
                             appliedIndexTypes.add(indexType);

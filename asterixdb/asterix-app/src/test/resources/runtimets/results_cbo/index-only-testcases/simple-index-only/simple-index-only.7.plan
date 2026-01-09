@@ -1,0 +1,32 @@
+distribute result [$$18] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$18] <- [{"storeName": $$19}] project: [$$18] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$19]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          distinct ([$$26]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8.0]
+          -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$26) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STABLE_SORT [$$26(ASC)]  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (eq($$19, "big store")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$19, $$26]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$19, $$24, $$25, $$26] <- index-search("country_idx1", 0, "Default", "test", "Orders", false, false, 1, $$21, 1, $$22, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$21, $$22] <- ["big store", "big store"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ASSIGN  |PARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -19,11 +19,13 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.common.cluster.PartitioningProperties;
@@ -50,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
@@ -383,7 +386,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         return true;
     }
 
-    protected void removeSmallerPrefixIndexes(List<IndexAccessInfo> indexes) throws CompilationException {
+    protected void keepBestPrefixIndexes(List<IndexAccessInfo> indexes, List<Integer> numberOfMatchedKeys)
+            throws CompilationException {
         int len = indexes.size();
         int i, j;
         Index indexI, indexJ;
@@ -412,10 +416,19 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                                 fieldNamesJ = findKeyFieldNames(indexJ);
                                 if (fieldNamesI.size() <= fieldNamesJ.size()) {
                                     if (prefix(fieldNamesI, fieldNamesJ)) {
-                                        include[i] = false;
+                                        if (numberOfMatchedKeys.get(j) > numberOfMatchedKeys.get(i)) {
+                                            include[i] = false;
+                                        } else {
+                                            include[j] = false;
+
+                                        }
                                     }
                                 } else if (prefix(fieldNamesJ, fieldNamesI)) {
-                                    include[j] = false;
+                                    if (numberOfMatchedKeys.get(i) > numberOfMatchedKeys.get(j)) {
+                                        include[j] = false;
+                                    } else {
+                                        include[i] = false;
+                                    }
                                 }
                             }
                         }
@@ -548,13 +561,16 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
                 // Choose all indexes that will be applied.
                 chooseAllIndexes(analyzedAMs, chosenIndexes);
-                removeSmallerPrefixIndexes(chosenIndexes);
-
                 if (chosenIndexes == null || chosenIndexes.isEmpty()) {
                     // We can't apply any index for this SELECT operator
                     context.addToDontApplySet(this, selectRef.getValue());
                     return false;
                 }
+                List<Integer> matchedKeyCountsNonCovering = new ArrayList<>();
+                List<Integer> matchedKeyCountsCovering = new ArrayList<>();
+                List<IndexAccessInfo> nonCoverigIndexes = new ArrayList<>();
+                List<IndexAccessInfo> coverigIndexes = new ArrayList<>();
+                fillFieldNamesInTheSubTree(subTree, context);
 
                 for (IndexAccessInfo indexAccessInfo : chosenIndexes) {
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(indexAccessInfo.getAccessMethod());
@@ -565,7 +581,15 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     AccessMethodUtils.indexOnlyPlanCheck(afterSelectRefs, selectRef, subTree, null,
                             indexAccessInfo.getIndex(), analysisCtx, context, indexOnlyPlanInfo, false);
                     indexAccessInfo.setIsIndexOnlyPlan(indexOnlyPlanInfo.getFirst());
+                    if (indexAccessInfo.isIndexOnlyPlan) {
+                        matchedKeyCountsCovering.add(analysisCtx.getNumberOfMatchedKeys(indexAccessInfo.getIndex()));
+                        coverigIndexes.add(indexAccessInfo);
+                    } else {
+                        matchedKeyCountsNonCovering.add(analysisCtx.getNumberOfMatchedKeys(indexAccessInfo.getIndex()));
+                        nonCoverigIndexes.add(indexAccessInfo);
+                    }
                 }
+                keepBestPrefixIndexes(nonCoverigIndexes, matchedKeyCountsNonCovering);
 
                 if (checkApplicableOnly) {
                     return true;
@@ -574,28 +598,36 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 // Apply plan transformation using chosen index.
                 boolean res;
                 // Primary index applicable?
+                // We should look in the list including both covering and non covering.
                 IndexAccessInfo chosenPrimaryIndex = fetchPrimaryIndexAmongChosenIndexes(chosenIndexes);
                 if (chosenPrimaryIndex != null) {
+                    subTree.getVarsToFieldNameMap().clear();
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenPrimaryIndex.getAccessMethod());
                     res = chosenPrimaryIndex.getAccessMethod().applySelectPlanTransformation(afterSelectRefs, selectRef,
                             subTree, chosenPrimaryIndex.getIndex(), analysisCtx, context);
                     context.addToDontApplySet(this, selectRef.getValue());
-                } else if (chosenIndexes.size() == 1) {
-                    // Index-only plan possible?
+                } else if (coverigIndexes.isEmpty() && nonCoverigIndexes.size() == 1) {
                     // Gets the analysis context for the given index.
-                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndexes.get(0).getAccessMethod());
-
-                    // Finds the field name of each variable in the sub-tree.
-                    fillFieldNamesInTheSubTree(subTree, context);
+                    AccessMethodAnalysisContext analysisCtx =
+                            analyzedAMs.get(nonCoverigIndexes.get(0).getAccessMethod());
 
                     // Finally, try to apply plan transformation using chosen index.
-                    res = chosenIndexes.get(0).getAccessMethod().applySelectPlanTransformation(afterSelectRefs,
-                            selectRef, subTree, chosenIndexes.get(0).getIndex(), analysisCtx, context);
+                    res = nonCoverigIndexes.get(0).getAccessMethod().applySelectPlanTransformation(afterSelectRefs,
+                            selectRef, subTree, nonCoverigIndexes.get(0).getIndex(), analysisCtx, context);
                     context.addToDontApplySet(this, selectRef.getValue());
                 } else {
-                    // Multiple secondary indexes applicable?
-                    res = intersectAllSecondaryIndexes(chosenIndexes, analyzedAMs, context);
-                    context.addToDontApplySet(this, selectRef.getValue());
+                    if (!coverigIndexes.isEmpty()) {
+                        IndexAccessInfo bestCoveringIndex =
+                                chooseBestCoveringIndex(coverigIndexes, matchedKeyCountsCovering, analyzedAMs);
+                        AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(bestCoveringIndex.getAccessMethod());
+                        res = bestCoveringIndex.getAccessMethod().applySelectPlanTransformation(afterSelectRefs,
+                                selectRef, subTree, bestCoveringIndex.getIndex(), analysisCtx, context);
+                        context.addToDontApplySet(this, selectRef.getValue());
+                    } else {
+                        subTree.getVarsToFieldNameMap().clear();
+                        res = intersectAllSecondaryIndexes(nonCoverigIndexes, analyzedAMs, context);
+                        context.addToDontApplySet(this, selectRef.getValue());
+                    }
                 }
 
                 // If the plan transformation is successful, we don't need to traverse
@@ -617,6 +649,68 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         return false;
 
+    }
+
+    private IndexAccessInfo chooseBestCoveringIndex(List<IndexAccessInfo> indexes,
+            List<Integer> numberOfMatchedKeysForCoveringindexes,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws CompilationException {
+
+        if (indexes.size() == 1) {
+            return indexes.get(0);
+        }
+
+        // 1) Keep only indexes with max matched keys
+        int max = numberOfMatchedKeysForCoveringindexes.stream().mapToInt(Integer::intValue).max().orElse(0);
+        List<IndexAccessInfo> indexesWithMaxMatchedKeys = IntStream.range(0, indexes.size())
+                .filter(i -> numberOfMatchedKeysForCoveringindexes.get(i) == max).mapToObj(indexes::get).toList();
+        if (indexesWithMaxMatchedKeys.size() == 1) {
+            return indexesWithMaxMatchedKeys.get(0);
+        }
+
+        // 2) Find earliest equality positions
+        List<IndexInfo> indexesWithMaxMatchedKeysInfo = new ArrayList<>(indexesWithMaxMatchedKeys.size());
+        for (IndexAccessInfo indexAccessInfo : indexesWithMaxMatchedKeys) {
+            List<List<String>> indexFields = findKeyFieldNames(indexAccessInfo.getIndex());
+            List<IOptimizableFuncExpr> funcExprs =
+                    analyzedAMs.get(indexAccessInfo.getAccessMethod()).getMatchedFuncExprs();
+            IndexInfo indexInfo = new IndexInfo();
+            indexInfo.indexExprs = new ArrayList<>(Collections.nCopies(funcExprs.size(), null));
+            indexInfo.numKeys = indexFields.size();
+            indexInfo.indexaccessinfo = indexAccessInfo;
+            for (IOptimizableFuncExpr expr : funcExprs) {
+                for (int i = 0; i < expr.getNumLogicalVars(); i++) {
+                    int i1 = indexFields.indexOf(expr.getFieldName(i));
+                    indexInfo.indexExprs.set(i1, expr.getFuncExpr().getFunctionIdentifier());
+                }
+            }
+            indexesWithMaxMatchedKeysInfo.add(indexInfo);
+        }
+        return indexesWithMaxMatchedKeysInfo.stream().sorted().toList().getFirst().indexaccessinfo;
+    }
+
+    class IndexInfo implements Comparable<IndexInfo> {
+        List<FunctionIdentifier> indexExprs = new ArrayList<>();
+        int numKeys;
+        IndexAccessInfo indexaccessinfo;
+
+        @Override
+        public int compareTo(IndexInfo other) {
+            for (int i = 0; i < this.indexExprs.size() && i < other.indexExprs.size(); i++) {
+                if (this.indexExprs.get(i) == AlgebricksBuiltinFunctions.EQ
+                        && other.indexExprs.get(i) != AlgebricksBuiltinFunctions.EQ) {
+                    return -1;
+                } else if (this.indexExprs.get(i) != AlgebricksBuiltinFunctions.EQ
+                        && other.indexExprs.get(i) == AlgebricksBuiltinFunctions.EQ) {
+                    return 1;
+                }
+            }
+
+            if (this.indexExprs.size() != other.indexExprs.size()) {
+                return 0;
+            }
+
+            return Integer.compare(this.numKeys, other.numKeys);
+        }
     }
 
     @Override

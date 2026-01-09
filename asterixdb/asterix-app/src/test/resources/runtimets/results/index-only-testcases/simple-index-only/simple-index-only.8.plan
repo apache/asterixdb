@@ -1,0 +1,30 @@
+distribute result [$$23] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$23] <- [{"city": $$24, "country": $$25, "storeName": $$27}] project: [$$23] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$24, $$25, $$27]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          distinct ([$$34]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$34) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (and(gt($$25, "USA"), eq($$24, "NYC"))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_SELECT  |PARTITIONED|
+                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      unnest-map [$$24, $$25, $$27, $$34] <- index-search("idx8_more_fields", 0, "Default", "test", "Orders", false, false, 2, $$28, $$29, 1, $$30, false, false, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$28, $$29, $$30] <- ["NYC", "USA", "NYC"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
