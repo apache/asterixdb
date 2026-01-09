@@ -21,6 +21,8 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.om.base.AInt32;
@@ -45,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -85,20 +88,54 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         if (fce.getFunctionIdentifier() != BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             return changed;
         }
-        changed |= extractFirstArg(fce, op, context);
-        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
-        IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        changed |= rewriteFieldAccess(exprRef, fce, TypeComputeUtils.getActualType(t));
+        int k = extractFirstArg(fce, op, context);
+        changed |= k >= 0;
+        if (k < 0) {
+            if (op.getInputs().size() > 1) {
+                context.computeAndSetTypeEnvironmentForOperator(op);
+                changed |= rewriteFieldAccessUsing(op, exprRef, context, fce);
+                return changed;
+            }
+            k = 0;
+        }
+        changed |= rewriteFieldAccessUsing(op.getInputs().get(k).getValue(), exprRef, context, fce);
         return changed;
     }
 
-    // Extracts the first argument of a field-access expression into an separate assign operator.
-    private boolean extractFirstArg(AbstractFunctionCallExpression fce, ILogicalOperator op,
+    // Extracts the first argument of a field-access expression into a separate assign operator.
+    private static int extractFirstArg(AbstractFunctionCallExpression fce, ILogicalOperator op,
             IOptimizationContext context) throws AlgebricksException {
         ILogicalExpression firstArg = fce.getArguments().get(0).getValue();
         if (firstArg.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
+            return -1;
         }
+        if (op.getInputs().size() > 1) {
+            return extractToBranch(fce, op, context, firstArg);
+        }
+        extractToAssignOp(fce, op.getInputs().get(0), context, firstArg);
+        return 0;
+    }
+
+    private static int extractToBranch(AbstractFunctionCallExpression fce, ILogicalOperator op,
+            IOptimizationContext ctx, ILogicalExpression firstArg) throws AlgebricksException {
+        Set<LogicalVariable> usedByExpr = new HashSet<>();
+        Set<LogicalVariable> inputLiveVars = new HashSet<>();
+        fce.getUsedVariables(usedByExpr);
+        int i = 0;
+        for (Mutable<ILogicalOperator> input : op.getInputs()) {
+            inputLiveVars.clear();
+            VariableUtilities.getLiveVariables(input.getValue(), inputLiveVars);
+            if (inputLiveVars.containsAll(usedByExpr)) {
+                extractToAssignOp(fce, input, ctx, firstArg);
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    private static void extractToAssignOp(AbstractFunctionCallExpression fce, Mutable<ILogicalOperator> op,
+            IOptimizationContext context, ILogicalExpression firstArg) throws AlgebricksException {
         SourceLocation sourceLoc = firstArg.getSourceLocation();
         LogicalVariable var1 = context.newVar();
         AssignOperator assignOp = new AssignOperator(new ArrayList<>(Collections.singletonList(var1)),
@@ -107,14 +144,20 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         VariableReferenceExpression var1Ref = new VariableReferenceExpression(var1);
         var1Ref.setSourceLocation(sourceLoc);
         fce.getArguments().get(0).setValue(var1Ref);
-        assignOp.getInputs().add(new MutableObject<>(op.getInputs().get(0).getValue()));
-        op.getInputs().get(0).setValue(assignOp);
+        assignOp.getInputs().add(new MutableObject<>(op.getValue()));
+        op.setValue(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
-        return true;
+    }
+
+    private static boolean rewriteFieldAccessUsing(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
+            IOptimizationContext ctx, AbstractFunctionCallExpression fce) throws AlgebricksException {
+        IVariableTypeEnvironment env = ctx.getOutputTypeEnvironment(op);
+        IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
+        return rewriteFieldAccess(exprRef, fce, TypeComputeUtils.getActualType(t));
     }
 
     // Rewrites field-access-by-name into field-access-by-index if possible.
-    private boolean rewriteFieldAccess(Mutable<ILogicalExpression> exprRef, AbstractFunctionCallExpression fce,
+    private static boolean rewriteFieldAccess(Mutable<ILogicalExpression> exprRef, AbstractFunctionCallExpression fce,
             IAType t) {
         if (t.getTypeTag() != ATypeTag.OBJECT) {
             return false;

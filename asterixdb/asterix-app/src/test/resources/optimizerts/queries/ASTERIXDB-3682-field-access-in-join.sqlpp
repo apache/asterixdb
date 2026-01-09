@@ -1,0 +1,107 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE TYPE OpenType AS {id: int};
+CREATE DATASET col1(OpenType) PRIMARY KEY id;
+CREATE DATASET col2(OpenType) PRIMARY KEY id;
+
+SELECT final_q.*
+FROM (
+SELECT subquery1.*,
+           subquery3.cKey AS lov_cKey,
+           subquery2.wsd,
+           subquery2.wsm,
+           subquery2.wsc,
+           subquery2.scKey,
+           subquery2.wpdi,
+           sbr.tohac.qaz AS bch,
+           sbr.tohac.omaa AS omaa,
+           UPPER(SUBSTR(sbr.tohac.qaz, 0, POS(sbr.tohac.qaz, '_'))) AS bco
+    FROM (SELECT join_key2,
+       s1.wsx1 AS lov13_wsx1,
+       s1.ikjhu AS lcd,
+       sataqw.name AS lov13_name,
+       s1.uunn AS lov13_uunn,
+       TO_STR(u_val.t0) AS lov13_t0_dd,
+       SUBSTR(TO_STR(u_val.t0),0,19) AS lov13_t0_ff
+FROM (
+  SELECT SUBSTR(b.qwer,0,7) AS wsx1,
+         SUBSTR(b.qwer,0,10) AS ikjhu,
+         b.uunn,
+         (
+           SELECT VALUE { "name": item.name, "val": (
+             SELECT VALUE { "marop": item2.marop, "t0": item2.t0 }
+             FROM item.`value` AS item2
+             WHERE item2.ua = 'iap'
+               AND item2.marop IS VALUED) }
+           FROM OBJECT_PAIRS(b.ihsaa) AS item
+           WHERE ANY v IN ["X", "Y" ] SATISFIES v = SPLIT(item.name," ")[0] END) AS ihsaa
+  FROM `col2` b
+  WHERE (b.`t` = "lovStat")
+    AND NOT (ARRAY_LENGTH(OBJECT_NAMES(b.ihsaa)) = 1
+      AND OBJECT_NAMES(b.ihsaa)[0] = "some_str")
+    AND (ANY item IN OBJECT_PAIRS(b.ihsaa) SATISFIES (SPLIT(item.name, " ")[0] IN [ "X", "Y" ])
+      AND (ANY item2 IN item.`value` SATISFIES (item2.ua = "iap"
+          AND item2.marop IS VALUED) END) END)) s1
+UNNEST s1.ihsaa sataqw
+UNNEST sataqw.val u_val
+LET join_key2 = SUBSTR(IFMISSINGORNULL(IFMISSINGORNULL(u_val.marop.someId1, u_val.marop.someId2), u_val.marop.someId3),0,38 )
+WHERE join_key2 IS NOT NULL
+  AND NOT sataqw.name IN [ 'p1', 'p2', 'p3']) subquery1
+        JOIN (
+        SELECT p1.cKey,
+               uniqueID
+        FROM (
+            SELECT p.cKey,
+       p.members[*].uniqueID
+FROM col1 p
+WHERE p.`t` = 'ccc'
+  AND p.`r` = 'uuu'
+  AND cKey IS NOT MISSING) p1
+        UNNEST p1.uniqueID uniqueID) subquery3 ON subquery3.uniqueID = subquery1.lov13_uunn
+        JOIN (
+        SELECT SUBSTR(p2.ed,0,38) AS join_key1,
+               p2.kat.coaed AS wpdi,
+               p2.kat.stchk AS wsc,
+               UPPER(SUBSTR(p2.kat.stchk, 0, POS(p2.kat.stchk, '_'))) AS scKey,
+               (SELECT VALUE item.wkps FROM p2.kat.intib AS item) AS wwlps,
+               SUBSTR(p2.kat.ssatt,0,10) AS wsd,
+               SUBSTR(p2.kat.ssatt,0,7) AS wsm
+        FROM col1 p2
+        WHERE p2.`t` = 'ak1'
+            AND p2.ha IN ['l1', 'l2']
+            AND p2.kat IS NOT MISSING
+            AND p2.kat.coaed IS NOT MISSING ) subquery2 ON subquery1.join_key2 = subquery2.join_key1
+        AND subquery3.cKey = subquery2.scKey
+        JOIN col1 sbr ON sbr.ed = subquery2.wpdi
+        AND sbr.tohac IS NOT MISSING ) final_q
+WHERE final_q.bco IS NOT MISSING
+    AND final_q.join_key2 LIKE '%'
+    AND final_q.wsc LIKE '%'
+    AND final_q.scKey LIKE '%'
+    AND final_q.bch LIKE '%'
+    AND final_q.bco LIKE '%'
+ORDER BY final_q.join_key2,
+         final_q.wsc,
+         final_q.lcd,
+         final_q.wsd;

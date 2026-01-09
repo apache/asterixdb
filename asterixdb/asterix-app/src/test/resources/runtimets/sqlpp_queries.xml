@@ -16096,6 +16096,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="window">
+      <compilation-unit name="isomorphic">
+        <output-dir compare="Text">isomorphic</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
       <compilation-unit name="lag_01">
         <output-dir compare="Text">lag_01</output-dir>
       </compilation-unit>
