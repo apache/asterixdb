@@ -321,9 +321,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
             }
             restoreConfig(ctx);
             JobConf readerConf = conf;
-            if (ctx.getWarningCollector().shouldWarn()
-                    && configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
-                            .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
+            if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
+                    .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
                 /*
                  * JobConf is used to pass warnings from the ParquetReadSupport to ParquetReader. As multiple
                  * partitions can issue different warnings, we might have a race condition on JobConf. Thus, we

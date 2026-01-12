@@ -99,6 +99,11 @@ public class ExternalWriterProvider {
         Map<String, String> configuration = sink.getConfiguration();
         String format = getFormat(configuration);
         String compression = getCompression(configuration);
+        if (format.equalsIgnoreCase(ExternalDataConstants.FORMAT_PARQUET)) {
+            // Parquet file extension format is like .snappy.parquet
+            return (compression.isEmpty() ? "" : compression.toLowerCase() + ".")
+                    + ExternalDataConstants.FORMAT_PARQUET;
+        }
         return format + (compression.isEmpty() ? "" : "." + compression);
     }
 
