@@ -1,0 +1,4 @@
+{"date":date("2024-01-02"),"time":time("12:34:56.789Z"),"datetime":datetime("2024-01-02T03:04:05.006Z"),"ymd":year-month-duration("P2Y3M"),"dtd":day-time-duration("PT36H"),"duration":duration("P1Y2M3DT4H5M6.007S")}
+{"date":date("1970-01-01"),"time":time("00:00:00.000Z"),"datetime":datetime("1970-01-01T00:00:00.000Z"),"ymd":year-month-duration("P0Y0M"),"dtd":day-time-duration("PT0S"),"duration":duration("P0D")}
+{"date":date("9999-12-31"),"time":time("23:59:59.999Z"),"datetime":datetime("9999-12-31T23:59:59.999Z"),"ymd":year-month-duration("P120Y11M"),"dtd":day-time-duration("PT999999S"),"duration":duration("P3650D")}
+{"date":null,"time":time("12:00:00.000Z"),"datetime":null,"ymd":null,"dtd":day-time-duration("PT1S"),"duration":null}

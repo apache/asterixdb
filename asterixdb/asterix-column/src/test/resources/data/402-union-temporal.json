@@ -1,0 +1,6 @@
+{"t":date("2024-01-02")}
+{"t":time("12:34:56.789Z")}
+{"t":datetime("2024-01-02T03:04:05.006Z")}
+{"t":year-month-duration("P2Y3M")}
+{"t":day-time-duration("PT36H")}
+{"t":duration("P1Y2M3DT4H5M6.007S")}

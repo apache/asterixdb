@@ -46,4 +46,9 @@
 #325-null-array5
 #326-null-array6
 #327-null-array7
+#400-temporal
+#401-array-temporal
+#402-union-temporal
+#403-union-temporal-nontemporal
+#404-array-mixed-temporal-nontemporal
 #900-dummy-tweet

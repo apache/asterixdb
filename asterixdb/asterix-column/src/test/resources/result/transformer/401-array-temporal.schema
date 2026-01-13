@@ -1,0 +1,19 @@
+root
+|-- dates: array <level: 1>
+|    |-- item: date <level: 2, index: 0>
+|    |    |-- Def size: 7 [(2,2),(5,1),(1,1),(0,1),(1,1),(0,1)]
+|-- times: array <level: 1>
+|    |-- item: time <level: 2, index: 1>
+|    |    |-- Def size: 6 [(2,2),(1,1),(0,1),(1,1),(0,1)]
+|-- datetimes: array <level: 1>
+|    |-- item: datetime <level: 2, index: 2>
+|    |    |-- Def size: 6 [(2,1),(5,1),(1,1),(0,1),(1,1),(0,1)]
+|-- ymds: array <level: 1>
+|    |-- item: yearmonthduration <level: 2, index: 3>
+|    |    |-- Def size: 6 [(2,2),(1,1),(0,1),(1,1),(0,1)]
+|-- dtds: array <level: 1>
+|    |-- item: daytimeduration <level: 2, index: 4>
+|    |    |-- Def size: 6 [(2,2),(1,1),(0,1),(1,1),(0,1)]
+|-- durations: array <level: 1>
+|    |-- item: duration <level: 2, index: 5>
+|    |    |-- Def size: 7 [(2,2),(5,1),(1,1),(0,1),(1,1),(0,1)]

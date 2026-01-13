@@ -1,0 +1,12 @@
+root
+|-- u: union <level: 1>
+|    |-- bigint: bigint <level: 1, index: 1>
+|    |    |-- Def size: 6 [(0,1),(1,1),(0,4)]
+|    |-- double: double <level: 1, index: 2>
+|    |    |-- Def size: 6 [(0,2),(1,1),(0,3)]
+|    |-- boolean: boolean <level: 1, index: 4>
+|    |    |-- Def size: 6 [(0,4),(1,1),(0,1)]
+|    |-- date: date <level: 1, index: 0>
+|    |    |-- Def size: 6 [(1,1),(0,4),(2,1)]
+|    |-- yearmonthduration: yearmonthduration <level: 1, index: 3>
+|    |    |-- Def size: 6 [(0,3),(1,1),(0,2)]

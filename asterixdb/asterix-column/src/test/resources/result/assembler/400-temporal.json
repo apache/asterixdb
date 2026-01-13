@@ -1,0 +1,4 @@
+{"date":"2024-01-02","time":"12:34:56.789","datetime":"2024-01-02T03:04:05.006","ymd":{ "year-month-duration": 27},"dtd":"P1DT12H"),"duration":"P1Y2M3DT4H5M6.7S"}
+{"date":"1970-01-01","time":"00:00:00.000","datetime":"1970-01-01T00:00:00.000","ymd":{ "year-month-duration": 0},"dtd":"P"),"duration":"P"}
+{"date":"9999-12-31","time":"23:59:59.999","datetime":"9999-12-31T23:59:59.999","ymd":{ "year-month-duration": 1451},"dtd":"P11DT13H46M39S"),"duration":"P3650D"}
+{"date":null,"time":"12:00:00.000","datetime":null,"ymd":null,"dtd":"PT1S"),"duration":null}

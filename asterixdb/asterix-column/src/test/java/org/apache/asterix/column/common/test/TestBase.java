@@ -38,12 +38,11 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.external.parser.JSONDataParser;
+import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.IoUtil;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 public abstract class TestBase {
     public static final File OUTPUT_PATH;
@@ -54,13 +53,14 @@ public abstract class TestBase {
     private static final Map<Class<?>, TestPath> TEST_PATH_MAP;
 
     protected final TestCase testCase;
-    protected final JSONDataParser parser;
+    protected final IStreamDataParser parser;
 
     static {
         TEST_PATH_MAP = new HashMap<>();
 
         ClassLoader classLoader = TestBase.class.getClassLoader();
         OUTPUT_PATH = new File("target", "result");
+
         TESTS = new File(Objects.requireNonNull(classLoader.getResource("only.txt")).getPath());
         DATA_PATH = new File(Objects.requireNonNull(classLoader.getResource("data")).getPath());
         RESULT_PATH = new File(Objects.requireNonNull(classLoader.getResource("result")).getPath());
@@ -68,14 +68,13 @@ public abstract class TestBase {
 
     protected TestBase(TestCase testCase) throws HyracksDataException {
         this.testCase = testCase;
-        JsonFactory jsonFactory = new JsonFactory();
-        parser = new JSONDataParser(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, jsonFactory);
+        parser = new ADMDataParser(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, true);
     }
 
     protected void prepareParser(File testFile) throws IOException {
         //Prepare parser
         FileInputStream inputStream = new FileInputStream(testFile);
-        parser.reset(inputStream);
+        parser.setInputStream(inputStream);
     }
 
     protected static void setup(Class<?> clazz) throws IOException {
@@ -115,8 +114,12 @@ public abstract class TestBase {
     }
 
     private static Set<String> getOnly() throws FileNotFoundException {
-        BufferedReader reader = new BufferedReader(new FileReader(TESTS));
-        return reader.lines().filter(l -> !l.trim().isEmpty() && l.charAt(0) != '#').collect(Collectors.toSet());
+        try (BufferedReader reader = new BufferedReader(new FileReader(TESTS))) {
+            return reader.lines().filter(l -> !l.trim().isEmpty() && l.charAt(0) != '#').collect(Collectors.toSet());
+        } catch (IOException e) {
+            // FileReader/BufferedReader creation should only fail due to IO errors; preserve method signature.
+            throw new RuntimeException(e);
+        }
     }
 
     private static class TestPath {
