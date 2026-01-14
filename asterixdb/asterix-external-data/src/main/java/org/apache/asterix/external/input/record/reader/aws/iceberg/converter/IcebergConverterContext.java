@@ -19,6 +19,8 @@
 package org.apache.asterix.external.input.record.reader.aws.iceberg.converter;
 
 import java.io.DataOutput;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -45,8 +47,9 @@ public class IcebergConverterContext extends ParserContext {
     private final boolean decimalToDouble;
     private final boolean timestampAsLong;
     private final boolean dateAsInt;
+    private final boolean timeAsInt;
 
-    private final int timeZoneOffset;
+    private final ZoneId timeZoneId;
     private final AMutableDate mutableDate = new AMutableDate(0);
     private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
     private final List<Warning> warnings;
@@ -57,13 +60,15 @@ public class IcebergConverterContext extends ParserContext {
                 .getOrDefault(ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
         timestampAsLong = Boolean.parseBoolean(configuration
                 .getOrDefault(ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG, ExternalDataConstants.TRUE));
+        timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.TIME_AS_INT,
+                ExternalDataConstants.TRUE));
         dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.DATE_AS_INT,
                 ExternalDataConstants.TRUE));
         String configuredTimeZoneId = configuration.get(ExternalDataConstants.IcebergOptions.TIMEZONE);
         if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
-            timeZoneOffset = TimeZone.getTimeZone(configuredTimeZoneId).getRawOffset();
+            timeZoneId = TimeZone.getTimeZone(configuredTimeZoneId).toZoneId();
         } else {
-            timeZoneOffset = 0;
+            timeZoneId = ZoneOffset.UTC;
         }
     }
 
@@ -89,12 +94,16 @@ public class IcebergConverterContext extends ParserContext {
         return decimalToDouble;
     }
 
-    public int getTimeZoneOffset() {
-        return timeZoneOffset;
+    public ZoneId getTimeZoneId() {
+        return timeZoneId;
     }
 
     public boolean isTimestampAsLong() {
         return timestampAsLong;
+    }
+
+    public boolean isTimeAsInt() {
+        return timeAsInt;
     }
 
     public boolean isDateAsInt() {

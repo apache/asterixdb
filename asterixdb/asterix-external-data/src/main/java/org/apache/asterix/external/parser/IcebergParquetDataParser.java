@@ -26,11 +26,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -170,6 +173,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
                 return;
             case TIMESTAMP:
             case TIMESTAMP_NANO:
+                serializeTimestamp(value, out);
             case GEOMETRY:
             case GEOGRAPHY:
             case VARIANT:
@@ -312,14 +316,34 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
 
     public void serializeDate(Object value, DataOutput output) throws HyracksDataException {
         LocalDate localDate = (LocalDate) value;
-        aDate.setValue((int) localDate.toEpochDay());
-        dateSerde.serialize(aDate, output);
+        if (parserContext.isDateAsInt()) {
+            serializeInteger((int) localDate.toEpochDay(), output);
+        } else {
+            aDate.setValue((int) localDate.toEpochDay());
+            dateSerde.serialize(aDate, output);
+        }
     }
 
     public void serializeTime(Object value, DataOutput output) throws HyracksDataException {
         LocalTime localTime = (LocalTime) value;
-        aTime.setValue((int) (localTime.toNanoOfDay() / 1_000_000));
-        timeSerde.serialize(aTime, output);
+        int timeInMillis = (int) TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay());
+        if (parserContext.isTimeAsInt()) {
+            serializeInteger(timeInMillis, output);
+        } else {
+            aTime.setValue(timeInMillis);
+            timeSerde.serialize(aTime, output);
+        }
+    }
+
+    public void serializeTimestamp(Object value, DataOutput output) throws HyracksDataException {
+        LocalDateTime localDateTime = (LocalDateTime) value;
+        ZoneId zoneId = parserContext.getTimeZoneId();
+        long timeStampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+        if (parserContext.isTimestampAsLong()) {
+            serializeLong(timeStampInMillis, output);
+        } else {
+            parserContext.serializeDateTime(timeStampInMillis, output);
+        }
     }
 
     private static HyracksDataException createUnsupportedException(Type type) {
@@ -353,8 +377,27 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             }
             case STRUCT -> ATypeTag.OBJECT;
             case LIST, MAP -> ATypeTag.ARRAY;
-            case DATE -> ATypeTag.DATE;
-            case TIME -> ATypeTag.TIME;
+            case DATE -> {
+                if (parserContext.isDateAsInt()) {
+                    yield ATypeTag.INTEGER;
+                } else {
+                    yield ATypeTag.DATE;
+                }
+            }
+            case TIME -> {
+                if (parserContext.isTimeAsInt()) {
+                    yield ATypeTag.INTEGER;
+                } else {
+                    yield ATypeTag.TIME;
+                }
+            }
+            case TIMESTAMP, TIMESTAMP_NANO -> {
+                if (parserContext.isTimestampAsLong()) {
+                    yield ATypeTag.BIGINT;
+                } else {
+                    yield ATypeTag.DATETIME;
+                }
+            }
             default -> throw createUnsupportedException(type);
         };
     }
