@@ -1372,6 +1372,15 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public List<Catalog> getCatalogs(MetadataTransactionContext ctx) throws AlgebricksException {
+        try {
+            return metadataNode.getCatalogs(ctx.getTxnId());
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+    }
+
+    @Override
     public Catalog getCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException {
         Objects.requireNonNull(catalogName);
         // first look in the context to see if this transaction created the

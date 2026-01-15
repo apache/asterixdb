@@ -3160,6 +3160,19 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Catalog> getCatalogs(TxnId txnId) throws AlgebricksException, RemoteException {
+        try {
+            CatalogTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCatalogTupleTranslator(false);
+            IValueExtractor<Catalog> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<Catalog> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getCatalogEntity().getIndex(), null, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+        }
+    }
+
+    @Override
     public Catalog getCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(catalogName);

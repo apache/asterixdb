@@ -1037,6 +1037,8 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     void addCatalog(TxnId txnId, Catalog catalog) throws AlgebricksException, RemoteException;
 
+    List<Catalog> getCatalogs(TxnId txnId) throws AlgebricksException, RemoteException;
+
     Catalog getCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException;
 
     void dropCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException;

@@ -928,6 +928,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     void addCatalog(MetadataTransactionContext ctx, Catalog catalog) throws AlgebricksException;
 
+    List<Catalog> getCatalogs(MetadataTransactionContext ctx) throws AlgebricksException;
+
     Catalog getCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
 
     void dropCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
