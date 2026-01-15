@@ -18,5 +18,6 @@
  */
 
 USE test;
-// cannot use array index
-FROM query_index("test", "ds1", "ds1_array_idx") as v SELECT VALUE v;
+SET `compiler.sort.parallel` "false";
+SELECT v.SK0 AS age, v.PK0
+FROM query_index("test", "ds4", "ds4_array_idx2") as v ORDER BY v.SK0, v.PK0;

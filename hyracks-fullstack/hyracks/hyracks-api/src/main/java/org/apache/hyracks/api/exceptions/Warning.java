@@ -26,6 +26,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
 
 public class Warning implements Serializable {
 
@@ -85,7 +86,7 @@ public class Warning implements Serializable {
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(component);
         output.writeInt(code);
-        output.writeUTF(message);
+        JavaSerializationUtils.writeTruncatedUTF(output, message);
         SourceLocation.writeFields(srcLocation, output);
         writeParams(output, params);
     }

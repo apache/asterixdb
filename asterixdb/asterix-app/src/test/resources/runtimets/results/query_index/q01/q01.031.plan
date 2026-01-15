@@ -1,34 +1,34 @@
-distribute result [$$57] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$61] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$57] <- [{"age": $$SK0, "dept": $$SK1, "cnt": $$63}] project: [$$57] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$61] <- [{"age": $$SK0, "dept": $$SK1, "cnt": $$67}] project: [$$61] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$SK0(ASC), $$SK1(ASC) ]  |PARTITIONED|
-        group by ([$$SK0 := $$65; $$SK1 := $$66]) decor ([]) {
-                  aggregate [$$63] <- [agg-sql-sum($$64)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        group by ([$$SK0 := $$69; $$SK1 := $$70]) decor ([]) {
+                  aggregate [$$67] <- [agg-sql-sum($$68)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- SORT_GROUP_BY[$$65, $$66]  |PARTITIONED|
+        -- SORT_GROUP_BY[$$69, $$70]  |PARTITIONED|
           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- HASH_PARTITION_EXCHANGE [$$65, $$66]  |PARTITIONED|
-            group by ([$$65 := $$60; $$66 := $$61]) decor ([]) {
-                      aggregate [$$64] <- [agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- HASH_PARTITION_EXCHANGE [$$69, $$70]  |PARTITIONED|
+            group by ([$$69 := $$64; $$70 := $$65]) decor ([]) {
+                      aggregate [$$68] <- [agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- PRE_CLUSTERED_GROUP_BY[$$60, $$61]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$64, $$65]  |PARTITIONED|
               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$60, $$61]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                project ([$$64, $$65]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$60, $$61, $$62] <- test.ds1.ds1_age_dept.query-index [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    data-scan []<-[$$64, $$65, $$66] <- test.ds1.ds1_age_dept.query-index [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

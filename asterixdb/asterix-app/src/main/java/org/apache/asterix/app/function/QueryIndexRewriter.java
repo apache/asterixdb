@@ -137,8 +137,10 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         AlgebricksAbsolutePartitionConstraint secPartitionConstraint =
                 (AlgebricksAbsolutePartitionConstraint) secIdxHelper.getSecondaryPartitionConstraint();
         INodeDomain domain = mp.findNodeDomain(ds.getNodeGroupName());
+        ARecordType dsType = (ARecordType) mp.findType(ds);
+        ARecordType metaType = DatasetUtil.getMetaType(mp, ds);
         ARecordType recType = computeRecType(f, mp, null, null, null);
-        int numSecKeys = ((Index.ValueIndexDetails) idx.getIndexDetails()).getKeyFieldNames().size();
+        int numSecKeys = KeyFieldTypeUtil.getNumSecondaryKeys(idx, dsType, metaType);
         return new QueryIndexDatasource(ds, idx.getIndexName(), domain, secPartitionConstraint, recType, numSecKeys);
     }
 
@@ -162,7 +164,9 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, dataset);
 
         List<IAType> dsKeyTypes = KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, dsType, metaType);
-        List<Pair<IAType, Boolean>> secKeyTypes = KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, dsType, metaType);
+        List<Pair<IAType, Boolean>> secKeyTypes = index.getIndexType() == DatasetConfig.IndexType.BTREE
+                ? KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, dsType, metaType)
+                : KeyFieldTypeUtil.getArrayIndexKeyTypes(index, dsType, metaType);
         int numPrimaryKeys = dsKeyTypes.size();
         int numSecKeys = secKeyTypes.size();
         String[] fieldNames = new String[numSecKeys + numPrimaryKeys];
@@ -206,6 +210,9 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, dsName,
                     MetadataUtil.dataverseName(dbName, dvName, mp.isUsingDatabase()));
         }
+        if (dataset.isCorrelated()) {
+            throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX, loc, dsName);
+        }
         return dataset;
     }
 
@@ -219,12 +226,12 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
             throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX, loc, idxName);
         }
         DatasetConfig.IndexType idxType = index.getIndexType();
-        // currently, only normal secondary indexes are supported
-        if (idxType != DatasetConfig.IndexType.BTREE || Index.IndexCategory.of(idxType) != Index.IndexCategory.VALUE
-                || index.isPrimaryKeyIndex()) {
-            throw new CompilationException(ErrorCode.COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX,
-                    f.getSourceLocation(), LogRedactionUtil.userData(f.toString()));
+        // currently, only normal and array secondary indexes are supported
+        if ((idxType == DatasetConfig.IndexType.BTREE && !index.isPrimaryKeyIndex())
+                || idxType == DatasetConfig.IndexType.ARRAY) {
+            return index;
         }
-        return index;
+        throw new CompilationException(ErrorCode.COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX,
+                f.getSourceLocation(), LogRedactionUtil.userData(f.toString()));
     }
 }

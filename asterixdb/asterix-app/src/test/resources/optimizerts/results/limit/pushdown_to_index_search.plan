@@ -1,0 +1,38 @@
+distribute result [$$57]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 2
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        assign [$$57] <- [{"field1": $$58, "field2": $$59, "field3": $$60, "field4": $$61, "comp_field": string-concat(ordered-list-constructor(replace($$58, "-", ""), "03")), "fieldX": $$ds2.getField("fieldX")}] project: [$$57]
+        -- ASSIGN  |PARTITIONED|
+          limit 2
+          -- STREAM_LIMIT  |PARTITIONED|
+            project ([$$58, $$61, $$60, $$59, $$ds2])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                unnest-map [$$63, $$ds2] <- index-search("ds2", 0, "Default", "test", "ds2", true, true, 1, $$65, 1, $$65, true, true, true) limit 2
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$65)
+                    -- STABLE_SORT [$$65(ASC)]  |PARTITIONED|
+                      exchange
+                      -- HASH_PARTITION_EXCHANGE [$$65]  |PARTITIONED|
+                        assign [$$65] <- [string-concat(ordered-list-constructor($$59, ":", to-string($$60), ":", $$61))]
+                        -- ASSIGN  |PARTITIONED|
+                          assign [$$58, $$61, $$60, $$59] <- [$$ds1.getField("field1"), $$ds1.getField("field4"), $$ds1.getField("field3"), $$ds1.getField("field2")] project: [$$58, $$61, $$60, $$59]
+                          -- ASSIGN  |PARTITIONED|
+                            project ([$$ds1])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                data-scan []<-[$$62, $$ds1] <- test.ds1
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

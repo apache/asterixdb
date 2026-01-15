@@ -162,6 +162,25 @@ public class KeyFieldTypeUtil {
     }
 
     /**
+     * @see KeyFieldTypeUtil#getBTreeIndexKeyTypes(Index, ARecordType, ARecordType)
+     */
+    public static List<Pair<IAType, Boolean>> getArrayIndexKeyTypes(Index index, ARecordType recordType,
+            ARecordType metaRecordType) throws AlgebricksException {
+        Index.ArrayIndexDetails indexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+        List<Pair<IAType, Boolean>> indexKeyTypes = new ArrayList<>();
+        for (Index.ArrayIndexElement e : indexDetails.getElementList()) {
+            for (int i = 0; i < e.getProjectList().size(); i++) {
+                ARecordType sourceType =
+                        (e.getSourceIndicator() == Index.RECORD_INDICATOR) ? recordType : metaRecordType;
+                Pair<IAType, Boolean> keyPairType = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
+                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
+                indexKeyTypes.add(keyPairType);
+            }
+        }
+        return indexKeyTypes;
+    }
+
+    /**
      * Get the types of RTree index key fields
      *
      * @param index,

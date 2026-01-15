@@ -21,6 +21,7 @@ package org.apache.asterix.app.function;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
@@ -33,6 +34,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -41,14 +43,13 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
-import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -94,6 +95,11 @@ public class QueryIndexDatasource extends FunctionDataSource {
     }
 
     @Override
+    public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList) {
+        // no op
+    }
+
+    @Override
     public boolean isScanAccessPathALeaf() {
         // the index scan op is not a leaf op. the ETS op will start the scan of the index. we need the ETS op below
         // the index scan to be still generated
@@ -130,15 +136,19 @@ public class QueryIndexDatasource extends FunctionDataSource {
 
             @Override
             public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables,
-                    IOptimizationContext ctx) {
+                    IOptimizationContext ctx) throws AlgebricksException {
+                // scanVariables should be SKs + PKs
                 List<ILocalStructuralProperty> propsLocal = new ArrayList<>(1);
-                //TODO(ali): consider primary keys?
-                List<OrderColumn> secKeys = new ArrayList<>(numSecKeys);
-                for (int i = 0; i < numSecKeys; i++) {
-                    secKeys.add(new OrderColumn(scanVariables.get(i), OrderOperator.IOrder.OrderKind.ASC));
+                int numPKs = ds.getPrimaryKeys().size();
+                Set<LogicalVariable> pVars = new ListSet<>();
+                for (int i = 0, j = numSecKeys; i < numPKs; i++, j++) {
+                    pVars.add(scanVariables.get(j));
                 }
-                propsLocal.add(new LocalOrderProperty(secKeys));
-                return new StructuralPropertiesVector(new RandomPartitioningProperty(domain), propsLocal);
+                int[][] computeStorageMap = ((MetadataProvider) ctx.getMetadataProvider()).getPartitioningProperties(ds)
+                        .getComputeStorageMap();
+                IPartitioningProperty pp =
+                        UnorderedPartitionedProperty.ofPartitionsMap(pVars, domain, computeStorageMap);
+                return new StructuralPropertiesVector(pp, propsLocal);
             }
         };
     }

@@ -21,12 +21,10 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.algebra.base.OperatorAnnotation;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -96,8 +94,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             context.addToDontApplySet(this, op1);
         }
         if (res && op1.getOperatorTag() == LogicalOperatorTag.SELECT) {
-            // checking if we can annotate a Selection as using just one field
-            // access
+            // checking if we can annotate a Selection as using just one field access
             SelectOperator sigma = (SelectOperator) op1;
             List<LogicalVariable> vars = new ArrayList<>();
             VariableUtilities.getUsedVariables(sigma, vars);
@@ -107,8 +104,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                 ILogicalExpression expr1 = getFirstExpr(assign1);
                 if (FunctionUtil.isFieldAccessFunction(expr1)) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr1;
-                    // f should be a call to a field/data access kind of
-                    // function
+                    // f should be a call to a field/data access kind of function
                     sigma.getAnnotations().put(OperatorAnnotation.FIELD_ACCESS, f.getArguments().get(0));
                 }
             }
@@ -144,7 +140,9 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     LogicalVariable v = context.newVar();
                     AssignOperator a2 = new AssignOperator(v, new MutableObject<>(f));
                     a2.setSourceLocation(expr.getSourceLocation());
-                    pushFieldAssign(a2, topOp, context);
+                    if (!pushFieldAssign(a2, topOp, context)) {
+                        return false;
+                    }
                     context.computeAndSetTypeEnvironmentForOperator(a2);
                     ILogicalExpression arg = f.getArguments().get(0).getValue();
                     if (arg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -183,59 +181,59 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private static void pushFieldAssign(AssignOperator a2, AbstractLogicalOperator topOp, IOptimizationContext context)
-            throws AlgebricksException {
+    private static boolean pushFieldAssign(AssignOperator a2, AbstractLogicalOperator topOp,
+            IOptimizationContext context) throws AlgebricksException {
         if (topOp.getInputs().size() == 1 && !topOp.hasNestedPlans()) {
             Mutable<ILogicalOperator> topChild = topOp.getInputs().get(0);
-            // plugAccessAboveOp(a2, topChild, context);
             List<Mutable<ILogicalOperator>> a2InptList = a2.getInputs();
-            a2InptList.clear();
             a2InptList.add(topChild);
             // and link it as child in the op. tree
             topOp.getInputs().set(0, new MutableObject<>(a2));
             findAndEliminateRedundantFieldAccess(a2, context);
+            return true;
         } else { // e.g., a join
-            LinkedList<LogicalVariable> usedInAccess = new LinkedList<LogicalVariable>();
+            Set<LogicalVariable> usedInAccess = new HashSet<>();
             VariableUtilities.getUsedVariables(a2, usedInAccess);
 
-            LinkedList<LogicalVariable> produced2 = new LinkedList<LogicalVariable>();
+            Set<LogicalVariable> produced2 = new HashSet<>();
             VariableUtilities.getProducedVariables(topOp, produced2);
 
             if (OperatorPropertiesUtil.disjoint(produced2, usedInAccess)) {
+                Set<LogicalVariable> inputLiveVars = new HashSet<>();
                 for (Mutable<ILogicalOperator> inp : topOp.getInputs()) {
-                    HashSet<LogicalVariable> v2 = new HashSet<LogicalVariable>();
-                    VariableUtilities.getLiveVariables(inp.getValue(), v2);
-                    if (!OperatorPropertiesUtil.disjoint(usedInAccess, v2)) {
-                        pushAccessAboveOpRef(a2, inp, context);
-                        return;
+                    inputLiveVars.clear();
+                    VariableUtilities.getLiveVariables(inp.getValue(), inputLiveVars);
+                    // push the assign to the correct branch that contains all the used vars
+                    if (inputLiveVars.containsAll(usedInAccess)) {
+                        pushAccessThroughOp(a2, inp, context);
+                        return true;
                     }
                 }
                 if (topOp.hasNestedPlans()) {
                     AbstractOperatorWithNestedPlans nestedOp = (AbstractOperatorWithNestedPlans) topOp;
                     for (ILogicalPlan plan : nestedOp.getNestedPlans()) {
                         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-                            HashSet<LogicalVariable> v2 = new HashSet<LogicalVariable>();
-                            VariableUtilities.getLiveVariables(root.getValue(), v2);
-                            if (!OperatorPropertiesUtil.disjoint(usedInAccess, v2)) {
-                                pushAccessAboveOpRef(a2, root, context);
-                                return;
+                            inputLiveVars.clear();
+                            VariableUtilities.getLiveVariables(root.getValue(), inputLiveVars);
+                            if (inputLiveVars.containsAll(usedInAccess)) {
+                                pushAccessThroughOp(a2, root, context);
+                                return true;
                             }
                         }
                     }
                 }
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, a2.getSourceLocation(),
-                        "Field access " + getFirstExpr(a2) + " does not correspond to any input");
             }
         }
+        return false;
     }
 
     /**
-     * Pushes one field-access assignment above toPushThroughChildRef
+     * Pushes one field-access assignment through toPushThroughChildRef
      *
      * @param toPush
      * @param toPushThroughChildRef
      */
-    private static void pushAccessAboveOpRef(AssignOperator toPush, Mutable<ILogicalOperator> toPushThroughChildRef,
+    private static void pushAccessThroughOp(AssignOperator toPush, Mutable<ILogicalOperator> toPushThroughChildRef,
             IOptimizationContext context) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> tpInpList = toPush.getInputs();
         tpInpList.clear();

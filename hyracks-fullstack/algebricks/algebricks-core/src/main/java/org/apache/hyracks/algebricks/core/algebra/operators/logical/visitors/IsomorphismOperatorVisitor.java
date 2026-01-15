@@ -176,21 +176,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         GroupByOperator argOp = (GroupByOperator) arg;
         List<ILogicalPlan> plans = op.getNestedPlans();
         List<ILogicalPlan> plansArg = argOp.getNestedPlans();
-        for (int i = 0; i < plans.size(); i++) {
-            List<Mutable<ILogicalOperator>> roots = plans.get(i).getRoots();
-            List<Mutable<ILogicalOperator>> rootsArg = plansArg.get(i).getRoots();
-            if (roots.size() != rootsArg.size()) {
-                return Boolean.FALSE;
-            }
-            for (int j = 0; j < roots.size(); j++) {
-                ILogicalOperator topOp1 = roots.get(j).getValue();
-                ILogicalOperator topOp2 = rootsArg.get(j).getValue();
-                isomorphic = IsomorphismUtilities.isOperatorIsomorphicPlanSegment(topOp1, topOp2);
-                if (!isomorphic) {
-                    return Boolean.FALSE;
-                }
-            }
-        }
+        isomorphic = compareSubplans(plans, plansArg);
         return isomorphic;
     }
 
@@ -344,25 +330,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (aop.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return Boolean.FALSE;
         }
-        SubplanOperator subplanOpArg = (SubplanOperator) copyAndSubstituteVar(op, arg);
         List<ILogicalPlan> plans = op.getNestedPlans();
-        List<ILogicalPlan> plansArg = subplanOpArg.getNestedPlans();
-        for (int i = 0; i < plans.size(); i++) {
-            List<Mutable<ILogicalOperator>> roots = plans.get(i).getRoots();
-            List<Mutable<ILogicalOperator>> rootsArg = plansArg.get(i).getRoots();
-            if (roots.size() == rootsArg.size()) {
-                return Boolean.FALSE;
-            }
-            for (int j = 0; j < roots.size(); j++) {
-                ILogicalOperator topOp1 = roots.get(j).getValue();
-                ILogicalOperator topOp2 = rootsArg.get(j).getValue();
-                boolean isomorphic = IsomorphismUtilities.isOperatorIsomorphicPlanSegment(topOp1, topOp2);
-                if (!isomorphic) {
-                    return Boolean.FALSE;
-                }
-            }
-        }
-        return Boolean.TRUE;
+        List<ILogicalPlan> plansArg = ((SubplanOperator) arg).getNestedPlans();
+        return compareSubplans(plans, plansArg);
     }
 
     @Override
@@ -646,7 +616,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
 
         // Check our nested plans as well.
-        return compareSubplans(op.getNestedPlans(), insertOpArg.getNestedPlans());
+        return compareSubplans(op.getNestedPlans(), ((IndexInsertDeleteUpsertOperator) arg).getNestedPlans());
     }
 
     @Override
@@ -702,7 +672,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return false;
         }
         List<ILogicalPlan> plans = op.getNestedPlans();
-        List<ILogicalPlan> plansArg = windowOpArg.getNestedPlans();
+        List<ILogicalPlan> plansArg = ((WindowOperator) arg).getNestedPlans();
         boolean isomorphic = compareSubplans(plans, plansArg);
         return isomorphic;
     }

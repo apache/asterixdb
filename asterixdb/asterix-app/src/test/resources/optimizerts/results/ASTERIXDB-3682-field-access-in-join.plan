@@ -1,0 +1,312 @@
+distribute result [$$462]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$462] <- [to-object-var-str($$609)] project: [$$462]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$609])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$544(ASC), $$545(ASC), $$546(ASC), $$547(ASC) ]  |PARTITIONED|
+          order (ASC, $$544) (ASC, $$545) (ASC, $$546) (ASC, $$547)
+          -- STABLE_SORT [$$544(ASC), $$545(ASC), $$546(ASC), $$547(ASC)]  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              assign [$$544, $$545, $$546, $$547] <- [$$609.getField("join_key2"), $$609.getField("wsc"), $$609.getField("lcd"), $$609.getField("wsd")]
+              -- ASSIGN  |PARTITIONED|
+                select (and(like($$471, "%"), not(is-missing($$471)))) project: [$$609]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$471] <- [$$609.getField("bco")]
+                  -- ASSIGN  |PARTITIONED|
+                    assign [$$609] <- [object-concat-strict(to-object-var-str($$343), {"lov_cKey": $$481, "wsd": $$620, "wsm": $$621, "wsc": $$528, "scKey": $$619, "wpdi": $$524, "bch": $$540, "omaa": $$541, "bco": uppercase(substring($$540, 0, position($$540, "_")))})] project: [$$609]
+                    -- ASSIGN  |PARTITIONED|
+                      select (and(like(object-concat-strict(to-object-var-str($$343), {"lov_cKey": $$481, "wsd": $$408.getField(3), "wsm": $$408.getField(4), "wsc": $$408.getField("wsc"), "scKey": $$619, "wpdi": $$524, "bch": $$540, "omaa": $$541, "bco": uppercase(substring($$540, 0, position($$540, "_")))}).getField("bch"), "%"), like(object-concat-strict(to-object-var-str($$343), {"lov_cKey": $$481, "wsd": $$408.getField(3), "wsm": $$408.getField(4), "wsc": $$408.getField("wsc"), "scKey": $$619, "wpdi": $$524, "bch": $$540, "omaa": $$541, "bco": uppercase(substring($$540, 0, position($$540, "_")))}).getField("scKey"), "%"), like(object-concat-strict(to-object-var-str($$343), {"lov_cKey": $$481, "wsd": $$408.getField(3), "wsm": $$408.getField(4), "wsc": $$408.getField("wsc"), "scKey": $$619, "wpdi": $$524, "bch": $$540, "omaa": $$541, "bco": uppercase(substring($$540, 0, position($$540, "_")))}).getField("wsc"), "%"), like(object-concat-strict(to-object-var-str($$343), {"lov_cKey": $$481, "wsd": $$408.getField(3), "wsm": $$408.getField(4), "wsc": $$408.getField("wsc"), "scKey": $$619, "wpdi": $$524, "bch": $$540, "omaa": $$541, "bco": uppercase(substring($$540, 0, position($$540, "_")))}).getField("join_key2"), "%"))) project: [$$343, $$481, $$620, $$621, $$528, $$619, $$524, $$540, $$541]
+                      -- STREAM_SELECT  |PARTITIONED|
+                        project ([$$343, $$481, $$620, $$621, $$528, $$619, $$524, $$408, $$540, $$541])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            join (eq($$491, $$524))
+                            -- HYBRID_HASH_JOIN [$$524][$$491]  |PARTITIONED|
+                              exchange
+                              -- HASH_PARTITION_EXCHANGE [$$524]  |PARTITIONED|
+                                project ([$$343, $$481, $$620, $$621, $$528, $$619, $$524, $$408])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (and(eq($$616, $$618), eq($$481, $$619)))
+                                    -- HYBRID_HASH_JOIN [$$616, $$481][$$618, $$619]  |PARTITIONED|
+                                      exchange
+                                      -- HASH_PARTITION_EXCHANGE [$$616, $$481]  |PARTITIONED|
+                                        project ([$$343, $$481, $$616])
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            join (eq($$uniqueID, $$504))
+                                            -- HYBRID_HASH_JOIN [$$504][$$uniqueID]  |PARTITIONED|
+                                              exchange
+                                              -- HASH_PARTITION_EXCHANGE [$$504]  |PARTITIONED|
+                                                assign [$$343] <- [{"join_key2": $$616, "lov13_wsx1": substring($$480, 0, 7), "lcd": substring($$480, 0, 10), "lov13_name": $$482, "lov13_uunn": $$504, "lov13_t0_dd": $$617, "lov13_t0_ff": substring($$617, 0, 19)}] project: [$$343, $$616, $$504]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  assign [$$617] <- [to-string($$u_val.getField("t0"))] project: [$$480, $$504, $$482, $$616, $$617]
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    select (not(is-null($$616)))
+                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                      assign [$$616] <- [substring(if-missing-or-null(if-missing-or-null($$476.getField("someId1"), $$476.getField("someId2")), $$476.getField("someId3")), 0, 38)] project: [$$480, $$504, $$482, $$u_val, $$616]
+                                                      -- ASSIGN  |PARTITIONED|
+                                                        assign [$$476] <- [$$u_val.getField("marop")]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          unnest $$u_val <- scan-collection($$310) project: [$$480, $$504, $$482, $$u_val]
+                                                          -- UNNEST  |PARTITIONED|
+                                                            project ([$$480, $$504, $$482, $$310])
+                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                              subplan {
+                                                                        aggregate [$$310] <- [listify($$309)]
+                                                                        -- AGGREGATE  |LOCAL|
+                                                                          assign [$$309] <- [{"marop": $$483, "t0": $$503}]
+                                                                          -- ASSIGN  |LOCAL|
+                                                                            select (and(eq($$502, "iap"), not(is-unknown($$483)))) project: [$$503, $$483]
+                                                                            -- STREAM_SELECT  |LOCAL|
+                                                                              assign [$$503, $$483, $$502] <- [$$item2.getField("t0"), $$item2.getField("marop"), $$item2.getField("ua")] project: [$$503, $$483, $$502]
+                                                                              -- ASSIGN  |LOCAL|
+                                                                                unnest $$item2 <- scan-collection($$501) project: [$$item2]
+                                                                                -- UNNEST  |LOCAL|
+                                                                                  project ([$$501])
+                                                                                  -- STREAM_PROJECT  |LOCAL|
+                                                                                    nested tuple source
+                                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                     }
+                                                              -- SUBPLAN  |PARTITIONED|
+                                                                select (not(or(eq($$482, "p1"), eq($$482, "p2"), eq($$482, "p3"))))
+                                                                -- STREAM_SELECT  |PARTITIONED|
+                                                                  project ([$$480, $$504, $$501, $$482])
+                                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                                    exchange
+                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      join (eq($$485, $$295))
+                                                                      -- HYBRID_HASH_JOIN [$$295][$$485]  |PARTITIONED|
+                                                                        exchange
+                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          assign [$$295] <- [get-item(split($$482, " "), 0)]
+                                                                          -- ASSIGN  |PARTITIONED|
+                                                                            assign [$$501, $$482] <- [$$item.getField("value"), $$item.getField("name")] project: [$$480, $$504, $$501, $$482]
+                                                                            -- ASSIGN  |PARTITIONED|
+                                                                              unnest $$item <- scan-collection(object-pairs($$492)) project: [$$480, $$504, $$item]
+                                                                              -- UNNEST  |PARTITIONED|
+                                                                                select ($$282) project: [$$480, $$504, $$492]
+                                                                                -- STREAM_SELECT  |PARTITIONED|
+                                                                                  project ([$$282, $$480, $$504, $$492])
+                                                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                                                    exchange
+                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                      group by ([$$566 := $$472]) decor ([$$480; $$504; $$492]) {
+                                                                                                aggregate [$$282] <- [non-empty-stream()]
+                                                                                                -- AGGREGATE  |LOCAL|
+                                                                                                  select (not(is-missing($$565)))
+                                                                                                  -- STREAM_SELECT  |LOCAL|
+                                                                                                    project ([$$565])
+                                                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                                                      nested tuple source
+                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                             }
+                                                                                      -- PRE_CLUSTERED_GROUP_BY[$$472]  |PARTITIONED|
+                                                                                        exchange
+                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                          order (ASC, $$472)
+                                                                                          -- STABLE_SORT [$$472(ASC)]  |PARTITIONED|
+                                                                                            exchange
+                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                              project ([$$504, $$480, $$492, $$565, $$472])
+                                                                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                exchange
+                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                  left outer join (eq($$472, $$564))
+                                                                                                  -- HYBRID_HASH_JOIN [$$472][$$564]  |PARTITIONED|
+                                                                                                    exchange
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                      select (and(eq($$b.getField("t"), "lovStat"), not(and(eq(len($$614), 1), eq(get-item($$614, 0), "some_str"))))) project: [$$504, $$480, $$492, $$472]
+                                                                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                                                                        assign [$$614] <- [object-names($$492)]
+                                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                                          assign [$$504, $$480, $$492] <- [$$b.getField("uunn"), $$b.getField("qwer"), $$b.getField("ihsaa")]
+                                                                                                          -- ASSIGN  |PARTITIONED|
+                                                                                                            exchange
+                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                              data-scan []<-[$$472, $$b] <- test.col2
+                                                                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                                exchange
+                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                  empty-tuple-source
+                                                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                    exchange
+                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                      assign [$$565] <- [true]
+                                                                                                      -- ASSIGN  |PARTITIONED|
+                                                                                                        project ([$$564])
+                                                                                                        -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                          exchange
+                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                            join (eq($$484, $$271))
+                                                                                                            -- HYBRID_HASH_JOIN [$$271][$$484]  |PARTITIONED|
+                                                                                                              exchange
+                                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                select ($$280) project: [$$564, $$271]
+                                                                                                                -- STREAM_SELECT  |PARTITIONED|
+                                                                                                                  project ([$$564, $$271, $$280])
+                                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                    subplan {
+                                                                                                                              aggregate [$$280] <- [non-empty-stream()]
+                                                                                                                              -- AGGREGATE  |LOCAL|
+                                                                                                                                select (and(eq($$499, "iap"), not(is-unknown($$498))))
+                                                                                                                                -- STREAM_SELECT  |LOCAL|
+                                                                                                                                  assign [$$499, $$498] <- [$$item2.getField("ua"), $$item2.getField("marop")] project: [$$499, $$498]
+                                                                                                                                  -- ASSIGN  |LOCAL|
+                                                                                                                                    unnest $$item2 <- scan-collection($$497) project: [$$item2]
+                                                                                                                                    -- UNNEST  |LOCAL|
+                                                                                                                                      project ([$$497])
+                                                                                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                        nested tuple source
+                                                                                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                           }
+                                                                                                                    -- SUBPLAN  |PARTITIONED|
+                                                                                                                      assign [$$271, $$497] <- [get-item(split($$item.getField("name"), " "), 0), $$item.getField("value")] project: [$$564, $$271, $$497]
+                                                                                                                      -- ASSIGN  |PARTITIONED|
+                                                                                                                        unnest $$item <- scan-collection(object-pairs($$560)) project: [$$564, $$item]
+                                                                                                                        -- UNNEST  |PARTITIONED|
+                                                                                                                          select (and(not(and(eq(len($$615), 1), eq(get-item($$615, 0), "some_str"))), eq($$561.getField("t"), "lovStat"))) project: [$$564, $$560]
+                                                                                                                          -- STREAM_SELECT  |PARTITIONED|
+                                                                                                                            assign [$$615] <- [object-names($$560)]
+                                                                                                                            -- ASSIGN  |PARTITIONED|
+                                                                                                                              assign [$$560] <- [$$561.getField("ihsaa")]
+                                                                                                                              -- ASSIGN  |PARTITIONED|
+                                                                                                                                exchange
+                                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                  data-scan []<-[$$564, $$561] <- test.col2
+                                                                                                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                                                    exchange
+                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                      empty-tuple-source
+                                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                              exchange
+                                                                                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                                unnest $$484 <- scan-collection(array: [ "X", "Y" ])
+                                                                                                                -- UNNEST  |UNPARTITIONED|
+                                                                                                                  empty-tuple-source
+                                                                                                                  -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                                        exchange
+                                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                          unnest $$485 <- scan-collection(array: [ "X", "Y" ])
+                                                                          -- UNNEST  |UNPARTITIONED|
+                                                                            empty-tuple-source
+                                                                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                              exchange
+                                              -- HASH_PARTITION_EXCHANGE [$$uniqueID]  |PARTITIONED|
+                                                unnest $$uniqueID <- scan-collection($$520) project: [$$481, $$uniqueID]
+                                                -- UNNEST  |PARTITIONED|
+                                                  assign [$$520] <- [array-star($$p.getField("members")).getField("uniqueID")] project: [$$481, $$520]
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    select (and(eq($$p.getField("r"), "uuu"), eq($$p.getField("t"), "ccc"), not(is-missing($$481))))
+                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                      assign [$$481] <- [$$p.getField("cKey")]
+                                                      -- ASSIGN  |PARTITIONED|
+                                                        assign [$$p] <- [$$p2] project: [$$p]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          exchange
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            replicate
+                                                            -- REPLICATE  |PARTITIONED|
+                                                              exchange
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                project ([$$p2])
+                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                  exchange
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    data-scan []<-[$$474, $$p2] <- test.col1
+                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      exchange
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        empty-tuple-source
+                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
+                                      -- HASH_PARTITION_EXCHANGE [$$618, $$619]  |PARTITIONED|
+                                        assign [$$408] <- [{"join_key1": $$618, "wpdi": $$524, "wsc": $$528, "scKey": $$619, "wwlps": $$401, "wsd": $$620, "wsm": $$621}] project: [$$620, $$621, $$528, $$619, $$524, $$408, $$618]
+                                        -- ASSIGN  |PARTITIONED|
+                                          assign [$$621, $$620, $$619, $$618] <- [substring($$531, 0, 7), substring($$531, 0, 10), uppercase(substring($$528, 0, position($$528, "_"))), substring($$526, 0, 38)] project: [$$528, $$524, $$401, $$621, $$620, $$619, $$618]
+                                          -- ASSIGN  |PARTITIONED|
+                                            project ([$$528, $$524, $$531, $$526, $$401])
+                                            -- STREAM_PROJECT  |PARTITIONED|
+                                              subplan {
+                                                        aggregate [$$401] <- [listify($$400)]
+                                                        -- AGGREGATE  |LOCAL|
+                                                          assign [$$400] <- [$$item.getField("wkps")]
+                                                          -- ASSIGN  |LOCAL|
+                                                            unnest $$item <- scan-collection($$525) project: [$$item]
+                                                            -- UNNEST  |LOCAL|
+                                                              project ([$$525])
+                                                              -- STREAM_PROJECT  |LOCAL|
+                                                                nested tuple source
+                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                     }
+                                              -- SUBPLAN  |PARTITIONED|
+                                                project ([$$528, $$524, $$531, $$526, $$525])
+                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    join (eq($$488, $$373))
+                                                    -- HYBRID_HASH_JOIN [$$373][$$488]  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        select (and(eq($$p2.getField("t"), "ak1"), not(is-missing($$524)), not(is-missing($$556)))) project: [$$528, $$524, $$531, $$526, $$525, $$373]
+                                                        -- STREAM_SELECT  |PARTITIONED|
+                                                          assign [$$531, $$528, $$526, $$525, $$524] <- [$$556.getField("ssatt"), $$556.getField("stchk"), $$p2.getField("ed"), $$556.getField("intib"), $$556.getField("coaed")]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            assign [$$373, $$556] <- [$$p2.getField("ha"), $$p2.getField("kat")]
+                                                            -- ASSIGN  |PARTITIONED|
+                                                              exchange
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                replicate
+                                                                -- REPLICATE  |PARTITIONED|
+                                                                  exchange
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    project ([$$p2])
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        data-scan []<-[$$474, $$p2] <- test.col1
+                                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                          exchange
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            empty-tuple-source
+                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                      exchange
+                                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        unnest $$488 <- scan-collection(array: [ "l1", "l2" ])
+                                                        -- UNNEST  |UNPARTITIONED|
+                                                          empty-tuple-source
+                                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                              exchange
+                              -- HASH_PARTITION_EXCHANGE [$$491]  |PARTITIONED|
+                                assign [$$541, $$540] <- [$$470.getField("omaa"), $$470.getField("qaz")] project: [$$540, $$541, $$491]
+                                -- ASSIGN  |PARTITIONED|
+                                  select (not(is-missing($$470)))
+                                  -- STREAM_SELECT  |PARTITIONED|
+                                    assign [$$491, $$470] <- [$$sbr.getField("ed"), $$sbr.getField("tohac")] project: [$$491, $$470]
+                                    -- ASSIGN  |PARTITIONED|
+                                      assign [$$sbr] <- [$$p2] project: [$$sbr]
+                                      -- ASSIGN  |PARTITIONED|
+                                        exchange
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          replicate
+                                          -- REPLICATE  |PARTITIONED|
+                                            exchange
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              project ([$$p2])
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  data-scan []<-[$$474, $$p2] <- test.col1
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
+                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
