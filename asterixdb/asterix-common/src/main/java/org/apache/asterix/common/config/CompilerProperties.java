@@ -28,6 +28,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
@@ -67,7 +68,7 @@ public class CompilerProperties extends AbstractProperties {
                 StorageUtil.getIntSizeInBytes(8, KILOBYTE),
                 "The memory budget (in bytes) for an external scan operator instance in a partition"),
         COMPILER_FRAMESIZE(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, KILOBYTE),
                 "The page size (in bytes) for computation"),
         COMPILER_MIN_SORTMEMORY(
@@ -195,6 +196,8 @@ public class CompilerProperties extends AbstractProperties {
             return this == COMPILER_EXTERNALSCANMEMORY || this == COMPILER_CBOTEST;
         }
     }
+
+    public static final String COMPILER_FRAMESIZE_KEY = Option.COMPILER_FRAMESIZE.ini();
 
     public static final String COMPILER_SORTMEMORY_KEY = Option.COMPILER_SORTMEMORY.ini();
 

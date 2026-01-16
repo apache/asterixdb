@@ -158,7 +158,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
     private static int getSortNumFrames(MetadataProvider metadataProvider, SourceLocation sourceLoc)
             throws AlgebricksException {
         return OptimizationConfUtil.getSortNumFrames(metadataProvider.getApplicationContext().getCompilerProperties(),
-                metadataProvider.getConfig(), sourceLoc);
+                metadataProvider.getConfig(), sourceLoc,
+                metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
     }
 
     public static ISecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,

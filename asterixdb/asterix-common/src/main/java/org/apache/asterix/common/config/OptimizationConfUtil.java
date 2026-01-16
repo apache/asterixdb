@@ -51,8 +51,8 @@ public class OptimizationConfUtil {
     public static PhysicalOptimizationConfig createPhysicalOptimizationConf(CompilerProperties compilerProperties,
             Map<String, Object> querySpecificConfig, Set<String> parameterNames, SourceLocation sourceLoc)
             throws AlgebricksException {
-        int frameSize = compilerProperties.getFrameSize();
-        int sortFrameLimit = getSortNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
+        int frameSize = getFrameSize(compilerProperties, querySpecificConfig, sourceLoc);
+        int sortFrameLimit = getSortNumFrames(compilerProperties, querySpecificConfig, sourceLoc, frameSize);
         int groupFrameLimit = getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
                 compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
@@ -62,7 +62,8 @@ public class OptimizationConfUtil {
         int windowFrameLimit = getFrameLimit(CompilerProperties.COMPILER_WINDOWMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_WINDOWMEMORY_KEY),
                 compilerProperties.getWindowMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_WINDOW, sourceLoc);
-        int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
+        int textSearchFrameLimit =
+                getTextSearchNumFrames(compilerProperties, frameSize, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
                 compilerProperties.getSortParallel());
@@ -143,6 +144,21 @@ public class OptimizationConfUtil {
         return physOptConf;
     }
 
+    private static int getFrameSize(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        String queryFrameSize = (String) querySpecificConfig.get(CompilerProperties.COMPILER_FRAMESIZE_KEY);
+        if (queryFrameSize == null) {
+            return compilerProperties.getFrameSize();
+        }
+        @SuppressWarnings("unchecked")
+        IOptionType<Integer> type = CompilerProperties.Option.COMPILER_FRAMESIZE.type();
+        try {
+            return type.parse(queryFrameSize);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
+        }
+    }
+
     private static int getExternalScanBufferSize(String externalScanMemorySizeParameter,
             int compilerExternalScanMemorySize, SourceLocation sourceLoc) throws AsterixException {
         IOptionType<Integer> intByteParser = OptionTypes.INTEGER_BYTE_UNIT;
@@ -155,27 +171,25 @@ public class OptimizationConfUtil {
     }
 
     public static int getSortNumFrames(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,
-            SourceLocation sourceLoc) throws AlgebricksException {
+            SourceLocation sourceLoc, int frameSize) throws AlgebricksException {
         return getFrameLimit(CompilerProperties.COMPILER_SORTMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
-                compilerProperties.getSortMemorySize(), compilerProperties.getFrameSize(), MIN_FRAME_LIMIT_FOR_SORT,
-                sourceLoc);
+                compilerProperties.getSortMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_SORT, sourceLoc);
     }
 
     public static int getGroupByNumFrames(CompilerProperties compilerProperties,
-            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc, int frameSize)
+            throws AlgebricksException {
         return getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
-                compilerProperties.getGroupMemorySize(), compilerProperties.getFrameSize(),
-                MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
+                compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
     }
 
-    public static int getTextSearchNumFrames(CompilerProperties compilerProperties,
+    public static int getTextSearchNumFrames(CompilerProperties compilerProperties, int frameSize,
             Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
         return getFrameLimit(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY),
-                compilerProperties.getTextSearchMemorySize(), compilerProperties.getFrameSize(),
-                MIN_FRAME_LIMIT_FOR_TEXT_SEARCH, sourceLoc);
+                compilerProperties.getTextSearchMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_TEXT_SEARCH, sourceLoc);
     }
 
     @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
@@ -190,8 +204,8 @@ public class OptimizationConfUtil {
         }
         int frameLimit = (int) (memBudget / frameSize);
         if (frameLimit < minFrameLimit) {
-            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc, parameterName,
-                    frameSize * minFrameLimit, "bytes");
+            throw AsterixException.create(ErrorCode.INVALID_FRAME_BASED_MEMORY_BUDGET, sourceLoc, parameterName,
+                    memBudget, frameSize, minFrameLimit, frameSize * minFrameLimit, "bytes");
         }
         // sets the frame limit to the minimum frame limit if the calculated frame limit is too small.
         return Math.max(frameLimit, minFrameLimit);

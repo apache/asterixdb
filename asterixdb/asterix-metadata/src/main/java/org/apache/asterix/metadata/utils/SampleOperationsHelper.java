@@ -380,6 +380,6 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
             throws AlgebricksException {
         return OptimizationConfUtil.getGroupByNumFrames(
                 metadataProvider.getApplicationContext().getCompilerProperties(), metadataProvider.getConfig(),
-                sourceLoc);
+                sourceLoc, metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
     }
 }
