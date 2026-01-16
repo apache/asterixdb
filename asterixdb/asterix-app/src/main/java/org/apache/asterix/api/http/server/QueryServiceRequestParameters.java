@@ -85,7 +85,8 @@ public class QueryServiceRequestParameters {
         MAX_WARNINGS("max-warnings"),
         SQL_COMPAT("sql-compat"),
         SOURCE("source"),
-        INCLUDE_HOST("include-host");
+        INCLUDE_HOST("include-host"),
+        RESULT_TTL("result-ttl");
 
         private final String str;
 
@@ -157,6 +158,7 @@ public class QueryServiceRequestParameters {
     private long timeout = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
     private long maxResultReads = 1L;
     private long maxWarnings = 0L;
+    private long resultTtlInMillis = -1L; // -1 means use system default
     private boolean includeHost = false;
 
     public String getHost() {
@@ -412,6 +414,14 @@ public class QueryServiceRequestParameters {
         return maxWarnings;
     }
 
+    public long getResultTtlInMillis() {
+        return resultTtlInMillis;
+    }
+
+    public void setResultTtlInMillis(long resultTtlInMillis) {
+        this.resultTtlInMillis = resultTtlInMillis;
+    }
+
     public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
@@ -446,6 +456,7 @@ public class QueryServiceRequestParameters {
         object.put("parseOnly", parseOnly);
         object.put("readOnly", readOnly);
         object.put("maxWarnings", maxWarnings);
+        object.put("resultTtl", resultTtlInMillis);
         object.put("sqlCompat", sqlCompatMode);
         object.put("source", source);
         if (statementParams != null) {
@@ -525,6 +536,7 @@ public class QueryServiceRequestParameters {
         setTimeout(parseTime(req, Parameter.TIMEOUT.str(), valGetter, getTimeout()));
         setMaxResultReads(parseLong(req, Parameter.MAX_RESULT_READS.str(), valGetter, getMaxResultReads()));
         setMaxWarnings(parseLong(req, Parameter.MAX_WARNINGS.str(), valGetter, getMaxWarnings()));
+        setResultTtlInMillis(parseTime(req, Parameter.RESULT_TTL.str(), valGetter, getResultTtlInMillis()));
 
         setPretty(parseBoolean(req, Parameter.PRETTY.str(), valGetter, isPretty()));
         setExpressionTree(parseBoolean(req, Parameter.EXPRESSION_TREE.str(), valGetter, isExpressionTree()));

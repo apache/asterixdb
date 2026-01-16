@@ -21,19 +21,26 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 
 public class ResultProperties implements Serializable {
-    private static final long serialVersionUID = -4741260459407538016L;
+    private static final long serialVersionUID = -4741260459407538017L;
 
     public static final long DEFAULT_MAX_READS = 1;
+    public static final long DEFAULT_RESULT_TTL = -1L; // -1 means use system default
     private final IStatementExecutor.ResultDelivery delivery;
     private final long maxReads;
+    private final long resultTtlInMillis;
 
     public ResultProperties(IStatementExecutor.ResultDelivery delivery) {
-        this(delivery, DEFAULT_MAX_READS);
+        this(delivery, DEFAULT_MAX_READS, DEFAULT_RESULT_TTL);
     }
 
     public ResultProperties(IStatementExecutor.ResultDelivery delivery, long maxReads) {
+        this(delivery, maxReads, DEFAULT_RESULT_TTL);
+    }
+
+    public ResultProperties(IStatementExecutor.ResultDelivery delivery, long maxReads, long resultTtlInMillis) {
         this.delivery = delivery;
         this.maxReads = maxReads;
+        this.resultTtlInMillis = resultTtlInMillis;
     }
 
     public IStatementExecutor.ResultDelivery getDelivery() {
@@ -44,11 +51,15 @@ public class ResultProperties implements Serializable {
         return maxReads;
     }
 
+    public long getResultTtlInMillis() {
+        return resultTtlInMillis;
+    }
+
     public ResultProperties getNcToCcResultProperties() {
         if (delivery != IStatementExecutor.ResultDelivery.IMMEDIATE) {
             return this;
         }
         // switch IMMEDIATE to DEFERRED since the result will be severed by the NC
-        return new ResultProperties(IStatementExecutor.ResultDelivery.DEFERRED, maxReads);
+        return new ResultProperties(IStatementExecutor.ResultDelivery.DEFERRED, maxReads, resultTtlInMillis);
     }
 }

@@ -40,7 +40,7 @@ public abstract class AbstractResultManager implements IResultManager {
         final long sweepTime = System.nanoTime();
         for (JobId jobId : getJobIds()) {
             final IResultStateRecord state = getState(jobId);
-            if (state != null && hasExpired(state, sweepTime, nanoResultTTL)) {
+            if (state != null && hasExpired(state, sweepTime)) {
                 expiredResultSets.add(jobId);
             }
         }
@@ -49,7 +49,9 @@ public abstract class AbstractResultManager implements IResultManager {
         }
     }
 
-    private static boolean hasExpired(IResultStateRecord state, long currentTime, long ttl) {
+    private boolean hasExpired(IResultStateRecord state, long currentTime) {
+        // Use per-request TTL if set (> 0), otherwise use system default
+        long ttl = state.getResultTtlInNanos() > 0 ? state.getResultTtlInNanos() : nanoResultTTL;
         return currentTime - state.getTimestamp() - ttl > 0;
     }
 }

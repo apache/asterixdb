@@ -78,9 +78,10 @@ public class ResultJobRecord implements IResultStateRecord {
         }
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = LogManager.getLogger();
     private final long timestamp;
+    private final long resultTtlInNanos; // per-request TTL in nanoseconds, -1 for system default
     private long jobStartTime;
     private long jobEndTime;
     private Status status;
@@ -89,8 +90,9 @@ public class ResultJobRecord implements IResultStateRecord {
     private long resultCount;
     private boolean resultSetOrdered;
 
-    public ResultJobRecord(boolean resultSetOrdered) {
+    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos) {
         this.timestamp = System.nanoTime();
+        this.resultTtlInNanos = resultTtlInNanos;
         this.status = new Status();
         this.resultCount = 0;
         this.resultSetOrdered = resultSetOrdered;
@@ -145,6 +147,11 @@ public class ResultJobRecord implements IResultStateRecord {
     @Override
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public long getResultTtlInNanos() {
+        return resultTtlInNanos;
     }
 
     public Status getStatus() {

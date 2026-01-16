@@ -23,6 +23,7 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement.FIELD_TYPE_STOPWORDS;
 import static org.apache.hyracks.api.job.HyracksJobProperty.JOB_KIND;
+import static org.apache.hyracks.api.job.HyracksJobProperty.RESULT_TTL;
 import static org.apache.hyracks.control.nc.result.ResultState.UNLIMITED_READS;
 
 import java.io.FileInputStream;
@@ -5813,6 +5814,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            // Set per-request result TTL if specified (for async/deferred queries)
+            long resultTtl = requestParameters.getResultProperties().getResultTtlInMillis();
+            if (resultTtl > 0) {
+                jobSpec.setProperty(RESULT_TTL, TimeUnit.MILLISECONDS.toNanos(resultTtl));
+            }
             jobId = runTrackJob(hcc, jobSpec, jobFlags, reqId, requestParameters.getClientContextId(), clientRequest,
                     jobKind);
             if (jId != null) {

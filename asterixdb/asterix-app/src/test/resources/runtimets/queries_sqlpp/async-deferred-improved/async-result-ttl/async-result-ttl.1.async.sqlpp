@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
 
-public enum HyracksJobProperty implements IJobProperty {
-    JOB_KIND,
-    RESULT_SET_ORDERED,
-    RESULT_TTL
-}
+-- handlevariable=status
+-- param result-ttl=2s
+-- param include-host=false
+-- maxresultreads=2
+select i, i * i as i2 from range(1, 5) i;

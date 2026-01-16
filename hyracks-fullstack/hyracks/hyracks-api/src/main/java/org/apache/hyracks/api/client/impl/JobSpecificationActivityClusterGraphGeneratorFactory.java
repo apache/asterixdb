@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
+import org.apache.hyracks.api.job.HyracksJobProperty;
 import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobActivityGraph;
@@ -68,6 +69,11 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         acg.setFrameSize(spec.getFrameSize());
         acg.setMaxReattempts(spec.getMaxReattempts());
         acg.setMaxWarnings(spec.getMaxWarnings());
+        Long resultTtl = (Long) spec.getProperty(HyracksJobProperty.RESULT_TTL);
+        if (resultTtl != null) {
+            // Need to pass request level result ttl to NCs
+            acg.setResultTtlInNanos(resultTtl);
+        }
         acg.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
         acg.setGlobalJobDataFactory(spec.getGlobalJobDataFactory());
         acg.setConnectorPolicyAssignmentPolicy(spec.getConnectorPolicyAssignmentPolicy());

@@ -237,7 +237,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             }
             delivery = param.getMode();
             setSessionConfig(sessionOutput, param, delivery);
-            final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
+            final ResultProperties resultProperties =
+                    new ResultProperties(delivery, param.getMaxResultReads(), param.getResultTtlInMillis());
             buildResponseHeaders(requestRef, sessionOutput, param, responsePrinter, delivery);
             responsePrinter.printHeaders();
             validateStatement(statement);

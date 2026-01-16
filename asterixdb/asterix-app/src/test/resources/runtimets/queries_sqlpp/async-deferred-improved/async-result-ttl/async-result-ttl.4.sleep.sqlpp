@@ -16,10 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
 
-public enum HyracksJobProperty implements IJobProperty {
-    JOB_KIND,
-    RESULT_SET_ORDERED,
-    RESULT_TTL
-}
+-- Sleep for 5 seconds to allow result TTL (2s) to expire and sweeper (1s interval) to run
+5000
