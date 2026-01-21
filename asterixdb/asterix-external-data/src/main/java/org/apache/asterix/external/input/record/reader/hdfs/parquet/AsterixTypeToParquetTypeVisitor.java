@@ -44,6 +44,7 @@ import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.IntervalLogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.TimeLogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.TimestampLogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.UUIDLogicalTypeAnnotation;
@@ -261,6 +262,8 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         ATypeTag inferredTypeTag = ATypeTag.SYSTEM_NULL;
         if (logicalType == null || logicalType == LogicalTypeAnnotation.bsonType()) {
             inferredTypeTag = ATypeTag.BINARY;
+        } else if (logicalType instanceof IntervalLogicalTypeAnnotation) {
+            inferredTypeTag = ATypeTag.DURATION;
         } else if (logicalType == LogicalTypeAnnotation.stringType()
                 || logicalType == LogicalTypeAnnotation.enumType()) {
             inferredTypeTag = ATypeTag.STRING;

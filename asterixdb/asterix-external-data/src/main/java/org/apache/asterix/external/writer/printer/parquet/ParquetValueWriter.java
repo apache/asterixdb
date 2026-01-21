@@ -28,6 +28,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeseri
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
@@ -40,24 +41,29 @@ import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.parquet.bytes.BytesUtils;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.PrimitiveType;
 
 //This class reduces the number of Java objects created each time a column is written to a Parquet file by reusing the same VoidPointable for all columns within the file.
 public class ParquetValueWriter {
+    public static final int INTERVAL_BINARY_LENGTH = 12;
     public static final String LIST_FIELD = "list";
     public static final String ELEMENT_FIELD = "element";
 
     public static final String GROUP_TYPE_ERROR_FIELD = "group";
     public static final String PRIMITIVE_TYPE_ERROR_FIELD = "primitive";
+    public static final long MILLISECONDS_IN_A_DAY = 86_400_000L;
 
     private final VoidPointable voidPointable;
     private final ResettableByteArrayOutputStream byteArrayOutputStream;
+    private final FixedByteArrayOutputStream fixedLen12ByteStream;
 
     ParquetValueWriter() {
         this.voidPointable = VoidPointable.FACTORY.createPointable();
         this.byteArrayOutputStream = new ResettableByteArrayOutputStream();
+        fixedLen12ByteStream = new FixedByteArrayOutputStream(INTERVAL_BINARY_LENGTH);
     }
 
     private void addIntegerType(long value, PrimitiveType.PrimitiveTypeName primitiveTypeName, ATypeTag typeTag,
@@ -189,6 +195,35 @@ public class ParquetValueWriter {
                 long dateTimeValue = ADateTimeSerializerDeserializer.getChronon(b, s);
                 addIntegerType(dateTimeValue, primitiveTypeName, typeTag, recordConsumer);
                 break;
+            case DURATION:
+                if (primitiveTypeName != PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
+                        || type.getTypeLength() != 12) {
+                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
+                }
+
+                int months = ADurationSerializerDeserializer.getYearMonth(b, s);
+                long totalMillis = ADurationSerializerDeserializer.getDayTime(b, s);
+                long daysLong = Math.floorDiv(totalMillis, MILLISECONDS_IN_A_DAY);
+
+                if (daysLong < Integer.MIN_VALUE || daysLong > Integer.MAX_VALUE) {
+                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
+                }
+
+                int days = (int) daysLong;
+                long millisOfDayLong = totalMillis - (days * MILLISECONDS_IN_A_DAY);
+                int millisOfDay = (int) millisOfDayLong;
+
+                fixedLen12ByteStream.reset();
+                try {
+                    BytesUtils.writeIntLittleEndian(fixedLen12ByteStream, months);
+                    BytesUtils.writeIntLittleEndian(fixedLen12ByteStream, days);
+                    BytesUtils.writeIntLittleEndian(fixedLen12ByteStream, millisOfDay);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+
+                recordConsumer.addBinary(
+                        Binary.fromReusedByteArray(fixedLen12ByteStream.getByteArray(), 0, INTERVAL_BINARY_LENGTH));
             case UUID:
                 recordConsumer.addBinary(Binary.fromReusedByteArray(b, s, l));
                 break;

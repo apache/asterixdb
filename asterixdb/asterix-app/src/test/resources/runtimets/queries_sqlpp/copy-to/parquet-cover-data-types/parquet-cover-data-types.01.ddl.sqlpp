@@ -27,4 +27,8 @@ CREATE TYPE ColumnType1 AS {
   name : string
 };
 
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
+CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id WITH {
+    "storage-format": {
+        "format": "column"
+    }
+};

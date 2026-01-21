@@ -81,14 +81,18 @@ public class DurationValueReader extends AbstractValueReader {
         byte[] a = value.getByteArray();
         int ao = value.getStartOffset();
         int monthsA = IntegerPointable.getInteger(a, ao);
-        long millisA = LongPointable.getLong(a, ao + Integer.BYTES);
 
         byte[] b = other.getByteArray();
         int bo = other.getStartOffset();
         int monthsB = IntegerPointable.getInteger(b, bo);
-        long millisB = LongPointable.getLong(b, bo + Integer.BYTES);
 
         int cmp = Integer.compare(monthsA, monthsB);
-        return cmp != 0 ? cmp : Long.compare(millisA, millisB);
+        if (cmp != 0) {
+            return cmp;
+        }
+
+        long millisA = LongPointable.getLong(a, ao + Integer.BYTES);
+        long millisB = LongPointable.getLong(b, bo + Integer.BYTES);
+        return Long.compare(millisA, millisB);
     }
 }

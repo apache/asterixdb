@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
+import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.INTERVAL_BINARY_LENGTH;
+
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Types;
@@ -47,9 +49,19 @@ public class ParquetSchemaBuilderUtils {
     public static Types.Builder<?, ?> getPrimitiveChild(Types.Builder parent, PrimitiveType.PrimitiveTypeName type,
             LogicalTypeAnnotation annotation) {
         if (parent instanceof Types.BaseGroupBuilder) {
-            return ((Types.BaseGroupBuilder<?, ?>) parent).optional(type).as(annotation);
+            Types.PrimitiveBuilder<?> primitiveBuilder =
+                    ((Types.BaseGroupBuilder<?, ?>) parent).optional(type).as(annotation);
+            if (annotation instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
+                primitiveBuilder.length(INTERVAL_BINARY_LENGTH);
+            }
+            return primitiveBuilder;
         } else if (parent instanceof Types.BaseListBuilder) {
-            return ((Types.BaseListBuilder<?, ?>) parent).optionalElement(type).as(annotation);
+            Types.BaseListBuilder.ElementBuilder<?, ?> elementBuilder =
+                    ((Types.BaseListBuilder<?, ?>) parent).optionalElement(type).as(annotation);
+            if (annotation instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
+                elementBuilder.length(INTERVAL_BINARY_LENGTH);
+            }
+            return elementBuilder;
         } else {
             return null;
         }

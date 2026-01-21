@@ -36,10 +36,12 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ANull;
@@ -84,6 +86,9 @@ public class ParquetConverterContext extends ParserContext {
     private final ISerializerDeserializer<ADateTime> datetimeSerDer =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
     @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ADuration> durationSerDer =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
+    @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<ANull> nullSerDer =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
@@ -109,6 +114,7 @@ public class ParquetConverterContext extends ParserContext {
     private final AMutableDate mutableDate = new AMutableDate(0);
     private final AMutableTime mutableTime = new AMutableTime(0);
     private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
+    private final AMutableDuration mutableDuration = new AMutableDuration(0, 0);
 
     /*
      * ************************************************************************
@@ -292,6 +298,15 @@ public class ParquetConverterContext extends ParserContext {
         try {
             mutableDateTime.setValue(timestamp);
             datetimeSerDer.serialize(mutableDateTime, output);
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public void serializeDuration(int months, long milliseconds, DataOutput output) {
+        try {
+            mutableDuration.setValue(months, milliseconds);
+            durationSerDer.serialize(mutableDuration, output);
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
         }

@@ -72,6 +72,8 @@ public class PrimitiveConverterProvider {
                 return getTimeConverter(type, parent, stringFieldName, index, context);
             case DATETIME:
                 return getTimeStampConverter(type, parent, stringFieldName, index, context);
+            case DURATION:
+                return new IntervalConverter(parent, stringFieldName, index, context);
             case ANY:
                 return new JsonStringConverter(parent, stringFieldName, index, context);
             default:

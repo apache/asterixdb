@@ -24,7 +24,7 @@ COPY (
 ) toWriter
 TO %adapter%
 PATH (%pathprefix% "copy-to-result", "parquet-cover-data-types")
-TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime , uuidType : uuid  } )
+TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime, durationType: duration, uuidType : uuid  } )
 WITH {
     %template_colons%,
     %additionalProperties%

@@ -29,5 +29,5 @@ insert into TestCollection({"id":`year-month-duration`("P16Y"), "name": "John"})
 insert into TestCollection({"id":`day-time-duration`("-P3829H849.392S"), "name": "Alex"});
 */
 
-insert into TestCollection({"id":18, "name": "Virat" , "dateType":date("1988-11-05"), "timeType": time("03:10:00.493Z") , "boolType" : false , "doubleType" : 0.75, "datetimeType" : datetime("1900-02-01T00:00:00") , "uuidType" : uuid("95ca22dd-ef64-46f2-9c2a-a38005e23344")  });
+insert into TestCollection({"id":18, "name": "Virat" , "dateType":date("1988-11-05"), "timeType": time("03:10:00.493Z") , "boolType" : false , "doubleType" : 0.75, "datetimeType" : datetime("1900-02-01T00:00:00"), "durationType": duration("P5Y12M1DT24H24M1.012S"), "uuidType" : uuid("95ca22dd-ef64-46f2-9c2a-a38005e23344")  });
 
