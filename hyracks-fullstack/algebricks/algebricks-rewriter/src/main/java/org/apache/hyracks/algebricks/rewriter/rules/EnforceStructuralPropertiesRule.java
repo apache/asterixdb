@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
@@ -100,6 +101,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private static final String HASH_MERGE = "hash_merge";
     private static final String TRUE_CONSTANT = "true";
+    private static final String FALSE_CONSTANT = "false";
+    private static final String MISSING = "missing";
     private final FunctionIdentifier rangeMapFunction;
     private final FunctionIdentifier localSamplingFun;
     private final FunctionIdentifier typePropagatingFun;
@@ -645,9 +648,18 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             int childIndex, ILogicalOperator parentOp) {
         UnorderedPartitionedProperty rqd = (UnorderedPartitionedProperty) rqdPartitioning;
         List<LogicalVariable> vars = new ArrayList<>(rqd.getColumnSet());
-        String hashMergeHint = (String) ctx.getMetadataProvider().getConfig().get(HASH_MERGE);
-        if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
-            return new HashPartitionExchangePOperator(vars, domain, rqd.getPartitionsMap());
+        String hashMergeHint = (String) ctx.getMetadataProvider().getConfig().getOrDefault(HASH_MERGE, MISSING);
+        switch(hashMergeHint){
+            case TRUE_CONSTANT:
+               break;
+            case FALSE_CONSTANT:
+               return new HashPartitionExchangePOperator(vars, domain, rqd.getPartitionsMap());
+            case MISSING:
+            default:
+                //if no preference stated via SET statement, use hash merge iff it's part of a pre-sorted bulkload
+                if(!(parentOp instanceof InsertDeleteUpsertOperator insDelUpOp && insDelUpOp.isBulkload())){
+                        return new HashPartitionExchangePOperator(vars, domain, rqd.getPartitionsMap());
+                }
         }
         List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
         List<ILocalStructuralProperty> reqdLocals = requiredAtChild.getLocalProperties();
