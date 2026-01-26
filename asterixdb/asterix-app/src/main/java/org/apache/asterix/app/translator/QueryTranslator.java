@@ -1074,7 +1074,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    validateIfIcebergTable(metadataProvider, properties, mdTxnCtx, sourceLoc);
+                    validateIfIcebergTable(metadataProvider, requestParameters, properties, mdTxnCtx, sourceLoc);
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx, metadataProvider);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
@@ -1187,8 +1187,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return Optional.of(dataset);
     }
 
-    protected void validateIfIcebergTable(MetadataProvider metadataProvider, Map<String, String> properties,
-            MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc) throws AlgebricksException {
+    protected void validateIfIcebergTable(MetadataProvider metadataProvider, IRequestParameters requestParameters,
+            Map<String, String> properties, MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc)
+            throws AlgebricksException {
         IcebergStatementValidationHelper.validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, properties, srcLoc);
     }
 
@@ -5891,8 +5892,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleCatalogStatement(Statement.Kind kind, MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-        IcebergCatalogStatementHandler statement = new IcebergCatalogStatementHandler(kind, metadataProvider, stmt,
-                Creator.DEFAULT_CREATOR, sessionConfig, lockUtil, lockManager);
+        IcebergCatalogStatementHandler statement = new IcebergCatalogStatementHandler(appCtx, kind, metadataProvider,
+                stmt, Creator.DEFAULT_CREATOR, sessionConfig, lockUtil, lockManager, requestParameters);
         statement.handle();
     }
 

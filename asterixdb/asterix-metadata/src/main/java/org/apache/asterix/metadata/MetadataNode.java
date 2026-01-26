@@ -3198,8 +3198,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             Catalog catalog = getCatalog(txnId, catalogName);
             if (catalog == null) {
-                throw new CompilationException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_CATALOG,
-                        catalogName);
+                throw CompilationException.create(UNKNOWN_CATALOG, catalogName);
             }
             confirmCatalogIsUnusedByCollections(txnId, catalogName);
 

@@ -19,12 +19,14 @@
 package org.apache.asterix.app.translator.handlers;
 
 import static org.apache.asterix.app.translator.QueryTranslator.abort;
+import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_CATALOG;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.config.CatalogConfig;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
@@ -47,22 +49,26 @@ import org.apache.asterix.metadata.entities.IcebergCatalog;
 import org.apache.asterix.metadata.entities.IcebergCatalogDetails;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class IcebergCatalogStatementHandler {
 
+    protected final ICcApplicationContext appCtx;
+    protected final MetadataProvider metadataProvider;
     private final Statement.Kind kind;
-    private final MetadataProvider metadataProvider;
     private final CatalogStatement statement;
     private final Creator creator;
     private final SessionConfig sessionConfig;
     private final IMetadataLockUtil lockUtil;
     private final IMetadataLockManager lockManager;
+    protected IRequestParameters requestParameters;
 
-    public IcebergCatalogStatementHandler(Statement.Kind kind, MetadataProvider metadataProvider, Statement statement,
-            Creator creator, SessionConfig sessionConfig, IMetadataLockUtil lockUtil,
-            IMetadataLockManager lockManager) {
+    public IcebergCatalogStatementHandler(ICcApplicationContext ccAppCtx, Statement.Kind kind,
+            MetadataProvider metadataProvider, Statement statement, Creator creator, SessionConfig sessionConfig,
+            IMetadataLockUtil lockUtil, IMetadataLockManager lockManager, IRequestParameters requestParameters) {
+        this.appCtx = ccAppCtx;
         this.kind = kind;
         this.metadataProvider = metadataProvider;
         this.statement = (CatalogStatement) statement;
@@ -70,6 +76,7 @@ public class IcebergCatalogStatementHandler {
         this.sessionConfig = sessionConfig;
         this.lockUtil = lockUtil;
         this.lockManager = lockManager;
+        this.requestParameters = requestParameters;
     }
 
     public void handle() throws Exception {
@@ -99,7 +106,7 @@ public class IcebergCatalogStatementHandler {
         }
     }
 
-    private boolean doHandleCreate(CatalogCreateStatement statement) throws Exception {
+    protected boolean doHandleCreate(CatalogCreateStatement statement) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -137,17 +144,26 @@ public class IcebergCatalogStatementHandler {
         }
         lockUtil.dropCatalogBegin(lockManager, metadataProvider.getLocks(), catalogName);
         try {
-            doDropCatalog(dropStatement);
+            doHandleDrop(dropStatement);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
-    private boolean doDropCatalog(CatalogDropStatement statement) throws Exception {
+    protected boolean doHandleDrop(CatalogDropStatement statement) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             String catalogName = statement.getCatalogName();
+            Catalog catalog = MetadataManager.INSTANCE.getCatalog(mdTxnCtx, catalogName);
+            if (catalog == null) {
+                if (statement.getIfExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw CompilationException.create(UNKNOWN_CATALOG, catalogName);
+                }
+            }
             MetadataManager.INSTANCE.dropCatalog(mdTxnCtx, catalogName);
             beforeDropTxnCommit(metadataProvider, creator, EntityDetails.newCatalog(catalogName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
