@@ -1881,6 +1881,11 @@
         <version>1.68.1</version>
       </dependency>
       <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-netty-shaded</artifactId>
+        <version>1.78.0</version>
+      </dependency>
+      <dependency>
         <groupId>io.opencensus</groupId>
         <artifactId>opencensus-contrib-http-util</artifactId>
         <version>${io.opencensus.version}</version>
