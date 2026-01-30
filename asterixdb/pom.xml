@@ -112,7 +112,7 @@
     <azurecore.version>1.56.0</azurecore.version>
     <azurecorehttpnetty.version>1.16.0</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.45.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.62.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
@@ -1877,8 +1877,10 @@
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-census</artifactId>
-        <version>1.68.1</version>
+        <artifactId>grpc-bom</artifactId>
+        <version>1.78.0</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
