@@ -59,5 +59,11 @@
         <expected-error>ASX1227: Cannot find catalog with name myDoesNotExistGlueCatalog</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg/catalog/negative">
+      <compilation-unit name="drop-has-dependent-collections">
+        <output-dir compare="Text">drop-has-dependent-collections</output-dir>
+        <expected-error>ASX1148: Cannot drop catalog myGlueCatalog being used by collection Default.Default.test</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

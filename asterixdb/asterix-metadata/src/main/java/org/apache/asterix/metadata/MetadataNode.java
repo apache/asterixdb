@@ -58,6 +58,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_NODEGROUP;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_SYNONYM;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_TYPE;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_CATALOG_NAME;
 
 import java.io.PrintStream;
 import java.rmi.RemoteException;
@@ -72,10 +73,12 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -117,6 +120,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.DependencyKind;
+import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
@@ -3192,6 +3196,13 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropCatalog(TxnId txnId, String catalogName) throws AlgebricksException, RemoteException {
         try {
+            Catalog catalog = getCatalog(txnId, catalogName);
+            if (catalog == null) {
+                throw new CompilationException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_CATALOG,
+                        catalogName);
+            }
+            confirmCatalogIsUnusedByCollections(txnId, catalogName);
+
             // delete the catalog entry from the 'Catalog' collection
             ITupleReference searchKey = createTuple(catalogName);
             MetadataIndex catalogIndex = mdIndexesProvider.getCatalogEntity().getIndex();
@@ -3203,6 +3214,25 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AsterixException(METADATA_ERROR, e, e.getMessage());
             }
+        }
+    }
+
+    private void confirmCatalogIsUnusedByCollections(TxnId txnId, String catalogName) throws AlgebricksException {
+        List<Dataset> allCollections = getAllDatasets(txnId);
+        for (Dataset collection : allCollections) {
+            if (collection.getDatasetType() != DatasetConfig.DatasetType.EXTERNAL) {
+                continue;
+            }
+            ExternalDatasetDetails details = (ExternalDatasetDetails) collection.getDatasetDetails();
+            String collectionCatalogName = details.getProperties().get(ICEBERG_CATALOG_NAME);
+            if (!catalogName.equals(collectionCatalogName)) {
+                continue;
+            }
+            String database = collection.getDatabaseName();
+            String dataverseName = collection.getDataverseName().getCanonicalForm();
+            String collectionName = collection.getDatasetName();
+            throw new AsterixException(CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "catalog", catalogName, "collection",
+                    String.join(".", database, dataverseName, collectionName));
         }
     }
 }

@@ -49,7 +49,6 @@ import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CatalogStatementHandler {
 
@@ -119,8 +118,8 @@ public class CatalogStatementHandler {
             validateCatalogType(statement.getCatalogType());
             validateCatalogProperties(statement, mdTxnCtx, metadataProvider);
 
-            beforeAddTxnCommit(metadataProvider, creator, EntityDetails.newCatalog(catalogName));
             MetadataManager.INSTANCE.addCatalog(mdTxnCtx, getCatalog(statement));
+            beforeAddTxnCommit(metadataProvider, creator, EntityDetails.newCatalog(catalogName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -149,24 +148,8 @@ public class CatalogStatementHandler {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             String catalogName = statement.getCatalogName();
-            Catalog catalog = MetadataManager.INSTANCE.getCatalog(mdTxnCtx, catalogName);
-            if (catalog == null) {
-                if (statement.getIfExists()) {
-                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return false;
-                } else {
-                    SourceLocation srcLoc = statement.getSourceLocation();
-                    throw new CompilationException(ErrorCode.UNKNOWN_CATALOG, srcLoc, catalogName);
-                }
-            }
-
-            // if we have any collections on catalog without cascade passed, we fail the drop, so check one only
-            // otherwise, list all so we drop them all
-            // TODO(htowaileb): list collections on catalog to drop
-            boolean firstOnly = !statement.isCascade();
-
-            beforeDropTxnCommit(metadataProvider, creator, EntityDetails.newCatalog(catalogName));
             MetadataManager.INSTANCE.dropCatalog(mdTxnCtx, catalogName);
+            beforeDropTxnCommit(metadataProvider, creator, EntityDetails.newCatalog(catalogName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -220,7 +203,7 @@ public class CatalogStatementHandler {
      */
     protected IcebergCatalog createIcebergCatalog(CatalogCreateStatement statement) throws AlgebricksException {
         IcebergCatalogCreateStatement icebergStatement = (IcebergCatalogCreateStatement) statement;
-        IcebergCatalogDetailsDecl detailsDecl = (IcebergCatalogDetailsDecl) icebergStatement.getCatalogDetailsDecl();
+        IcebergCatalogDetailsDecl detailsDecl = icebergStatement.getCatalogDetailsDecl();
         Map<String, String> properties = createCatalogDetailsProperties(icebergStatement);
         IcebergCatalogDetails details = new IcebergCatalogDetails(detailsDecl.getAdapter(), properties);
         return new IcebergCatalog(statement.getCatalogName(), statement.getCatalogType(), details,
@@ -230,8 +213,7 @@ public class CatalogStatementHandler {
     protected Map<String, String> createCatalogDetailsProperties(IcebergCatalogCreateStatement statement)
             throws AlgebricksException {
         AdmObjectNode withObjectNode = statement.getWithObjectNode();
-        IcebergCatalogDetailsDecl icebergCatalogDetailsDecl =
-                (IcebergCatalogDetailsDecl) statement.getCatalogDetailsDecl();
+        IcebergCatalogDetailsDecl icebergCatalogDetailsDecl = statement.getCatalogDetailsDecl();
         Map<String, String> properties = new HashMap<>(icebergCatalogDetailsDecl.getProperties());
         Map<String, String> withClauseProperties = ExternalDataUtils
                 .convertStringArrayParamIntoNumberedParameters(withObjectNode, statement.getSourceLocation());
