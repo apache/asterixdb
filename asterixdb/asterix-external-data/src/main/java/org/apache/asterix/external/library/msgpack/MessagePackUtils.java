@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.external.library.msgpack;
 
+import static org.msgpack.core.MessagePack.Code.FALSE;
 import static org.msgpack.core.MessagePack.Code.FIXARRAY_PREFIX;
 import static org.msgpack.core.MessagePack.Code.FIXSTR_PREFIX;
 import static org.msgpack.core.MessagePack.Code.STR32;
+import static org.msgpack.core.MessagePack.Code.TRUE;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -69,5 +71,9 @@ public class MessagePackUtils {
 
     public static void packFixArrayHeader(ByteBuffer buf, byte numObj) {
         buf.put((byte) (FIXARRAY_PREFIX + (0x0F & numObj)));
+    }
+
+    public static void packBoolean(ByteBuffer buf, boolean val) {
+        buf.put(val ? TRUE : FALSE);
     }
 }

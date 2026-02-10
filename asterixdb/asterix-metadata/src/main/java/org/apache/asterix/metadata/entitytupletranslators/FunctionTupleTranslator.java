@@ -28,6 +28,7 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NA
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_VALUE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_BATCHED_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LIBRARY_FIELD_NAME;
@@ -185,9 +186,11 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
 
         Boolean nullCall = null;
+        Boolean batched = null;
         Boolean deterministic = null;
         if (externalIdentifier != null) {
             nullCall = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME);
+            batched = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_BATCHED_FIELD_NAME);
             deterministic = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME);
         }
 
@@ -214,7 +217,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
         return new Function(signature, paramNames, paramTypes, returnType, definition, functionKind, language,
                 libraryDatabaseName, libraryDataverseName, libraryName, externalIdentifier, nullCall, deterministic,
-                resources, dependencies, creator, transform);
+                batched, resources, dependencies, creator, transform);
     }
 
     private List<TypeSignature> getParamTypes(ARecord functionRecord, String functionDatabaseName,
@@ -582,6 +585,18 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         stringSerde.serialize(aString, fieldName.getDataOutput());
         fieldValue.reset();
         booleanSerde.serialize(ABoolean.valueOf(function.getNullCall()), fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
+    }
+
+    protected void writeBatched(Function function) throws HyracksDataException {
+        if (function.getBatched() == null) {
+            return;
+        }
+        fieldName.reset();
+        aString.setValue(FUNCTION_ARECORD_FUNCTION_BATCHED_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        booleanSerde.serialize(ABoolean.valueOf(function.getBatched()), fieldValue.getDataOutput());
         recordBuilder.addField(fieldName, fieldValue);
     }
 

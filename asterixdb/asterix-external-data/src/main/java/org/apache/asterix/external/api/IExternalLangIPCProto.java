@@ -79,7 +79,7 @@ public interface IExternalLangIPCProto {
 
     void helo() throws IOException, AsterixException;
 
-    long init(String module, String clazz, String fn) throws IOException, AsterixException;
+    long init(String module, String clazz, String fn, boolean batched) throws IOException, AsterixException;
 
     ByteBuffer call(long functionId, IAType[] argTypes, IValueReference[] argValues, boolean nullCall)
             throws IOException, AsterixException;

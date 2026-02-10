@@ -3493,7 +3493,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 function = new Function(functionSignature, paramNames, paramTypes, returnTypeSignature, null,
                         FunctionKind.SCALAR.toString(), library.getLanguage(), libraryDatabaseName,
                         libraryDataverseName, libraryName, externalIdentifier, cfs.getNullCall(),
-                        cfs.getDeterministic(), cfs.getResources(), dependencies, creator, false);
+                        cfs.getDeterministic(), cfs.getBatched(), cfs.getResources(), dependencies, creator, false);
             } else {
                 List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
                 int paramCount = paramList.size();
@@ -3559,7 +3559,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
                         FunctionKind.SCALAR.toString(), compilationProvider.getParserFactory().getLanguage(), null,
-                        null, null, null, null, null, null, dependencies, creator, cfs.isTransform());
+                        null, null, null, null, null, null, null, dependencies, creator, cfs.isTransform());
             }
 
             if (existingFunction == null) {

@@ -199,6 +199,20 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 }
             }
 
+            private void writeAdmToMsgpackBuf(int[] cols, ByteBuffer buffer, int func, boolean argArray)
+                    throws IOException {
+                if (argArray && cols.length > 0) {
+                    argHolders.get(func).getDataOutput().writeByte(ARRAY16);
+                    argHolders.get(func).getDataOutput().writeShort((short) cols.length);
+                }
+                for (int colIdx = 0; colIdx < cols.length; colIdx++) {
+                    ref.set(buffer.array(), tRef.getFieldStart(cols[colIdx]), tRef.getFieldLength(cols[colIdx]));
+                    IExternalLangIPCProto.visitValueRef(fnDescs[func].getArgumentTypes()[colIdx],
+                            argHolders.get(func).getDataOutput(), ref, pointableAllocator, pointableVisitor,
+                            fnDescs[func].getFunctionInfo().getNullCall());
+                }
+            }
+
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 /*TODO: this whole transposition stuff is not necessary
@@ -211,6 +225,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                     //build columns of arguments for each function
                     for (int t = 0; t < numTuples; t++) {
                         for (int func = 0; func < fnArgColumns.length; func++) {
+                            boolean batchedFn = fnDescs[func].getFunctionInfo().isBatched();
                             tRef.reset(tAccess, t);
                             int[] cols = fnArgColumns[func];
                             //TODO: switch between fixarray/array16/array32 where appropriate
@@ -225,17 +240,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 }
                             }
                             if (argumentStatus == ATypeTag.TYPE) {
-                                if (cols.length > 0) {
-                                    argHolders.get(func).getDataOutput().writeByte(ARRAY16);
-                                    argHolders.get(func).getDataOutput().writeShort((short) cols.length);
-                                }
-                                for (int colIdx = 0; colIdx < cols.length; colIdx++) {
-                                    ref.set(buffer.array(), tRef.getFieldStart(cols[colIdx]),
-                                            tRef.getFieldLength(cols[colIdx]));
-                                    IExternalLangIPCProto.visitValueRef(fnDescs[func].getArgumentTypes()[colIdx],
-                                            argHolders.get(func).getDataOutput(), ref, pointableAllocator,
-                                            pointableVisitor, fnDescs[func].getFunctionInfo().getNullCall());
-                                }
+                                writeAdmToMsgpackBuf(cols, buffer, func, !batchedFn);
                             } else {
                                 numCalls[func]--;
                             }
@@ -268,6 +273,9 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                             //wrapper for results and warnings arrays. always length 2
                             consumeAndGetBatchLength(resultBuf);
                             int numResults = (int) consumeAndGetBatchLength(resultBuf);
+                            if (fnDescs[argHolderIdx].getFunctionInfo().isBatched()) {
+                                numResults = (int) consumeAndGetBatchLength(resultBuf);
+                            }
                             resultholder.getSecond().set(numResults);
                         } else {
                             if (ctx.getWarningCollector().shouldWarn()) {

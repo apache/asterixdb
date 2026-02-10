@@ -76,7 +76,7 @@ class Wrapper(object):
     readview = memoryview(readbuf)
 
 
-    def init(self, module_name, class_name, fn_name):
+    def init(self, module_name, class_name, fn_name, batched):
         self.wrapped_module = import_module(module_name)
         # do not allow modules to be called that are not part of the uploaded module
         wrapped_fn = None
@@ -93,10 +93,10 @@ class Wrapper(object):
         if wrapped_fn is None:
             raise ImportError(
                 "Could not find class or function in specified module")
-        self.wrapped_fns[self.mid] = wrapped_fn
+        self.wrapped_fns[self.mid] = (wrapped_fn, batched)
 
     def next_tuple(self, *args, key=None):
-        return self.wrapped_fns[key](*args)
+        return self.wrapped_fns[key][0](*args)
 
     def check_module_path(self, module):
         cwd = Path('.').resolve()
@@ -150,13 +150,15 @@ class Wrapper(object):
         self.response_buf.seek(0)
         args = self.unpacked_msg[1]
         module = args[0]
-        if len(args) == 3:
+        if len(args) == 4:
             clazz = args[1]
             fn = args[2]
+            batched = args[3];
         else:
             clazz = None
             fn = args[1]
-        self.init(module, clazz, fn)
+            batched = args[2];
+        self.init(module, clazz, fn, batched)
         self.packer.pack(int(MessageType.INIT_RSP))
         dlen = 1  # just the tag.
         resp_len = self.write_header(self.response_buf, dlen)
@@ -177,11 +179,17 @@ class Wrapper(object):
         if len(self.unpacked_msg) > 1:
             args = self.unpacked_msg[1]
             if args is not None:
-                for arg in args:
+                if self.wrapped_fns[self.mid][1] is True: # batchable function call
                     try:
-                        result[0].append(self.next_tuple(*arg, key=self.mid))
+                        result[0].append(self.next_tuple(args,key=self.mid))
                     except BaseException as e:
                         result[1].append(traceback.format_exc())
+                else:
+                    for arg in args:
+                        try:
+                            result[0].append(self.next_tuple(*arg, key=self.mid))
+                        except BaseException as e:
+                            result[1].append(traceback.format_exc())
         self.packer.reset()
         self.response_buf.seek(0)
         body = msgpack.packb(result)

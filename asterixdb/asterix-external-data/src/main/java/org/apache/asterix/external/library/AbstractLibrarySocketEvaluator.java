@@ -68,7 +68,7 @@ public abstract class AbstractLibrarySocketEvaluator extends AbstractStateObject
             clazz = null;
             fn = externalIdent1;
         }
-        return proto.init(packageModule, clazz, fn);
+        return proto.init(packageModule, clazz, fn, finfo.isBatched());
     }
 
     @Override

@@ -272,6 +272,7 @@ public final class MetadataRecordTypes {
     //open types
     public static final String FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME = "Resources";
     public static final String FUNCTION_ARECORD_FUNCTION_NULLCALL_FIELD_NAME = "NullCall";
+    public static final String FUNCTION_ARECORD_FUNCTION_BATCHED_FIELD_NAME = "Batched";
     public static final String FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME = "Deterministic";
     public static final String FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME = "ParamTypes";
     public static final String FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME = "ExternalIdentifier";

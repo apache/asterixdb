@@ -99,23 +99,25 @@ public class PythonMessageBuilder {
         MessagePackUtils.packFixStr(buf, "QUIT");
     }
 
-    public void init(final String module, final String clazz, final String fn) throws HyracksDataException {
+    public void init(final String module, final String clazz, final String fn, final boolean batched)
+            throws HyracksDataException {
         this.type = MessageType.INIT;
-        // sum(string lengths) + 2 from fix array tag and message type
+        // sum(string lengths) + 3 from fix array tag, message type and batched flag
         if (clazz != null) {
             dataLength =
-                    PythonMessageBuilder.getStringLength(module) + getStringLength(clazz) + getStringLength(fn) + 2;
+                    PythonMessageBuilder.getStringLength(module) + getStringLength(clazz) + getStringLength(fn) + 3;
         } else {
-            dataLength = PythonMessageBuilder.getStringLength(module) + getStringLength(fn) + 2;
+            dataLength = PythonMessageBuilder.getStringLength(module) + getStringLength(fn) + 3;
         }
         packHeader();
-        int numArgs = clazz == null ? 2 : 3;
+        int numArgs = clazz == null ? 3 : 4;
         MessagePackUtils.packFixArrayHeader(buf, (byte) numArgs);
         MessagePackUtils.packStr(buf, module);
         if (clazz != null) {
             MessagePackUtils.packStr(buf, clazz);
         }
         MessagePackUtils.packStr(buf, fn);
+        MessagePackUtils.packBoolean(buf, batched);
     }
 
     public void call(int numArgs, int len) throws HyracksDataException {

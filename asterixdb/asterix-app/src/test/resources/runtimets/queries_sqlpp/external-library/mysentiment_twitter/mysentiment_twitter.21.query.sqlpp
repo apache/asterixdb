@@ -16,11 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- USE externallibtest;
+use externallibtest;
 
-create function sentiment(s)
-  as "sentiment", "TweetSent.sentiment" at testlib;
+select value count(sentimentBatch(t.text))
+from Tweet t;
 
-create function sentimentBatch(s)
-  as "sentiment", "TweetSent.sentiment_batch" at testlib
-  with {"batched": true};

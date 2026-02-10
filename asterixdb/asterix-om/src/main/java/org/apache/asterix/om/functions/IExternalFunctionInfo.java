@@ -49,4 +49,6 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
     Map<String, String> getResources();
 
     boolean getNullCall();
+
+    boolean isBatched();
 }

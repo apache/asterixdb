@@ -80,12 +80,11 @@ public class ExternalFunctionCompilerUtil {
             throw new AsterixException(ErrorCode.METADATA_ERROR, function.getSignature().toString());
         }
 
-        //TODO(DB): review
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
                 returnType, typeComputer, lang,
                 new Namespace(function.getLibraryDatabaseName(), function.getLibraryDataverseName()),
                 function.getLibraryName(), function.getExternalIdentifier(), function.getResources(), deterministic,
-                function.getNullCall());
+                function.getNullCall(), function.getBatched());
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {

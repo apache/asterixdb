@@ -48,6 +48,7 @@ public class Function implements IMetadataEntity<Function> {
     private final List<String> externalIdentifier;
     private final Boolean deterministic; // null for SQL++ and AQL functions
     private final Boolean nullCall; // null for SQL++ and AQL functions
+    private final Boolean batched; // null for SQL++ and AQL functions
     private final Map<String, String> resources;
     private final List<List<DependencyFullyQualifiedName>> dependencies;
     private final Creator creator;
@@ -56,8 +57,9 @@ public class Function implements IMetadataEntity<Function> {
     public Function(FunctionSignature signature, List<String> paramNames, List<TypeSignature> paramTypes,
             TypeSignature returnType, String functionBody, String functionKind, String language,
             String libraryDatabaseName, DataverseName libraryDataverseName, String libraryName,
-            List<String> externalIdentifier, Boolean nullCall, Boolean deterministic, Map<String, String> resources,
-            List<List<DependencyFullyQualifiedName>> dependencies, Creator creator, boolean transform) {
+            List<String> externalIdentifier, Boolean nullCall, Boolean deterministic, Boolean batched,
+            Map<String, String> resources, List<List<DependencyFullyQualifiedName>> dependencies, Creator creator,
+            boolean transform) {
         this.signature = signature;
         this.paramNames = paramNames;
         this.paramTypes = paramTypes;
@@ -70,6 +72,7 @@ public class Function implements IMetadataEntity<Function> {
         this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
         this.nullCall = nullCall;
+        this.batched = batched;
         this.deterministic = deterministic;
         this.resources = resources == null ? Collections.emptyMap() : resources;
         this.dependencies = dependencies == null
@@ -152,6 +155,10 @@ public class Function implements IMetadataEntity<Function> {
 
     public Boolean getNullCall() {
         return nullCall;
+    }
+
+    public Boolean getBatched() {
+        return batched;
     }
 
     public Boolean getDeterministic() {

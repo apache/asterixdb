@@ -41,11 +41,12 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     private final List<String> externalIdentifier;
     private final Map<String, String> resources;
     private final boolean nullCall;
+    private final boolean batched;
 
     public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<IAType> parameterTypes,
             IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace,
             String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic,
-            boolean nullCall) {
+            boolean nullCall, boolean batched) {
         super(fid, rtc, deterministic);
         this.kind = kind;
         this.parameterTypes = parameterTypes;
@@ -56,6 +57,7 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
         this.externalIdentifier = externalIdentifier;
         this.resources = resources;
         this.nullCall = nullCall;
+        this.batched = batched;
     }
 
     @Override
@@ -105,5 +107,10 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     @Override
     public boolean isExternal() {
         return true;
+    }
+
+    @Override
+    public boolean isBatched() {
+        return batched;
     }
 }

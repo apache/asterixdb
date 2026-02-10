@@ -47,6 +47,8 @@ public class CreateFunctionStatement extends AbstractStatement {
     private static final String NULLCALL_FIELD_NAME = "null-call";
     private static final boolean NULLCALL_DEFAULT = false;
     private static final String DETERMINISTIC_FIELD_NAME = "deterministic";
+    private static final String BATCHED_FIELD_NAME = "batched";
+    private static final boolean BATCHED_DEFAULT = false;
     private static final boolean DETERMINISTIC_DEFAULT = true;
     private static final String RESOURCES_FIELD_NAME = "resources";
 
@@ -160,6 +162,11 @@ public class CreateFunctionStatement extends AbstractStatement {
     public boolean getDeterministic() throws CompilationException {
         Boolean deterministic = getBooleanOption(DETERMINISTIC_FIELD_NAME);
         return deterministic != null ? deterministic : DETERMINISTIC_DEFAULT;
+    }
+
+    public boolean getBatched() throws CompilationException {
+        Boolean batched = getBooleanOption(BATCHED_FIELD_NAME);
+        return batched != null ? batched : BATCHED_DEFAULT;
     }
 
     private Boolean getBooleanOption(String optionName) throws CompilationException {

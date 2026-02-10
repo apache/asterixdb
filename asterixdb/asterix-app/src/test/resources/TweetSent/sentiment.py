@@ -32,3 +32,8 @@ class TweetSent(object):
         if args is None:
             return 2
         return self.pipeline.predict([args])[0].item()
+
+    def sentiment_batch(self, args):
+        if args is None:
+            return 2
+        return self.pipeline.predict(args).tolist()
