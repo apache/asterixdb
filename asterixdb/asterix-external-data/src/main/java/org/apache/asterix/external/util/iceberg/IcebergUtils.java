@@ -348,8 +348,10 @@ public class IcebergUtils {
         } catch (Exception ex) {
             throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
         } finally {
-            String awsClientsFactoryId = catalogProperties.get(FACTORY_INSTANCE_ID_KEY);
-            EnsureCloseClientsFactoryRegistry.closeAll(awsClientsFactoryId);
+            if (catalogProperties != null) {
+                String awsClientsFactoryId = catalogProperties.get(FACTORY_INSTANCE_ID_KEY);
+                EnsureCloseClientsFactoryRegistry.closeAll(awsClientsFactoryId);
+            }
         }
     }
 
