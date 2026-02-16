@@ -1,1 +1,1 @@
-[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_b ON `Default`.`test`.`A`(`b`);"},{"index_statement":"CREATE INDEX idx_c ON `Default`.`test`.`B`(`c`);"}]}}}}]
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_b ON `Default`.`test`.`A`(`b`);"},{"index_statement":"CREATE INDEX idx_adv_c ON `Default`.`test`.`B`(`c`);"}]}}}}]

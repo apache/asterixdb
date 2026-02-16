@@ -1,1 +1,1 @@
-[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX array_idx_items ON `Default`.`test`.`A`(UNNEST `items` SELECT `qty`: bigint, `price`: double) EXCLUDE UNKNOWN KEY;"}]}}}}]
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_array_items ON `Default`.`test`.`A`(UNNEST `items` SELECT `qty`: bigint, `price`: double) EXCLUDE UNKNOWN KEY;"}]}}}}]

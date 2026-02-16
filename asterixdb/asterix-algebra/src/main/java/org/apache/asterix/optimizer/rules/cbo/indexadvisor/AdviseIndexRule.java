@@ -187,12 +187,12 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
     }
 
     public static String getIndexName(List<List<String>> fields) {
-        return "idx_" + fields.stream().map(field -> String.join("_", field)).collect(Collectors.joining("_"))
+        return "idx_adv_" + fields.stream().map(field -> String.join("_", field)).collect(Collectors.joining("_"))
                 .replaceAll(" ", "");
     }
 
     public static String getArrayIndexName(List<Index.ArrayIndexElement> fields) {
-        return "array_idx_" + fields.stream().map(
+        return "idx_adv_array_" + fields.stream().map(
                 field -> field.getUnnestList().stream().map(f -> String.join("_", f)).collect(Collectors.joining("_")))
                 .collect(Collectors.joining("_")).replaceAll(" ", "");
     }
