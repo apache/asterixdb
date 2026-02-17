@@ -1128,6 +1128,16 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ST_MBR = FunctionConstants.newAsterix("st-mbr", 1);
     public static final FunctionIdentifier ST_MBR_ENLARGE = FunctionConstants.newAsterix("st-mbr-enlarge", 2);
 
+    public static final FunctionIdentifier ST_CONVEX_HULL = FunctionConstants.newAsterix("st-convex-hull", 1);
+    public static final FunctionIdentifier ST_CENTROID = FunctionConstants.newAsterix("st-centroid", 1);
+    public static final FunctionIdentifier ST_IS_VALID = FunctionConstants.newAsterix("st-is-valid", 1);
+    public static final FunctionIdentifier ST_REVERSE = FunctionConstants.newAsterix("st-reverse", 1);
+    public static final FunctionIdentifier ST_FLIP_COORDINATES = FunctionConstants.newAsterix("st-flip-coordinates", 1);
+    public static final FunctionIdentifier ST_SET_SRID = FunctionConstants.newAsterix("st-set-srid", 2);
+    public static final FunctionIdentifier ST_DISTANCE_SPHERE = FunctionConstants.newAsterix("st-distance-sphere", 2);
+    public static final FunctionIdentifier ST_DWITHIN = FunctionConstants.newAsterix("st-dwithin", 3);
+    public static final FunctionIdentifier ST_BUFFER = FunctionConstants.newAsterix("st-buffer", 2);
+
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = FunctionConstants.newAsterix("get-year", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = FunctionConstants.newAsterix("get-month", 1);
@@ -2008,6 +2018,15 @@ public class BuiltinFunctions {
 
         addPrivateFunction(ST_MBR, ARectangleTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_MBR_ENLARGE, ARectangleTypeComputer.INSTANCE, true);
+
+        addFunction(ST_CONVEX_HULL, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_CENTROID, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_IS_VALID, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(ST_REVERSE, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_FLIP_COORDINATES, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_DISTANCE_SPHERE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(ST_DWITHIN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(ST_BUFFER, AGeometryTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);

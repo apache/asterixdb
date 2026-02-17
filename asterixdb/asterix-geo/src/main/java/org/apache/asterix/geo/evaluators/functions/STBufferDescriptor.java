@@ -24,11 +24,15 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -39,11 +43,16 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.locationtech.jts.geom.Geometry;
 
-public abstract class AbstractSTGeometryNDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class STBufferDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
+    public static final IFunctionDescriptorFactory FACTORY = STBufferDescriptor::new;
 
     private static final long serialVersionUID = 1L;
 
-    abstract protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException;
+    @Override
+    public FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.ST_BUFFER;
+    }
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -52,66 +61,59 @@ public abstract class AbstractSTGeometryNDescriptor extends AbstractScalarFuncti
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-
-                return new AbstractSTGeometryNEvaluator(args, ctx);
+                return new STBufferEvaluator(args, ctx);
             }
         };
     }
 
-    private class AbstractSTGeometryNEvaluator implements IScalarEvaluator {
+    private class STBufferEvaluator implements IScalarEvaluator {
+        private final ArrayBackedValueStorage resultStorage;
+        private final DataOutput out;
+        private final IPointable inputArg0;
+        private final IScalarEvaluator eval0;
+        private final IPointable inputArg1;
+        private final IScalarEvaluator eval1;
 
-        private ArrayBackedValueStorage resultStorage;
-        private DataOutput out;
-        private IPointable inputArg;
-        private IScalarEvaluator eval;
-        private IPointable inputArg0;
-        private IScalarEvaluator eval0;
-
-        public AbstractSTGeometryNEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
-                throws HyracksDataException {
+        public STBufferEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
             resultStorage = new ArrayBackedValueStorage();
             out = resultStorage.getDataOutput();
-            inputArg = new VoidPointable();
-            eval = args[0].createScalarEvaluator(ctx);
             inputArg0 = new VoidPointable();
-            eval0 = args[1].createScalarEvaluator(ctx);
+            eval0 = args[0].createScalarEvaluator(ctx);
+            inputArg1 = new VoidPointable();
+            eval1 = args[1].createScalarEvaluator(ctx);
         }
 
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             resultStorage.reset();
-            eval.evaluate(tuple, inputArg);
-            byte[] data = inputArg.getByteArray();
-            int offset = inputArg.getStartOffset();
-            int len = inputArg.getLength();
-
             eval0.evaluate(tuple, inputArg0);
-            byte[] data0 = inputArg0.getByteArray();
+            byte[] bytes0 = inputArg0.getByteArray();
             int offset0 = inputArg0.getStartOffset();
+            int len0 = inputArg0.getLength();
 
-            if (data[offset] != ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG) {
-                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
+            eval1.evaluate(tuple, inputArg1);
+            byte[] bytes1 = inputArg1.getByteArray();
+            int offset1 = inputArg1.getStartOffset();
+
+            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
+            if (tag != ATypeTag.GEOMETRY) {
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
-            if (data0[offset0] != ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data0[offset0],
-                        ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-            }
 
-            ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
-            DataInputStream dataIn = new DataInputStream(inStream);
-            Geometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
-            int n = (int) AInt64SerializerDeserializer.getLong(data0, offset0 + 1);
+            double distance = ATypeHierarchy.getDoubleValue(getIdentifier().getName(), 1, bytes1, offset1);
 
-            Geometry geometryN = evaluateOGCGeometry(geometry, n);
+            DataInputStream dataIn0 = new DataInputStream(new ByteArrayInputStream(bytes0, offset0 + 1, len0 - 1));
+            Geometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn0).getGeometry();
             try {
+                Geometry buffered = geometry.buffer(distance);
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                AGeometrySerializerDeserializer.INSTANCE.serialize(geometryN, out);
-                result.set(resultStorage);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(buffered, out);
             } catch (IOException e) {
                 throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
+            result.set(resultStorage);
         }
     }
 }
