@@ -52,4 +52,5 @@ public class AlgebricksConfig {
     public static final int HASH_BASED_OR_THRESHOLD_DEFAULT = 40;
     public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 100;
     public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 100;
+    public static final int HDFS_SPLIT_PARALLEL_DEFAULT = Runtime.getRuntime().availableProcessors();
 }

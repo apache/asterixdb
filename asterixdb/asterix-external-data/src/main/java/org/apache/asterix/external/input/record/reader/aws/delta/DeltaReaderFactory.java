@@ -167,7 +167,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         LOGGER.info("Number of delta table parquet data files to scan: {}", scanFiles.size());
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
         try {
-            usingSplits = getFileSplitsConfig(configuration, appCtx);
+            usingSplits = getDeltaFileSplitsConfig(configuration, appCtx);
             if (usingSplits) {
                 distributeSplits(scanFiles, conf, numPartitions);
             } else {
@@ -179,7 +179,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         issueWarnings(warnings, warningCollector);
     }
 
-    private boolean getFileSplitsConfig(Map<String, String> configuration, ICcApplicationContext appCtx) {
+    private boolean getDeltaFileSplitsConfig(Map<String, String> configuration, ICcApplicationContext appCtx) {
         String fileSplits = configuration.get(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY);
         return fileSplits != null ? Boolean.parseBoolean(fileSplits)
                 : appCtx.getCompilerProperties().isDeltaLakeFileSplitsEnabled();

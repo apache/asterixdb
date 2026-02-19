@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.LIST_STATUS_NUM_THREADS;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.ByteArrayInputStream;
@@ -48,6 +49,7 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -222,7 +224,7 @@ public class HDFSUtils {
         }
     }
 
-    public static JobConf configureHDFSJobConf(Map<String, String> configuration) {
+    public static JobConf configureHDFSJobConf(Map<String, String> configuration, ICcApplicationContext serviceCtx) {
         JobConf conf = new JobConf();
         String localShortCircuitSocketPath = configuration.get(ExternalDataConstants.KEY_LOCAL_SOCKET_PATH);
         String formatClassName = HDFSUtils.getInputFormatClassName(configuration);
@@ -243,6 +245,7 @@ public class HDFSUtils {
         }
         conf.setClassLoader(HDFSInputStream.class.getClassLoader());
         conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_FORMAT, formatClassName);
+        conf.set(LIST_STATUS_NUM_THREADS, getHdfsFileSplitParallelism(configuration, serviceCtx));
 
         // Enable local short circuit reads if user supplied the parameters
         if (localShortCircuitSocketPath != null) {
@@ -268,6 +271,12 @@ public class HDFSUtils {
         }
         conf.set(ExternalDataConstants.HDFS_IO_COMPRESSION_CODECS_KEY, AliasGzipCodec.class.getName());
         return conf;
+    }
+
+    private static String getHdfsFileSplitParallelism(Map<String, String> configuration, ICcApplicationContext appCtx) {
+        String numThreads = configuration.get(CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY);
+        return numThreads != null ? numThreads
+                : String.valueOf(appCtx.getCompilerProperties().getHdfsSplitParallelism());
     }
 
     public static Configuration configureHDFSwrite(Map<String, String> configuration) {

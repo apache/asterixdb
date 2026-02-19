@@ -46,6 +46,8 @@ public class PhysicalOptimizationConfig {
     private static final String SORT_SAMPLES = "SORT_SAMPLES";
     private static final String INDEX_ONLY = "INDEX_ONLY";
     private static final String REWRITE_OR_TO_JOIN = "REWRITE_OR_TO_JOIN";
+    private static final String ENABLE_PARQUET_FILE_SPLIT = "ENABLE_PARQUET_FILE_SPLIT";
+    private static final String HDFS_SPLIT_PARALLELISM = "HDFS_SPLIT_PARALLELISM";
     private static final String SANITY_CHECK = "SANITY_CHECK";
     private static final String EXTERNAL_FIELD_PUSHDOWN = "EXTERNAL_FIELD_PUSHDOWN";
     private static final String SUBPLAN_MERGE = "SUBPLAN_MERGE";
@@ -275,6 +277,18 @@ public class PhysicalOptimizationConfig {
 
     public boolean isIndexOnly() {
         return getBoolean(INDEX_ONLY, AlgebricksConfig.INDEX_ONLY_DEFAULT);
+    }
+
+    public void setParquetFileSplit(boolean parquetFileSplit) {
+        setBoolean(ENABLE_PARQUET_FILE_SPLIT, parquetFileSplit);
+    }
+
+    public void setHdfsSplitParallelism(int hdfsSplitParallelism) {
+        setInt(HDFS_SPLIT_PARALLELISM, hdfsSplitParallelism);
+    }
+
+    public int getHdfsSplitParallelism() {
+        return getInt(HDFS_SPLIT_PARALLELISM, AlgebricksConfig.HDFS_SPLIT_PARALLEL_DEFAULT);
     }
 
     public void setSanityCheckEnabled(boolean sanityCheck) {

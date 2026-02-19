@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.metadata.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.metadata.declared.DatasetDataSource.setExternalCollectionCompilerProperties;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -1022,6 +1023,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             configuration.put(ExternalDataConstants.KEY_DATASET_DATABASE, dataset.getDatabaseName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
+            setExternalCollectionCompilerProperties(this, configuration);
             setExternalEntityId(configuration);
             setSourceType(configuration, adapterName);
 

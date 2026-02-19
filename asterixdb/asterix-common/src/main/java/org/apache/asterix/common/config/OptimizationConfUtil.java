@@ -105,6 +105,9 @@ public class OptimizationConfUtil {
                 getCommonExpressionLimitSize(compilerProperties, querySpecificConfig, sourceLoc);
         boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 compilerProperties.isOrderedFields());
+        boolean useFileSplits = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY,
+                compilerProperties.isParquetFileSplitsEnabled());
+        int hdfsSplitParallelism = getHdfsSplitParellelism(compilerProperties, querySpecificConfig, sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -117,6 +120,8 @@ public class OptimizationConfUtil {
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);
         physOptConf.setRewriteOrToJoin(rewriteOrToJoin);
+        physOptConf.setParquetFileSplit(useFileSplits);
+        physOptConf.setHdfsSplitParallelism(hdfsSplitParallelism);
         physOptConf.setSanityCheckEnabled(sanityCheck);
         physOptConf.setExternalFieldPushdown(externalFieldPushdown);
         physOptConf.setSubplanMerge(subplanMerge);
@@ -283,4 +288,16 @@ public class OptimizationConfUtil {
             throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
         }
     }
+
+    private static int getHdfsSplitParellelism(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getHdfsSplitParallelism()
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
 }

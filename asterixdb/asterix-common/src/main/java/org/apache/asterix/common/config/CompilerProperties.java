@@ -175,7 +175,12 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_DISJUNCTION_HASH_THRESHOLD(
                 getRangedIntegerType(-1, Integer.MAX_VALUE),
                 AlgebricksConfig.HASH_BASED_OR_THRESHOLD_DEFAULT,
-                "The number of disjunctions after which a hash-based approach is used for evaluating OR operation (-1 disables using the hash-based approach)");
+                "The number of disjunctions after which a hash-based approach is used for evaluating OR operation (-1 disables using the hash-based approach)"),
+        COMPILER_PARQUET_FILESPLITS(BOOLEAN, false, "Enable/disable parquet file splits"),
+        COMPILER_HDFS_SPLIT_PARALLELISM(
+                INTEGER,
+                Runtime.getRuntime().availableProcessors(),
+                "Number of threads to use for generating file splits for HDFS files");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -276,6 +281,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
     public static final String COMPILER_DELTALAKE_FILESPLITS_KEY = Option.COMPILER_DELTALAKE_FILESPLITS.ini();
+    public static final String COMPILER_PARQUET_FILESPLITS_KEY = Option.COMPILER_PARQUET_FILESPLITS.ini();
+    public static final String COMPILER_HDFS_SPLIT_PARALLELISM_KEY = Option.COMPILER_HDFS_SPLIT_PARALLELISM.ini();
 
     public CompilerProperties(PropertiesAccessor accessor) {
         super(accessor);
@@ -434,4 +441,13 @@ public class CompilerProperties extends AbstractProperties {
     public boolean isDeltaLakeFileSplitsEnabled() {
         return accessor.getBoolean(Option.COMPILER_DELTALAKE_FILESPLITS);
     }
+
+    public boolean isParquetFileSplitsEnabled() {
+        return accessor.getBoolean(Option.COMPILER_PARQUET_FILESPLITS);
+    }
+
+    public int getHdfsSplitParallelism() {
+        return accessor.getInt(Option.COMPILER_HDFS_SPLIT_PARALLELISM);
+    }
+
 }

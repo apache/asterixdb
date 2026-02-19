@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
@@ -73,6 +74,11 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
             resultSplits[i++] = new ParquetInputSplitWrapper(split);
         }
         return resultSplits;
+    }
+
+    @Override
+    public FileStatus[] listStatus(JobConf job) throws IOException {
+        return super.listStatus(job);
     }
 
     public List<Footer> getFooters(JobConf job) throws IOException {
