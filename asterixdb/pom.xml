@@ -91,9 +91,9 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.10-SNAPSHOT</hyracks.version>
-    <hadoop.version>3.4.1</hadoop.version>
+    <hadoop.version>3.4.2</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.22.1</log4j.version>
+    <log4j.version>2.25.3</log4j.version>
     <!-- IMPORTANT: please keep the aws-crt version in sync with that defined in the AWS SDK BOM -->
     <!-- you can get this by inspecting the aws-sdk-java-pom for the SDK version. e.g.
      $ curl -s https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.31.57/aws-sdk-java-pom-2.31.57.pom | grep awscrt.version
@@ -1878,14 +1878,9 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.78.0</version>
+        <version>1.79.0</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty-shaded</artifactId>
-        <version>1.78.0</version>
       </dependency>
       <dependency>
         <groupId>io.opencensus</groupId>
