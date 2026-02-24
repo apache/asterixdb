@@ -140,6 +140,7 @@ public class IPCConnectionManager {
                 }
                 Thread.sleep(delay);
                 delay = Math.min(MAX_RETRY_DELAY_MILLIS, (int) (delay * 1.5));
+                remoteAddress = NetworkUtil.refresh(remoteAddress);
             } else {
                 throw new IOException("Connection failed to " + remoteAddress);
             }
