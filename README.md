@@ -20,20 +20,20 @@
 
 ## What is AsterixDB?
 
-AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other Big Data platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:
+AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:
 
 - __Data model__<br/>
-A semistructured NoSQL style data model ([ADM](https://ci.apache.org/projects/asterixdb/datamodel.html)) resulting from
+A semistructured NoSQL style data model ([ADM](https://nightlies.apache.org/asterixdb/datamodel.html)) resulting from
 extending JSON with object database ideas
 
 - __Query languages__<br/>
-An expressive and declarative query language ([SQL++](http://asterixdb.apache.org/docs/0.9.7/sqlpp/manual.html) that supports a broad range of queries and analysis over semistructured data
+An expressive and declarative query language ([SQL++](http://asterixdb.apache.org/docs/0.9.9/sqlpp/manual.html) that supports a broad range of queries and analysis over semistructured data
 
 - __Scalability__<br/>
 A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
 
 - __Native storage__<br/>
-Partitioned LSM-based data storage and indexing to support efficient ingestion and management of semistructured data
+Partitioned, flexible LSM-based row and column storage, with indexing to support efficient ingestion and management of semistructured data
 
 - __External storage__<br/>
 Support for query access to externally stored data (e.g., data in HDFS) as well as to data stored natively by AsterixDB
@@ -57,8 +57,8 @@ To build AsterixDB from source, you should have a platform with the following:
 * A Unix-ish environment (Linux, OS X, will all do).
 * git
 * Maven 3.3.9 or newer.
-* JDK 11 or newer.
-* Python 3.6+ with pip and venv
+* JDK 17 or newer.
+* Python 3.11+ with pip and venv
 
 Instructions for building the master:
 
@@ -84,7 +84,7 @@ Here are steps to get AsterixDB running on your local machine:
 
         http://localhost:19006
 
-* Read more [documentation](https://ci.apache.org/projects/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
+* Read more [documentation](https://nightlies.apache.org/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
 
 ## Documentation
 
@@ -92,16 +92,10 @@ To generate the documentation, run asterix-doc with the generate.rr profile in m
 Be sure to run `mvn package` beforehand or run `mvn site` in asterix-lang-sqlpp to generate some resources that
 are used in the documentation that are generated directly from the grammar.
 
-* [master](https://ci.apache.org/projects/asterixdb/index.html) |
+* [master](https://nightlies.apache.org/asterixdb/index.html) |
+  [0.9.9](http://asterixdb.apache.org/docs/0.9.9/index.html) |
+  [0.9.8](http://asterixdb.apache.org/docs/0.9.8/index.html) |
   [0.9.7](http://asterixdb.apache.org/docs/0.9.7/index.html) |
-  [0.9.6](http://asterixdb.apache.org/docs/0.9.6/index.html) |
-  [0.9.5](http://asterixdb.apache.org/docs/0.9.5/index.html) |
-  [0.9.4.1](http://asterixdb.apache.org/docs/0.9.4.1/index.html) |
-  [0.9.4](http://asterixdb.apache.org/docs/0.9.4/index.html) |
-  [0.9.3](http://asterixdb.apache.org/docs/0.9.3/index.html) |
-  [0.9.2](http://asterixdb.apache.org/docs/0.9.2/index.html) |
-  [0.9.1](http://asterixdb.apache.org/docs/0.9.1/index.html) |
-  [0.9.0](http://asterixdb.apache.org/docs/0.9.0/index.html)
 
 ## Community support
 
