@@ -70,6 +70,8 @@ public class PushdownUtil {
     public static IVariableTypeEnvironment getTypeEnv(ILogicalOperator useOperator, IOptimizationContext context)
             throws AlgebricksException {
         if (useOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
+                || useOperator.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP
+                || useOperator.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP
                 || useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
             // Special case: for pushed select condition
             return useOperator.computeOutputTypeEnvironment(context);
