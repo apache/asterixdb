@@ -80,6 +80,11 @@ public class PrintToolsTest {
     }
 
     @Test
+    public void testCsvTwoByteCharWithComma() throws Exception {
+        assertEquals("\"café,café\"", csvOf("café,café"));
+    }
+
+    @Test
     public void testCsvThreeByteChar() throws Exception {
         assertEquals("中文", csvOf("中文"));
     }
@@ -127,14 +132,18 @@ public class PrintToolsTest {
     }
 
     @Test
-    public void testJsonAsciiEscapeSpecialChars() throws Exception {
+    public void testJsonAsciiEscapeNewline() throws Exception {
         assertEquals("\"line1\\nline2\"", jsonOf("line1\nline2"));
     }
 
     @Test
-    public void testJsonMixedMultibyteAndAscii() throws Exception {
-        String input = "Hello 中文 café 😀!";
-        assertEquals("\"" + input + "\"", jsonOf(input));
+    public void testJsonAsciiEscapeTab() throws Exception {
+        assertEquals("\"col1\\tcol2\"", jsonOf("col1\tcol2"));
+    }
+
+    @Test
+    public void testJsonAsciiEscapeBackslash() throws Exception {
+        assertEquals("\"a\\\\b\"", jsonOf("a\\b"));
     }
 
     @Test
@@ -150,6 +159,12 @@ public class PrintToolsTest {
     @Test
     public void testJsonEmoji() throws Exception {
         assertEquals("\"💪\"", jsonOf("💪"));
+    }
+
+    @Test
+    public void testJsonMixedMultibyteAndAscii() throws Exception {
+        String input = "Hello 中文 café 😀!";
+        assertEquals("\"" + input + "\"", jsonOf(input));
     }
 
     @Test
