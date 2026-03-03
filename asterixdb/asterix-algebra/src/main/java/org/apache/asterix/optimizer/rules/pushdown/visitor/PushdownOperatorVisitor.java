@@ -175,9 +175,9 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      */
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
-        visitInputs(op);
         DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable(getDataSourceFromUnnestMapOperator(op));
         registerDatasetIfApplicable(datasetDataSource, op);
+        visitInputs(op);
         return null;
     }
 
@@ -187,9 +187,9 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      */
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
-        visitInputs(op);
         DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable(getDataSourceFromUnnestMapOperator(op));
         registerDatasetIfApplicable(datasetDataSource, op);
+        visitInputs(op);
         return null;
     }
 

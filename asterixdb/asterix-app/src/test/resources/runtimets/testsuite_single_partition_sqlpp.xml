@@ -411,6 +411,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="secondary-index/projection-filter">
+        <output-dir compare="Text">secondary-index/projection-filter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="secondary-index/array-index/use-case-1">
         <output-dir compare="Text">secondary-index/array-index/use-case-1</output-dir>
       </compilation-unit>
