@@ -225,11 +225,16 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         }
     }
 
-    private InputSplit[] getInputSplits(JobConf conf, int numPartitions) throws IOException {
-        if (HDFSUtils.isEmpty(conf)) {
-            return Scheduler.EMPTY_INPUT_SPLITS;
+    private InputSplit[] getInputSplits(JobConf conf, int numPartitions) throws IOException, CompilationException {
+        try {
+            if (HDFSUtils.isEmpty(conf)) {
+                return Scheduler.EMPTY_INPUT_SPLITS;
+            }
+            return conf.getInputFormat().getSplits(conf, numPartitions);
+        } catch (IllegalArgumentException e) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e)
+                    + " . If your file path contains colons then this can lead to this error. HDFS does not support colons in file paths.");
         }
-        return conf.getInputFormat().getSplits(conf, numPartitions);
     }
 
     /*
