@@ -35,7 +35,7 @@ public class Args {
     protected int clusterPort = 19002;
 
     @Option(name = "-clusterstatepath", metaVar = "<path>", hidden = true, usage = "Path on host:port to check for cluster readiness")
-    protected String clusterStatePath = "admin/cluster";
+    protected String clusterStatePath = "admin/ping";
 
     @Option(name = "-shutdownpath", metaVar = "<path>", hidden = true, usage = "Path on host:port to invoke to initiate shutdown")
     protected String shutdownPath = "admin/shutdown";

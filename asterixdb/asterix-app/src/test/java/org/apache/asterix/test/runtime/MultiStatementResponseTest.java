@@ -26,13 +26,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -175,7 +175,7 @@ public class MultiStatementResponseTest {
     }
 
     private static Response get(String handle) throws IOException {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             try (CloseableHttpResponse response =
                     httpClient.execute(new HttpGet(handle.startsWith("http") ? handle : NC + handle))) {
                 return new Response(response.getStatusLine().getStatusCode(),
@@ -185,7 +185,7 @@ public class MultiStatementResponseTest {
     }
 
     private static Response post(String endpoint, String body) throws IOException {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpPost request = new HttpPost(endpoint);
             request.setHeader("Content-Type", "application/json");
             request.setEntity(new StringEntity(body, StandardCharsets.UTF_8));

@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.om.base.IAObject;
@@ -47,6 +48,10 @@ import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,6 +67,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 public final class TestHelper {
 
+    /** Authorization header carrying the credentials of the test clusters' passwd file. */
+    public static final String ADMIN_AUTH_HEADER = BasicAuthServlet.createAuthHeader("admin", "admin");
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String TEST_DIR_BASE_PATH = System.getProperty("user.dir") + File.separator + "target";
     private static final String[] TEST_DIRS = new String[] { "txnLogDir", "IODevice", "spill_area", "config" };
@@ -76,6 +83,17 @@ public final class TestHelper {
         SORTED_MAPPER.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         SORTED_MAPPER.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
         PRETTY_SORTED_WRITER = SORTED_MAPPER.writerWithDefaultPrettyPrinter();
+    }
+
+    /**
+     * Returns a client that sends the test admin credentials with every request. They must be sent up front: the
+     * servers answer a missing or wrong Authorization header with a bare 401 and no challenge to retry on.
+     */
+    public static CloseableHttpClient createAuthenticatedHttpClient() {
+        return HttpClients.custom()
+                .setDefaultHeaders(
+                        Collections.singletonList(new BasicHeader(HttpHeaders.AUTHORIZATION, ADMIN_AUTH_HEADER)))
+                .build();
     }
 
     public static Reader asPrettyJson(final Reader rawJson) throws IOException {

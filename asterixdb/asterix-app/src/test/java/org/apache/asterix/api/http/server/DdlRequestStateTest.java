@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.EntityDetails;
 import org.apache.asterix.metadata.utils.Creator;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.translator.ClientRequest;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -55,7 +56,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -223,7 +223,7 @@ public class DdlRequestStateTest {
     }
 
     private static JsonNode runningRequest(String clientContextId) throws Exception {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient();
                 CloseableHttpResponse httpResponse = httpClient.execute(new HttpGet(RUNNING_REQUESTS))) {
             JsonNode requests = OM.readTree(httpResponse.getEntity().getContent());
             for (JsonNode request : requests) {
@@ -236,7 +236,7 @@ public class DdlRequestStateTest {
     }
 
     private static String post(String statement, String clientContextId) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpPost httpPost = new HttpPost(QUERY_SERVICE);
             StringBuilder body =
                     new StringBuilder("{\"statement\": \"").append(statement.replace("\"", "\\\"")).append("\"");

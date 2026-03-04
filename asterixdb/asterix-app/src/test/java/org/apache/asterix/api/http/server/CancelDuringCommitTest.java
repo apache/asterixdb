@@ -29,13 +29,13 @@ import org.apache.asterix.app.cc.GlobalTxManager;
 import org.apache.asterix.common.cluster.IGlobalTxManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.JobId;
@@ -100,7 +100,7 @@ public class CancelDuringCommitTest {
     }
 
     private static String post(String statement, String clientContextId) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpPost httpPost = new HttpPost(QUERY_SERVICE);
             StringBuilder body =
                     new StringBuilder("{\"statement\": \"").append(statement.replace("\"", "\\\"")).append("\"");
@@ -118,7 +118,7 @@ public class CancelDuringCommitTest {
     }
 
     private static int cancel(String clientContextId) throws Exception {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpDelete delete = new HttpDelete(RUNNING_REQUESTS + "?client_context_id=" + clientContextId);
             try (CloseableHttpResponse httpResponse = httpClient.execute(delete)) {
                 return httpResponse.getStatusLine().getStatusCode();

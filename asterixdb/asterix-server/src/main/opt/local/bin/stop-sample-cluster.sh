@@ -20,14 +20,18 @@
 
 function usage() {
   echo
-  echo Usage: $(basename $0) [-f[orce]]
+  echo Usage: $(basename $0) [-f[orce]] [-u[sername] <username>] [-p[assword] <password>]
   echo
+  echo "  -u[sername]  : User to authenticate the shutdown request as (default: admin)"
+  echo "  -p[assword]  : Password of that user (default: read from conf/.admin_password)"
   echo "  -f[orce]  : Forcibly terminates any running ${PRODUCT} processes (after shutting down cluster, if running)"
 }
 
 while [ -n "$1" ]; do
   case $1 in
     -f|-force) force=1;;
+    -u|-username) username=$2; shift;;
+    -p|-password) password=$2; shift;;
     -help|--help|-usage|--usage) usage; exit 0;;
     *) echo "ERROR: unknown argument '$1'"; usage; exit 1;;
     esac
@@ -42,6 +46,8 @@ fi
 while [ -n "$1" ]; do
   case $1 in
     -f|-force) force=1;;
+    -u|-username) username=$2; shift;;
+    -p|-password) password=$2; shift;;
     -help|--help|-usage|--usage) usage; exit 0;;
     *) echo "ERROR: unknown argument '$1'"; usage; exit 1;;
   esac
@@ -116,9 +122,20 @@ DIRNAME=$(dirname "$0")
 
 CLUSTERDIR=$(cd "$DIRNAME/.."; echo $PWD)
 INSTALLDIR=$(cd "$CLUSTERDIR/../.."; echo $PWD)
+
+ADMIN_PASSWORD_FILE="$CLUSTERDIR/conf/.admin_password"
+if [ -z "$password" ] && [ -f "$ADMIN_PASSWORD_FILE" ]; then
+  read -r password < "$ADMIN_PASSWORD_FILE"
+  username=${username:-admin}
+fi
+CRED_ARGS=()
+if [ -n "$username" ] && [ -n "$password" ]; then
+  CRED_ARGS=(-u "$username" -p "$password")
+fi
+
 "$INSTALLDIR/bin/${HELPER_COMMAND}" get_cluster_state -quiet
 if [ $? -ne 1 ]; then
-  "$INSTALLDIR/bin/${HELPER_COMMAND}" shutdown_cluster_all
+  "$INSTALLDIR/bin/${HELPER_COMMAND}" shutdown_cluster_all "${CRED_ARGS[@]}"
   first=1
   tries=0
   echo -n "INFO: Waiting up to 60s for cluster to shutdown"

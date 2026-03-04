@@ -8,6 +8,7 @@
     "active\.memory\.global\.budget" : 67108864,
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
+    "api\.authentication\.enabled" : true,
     "aws.assume.role.async.refresh.enabled" : true,
     "aws.assume.role.duration" : 3600,
     "aws.assume.role.prefetch.time" : 300,

@@ -49,11 +49,9 @@ public class BasicAuthServlet implements IServlet {
     Map<String, String> storedCredentials;
     Map<String, String> ephemeralCredentials;
     private final IServlet delegate;
-    private ConcurrentMap<String, Object> ctx;
 
-    public BasicAuthServlet(ConcurrentMap<String, Object> ctx, IServlet delegate, Map<String, String> storedCredentials,
+    public BasicAuthServlet(IServlet delegate, Map<String, String> storedCredentials,
             Map<String, String> ephemeralCredentials) {
-        this.ctx = ctx;
         this.delegate = delegate;
         b64Decoder = Base64.getDecoder();
         this.storedCredentials = storedCredentials;
@@ -87,7 +85,7 @@ public class BasicAuthServlet implements IServlet {
 
     @Override
     public ConcurrentMap<String, Object> ctx() {
-        return ctx;
+        return delegate.ctx();
     }
 
     @Override

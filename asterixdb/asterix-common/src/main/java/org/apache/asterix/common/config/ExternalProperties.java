@@ -82,7 +82,12 @@ public class ExternalProperties extends AbstractProperties {
                 900,
                 "GCS impersonating service account duration in seconds. "
                         + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)"),
-        ICEBERG_VARIANT_ENABLED(BOOLEAN, true, "Enable or disable Iceberg VARIANT column support");
+        ICEBERG_VARIANT_ENABLED(BOOLEAN, true, "Enable or disable Iceberg VARIANT column support"),
+        API_AUTHENTICATION_ENABLED(
+                BOOLEAN,
+                true,
+                "Whether the HTTP APIs require Basic authentication. The health check endpoints are always open, "
+                        + "and the UDF endpoints always require authentication");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -116,6 +121,7 @@ public class ExternalProperties extends AbstractProperties {
                 case AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED:
                 case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
                 case ICEBERG_VARIANT_ENABLED:
+                case API_AUTHENTICATION_ENABLED:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -219,5 +225,9 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getGcpImpersonateServiceAccountDuration() {
         return accessor.getInt(Option.GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION);
+    }
+
+    public boolean isApiAuthenticationEnabled() {
+        return accessor.getBoolean(Option.API_AUTHENTICATION_ENABLED);
     }
 }
