@@ -6770,6 +6770,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="duplicate-predicate-index">
+        <output-dir compare="Text">duplicate-predicate-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="heterogeneous-index-complex-types">
         <output-dir compare="Text">heterogeneous-index-complex-types</output-dir>
       </compilation-unit>

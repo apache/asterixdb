@@ -23,6 +23,8 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.EQ;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 import static org.apache.asterix.optimizer.rules.am.AccessMethodUtils.CAST_NULL_TYPE_CONSTRUCTORS;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -42,7 +44,9 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator;
+import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
+import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -95,6 +99,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
 
@@ -1188,8 +1193,10 @@ public class BTreeAccessMethod implements IAccessMethod {
                                 && highKeyExprs[keyPos].equals(searchKeyExpr)) {
                             break;
                         }
-                        couldntFigureOut = true;
-                        doneWithExprs = true;
+                        if (!rangeMerging(searchKeyExpr, highKeyExprs, highKeyLimits, limit, keyPos, true)) {
+                            couldntFigureOut = true;
+                            doneWithExprs = true;
+                        }
                     }
                     break;
                 }
@@ -1206,8 +1213,10 @@ public class BTreeAccessMethod implements IAccessMethod {
                                 && highKeyExprs[keyPos].equals(searchKeyExpr)) {
                             break;
                         }
-                        couldntFigureOut = true;
-                        doneWithExprs = true;
+                        if (!rangeMerging(searchKeyExpr, highKeyExprs, highKeyLimits, limit, keyPos, true)) {
+                            couldntFigureOut = true;
+                            doneWithExprs = true;
+                        }
                     }
                     break;
                 }
@@ -1224,8 +1233,10 @@ public class BTreeAccessMethod implements IAccessMethod {
                                 && lowKeyExprs[keyPos].equals(searchKeyExpr)) {
                             break;
                         }
-                        couldntFigureOut = true;
-                        doneWithExprs = true;
+                        if (!rangeMerging(searchKeyExpr, lowKeyExprs, lowKeyLimits, limit, keyPos, false)) {
+                            couldntFigureOut = true;
+                            doneWithExprs = true;
+                        }
                     }
                     break;
                 }
@@ -1242,8 +1253,10 @@ public class BTreeAccessMethod implements IAccessMethod {
                                 && lowKeyExprs[keyPos].equals(searchKeyExpr)) {
                             break;
                         }
-                        couldntFigureOut = true;
-                        doneWithExprs = true;
+                        if (!rangeMerging(searchKeyExpr, lowKeyExprs, lowKeyLimits, limit, keyPos, false)) {
+                            couldntFigureOut = true;
+                            doneWithExprs = true;
+                        }
                     }
                     break;
                 }
@@ -1851,6 +1864,64 @@ public class BTreeAccessMethod implements IAccessMethod {
     @Override
     public int compareTo(IAccessMethod o) {
         return this.getName().compareTo(o.getName());
+    }
+
+    private boolean rangeMerging(ILogicalExpression searchKeyExpr, ILogicalExpression[] keyExprs, LimitType[] keyLimits,
+            LimitType limit, int keyPos, boolean highkey) {
+        int cmp = compareConstants(searchKeyExpr, keyExprs[keyPos]);
+        if (cmp != 0) {
+            if (highkey && cmp < 0) {
+                keyLimits[keyPos] = limit;
+                keyExprs[keyPos] = searchKeyExpr;
+            }
+            if (!highkey && cmp > 0) {
+                keyLimits[keyPos] = limit;
+                keyExprs[keyPos] = searchKeyExpr;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static int compareConstants(ILogicalExpression expr1, ILogicalExpression expr2) {
+        if (expr1.getExpressionTag() != LogicalExpressionTag.CONSTANT
+                || expr2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            return 0;
+        }
+        IAObject val1 = ((AsterixConstantValue) ((ConstantExpression) expr1).getValue()).getObject();
+        IAObject val2 = ((AsterixConstantValue) ((ConstantExpression) expr2).getValue()).getObject();
+        ATypeTag tag1 = val1.getType().getTypeTag();
+        ATypeTag tag2 = val2.getType().getTypeTag();
+        if (!ATypeHierarchy.isCompatible(tag1, tag2)) {
+            return 0;
+        }
+        try {
+            byte[] bytes1 = serializeObject(val1);
+            byte[] bytes2 = serializeObject(val2);
+            TaggedValueReference ref1 = new TaggedValueReference();
+            TaggedValueReference ref2 = new TaggedValueReference();
+            ref1.set(bytes1, 1, bytes1.length - 1, tag1);
+            ref2.set(bytes2, 1, bytes2.length - 1, tag2);
+            ILogicalBinaryComparator comparator =
+                    ComparatorUtil.createLogicalComparator(val1.getType(), val2.getType(), false);
+            ILogicalBinaryComparator.Result result = comparator.compare(ref1, ref2);
+            switch (result) {
+                case LT:
+                    return -1;
+                case GT:
+                    return 1;
+                default:
+                    return 0;
+            }
+        } catch (HyracksDataException e) {
+            return 0;
+        }
+    }
+
+    private static byte[] serializeObject(IAObject obj) throws HyracksDataException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        AObjectSerializerDeserializer.INSTANCE.serialize(obj, new DataOutputStream(baos));
+        return baos.toByteArray();
     }
 
 }
