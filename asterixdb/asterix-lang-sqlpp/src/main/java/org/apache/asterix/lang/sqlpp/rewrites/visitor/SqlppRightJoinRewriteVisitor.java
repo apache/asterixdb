@@ -56,6 +56,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -149,6 +150,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
         Expression fromExpr = fromTerm.getLeftExpression();
         VariableExpr fromVar = fromTerm.getLeftVariable();
         VariableExpr fromPosVar = fromTerm.getPositionalVariable();
+        TimeTravel fromTimeTravel = fromTerm.getTimeTravel();
 
         List<AbstractBinaryCorrelateClause> correlateClauses = fromTerm.getCorrelateClauses();
         for (int i = 0; i < correlateClauses.size(); i++) {
@@ -161,16 +163,18 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                 Expression rightExpr = joinClause.getRightExpression();
                 VariableExpr rightVar = joinClause.getRightVariable();
                 VariableExpr rightPosVar = joinClause.getPositionalVariable();
+                TimeTravel rightTimeTravel = joinClause.getTimeTravel();
                 Expression condExpr = joinClause.getConditionExpression();
                 Literal.Type outerMissingValueType = joinClause.getOuterJoinMissingValueType();
                 if (i == 0) {
                     JoinClause newJoinClause = new JoinClause(JoinType.LEFTOUTER, fromExpr, fromVar, fromPosVar,
-                            condExpr, outerMissingValueType);
+                            condExpr, outerMissingValueType, fromTimeTravel);
                     newJoinClause.setSourceLocation(joinClauseSourceLoc);
 
                     fromExpr = rightExpr;
                     fromVar = rightVar;
                     fromPosVar = rightPosVar;
+                    fromTimeTravel = rightTimeTravel;
                     correlateClauses.set(i, newJoinClause);
                 } else {
                     VarIdentifier newRightVar = context.newVariable();
@@ -276,7 +280,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                     }
 
                     Expression newRightExpr = createRightSelectExpression(fromExpr, newFromVar, newFromPosVar,
-                            newPrecedingClauseList, projectList, joinClauseSourceLoc);
+                            newPrecedingClauseList, fromTimeTravel, projectList, joinClauseSourceLoc);
 
                     VariableExpr newRightVarExpr = newVariableExpr(newRightVar, rightVar.getSourceLocation());
                     newRightVarExpr.addHint(ExcludeFromSelectStarAnnotation.INSTANCE);
@@ -300,6 +304,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                     fromExpr = rightExpr;
                     fromVar = rightVar;
                     fromPosVar = rightPosVar;
+                    fromTimeTravel = rightTimeTravel;
 
                     correlateClauses.subList(0, i).clear();
                     correlateClauses.set(0, newJoinClause);
@@ -330,7 +335,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
             }
         }
 
-        FromTerm newFromTerm = new FromTerm(fromExpr, fromVar, fromPosVar, correlateClauses);
+        FromTerm newFromTerm = new FromTerm(fromExpr, fromVar, fromPosVar, correlateClauses, fromTimeTravel);
         newFromTerm.setSourceLocation(fromTerm.getSourceLocation());
 
         List<LetClause> newLetClauses = new ArrayList<>(substMapOuterFinal.size());
@@ -346,10 +351,10 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
     }
 
     private Expression createRightSelectExpression(Expression fromExpr, VarIdentifier fromVar, VarIdentifier fromPosVar,
-            List<AbstractBinaryCorrelateClause> correlateClauseList, List<Projection> projectList,
-            SourceLocation sourceLoc) {
+            List<AbstractBinaryCorrelateClause> correlateClauseList, TimeTravel timeTravel,
+            List<Projection> projectList, SourceLocation sourceLoc) {
         FromTerm newFromTerm = new FromTerm(fromExpr, newVariableExpr(fromVar, sourceLoc),
-                fromPosVar != null ? newVariableExpr(fromPosVar, sourceLoc) : null, correlateClauseList);
+                fromPosVar != null ? newVariableExpr(fromPosVar, sourceLoc) : null, correlateClauseList, timeTravel);
         List<FromTerm> newFromTermList = new ArrayList<>(1);
         newFromTermList.add(newFromTerm);
         FromClause newFromClause = new FromClause(newFromTermList);

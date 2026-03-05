@@ -43,5 +43,4 @@ public abstract class AbstractUnnestOperator extends AbstractScanOperator {
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         return visitor.transform(expression);
     }
-
 }

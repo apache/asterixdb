@@ -20,6 +20,8 @@ package org.apache.asterix.metadata.declared;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -137,9 +139,8 @@ public class DatasetDataSource extends DataSource {
                 PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
                 int externalScanBufferSize = physicalOptimizationConfig.getExternalScanBufferSize();
                 Map<String, String> properties =
-                        addExternalProjectionInfo(projectionFiltrationInfo, edd.getProperties());
-                properties = addSubPath(externalDataSource.getProperties(), properties);
-                properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
+                        prepareExternalDatasetProperties(edd.getProperties(), externalDataSource.getProperties(),
+                                projectionFiltrationInfo, metadataProvider, externalScanBufferSize);
                 IExternalFilterEvaluatorFactory filterEvaluatorFactory = metadataProvider
                         .createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
                 ITypedAdapterFactory adapterFactory =
@@ -181,31 +182,50 @@ public class DatasetDataSource extends DataSource {
         }
     }
 
-    private Map<String, String> addExternalProjectionInfo(IProjectionFiltrationInfo projectionInfo,
-            Map<String, String> properties) {
-        Map<String, String> propertiesCopy = properties;
+    private Map<String, String> prepareExternalDatasetProperties(Map<String, String> originalProperties,
+            Map<String, Serializable> dataSourceProps, IProjectionFiltrationInfo projectionInfo,
+            MetadataProvider metadataProvider, int externalScanBufferSize) {
+        // Always create a copy to avoid modifying the original properties map
+        Map<String, String> properties = new HashMap<>(originalProperties);
+
+        // Add external scan buffer size
+        properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
+
+        // Add external collection compiler properties
+        setExternalCollectionCompilerProperties(metadataProvider, properties);
+
+        // Add subpath if present
+        Serializable subPath = dataSourceProps.get(SUBPATH);
+        if (subPath instanceof String) {
+            properties.put(SUBPATH, (String) subPath);
+        }
+
+        // Add time travel properties (Iceberg snapshot ID or timestamp)
+        Serializable snapshotId = dataSourceProps.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+        Serializable snapshotTimestamp = dataSourceProps.get(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
+
+        String snapshotKey =
+                snapshotId != null ? ICEBERG_SNAPSHOT_ID_PROPERTY_KEY : ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY;
+        Serializable snapshotValue = snapshotId != null ? snapshotId : snapshotTimestamp;
+
+        if (snapshotValue instanceof String) {
+            properties.remove(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
+            properties.remove(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
+            properties.put(snapshotKey, (String) snapshotValue);
+        }
+
+        // Add projection info if needed
         if (projectionInfo != DefaultProjectionFiltrationInfo.INSTANCE) {
-            //properties could be cached and reused, so we make a copy per query
-            propertiesCopy = new HashMap<>(properties);
             try {
                 ExternalDatasetProjectionFiltrationInfo externalProjectionInfo =
                         (ExternalDatasetProjectionFiltrationInfo) projectionInfo;
-                ExternalDataUtils.setExternalDataProjectionInfo(externalProjectionInfo, propertiesCopy);
+                ExternalDataUtils.setExternalDataProjectionInfo(externalProjectionInfo, properties);
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
         }
-        return propertiesCopy;
-    }
 
-    private Map<String, String> addSubPath(Map<String, Serializable> dataSourceProps, Map<String, String> properties) {
-        Serializable subPath = dataSourceProps.get(SUBPATH);
-        if (!(subPath instanceof String)) {
-            return properties;
-        }
-        Map<String, String> propertiesCopy = new HashMap<>(properties);
-        propertiesCopy.put(SUBPATH, (String) subPath);
-        return propertiesCopy;
+        return properties;
     }
 
     private int[] createFilterIndexes(List<LogicalVariable> filterVars, IOperatorSchema opSchema) {

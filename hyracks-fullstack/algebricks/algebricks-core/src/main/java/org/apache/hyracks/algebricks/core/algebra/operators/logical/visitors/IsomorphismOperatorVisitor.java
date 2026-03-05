@@ -407,6 +407,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (!isomorphic) {
             return Boolean.FALSE;
         }
+        isomorphic = Objects.equals(op.getTimeTravel(), unnestOpArg.getTimeTravel());
+        if (!isomorphic) {
+            return Boolean.FALSE;
+        }
         isomorphic = op.getExpressionRef().getValue().equals(unnestOpArg.getExpressionRef().getValue());
         return isomorphic;
     }
@@ -811,6 +815,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         isomorphic = op.getMissingValue().equals(unnestOpArg.getMissingValue());
+        if (!isomorphic) {
+            return Boolean.FALSE;
+        }
+        isomorphic = Objects.equals(op.getTimeTravel(), unnestOpArg.getTimeTravel());
         if (!isomorphic) {
             return Boolean.FALSE;
         }

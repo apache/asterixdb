@@ -33,9 +33,13 @@ public class UnnestOperator extends AbstractUnnestNonMapOperator {
         super(variable, expression);
     }
 
+    public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression, TimeTravel timeTravel) {
+        super(variable, expression, timeTravel);
+    }
+
     public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType) {
-        super(variable, expression, positionalVariable, positionalVariableType);
+            LogicalVariable positionalVariable, Object positionalVariableType, TimeTravel timeTravel) {
+        super(variable, expression, positionalVariable, positionalVariableType, timeTravel);
     }
 
     @Override

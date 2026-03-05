@@ -194,6 +194,7 @@ import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.DatasetDeclParametersUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
+import org.apache.asterix.lang.sqlpp.JoinClauseRightInput;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -205,6 +206,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
@@ -288,6 +290,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     protected static final String CATALOG = "CATALOG";
     private static final String SOURCE = "SOURCE";
     private static final String CASCADE = "CASCADE";
+    private static final String SNAPSHOT = "SNAPSHOT";
+    private static final String TIMESTAMP = "TIMESTAMP";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -5939,6 +5943,9 @@ FromTerm FromTerm() throws ParseException :
   VariableExpr posVar = null;
   AbstractBinaryCorrelateClause correlateClause = null;
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
+
+  String snapshotOrTimestamp = null;
+  TimeTravel.Type timeTravelType = TimeTravel.Type.SNAPSHOT_ID;
 }
 {
   leftExpr = Expression()
@@ -5950,7 +5957,25 @@ FromTerm FromTerm() throws ParseException :
         ((VariableExpr) leftExpr).addHint(new ExternalSubpathAnnotation(subPath));
       }
     }
-  } ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
+  } ((<AS>)? leftVar = Variable())?
+  (
+    <AT>
+    (
+        LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
+        <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+        { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+        (
+          <AT> posVar = Variable()
+        )?
+      | LOOKAHEAD( { laIdentifier(TIMESTAMP) } )
+        <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+        { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
+        (
+          <AT> posVar = Variable()
+        )?
+      | posVar = Variable()
+    )
+  )?
   (
      (
       correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER)
@@ -5967,7 +5992,13 @@ FromTerm FromTerm() throws ParseException :
     if (leftVar == null) {
         leftVar = ExpressionToVariableUtil.getGeneratedVariable(leftExpr, true);
     }
-    FromTerm fromTerm = new FromTerm(leftExpr, leftVar, posVar, correlateClauses);
+    FromTerm fromTerm;
+    if (snapshotOrTimestamp != null) {
+      TimeTravel timeTravel = new TimeTravel(snapshotOrTimestamp, timeTravelType);
+      fromTerm = new FromTerm(leftExpr, leftVar, posVar, correlateClauses, timeTravel);
+    } else {
+      fromTerm = new FromTerm(leftExpr, leftVar, posVar, correlateClauses);
+    }
     fromTerm.setSourceLocation(leftExpr.getSourceLocation());
     return fromTerm;
   }
@@ -5987,14 +6018,14 @@ AbstractBinaryCorrelateClause JoinOrUnnestClause(JoinType joinType, UnnestType u
 JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
     Token startToken = null;
-    Triple<Expression, VariableExpr, VariableExpr> rightInput = null;
+    JoinClauseRightInput rightInput = null;
     Expression conditionExpr = null;
 }
 {
   <JOIN> { startToken = token; } rightInput = JoinClauseRightInput() <ON> conditionExpr = Expression()
   {
-    JoinClause joinClause = new JoinClause(joinType, rightInput.first, rightInput.second, rightInput.third,
-      conditionExpr, joinType == JoinType.INNER ? null : Literal.Type.MISSING);
+    JoinClause joinClause = new JoinClause(joinType, rightInput.getRightExpr(), rightInput.getRightVar(), rightInput.getPosVar(),
+      conditionExpr, joinType == JoinType.INNER ? null : Literal.Type.MISSING, rightInput.getTimeTravel());
     return addSourceLocation(joinClause, startToken);
   }
 }
@@ -6002,23 +6033,26 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
 JoinClause CrossJoinClause() throws ParseException :
 {
     Token startToken = null;
-    Triple<Expression, VariableExpr, VariableExpr> rightInput = null;
+    JoinClauseRightInput rightInput = null;
     Expression conditionExpr = null;
 }
 {
   <JOIN> { startToken = token; } rightInput = JoinClauseRightInput()
   {
-    JoinClause joinClause = new JoinClause(JoinType.INNER, rightInput.first, rightInput.second, rightInput.third,
-      new LiteralExpr(TrueLiteral.INSTANCE), null);
+    JoinClause joinClause = new JoinClause(JoinType.INNER, rightInput.getRightExpr(), rightInput.getRightVar(), rightInput.getPosVar(),
+      new LiteralExpr(TrueLiteral.INSTANCE), null, rightInput.getTimeTravel());
     return addSourceLocation(joinClause, startToken);
   }
 }
 
-Triple<Expression, VariableExpr, VariableExpr> JoinClauseRightInput() throws ParseException :
+JoinClauseRightInput JoinClauseRightInput() throws ParseException :
 {
     Expression rightExpr = null;
     VariableExpr rightVar = null;
     VariableExpr posVar = null;
+
+    String snapshotOrTimestamp = null;
+    TimeTravel.Type timeTravelType = TimeTravel.Type.SNAPSHOT_ID;
 }
 {
   rightExpr = Expression()
@@ -6030,12 +6064,34 @@ Triple<Expression, VariableExpr, VariableExpr> JoinClauseRightInput() throws Par
           ((VariableExpr) rightExpr).addHint(new ExternalSubpathAnnotation(subPath));
         }
     }
-  } ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
+  }
+  ((<AS>)? rightVar = Variable())?
+  (
+    <AT>
+    (
+      LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
+      <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+      { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+      | LOOKAHEAD( { laIdentifier(TIMESTAMP) } )
+      <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+      { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
+    )
+  )?
+  (
+    <AT>
+    (
+      posVar = Variable()
+    )
+  )?
   {
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
-    return new Triple<Expression, VariableExpr, VariableExpr>(rightExpr, rightVar, posVar);
+    TimeTravel timeTravel = null;
+    if (snapshotOrTimestamp != null) {
+      timeTravel = new TimeTravel(snapshotOrTimestamp, timeTravelType);
+    }
+    return new JoinClauseRightInput(rightExpr, rightVar, posVar, timeTravel);
   }
 }
 

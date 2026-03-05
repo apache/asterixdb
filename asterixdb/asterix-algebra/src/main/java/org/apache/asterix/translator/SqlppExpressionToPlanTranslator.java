@@ -327,9 +327,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         if (fromTerm.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(fromTerm.getPositionalVariable());
             // We set the positional variable type as BIGINT type.
-            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64);
+            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64,
+                    fromTerm.getTimeTravel());
         } else {
-            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.first));
+            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.first), fromTerm.getTimeTravel());
         }
         unnestOp.getAnnotations().put(ARRAY_ACCESS, fromExpr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION);
         ExternalSubpathAnnotation hint = ((AbstractExpression) fromExpr).findHint(ExternalSubpathAnnotation.class);
@@ -579,13 +580,15 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             // We set the positional variable type as BIGINT type.
             unnestOp = outerUnnest
                     ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar,
-                            BuiltinType.AINT64, outerUnnestMissingValue)
-                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64);
+                            BuiltinType.AINT64, outerUnnestMissingValue, binaryCorrelate.getTimeTravel())
+                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64,
+                            binaryCorrelate.getTimeTravel());
         } else {
             unnestOp = outerUnnest
                     ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first),
-                            outerUnnestMissingValue)
-                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first));
+                            outerUnnestMissingValue, binaryCorrelate.getTimeTravel())
+                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first),
+                            binaryCorrelate.getTimeTravel());
         }
         unnestOp.getAnnotations().put(ARRAY_ACCESS, rightExpr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION);
         ExternalSubpathAnnotation hint = ((AbstractExpression) rightExpr).findHint(ExternalSubpathAnnotation.class);

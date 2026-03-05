@@ -29,21 +29,29 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class FromTerm extends AbstractClause {
     private Expression leftExpr;
-    private VariableExpr leftVar;
-    private VariableExpr posVar;
-    private List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
+    private final VariableExpr leftVar;
+    private final VariableExpr posVar;
+    private final List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
+    private final TimeTravel timeTravel;
 
     public FromTerm(Expression leftExpr, VariableExpr leftVar, VariableExpr posVar,
             List<AbstractBinaryCorrelateClause> correlateClauses) {
+        this(leftExpr, leftVar, posVar, correlateClauses, null);
+    }
+
+    public FromTerm(Expression leftExpr, VariableExpr leftVar, VariableExpr posVar,
+            List<AbstractBinaryCorrelateClause> correlateClauses, TimeTravel timeTravel) {
         this.leftExpr = leftExpr;
         this.leftVar = leftVar;
         this.posVar = posVar;
         if (correlateClauses != null) {
             this.correlateClauses.addAll(correlateClauses);
         }
+        this.timeTravel = timeTravel;
     }
 
     @Override
@@ -73,7 +81,7 @@ public class FromTerm extends AbstractClause {
     }
 
     public boolean hasCorrelateClauses() {
-        return correlateClauses != null && !correlateClauses.isEmpty();
+        return !correlateClauses.isEmpty();
     }
 
     public List<AbstractBinaryCorrelateClause> getCorrelateClauses() {
@@ -84,14 +92,22 @@ public class FromTerm extends AbstractClause {
         return posVar != null;
     }
 
+    public boolean hasTimeTravel() {
+        return timeTravel != null;
+    }
+
+    public TimeTravel getTimeTravel() {
+        return timeTravel;
+    }
+
     @Override
     public String toString() {
-        return String.valueOf(leftExpr) + " AS " + leftVar;
+        return leftExpr + " AS " + leftVar;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(correlateClauses, leftExpr, leftVar, posVar);
+        return Objects.hash(correlateClauses, leftExpr, leftVar, posVar, timeTravel);
     }
 
     @Override
@@ -99,11 +115,11 @@ public class FromTerm extends AbstractClause {
         if (this == object) {
             return true;
         }
-        if (!(object instanceof FromTerm)) {
+        if (!(object instanceof FromTerm target)) {
             return false;
         }
-        FromTerm target = (FromTerm) object;
         return Objects.equals(correlateClauses, target.correlateClauses) && Objects.equals(leftExpr, target.leftExpr)
-                && Objects.equals(leftVar, target.leftVar) && Objects.equals(posVar, target.posVar);
+                && Objects.equals(leftVar, target.leftVar) && Objects.equals(posVar, target.posVar)
+                && Objects.equals(timeTravel, target.timeTravel);
     }
 }

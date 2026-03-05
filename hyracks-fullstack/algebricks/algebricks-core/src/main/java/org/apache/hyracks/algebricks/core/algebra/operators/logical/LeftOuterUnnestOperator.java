@@ -39,8 +39,15 @@ public class LeftOuterUnnestOperator extends AbstractUnnestNonMapOperator {
     }
 
     public LeftOuterUnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType, IAlgebricksConstantValue missingValue) {
-        super(variable, expression, positionalVariable, positionalVariableType);
+            IAlgebricksConstantValue missingValue, TimeTravel timeTravel) {
+        super(variable, expression, timeTravel);
+        setMissingValue(missingValue);
+    }
+
+    public LeftOuterUnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
+            LogicalVariable positionalVariable, Object positionalVariableType, IAlgebricksConstantValue missingValue,
+            TimeTravel timeTravel) {
+        super(variable, expression, positionalVariable, positionalVariableType, timeTravel);
         setMissingValue(missingValue);
     }
 
