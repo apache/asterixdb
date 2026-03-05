@@ -1,0 +1,1 @@
+{ "userId": 3, "email": "carol@example.com", "username": "carol", "roles": [ { "roleId": "role1", "roleName": "moderator", "roleId2": "pp" }, { "roleId": "role2", "roleName": "reviewer", "roleId2": "pp" }, { "roleId": "role3", "roleName": "reviewer", "roleId2": "pp" }, { "roleId": "role4", "roleName": "reviewer", "roleId2": "pp" } ], "isActive": true }

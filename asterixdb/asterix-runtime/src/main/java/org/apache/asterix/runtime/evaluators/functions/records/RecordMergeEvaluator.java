@@ -63,6 +63,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RecordMergeEvaluator extends AbstractScalarEval {
 
     private final boolean isIgnoreDuplicates;
+    private final boolean isRemovalRecord;
 
     private final ARecordType outRecType;
 
@@ -81,17 +82,21 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
     private final IBinaryComparator stringBinaryComparator =
             UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
+    // Empty record for processing removal nested records
+    private ARecordVisitablePointable emptyRecord;
+
     private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
     private final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput out = resultStorage.getDataOutput();
 
     RecordMergeEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
-            SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates)
-            throws HyracksDataException {
+            SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates,
+            boolean isRemovalRecord) throws HyracksDataException {
         super(sourceLocation, identifier);
 
         this.isIgnoreDuplicates = isIgnoreDuplicates;
+        this.isRemovalRecord = isRemovalRecord;
 
         eval0 = args[0].createScalarEvaluator(ctx);
         eval1 = args[1].createScalarEvaluator(ctx);
@@ -103,6 +108,11 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
         PointableAllocator pa = new PointableAllocator();
         vp0 = pa.allocateRecordValue(inRecType0);
         vp1 = pa.allocateRecordValue(inRecType1);
+
+        // Create empty record for processing removal nested records
+        if (isRemovalRecord) {
+            emptyRecord = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        }
     }
 
     @Override
@@ -149,8 +159,10 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
             IVisitablePointable leftValue = leftRecord.getFieldValues().get(i);
             ATypeTag leftType = PointableHelper.getTypeTag(leftValue);
 
-            // Skip NULL or MISSING values from the transform record
-            if (leftType == ATypeTag.NULL || leftType == ATypeTag.MISSING) {
+            // Must check both conditions: isRemovalRecord AND leftType == ATypeTag.NULL
+            // Without the type check, ALL fields would be skipped from the transform record.
+            // Example: SET a.a=2, a.b=missing → only 'b' should be skipped (NULL), 'a' must be kept
+            if (isRemovalRecord && leftType == ATypeTag.NULL) {
                 continue;
             }
 
@@ -170,6 +182,10 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
                         if (ATypeTag.OBJECT == rightType && ATypeTag.OBJECT == leftType) {
                             // We are merging two sub records
                             addFieldToSubRecord(combinedType, leftName, leftValue, rightValue, nestedLevel);
+                            foundMatch = true;
+                        } else if (isRemovalRecord) {
+                            // Process removal record with empty record to strip NULL fields
+                            addFieldToSubRecord(combinedType, leftName, leftValue, emptyRecord, nestedLevel);
                             foundMatch = true;
                         }
                         // Same name, different value, not of type Record, handle duplicate field
@@ -192,7 +208,13 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
 
             // If no match is found, we add the left field
             if (!foundMatch) {
-                addFieldToSubRecord(combinedType, leftName, leftValue, null, nestedLevel);
+                if (!isRemovalRecord) {
+                    addFieldToSubRecord(combinedType, leftName, leftValue, null, nestedLevel);
+                } else if (leftType == ATypeTag.OBJECT) {
+                    // For removal records with nested objects, process to strip NULL fields
+                    // Use empty record as right side to apply NULL-stripping logic
+                    addFieldToSubRecord(combinedType, leftName, leftValue, emptyRecord, nestedLevel);
+                }
             }
 
         }

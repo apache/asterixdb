@@ -1,0 +1,3 @@
+{ "UserTypes": { "userId": 1, "email": "alice@example.com", "username": "alice", "roles": [ { "roleId": "role1", "roleName": "admin" }, { "roleId": "role2", "roleName": "developer" } ], "moreInfo": { "b": null }, "isActive": true } }
+{ "UserTypes": { "userId": 2, "email": "bob@example.com", "username": "bob", "roles": [ { "roleId": "role1", "roleName": "user" }, { "roleId": "role2", "roleName": "contributor" } ], "newf": null, "isActive": false } }
+{ "UserTypes": { "userId": 3, "email": "carol@example.com", "username": "carol", "roles": [ { "roleId": "role1", "roleName": "moderator", "roleId3": null }, { "roleId": "role3", "roleName": "reviewer", "roleId3": 3 }, { "roleId": "role4", "roleName": "reviewer", "roleId3": 3 } ], "isActive": true } }

@@ -15415,6 +15415,11 @@
           <output-dir compare="Text">complex-case</output-dir>
         </compilation-unit>
       </test-case>
+  <test-case FilePath="update-statements">
+    <compilation-unit name="update-null-missing">
+      <output-dir compare="Text">update-null-missing</output-dir>
+    </compilation-unit>
+  </test-case>
   </test-group>
 <test-group name="json">
     <test-case FilePath="json">

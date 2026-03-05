@@ -1,0 +1,135 @@
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+USE test;
+
+
+
+INSERT INTO UserTypes([
+{
+    "id": "35bd594c-be7e-6e55-b974-8ba359af67a0",
+    "characters_with_spaces": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ",
+    "characters_without_spaces": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "document_size": 1024,
+    "address": "85896 Phillips Greens",
+    "free_parking": true,
+    "city": "Port Jeremyborough",
+    "type": "Center",
+    "url": "https://www.reyes.com/",
+    "phone": 562014407446777,
+    "price": 3503,
+    "avg_rating": 0.6859984982606409,
+    "free_breakfast": false,
+    "name": "Martinez-Flores Hotel",
+    "email": "ymartinez@example.com",
+    "mutated": 0,
+    "padding": "",
+    "public_likes": [
+      "Stephen Wilson"
+    ],
+    "country": "Rwanda",
+    "reviews": [
+      {
+        "date": "2026-03-10 12:43:07.264184",
+        "author": "Michael Henderson",
+        "rating": {
+          "value": 8.406756673721446,
+          "cleanliness": 3.9047144568283687,
+          "overall": 9.177556444067264
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.264503",
+        "author": "James Montoya",
+        "rating": {
+          "value": 3.7506489481471137,
+          "cleanliness": 5.246937763023568,
+          "overall": 1.032062458844989
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.264831",
+        "author": "Lisa Gates",
+        "rating": {
+          "value": 6.6611250937435065,
+          "cleanliness": 3.4025205110210877,
+          "overall": 0.596784975005652
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.265172",
+        "author": "Brooke Hernandez",
+        "rating": {
+          "value": 0.11961495510021902,
+          "cleanliness": 7.393498110549007,
+          "overall": 9.637315958345473
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.320712",
+        "author": "Brian Chavez",
+        "rating": {
+          "value": 0.2140576224243651,
+          "cleanliness": 4.867233551339014,
+          "overall": 3.632851583190809
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.321035",
+        "author": "Regina Cummings",
+        "rating": {
+          "value": 6.575879018967038,
+          "cleanliness": 8.73315278727325,
+          "overall": 4.40723234799864
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.321354",
+        "author": "Jennifer Russell",
+        "rating": {
+          "value": 6.163978238017556,
+          "cleanliness": 9.612739444898677,
+          "overall": 9.670299535989171
+        }
+      },
+      {
+        "date": "2026-03-10 12:43:07.321703",
+        "author": "Timothy Mckee",
+        "rating": {
+          "value": 1.6039159723991192,
+          "cleanliness": 7.010661408205543,
+          "overall": 9.63336603959597
+        }
+      }
+    ]
+  }
+]);
+
+
+UPDATE  UserTypes AS h
+SET h.total_overall_rating = (ARRAY_SUM((
+  FROM h.reviews AS r
+  SELECT VALUE r.rating.overall
+)) = null)
+WHERE h.id ="35bd594c-be7e-6e55-b974-8ba359af67a0"
+
+returning h;
+
