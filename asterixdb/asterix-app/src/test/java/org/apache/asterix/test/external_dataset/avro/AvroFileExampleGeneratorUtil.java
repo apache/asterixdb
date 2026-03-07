@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +85,7 @@ public class AvroFileExampleGeneratorUtil {
             // First record with various fields
             GenericRecord record = new GenericData.Record(schema);
             record.put("unionField", 42);
-            Map<String, Integer> map = new HashMap<>();
+            Map<String, Integer> map = new LinkedHashMap<>();
             map.put("key1", 1);
             map.put("key2", 2);
             record.put("mapField", map);
@@ -102,7 +102,7 @@ public class AvroFileExampleGeneratorUtil {
             //second record to be added
             GenericRecord record2 = new GenericData.Record(schema);
             record2.put("unionField", ByteBuffer.wrap(new byte[] { 0x01, 0x05 }));
-            Map<String, Integer> map2 = new HashMap<>();
+            Map<String, Integer> map2 = new LinkedHashMap<>();
             map2.put("key3", 3);
             map2.put("key4", 4);
             record2.put("mapField", map2);
@@ -119,7 +119,7 @@ public class AvroFileExampleGeneratorUtil {
             //Third record to be added
             GenericRecord record3 = new GenericData.Record(schema);
             record3.put("unionField", map2);
-            Map<String, Integer> map3 = new HashMap<>();
+            Map<String, Integer> map3 = new LinkedHashMap<>();
             map3.put("key4", 121);
             map3.put("key5", 45);
             record3.put("mapField", map3);
@@ -139,7 +139,7 @@ public class AvroFileExampleGeneratorUtil {
             arrayField.add("value1");
             arrayField.add("value2");
             record4.put("unionField", arrayField);
-            Map<String, Integer> map4 = new HashMap<>();
+            Map<String, Integer> map4 = new LinkedHashMap<>();
             map4.put("key6", 112);
             map4.put("key7", 548);
             record4.put("mapField", map4);
