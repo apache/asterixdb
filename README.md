@@ -57,7 +57,7 @@ To build AsterixDB from source, you should have a platform with the following:
 * A Unix-ish environment (Linux, OS X, will all do).
 * git
 * Maven 3.3.9 or newer.
-* JDK 17 or newer.
+* JDK 21 or newer.
 * Python 3.11+ with pip and venv
 
 Instructions for building the master:
