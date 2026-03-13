@@ -44,13 +44,13 @@ class RecordPutEvaluator extends AbstractRecordAddPutEvaluator {
         for (int i = 0, fieldCount = fieldNames.size(); i < fieldCount; i++) {
             final IVisitablePointable fieldName = fieldNames.get(i);
             final IVisitablePointable fieldValue = fieldValues.get(i);
-            if (!newFieldFound && !PointableHelper.isEqual(fieldName, newFieldNamePointable, stringBinaryComparator)) {
-                addField(fieldName, fieldValue);
-            } else {
+            if (PointableHelper.isEqual(fieldName, newFieldNamePointable, stringBinaryComparator)) {
                 newFieldFound = true;
                 if (!newFieldValueIsMissing) {
                     addField(newFieldNamePointable, newFieldValuePointable);
                 }
+            } else {
+                addField(fieldName, fieldValue);
             }
         }
         if (!newFieldFound) {
