@@ -164,7 +164,7 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         for (Expression pathExpr : pathExprList) {
             try {
                 if (isPrimaryKeyField(pathExpr, fieldPath)) {
-                    throw new CompilationException("Cannot set primary key field: " + pathExpr);
+                    throw new CompilationException(ErrorCode.UPDATE_PRIMARY_KEY, pathExpr.toString());
                 }
             } catch (AlgebricksException e) {
                 throw new RuntimeException(e);
