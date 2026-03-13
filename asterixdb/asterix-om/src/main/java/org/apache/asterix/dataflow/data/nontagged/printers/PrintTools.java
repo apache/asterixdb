@@ -312,7 +312,7 @@ public class PrintTools {
         boolean shouldQuote = forceQuote;
         if (!shouldQuote) {
             // Check if the string contains any special characters that require quoting
-            for (int i = position; i < maxPosition; i++) {
+            for (int i = position; i < maxPosition; i += UTF8StringUtil.charSize(b, i)) {
                 char c = UTF8StringUtil.charAt(b, i);
                 if (c == quote || c == '\r' || c == '\n' || c == escape || c == delimiter) {
                     shouldQuote = true;
@@ -342,7 +342,7 @@ public class PrintTools {
 
             // Write the character bytes
             while (sz > 0) {
-                ps.print(c);
+                ps.write(b[position]);
                 ++position;
                 --sz;
             }

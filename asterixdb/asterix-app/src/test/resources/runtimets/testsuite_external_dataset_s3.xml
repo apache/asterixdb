@@ -382,6 +382,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
+      <compilation-unit name="multibyte-chars">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">multibyte-chars</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
       <compilation-unit name="type-mismatch">
         <placeholder name="adapter" value="S3" />
         <placeholder name="pathprefix" value="" />
