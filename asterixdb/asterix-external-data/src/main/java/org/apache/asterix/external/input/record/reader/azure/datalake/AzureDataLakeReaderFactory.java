@@ -30,7 +30,7 @@ public class AzureDataLakeReaderFactory extends StreamRecordReaderFactory {
     private static final long serialVersionUID = 1L;
 
     private static final List<String> recordReaderNames =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE);
+            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE);
 
     @Override
     public List<String> getRecordReaderNames() {

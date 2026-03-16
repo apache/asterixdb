@@ -34,8 +34,10 @@ import static org.apache.asterix.external.util.azure.AzureConstants.ENDPOINT_FIE
 import static org.apache.asterix.external.util.azure.AzureConstants.MANAGED_IDENTITY_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.azure.AzureConstants.TOKEN_REQUEST_CONTEXT_SCOPE;
 import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.DEFAULT_RECUSRIVE_VALUE;
 import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.RECURSIVE_FIELD_NAME;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.util.ArrayList;
@@ -55,12 +57,16 @@ import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.azure.AzureUtils;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.iceberg.azure.AzureProperties;
 
+import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.AzureSasCredential;
+import com.azure.core.credential.TokenRequestContext;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
@@ -109,9 +115,11 @@ public class DatalakeUtils {
         DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
         builder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
 
-        int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
-        RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
-        builder.retryOptions(requestRetryOptions);
+        if (appCtx != null) {
+            int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
+            RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
+            builder.retryOptions(requestRetryOptions);
+        }
 
         // Endpoint is required
         if (endpoint == null) {
@@ -282,7 +290,7 @@ public class DatalakeUtils {
      * @param configuration properties
      * @throws CompilationException Compilation exception
      */
-    public static void validateAzureDataLakeProperties(Map<String, String> configuration, SourceLocation srcLoc,
+    public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
 
         // check if the format property is present
@@ -292,12 +300,16 @@ public class DatalakeUtils {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        if (IcebergUtils.isIcebergTable(configuration)) {
+            return;
+        }
+
         validateIncludeExclude(configuration);
 
         // Check if the bucket is present
         DataLakeServiceClient dataLakeServiceClient;
         try {
-            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
             dataLakeServiceClient = buildClient(appCtx, configuration);
             DataLakeFileSystemClient fileSystemClient = dataLakeServiceClient.getFileSystemClient(container);
 
@@ -332,4 +344,60 @@ public class DatalakeUtils {
         return AzureUtils.extractEndPoint(builder.buildClient().getAccountUrl());
     }
 
+    public static boolean isDatalakeAdapter(String adapter) {
+        return adapter.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE)
+                || adapter.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS);
+    }
+
+    public static void setIcebergAdlsAuthParams(Map<String, String> properties) throws CompilationException {
+        String managedIdentity =
+                properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + MANAGED_IDENTITY_FIELD_NAME);
+        String accountName = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + ACCOUNT_NAME_FIELD_NAME);
+        String accountKey = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + ACCOUNT_KEY_FIELD_NAME);
+        String sharedAccessSignature =
+                properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+        String tenantId = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + TENANT_ID_FIELD_NAME);
+        String clientId = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + CLIENT_ID_FIELD_NAME);
+        String clientSecret = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + CLIENT_SECRET_FIELD_NAME);
+
+        Map<String, String> collectionProperties = IcebergUtils.filterCollectionProperties(properties);
+        DataLakeServiceClient dataLakeServiceClient = DatalakeUtils.buildClient(null, collectionProperties);
+        String endpoint = AzureUtils.extractEndPoint(dataLakeServiceClient.getAccountUrl());
+
+        if (accountName != null && accountKey != null) {
+            properties.put(AzureProperties.ADLS_SHARED_KEY_ACCOUNT_NAME, accountName);
+            properties.put(AzureProperties.ADLS_SHARED_KEY_ACCOUNT_KEY, accountKey);
+            return;
+        }
+
+        if (sharedAccessSignature != null) {
+            properties.put(AzureProperties.ADLS_SAS_TOKEN_PREFIX + endpoint, sharedAccessSignature);
+            return;
+        }
+
+        if (managedIdentity != null) {
+            ManagedIdentityCredentialBuilder builder = new ManagedIdentityCredentialBuilder();
+            if (clientId != null) {
+                builder.clientId(clientId);
+            }
+            TokenRequestContext context = new TokenRequestContext().addScopes(TOKEN_REQUEST_CONTEXT_SCOPE);
+            AccessToken token = builder.build().getToken(context).block();
+            if (token != null) {
+                properties.put(AzureProperties.ADLS_TOKEN, token.getToken());
+            }
+            return;
+        }
+
+        if (clientSecret != null) {
+            ClientSecretCredentialBuilder builder = new ClientSecretCredentialBuilder();
+            builder.clientId(clientId);
+            builder.clientSecret(clientSecret);
+            builder.tenantId(tenantId);
+            TokenRequestContext context = new TokenRequestContext().addScopes(TOKEN_REQUEST_CONTEXT_SCOPE);
+            AccessToken token = builder.build().getToken(context).block();
+            if (token != null) {
+                properties.put(AzureProperties.ADLS_TOKEN, token.getToken());
+            }
+        }
+    }
 }

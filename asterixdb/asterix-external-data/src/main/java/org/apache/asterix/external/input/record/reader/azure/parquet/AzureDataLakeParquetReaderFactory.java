@@ -52,7 +52,7 @@ import com.azure.storage.file.datalake.models.PathItem;
 public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
     private static final long serialVersionUID = -6140824803254158253L;
     private static final List<String> recordReaderNames =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE);
+            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE);
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,

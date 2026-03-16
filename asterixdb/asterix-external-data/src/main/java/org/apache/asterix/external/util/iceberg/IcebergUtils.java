@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNSUPPORTED_ICEBERG_DATA_FORMAT;
 import static org.apache.asterix.external.util.aws.EnsureCloseClientsFactoryRegistry.FACTORY_INSTANCE_ID_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_AVRO_FORMAT;
@@ -46,6 +45,8 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.EnsureCloseClientsFactoryRegistry;
 import org.apache.asterix.external.util.aws.iceberg.glue.GlueUtils;
+import org.apache.asterix.external.util.azure.blob.BlobUtils;
+import org.apache.asterix.external.util.azure.datalake.DatalakeUtils;
 import org.apache.asterix.external.util.google.iceberg.biglake_metastore.BiglakeMetastoreUtils;
 import org.apache.asterix.external.util.google.iceberg.fileio.GCSFileIO;
 import org.apache.asterix.external.util.iceberg.nessie.NessieUtils;
@@ -379,7 +380,8 @@ public class IcebergUtils {
         }
     }
 
-    public static void setFileIoProperties(Map<String, String> catalogProperties, IcebergCatalogSource catalogSource) {
+    public static void setFileIoProperties(Map<String, String> catalogProperties, IcebergCatalogSource catalogSource)
+            throws CompilationException {
         if (catalogSource == IcebergCatalogSource.NESSIE_REST) {
             // NESSIE_REST should not set any FileIO properties, it is provided by Nessie server
             return;
@@ -393,6 +395,9 @@ public class IcebergUtils {
             setIcebergS3FileIoProperties(catalogProperties);
         } else if (ioType.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_GCS)) {
             setIcebergGcsFileIoProperties(catalogProperties);
+        } else if (BlobUtils.isBlobAdapter(ioType) || DatalakeUtils.isDatalakeAdapter(ioType)) {
+            // ADLSFileIO is used for both Blob storage and Datalake storage
+            setIcebergAzureAdlsFileIoProperties(catalogProperties);
         }
     }
 
@@ -403,6 +408,11 @@ public class IcebergUtils {
 
     public static void setIcebergGcsFileIoProperties(Map<String, String> properties) {
         properties.put(CatalogProperties.FILE_IO_IMPL, GCSFileIO.class.getName());
+    }
+
+    public static void setIcebergAzureAdlsFileIoProperties(Map<String, String> properties) throws CompilationException {
+        properties.put(CatalogProperties.FILE_IO_IMPL, IcebergConstants.Azure.ADLS_FILE_IO);
+        DatalakeUtils.setIcebergAdlsAuthParams(properties);
     }
 
     public static void putCatalogProperties(Map<String, String> addTo, Map<String, String> toAdd) {
