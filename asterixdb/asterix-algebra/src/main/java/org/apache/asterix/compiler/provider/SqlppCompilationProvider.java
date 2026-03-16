@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
+import org.apache.asterix.lang.common.base.ICompilationContextFactory;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
@@ -42,6 +43,7 @@ import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslatorFactory;
+import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
 
 public class SqlppCompilationProvider implements ILangCompilationProvider {
 
@@ -79,6 +81,11 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
     @Override
     public IRuleSetFactory getRuleSetFactory() {
         return new DefaultRuleSetFactory();
+    }
+
+    @Override
+    public ICompilationContextFactory getCompilationContextFactory() {
+        return request -> ICompilationContext.INSTANCE;
     }
 
     @Override

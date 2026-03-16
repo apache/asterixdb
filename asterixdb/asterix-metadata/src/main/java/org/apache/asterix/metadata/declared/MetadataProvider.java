@@ -169,6 +169,7 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreePartitionSearchOperator
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
@@ -348,10 +349,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public IDataFormat getDataFormat() {
         return dataFormat;
-    }
-
-    public void setDataFormat(IDataFormat dataFormat) {
-        this.dataFormat = dataFormat;
     }
 
     public INamespaceResolver getNamespaceResolver() {
@@ -702,6 +699,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     datasetPartitioningProp.getNumberOfPartitions());
         }
 
+        ITupleFilterFactory extTupleFilterFactory = getExtTupleFilterFactory(context, dataset, primaryKeyFields);
+        if (extTupleFilterFactory != null) {
+            tupleFilterFactory = tupleFilterFactory == null ? extTupleFilterFactory
+                    : andTupleFilter(tupleFilterFactory, extTupleFilterFactory);
+        }
+
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             btreeSearchOp = !isSecondary && isPrimaryIndexPointSearch
                     ? new LSMBTreeBatchPointSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
@@ -726,6 +729,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             btreeSearchOp = null;
         }
         return new Pair<>(btreeSearchOp, datasetPartitioningProp.getConstraints());
+    }
+
+    private static ITupleFilterFactory andTupleFilter(ITupleFilterFactory tupleFilterFactory,
+            ITupleFilterFactory extTupleFilterFactory) {
+        return ctx -> {
+            ITupleFilter tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
+            ITupleFilter extTupleFilter = extTupleFilterFactory.createTupleFilter(ctx);
+
+            return (ITupleFilter) tuple -> tupleFilter.accept(tuple) && extTupleFilter.accept(tuple);
+        };
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRtreeSearchRuntime(JobSpecification jobSpec,
@@ -2021,6 +2034,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Set<EntityDetails> getAccessedEntities() {
         return Collections.unmodifiableSet(accessedEntities);
+    }
+
+    protected ITupleFilterFactory getExtTupleFilterFactory(JobGenContext ctx, Dataset ds, int[] pkFields)
+            throws AlgebricksException {
+        return null;
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {

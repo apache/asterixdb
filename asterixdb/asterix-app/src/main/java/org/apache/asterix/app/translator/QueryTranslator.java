@@ -4160,7 +4160,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     loadStmt.getDatasetName(), loadStmt.getAdapter(), properties, loadStmt.dataIsAlreadySorted());
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
-                    null, responsePrinter, warningCollector, null, jobFlags);
+                    null, responsePrinter, warningCollector, requestParameters, jobFlags);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -4239,7 +4239,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     copyStmt.getDatasetName(), itemType, externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
-                    null, responsePrinter, warningCollector, null, jobFlags);
+                    null, responsePrinter, warningCollector, requestParameters, jobFlags);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -4423,7 +4423,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 metadataProvider.setWriteTransaction(true);
                 final JobSpecification jobSpec =
-                        rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams);
+                        rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams, reqParams);
                 appCtx.getReceptionist().ensureAuthorized(reqParams, metadataProvider);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
@@ -4511,8 +4511,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     new CompiledDeleteStatement(stmtDelete.getVariableExpr(), databaseName, dataverseName, datasetName,
                             stmtDelete.getCondition(), stmtDelete.getVarCounter(), stmtDelete.getQuery());
             clfrqs.setSourceLocation(stmt.getSourceLocation());
-            JobSpecification jobSpec =
-                    rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams, null);
+            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams,
+                    requestParameters);
             appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
             afterCompile();
 
@@ -4602,8 +4602,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams)
-            throws AlgebricksException, ACIDException {
+            MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams,
+            IRequestParameters reqParams) throws AlgebricksException, ACIDException {
         SourceLocation sourceLoc = insertUpsert.getSourceLocation();
 
         Map<VarIdentifier, IAObject> externalVars = createExternalVariables(insertUpsert, stmtParams);
@@ -4646,7 +4646,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
                 rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars, responsePrinter,
-                warningCollector, null, jobFlags);
+                warningCollector, reqParams, jobFlags);
     }
 
     protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {

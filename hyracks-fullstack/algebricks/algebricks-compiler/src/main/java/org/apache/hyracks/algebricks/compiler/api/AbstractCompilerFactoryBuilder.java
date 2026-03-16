@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeCom
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IPartialAggregationTypeComputer;
+import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
@@ -84,6 +85,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected AlgebricksAbsolutePartitionConstraint clusterLocations;
     protected IWarningCollector warningCollector;
     protected long maxWarnings;
+    protected ICompilationContext compilationContext;
 
     public abstract ICompilerFactory create();
 
@@ -315,5 +317,9 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public long getMaxWarnings() {
         return maxWarnings;
+    }
+
+    public void setCompilationContext(ICompilationContext compilationContext) {
+        this.compilationContext = compilationContext;
     }
 }

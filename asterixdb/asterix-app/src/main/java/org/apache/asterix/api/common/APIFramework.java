@@ -63,6 +63,7 @@ import org.apache.asterix.dataflow.data.common.PartialAggregationTypeComputer;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
+import org.apache.asterix.lang.common.base.ICompilationContextFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
@@ -146,6 +147,7 @@ public class APIFramework {
     private final IRuleSetFactory ruleSetFactory;
     private final Set<String> configurableParameterNames;
     private final ExecutionPlans executionPlans;
+    private final ICompilationContextFactory compilationContextFactory;
     private PlanInfo lastPlan;
 
     public APIFramework(ILangCompilationProvider compilationProvider) {
@@ -154,6 +156,7 @@ public class APIFramework {
         this.translatorFactory = compilationProvider.getExpressionToPlanTranslatorFactory();
         this.ruleSetFactory = compilationProvider.getRuleSetFactory();
         this.configurableParameterNames = compilationProvider.getCompilerOptions();
+        this.compilationContextFactory = compilationProvider.getCompilationContextFactory();
         executionPlans = new ExecutionPlans();
         lastPlan = null;
     }
@@ -321,6 +324,7 @@ public class APIFramework {
             builder.setSerializerDeserializerProvider(format.getSerdeProvider());
             builder.setTypeTraitProvider(format.getTypeTraitProvider());
             builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
+            builder.setCompilationContext(compilationContextFactory.createCompilationContext(requestParameters));
 
             IndexAdvisor indexAdvisor = new IndexAdvisor(isAdviceOnly);
 

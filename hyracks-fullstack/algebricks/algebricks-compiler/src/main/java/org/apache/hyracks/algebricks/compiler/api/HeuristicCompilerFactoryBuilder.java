@@ -84,10 +84,6 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
 
     private final IOptimizationContextFactory optCtxFactory;
 
-    public HeuristicCompilerFactoryBuilder() {
-        this.optCtxFactory = DefaultOptimizationContextFactory.INSTANCE;
-    }
-
     public HeuristicCompilerFactoryBuilder(IOptimizationContextFactory optCtxFactory) {
         this.optCtxFactory = optCtxFactory;
     }
@@ -131,7 +127,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                     normalizedKeyComputerFactoryProvider, expressionRuntimeProvider, expressionTypeComputer, oc,
                     expressionEvalSizeComputer, partialAggregationTypeComputer, predEvaluatorFactoryProvider,
                     physicalOptimizationConfig.getFrameSize(), clusterLocations, warningCollector, maxWarnings,
-                    physicalOptimizationConfig);
+                    physicalOptimizationConfig, compilationContext);
             return new PlanCompiler(context);
         }
     }

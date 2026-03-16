@@ -160,7 +160,7 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
                 UnnestingPositionWriterFactory.INSTANCE, null,
                 new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
                 ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null,
-                NoOpWarningCollector.INSTANCE, 0, new PhysicalOptimizationConfig());
+                NoOpWarningCollector.INSTANCE, 0, new PhysicalOptimizationConfig(), null);
     }
 
     public void reset(IOptimizationContext context) {
