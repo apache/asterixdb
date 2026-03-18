@@ -1,8 +1,0 @@
-DataverseUse test
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.max@1[
-  OrderedListConstructor [
-  ]
-]
-]

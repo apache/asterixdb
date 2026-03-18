@@ -1,8 +1,0 @@
-{
-	"requestID": "R{[a-zA-Z0-9-]+}",
-	"signature": {"*": "*"},
-	"results": [{"unorderedlist":["foo","bar"]}],
-	"plans":{},
-	"status": "success",
-    "metrics": "R{.*}"
-}

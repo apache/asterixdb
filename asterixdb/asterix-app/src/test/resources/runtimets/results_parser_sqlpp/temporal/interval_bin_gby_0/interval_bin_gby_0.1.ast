@@ -1,8 +1,0 @@
-DataverseUse test
-TypeDecl Schema [
-  closed RecordType {
-    id : bigint,
-    timestamp : datetime
-  }
-]
-DatasetDecl tsdata(Schema) partitioned by [[id]]

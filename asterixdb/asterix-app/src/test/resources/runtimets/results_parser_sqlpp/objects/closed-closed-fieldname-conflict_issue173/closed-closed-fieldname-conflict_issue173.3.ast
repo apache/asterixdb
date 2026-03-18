@@ -1,9 +1,0 @@
-DataverseUse test
-Query:
-RecordConstructor [
-  (
-    LiteralExpr [STRING] [name]
-    :
-    LiteralExpr [STRING] [john]
-  )
-]

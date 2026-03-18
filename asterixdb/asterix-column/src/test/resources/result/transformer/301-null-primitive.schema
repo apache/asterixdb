@@ -1,3 +1,0 @@
-root
-|-- a: bigint <level: 1, index: 0>
-|    |-- Def size: 4 [(2,3),(1,1)]

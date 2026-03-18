@@ -1,4 +1,0 @@
-DataverseUse testdv1
-Query:
-FunctionCall testdv1.fun01@0[
-]

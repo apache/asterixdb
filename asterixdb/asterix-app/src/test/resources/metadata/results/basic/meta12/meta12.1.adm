@@ -1,1 +1,0 @@
-{ "DataverseName": "test", "DatasetName": "dst01", "IndexName": "dst01", "IndexStructure": "BTREE", "SearchKey": [ [ "id" ] ], "IsPrimary": true, "Timestamp": "Tue Jun 21 15:54:28 PDT 2016", "PendingOp": 0 }

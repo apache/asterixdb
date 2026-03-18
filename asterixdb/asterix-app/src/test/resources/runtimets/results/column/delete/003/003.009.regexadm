@@ -1,1 +1,0 @@
-\Q{"keys":"myId","type":{"type":"org.apache.asterix.om.types.ARecordType","name":"OpenType","open":true,"fields":[{"myId":{"type":"AInt64"}}]},"splits":[\E.*\Q]}\E

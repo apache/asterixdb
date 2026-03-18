@@ -1,5 +1,0 @@
-DataverseUse test
-Query:
-FunctionCall test.echo@1[
-  LiteralExpr [DOUBLE] [1234.1]
-]

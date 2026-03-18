@@ -1,6 +1,0 @@
-DataverseUse test
-Query:
-FunctionCall algebricks.not@1[
-  FunctionCall test.fn06@0[
-  ]
-]

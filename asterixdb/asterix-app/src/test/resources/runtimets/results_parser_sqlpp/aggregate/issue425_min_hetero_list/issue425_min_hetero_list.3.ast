@@ -1,7 +1,0 @@
-Query:
-FunctionCall asterix.min@1[
-  OrderedListConstructor [
-    LiteralExpr [LONG] [23]
-    LiteralExpr [LONG] [748374857483]
-  ]
-]

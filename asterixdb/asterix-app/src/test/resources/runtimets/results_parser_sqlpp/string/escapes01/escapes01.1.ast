@@ -1,11 +1,0 @@
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.string-concat@1[
-  OrderedListConstructor [
-    LiteralExpr [STRING] [12
-3	4
-567"8]
-    LiteralExpr [STRING] ['9]
-  ]
-]
-]

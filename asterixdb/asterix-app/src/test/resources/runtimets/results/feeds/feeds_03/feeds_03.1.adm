@@ -1,1 +1,0 @@
-{ "DataverseName": "feeds", "FeedName": "TweetFeed", "DatasetName": "Tweets", "ReturnType": "TweetType", "AppliedFunctions": {{ "feeds.feed_processor" }}, "PolicyName": "Basic" }

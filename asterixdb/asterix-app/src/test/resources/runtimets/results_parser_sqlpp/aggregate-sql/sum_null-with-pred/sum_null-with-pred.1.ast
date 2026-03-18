@@ -1,8 +1,0 @@
-DataverseUse test
-TypeDecl TestType [
-  open RecordType {
-    id : bigint,
-    sal : bigint?
-  }
-]
-DatasetDecl tdst(TestType) partitioned by [[id]]

@@ -1,7 +1,0 @@
-DataverseUse test
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.get-year@1[
-  LiteralExpr [STRING] [1996-12-01]
-]
-]

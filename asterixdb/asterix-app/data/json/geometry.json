@@ -1,5 +1,0 @@
-{
-"point_value": {"coordinates":[10.0, 10.0], "type":"Point"},
-"line_value": {"coordinates":[[10.0, 10.0], [11.0, 11.0]], "type":"LineString"},
-"polygon_value": {"coordinates":[[[10.0, 10.0], [11.0, 11.0], [10.0, 10.0]]], "type":"Polygon"}
-}

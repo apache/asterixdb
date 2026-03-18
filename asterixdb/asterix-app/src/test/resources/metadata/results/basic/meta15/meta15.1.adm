@@ -1,1 +1,0 @@
-{ "DataverseName": "Metadata", "Name": "adapter", "Classname": "org.apache.asterix.external.adapter.factory.GenericAdapterFactory", "Type": "INTERNAL", "Timestamp": "Sun Jan 10 16:13:18 AST 2016" }

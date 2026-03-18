@@ -1,1 +1,0 @@
-s_suppkey: int32|s_name: string|s_address: string|s_nationkey: int32|s_phone: string|s_acctbal: double|s_comment: string|

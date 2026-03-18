@@ -1,8 +1,0 @@
-DataverseUse test
-TypeDecl TestType [
-  open RecordType {
-    id : integer,
-    val : double
-  }
-]
-DatasetDecl Test(TestType) partitioned by [[id]]

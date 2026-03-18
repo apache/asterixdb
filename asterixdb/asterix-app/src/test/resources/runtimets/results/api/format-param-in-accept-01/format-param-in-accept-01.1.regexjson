@@ -1,9 +1,0 @@
-{
-	"requestID": "R{[a-zA-Z0-9-]+}",
-	"signature": {"*": "*"},
-	"type": "application/x-adm",
-	"results": [ "{{ \"foo\", \"bar\" }}" ],
-	"plans":{},
-	"status": "success",
-    "metrics": "R{.*}"
-}

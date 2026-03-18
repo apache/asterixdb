@@ -1,9 +1,0 @@
-DataverseUse test
-TypeDecl Schema [
-  closed RecordType {
-    id : integer,
-    time : time,
-    duration : day_time_duration
-  }
-]
-DatasetDecl tsdata(Schema) partitioned by [[id]]
