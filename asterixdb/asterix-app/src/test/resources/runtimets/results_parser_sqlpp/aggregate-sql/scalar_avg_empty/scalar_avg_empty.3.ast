@@ -1,7 +1,0 @@
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.sql-avg@1[
-  OrderedListConstructor [
-  ]
-]
-]

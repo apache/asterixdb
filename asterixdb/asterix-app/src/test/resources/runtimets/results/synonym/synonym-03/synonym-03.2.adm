@@ -1,2 +1,0 @@
-{ "DataverseName": "test2", "SynonymName": "md_syn_1", "ObjectDataverseName": "Metadata", "ObjectName": "Synonym" }
-{ "DataverseName": "test2", "SynonymName": "md_syn_2", "ObjectDataverseName": "test2", "ObjectName": "md_syn_1" }

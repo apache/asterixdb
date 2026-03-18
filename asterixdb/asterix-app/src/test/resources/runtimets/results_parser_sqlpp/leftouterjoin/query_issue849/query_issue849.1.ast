@@ -1,7 +1,0 @@
-DataverseUse test
-TypeDecl sType [
-  closed RecordType {
-    b : bigint
-  }
-]
-DatasetDecl s(sType) partitioned by [[b]]

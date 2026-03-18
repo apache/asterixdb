@@ -1,7 +1,0 @@
-DataverseUse test
-TypeDecl myDataType [
-  open RecordType {
-    id : bigint
-  }
-]
-DatasetDecl myData(myDataType) partitioned by [[id]]

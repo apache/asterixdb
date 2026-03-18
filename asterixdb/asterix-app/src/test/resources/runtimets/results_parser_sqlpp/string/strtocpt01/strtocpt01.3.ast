@@ -1,4 +1,0 @@
-Query:
-FunctionCall asterix.string-to-codepoint@1[
-  LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZ-01234567890]
-]

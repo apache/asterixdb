@@ -1,1 +1,0 @@
-[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_b ON `Default`.`test`.`A`(`b`);"}]}}}}]

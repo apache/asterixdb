@@ -1,9 +1,0 @@
-Query:
-FunctionCall asterix.string-length@1[
-  FunctionCall asterix.string-concat@1[
-    OrderedListConstructor [
-      LiteralExpr [STRING] [this is a ]
-      LiteralExpr [STRING] [test string]
-    ]
-  ]
-]

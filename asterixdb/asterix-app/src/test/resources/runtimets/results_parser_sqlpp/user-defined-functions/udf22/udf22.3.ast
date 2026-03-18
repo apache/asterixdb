@@ -1,6 +1,0 @@
-DataverseUse test
-Query:
-FunctionCall test.getFullName@2[
-  LiteralExpr [STRING] [Bob]
-  LiteralExpr [STRING] [Harbus]
-]

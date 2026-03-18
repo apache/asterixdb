@@ -1,3 +1,0 @@
-{
-  "logicalPlan":"R{(?s).*digraph.*\\{.*distribute result.*\\}}"
-}

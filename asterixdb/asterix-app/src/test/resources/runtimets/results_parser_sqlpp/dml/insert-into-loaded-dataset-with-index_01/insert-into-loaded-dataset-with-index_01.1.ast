@@ -1,9 +1,0 @@
-DataverseUse test
-TypeDecl LineIDType [
-  closed RecordType {
-    l_orderkey : bigint,
-    l_linenumber : bigint,
-    l_suppkey : bigint
-  }
-]
-DatasetDecl LineID(LineIDType) partitioned by [[l_orderkey], [l_linenumber]]

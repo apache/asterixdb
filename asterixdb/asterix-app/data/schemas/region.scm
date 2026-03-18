@@ -1,1 +1,0 @@
-r_regionkey: int32|r_name: string|r_comment: string|

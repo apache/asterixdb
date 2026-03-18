@@ -1,9 +1,0 @@
-DataverseUse fooverse
-TypeDecl FooType [
-  open RecordType {
-    id : bigint,
-    numbers : OrderedList [bigint]
-
-  }
-]
-DatasetDecl Foo(FooType) partitioned by [[id]]

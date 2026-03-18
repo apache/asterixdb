@@ -1,2 +1,0 @@
-{ "DatasetName": "orders", "PrimaryKeyTypes": [ "string" ] }
-{ "DatasetName": "users", "PrimaryKeyTypes": [ "int32", "string", "string", "string" ] }

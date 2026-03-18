@@ -1,9 +1,0 @@
-DataverseUse test
-TypeDecl EmployeeType [
-  closed RecordType {
-    id : bigint,
-    name : string,
-    age : bigint
-  }
-]
-DatasetDecl EmployeeDataset(EmployeeType)is an external dataset

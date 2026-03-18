@@ -1,6 +1,0 @@
-DataverseUse test
-Query:
-FunctionCall asterix.string-length@1[
-  FunctionCall test.fn02@0[
-  ]
-]

@@ -1,7 +1,0 @@
-Query:
-SELECT ELEMENT [
-FunctionCall test.computeBonus@2[
-  - LiteralExpr [LONG] [1]
-  - LiteralExpr [LONG] [1]
-]
-]

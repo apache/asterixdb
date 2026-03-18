@@ -1,8 +1,0 @@
-DataverseUse test
-TypeDecl t1 [
-  closed RecordType {
-    id : bigint
-  }
-]
-DatasetDecl ds1(t1) partitioned by [[id]]
-DatasetDecl ds2(t1) partitioned by [[id]]

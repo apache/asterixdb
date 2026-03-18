@@ -1,8 +1,0 @@
-DataverseUse test
-TypeDecl MyRecord [
-  open RecordType {
-    id : bigint,
-    loc : point
-  }
-]
-DatasetDecl MyData(MyRecord)is an external dataset

@@ -1,8 +1,0 @@
-DataverseUse test
-Query:
-SELECT ELEMENT [
-FunctionCall asterix.sql-count@1[
-  OrderedListConstructor [
-  ]
-]
-]

@@ -1,1 +1,0 @@
-\Q{"keys":"id","type":{"type":"org.apache.asterix.om.types.ARecordType","name":"root","open":true,"fields":[{"id":{"type":"UUID"}}]},"splits":[\E.*\Q]}\E
