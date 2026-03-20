@@ -84,12 +84,13 @@ public class ExternalWriterProvider {
     }
 
     private static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,
-            String staticPath, SourceLocation pathExpressionLocation) {
+            String staticPath, SourceLocation pathExpressionLocation) throws CompilationException {
         String adapterName = sink.getAdapterName().toLowerCase();
         IExternalFileWriterFactoryProvider creator = CREATOR_MAP.get(adapterName);
 
         if (creator == null) {
-            throw new UnsupportedOperationException("Unsupported adapter " + adapterName);
+            throw new CompilationException(ErrorCode.UNSUPPORTED_WRITING_ADAPTER, pathExpressionLocation, adapterName,
+                    String.join(", ", CREATOR_MAP.keySet()));
         }
 
         return creator.create(createConfiguration(appCtx, sink, staticPath, pathExpressionLocation));
@@ -164,7 +165,8 @@ public class ExternalWriterProvider {
 
         // Check for supported formats
         if (!ExternalDataConstants.WRITER_SUPPORTED_FORMATS.contains(format.toLowerCase())) {
-            throw new UnsupportedOperationException("Unsupported format " + format);
+            throw new CompilationException(ErrorCode.UNSUPPORTED_WRITING_FORMAT, pathSourceLocation, format,
+                    String.join(", ", ExternalDataConstants.WRITER_SUPPORTED_FORMATS));
         }
 
         String compression = getCompression(configuration);
@@ -247,7 +249,8 @@ public class ExternalWriterProvider {
                         pathResolverFactory);
 
             default:
-                throw new UnsupportedOperationException("Unsupported format " + format);
+                throw new CompilationException(ErrorCode.UNSUPPORTED_WRITING_FORMAT, pathSourceLocation, format,
+                        String.join(", ", ExternalDataConstants.WRITER_SUPPORTED_FORMATS));
         }
 
     }
@@ -279,11 +282,12 @@ public class ExternalWriterProvider {
         return configuration.getOrDefault(ExternalDataConstants.KEY_WRITER_COMPRESSION, "");
     }
 
-    public static char getSeparator(String adapterName) {
+    public static char getSeparator(String adapterName) throws CompilationException {
         IExternalFileWriterFactoryProvider creator = CREATOR_MAP.get(adapterName.toLowerCase());
 
         if (creator == null) {
-            throw new UnsupportedOperationException("Unsupported adapter " + adapterName);
+            throw new CompilationException(ErrorCode.UNSUPPORTED_WRITING_ADAPTER, adapterName,
+                    String.join(", ", CREATOR_MAP.keySet()));
         }
 
         return creator.getSeparator();

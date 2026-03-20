@@ -491,7 +491,7 @@ abstract class LangExpressionToPlanTranslator
         return plan;
     }
 
-    private String getSeparator(String adapter, boolean isFileStore) {
+    private String getSeparator(String adapter, boolean isFileStore) throws CompilationException {
         return isFileStore ? String.valueOf(ExternalWriterProvider.getSeparator(adapter)) : "";
     }
 
