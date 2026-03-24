@@ -263,8 +263,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
         if (serviceCtx.getMemoryManager().allocate(bytes)) {
-            memoryAllocation.addAndGet(bytes);
-            return frameManager.allocateFrame(bytes);
+            try {
+                ByteBuffer frame = frameManager.allocateFrame(bytes);
+                memoryAllocation.addAndGet(bytes);
+                return frame;
+            } catch (HyracksDataException e) {
+                serviceCtx.getMemoryManager().deallocate(bytes);
+                throw e;
+            }
         }
         throw new HyracksDataException("Unable to allocate frame: Not enough memory");
     }
@@ -277,7 +283,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     @Override
     public void deallocateFrames(int bytes) {
-        memoryAllocation.addAndGet(bytes);
+        memoryAllocation.addAndGet(-bytes);
         serviceCtx.getMemoryManager().deallocate(bytes);
         frameManager.deallocateFrames(bytes);
     }
