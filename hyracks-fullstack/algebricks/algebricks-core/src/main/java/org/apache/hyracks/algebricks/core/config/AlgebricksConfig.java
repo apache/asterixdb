@@ -49,6 +49,7 @@ public class AlgebricksConfig {
     public static final boolean COLUMN_FILTER_DEFAULT = true;
     public static final boolean ORDERED_FIELDS = true;
     public static final int MAX_VARIABLE_OCCURRENCES_INLINING_DEFAULT = 128;
-    public static final int HASH_BASED_OR_THRESHOLD_DEFAULT = -1;
-    public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 10000;
+    public static final int HASH_BASED_OR_THRESHOLD_DEFAULT = 40;
+    public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 1000;
+    public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 1000;
 }

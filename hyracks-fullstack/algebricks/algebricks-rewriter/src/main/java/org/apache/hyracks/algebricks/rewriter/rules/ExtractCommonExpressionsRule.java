@@ -357,7 +357,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 // Guard against unbounded map growth for very large expression trees (e.g. IN with a
                 // long list expands into O(N) OR nodes). Beyond the limit the map lookups themselves
                 // become O(N) due to equals() chain traversal, making the whole pass O(N^2).
-                if (exprEqClassMap.size() < context.getPhysicalOptimizationConfig().getMaxExpressionTreeSize()) {
+                if (exprEqClassMap.size() < context.getPhysicalOptimizationConfig().getCommonExpressionLimit()) {
                     exprEqClass = new ExprEquivalenceClass(op, exprRef);
                     exprEqClassMap.put(expr, exprEqClass);
                 }
