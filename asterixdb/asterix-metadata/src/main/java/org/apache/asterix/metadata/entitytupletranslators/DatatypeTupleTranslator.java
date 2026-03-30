@@ -49,7 +49,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Datatype> {
 
     // Payload field containing serialized Datatype.
-    private static final int DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    public static final int DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
         super(txnId, metadataNode, getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET,
