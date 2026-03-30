@@ -1,57 +1,69 @@
-distribute result [$$133] [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+distribute result [$$133] [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+  exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$133] <- [{"t0_unique1": $$145, "t1_unique1": $$146, "t2_unique1": $#3}] project: [$$133] [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+    assign [$$133] <- [{"t0_unique1": $$145, "t1_unique1": $$146, "t2_unique1": $#3}] project: [$$133] [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+      exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
       -- SORT_MERGE_EXCHANGE [$$145(ASC), $$146(ASC), $#3(ASC) ]  |PARTITIONED|
-        order (ASC, $$145) (ASC, $$146) (ASC, $#3) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+        order (ASC, $$145) (ASC, $$146) (ASC, $#3) [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
         -- STABLE_SORT [$$145(ASC), $$146(ASC), $#3(ASC)]  |PARTITIONED|
-          exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+          exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$145, $$146, $#3]) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+            project ([$$145, $$146, $#3]) [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+              exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                left outer join (eq(numeric-add($$136, $$138), $$159)) [cardinality: 9.223372036854776E16, doc-size: -3.0, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                left outer join (eq(numeric-add($$136, $$138), $$159)) [cardinality: 9.9980001E11, doc-size: -3.0, op-cost: 1999800.01, total-cost: 1.099920002E7]
                 -- NESTED_LOOP  |PARTITIONED|
-                  exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+                  exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$159] <- [numeric-multiply(2, $$137)] project: [$$145, $$146, $$136, $$159] [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+                    assign [$$159] <- [numeric-multiply(2, $$137)] project: [$$145, $$146, $$136, $$159] [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
                     -- ASSIGN  |PARTITIONED|
-                      exchange [cardinality: 5.0E11, doc-size: -2.0, op-cost: 0.0, total-cost: 6000000.0]
+                      exchange [cardinality: 999800.01, doc-size: -2.0, op-cost: 0.0, total-cost: 5999600.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        join (eq($$136, $$137)) [cardinality: 5.0E11, doc-size: -2.0, op-cost: 2000000.0, total-cost: 6000000.0]
+                        join (eq($$136, $$137)) [cardinality: 999800.01, doc-size: -2.0, op-cost: 1999800.0, total-cost: 5999600.0]
                         -- HYBRID_HASH_JOIN [$$136][$$137]  |PARTITIONED|
-                          exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                          exchange [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$145] <- [$$tenk.getField(0)] project: [$$145, $$136] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                            assign [$$145, $$136] <- [$$146, $$137] project: [$$145, $$136] [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- ASSIGN  |PARTITIONED|
-                              select (and(lt($$136, 4), lt($$136, 2))) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                              -- STREAM_SELECT  |PARTITIONED|
-                                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$136, $$tenk] <- test.tenk [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                              exchange [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                replicate [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                -- REPLICATE  |PARTITIONED|
+                                  exchange [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$146] <- [$$tenk.getField(0)] project: [$$146, $$137] [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                    -- ASSIGN  |PARTITIONED|
+                                      select (and(lt($$137, 2), lt($$137, 4))) [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                      -- STREAM_SELECT  |PARTITIONED|
+                                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          data-scan []<-[$$137, $$tenk] <- test.tenk [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$146] <- [$$tenk.getField(0)] project: [$$146, $$137] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                            -- ASSIGN  |PARTITIONED|
-                              select (and(lt($$137, 2), lt($$137, 4))) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                              -- STREAM_SELECT  |PARTITIONED|
-                                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$137, $$tenk] <- test.tenk [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            replicate [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                            -- REPLICATE  |PARTITIONED|
+                              exchange [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                assign [$$146] <- [$$tenk.getField(0)] project: [$$146, $$137] [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                -- ASSIGN  |PARTITIONED|
+                                  select (and(lt($$137, 2), lt($$137, 4))) [cardinality: 999900.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                  -- STREAM_SELECT  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      data-scan []<-[$$137, $$tenk] <- test.tenk [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 1000000.0]
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
                     assign [$#3] <- [{"unique1": $$tenk.getField(0), "unique2": $$138}.getField(0)] project: [$#3, $$138] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
