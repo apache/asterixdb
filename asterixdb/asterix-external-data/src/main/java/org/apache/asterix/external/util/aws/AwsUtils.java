@@ -21,7 +21,6 @@ package org.apache.asterix.external.util.aws;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
-import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateAndGetBooleanProperty;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
@@ -37,9 +36,7 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.asterix.common.api.IApplicationContext;
@@ -66,7 +63,6 @@ import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sts.StsClient;
 import software.amazon.awssdk.services.sts.StsClientBuilder;
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider;
@@ -132,14 +128,8 @@ public class AwsUtils {
         }
     }
 
-    public static Region validateAndGetRegion(String regionId) throws CompilationException {
-        List<Region> regions = S3Client.serviceMetadata().regions();
-        Optional<Region> selectedRegion = regions.stream().filter(region -> region.id().equals(regionId)).findFirst();
-
-        if (selectedRegion.isEmpty()) {
-            throw new CompilationException(S3_REGION_NOT_SUPPORTED, regionId);
-        }
-        return selectedRegion.get();
+    public static Region getRegion(String regionId) {
+        return Region.of(regionId);
     }
 
     public static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
@@ -216,7 +206,7 @@ public class AwsUtils {
 
         StsClientBuilder stsClientBuilder = StsClient.builder();
         stsClientBuilder.credentialsProvider(credentialsToAssumeRole);
-        stsClientBuilder.region(validateAndGetRegion(configuration.get(REGION_FIELD_NAME)));
+        stsClientBuilder.region(getRegion(configuration.get(REGION_FIELD_NAME)));
         stsClientBuilder.overrideConfiguration(clientConfiguration);
         StsClient stsClient = stsClientBuilder.build();
         awsClients.setStsClient(stsClient);

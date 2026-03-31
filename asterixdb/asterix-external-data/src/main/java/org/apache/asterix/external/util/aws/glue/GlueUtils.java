@@ -21,7 +21,7 @@ package org.apache.asterix.external.util.aws.glue;
 import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SERVICE_END_POINT_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProvider;
-import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
+import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
 
 import java.util.Map;
 
@@ -53,7 +53,7 @@ public class GlueUtils {
         String regionId = configuration.get(REGION_FIELD_NAME);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
-        Region region = validateAndGetRegion(regionId);
+        Region region = getRegion(regionId);
         AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
 
         GlueClientBuilder builder = GlueClient.builder();
