@@ -20,6 +20,7 @@ package org.apache.asterix.external.util.aws.s3;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.LONG_LIVED_CREDENTIALS_NEEDED_TO_ASSUME_ROLE;
+import static org.apache.asterix.external.util.ExternalDataConstants.CERTIFICATES_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
@@ -67,13 +68,24 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -99,6 +111,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.SdkHttpConfigurationOption;
+import software.amazon.awssdk.http.TlsTrustManagersProvider;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -116,6 +129,19 @@ import software.amazon.awssdk.utils.AttributeMap;
 
 public class S3Utils {
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final class StaticTrustManagersProvider implements TlsTrustManagersProvider {
+        private final TrustManager[] trustManagers;
+
+        private StaticTrustManagersProvider(TrustManager[] trustManagers) {
+            this.trustManagers = trustManagers;
+        }
+
+        @Override
+        public TrustManager[] trustManagers() {
+            return trustManagers;
+        }
+    }
 
     private S3Utils() {
         throw new AssertionError("do not instantiate");
@@ -139,6 +165,7 @@ public class S3Utils {
 
         boolean crossRegion = getCrossRegion(configuration);
         boolean disableSslVerify = getDisableSslVerify(configuration);
+        String certificates = configuration.get(CERTIFICATES_FIELD_NAME);
 
         S3ClientBuilder builder = S3Client.builder();
         builder.region(region);
@@ -150,10 +177,55 @@ public class S3Utils {
         builder.forcePathStyle(pathStyleAddressing);
         if (disableSslVerify) {
             disableSslVerify(builder);
+        } else if (certificates != null && !certificates.isBlank()) {
+            builder.httpClient(createHttpClient(certificates));
         }
         awsClients.setConsumingClient(builder.build());
         return awsClients;
 
+    }
+
+    static SdkHttpClient createHttpClient(String pemCertificates) throws CompilationException {
+        TrustManager[] trustManagers = buildTrustManagers(pemCertificates);
+        TlsTrustManagersProvider trustManagersProvider = new StaticTrustManagersProvider(trustManagers);
+        return ApacheHttpClient.builder().tlsTrustManagersProvider(trustManagersProvider).build();
+    }
+
+    static TrustManager[] buildTrustManagers(String pemCertificates) throws CompilationException {
+        try {
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(
+                    new ByteArrayInputStream(pemCertificates.getBytes(StandardCharsets.UTF_8)));
+            if (certificates.isEmpty()) {
+                throw new IllegalArgumentException("No certificates found in the supplied PEM data");
+            }
+
+            TrustManagerFactory defaultTrustManagerFactory =
+                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            defaultTrustManagerFactory.init((KeyStore) null);
+
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+
+            int alias = 0;
+            for (TrustManager trustManager : defaultTrustManagerFactory.getTrustManagers()) {
+                if (trustManager instanceof X509TrustManager x509TrustManager) {
+                    for (X509Certificate certificate : x509TrustManager.getAcceptedIssuers()) {
+                        keyStore.setCertificateEntry("default-ca-" + alias++, certificate);
+                    }
+                }
+            }
+            for (Certificate certificate : certificates) {
+                keyStore.setCertificateEntry("custom-ca-" + alias++, certificate);
+            }
+
+            TrustManagerFactory trustManagerFactory =
+                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore);
+            return trustManagerFactory.getTrustManagers();
+        } catch (Exception e) {
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+        }
     }
 
     private static void disableSslVerify(S3ClientBuilder builder) {

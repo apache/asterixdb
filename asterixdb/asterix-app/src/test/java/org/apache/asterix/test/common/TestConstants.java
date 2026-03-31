@@ -37,6 +37,9 @@ public class TestConstants {
     public static final String S3_REGION_DEFAULT = "us-west-2";
     public static final String S3_SERVICE_ENDPOINT_PLACEHOLDER = "%serviceEndpoint%";
     public static final String S3_SERVICE_ENDPOINT_DEFAULT = "http://127.0.0.1:8001";
+    public static final String S3_API_CERTIFICATES_PLACEHOLDER = "%apiCertificates%";
+    public static final String S3_DDL_CERTIFICATES_PLACEHOLDER = "%ddlCertificates%";
+    public static final String S3_HTTP_CERTIFICATES_PLACEHOLDER = "%httpCertificates%";
     public static final String S3_SERVICE_ENDPOINT_KEY = "s3mockEndpoint";
     public static final String S3_TEMPLATE = "(\"accessKeyId\"=\"" + S3_ACCESS_KEY_ID_DEFAULT + "\"),\n"
             + "(\"secretAccessKey\"=\"" + S3_SECRET_ACCESS_KEY_DEFAULT + "\"),\n" + "(\"region\"=\""

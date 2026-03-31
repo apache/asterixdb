@@ -396,10 +396,13 @@ public final class S3CloudClient implements ICloudClient {
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));
         }
+        ApacheHttpClient.Builder apacheBuilder = ApacheHttpClient.builder();
         if (config.isDisableSslVerify()) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
+        } else if (!config.getCertificates().isEmpty()) {
+            apacheBuilder.tlsTrustManagersProvider(S3TrustManagerProvider.create(config.getCertificates()));
         }
-        SdkHttpClient httpClient = ApacheHttpClient.builder().buildWithDefaults(customHttpConfigBuilder.build());
+        SdkHttpClient httpClient = apacheBuilder.buildWithDefaults(customHttpConfigBuilder.build());
         builder.httpClient(httpClient);
 
         awsClients.setConsumingClient(builder.build());

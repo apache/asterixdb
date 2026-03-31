@@ -18,10 +18,12 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.asterix.external.util.aws.AwsConstants;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
@@ -36,6 +38,7 @@ public final class S3ClientConfig {
     private final String endpoint;
     private final String prefix;
     private final boolean anonymousAuth;
+    private final Collection<String> certificates;
     private final long profilerLogInterval;
     private final int writeBufferSize;
     private final long tokenAcquireTimeout;
@@ -52,22 +55,23 @@ public final class S3ClientConfig {
     private final boolean roundRobinDnsResolver;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, int writeBufferSize, S3ParallelDownloaderClientType parallelDownloaderClientType,
-            boolean roundRobinDnsResolver) {
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0, 0, false, false,
-                false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver);
+            Collection<String> certificates, long profilerLogInterval, int writeBufferSize,
+            S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
+        this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
+                false, false, false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int requestsMaxHttpConnections, boolean forcePathStyle,
-            boolean disableSslVerify, boolean storageListEventuallyConsistent, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
+            Collection<String> certificates, long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout,
+            int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds, int requestsMaxHttpConnections,
+            boolean forcePathStyle, boolean disableSslVerify, boolean storageListEventuallyConsistent,
+            int requestsMaxPendingHttpConnections, int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
         this.anonymousAuth = anonymousAuth;
+        this.certificates = Objects.requireNonNull(certificates, "certificates");
         this.profilerLogInterval = profilerLogInterval;
         this.writeBufferSize = writeBufferSize;
         this.tokenAcquireTimeout = tokenAcquireTimeout;
@@ -84,14 +88,14 @@ public final class S3ClientConfig {
         this.roundRobinDnsResolver = roundRobinDnsResolver;
     }
 
-    public static S3ClientConfig of(CloudProperties cloudProperties) {
+    public static S3ClientConfig of(ICloudProperties cloudProperties) {
         return new S3ClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
-                cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize(),
-                cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
-                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getRequestsMaxHttpConnections(),
-                cloudProperties.isStorageForcePathStyle(), cloudProperties.isStorageDisableSSLVerify(),
-                cloudProperties.isStorageListEventuallyConsistent(),
+                cloudProperties.getStorageCertificates(), cloudProperties.getProfilerLogInterval(),
+                cloudProperties.getWriteBufferSize(), cloudProperties.getTokenAcquireTimeout(),
+                cloudProperties.getWriteMaxRequestsPerSecond(), cloudProperties.getReadMaxRequestsPerSecond(),
+                cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.isStorageForcePathStyle(),
+                cloudProperties.isStorageDisableSSLVerify(), cloudProperties.isStorageListEventuallyConsistent(),
                 cloudProperties.getRequestsMaxPendingHttpConnections(),
                 cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
                 S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()),
@@ -125,10 +129,11 @@ public final class S3ClientConfig {
         // Dummy values;
         String region = "";
         String prefix = "";
+        Collection<String> certificates = Collections.emptyList();
         boolean anonymousAuth = false;
 
-        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize,
-                S3ParallelDownloaderClientType.ASYNC, false);
+        return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, certificates, profilerLogInterval,
+                writeBufferSize, S3ParallelDownloaderClientType.ASYNC, false);
     }
 
     public String getRegion() {
@@ -186,6 +191,10 @@ public final class S3ClientConfig {
 
     public boolean isDisableSslVerify() {
         return disableSslVerify;
+    }
+
+    public Collection<String> getCertificates() {
+        return certificates;
     }
 
     public boolean isForcePathStyle() {

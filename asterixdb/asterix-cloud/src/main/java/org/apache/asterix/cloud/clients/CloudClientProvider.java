@@ -24,7 +24,7 @@ import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientCon
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
-import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 
@@ -38,7 +38,7 @@ public class CloudClientProvider {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
+    public static ICloudClient getClient(ICloudProperties cloudProperties, ICloudGuardian guardian)
             throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
         ICloudClient cloudClient = switch (storageScheme.toLowerCase()) {

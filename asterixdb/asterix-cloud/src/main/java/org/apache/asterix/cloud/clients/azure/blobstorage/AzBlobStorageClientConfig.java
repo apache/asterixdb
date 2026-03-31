@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
 
@@ -81,7 +82,7 @@ public class AzBlobStorageClientConfig {
         this.accessTier = accessTier;
     }
 
-    public static AzBlobStorageClientConfig of(CloudProperties cloudProperties) {
+    public static AzBlobStorageClientConfig of(ICloudProperties cloudProperties) {
         return new AzBlobStorageClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),

@@ -356,6 +356,7 @@ public class ExternalDataConstants {
     public static final String CONTAINER_NAME_FIELD_NAME = "container";
     public static final String SUBPATH = "subpath";
     public static final String PREFIX_DEFAULT_DELIMITER = "/";
+    public static final String CERTIFICATES_FIELD_NAME = "certificates";
     public static final String DISABLE_SSL_VERIFY_FIELD_NAME = "disableSslVerify";
     public static final Pattern COMPUTED_FIELD_PATTERN = Pattern.compile("\\{[^{}:]+:[^{}:]+}");
 

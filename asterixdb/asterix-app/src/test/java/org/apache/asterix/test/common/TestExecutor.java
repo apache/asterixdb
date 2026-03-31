@@ -2531,6 +2531,9 @@ public class TestExecutor {
         str = str.replace(TestConstants.S3_SERVICE_ENDPOINT_PLACEHOLDER, getS3ServiceEndpointDefault());
         str = str.replace(TestConstants.S3_ACCESS_KEY_ID_PLACEHOLDER, getS3AccessKeyIdDefault());
         str = str.replace(TestConstants.S3_SECRET_ACCESS_KEY_PLACEHOLDER, getS3SecretAccessKeyDefault());
+        str = str.replace(TestConstants.S3_API_CERTIFICATES_PLACEHOLDER, getS3ApiCertificatesDefault());
+        str = str.replace(TestConstants.S3_DDL_CERTIFICATES_PLACEHOLDER, getS3DdlCertificatesDefault());
+        str = str.replace(TestConstants.S3_HTTP_CERTIFICATES_PLACEHOLDER, getS3HttpCertificatesDefault());
 
         return str;
     }
@@ -2543,12 +2546,46 @@ public class TestExecutor {
         return TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT;
     }
 
+    protected String getS3CertificatesDefault() {
+        return null;
+    }
+
     protected String getS3ServiceEndpointDefault() {
         return TestConstants.S3_SERVICE_ENDPOINT_DEFAULT;
     }
 
     protected String getS3RegionDefault() {
         return TestConstants.S3_REGION_DEFAULT;
+    }
+
+    protected String getS3ApiCertificatesDefault() {
+        String certificates = getS3CertificatesDefault();
+        return certificates == null || certificates.isBlank() ? ""
+                : "&certificates=" + URLEncoder.encode(writeAsJsonString(List.of(certificates)), UTF_8);
+    }
+
+    protected String getS3DdlCertificatesDefault() {
+        String certificates = getS3CertificatesDefault();
+        return certificates == null || certificates.isBlank() ? ""
+                : ",\n\"certificates\":" + writeAsJsonString(List.of(certificates));
+    }
+
+    protected String getS3HttpCertificatesDefault() {
+        String certificates = getS3CertificatesDefault();
+        return certificates == null || certificates.isBlank() ? ""
+                : ", \\\"certificates\\\":" + escapeForHttpBodyString(writeAsJsonString(List.of(certificates)));
+    }
+
+    private static String escapeForHttpBodyString(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String writeAsJsonString(Object value) {
+        try {
+            return OBJECT_WRITER.writeValueAsString(value);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to serialize S3 test value", e);
+        }
     }
 
     protected String setS3Template(String str) {

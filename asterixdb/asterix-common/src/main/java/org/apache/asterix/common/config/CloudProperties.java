@@ -25,9 +25,13 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNI
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -38,7 +42,7 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.util.StorageUtil;
 
-public class CloudProperties extends AbstractProperties {
+public class CloudProperties extends AbstractProperties implements ICloudProperties {
 
     public static final int MAX_HTTP_CONNECTIONS = 1000;
     public static final int MAX_PENDING_HTTP_CONNECTIONS = 10000;
@@ -54,6 +58,7 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_PREFIX(STRING, ""),
         CLOUD_STORAGE_REGION(STRING, ""),
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
+        CLOUD_STORAGE_CERTIFICATES(STRING_ARRAY, new String[0]),
         CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
         CLOUD_STORAGE_CACHE_POLICY(STRING, "selective"),
         // 80% of the total disk space
@@ -106,6 +111,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_PREFIX:
                 case CLOUD_STORAGE_REGION:
                 case CLOUD_STORAGE_ENDPOINT:
+                case CLOUD_STORAGE_CERTIFICATES:
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                 case CLOUD_STORAGE_CACHE_POLICY:
                 case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
@@ -147,6 +153,8 @@ public class CloudProperties extends AbstractProperties {
                     return "The cloud storage endpoint";
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                     return "Indicates whether or not anonymous auth should be used for the cloud storage";
+                case CLOUD_STORAGE_CERTIFICATES:
+                    return "The certificates to use to validate the cloud storage server";
                 case CLOUD_STORAGE_CACHE_POLICY:
                     return "The caching policy (either eager, lazy or selective). 'eager' caching will download"
                             + "all partitions upon booting, whereas 'lazy' caching will download a file upon"
@@ -252,6 +260,11 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean isStorageAnonymousAuth() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_ANONYMOUS_AUTH);
+    }
+
+    public Collection<String> getStorageCertificates() {
+        String[] certificates = accessor.getStringArray(Option.CLOUD_STORAGE_CERTIFICATES);
+        return certificates == null || certificates.length == 0 ? Collections.emptyList() : List.of(certificates);
     }
 
     public CloudCachePolicy getCloudCachePolicy() {

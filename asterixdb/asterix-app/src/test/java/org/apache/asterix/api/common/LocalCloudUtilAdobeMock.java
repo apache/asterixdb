@@ -78,6 +78,12 @@ public class LocalCloudUtilAdobeMock {
 
     public static S3MockContainer startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer)
             throws IOException {
+        // Testcontainers 1.21.x defaults to Docker API version 1.32, but Docker Desktop 4.65.0+ requires
+        // minimum API version 1.44. Set the api.version system property so the shaded docker-java client
+        // inside testcontainers negotiates with a supported version.
+        if (System.getProperty("api.version") == null) {
+            System.setProperty("api.version", "1.44");
+        }
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
         s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart);

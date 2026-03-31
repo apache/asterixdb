@@ -49,6 +49,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
 import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder;
+import software.amazon.awssdk.services.s3.crt.S3CrtHttpConfiguration;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryDownload;
@@ -225,6 +226,10 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         NettyNioAsyncHttpClient.Builder nettyBuilder =
                 NettyNioAsyncHttpClient.builder().eventLoopGroup(SHARED_EVENT_LOOP);
 
+        if (!config.isDisableSslVerify() && !config.getCertificates().isEmpty()) {
+            nettyBuilder.tlsTrustManagersProvider(S3TrustManagerProvider.create(config.getCertificates()));
+        }
+
         SdkAsyncHttpClient nettyClient = nettyBuilder.buildWithDefaults(httpOptions.build());
         if (config.useRoundRobinDnsResolver()) {
             try {
@@ -241,12 +246,20 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
     }
 
     private static S3AsyncClient createS3CrtAsyncClient(S3ClientConfig config) {
+        if (!config.getCertificates().isEmpty()) {
+            LOGGER.warn("Custom CA certificate is not supported with the CRT S3 client. "
+                    + "The certificate will be ignored for parallel downloads. "
+                    + "Consider using the 'async' parallel downloader client type instead.");
+        }
         S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder();
         builder.credentialsProvider(config.createCredentialsProvider());
         builder.region(Region.of(config.getRegion()));
         builder.forcePathStyle(config.isForcePathStyle());
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.endpointOverride(URI.create(config.getEndpoint()));
+        }
+        if (config.isDisableSslVerify()) {
+            builder.httpConfiguration(S3CrtHttpConfiguration.builder().trustAllCertificatesEnabled(true).build());
         }
         return builder.build();
     }
