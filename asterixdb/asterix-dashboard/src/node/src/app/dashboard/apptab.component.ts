@@ -14,6 +14,7 @@ limitations under the License.
 import { Component } from '@angular/core';
 
 @Component({
+    standalone: false,
     selector: 'awc-tab',
     templateUrl: 'apptab.component.html',
     styleUrls: ['apptab.component.scss']

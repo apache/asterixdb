@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */ -->
 <mat-card class="sql-results-card">
-    <mat-card-content class="content-area">
+    <div class="content-area">
         <div class="divider">
         <div *ngIf="isError == false && hideOutput == false">
             <tree-view [data]="data" [queryId]="queryId" [planFormat]="planFormat" [jsonPlan]="queryOptimizedLogicalPlan" [plan]="optimalLogicalPlan" [planName]="'OPTIMIZED PLAN'" [inputToOutput]="inputToOutput"></tree-view>
@@ -25,5 +25,5 @@ limitations under the License.
         </div>
         -->
         </div>
-    </mat-card-content>
+    </div>
 </mat-card>

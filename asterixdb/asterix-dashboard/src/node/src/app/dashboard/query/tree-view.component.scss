@@ -22,6 +22,7 @@ limitations under the License.
 .panel {
     display: flex;
     flex-flow: row;
+    flex: 0 0 100%;
     align-items: center;
     justify-content: space-between;
     font-size: 12px;
@@ -49,6 +50,7 @@ limitations under the License.
 .divider {
     display: flex;
     flex-flow: row;
+    flex: 0 0 100%;
     align-items: flex-start;
     font-size: 14px;
     border: 1px dashed gainsboro;
@@ -58,8 +60,7 @@ limitations under the License.
 }
 
 .content {
-    display: flex;
-    flex-flow: column;
+    flex-flow: wrap;
     font-size: 0.80rem;
     font-weight: 500;
     padding-bottom: 20px;

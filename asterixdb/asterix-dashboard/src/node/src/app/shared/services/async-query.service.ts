@@ -13,7 +13,7 @@ limitations under the License.
 */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -179,8 +179,8 @@ export class SQLService {
     */
     executeDDLSQLQuery(ddlQuery: string): Observable<any> {
     const apiUrl = AsterixRestApiUrl;
-        return this.http.post(apiUrl, {statement: ddlQuery})
-          .catch((error: any) => this.handleExecuteQueryError(error));
+        return this.http.post(apiUrl, {statement: ddlQuery}).pipe(
+          catchError((error: any) => this.handleExecuteQueryError(error)));
     }
 
     /*
@@ -258,15 +258,15 @@ export class SQLService {
           signature: string;
           status: string;
     */
-    private handleExecuteQueryError(error: any): Promise<any> {
+    private handleExecuteQueryError(error: any): Observable<never> {
         console.log('executeQueryError:')
         console.log(error);
-        return Promise.reject(error.error || error);
+        return throwError(() => error.error || error);
     }
 
-    private handleDeleteQueryError(error: any): Promise<any> {
+    private handleDeleteQueryError(error: any): Observable<never> {
       console.log('deleteQueryError:')
       console.log(error);
-      return Promise.reject(error.error || error);
+      return throwError(() => error.error || error);
     }
 }

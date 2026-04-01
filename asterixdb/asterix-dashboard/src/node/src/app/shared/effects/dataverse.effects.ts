@@ -12,29 +12,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Effect, Actions, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Observable ,  of } from 'rxjs';
 import { map, switchMap, catchError } from "rxjs/operators";
 import * as dataverseActions from '../actions/dataverse.actions';
 import { SQLService } from '../services/async-query.service';
 
-export type Action = dataverseActions.All
-
 @Injectable()
 export class DataverseEffects {
   constructor(private actions: Actions, private sqlService: SQLService) {}
-    /* Effect to set the default Dataverse */
-    @Effect()
-    setDefaultDataverse$: Observable<Action> = this.actions.pipe(
+
+    setDefaultDataverse$ = createEffect(() => this.actions.pipe(
       ofType(dataverseActions.SET_DEFAULT_DATAVERSE),
       switchMap(query => {
         return new Observable().pipe(map(dataverse => new dataverseActions.SetDefaultDataverse('Default')))
       })
-    );
+    ));
 
-    /* Effect to load a collection of all Dataverses from AsterixDB */
-    @Effect()
-    selectDataverses$: Observable<Action> = this.actions.pipe(
+    selectDataverses$ = createEffect(() => this.actions.pipe(
       ofType(dataverseActions.SELECT_DATAVERSES),
       switchMap(query => {
         return this.sqlService.selectDataverses().pipe(
@@ -42,12 +37,9 @@ export class DataverseEffects {
           catchError(err => of(new dataverseActions.SelectDataversesFail(err)))
         )
       })
-    );
+    ));
 
-    /* Effect to create Dataverse from AsterixDB
-    */
-    @Effect()
-    createDataverses$: Observable<Action> = this.actions.pipe(
+    createDataverses$ = createEffect(() => this.actions.pipe(
       ofType(dataverseActions.CREATE_DATAVERSE),
       switchMap(dataverseName => {
         return this.sqlService.createDataverse((dataverseName as any).payload).pipe(
@@ -55,12 +47,9 @@ export class DataverseEffects {
           catchError(err => of(new dataverseActions.CreateDataverseFail(err)))
         )
       })
-    );
+    ));
 
-    /* Effect to drop a Dataverse from AsterixDB
-    */
-    @Effect()
-    dropDataverses$: Observable<Action> = this.actions.pipe(
+    dropDataverses$ = createEffect(() => this.actions.pipe(
       ofType(dataverseActions.DROP_DATAVERSE),
       switchMap(dataverseName => {
         return this.sqlService.dropDataverse((dataverseName as any).payload).pipe(
@@ -68,5 +57,5 @@ export class DataverseEffects {
           catchError(err => of(new dataverseActions.DropDataverseFail(err)))
         )
       })
-    );
+    ));
 }

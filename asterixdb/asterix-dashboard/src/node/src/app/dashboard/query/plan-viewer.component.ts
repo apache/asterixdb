@@ -20,6 +20,7 @@ export  interface planCount {
 }
 
 @Component({
+    standalone: false,
   selector: 'plan-viewer',
   templateUrl: 'plan-viewer.component.html',
   styleUrls: ['plan-viewer.component.scss'],
@@ -491,7 +492,11 @@ export class PlanViewerComponent {
 
   setDetail(checked: boolean) {
     this.detailed = checked;
+    for(let node of this.nodesArr){
+        node.dimension = undefined;
+    }
     this.update$.next(true);
+    requestAnimationFrame(() => this.update$.next(true));
   }
 
   /*

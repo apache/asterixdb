@@ -14,7 +14,7 @@ limitations under the License.
 import { Component, Input, Output, OnInit, OnChanges, EventEmitter } from '@angular/core';
 
 @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'tree-node',
     templateUrl: 'tree-node.component.html',
     styleUrls: ['tree-node.component.scss'],

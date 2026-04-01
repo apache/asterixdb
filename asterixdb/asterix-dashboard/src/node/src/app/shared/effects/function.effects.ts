@@ -13,22 +13,18 @@ limitations under the License.
 */
 
 import { Injectable } from '@angular/core';
-import { Effect, Actions, ofType } from '@ngrx/effects';
-import { Observable ,  of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import * as functionActions from '../actions/function.actions';
 import { SQLService } from "../services/async-query.service";
-
-export type Action = functionActions.All;
 
 @Injectable()
 export class FunctionEffects {
   constructor(private actions: Actions,
               private sqlService: SQLService) {}
 
-  /* Effect to load a collection of all functions from AsterixDB */
-  @Effect()
-  selectFunctions$: Observable<Action> = this.actions.pipe(
+  selectFunctions$ = createEffect(() => this.actions.pipe(
     ofType(functionActions.SELECT_FUNCTIONS),
     switchMap(query => {
       return this.sqlService.selectFunctions().pipe(
@@ -36,5 +32,5 @@ export class FunctionEffects {
         catchError(err => of(new functionActions.SelectFunctionsFail(err)))
       )
     })
-  );
+  ));
 }

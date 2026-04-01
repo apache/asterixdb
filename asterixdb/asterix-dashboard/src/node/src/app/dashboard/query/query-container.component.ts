@@ -20,7 +20,7 @@ import { Observable } from 'rxjs';
  * has editor (codemirror) for writing some query
  */
 @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'awc-query-container',
     templateUrl:'query-container.component.html',
     styleUrls: ['query-container.component.scss']

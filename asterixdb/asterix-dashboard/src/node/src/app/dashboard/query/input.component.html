@@ -20,7 +20,7 @@ limitations under the License.
             <mat-spinner *ngIf="querySpinnerVisible" [color]="blue" [diameter]="15" class="spinner"></mat-spinner>
         </mat-panel-title>
     </mat-expansion-panel-header>
-    <mat-panel-description class="contentarea">
+    <div class="contentarea">
         <div class='options'>
             <div class='dataverses'>
                 <div class='d1'>
@@ -68,7 +68,7 @@ limitations under the License.
         <div class="codemirror-container">
             <textarea class="code" #editor></textarea>
         </div>
-    </mat-panel-description>
+    </div>
     <div class="message">
         <span *ngIf="querySuccess==true && queryWarningsShow==false" class="metrics">{{metricsString}}</span>
         <span *ngIf="queryError" class="queryErrorMessage">{{queryErrorMessageString}}</span>

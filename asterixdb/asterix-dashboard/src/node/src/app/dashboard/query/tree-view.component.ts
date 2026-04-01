@@ -13,9 +13,9 @@ limitations under the License.
 */
 import { Component, Input, NgZone, SimpleChange, ViewChild, Inject } from '@angular/core';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {MatFooterCell, MatTableDataSource} from '@angular/material/table';
+import {MatTableDataSource} from '@angular/material/table';
 import { saveAs } from 'file-saver';
-import * as cloneDeep from 'lodash/cloneDeep';
+import cloneDeep from 'lodash/cloneDeep';
 
 export interface DialogData {
   exportFormat: string;
@@ -23,6 +23,7 @@ export interface DialogData {
 }
 
 @Component({
+    standalone: false,
     selector: 'tree-view',
     templateUrl: 'tree-view.component.html',
     styleUrls: ['tree-view.component.scss']
@@ -596,6 +597,7 @@ export class TreeViewComponent {
 }
 
 @Component({
+    standalone: false,
   selector: 'dialog-export-picker',
   templateUrl: 'dialog-export-picker.html',
   styleUrls:  ['dialog-export-picker.scss']

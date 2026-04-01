@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'awc-results',
     templateUrl: 'output.component.html',
     styleUrls: ['output.component.scss']

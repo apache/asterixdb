@@ -12,14 +12,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Observable ,  of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { SQLService } from '../services/async-query.service';
 import * as sqlCancelActions from '../actions/cancel.actions';
-
-export type Action_type = sqlCancelActions.All;
 
 @Injectable()
 export class SQLCancelEffects {
@@ -27,11 +24,7 @@ export class SQLCancelEffects {
               private sqlService: SQLService) {
   }
 
-  /*
-   * Effect to Cancel a SQL++ Query against AsterixDB
-   */
-  @Effect()
-  cancelQuery$: Observable<Action_type> = this.actions.pipe(
+  cancelQuery$ = createEffect(() => this.actions.pipe(
     ofType(sqlCancelActions.CANCEL_QUERY),
     switchMap(query => {
       return this.sqlService.cancelSQLQuery((query as any).payload.requestId).pipe(
@@ -39,5 +32,5 @@ export class SQLCancelEffects {
         catchError(sqlCancelQueryError => of(new sqlCancelActions.CancelQueryFail(sqlCancelQueryError)))
       )
     })
-  )
+  ));
 }

@@ -16,8 +16,6 @@ limitations under the License.
     "compilerOptions": {
         "outDir": "../out-tsc/spec",
         "baseUrl": "./",
-        "module": "commonjs",
-        "target": "es5",
         "types": [
         "jasmine",
         "node"

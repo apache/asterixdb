@@ -25,6 +25,7 @@ $results-spacing-unit: 5px;
 
 .content-area {
     overflow: auto;
+    flex-flow: column;
     font-size: 0.80rem;
     font-weight: 500;
     font-family: Consolas, monospace;

@@ -15,7 +15,9 @@
             "index": "src/index.html",
             "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "zone.js"
+            ],
             "assets": [
               "src/assets",
               "src/favicon.ico"
@@ -30,7 +32,6 @@
               "node_modules/codemirror/lib/codemirror.js"
             ],
             "allowedCommonJsDependencies": [
-              "hammerjs",
               "lodash",
               "file-saver",
               "codemirror",
@@ -43,7 +44,6 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
               "aot": true,
               "extractLicenses": true,
@@ -61,11 +61,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "asterixdb-web-console:build"
+            "buildTarget": "asterixdb-web-console:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "asterixdb-web-console:build:production",
+              "buildTarget": "asterixdb-web-console:build:production",
               "sourceMap": true
             }
           }
@@ -73,7 +73,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "asterixdb-web-console:build"
+            "buildTarget": "asterixdb-web-console:build"
           }
         },
         "test": {
@@ -81,7 +81,10 @@
           "options": {
             "main": "src/test.ts",
             "karmaConfig": "./karma.conf.js",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [
               "node_modules/codemirror/lib/codemirror.js"
@@ -95,55 +98,14 @@
               "src/favicon.ico"
             ]
           }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "src/tsconfig.app.json",
-              "src/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
-            ]
-          }
-        }
-      }
-    },
-    "asterixdb-web-console-e2e": {
-      "root": "",
-      "sourceRoot": "e2e",
-      "projectType": "application",
-      "architect": {
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
-          "options": {
-            "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "asterixdb-web-console:serve"
-          }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "e2e/tsconfig.e2e.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
-            ]
-          }
         }
       }
     }
   },
-  "defaultProject": "asterixdb-web-console",
   "schematics": {
-    "@schematics/angular:class": {
-      "spec": false
-    },
     "@schematics/angular:component": {
       "prefix": "app",
-      "styleext": "css"
+      "style": "scss"
     },
     "@schematics/angular:directive": {
       "prefix": "app"

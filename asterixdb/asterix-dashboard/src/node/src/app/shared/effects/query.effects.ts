@@ -12,23 +12,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Observable ,  of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { SQLService } from '../services/async-query.service';
 import * as sqlQueryActions from '../actions/query.actions';
-
-export type Action_type = sqlQueryActions.All
 
 @Injectable()
 export class SQLQueryEffects {
   constructor(private actions: Actions,
         private sqlService: SQLService) {}
 
-    /* Effect to Execute an SQL++ Query against the AsterixDB */
-    @Effect()
-    executeQuery$: Observable<Action_type> = this.actions.pipe(
+    executeQuery$ = createEffect(() => this.actions.pipe(
       ofType(sqlQueryActions.EXECUTE_QUERY),
       switchMap(query => {
         return this.sqlService.executeSQLQuery((query as any).payload.queryString, (query as any).payload.planFormat, (query as any).payload.format, (query as any).payload.requestId).pipe(
@@ -36,12 +31,9 @@ export class SQLQueryEffects {
           catchError(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)))
         )
       })
-    );
+    ));
 
-    /* Effect to Execute an SQL++ Metadata Query against the AsterixDB
-    */
-    @Effect()
-    executeMetadataQuery$: Observable<Action_type> = this.actions.pipe(
+    executeMetadataQuery$ = createEffect(() => this.actions.pipe(
       ofType(sqlQueryActions.EXECUTE_METADATA_QUERY),
       switchMap(query => {
         return this.sqlService.executeSQLQuery((query as any).payload, (query as any).payload.planFormat, (query as any).payload.format, 'default').pipe(
@@ -49,5 +41,5 @@ export class SQLQueryEffects {
           catchError(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)))
         )
       })
-    );
+    ));
 }

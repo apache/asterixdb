@@ -18,6 +18,7 @@ import { Component } from '@angular/core';
  * Defines AsterixDB Dashboard application's layout
  */
 @Component({
+    standalone: false,
     selector: 'awc-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']

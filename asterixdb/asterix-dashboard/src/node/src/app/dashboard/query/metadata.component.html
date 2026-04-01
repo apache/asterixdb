@@ -63,7 +63,6 @@ limitations under the License.
         <mat-expansion-panel hideToggle [expanded]="panelOpenState">
           <mat-expansion-panel-header class="header">
             <mat-panel-title class="title">USER DEFINED FUNCTIONS</mat-panel-title>
-            <mat-panel-description></mat-panel-description>
           </mat-expansion-panel-header>
           <section class="section">
             <li *ngFor="let function of functionsFiltered" (click)="openMetadataInspectorDialog(function, 'function')">

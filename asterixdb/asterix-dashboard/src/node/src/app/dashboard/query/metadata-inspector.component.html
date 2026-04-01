@@ -40,7 +40,7 @@ limitations under the License.
             <pre class="content"><b>Dataverse: </b>{{data.DataverseName}}</pre>
             <pre class="content"><b>Datatype Name: </b>{{data.DatatypeName}}</pre>
             <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'ORDEREDLIST'"><b>[</b></pre>
-            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>{{</b></pre>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>&#123;&#123;</b></pre>
             <pre class="list-title content" *ngIf="data.Derived.Tag === 'RECORD'"><b>Fields:</b></pre>
             <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
               <mat-tree-node *matTreeNodeDef="let node;" matTreeNodeToggle>
@@ -69,18 +69,18 @@ limitations under the License.
                       <mat-panel-description *ngIf="node.isNullable == false && node.isMissable == true">Not Nullable | Not Required</mat-panel-description>
                     </mat-expansion-panel-header>
                     <pre class="list-title content list-tag" *ngIf="node.OrderedList == true"><b>[</b></pre>
-                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>{{</b></pre>
+                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>&#123;&#123;</b></pre>
                     <div [class.example-tree-invisible]="!treeControl.isExpanded(node)">
                       <ng-container matTreeNodeOutlet></ng-container>
                     </div>
                     <pre class="list-title content list-tag" *ngIf="node.OrderedList == true"><b>]</b></pre>
-                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>}}</b></pre>
+                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>&#125;&#125;</b></pre>
                   </mat-expansion-panel>
                 </div>
               </mat-nested-tree-node>
             </mat-tree>
             <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'ORDEREDLIST'"><b>]</b></pre>
-            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>}}</b></pre>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>&#125;&#125;</b></pre>
             <p class="anon-note">Note: italicized = anonymous type</p>
         </div>
         <div *ngIf="data.MetadataType === 'index'">

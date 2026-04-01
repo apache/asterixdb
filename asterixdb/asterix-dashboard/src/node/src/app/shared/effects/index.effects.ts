@@ -12,22 +12,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Effect, Actions, ofType } from '@ngrx/effects';
-import { Observable ,  of } from 'rxjs';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import * as indexActions from '../actions/index.actions';
 import { SQLService } from '../services/async-query.service';
-
-export type Action = indexActions.All
 
 @Injectable()
 export class IndexEffects {
   constructor(private actions: Actions,
         private sqlService: SQLService) {}
 
-    /* Effect to load a collection of all Index from AsterixDB */
-    @Effect()
-    selectIndexes$: Observable<Action> = this.actions.pipe(
+    selectIndexes$ = createEffect(() => this.actions.pipe(
       ofType(indexActions.SELECT_INDEXES),
       switchMap(query => {
         return this.sqlService.selectIndexes().pipe(
@@ -35,12 +31,9 @@ export class IndexEffects {
           catchError(err => of(new indexActions.SelectIndexesFail(err)))
         )
       })
-    );
+    ));
 
-    /* Effect to create a Index
-    */
-    @Effect()
-    createIndexes$: Observable<Action> = this.actions.pipe(
+    createIndexes$ = createEffect(() => this.actions.pipe(
       ofType(indexActions.CREATE_INDEX),
       switchMap(index => {
         return this.sqlService.createIndex((index as any).payload).pipe(
@@ -48,12 +41,9 @@ export class IndexEffects {
           catchError(err => of(new indexActions.CreateIndexFail(err)))
         )
       })
-    );
+    ));
 
-    /* Effect to drop a Index
-    */
-    @Effect()
-    dropIndexes$: Observable<Action> = this.actions.pipe(
+    dropIndexes$ = createEffect(() => this.actions.pipe(
       ofType(indexActions.DROP_INDEX),
       switchMap(index => {
         return this.sqlService.dropIndex((index as any).payload).pipe(
@@ -61,5 +51,5 @@ export class IndexEffects {
           catchError(err => of(new indexActions.DropIndexFail(err)))
         )
       })
-    );
+    ));
 }

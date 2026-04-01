@@ -55,7 +55,7 @@ enum MetadataListTypes {
 }
 
 @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'awc-metadata',
     templateUrl: 'metadata.component.html',
     styleUrls: ['metadata.component.scss']
@@ -440,6 +440,7 @@ export class MetadataComponent {
 }
 
 @Component({
+    standalone: false,
     selector: 'dataset-create-dialog',
     templateUrl: 'metadata-inspector.component.html',
     styleUrls: ['metadata-inspector.component.scss']

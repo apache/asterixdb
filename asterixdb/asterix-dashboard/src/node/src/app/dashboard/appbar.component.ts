@@ -16,7 +16,7 @@ import { Store } from '@ngrx/store';
 import * as appActions from '../shared/actions/app.actions'
 
 @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'awc-bar',
     templateUrl: 'appbar.component.html',
     styleUrls: ['appbar.component.scss']

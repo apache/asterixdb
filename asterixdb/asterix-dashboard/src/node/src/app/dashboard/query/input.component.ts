@@ -27,7 +27,7 @@
    * has editor (codemirror)
    */
   @Component({
-    moduleId: module.id,
+    standalone: false,
     selector: 'awc-query',
     templateUrl: 'input.component.html',
     styleUrls: ['input.component.scss']

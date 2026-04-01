@@ -29,7 +29,7 @@ limitations under the License.
 }
 
 .menu {
-    >>> .mat-tab-label {
+    ::ng-deep .mat-mdc-tab {
         font-size: 0.80rem !important;
         font-weight: 500 !important;
         color: white;

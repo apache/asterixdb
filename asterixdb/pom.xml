@@ -183,6 +183,7 @@
             <exclude>**/*.regexadm</exclude>
             <exclude>**/*.regexjson</exclude>
             <exclude>**/*.template</exclude>
+            <exclude>**/*.lock</exclude>
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
           </excludes>
         </configuration>

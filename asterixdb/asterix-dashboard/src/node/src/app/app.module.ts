@@ -80,10 +80,6 @@ import {SQLCancelEffects} from "./shared/effects/cancel.effects";
         NgxChartsModule
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    entryComponents: [
-        DialogMetadataInspector,
-        DialogExportPicker,
-    ],
     providers: [SQLService],
     bootstrap: [AppComponent]
 })
