@@ -23,6 +23,7 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.getBuiltinFunctio
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -433,7 +434,59 @@ public class JoinEnum {
                     if (skipAnno != null) {
                         return skipAnno;
                     }
+                    if (AFCexpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+                        skipAnno = findSkipIndexHint(AFCexpr);
+                        if (skipAnno != null) {
+                            return skipAnno;
+                        }
+                    }
                 }
+            }
+        } else if (condition.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+            Collection<String> skippedIndexNames = new HashSet<>();
+            boolean foundSpecificIndexes = false;
+
+            for (int i = 0; i < condition.getArguments().size(); i++) {
+                ILogicalExpression expr = condition.getArguments().get(i).getValue();
+                if (expr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                    AbstractFunctionCallExpression AFCexpr = (AbstractFunctionCallExpression) expr;
+                    SkipSecondaryIndexSearchExpressionAnnotation skipAnno =
+                            AFCexpr.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+
+                    if (skipAnno != null) {
+                        // INSTANCE_ANY_INDEX takes precedence - skip ALL indexes immediately
+                        if (skipAnno == SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX) {
+                            return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
+                        }
+                        // Collect specific index names
+                        if (skipAnno.getIndexNames() != null) {
+                            skippedIndexNames.addAll(skipAnno.getIndexNames());
+                            foundSpecificIndexes = true;
+                        }
+                    }
+
+                    // Recursively check nested expressions
+                    if (AFCexpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)
+                            || AFCexpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+                        SkipSecondaryIndexSearchExpressionAnnotation nestedSkipAnno = findSkipIndexHint(AFCexpr);
+                        if (nestedSkipAnno != null) {
+                            // INSTANCE_ANY_INDEX takes precedence
+                            if (nestedSkipAnno == SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX) {
+                                return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
+                            }
+                            // Collect specific index names from nested
+                            if (nestedSkipAnno.getIndexNames() != null) {
+                                skippedIndexNames.addAll(nestedSkipAnno.getIndexNames());
+                                foundSpecificIndexes = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Return collected specific indexes (only if we found them and INSTANCE_ANY_INDEX wasn't found)
+            if (foundSpecificIndexes) {
+                return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(skippedIndexNames);
             }
         } else if (condition.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             SkipSecondaryIndexSearchExpressionAnnotation skipAnno =
