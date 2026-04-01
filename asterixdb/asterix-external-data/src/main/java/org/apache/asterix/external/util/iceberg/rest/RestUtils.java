@@ -29,7 +29,6 @@ import static org.apache.asterix.external.util.http.HttpConstants.OAUTH_TOKEN_UR
 import static org.apache.asterix.external.util.http.HttpConstants.PASSWORD_FIELD_NAME;
 import static org.apache.asterix.external.util.http.HttpConstants.USERNAME_FIELD_NAME;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_URI_PROPERTY_KEY;
-import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 
 import java.util.Map;
@@ -61,7 +60,6 @@ public class RestUtils {
 
     public static void validateRequiredProperties(Map<String, String> catalogProperties) throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
-        validatePropertyExists(catalogProperties, ICEBERG_WAREHOUSE_PROPERTY_KEY, PARAMETERS_REQUIRED);
     }
 
     private static void setAuthentication(Map<String, String> catalogProperties) throws CompilationException {
