@@ -24,6 +24,11 @@
 * [Query Service API](#queryservice)
 * [Query Status API](#querystatus)
 * [Query Result API](#queryresult)
+* [Connector API](#connector)
+* [Administration APIs](#admin)
+    * [Cluster Controller Details API](#ccdetails)
+    * [Active Entity Statistics API](#activestats)
+    * [Network Diagnostics API](#netdiagnostics)
 
 ## <a id="queryservice">POST /query/service</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
@@ -218,4 +223,243 @@ __Sample response__
     <
     [ { "$1": 1 }
      ]
+
+## <a id="connector">GET /connector</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+__Description__ Returns the file splits (partition locations) for a dataset. This endpoint is primarily used by
+  external runtime systems such as Pregelix or IMRU to pull data in parallel from existing AsterixDB datasets.
+  The response includes the dataset's primary keys, record type schema, and an array of file splits with their
+  IP addresses and file paths.
+
+__Parameters__
+
+* `dataverseName` - The name of the dataverse containing the dataset. Required.
+* `datasetName` - The name of the dataset. Required.
+
+__Command__
+
+    $ curl -v "http://localhost:19002/connector?dataverseName=TinySocial&datasetName=FacebookUsers"
+
+__Sample response__
+
+    > GET /connector?dataverseName=TinySocial&datasetName=FacebookUsers HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "keys": "id",
+        "type": {
+            "type": "RECORD",
+            "name": "FacebookUserType",
+            "open": true,
+            "fields": [
+                { "name": "id", "type": "INT64" },
+                { "name": "alias", "type": "STRING" },
+                { "name": "name", "type": "STRING" },
+                { "name": "user-since", "type": "DATETIME" },
+                { "name": "friend-ids", "type": { "type": "UNORDEREDLIST", "item": "INT64" } },
+                { "name": "employment", "type": { "type": "ORDEREDLIST", "item": { "type": "RECORD", ... } } }
+            ]
+        },
+        "splits": [
+            { "ip": "127.0.0.1", "path": "/data/storage/partition_0/TinySocial/FacebookUsers/0/FacebookUsers" },
+            { "ip": "127.0.0.1", "path": "/data/storage/partition_1/TinySocial/FacebookUsers/0/FacebookUsers" }
+        ]
+    }
+
+__Error response__
+
+If the dataverse or dataset does not exist:
+
+    {
+        "error": "Dataset FacebookUsers does not exist in dataverse TinySocial"
+    }
+
+---
+
+# <a id="admin">Administration APIs</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+The following endpoints provide administrative functionality for monitoring and managing the AsterixDB cluster.
+
+## <a id="ccdetails">GET /admin/cluster/cc</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+__Description__ Returns detailed information about the Cluster Controller (CC). This endpoint provides access to
+  CC configuration, runtime statistics, and thread dumps for debugging purposes.
+
+__Sub-endpoints__
+
+* `GET /admin/cluster/cc` - Returns summary information about the CC
+* `GET /admin/cluster/cc/config` - Returns the CC configuration parameters
+* `GET /admin/cluster/cc/stats` - Returns runtime statistics for the CC
+* `GET /admin/cluster/cc/threaddump` - Returns a thread dump of the CC JVM
+
+__Command (CC summary)__
+
+    $ curl -v http://localhost:19002/admin/cluster/cc
+
+__Sample response__
+
+    > GET /admin/cluster/cc HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "configUri": "/admin/cluster/cc/config",
+        "statsUri": "/admin/cluster/cc/stats",
+        "threadDumpUri": "/admin/cluster/cc/threaddump"
+    }
+
+__Command (CC configuration)__
+
+    $ curl -v http://localhost:19002/admin/cluster/cc/config
+
+__Sample response__
+
+    {
+        "cc.address.host": "127.0.0.1",
+        "cc.address.http.port": 19002,
+        "cc.address.console.port": 19001,
+        "cc.cluster.port": 19000,
+        "cc.heartbeat.period": 10000,
+        "cc.heartbeat.max.misses": 5,
+        ...
+    }
+
+__Command (CC statistics)__
+
+    $ curl -v http://localhost:19002/admin/cluster/cc/stats
+
+__Sample response__
+
+    {
+        "heap-used": 268435456,
+        "heap-max": 4294967296,
+        "thread-count": 45,
+        "system-load-average": 2.5,
+        "gc-count": 12,
+        "gc-time": 150
+    }
+
+__Command (CC thread dump)__
+
+    $ curl -v http://localhost:19002/admin/cluster/cc/threaddump
+
+__Sample response__
+
+    {
+        "date": "2024-01-15T10:30:00Z",
+        "threads": [
+            {
+                "name": "main",
+                "state": "RUNNABLE",
+                "stack": [
+                    "java.lang.Thread.dumpThreads(Native Method)",
+                    "java.lang.Thread.getAllStackTraces(Thread.java:1610)",
+                    ...
+                ]
+            },
+            ...
+        ]
+    }
+
+## <a id="activestats">GET /admin/active</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+__Description__ Returns statistics for all active entities in the cluster, such as running feeds.
+  Active entities are long-running processes that continuously ingest or process data.
+  The statistics include ingestion rates, processing metrics, and entity-specific information.
+
+__Parameters__
+
+* `{timeout}` - Optional path parameter specifying the cache expiry time in milliseconds for statistics.
+  If the cached statistics are older than this value, they will be refreshed. Default is 2000ms.
+
+__Command__
+
+    $ curl -v http://localhost:19002/admin/active
+
+__Sample response__
+
+    > GET /admin/active HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "TinySocial.TwitterFeed": {
+            "runtime": {
+                "intake-rate": 1250,
+                "store-rate": 1248,
+                "records-ingested": 50000
+            },
+            "state": "ACTIVE",
+            "start-time": "2024-01-15T08:00:00Z"
+        }
+    }
+
+__Command (with custom timeout)__
+
+    $ curl -v http://localhost:19002/admin/active/5000
+
+This refreshes statistics if they are older than 5000ms.
+
+__Sample response (no active entities)__
+
+    { }
+
+## <a id="netdiagnostics">GET /admin/net</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+__Description__ Returns network diagnostics information for a Node Controller (NC).
+  This NC-level endpoint provides details about the network multiplexer/demultiplexer state,
+  including channel information and connection statistics. This is useful for debugging
+  network-related issues in the cluster.
+
+__Note:__ This endpoint is available on Node Controllers (default port 19003), not the Cluster Controller.
+
+__Command__
+
+    $ curl -v http://localhost:19003/admin/net
+
+__Sample response__
+
+    > GET /admin/net HTTP/1.1
+    > Host: localhost:19003
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "mux-demux": {
+            "channels": [
+                {
+                    "remote-address": "127.0.0.1:19000",
+                    "state": "CONNECTED",
+                    "pending-writes": 0,
+                    "pending-reads": 0
+                }
+            ],
+            "total-connections": 5,
+            "active-connections": 5
+        }
+    }
 
