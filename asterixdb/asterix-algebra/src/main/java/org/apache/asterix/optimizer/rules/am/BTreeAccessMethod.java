@@ -19,6 +19,7 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.EQ;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 import static org.apache.asterix.optimizer.rules.am.AccessMethodUtils.CAST_NULL_TYPE_CONSTRUCTORS;
 
@@ -205,14 +206,17 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Sets the result of index-only plan check into AccessMethodAnalysisContext.
         analysisCtx.setIndexOnlyPlanInfo(indexOnlyPlanInfo);
 
+        List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions = new ArrayList<>();
+
         // Transform the current path to the path that is utilizing the corresponding indexes
         ILogicalOperator primaryIndexUnnestOp = createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
                 subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex, analysisCtx,
                 AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
                         afterSelectRefs),
-                false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
+                false,
+                subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
                         .getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                context, null, null);
+                context, null, null, optimizableDisjunctionConditions);
 
         if (primaryIndexUnnestOp == null) {
             return false;
@@ -241,6 +245,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     selectOp.getInputs().clear();
                     subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
                     selectOp.getInputs().add(new MutableObject<ILogicalOperator>(assignBeforeSelectOp));
+                    optimizeSelectCondition(selectOp.getCondition(), optimizableDisjunctionConditions);
                 }
             } else {
                 // A secondary-index-only plan without any assign cannot exist. This is a non-index only plan.
@@ -259,6 +264,72 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
 
         return true;
+    }
+
+    public static void optimizeSelectCondition(Mutable<ILogicalExpression> cond,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions) {
+        if (cond.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond.getValue();
+            if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+
+                LogicalVariable variable = null;
+                Set<ConstantExpression> constantExpressions = new HashSet<>();
+                List<ILogicalExpression> orExprs = new ArrayList<>();
+
+                for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                    if (arg.get().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                        return;
+                    }
+
+                    AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) arg.get();
+
+                    if (!argFuncExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)) {
+                        return;
+                    }
+
+                    ILogicalExpression arg1 = argFuncExpr.getArguments().get(0).get();
+                    ILogicalExpression arg2 = argFuncExpr.getArguments().get(1).get();
+
+                    if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                            && arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                        if (variable == null) {
+                            variable = ((VariableReferenceExpression) arg1).getVariableReference();
+                        } else if (!variable.equals(((VariableReferenceExpression) arg1).getVariableReference())) {
+                            return;
+                        }
+
+                        constantExpressions.add((ConstantExpression) arg2);
+                    } else if (arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                            && arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                        if (variable == null) {
+                            variable = ((VariableReferenceExpression) arg2).getVariableReference();
+                        } else if (!variable.equals(((VariableReferenceExpression) arg2).getVariableReference())) {
+                            return;
+                        }
+                        constantExpressions.add((ConstantExpression) arg1);
+                    }
+                    orExprs.add(arg.get());
+                }
+
+                for (Pair<LogicalVariable, List<ILogicalExpression>> optimizableDisjunctionCondition : optimizableDisjunctionConditions) {
+                    if (optimizableDisjunctionCondition.getSecond().containsAll(orExprs)
+                            && optimizableDisjunctionCondition.getSecond().size() == orExprs.size()) {
+                        List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+                        args.add(new MutableObject<>(new VariableReferenceExpression(variable)));
+                        args.add(new MutableObject<>(
+                                new VariableReferenceExpression(optimizableDisjunctionCondition.getFirst())));
+                        cond.setValue(
+                                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(EQ), args));
+                        break;
+                    }
+                }
+
+            } else if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
+                for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                    optimizeSelectCondition(arg, optimizableDisjunctionConditions);
+                }
+            }
+        }
     }
 
     @Override
@@ -307,7 +378,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
                 indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
-                isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue);
+                isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue, new ArrayList<>());
 
         if (indexSearchOp == null) {
             return false;
@@ -329,7 +400,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
             throws AlgebricksException {
 
         Index.ValueIndexDetails chosenIndexDetails = (Index.ValueIndexDetails) chosenIndex.getIndexDetails();
@@ -340,7 +412,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         return createBTreeIndexSearchPlan(afterTopOpRefs, topOpRef, conditionRef, assignBeforeTheOpRefs, indexSubTree,
                 probeSubTree, chosenIndex, analysisCtx, retainInput, retainMissing, requiresBroadcast, context,
                 newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, chosenIndexKeyFieldNames,
-                chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators);
+                chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators, optimizableDisjunctionConditions);
     }
 
     private static boolean containsOR(ILogicalExpression condition) {
@@ -361,26 +433,26 @@ public class BTreeAccessMethod implements IAccessMethod {
     private void createKeyVarsAndExprsWithOr(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
             ArrayList<LogicalVariable> assignKeyVarList, ArrayList<List<Mutable<ILogicalExpression>>> assignKeyExprList,
             ArrayList<LogicalVariable> keyVarList, IOptimizationContext context, ILogicalExpression[] constExpressions,
-            LogicalVariable[] constExprVars, List<ILogicalExpression>[] disjunctiveEqualityConditionExprs,
-            boolean[] isDisjunctiveEqualityCondition, boolean isHighKey, int numlowKeys) {
+            LogicalVariable[] constExprVars, List<ILogicalExpression>[] disjunctiveEqualityKeyExprs,
+            List<ILogicalExpression>[] disjunctiveEqualityConditionExprs, boolean[] isDisjunctiveEqualityCondition,
+            boolean isHighKey, int numlowKeys, List<List<ILogicalExpression>> disjunctiveEqualityConditionExprSet) {
         for (int i = 0; i < numKeys; i++) {
             ILogicalExpression searchKeyExpr = searchKeyExprs[i];
             ILogicalExpression constExpression = constExpressions[i];
             LogicalVariable keyVar = null;
             if (isDisjunctiveEqualityCondition[i] && (i >= numlowKeys || !isHighKey)) {
                 keyVar = context.newVar();
-                assignKeyExprList.add(disjunctiveEqualityConditionExprs[i].stream().map(MutableObject::new)
-                        .collect(Collectors.toList()));
+                assignKeyExprList.add(
+                        disjunctiveEqualityKeyExprs[i].stream().map(MutableObject::new).collect(Collectors.toList()));
                 assignKeyVarList.add(keyVar);
+                disjunctiveEqualityConditionExprSet.add(disjunctiveEqualityConditionExprs[i]);
             } else if (isDisjunctiveEqualityCondition[i] && isHighKey && i < numlowKeys) {
-                keyVar = context.newVar();
-                assignKeyVarList.add(keyVar);
-                assignKeyExprList.add(Collections
-                        .singletonList(new MutableObject<>(new VariableReferenceExpression(assignKeyVarList.get(i)))));
+                keyVar = assignKeyVarList.get(i);
             } else if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 keyVar = context.newVar();
                 assignKeyExprList.add(Collections.singletonList(new MutableObject<>(searchKeyExpr)));
                 assignKeyVarList.add(keyVar);
+                disjunctiveEqualityConditionExprSet.add(disjunctiveEqualityConditionExprs[i]);
             } else {
                 keyVar = ((VariableReferenceExpression) searchKeyExpr).getVariableReference();
                 if (constExpression != null) {
@@ -389,6 +461,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     }
                     assignKeyExprList.add(Collections.singletonList(new MutableObject<>(constExpression)));
                     assignKeyVarList.add(constExprVars[i]);
+                    disjunctiveEqualityConditionExprSet.add(disjunctiveEqualityConditionExprs[i]);
                 }
             }
             keyVarList.add(keyVar);
@@ -403,7 +476,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
             LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
             List<List<String>> chosenIndexKeyFieldNames, List<IAType> chosenIndexKeyFieldTypes,
-            List<Integer> chosenIndexKeyFieldSourceIndicators) throws AlgebricksException {
+            List<Integer> chosenIndexKeyFieldSourceIndicators,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
 
         Dataset dataset = indexSubTree.getDataset();
         ARecordType recordType = indexSubTree.getRecordType();
@@ -433,6 +508,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         LogicalVariable[] lowKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
         LogicalVariable[] highKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
         boolean[] isDisjunctiveEqualityCondition = new boolean[numSecondaryKeys];
+        List<ILogicalExpression>[] disjunctiveEqualityKeyExprs = new List[numSecondaryKeys];
         List<ILogicalExpression>[] disjunctiveEqualityConditionExprs = new List[numSecondaryKeys];
         LogicalVariable[] disjunctiveRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
 
@@ -544,12 +620,15 @@ public class BTreeAccessMethod implements IAccessMethod {
                     } else if (isDisjunctiveEqualityCondition[keyPos]) {
                         // when is serachKeyExpr NULL?
                         isEqCondition = true;
-                        disjunctiveEqualityConditionExprs[keyPos].add(searchKeyExpr);
+                        disjunctiveEqualityKeyExprs[keyPos].add(searchKeyExpr);
+                        disjunctiveEqualityConditionExprs[keyPos].add(optFuncExpr.getFuncExpr());
                     } else {
                         isDisjunctiveEqualityCondition[keyPos] = true;
                         isEqCondition = true;
+                        disjunctiveEqualityKeyExprs[keyPos] = new ArrayList<>();
+                        disjunctiveEqualityKeyExprs[keyPos].add(searchKeyExpr);
                         disjunctiveEqualityConditionExprs[keyPos] = new ArrayList<>();
-                        disjunctiveEqualityConditionExprs[keyPos].add(searchKeyExpr);
+                        disjunctiveEqualityConditionExprs[keyPos].add(optFuncExpr.getFuncExpr());
                     }
 
                     break;
@@ -669,6 +748,15 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Lets keep always false for now to be safe
         boolean primaryIndexPostProccessingIsNeeded = true;
 
+        if (!chosenIndex.isPrimaryIndex() && primaryIndexPostProccessingIsNeeded) {
+            for (boolean isDisjEq : isDisjunctiveEqualityCondition) {
+                if (isDisjEq) {
+                    retainInput = true;
+                    break;
+                }
+            }
+        }
+
         if (primaryIndexPostProccessingIsNeeded) {
             Arrays.fill(lowKeyInclusive, true);
             Arrays.fill(highKeyInclusive, true);
@@ -700,14 +788,17 @@ public class BTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<>();
         ArrayList<List<Mutable<ILogicalExpression>>> assignKeyExprList = new ArrayList<>();
+        List<List<ILogicalExpression>> disjunctiveEqualityConditionExprSet = new ArrayList<>();
 
         createKeyVarsAndExprsWithOr(numLowKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList, assignKeyExprList,
                 keyVarList, context, lowKeyConstAtRuntimeExpressions, lowKeyConstAtRuntimeExprVars,
-                disjunctiveEqualityConditionExprs, isDisjunctiveEqualityCondition, false, 0);
+                disjunctiveEqualityKeyExprs, disjunctiveEqualityConditionExprs, isDisjunctiveEqualityCondition, false,
+                0, disjunctiveEqualityConditionExprSet);
 
         createKeyVarsAndExprsWithOr(numHighKeys, highKeyLimits, highKeyExprs, assignKeyVarList, assignKeyExprList,
                 keyVarList, context, highKeyConstantAtRuntimeExpressions, highKeyConstAtRuntimeExprVars,
-                disjunctiveEqualityConditionExprs, isDisjunctiveEqualityCondition, true, numLowKeys);
+                disjunctiveEqualityKeyExprs, disjunctiveEqualityConditionExprs, isDisjunctiveEqualityCondition, true,
+                numLowKeys, disjunctiveEqualityConditionExprSet);
 
         BTreeJobGenParams jobGenParams =
                 new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE, dataset.getDatabaseName(),
@@ -733,7 +824,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         ILogicalOperator inputOp = null;
 
         if (!assignKeyVarList.isEmpty()) {
-            int numKeys = keyVarList.size();
+            int numKeys = assignKeyVarList.size();
             for (int i = 0; i < numKeys; i++) {
 
                 AbstractLogicalOperator currOp = null;
@@ -755,6 +846,8 @@ public class BTreeAccessMethod implements IAccessMethod {
 
                     currOp = new UnnestOperator(assignKeyVarList.get(i), new MutableObject<>(scanCollectionExpr));
                     jobGenParams.requiresBroadcast = true;
+                    optimizableDisjunctionConditions
+                            .add(new Pair<>(assignKeyVarList.get(i), disjunctiveEqualityConditionExprSet.get(i)));
 
                 }
 
@@ -818,7 +911,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     assignBeforeTheOpRefs, dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp,
                     context, true, retainInput, retainMissing, false, chosenIndex, analysisCtx, indexSubTree,
                     probeSubTree, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue,
-                    anyRealTypeConvertedToIntegerType);
+                    anyRealTypeConvertedToIntegerType, optimizableDisjunctionConditions);
 
             // Replaces the datasource scan with the new plan rooted at
             // Get dataSourceRef operator -
@@ -929,13 +1022,15 @@ public class BTreeAccessMethod implements IAccessMethod {
             boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
             LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
             List<List<String>> chosenIndexKeyFieldNames, List<IAType> chosenIndexKeyFieldTypes,
-            List<Integer> chosenIndexKeyFieldSourceIndicators) throws AlgebricksException {
+            List<Integer> chosenIndexKeyFieldSourceIndicators,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
 
         if (containsOR(conditionRef.get())) {
             return createBTreeIndexSearchPlanWithOr(afterTopOpRefs, topOpRef, conditionRef, assignBeforeTheOpRefs,
                     indexSubTree, probeSubTree, chosenIndex, analysisCtx, retainInput, retainMissing, requiresBroadcast,
                     context, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, chosenIndexKeyFieldNames,
-                    chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators);
+                    chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators, optimizableDisjunctionConditions);
         }
 
         Dataset dataset = indexSubTree.getDataset();
@@ -1301,7 +1396,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     assignBeforeTheOpRefs, dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp,
                     context, true, retainInput, retainMissing, false, chosenIndex, analysisCtx, indexSubTree,
                     probeSubTree, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue,
-                    anyRealTypeConvertedToIntegerType);
+                    anyRealTypeConvertedToIntegerType, optimizableDisjunctionConditions);
 
             // Replaces the datasource scan with the new plan rooted at
             // Get dataSourceRef operator -

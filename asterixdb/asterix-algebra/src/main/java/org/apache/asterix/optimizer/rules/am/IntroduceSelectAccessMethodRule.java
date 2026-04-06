@@ -279,7 +279,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     .getExecutionMode() == ExecutionMode.UNPARTITIONED;
             ILogicalOperator subRoot = pair.first.createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
                     subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.second, analysisCtx, retainInput, false,
-                    requiresBroadcast, context, null, null);
+                    requiresBroadcast, context, null, null, new ArrayList<>());
             if (subRoot == null) {
                 return false;
             }
