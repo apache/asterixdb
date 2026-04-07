@@ -1,0 +1,110 @@
+distribute result [$$53]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$53])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$53] <- [object-concat-strict(if-missing-or-null(to-object($$m), cast({  })), {"close": $$52})]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$52, $$m])
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange
+          -- SORT_MERGE_EXCHANGE [$$77(ASC) ]  |PARTITIONED|
+            group by ([$$77 := $$55]) decor ([$$m]) {
+                      aggregate [$$52] <- [listify($$69)]
+                      -- AGGREGATE  |LOCAL|
+                        select (not(is-missing($$76)))
+                        -- STREAM_SELECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                   }
+            -- PRE_CLUSTERED_GROUP_BY[$$55]  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$55) (ASC, $$70) (ASC, $$71)
+                -- STABLE_SORT [$$55(ASC), $$70(ASC), $$71(ASC)]  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$m, $$69, $$70, $$71, $$76, $$55])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        left outer join (eq($$55, $$65))
+                        -- HYBRID_HASH_JOIN [$$55][$$65]  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$55, $$m] <- MovieTest.movies
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$69, $$70, $$71, $$76, $$65])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$76, $$69, $$70, $$71] <- [true, $$67.getField(1), $$67.getField("35"), $$67.getField(2)]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$65, $$67])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  unnest $$67 <- scan-collection($$66)
+                                  -- UNNEST  |PARTITIONED|
+                                    exchange
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      group by ([$$65 := $$63]) decor ([]) {
+                                                aggregate [$$66] <- [listify($$64)]
+                                                -- AGGREGATE  |LOCAL|
+                                                  limit 3
+                                                  -- STREAM_LIMIT  |LOCAL|
+                                                    order (ASC, $$diff) (ASC, $$56)
+                                                    -- MICRO_STABLE_SORT [$$diff(ASC), $$56(ASC)]  |LOCAL|
+                                                      nested tuple source
+                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                             }
+                                      -- PRE_CLUSTERED_GROUP_BY[$$63]  |PARTITIONED|
+                                        exchange
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$63)
+                                          -- STABLE_SORT [$$63(ASC)]  |PARTITIONED|
+                                            exchange
+                                            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$63(ASC), $$diff(ASC), $$56(ASC)] HASH:[$$63]  |PARTITIONED|
+                                              project ([$$64, $$diff, $$56, $$63])
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$64] <- [{"34": $$im, "50": if-missing-or-null(to-object($$im), cast({  })), "35": $$diff, "56": $$56, "58": $$58, "61": $$61, "62": $$62}]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  exchange
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    order (ASC, $$63) (ASC, $$diff) (ASC, $$56)
+                                                    -- STABLE_SORT [$$63(ASC), $$diff(ASC), $$56(ASC)]  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$diff] <- [abs(numeric-subtract($$61, $$58))]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          exchange
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            join (true)
+                                                            -- NESTED_LOOP  |PARTITIONED|
+                                                              exchange
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                assign [$$61] <- [$$62.getField("runtime")]
+                                                                -- ASSIGN  |PARTITIONED|
+                                                                  exchange
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    data-scan []<-[$$63, $$62] <- MovieTest.movies
+                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      exchange
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        empty-tuple-source
+                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                              exchange
+                                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                assign [$$58] <- [$$im.getField("runtime")]
+                                                                -- ASSIGN  |PARTITIONED|
+                                                                  exchange
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    data-scan []<-[$$56, $$im] <- MovieTest.movies
+                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      exchange
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        empty-tuple-source
+                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

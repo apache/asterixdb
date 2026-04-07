@@ -274,7 +274,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
 
         // Get live variables before limit (or running aggregate) operator.
-        Set<LogicalVariable> inputLiveVars = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> inputLiveVars = new HashSet<>();
         VariableUtilities.getSubplanLocalLiveVariables(op.getInputs().get(0).getValue(), inputLiveVars);
 
         // Creates a record construction assign operator.
@@ -286,9 +286,9 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         assignOp.getInputs().add(new MutableObject<>(inputOp));
 
         // Rewrites limit (or running aggregate) to a group-by with limit (or running aggregate) as its nested operator.
-        Pair<ILogicalOperator, LogicalVariable> gbyOpAndAggVar =
+        Pair<GroupByOperator, LogicalVariable> gbyOpAndAggVar =
                 wrapLimitOrRunningAggregateInGroupBy(op, recordVar, inputLiveVars);
-        ILogicalOperator gbyOp = gbyOpAndAggVar.first;
+        GroupByOperator gbyOp = gbyOpAndAggVar.first;
         LogicalVariable aggVar = gbyOpAndAggVar.second;
         gbyOp.getInputs().add(new MutableObject<>(assignOp));
 
@@ -301,7 +301,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
         // Adds field accesses to recover input live variables.
         ILogicalOperator fieldAccessAssignOp =
-                createFieldAccessAssignOperator(unnestVar, inputLiveVars, op.getSourceLocation());
+                createFieldAccessAssignOperator(unnestVar, inputLiveVars, op.getSourceLocation(), gbyOp);
         fieldAccessAssignOp.getInputs().add(new MutableObject<>(unnestOp));
 
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(fieldAccessAssignOp, context);
@@ -331,7 +331,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         return new Pair<>(assignOp, recordVar);
     }
 
-    private Pair<ILogicalOperator, LogicalVariable> wrapLimitOrRunningAggregateInGroupBy(ILogicalOperator op,
+    private Pair<GroupByOperator, LogicalVariable> wrapLimitOrRunningAggregateInGroupBy(ILogicalOperator op,
             LogicalVariable recordVar, Set<LogicalVariable> inputLiveVars) throws AlgebricksException {
         SourceLocation sourceLoc = op.getSourceLocation();
         GroupByOperator gbyOp = new GroupByOperator();
@@ -417,7 +417,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     private ILogicalOperator createFieldAccessAssignOperator(LogicalVariable recordVar,
-            Set<LogicalVariable> inputLiveVars, SourceLocation sourceLoc) {
+            Set<LogicalVariable> inputLiveVars, SourceLocation sourceLoc, GroupByOperator gbyOp) {
         List<LogicalVariable> fieldAccessVars = new ArrayList<>();
         List<Mutable<ILogicalExpression>> fieldAccessExprs = new ArrayList<>();
         // Adds field access by name.
@@ -426,7 +426,21 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                 // field Var
                 LogicalVariable newVar = context.newVar();
                 fieldAccessVars.add(newVar);
-                // fieldAcess expr
+                List<LogicalVariable> groupByVarList = gbyOp.getGroupByVarList();
+                int i = groupByVarList.indexOf(inputLiveVar);
+                if (i >= 0) {
+                    // this means the input live variable used to be in correlatedKeyVars, but was removed from
+                    // correlatedKeyVars since it was added as a group-by key and re-assigned to a new variable in the
+                    // group-by operator, e.g. GROUP-BY [$1 = $inputLiveVar]. In this case, we can directly access it
+                    // without field access expression via $1.
+                    LogicalVariable gbyOutVar = gbyOp.getGroupByList().get(i).getFirst();
+                    VariableReferenceExpression gbyOutVarRef = new VariableReferenceExpression(gbyOutVar);
+                    gbyOutVarRef.setSourceLocation(sourceLoc);
+                    fieldAccessExprs.add(new MutableObject<>(gbyOutVarRef));
+                    updateInputToOutputVarMapping(gbyOutVar, newVar, false);
+                    continue;
+                }
+                // fieldAccess expr
                 List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
                 VariableReferenceExpression recordVarRef = new VariableReferenceExpression(recordVar);
                 recordVarRef.setSourceLocation(sourceLoc);
