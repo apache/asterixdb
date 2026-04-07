@@ -1,0 +1,22 @@
+distribute result [$$23]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+    order (ASC, $$23)
+    -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
+      exchange
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        select (or(eq($$21, 0), eq($$21, 1))) project: [$$23]
+        -- STREAM_SELECT  |PARTITIONED|
+          assign [$$23, $$21] <- [$$tenk.getField(0), $$tenk.getField(7)] project: [$$23, $$21]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$tenk])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$22, $$tenk] <- test.tenk
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,54 @@
+distribute result [$$21]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    order (ASC, $$21)
+    -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+      exchange
+      -- RANGE_PARTITION_EXCHANGE [$$21(ASC)]  |PARTITIONED|
+        forward: shared-variable = $$25
+        -- FORWARD  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            replicate
+            -- REPLICATE  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (or(eq($$16, "Customer#000000001"), eq($$16, "Customer#000000002"), eq($$16, "Customer#000000003"))) project: [$$21]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$16] <- [$$c.getField(1)] project: [$$21, $$16]
+                  -- ASSIGN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$21, $$c] <- tpch.Customer
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+          exchange
+          -- BROADCAST_EXCHANGE  |PARTITIONED|
+            aggregate [$$25] <- [agg-range-map($$23, $$24)]
+            -- AGGREGATE  |UNPARTITIONED|
+              exchange
+              -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                aggregate [$$23, $$24] <- [agg-local-sampling($$21), agg-null-writer($$21)]
+                -- AGGREGATE  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
+                    -- REPLICATE  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (or(eq($$16, "Customer#000000001"), eq($$16, "Customer#000000002"), eq($$16, "Customer#000000003"))) project: [$$21]
+                        -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$16] <- [$$c.getField(1)] project: [$$21, $$16]
+                          -- ASSIGN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$21, $$c] <- tpch.Customer
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

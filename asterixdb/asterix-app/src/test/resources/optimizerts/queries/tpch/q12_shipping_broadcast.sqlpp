@@ -35,7 +35,7 @@ CREATE TYPE OrderType AS {
 CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_linenumber;
 
 CREATE DATASET Orders(OrderType) PRIMARY KEY o_orderkey;
-
+SET `compiler.disjunction.as.join` "true";
 /** The plan tests that the expression for different switch-case branches are not extracted.*/
 SELECT l.l_shipmode,
        sum(CASE

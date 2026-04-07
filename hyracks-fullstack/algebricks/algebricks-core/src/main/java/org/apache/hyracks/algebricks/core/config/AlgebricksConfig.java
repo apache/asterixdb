@@ -38,7 +38,7 @@ public class AlgebricksConfig {
     public static final boolean CBO_DEFAULT = true;
     public static final boolean CBO_TEST_DEFAULT = false;
     public static final boolean FORCE_JOIN_ORDER_DEFAULT = false;
-    public static final boolean REWRITE_DISJUNCTION_DEFAULT = true;
+    public static final boolean REWRITE_DISJUNCTION_DEFAULT = false;
     public static final String QUERY_PLAN_SHAPE_ZIGZAG = "zigzag";
     public static final String QUERY_PLAN_SHAPE_LEFTDEEP = "leftdeep";
     public static final String QUERY_PLAN_SHAPE_RIGHTDEEP = "rightdeep";
@@ -50,6 +50,6 @@ public class AlgebricksConfig {
     public static final boolean ORDERED_FIELDS = true;
     public static final int MAX_VARIABLE_OCCURRENCES_INLINING_DEFAULT = 128;
     public static final int HASH_BASED_OR_THRESHOLD_DEFAULT = 40;
-    public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 10000;
-    public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 10000;
+    public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 100;
+    public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 100;
 }

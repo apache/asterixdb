@@ -35,7 +35,7 @@ create type tpch.CustomerType as
 };
 
 create  dataset Customer(CustomerType) primary key c_custkey;
-
+SET `compiler.disjunction.as.join` "true";
 select value c.c_custkey
 from Customer c
 where c.c_name in ["Customer#000000001", "Customer#000000002", "Customer#000000003"]

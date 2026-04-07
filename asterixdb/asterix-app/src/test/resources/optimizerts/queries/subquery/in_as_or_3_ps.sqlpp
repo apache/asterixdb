@@ -39,7 +39,7 @@ create type tpch.CustomerType as closed {
 create  dataset Customer(CustomerType) primary key c_custkey;
 
 set `compiler.sort.parallel` "true";
-
+SET `compiler.disjunction.as.join` "true";
 select value c.c_custkey
 from Customer c
 where c.c_name in $p_arr
