@@ -17084,4 +17084,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="correlation">
+    <test-case FilePath="correlation">
+      <compilation-unit name="ASTERIXDB-3752-LIMIT-in-subquery">
+        <output-dir compare="Text">ASTERIXDB-3752-LIMIT-in-subquery</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-group>

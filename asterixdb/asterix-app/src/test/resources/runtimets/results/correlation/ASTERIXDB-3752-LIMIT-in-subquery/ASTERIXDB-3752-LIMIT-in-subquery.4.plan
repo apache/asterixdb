@@ -1,0 +1,108 @@
+distribute result [$$49] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$49] <- [object-concat-strict(to-object-var-str($$m), {"close": $$48})] project: [$$49] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$48, $$m]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- SORT_MERGE_EXCHANGE [$$73(ASC) ]  |PARTITIONED|
+          group by ([$$73 := $$51]) decor ([$$m]) {
+                    aggregate [$$48] <- [listify($$71)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- AGGREGATE  |LOCAL|
+                      select (not(is-missing($$72))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STREAM_SELECT  |LOCAL|
+                        project ([$$71, $$72]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- PRE_CLUSTERED_GROUP_BY[$$51]  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$51) (ASC, $$65) (ASC, $$66) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STABLE_SORT [$$51(ASC), $$65(ASC), $$66(ASC)]  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$m, $$71, $$65, $$66, $$72, $$51]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      left outer join (eq($$51, $$61)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- HYBRID_HASH_JOIN [$$51][$$61]  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$51, $$m] <- MovieTest.movies [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$72, $$65, $$66, $$71] <- [true, $$63.getField("35"), $$63.getField(1), $$63.getField(3)] project: [$$71, $$65, $$66, $$72, $$61] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ASSIGN  |PARTITIONED|
+                            unnest $$63 <- scan-collection($$62) project: [$$61, $$63] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- UNNEST  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                group by ([$$61 := $$59]) decor ([]) {
+                                          aggregate [$$62] <- [listify($$60)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- AGGREGATE  |LOCAL|
+                                            limit 3 [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- STREAM_LIMIT  |LOCAL|
+                                              project ([$$60]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- STREAM_PROJECT  |LOCAL|
+                                                order (ASC, $$diff) (ASC, $$52) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- MICRO_STABLE_SORT [$$diff(ASC), $$52(ASC)]  |LOCAL|
+                                                  project ([$$60, $$diff, $$52]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- STREAM_PROJECT  |LOCAL|
+                                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                       } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- PRE_CLUSTERED_GROUP_BY[$$59]  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    order (ASC, $$59) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STABLE_SORT [$$59(ASC)]  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$59(ASC), $$diff(ASC), $$52(ASC)] HASH:[$$59]  |PARTITIONED|
+                                        assign [$$60] <- [{"34": $$im, "35": $$diff, "52": $$52, "54": $$54, "57": $$57, "58": $$58, "46": to-object-var-str($$im)}] project: [$$60, $$diff, $$52, $$59] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ASSIGN  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            order (ASC, $$59) (ASC, $$diff) (ASC, $$52) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- STABLE_SORT [$$59(ASC), $$diff(ASC), $$52(ASC)]  |PARTITIONED|
+                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$diff] <- [abs(numeric-subtract($$57, $$54))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    join (true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- NESTED_LOOP  |PARTITIONED|
+                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$57] <- [$$58.getField("runtime")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            data-scan []<-[$$59, $$58] <- MovieTest.movies [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        assign [$$54] <- [$$im.getField("runtime")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            data-scan []<-[$$52, $$im] <- MovieTest.movies [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
