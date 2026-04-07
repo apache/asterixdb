@@ -17,11 +17,13 @@
  * under the License.
  */
 
-USE test;
-SET `compiler.disjunction.as.join` "true";
-EXPLAIN
-SELECT VALUE d
-FROM Department d
-WHERE lowercase(d.department) IN ["hr", "accounting"]
-  AND d.name.last = "Smith"
-ORDER BY d.id;
+use test;
+SET `rewrite_or_as_join` "true";
+/*
+ * this will not change to join as the types are not compatible 
+ *
+ */
+
+explain select value unique1
+from tenk
+where thousand ="1" or thousand = 0;

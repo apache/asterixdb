@@ -17,11 +17,20 @@
  * under the License.
  */
 
-USE test;
-SET `compiler.disjunction.as.join` "true";
-EXPLAIN
-SELECT VALUE d
-FROM Department d
-WHERE lowercase(d.department) IN ["hr", "accounting"]
-  AND d.name.last = "Smith"
-ORDER BY d.id;
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type tenkType as  {
+  unique1         : integer,
+  unique2         : integer
+};
+
+create dataset tenk(tenkType) primary key unique2;
+
+create index idx_1k on tenk(thousand:int);
+
+create index idx_1k_2k on tenk(thousand:int, twothousand:string);
+
+create index idx_2k on tenk(twothousand);

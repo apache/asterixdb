@@ -205,7 +205,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
      *            another type
      * @return true, if types are equal
      */
-    private static boolean isCompatible(IAType t1, IAType t2) {
+    public static boolean isCompatible(IAType t1, IAType t2) {
         return t1.equals(t2);
     }
 
