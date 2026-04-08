@@ -153,7 +153,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             // Assumes that when unnesting the tuple, each step() call for each element
             // in the tuple will increase the positionIndex, and the positionIndex will
             // be reset when a new tuple is to be processed.
-            int positionIndex = 1;
+            int positionIndex = 0;
             boolean emitted = false;
             do {
                 if (!unnest.step(p)) {

@@ -1259,6 +1259,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IS_SYSTEM_NULL = FunctionConstants.newAsterix("is-system-null", 1);
     public static final FunctionIdentifier CHECK_UNKNOWN = FunctionConstants.newAsterix("check-unknown", 1);
     public static final FunctionIdentifier CHECK_LIST = FunctionConstants.newAsterix("check-list", 1);
+    public static final FunctionIdentifier CHECK_INSERT_POSITION =
+            FunctionConstants.newAsterix("check-insert-position", 2);
     public static final FunctionIdentifier CHECK_INTEGER = FunctionConstants.newAsterix("check-integer", 1);
     public static final FunctionIdentifier COLLECTION_TO_SEQUENCE =
             FunctionConstants.newAsterix("collection-to-sequence", 1);
@@ -1370,7 +1372,8 @@ public class BuiltinFunctions {
 
         // and then, Asterix builtin functions
         addPrivateFunction(CHECK_UNKNOWN, NotUnknownTypeComputer.INSTANCE, true);
-        addPrivateFunction(CHECK_LIST, NotUnknownTypeComputer.INSTANCE, true);
+        addPrivateFunction(CHECK_LIST, ABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(CHECK_INSERT_POSITION, NotUnknownTypeComputer.INSTANCE, true);
         addPrivateFunction(CHECK_INTEGER, NotUnknownTypeComputer.INSTANCE, true);
         addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE_MISSABLE, true);
         addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE_NULLABLE, true);

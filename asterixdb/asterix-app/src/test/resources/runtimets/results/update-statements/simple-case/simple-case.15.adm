@@ -8,4 +8,4 @@
 { "UserTypes": { "userId": 8, "email": "robert.lee@example.com", "username": "robertl", "isActive": true, "age": 31 } }
 { "UserTypes": { "userId": 9, "email": "james.wilson@example.com", "username": "jamesw", "isActive": true, "age": "65" } }
 { "UserTypes": { "userId": 10, "email": "mary.moore@example.com", "username": "marym", "isActive": false, "timeZone": "PT", "age": 32, "addresses": [ { "city": "Riverside", "zipcode": 92510 } ] } }
-{ "UserTypes": { "userId": 11, "email": "jack.moore@example.com", "username": "jk", "isActive": true, "job": "pilot", "addresses": [ { "city": "Irvine, United States", "street": "Second st", "zipcode": 98128 }, { "city": "iii, United States", "street": "Second st", "zipcode": 98128 }, { "city": "Riverside", "zipcode": 92507 } ], "age": 31 } }
+{ "UserTypes": { "userId": 11, "email": "jack.moore@example.com", "username": "jk", "isActive": true, "job": "pilot", "age": 31, "addresses": [ { "city": "Irvine, United States", "street": "Second st", "zipcode": 98128 } ] } }

@@ -25,25 +25,25 @@
 use IntervalTest;
 
 insert into DataSet1
-from range(1, 100) s at srow,
-     range(1, 1) l at lrow
+from range(0, 99) s at srow,
+     range(0, 0) l at lrow
 let filler = repeat("i", 10000),
     lambda = 1, d = 20,
-    id = (srow-1) * lambda + lrow
+    id = srow * lambda + (lrow + 1)
 select value {
 "id": id,
-"interval": interval(datetime_from_unix_time_in_secs(s), datetime_from_unix_time_in_secs(s + d)),
+"interval": interval(datetime_from_unix_time_in_secs(s + 1), datetime_from_unix_time_in_secs(s + 1 + d)),
 "filler": filler
 };
 
 insert into DataSet2
-from range(1, 100) s at srow,
-     range(1, 1) l at lrow
+from range(0, 99) s at srow,
+     range(0, 0) l at lrow
 let filler = repeat("i", 10000),
     lambda = 1, d = 20,
-    id = (srow-1) * lambda + lrow
+    id = srow * lambda + (lrow + 1)
 select value {
 "id": id,
-"interval": interval(datetime_from_unix_time_in_secs(s), datetime_from_unix_time_in_secs(s + d)),
+"interval": interval(datetime_from_unix_time_in_secs(s + 1), datetime_from_unix_time_in_secs(s + 1 + d)),
 "filler": filler
 };

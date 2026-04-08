@@ -371,6 +371,7 @@ import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffnDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayUnionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CheckInsertPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckListDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
@@ -1388,6 +1389,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // Check <datatype> functions
         fc.add(CheckListDescriptor.FACTORY);
+        fc.add(CheckInsertPositionDescriptor.FACTORY);
         fc.add(CheckIntegerDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));

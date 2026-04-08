@@ -20,7 +20,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -37,19 +37,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
- * Validates that the input is either an ordered or unordered list.
- * <p>This check is specifically used in nested {@code UPDATE} statements, where the value
- * being updated in the inner update must also be a list.
- * <p><b>Example:</b>
- * <pre>
- * UPDATE Orders AS o
- *   (UPDATE o.b1 AS o1
- *    SET o1.v1 = 1);
- * </pre>
- * <p>In this case, {@code b1} should be a list. If it is an empty list, the return value
- * from this function will still include the empty list.
- * <p>If the input is not an ordered or unordered list, a {@code DataTransformException}
- * is thrown. Otherwise, the input is returned unchanged.
+ * {@code check-list(value)} for nested array updates: returns {@code TRUE} when {@code value} is an ordered or
+ * unordered list, otherwise emits {@link ErrorCode#UPDATE_TARGET_NOT_LIST} as a warning and returns {@code FALSE}.
+ * The boolean result is consumed by the rewriter's CASE guard so that non-list paths leave the field unchanged.
  */
 public class CheckListDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -65,21 +55,19 @@ public class CheckListDescriptor extends AbstractScalarFunctionDynamicDescriptor
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractMultiTypeCheckEvaluator(args[0].createScalarEvaluator(ctx),
                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval.evaluate(tuple, argPtr);
                         byte typeTag = argPtr.getByteArray()[argPtr.getStartOffset()];
-                        if (isMatch(typeTag)) {
-                            result.set(argPtr);
-                        } else {
-                            if (ctx.getWarningCollector().shouldWarn()) {
-                                ctx.getWarningCollector().warn(Warning.of(sourceLoc, ErrorCode.TYPE_UNSUPPORTED,
-                                        getIdentifier(), EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag)));
-                            }
-                            throw new RuntimeDataException(ErrorCode.UPDATE_TARGET_NOT_LIST,
-                                    EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag).toString());
+                        boolean match = isMatch(typeTag);
+                        if (!match && ctx.getWarningCollector().shouldWarn()) {
+                            ctx.getWarningCollector().warn(Warning.of(sourceLoc, ErrorCode.UPDATE_TARGET_NOT_LIST,
+                                    EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag)));
                         }
+                        res = match ? ABoolean.TRUE : ABoolean.FALSE;
+                        resultStorage.reset();
+                        aObjectSerializerDeserializer.serialize(res, out);
+                        result.set(resultStorage);
                     }
                 };
             }
@@ -90,5 +78,4 @@ public class CheckListDescriptor extends AbstractScalarFunctionDynamicDescriptor
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.CHECK_LIST;
     }
-
 }
