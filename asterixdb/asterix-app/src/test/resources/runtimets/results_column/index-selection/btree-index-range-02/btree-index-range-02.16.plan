@@ -52,10 +52,10 @@ distribute result [$$47] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    unnest-map [$$58, $$59] <- index-search("idx_b", 0, "Default", "test", "A", false, false, 1, $$56, 1, $$56, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    unnest-map [$$58, $$59] <- index-search("idx_b", 0, "Default", "test", "A", false, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- BTREE_SEARCH  |PARTITIONED|
                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
                                         unnest $$56 <- scan-collection(array: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |PARTITIONED|
                                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -70,10 +70,10 @@ distribute result [$$47] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    unnest-map [$$62, $$63] <- index-search("idx_c", 0, "Default", "test", "A", false, false, 1, $$60, 1, $$60, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    unnest-map [$$62, $$63] <- index-search("idx_c", 0, "Default", "test", "A", false, true, 1, $$60, 1, $$60, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- BTREE_SEARCH  |PARTITIONED|
                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
                                         unnest $$60 <- scan-collection(array: [ 0, 1, 2, 3, 4 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |PARTITIONED|
                                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

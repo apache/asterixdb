@@ -754,6 +754,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                             Collections.singletonList(new MutableObject<>(constantExpression)));
 
                     currOp = new UnnestOperator(assignKeyVarList.get(i), new MutableObject<>(scanCollectionExpr));
+                    jobGenParams.requiresBroadcast = true;
 
                 }
 

@@ -26,10 +26,10 @@ distribute result [$$23]
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$26, $$27, $$28] <- index-search("idx_1k_2k", 0, "Default", "test", "tenk", false, false, 1, $$24, 1, $$24, true, true, true)
+                            unnest-map [$$26, $$27, $$28] <- index-search("idx_1k_2k", 0, "Default", "test", "tenk", false, true, 1, $$24, 1, $$24, true, true, true)
                             -- BTREE_SEARCH  |PARTITIONED|
                               exchange
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 unnest $$24 <- scan-collection(array: [ 1, 0 ])
                                 -- UNNEST  |PARTITIONED|
                                   empty-tuple-source

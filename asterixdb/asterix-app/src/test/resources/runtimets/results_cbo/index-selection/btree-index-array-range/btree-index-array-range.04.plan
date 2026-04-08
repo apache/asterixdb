@@ -36,10 +36,10 @@ distribute result [$$30] [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      unnest-map [$$37, $$38] <- index-search("idx_categories", 0, "Default", "test", "A", false, false, 1, $$35, 1, $$35, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      unnest-map [$$37, $$38] <- index-search("idx_categories", 0, "Default", "test", "A", false, true, 1, $$35, 1, $$35, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- BTREE_SEARCH  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
                                           unnest $$35 <- scan-collection(array: [ "Food", "Restaurant" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- UNNEST  |PARTITIONED|
                                             empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

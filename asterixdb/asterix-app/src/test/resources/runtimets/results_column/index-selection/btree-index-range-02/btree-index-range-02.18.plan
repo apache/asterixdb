@@ -34,10 +34,10 @@ distribute result [$$44] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    unnest-map [$$52, $$53] <- index-search("idx_a", 0, "Default", "test", "A", false, false, 1, $$50, 1, $$50, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    unnest-map [$$52, $$53] <- index-search("idx_a", 0, "Default", "test", "A", false, true, 1, $$50, 1, $$50, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- BTREE_SEARCH  |PARTITIONED|
                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
                                         unnest $$50 <- scan-collection(array: [ 0, 1 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |PARTITIONED|
                                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

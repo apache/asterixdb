@@ -8,29 +8,29 @@ distribute result [$$x]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
         limit 2
         -- STREAM_LIMIT  |PARTITIONED|
-          assign [$$22] <- [$$x.getField(1)] project: [$$x]
+          assign [$$20] <- [$$x.getField(1)] project: [$$x]
           -- ASSIGN  |PARTITIONED|
             project ([$$x])
             -- STREAM_PROJECT  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                unnest-map [$$23, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", false, false, 1, $$28, 1, $$28, true, true, true) condition (or(eq($$x.getField(1), "one"), eq($$x.getField(1), "two"), eq($$x.getField(1), "two"))) limit 2
+                unnest-map [$$21, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", false, false, 1, $$26, 1, $$26, true, true, true) condition (or(eq($$x.getField(1), "one"), eq($$x.getField(1), "two"), eq($$x.getField(1), "two"))) limit 2
                 -- BTREE_SEARCH  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    order (ASC, $$28)
-                    -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
+                    order (ASC, $$26)
+                    -- STABLE_SORT [$$26(ASC)]  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        project ([$$28])
+                        project ([$$26])
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$27, $$28] <- index-search("TestSetIndex", 0, "Default", "test", "TestSet", false, false, 1, $$25, 1, $$25, true, true, true)
+                            unnest-map [$$25, $$26] <- index-search("TestSetIndex", 0, "Default", "test", "TestSet", false, true, 1, $$23, 1, $$23, true, true, true)
                             -- BTREE_SEARCH  |PARTITIONED|
                               exchange
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                unnest $$25 <- scan-collection(array: [ "one", "two" ])
+                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                unnest $$23 <- scan-collection(array: [ "one", "two" ])
                                 -- UNNEST  |PARTITIONED|
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

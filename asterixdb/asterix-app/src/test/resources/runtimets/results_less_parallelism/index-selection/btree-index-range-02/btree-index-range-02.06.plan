@@ -32,10 +32,10 @@ distribute result [$$47] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                               -- SPLIT  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  unnest-map [$$58, $$59, $$60, $$61, $$62] <- index-search("idx_bed", 0, "Default", "test", "A", false, false, 3, $$52, $$53, $$54, 3, $$52, $$53, $$54, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  unnest-map [$$58, $$59, $$60, $$61, $$62] <- index-search("idx_bed", 0, "Default", "test", "A", false, true, 3, $$52, $$53, $$54, 3, $$52, $$53, $$54, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- BTREE_SEARCH  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
                                       unnest $$54 <- scan-collection(array: [ 122, 242, 602, 1202, 2402, 10, 11, 12 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- UNNEST  |PARTITIONED|
                                         assign [$$53] <- [2] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -56,10 +56,10 @@ distribute result [$$47] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                         -- SPLIT  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$58, $$59, $$60, $$61, $$62] <- index-search("idx_bed", 0, "Default", "test", "A", false, false, 3, $$52, $$53, $$54, 3, $$52, $$53, $$54, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            unnest-map [$$58, $$59, $$60, $$61, $$62] <- index-search("idx_bed", 0, "Default", "test", "A", false, true, 3, $$52, $$53, $$54, 3, $$52, $$53, $$54, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- BTREE_SEARCH  |PARTITIONED|
                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 unnest $$54 <- scan-collection(array: [ 122, 242, 602, 1202, 2402, 10, 11, 12 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- UNNEST  |PARTITIONED|
                                   assign [$$53] <- [2] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
