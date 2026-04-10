@@ -79,6 +79,10 @@ public interface ICloudProperties {
 
     int getRequestsHttpConnectionAcquireTimeout();
 
+    int getRequestsHttpConnectionMaxIdleSeconds();
+
+    int getRequestsHttpConnectionMaxLifetimeSeconds();
+
     boolean isStorageForcePathStyle();
 
     boolean isStorageDisableSSLVerify();

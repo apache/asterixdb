@@ -75,6 +75,7 @@ import com.azure.storage.common.policy.RequestRetryOptions;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import reactor.netty.http.client.HttpClient;
 
 public class BlobUtils {
@@ -130,7 +131,8 @@ public class BlobUtils {
         }
 
         if (disableSslVerify) {
-            disableSslVerify(builder);
+            HttpClient httpClient = disableSslVerify(HttpClient.create());
+            builder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
         }
 
         // Shared Key
@@ -221,18 +223,21 @@ public class BlobUtils {
         }
     }
 
-    public static void disableSslVerify(BlobServiceClientBuilder builder) {
+    /**
+     * Returns a new {@link HttpClient} derived from {@code baseClient} with SSL verification disabled.
+     * The caller is responsible for setting the resulting client on the builder via
+     * {@code builder.httpClient(new NettyAsyncHttpClientBuilder(result).build())}.
+     *
+     * @param baseClient the base Reactor Netty {@link HttpClient} to apply SSL disabling on top of
+     * @return a new {@link HttpClient} with an insecure trust manager applied
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.DOC_GENERATED)
+    public static HttpClient disableSslVerify(HttpClient baseClient) {
         try {
-            // Create SSL context that trusts all certificates
             SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
             SslContext sslContext = sslContextBuilder.build();
-
-            // Create a base Reactor Netty HttpClient with SSL verification disabled
-            HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
-
-            // Configure the Azure HTTP client with the base client
-            builder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
+            return baseClient.secure(sslSpec -> sslSpec.sslContext(sslContext));
         } catch (Exception e) {
             throw new RuntimeException("Failed to disable SSL verification", e);
         }
