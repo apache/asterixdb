@@ -82,6 +82,11 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
+                // elementType is non-null when hash-based optimization is applicable:
+                // - all OR arguments are EQ comparisons with the same field/variable
+                // - all constants have compatible types for a single hash map
+                // elementType is null when optimization is not possible:
+                // - mixed comparison types, different variables, or incompatible constant types
                 if (elementType != null) {
                     return new HashBasedOrEval(elementType, ctx, args);
                 }

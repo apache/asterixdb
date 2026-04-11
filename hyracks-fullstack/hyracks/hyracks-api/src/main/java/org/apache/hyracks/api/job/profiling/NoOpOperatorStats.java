@@ -71,7 +71,7 @@ public class NoOpOperatorStats implements IOperatorStats {
 
     @Override
     public void readFields(DataInput input) throws IOException {
-        // nothing
+        //name and id are read by StatsCollector
     }
 
     @Override

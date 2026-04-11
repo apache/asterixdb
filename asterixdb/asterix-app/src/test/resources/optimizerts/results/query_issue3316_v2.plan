@@ -1,0 +1,248 @@
+distribute result [$$217]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    distinct ([$$217])
+    -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+      exchange
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$217)
+        -- STABLE_SORT [$$217(ASC)]  |PARTITIONED|
+          exchange
+          -- HASH_PARTITION_EXCHANGE [$$217]  |PARTITIONED|
+            assign [$$217] <- [object-concat-strict(to-object-var-str($$141), {"sub_query1": $$181, "sub_query2": $$216})] project: [$$217]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$216, $$181, $$141])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  group by ([$$259 := $$255]) decor ([$$181; $$141]) {
+                            aggregate [$$216] <- [listify({"u": $$249})]
+                            -- AGGREGATE  |LOCAL|
+                              select ($$211)
+                              -- STREAM_SELECT  |LOCAL|
+                                project ([$$211, $$249])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  group by ([$$257 := $$221]) decor ([$$H; $$243; $$181; $$248; $$T0; $$249; $$187; $$141; $$237; $$190; $$255]) {
+                                            aggregate [$$211] <- [non-empty-stream()]
+                                            -- AGGREGATE  |LOCAL|
+                                              select (eq($$248, $#11))
+                                              -- STREAM_SELECT  |LOCAL|
+                                                unnest $#11 <- scan-collection($$208) project: [$$248, $#11]
+                                                -- UNNEST  |LOCAL|
+                                                  project ([$$208, $$248])
+                                                  -- STREAM_PROJECT  |LOCAL|
+                                                    group by ([]) decor ([$$H; $$243; $$181; $$248; $$T0; $$249; $$187; $$141; $$221; $$237; $$190; $$255]) {
+                                                              aggregate [$$208] <- [listify($$224)]
+                                                              -- AGGREGATE  |LOCAL|
+                                                                aggregate [$$224] <- [agg-sql-max($$205)]
+                                                                -- AGGREGATE  |LOCAL|
+                                                                  select (not(is-missing($$256)))
+                                                                  -- STREAM_SELECT  |LOCAL|
+                                                                    project ([$$205, $$256])
+                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                      nested tuple source
+                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                           }
+                                                    -- MICRO_PRE_CLUSTERED_GROUP_BY[]  |LOCAL|
+                                                      nested tuple source
+                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                         }
+                                  -- MICRO_PRE_CLUSTERED_GROUP_BY[$$221]  |LOCAL|
+                                    order (ASC, $$221)
+                                    -- MICRO_STABLE_SORT [$$221(ASC)]  |LOCAL|
+                                      select (not(is-missing($$258))) project: [$$141, $$181, $$249, $$248, $$205, $$256, $$H, $$243, $$T0, $$187, $$221, $$237, $$190, $$255]
+                                      -- STREAM_SELECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         }
+                  -- PRE_CLUSTERED_GROUP_BY[$$255]  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$255)
+                      -- STABLE_SORT [$$255(ASC)]  |PARTITIONED|
+                        exchange
+                        -- HASH_PARTITION_EXCHANGE [$$255]  |PARTITIONED|
+                          project ([$$141, $$181, $$249, $$248, $$205, $$256, $$H, $$243, $$T0, $$187, $$221, $$237, $$190, $$255, $$258])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              left outer join (eq($$241, $$243))
+                              -- HYBRID_HASH_JOIN [$$243][$$241]  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (eq($$237, $$243))
+                                  -- HYBRID_HASH_JOIN [$$243][$$237]  |PARTITIONED|
+                                    exchange
+                                    -- HASH_PARTITION_EXCHANGE [$$243]  |PARTITIONED|
+                                      group by ([$$255 := $$218]) decor ([$$243; $$T0; $$141]) {
+                                                aggregate [$$181] <- [listify({"u": $$247})]
+                                                -- AGGREGATE  |LOCAL|
+                                                  select ($$176)
+                                                  -- STREAM_SELECT  |LOCAL|
+                                                    project ([$$176, $$247])
+                                                    -- STREAM_PROJECT  |LOCAL|
+                                                      group by ([$$253 := $$219]) decor ([$$243; $$244; $$246; $$247; $$151; $$T0; $$218; $$H; $$235; $$141]) {
+                                                                aggregate [$$176] <- [non-empty-stream()]
+                                                                -- AGGREGATE  |LOCAL|
+                                                                  select (eq($$246, $#7))
+                                                                  -- STREAM_SELECT  |LOCAL|
+                                                                    unnest $#7 <- scan-collection($$173) project: [$$246, $#7]
+                                                                    -- UNNEST  |LOCAL|
+                                                                      project ([$$173, $$246])
+                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                        group by ([]) decor ([$$243; $$244; $$246; $$247; $$151; $$T0; $$218; $$219; $$H; $$235; $$141]) {
+                                                                                  aggregate [$$173] <- [listify($$223)]
+                                                                                  -- AGGREGATE  |LOCAL|
+                                                                                    aggregate [$$223] <- [agg-sql-max($$170)]
+                                                                                    -- AGGREGATE  |LOCAL|
+                                                                                      select (not(is-missing($$252)))
+                                                                                      -- STREAM_SELECT  |LOCAL|
+                                                                                        project ([$$170, $$252])
+                                                                                        -- STREAM_PROJECT  |LOCAL|
+                                                                                          nested tuple source
+                                                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                               }
+                                                                        -- MICRO_PRE_CLUSTERED_GROUP_BY[]  |LOCAL|
+                                                                          nested tuple source
+                                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                             }
+                                                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$219]  |LOCAL|
+                                                        order (ASC, $$219)
+                                                        -- MICRO_STABLE_SORT [$$219(ASC)]  |LOCAL|
+                                                          select (not(is-missing($$254))) project: [$$141, $$243, $$T0, $$247, $$246, $$170, $$252, $$244, $$151, $$218, $$219, $$H, $$235]
+                                                          -- STREAM_SELECT  |LOCAL|
+                                                            nested tuple source
+                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                             }
+                                      -- PRE_CLUSTERED_GROUP_BY[$$218]  |PARTITIONED|
+                                        exchange
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$218)
+                                          -- STABLE_SORT [$$218(ASC)]  |PARTITIONED|
+                                            exchange
+                                            -- HASH_PARTITION_EXCHANGE [$$218]  |PARTITIONED|
+                                              project ([$$141, $$243, $$T0, $$247, $$246, $$170, $$252, $$244, $$151, $$218, $$219, $$H, $$235, $$254])
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  left outer join (eq($$239, $$243))
+                                                  -- HYBRID_HASH_JOIN [$$243][$$239]  |PARTITIONED|
+                                                    exchange
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      left outer join (eq($$235, $$243))
+                                                      -- HYBRID_HASH_JOIN [$$243][$$235]  |PARTITIONED|
+                                                        exchange
+                                                        -- HASH_PARTITION_EXCHANGE [$$243]  |PARTITIONED|
+                                                          assign [$$141] <- [{"x_id": $$243}]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            assign [$$243] <- [$$T0.getField("x_id")]
+                                                            -- ASSIGN  |PARTITIONED|
+                                                              exchange
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                data-scan []<-[$$218, $$T0] <- test.collection0
+                                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                  exchange
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    empty-tuple-source
+                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                        exchange
+                                                        -- HASH_PARTITION_EXCHANGE [$$235]  |PARTITIONED|
+                                                          assign [$$254] <- [true]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            select (and(eq($$244, "aaaaa"), or(eq($$151, 12), eq($$151, 66), eq($$151, 67), eq($$151, 13), eq($$151, 26))))
+                                                            -- STREAM_SELECT  |PARTITIONED|
+                                                              assign [$$247, $$246, $$235, $$151, $$244] <- [$$H.getField("u"), $$H.getField("b"), $$H.getField("y_id"), $$H.getField("a"), $$H.getField("to_u")]
+                                                              -- ASSIGN  |PARTITIONED|
+                                                                exchange
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  replicate
+                                                                  -- REPLICATE  |PARTITIONED|
+                                                                    exchange
+                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      data-scan []<-[$$219, $$H] <- test.collection1
+                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                        exchange
+                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          empty-tuple-source
+                                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                    exchange
+                                                    -- HASH_PARTITION_EXCHANGE [$$239]  |PARTITIONED|
+                                                      assign [$$252] <- [true]
+                                                      -- ASSIGN  |PARTITIONED|
+                                                        select (and(eq($$232.getField("to_u"), "aaaaa"), or(eq($$233, 12), eq($$233, 66), eq($$233, 67), eq($$233, 13), eq($$233, 26)))) project: [$$239, $$170]
+                                                        -- STREAM_SELECT  |PARTITIONED|
+                                                          assign [$$239, $$233, $$170] <- [$$232.getField("y_id"), $$232.getField("a"), $$232.getField("b")]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            exchange
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              replicate
+                                                              -- REPLICATE  |PARTITIONED|
+                                                                exchange
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  assign [$$234, $$232] <- [$$219, $$H] project: [$$232]
+                                                                  -- ASSIGN  |PARTITIONED|
+                                                                    exchange
+                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      replicate
+                                                                      -- REPLICATE  |PARTITIONED|
+                                                                        exchange
+                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          data-scan []<-[$$219, $$H] <- test.collection1
+                                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                            exchange
+                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                              empty-tuple-source
+                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
+                                    -- HASH_PARTITION_EXCHANGE [$$237]  |PARTITIONED|
+                                      assign [$$258] <- [true]
+                                      -- ASSIGN  |PARTITIONED|
+                                        select (and(or(eq($$187, 12), eq($$187, 66), eq($$187, 67), eq($$187, 13)), or(eq($$190, "a"), eq($$190, "b"))))
+                                        -- STREAM_SELECT  |PARTITIONED|
+                                          assign [$$249, $$248, $$190, $$237, $$187] <- [$$H.getField("u"), $$H.getField("b"), $$H.getField("posi"), $$H.getField("y_id"), $$H.getField("a")]
+                                          -- ASSIGN  |PARTITIONED|
+                                            assign [$$221, $$H] <- [$$219, $$H] project: [$$221, $$H]
+                                            -- ASSIGN  |PARTITIONED|
+                                              exchange
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                replicate
+                                                -- REPLICATE  |PARTITIONED|
+                                                  exchange
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    data-scan []<-[$$219, $$H] <- test.collection1
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
+                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
+                                -- HASH_PARTITION_EXCHANGE [$$241]  |PARTITIONED|
+                                  assign [$$256] <- [true]
+                                  -- ASSIGN  |PARTITIONED|
+                                    select (or(eq($$228, "a"), eq($$228, "b"))) project: [$$241, $$205]
+                                    -- STREAM_SELECT  |PARTITIONED|
+                                      assign [$$241, $$228, $$205] <- [$$227.getField("y_id"), $$227.getField("posi"), $$227.getField("b")] project: [$$241, $$228, $$205]
+                                      -- ASSIGN  |PARTITIONED|
+                                        assign [$$227] <- [$$232] project: [$$227]
+                                        -- ASSIGN  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
+                                            -- REPLICATE  |PARTITIONED|
+                                              exchange
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$234, $$232] <- [$$219, $$H] project: [$$232]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  exchange
+                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    replicate
+                                                    -- REPLICATE  |PARTITIONED|
+                                                      exchange
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        data-scan []<-[$$219, $$H] <- test.collection1
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source
+                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

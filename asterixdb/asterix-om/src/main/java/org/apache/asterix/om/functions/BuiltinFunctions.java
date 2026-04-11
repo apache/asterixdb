@@ -1255,8 +1255,6 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IS_OBJECT = FunctionConstants.newAsterix("is-object", 1);
     public static final FunctionIdentifier IS_MULTISET = FunctionConstants.newAsterix("is-multiset", 1);
     public static final FunctionIdentifier GET_TYPE = FunctionConstants.newAsterix("get-type", 1);
-    public static final FunctionIdentifier HASH_BASED_OR =
-            FunctionConstants.newAsterix("hash-based-or", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier IS_SYSTEM_NULL = FunctionConstants.newAsterix("is-system-null", 1);
     public static final FunctionIdentifier CHECK_UNKNOWN = FunctionConstants.newAsterix("check-unknown", 1);
@@ -1365,7 +1363,6 @@ public class BuiltinFunctions {
         addPrivateFunction(AND, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(NEQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(OR, BooleanFunctionTypeComputer.INSTANCE, true);
-        addPrivateFunction(HASH_BASED_OR, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_ADD, NumericAddSubMulDivTypeComputer.INSTANCE_ADD, true);
 
         // deep equality

@@ -33,4 +33,3 @@ SELECT  VALUE {
   "t4c":  object_put({"a": 1, "b": 2}, "d", 3),
   "t5c":  object_put({"a": 1, "b": 2, "c": 7}, "b", 3)
 };
-

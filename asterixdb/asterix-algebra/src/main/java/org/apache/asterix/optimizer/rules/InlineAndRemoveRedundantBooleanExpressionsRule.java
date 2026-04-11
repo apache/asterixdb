@@ -20,13 +20,13 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.util.FunctionUtil;
 
 /**
  * Inline and remove redundant boolean expressions

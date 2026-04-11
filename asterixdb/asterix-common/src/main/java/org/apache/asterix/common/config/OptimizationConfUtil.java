@@ -260,7 +260,7 @@ public class OptimizationConfUtil {
     private static int getMaxExpressionTreeSize(CompilerProperties compilerProperties,
             Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
         String valueInQuery =
-                (String) querySpecificConfig.get(CompilerProperties.COMPILER_MAX_EXPRESSION_TREE_SIZE_KEY);
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY);
         try {
             return valueInQuery == null ? compilerProperties.getMaxExpressionTreeSize()
                     : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);

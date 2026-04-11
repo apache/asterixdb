@@ -108,7 +108,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
             List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
             throws AlgebricksException;
 
     /**

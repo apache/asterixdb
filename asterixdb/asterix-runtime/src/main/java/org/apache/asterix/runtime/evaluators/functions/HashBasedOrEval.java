@@ -45,6 +45,28 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * Hash-based evaluator for optimized OR expressions with multiple equality comparisons.
+ *
+ * <p>This evaluator optimizes expressions of the form:
+ * <pre>
+ *   field = const1 OR field = const2 OR field = const3 ...
+ * </pre>
+ * <p>A hash set is built containing all constant values.
+ * We have to note that when getting to this evaluator, all the constants
+ * should have compatible types, there for a case like "eq($a,1) or eq($a,null)"
+ * or "eq($a,missing) or eq($a,3) or eq($a,1)" will not come through this evaluator
+ * and will be using the original OrDescriptor.
+ *
+ * <h3>NULL and MISSING Handling</h3>
+ * <p>Follows standard OR semantics where NULL and MISSING propagate to the result:
+ * <ul>
+ *   <li>If the field value is NULL → result is NULL</li>
+ *   <li>If the field value is MISSING → result is MISSING</li>
+ * </ul>
+ *
+ */
+
 class HashBasedOrEval implements IScalarEvaluator {
 
     private static final byte[] DUMMY_VALUE = new byte[] { 0 };
@@ -114,13 +136,13 @@ class HashBasedOrEval implements IScalarEvaluator {
         byte[] data = valuePtr.getByteArray();
         int offset = valuePtr.getStartOffset();
 
-        if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-            missingSerde.serialize(AMissing.MISSING, output);
+        if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            nullSerde.serialize(ANull.NULL, output);
             result.set(resultStorage);
             return;
         }
-        if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            nullSerde.serialize(ANull.NULL, output);
+        if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+            missingSerde.serialize(AMissing.MISSING, output);
             result.set(resultStorage);
             return;
         }
@@ -150,6 +172,9 @@ class HashBasedOrEval implements IScalarEvaluator {
             constEvals[i].evaluate(tuple, constPtr);
             byte[] data = constPtr.getByteArray();
             int offset = constPtr.getStartOffset();
+            // the data here will never be of a Type NUll/missing
+            // cases like "eq($a,null) or eq($a,1) or eq($a,5) "
+            // will use the OrDiscriptor
             if (offset < data.length) {
                 keyEntry.set(data, offset, constPtr.getLength());
                 valueSet.put(keyEntry, valEntry);

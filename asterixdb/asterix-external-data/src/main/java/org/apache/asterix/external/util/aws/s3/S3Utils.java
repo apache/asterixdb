@@ -42,7 +42,7 @@ import static org.apache.asterix.external.util.aws.AwsUtils.buildStsUri;
 import static org.apache.asterix.external.util.aws.AwsUtils.getAuthenticationType;
 import static org.apache.asterix.external.util.aws.AwsUtils.getCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.getPathStyleAddressing;
-import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
+import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
@@ -160,7 +160,7 @@ public class S3Utils {
         String regionId = configuration.get(REGION_FIELD_NAME);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
-        Region region = validateAndGetRegion(regionId);
+        Region region = getRegion(regionId);
         AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
 
         boolean crossRegion = getCrossRegion(configuration);
@@ -249,7 +249,7 @@ public class S3Utils {
      */
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf jobConf,
             Map<String, String> configuration, int numberOfPartitions) throws CompilationException {
-        Region region = validateAndGetRegion(configuration.get(REGION_FIELD_NAME));
+        Region region = getRegion(configuration.get(REGION_FIELD_NAME));
         boolean crossRegion = getCrossRegion(configuration);
 
         // if region is set, hadoop will always try the specified region only, if bucket is not found, it will fail

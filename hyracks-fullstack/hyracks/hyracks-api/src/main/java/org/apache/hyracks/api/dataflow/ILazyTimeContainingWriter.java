@@ -16,5 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.api.dataflow;
 
-drop dataverse test if exists;
+public interface ILazyTimeContainingWriter {
+    void computeTimings();
+}

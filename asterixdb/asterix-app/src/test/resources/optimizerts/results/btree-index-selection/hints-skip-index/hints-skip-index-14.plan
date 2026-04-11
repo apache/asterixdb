@@ -1,0 +1,36 @@
+distribute result [$$23]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+    order (ASC, $$23)
+    -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
+      exchange
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        select (eq($$tenk.getField(7), $$24)) project: [$$23]
+        -- STREAM_SELECT  |PARTITIONED|
+          assign [$$23] <- [$$tenk.getField(0)]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$24, $$tenk])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                unnest-map [$$22, $$tenk] <- index-search("tenk", 0, "Default", "test", "tenk", true, false, 1, $$27, 1, $$27, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$27)
+                    -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$24, $$27])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            unnest-map [$$25, $$26, $$27] <- index-search("idx_1k_2k", 0, "Default", "test", "tenk", true, true, 1, $$24, 1, $$24, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
+                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                unnest $$24 <- scan-collection(array: [ 1, 0 ])
+                                -- UNNEST  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

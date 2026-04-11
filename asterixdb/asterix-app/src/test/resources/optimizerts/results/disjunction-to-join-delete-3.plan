@@ -4,11 +4,11 @@ commit
   -- STREAM_PROJECT  |PARTITIONED|
     exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      delete from TestSetIndex on test.TestSet from [$$24]
+      delete from TestSetIndex on test.TestSet from [$$23]
       -- INDEX_INSERT_DELETE  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          project ([$$24, $$19])
+          project ([$$23, $$19])
           -- STREAM_PROJECT  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -20,31 +20,19 @@ commit
                   -- MATERIALIZE  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      assign [$$24, $$19] <- [$$TestSet.getField(1), $$TestSet.getField(0)]
+                      assign [$$23, $$19] <- [$$TestSet.getField(1), $$TestSet.getField(0)]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$TestSet])
-                        -- STREAM_PROJECT  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            join (eq($$23, $$21))
-                            -- HYBRID_HASH_JOIN [$$21][$$23]  |PARTITIONED|
+                        select (or(eq($$21, "one"), eq($$21, "two"))) project: [$$TestSet]
+                        -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$21] <- [$$TestSet.getField(2)]
+                          -- ASSIGN  |PARTITIONED|
+                            project ([$$TestSet])
+                            -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                assign [$$21] <- [$$TestSet.getField(2)]
-                                -- ASSIGN  |PARTITIONED|
-                                  project ([$$TestSet])
-                                  -- STREAM_PROJECT  |PARTITIONED|
-                                    exchange
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      data-scan []<-[$$20, $$TestSet] <- test.TestSet
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
-                                        exchange
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          empty-tuple-source
-                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              exchange
-                              -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                unnest $$23 <- scan-collection(array: [ "one", "two" ])
-                                -- UNNEST  |UNPARTITIONED|
-                                  empty-tuple-source
-                                  -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                data-scan []<-[$$20, $$TestSet] <- test.TestSet
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

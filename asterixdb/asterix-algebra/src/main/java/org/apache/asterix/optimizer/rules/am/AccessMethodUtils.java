@@ -1077,7 +1077,9 @@ public class AccessMethodUtils {
             ARecordType recordType, ARecordType metaRecordType, OptimizableOperatorSubTree subTree,
             Index secondaryIndex, Mutable<ILogicalOperator> topOpRef,
             List<Mutable<ILogicalOperator>> assignsBeforeTopOpRef, Mutable<ILogicalExpression> conditionRef,
-            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
+            LogicalVariable newMissingPlaceHolderForLOJ,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
 
         SourceLocation sourceLoc = inputOp.getSourceLocation();
         // Sanity check: requiresDistinct and sortPrimaryKeys are mutually exclusive.
@@ -1096,7 +1098,8 @@ public class AccessMethodUtils {
             if (idxType == IndexType.BTREE && secodaryKeysType.contains(BuiltinType.ANY)) {
                 op = additionalSelectForHeterogeneousIndex(chosenIndexFieldNames, afterTopOpRefs, dataset, inputOp,
                         context, retainMissing, leftOuterMissingValue, recordType, metaRecordType, subTree,
-                        secondaryIndex, topOpRef, assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ);
+                        secondaryIndex, topOpRef, assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ,
+                        optimizableDisjunctionConditions);
             }
         }
         if (op == null) {
@@ -1630,7 +1633,9 @@ public class AccessMethodUtils {
             boolean requiresBroadcast, Index secondaryIndex, AccessMethodAnalysisContext analysisCtx,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree,
             LogicalVariable newMissingPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
-            boolean anyRealTypeConvertedToIntegerType) throws AlgebricksException {
+            boolean anyRealTypeConvertedToIntegerType,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
         // Common part for the non-index-only plan and index-only plan
         // Variables and types for the primary-index search.
         List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<>();
@@ -1678,7 +1683,7 @@ public class AccessMethodUtils {
                     !isArrayIndex && sortPrimaryKeys, retainInput, retainMissing, requiresBroadcast, isArrayIndex,
                     pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars, joinPKVars, primaryIndexOutputTypes,
                     leftOuterMissingValue, recordType, metaRecordType, indexSubTree, secondaryIndex, topOpRef,
-                    assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ);
+                    assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ, optimizableDisjunctionConditions);
 
         } else if (!isArrayIndex) {
 
@@ -1946,25 +1951,25 @@ public class AccessMethodUtils {
             if (argFuncIdent.equals(funcIdents.get(i).first)) {
                 functionFound = true;
                 requireVerificationAfterSIdxSearch = funcIdents.get(i).second;
-                break;
+                return new Pair<>(functionFound, requireVerificationAfterSIdxSearch);
             }
         }
 
         // If function-call itself is not an index-based access method, we check its arguments.
-        if (!functionFound) {
-            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-                ILogicalExpression argExpr = arg.getValue();
-                if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                    continue;
-                }
-                AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
-                FunctionIdentifier argExprFuncIdent = argFuncExpr.getFunctionIdentifier();
-                for (int i = 0; i < funcIdents.size(); i++) {
-                    if (argExprFuncIdent.equals(funcIdents.get(i).first)) {
-                        functionFound = true;
-                        requireVerificationAfterSIdxSearch = funcIdents.get(i).second;
-                        break;
-                    }
+
+        for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+            ILogicalExpression argExpr = arg.getValue();
+            if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                continue;
+            }
+            AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
+            for (int i = 0; i < funcIdents.size(); i++) {
+                Pair<Boolean, Boolean> pair =
+                        canFunctionGenerateFalsePositiveResultsUsingIndex(argFuncExpr, funcIdents);
+                if (pair.first) {
+                    functionFound = true;
+                    requireVerificationAfterSIdxSearch = pair.second;
+                    return new Pair<>(functionFound, requireVerificationAfterSIdxSearch);
                 }
             }
         }
@@ -3159,7 +3164,9 @@ public class AccessMethodUtils {
             ARecordType recordType, ARecordType metaRecordType, OptimizableOperatorSubTree subTree,
             Index secondaryIndex, Mutable<ILogicalOperator> topOpRef,
             List<Mutable<ILogicalOperator>> assignsBeforeTopOpRef, Mutable<ILogicalExpression> conditionRef,
-            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
+            LogicalVariable newMissingPlaceHolderForLOJ,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
         List<LogicalVariable> skVarsFromSIdxUnnestMap = AccessMethodUtils.getKeyVarsFromSecondaryUnnestMap(dataset,
                 recordType, metaRecordType, inputOp, secondaryIndex, SecondaryUnnestMapOutputVarType.SECONDARY_KEY);
 
@@ -3234,8 +3241,12 @@ public class AccessMethodUtils {
         Set<LogicalVariable> skAcceptableVars = new HashSet<>();
         skAcceptableVars.addAll(origVarToSIdxUnnestMapOpVarMap.keySet());
         skAcceptableVars.addAll(usedVarInInput);
-        ILogicalExpression conditionRefExpr =
-                filterCondition(conditionRef.getValue().cloneExpression(), skAcceptableVars);
+
+        ILogicalExpression clonedExpr = conditionRef.getValue().cloneExpression();
+        Mutable<ILogicalExpression> mutableClonedExpr = new MutableObject<>(clonedExpr);
+        BTreeAccessMethod.optimizeSelectCondition(mutableClonedExpr, optimizableDisjunctionConditions);
+
+        ILogicalExpression conditionRefExpr = filterCondition(mutableClonedExpr.get(), skAcceptableVars);
         if (conditionRefExpr != null) {
             LogicalVariable newMissingPlaceHolderVar = null;
             SelectOperator newSelectOp =

@@ -158,17 +158,24 @@ public class CompilerProperties extends AbstractProperties {
                 getRangedIntegerType(0, Integer.MAX_VALUE),
                 128,
                 "Maximum occurrences of a variable allowed in an expression for inlining"),
-        COMPILER_MAX_EXPRESSION_TREE_SIZE(
+        COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS(
                 getRangedIntegerType(1, Integer.MAX_VALUE),
                 AlgebricksConfig.MAX_EXPRESSION_TREE_SIZE_DEFAULT,
-                "Maximum number of OR/AND arguments before skipping costly O(N^2) optimization passes "
-                        + "(e.g. constant folding, CSE) on large IN-list queries"),
+                "Avoid costly O(N^2) expression optimization passes (e.g. constant folding, CSE) on large IN-list queries when the number of OR/AND function arguments >= the specified value"),
+        COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT(
+                getRangedIntegerType(1, Integer.MAX_VALUE),
+                AlgebricksConfig.COMMON_EXPRESSION_LIMIT_DEFAULT,
+                "The maximum number of common expressions to extract"),
         COMPILER_ORDERED_FIELDS(BOOLEAN, AlgebricksConfig.ORDERED_FIELDS, "Enable/disable select order list"),
         COMPILER_DELTALAKE_FILESPLITS(BOOLEAN, false, "Enable/disable delta lake file splits"),
-        COMPILER_REWRITE_DISJUNCTION(
+        COMPILER_DISJUNCTION_AS_JOIN(
                 BOOLEAN,
                 AlgebricksConfig.REWRITE_DISJUNCTION_DEFAULT,
-                "Set the mode for rewriting disjunctions to joins in query plans");
+                "Rewrite disjunctions to joins in query plans"),
+        COMPILER_DISJUNCTION_HASH_THRESHOLD(
+                getRangedIntegerType(-1, Integer.MAX_VALUE),
+                AlgebricksConfig.HASH_BASED_OR_THRESHOLD_DEFAULT,
+                "The number of disjunctions after which a hash-based approach is used for evaluating OR operation (-1 disables using the hash-based approach)");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -226,7 +233,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_INDEXONLY_KEY = Option.COMPILER_INDEX_COVERING.ini();
 
-    public static final String COMPILER_REWRITE_DISJUNCTION_KEY = Option.COMPILER_REWRITE_DISJUNCTION.ini();
+    public static final String COMPILER_REWRITE_DISJUNCTION_KEY = Option.COMPILER_DISJUNCTION_AS_JOIN.ini();
+
+    public static final String COMPILER_DISJUNCTION_HASH_THRESHOLD = Option.COMPILER_DISJUNCTION_HASH_THRESHOLD.ini();
 
     public static final String COMPILER_INTERNAL_SANITYCHECK_KEY = Option.COMPILER_INTERNAL_SANITYCHECK.ini();
 
@@ -257,7 +266,11 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY =
             Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING.ini();
 
-    public static final String COMPILER_MAX_EXPRESSION_TREE_SIZE_KEY = Option.COMPILER_MAX_EXPRESSION_TREE_SIZE.ini();
+    public static final String COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY =
+            Option.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS.ini();
+
+    public static final String COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY =
+            Option.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT.ini();
 
     public static final String COMPILER_ORDERED_FIELDS_KEY = Option.COMPILER_ORDERED_FIELDS.ini();
 
@@ -329,7 +342,11 @@ public class CompilerProperties extends AbstractProperties {
     }
 
     public boolean rewriteDisjunctionToJoin() {
-        return accessor.getBoolean(Option.COMPILER_REWRITE_DISJUNCTION);
+        return accessor.getBoolean(Option.COMPILER_DISJUNCTION_AS_JOIN);
+    }
+
+    public int getHashBasedORThreshold() {
+        return accessor.getInt(Option.COMPILER_DISJUNCTION_HASH_THRESHOLD);
     }
 
     public boolean isSanityCheck() {
@@ -411,7 +428,7 @@ public class CompilerProperties extends AbstractProperties {
     }
 
     public int getMaxExpressionTreeSize() {
-        return accessor.getInt(Option.COMPILER_MAX_EXPRESSION_TREE_SIZE);
+        return accessor.getInt(Option.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS);
     }
 
     public boolean isDeltaLakeFileSplitsEnabled() {

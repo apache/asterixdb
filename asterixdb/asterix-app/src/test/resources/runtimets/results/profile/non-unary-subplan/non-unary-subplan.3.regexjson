@@ -189,6 +189,23 @@
               "name": "R{(?s).*}",
               "run-time": "R{[0-9.]+}",
               "runtime-id": "R{.+}"
+            },
+            {
+              "name": "R{(?s).*}",
+              "run-time": "R{[0-9.]+}",
+              "runtime-id": "R{.+}"
+            },
+            {
+              "name": "R{(?s).*}",
+              "run-time": "R{[0-9.]+}",
+              "runtime-id": "R{.+}",
+              "cardinality-out": "R{[0-9.]+}",
+              "avg-tuple-size": "R{[0-9.]+}",
+              "min-tuple-size": "R{[0-9.]+}",
+              "max-tuple-size": "R{[0-9.]+}",
+              "tuple-bytes": "R{[0-9.]+}",
+              "frames-processed": "R{[0-9.]+}",
+              "avg-tuples-per-frame": "R{[0-9.]+}"
             }
           ]
         },

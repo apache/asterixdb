@@ -17,25 +17,10 @@
  * under the License.
  */
 
-/*
- * Creating an external dataset should fail when non-s3-region is used (some-new-region)
- */
-
-drop dataverse test if exists;
-create dataverse test;
 use test;
 
-drop type test if exists;
-create type test as open {
-};
+SET `rewrite_or_as_join` "false";
 
-drop dataset test if exists;
-create external dataset test(test) using S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="some-new-region"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="json-data/reviews/single-line/json"),
-    ("format"="json")
-);
+explain select value unique1
+from tenk
+where thousand ="1" or thousand = 0;

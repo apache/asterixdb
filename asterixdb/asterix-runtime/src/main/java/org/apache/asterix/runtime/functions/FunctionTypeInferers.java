@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -53,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 
 /**
  * Implementations of {@link IFunctionTypeInferer} for built-in functions
@@ -123,12 +123,6 @@ public final class FunctionTypeInferers {
         }
     };
 
-    public static final IFunctionTypeInferer SET_OR_TYPES = (expr, fd, context, compilerProps, metadataProvider) -> {
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-        IAType elementType = (IAType) context.getType(fce.getArguments().get(1).getValue());
-        fd.setImmutableStates(TypeComputeUtils.getActualType(elementType));
-    };
-
     public static final IFunctionTypeInferer MEDIAN_MEMORY = (expr, fd, context, compilerProps, metadataProvider) -> fd
             .setImmutableStates(compilerProps.getSortMemoryFrames());
 
@@ -146,25 +140,45 @@ public final class FunctionTypeInferers {
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
                 CompilerProperties compilerProps, IMetadataProvider<?, ?> mp) throws AlgebricksException {
-            Object hashBasedOption = mp.getConfig().get(AlgebricksConfig.HASH_BASED_OR_OPTION);
-            boolean hashBasedOrEnabled = AlgebricksConfig.HASH_BASED_OR_OPTION_DEFAULT;
-            if (hashBasedOption != null) {
-                hashBasedOrEnabled = Boolean.parseBoolean(String.valueOf(hashBasedOption));
+            int hashBasedThreshold;
+            Map<String, Object> config = mp.getConfig();
+            Object hashBasedOptionFromQuery = config.get(CompilerProperties.COMPILER_DISJUNCTION_HASH_THRESHOLD);
+            if (hashBasedOptionFromQuery != null) {
+                hashBasedThreshold = Integer.parseInt(String.valueOf(hashBasedOptionFromQuery));
+            } else {
+                hashBasedThreshold = compilerProps.getHashBasedORThreshold();
             }
-            if (!hashBasedOrEnabled) {
-                return;
-            }
+
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-            IAType elementType = useHashBased(fce);
+            IAType elementType = useHashBased(fce, hashBasedThreshold);
             if (elementType != null) {
                 fd.setImmutableStates((Object[]) new IAType[] { elementType });
             }
         }
     };
 
-    private static IAType useHashBased(AbstractFunctionCallExpression funcExpr) {
+    /**
+     * Determines if the OR expression can be optimized using hash-based evaluation.
+     * <p>Using the hash-based OR is only possible if we have:
+     * <ul>
+     *   <li>All arguments are equality comparisons (EQ function calls with exactly 2 arguments)</li>
+     *   <li>Each EQ has exactly one constant operand and one non-constant operand</li>
+     *   <li>All non-constant operands are identical across all EQs</li>
+     *   <li>All constant operands have mutually compatible types that can share the same hash function</li>
+     * </ul>
+     * <p>Examples of non-optimizable expressions:
+     * <ul>
+     *   <li>{@code EQ(a, 1) OR EQ(b = 2)} (different variables)</li>
+     *   <li>{@code EQ(a, 1) OR EQ(a = "2")} (incompatible constant types)</li>
+     *   <li>{@code EQ(a, 1) OR EQ(a = null)} (null is not compatible with integer)</li>
+     * </ul>
+     *
+     * @param funcExpr the OR function expression
+     * @return the element type for hash-based comparison, or null if optimization is not applicable
+     */
+    private static IAType useHashBased(AbstractFunctionCallExpression funcExpr, int hashBasedThreshold) {
         List<Mutable<ILogicalExpression>> orArgs = funcExpr.getArguments();
-        if (orArgs.size() < 2) {
+        if (hashBasedThreshold < 0 || orArgs.size() < 2 || orArgs.size() < hashBasedThreshold) {
             return null;
         }
         LogicalVariable commonVar = null;

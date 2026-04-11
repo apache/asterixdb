@@ -270,7 +270,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     .getExecutionMode() == ExecutionMode.UNPARTITIONED;
             ILogicalOperator subRoot = pair.getAccessMethod().createIndexSearchPlan(afterSelectRefs, selectRef,
                     conditionRef, subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.getIndex(), analysisCtx,
-                    retainInput, false, requiresBroadcast, context, null, null);
+                    retainInput, false, requiresBroadcast, context, null, null, new ArrayList<>());
+
             if (subRoot == null) {
                 return false;
             }
@@ -505,6 +506,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             // whether an available index can be applicable or not.
             if (!checkApplicableOnly && continueCheck) {
                 analyzedAMs = new TreeMap<>();
+                // we need to clear the chosenIndexes as well, if we do not
+                // in nested queries we might get to a situation where we
+                // have chosenIndexes from the previous check.
+                chosenIndexes = new ArrayList<>();
             }
 
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()

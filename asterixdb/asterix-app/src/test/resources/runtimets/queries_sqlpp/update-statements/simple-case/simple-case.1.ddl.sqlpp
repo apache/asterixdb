@@ -32,4 +32,3 @@ CREATE TYPE UserType AS {
 
 create dataset UserTypes(UserType) primary key userId;
 
-

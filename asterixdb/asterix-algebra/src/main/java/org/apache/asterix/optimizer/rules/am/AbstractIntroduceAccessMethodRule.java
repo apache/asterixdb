@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -45,12 +46,14 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
 import org.apache.asterix.optimizer.rules.util.FullTextUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -65,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -739,6 +743,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         boolean found = true;
         LogicalVariable variable = null;
+        IAType constantType = null;
         Map<IAccessMethod, AccessMethodAnalysisContext> disjuncAnalyzedAMs = new HashMap<>();
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
             ILogicalExpression argExpr = arg.get();
@@ -755,6 +760,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             ILogicalExpression arg1 = argFuncExpr.getArguments().get(0).get();
             ILogicalExpression arg2 = argFuncExpr.getArguments().get(1).get();
 
+            ILogicalExpression constExpr = null;
             if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE
                     && arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 if (variable == null) {
@@ -764,6 +770,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     found = false;
                     break;
                 }
+                constExpr = arg2;
 
             } else if (arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE
                     && arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
@@ -774,32 +781,87 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     found = false;
                     break;
                 }
+                constExpr = arg1;
 
             } else {
                 found = false;
                 break;
             }
-            if (!found) {
+
+            // Bail out if the constant types are not compatible across disjuncts,
+            AsterixConstantValue constValue = (AsterixConstantValue) ((ConstantExpression) constExpr).getValue();
+            IAType argConstType = constValue.getObject().getType();
+            if (constantType == null) {
+                constantType = argConstType;
+            } else if (!DisjunctivePredicateToJoinRule.isCompatible(constantType, argConstType)) {
+                found = false;
                 break;
             }
-            boolean matchFound = analyzeSelectOrJoinOpConditionAndUpdateAnalyzedAM(argFuncExpr, assignsAndUnnests,
+
+            found = analyzeSelectOrJoinOpConditionAndUpdateAnalyzedAM(argFuncExpr, assignsAndUnnests,
                     disjuncAnalyzedAMs, context, typeEnvironment);
-            found = found && matchFound;
             if (!found) {
                 break;
             }
         }
 
-        AccessMethodAnalysisContext disjuncAnalysisCtx = disjuncAnalyzedAMs.get(BTreeAccessMethod.INSTANCE);
-        if (found && disjuncAnalysisCtx != null) {
-            AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(BTreeAccessMethod.INSTANCE);
-            if (analysisCtx == null) {
-                analysisCtx = new AccessMethodAnalysisContext();
-                analyzedAMs.put(BTreeAccessMethod.INSTANCE, analysisCtx);
+        if (found) {
+            for (IAccessMethod accessMethod : getAccessMethods().get(AlgebricksBuiltinFunctions.EQ)) {
+                AccessMethodAnalysisContext disjuncAnalysisCtx = disjuncAnalyzedAMs.get(accessMethod);
+                if (disjuncAnalysisCtx != null) {
+                    AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(accessMethod);
+                    if (analysisCtx == null) {
+                        analysisCtx = new AccessMethodAnalysisContext();
+                        analyzedAMs.put(accessMethod, analysisCtx);
+                    }
+                    for (IOptimizableFuncExpr optFuncExpr : disjuncAnalysisCtx.getMatchedFuncExprs()) {
+                        analysisCtx.addMatchedFuncExpr(optFuncExpr);
+                    }
+                }
             }
 
-            for (IOptimizableFuncExpr optFuncExpr : disjuncAnalysisCtx.getMatchedFuncExprs()) {
-                analysisCtx.addMatchedFuncExpr(optFuncExpr);
+            /*
+             *  If any predicate within a disjunction is marked with skip-index,
+             *  propagate the annotation to all predicates in the disjunction.
+             *  var /skip-index/ = 0 or var = 1 should entirely skip index search for var = 0 and var = 1
+             * */
+
+            boolean skipAnyIndex = false;
+            Collection<String> indexNames = new ArrayList<>();
+            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                AbstractFunctionCallExpression argExpr = (AbstractFunctionCallExpression) arg.get();
+                SkipSecondaryIndexSearchExpressionAnnotation anno =
+                        argExpr.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                if (anno == SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX) {
+                    skipAnyIndex = true;
+                    break;
+                } else if (anno != null) {
+                    indexNames.addAll(anno.getIndexNames());
+                }
+            }
+
+            if (skipAnyIndex) {
+                funcExpr.getArguments().forEach(arg -> {
+                    AbstractFunctionCallExpression argExpr = (AbstractFunctionCallExpression) arg.get();
+                    SkipSecondaryIndexSearchExpressionAnnotation anno =
+                            argExpr.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                    if (anno != SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX) {
+                        argExpr.removeAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                        argExpr.putAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX);
+                    }
+                });
+            } else if (!indexNames.isEmpty()) {
+                SkipSecondaryIndexSearchExpressionAnnotation annotation =
+                        SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
+                funcExpr.getArguments().forEach(arg -> {
+                    AbstractFunctionCallExpression argExpr = (AbstractFunctionCallExpression) arg.get();
+                    SkipSecondaryIndexSearchExpressionAnnotation argExprAnnotation =
+                            argExpr.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                    if (argExprAnnotation != null) {
+                        argExpr.removeAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                    }
+                    argExpr.putAnnotation(annotation);
+                });
             }
         }
         return found;

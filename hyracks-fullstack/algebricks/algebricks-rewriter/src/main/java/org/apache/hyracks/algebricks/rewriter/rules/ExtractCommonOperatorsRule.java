@@ -60,9 +60,6 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  */
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
-    public static final String EXTRACT_COMMON_OPS = "extract_common_ops";
-    public static final boolean EXTRACT_DEFAULT = true;
-
     private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents =
             new HashMap<>();
     private final List<Mutable<ILogicalOperator>> roots = new ArrayList<>();
@@ -73,15 +70,10 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     private int lastUsedClusterId = 0;
     private final Map<Mutable<ILogicalOperator>, BitSet> replicateToOutputs = new HashMap<>();
     private final List<Pair<Mutable<ILogicalOperator>, Boolean>> newOutputs = new ArrayList<>();
-    private Boolean extractCommonOpsEnabled = null;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        if (extractCommonOpsEnabled == null) {
-            Object option = context.getMetadataProvider().getConfig().get(EXTRACT_COMMON_OPS);
-            extractCommonOpsEnabled = option != null ? Boolean.parseBoolean(option.toString()) : EXTRACT_DEFAULT;
-        }
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.WRITE && op.getOperatorTag() != LogicalOperatorTag.WRITE_RESULT
                 && op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
@@ -109,11 +101,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 changed = false;
                 // applying the rewriting until fixpoint
                 topDownMaterialization(roots);
-                if (extractCommonOpsEnabled) {
-                    genCandidatesGrow();
-                } else {
-                    genCandidates();
-                }
+                genCandidates();
                 removeTrivialShare();
                 if (!equivalenceClasses.isEmpty()) {
                     changed = rewrite(context);
@@ -424,7 +412,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void genCandidatesGrow() throws AlgebricksException {
+    private void genCandidates() throws AlgebricksException {
         List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<>();
         boolean grown = true;
         while (equivalenceClasses.size() > 0 && grown) {
@@ -460,40 +448,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                         break;
                     }
                 }
-            }
-            prune();
-        }
-        if (equivalenceClasses.size() < 1 && previousEquivalenceClasses.size() > 0) {
-            equivalenceClasses.addAll(previousEquivalenceClasses);
-            prune();
-        }
-    }
-
-    private void genCandidates() throws AlgebricksException {
-        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<>();
-        while (equivalenceClasses.size() > 0) {
-            previousEquivalenceClasses.clear();
-            for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
-                List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<>(candidates);
-                previousEquivalenceClasses.add(candidatesCopy);
-            }
-            List<Mutable<ILogicalOperator>> currentLevelOpRefs = new ArrayList<>();
-            for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
-                if (candidates.size() > 0) {
-                    for (Mutable<ILogicalOperator> opRef : candidates) {
-                        List<Mutable<ILogicalOperator>> refs = childrenToParents.get(opRef);
-                        if (refs != null) {
-                            currentLevelOpRefs.addAll(refs);
-                        }
-                    }
-                }
-                if (currentLevelOpRefs.size() == 0) {
-                    continue;
-                }
-                candidates(currentLevelOpRefs, candidates);
-            }
-            if (currentLevelOpRefs.size() == 0) {
-                break;
             }
             prune();
         }
@@ -568,45 +522,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         if (candidates.isEmpty()) {
             candidates.addAll(previousCandidates);
             return false;
-        }
-        return true;
-    }
-
-    private boolean candidates(List<Mutable<ILogicalOperator>> opList, List<Mutable<ILogicalOperator>> candidates) {
-        List<Mutable<ILogicalOperator>> previousCandidates = new ArrayList<>(candidates);
-        candidates.clear();
-        boolean validCandidate = false;
-        for (Mutable<ILogicalOperator> op : opList) {
-            List<Mutable<ILogicalOperator>> inputs = op.getValue().getInputs();
-            for (int i = 0; i < inputs.size(); i++) {
-                Mutable<ILogicalOperator> inputRef = inputs.get(i);
-                validCandidate = false;
-                for (Mutable<ILogicalOperator> candidate : previousCandidates) {
-                    // if current input is in candidates
-                    if (inputRef.getValue().equals(candidate.getValue())) {
-                        if (inputs.size() == 1) {
-                            validCandidate = true;
-                        } else {
-                            BitSet candidateInputBitMap = opToCandidateInputs.get(op);
-                            if (candidateInputBitMap == null) {
-                                candidateInputBitMap = new BitSet(inputs.size());
-                                opToCandidateInputs.put(op, candidateInputBitMap);
-                            }
-                            candidateInputBitMap.set(i);
-                            if (candidateInputBitMap.cardinality() == inputs.size()) {
-                                validCandidate = true;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-            if (!validCandidate) {
-                continue;
-            }
-            if (!candidates.contains(op)) {
-                candidates.add(op);
-            }
         }
         return true;
     }

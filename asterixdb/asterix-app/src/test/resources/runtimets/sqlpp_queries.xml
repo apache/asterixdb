@@ -6052,6 +6052,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="hash-based-or">
+  <test-case FilePath="hash-based-or">
+    <compilation-unit name="hash-based-or">
+      <output-dir compare="Text">hash-based-or</output-dir>
+    </compilation-unit>
+  </test-case>
+  </test-group>
   <test-group name="group-by">
     <test-case FilePath="group-by">
       <compilation-unit name="gby-array">
@@ -6438,6 +6445,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-array-range">
+        <output-dir compare="Text">btree-index-array-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-range-02">
         <output-dir compare="Text">btree-index-range-02</output-dir>
       </compilation-unit>
@@ -6750,6 +6762,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="heterogeneous-index-complex-types">
         <output-dir compare="Text">heterogeneous-index-complex-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="mismatch-type-predicate">
+        <output-dir compare="Text">mismatch-type-predicate</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -17146,6 +17163,13 @@
         <output-dir compare="Clean-JSON">nested-type</output-dir>
         <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
         <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="correlation">
+    <test-case FilePath="correlation">
+      <compilation-unit name="ASTERIXDB-3752-LIMIT-in-subquery">
+        <output-dir compare="Text">ASTERIXDB-3752-LIMIT-in-subquery</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

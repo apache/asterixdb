@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.algebricks.runtime.operators.win;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,8 +74,8 @@ public final class WindowAggregatorDescriptorFactory extends AbstractAccumulatin
             if (pipelineRuntimeMap != null) {
                 pipelineRuntimeMap.clear();
             }
-            pipelines[i] = (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplan, outputWriter, ctx,
-                    pipelineRuntimeMap);
+            pipelines[i] = (NestedTupleSourceRuntime) PipelineAssembler
+                    .assemblePipeline(subplan, outputWriter, ctx, pipelineRuntimeMap, Collections.emptyMap()).getLeft();
             if (pipelineRuntimeMap != null) {
                 IPushRuntimeFactory[] subplanFactories = subplan.getRuntimeFactories();
                 IPushRuntimeFactory aggFactory = subplanFactories[subplanFactories.length - 1];

@@ -391,7 +391,6 @@ import org.apache.asterix.runtime.evaluators.functions.GetIntersectionDescriptor
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetTypeDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.HashBasedOrDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfErrorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
@@ -970,7 +969,6 @@ public final class FunctionCollection implements IFunctionCollection {
         // boolean functions
         fc.add(AndDescriptor.FACTORY);
         fc.add(OrDescriptor.FACTORY);
-        fc.add(HashBasedOrDescriptor.FACTORY);
 
         // Record constructors / functions
         fc.add(ClosedRecordConstructorDescriptor.FACTORY);

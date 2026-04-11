@@ -37,13 +37,11 @@ import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppAstPrintVisitorFactory;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
-import org.apache.asterix.optimizer.rules.HashBasedOrRule;
 import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslatorFactory;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
 
 public class SqlppCompilationProvider implements ILangCompilationProvider {
 
@@ -99,17 +97,17 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
                 CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY, CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY,
                 CompilerProperties.COMPILER_COLUMN_FILTER_KEY, CompilerProperties.COMPILER_BATCH_LOOKUP_KEY,
                 CompilerProperties.COMPILER_FRAMESIZE_KEY, FunctionUtil.IMPORT_PRIVATE_FUNCTIONS,
+                CompilerProperties.COMPILER_DISJUNCTION_HASH_THRESHOLD,
                 CompilerProperties.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY,
                 CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY,
-                CompilerProperties.COMPILER_MAX_EXPRESSION_TREE_SIZE_KEY, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
-                FuzzyUtils.SIM_THRESHOLD_PROP_NAME, StartFeedStatement.WAIT_FOR_COMPLETION,
-                FeedActivityDetails.FEED_POLICY_NAME, FeedActivityDetails.COLLECT_LOCATIONS,
-                SqlppQueryRewriter.INLINE_WITH_OPTION, SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION,
-                HashBasedOrRule.HASH_BASED_OR_OPTION, "hash_merge", "output-record-type",
+                CompilerProperties.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
+                CompilerProperties.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY, FuzzyUtils.SIM_THRESHOLD_PROP_NAME,
+                StartFeedStatement.WAIT_FOR_COMPLETION, FeedActivityDetails.FEED_POLICY_NAME,
+                FeedActivityDetails.COLLECT_LOCATIONS, SqlppQueryRewriter.INLINE_WITH_OPTION,
+                SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION, "hash_merge", "output-record-type",
                 DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
                 SetAsterixPhysicalOperatorsRule.REWRITE_ATTEMPT_BATCH_ASSIGN,
                 EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK, SqlppQueryRewriter.SQL_COMPAT_OPTION,
-                JoinEnum.CBO_FULL_ENUM_LEVEL_KEY, JoinEnum.CBO_CP_ENUM_KEY,
-                ExtractCommonOperatorsRule.EXTRACT_COMMON_OPS));
+                JoinEnum.CBO_FULL_ENUM_LEVEL_KEY, JoinEnum.CBO_CP_ENUM_KEY));
     }
 }

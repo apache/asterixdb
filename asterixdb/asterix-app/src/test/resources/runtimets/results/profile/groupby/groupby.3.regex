@@ -1,0 +1,1 @@
+/"operator"\s*:\s*"assign"[^}]*?"max-time"\s*:\s*30[0-9]{2}(?:\.\d+)?/

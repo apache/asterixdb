@@ -38,6 +38,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.azure.AzureUtils;
+import org.apache.hadoop.fs.azurebfs.constants.ConfigurationKeys;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -84,6 +85,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
 
         // configure Hadoop Azure input splits
         JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
+        conf.set(ConfigurationKeys.FS_AZURE_ACCOUNT_IS_HNS_ENABLED, "false");
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
         if (filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory) {

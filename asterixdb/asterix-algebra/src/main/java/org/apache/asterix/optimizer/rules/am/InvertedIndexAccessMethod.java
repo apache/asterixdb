@@ -401,7 +401,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTopOpRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
             throws AlgebricksException {
         // TODO: we currently do not support the index-only plan for the inverted index searches since (how to say no?)
 
@@ -456,7 +457,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalOperator primaryIndexUnnestOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef,
                 conditionRef, assignBeforeTopOpRefs, dataSourceScan, dataset, recordType, metaRecordType,
                 secondaryIndexUnnestOp, context, true, retainInput, retainNull, false, chosenIndex, analysisCtx,
-                indexSubTree, null, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, false);
+                indexSubTree, null, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, false,
+                optimizableDisjunctionConditions);
 
         return primaryIndexUnnestOp;
     }
@@ -482,12 +484,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
         SelectOperator selectOp = (SelectOperator) selectRef.getValue();
-        ILogicalOperator indexPlanRootOp =
-                createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
-                        subTree.getAssignsAndUnnestsRefs(), subTree,
-                        null, chosenIndex, analysisCtx, false, false, subTree.getDataSourceRef().getValue().getInputs()
-                                .get(0).getValue().getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                        context, null, null);
+        ILogicalOperator indexPlanRootOp = createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
+                subTree.getAssignsAndUnnestsRefs(), subTree, null,
+                chosenIndex, analysisCtx, false, false, subTree.getDataSourceRef().getValue().getInputs().get(0)
+                        .getValue().getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                context, null, null, new ArrayList<>());
 
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.getDataSourceRef().setValue(indexPlanRootOp);
@@ -571,10 +572,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             probeSubTree.setRoot(newProbeRootRef.getValue());
         }
         // Create regular indexed-nested loop join path.
-        ILogicalOperator indexPlanRootOp =
-                createIndexSearchPlan(afterJoinRefs, joinRef, new MutableObject<ILogicalExpression>(joinCond),
-                        indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx,
-                        true, isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue);
+        ILogicalOperator indexPlanRootOp = createIndexSearchPlan(afterJoinRefs, joinRef,
+                new MutableObject<ILogicalExpression>(joinCond), indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree,
+                probeSubTree, chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context,
+                newMissingNullPlaceHolderVar, leftOuterMissingValue, new ArrayList<>());
         indexSubTree.getDataSourceRef().setValue(indexPlanRootOp);
 
         // Change join into a select with the same condition.

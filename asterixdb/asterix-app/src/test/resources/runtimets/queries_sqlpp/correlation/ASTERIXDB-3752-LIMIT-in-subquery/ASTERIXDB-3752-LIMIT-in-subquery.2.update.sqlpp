@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE MovieTest;
+
+INSERT INTO movies([
+{"id":19995,"title":"Avatar","revenue":2923706026,"runtime":162,"overview":"In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization.","genres":"Action, Adventure, Fantasy, Science Fiction"}
+,
+{"id":299536,"title":"Avengers: Infinity War","revenue":2052415039,"runtime":149,"overview":"As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.","genres":"Adventure, Action, Science Fiction"}
+,
+{"id":299534,"title":"Avengers: Endgame","revenue":2800000000,"runtime":181,"overview":"After the devastating events of Avengers: Infinity War, the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos' actions and restore order to the universe once and for all, no matter what consequences may be in store.","genres":"Adventure, Science Fiction, Action"}
+,
+{"id":135397,"title":"Jurassic World","revenue":1671537444,"runtime":124,"overview":"Twenty-two years after the events of Jurassic Park, Isla Nublar now features a fully functioning dinosaur theme park, Jurassic World, as originally envisioned by John Hammond.","genres":"Action, Adventure, Science Fiction, Thriller"}
+,
+{"id":140607,"title":"Star Wars: The Force Awakens","revenue":2068223624,"runtime":136,"overview":"Thirty years after defeating the Galactic Empire, Han Solo and his allies face a new threat from the evil Kylo Ren and his army of Stormtroopers.","genres":"Adventure, Action, Science Fiction"}
+,
+{"m_id":"0025931c-a350-031a-0bf0-71d366e6d8a6","id":634649,"title":"Spider-Man: No Way Home","revenue":1921847111,"runtime":148,"overview":"Peter Parker is unmasked and no longer able to separate his normal life from the high-stakes of being a super-hero. When he asks for help from Doctor Strange the stakes become even more dangerous, forcing him to discover what it truly means to be Spider-Man.","genres":"Action, Adventure, Science Fiction"}
+,
+{"id":24428,"title":"The Avengers","revenue":1518815515,"runtime":143,"overview":"When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!","genres":"Science Fiction, Action, Adventure"}
+,
+{"id":597,"title":"Titanic","revenue":2264162353,"runtime":194,"overview":"101-year-old Rose DeWitt Bukater tells the story of her life aboard the Titanic, 84 years later. A young Rose boards the ship with her mother and fiancé. Meanwhile, Jack Dawson and Fabrizio De Rossi win third-class tickets aboard the ship. Rose tells the whole story from Titanic's departure through to its death—on its first and last voyage—on April 15, 1912.","genres":"Drama, Romance"}
+,
+{"id":76600,"title":"Avatar: The Way of Water","revenue":2320250281,"runtime":192,"overview":"Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure.","genres":"Science Fiction, Adventure, Action"}
+,
+{"id":420818,"title":"The Lion King","revenue":1663075401,"runtime":118,"overview":"Simba idolizes his father, King Mufasa, and takes to heart his own royal destiny. But not everyone in the kingdom celebrates the new cub's arrival. Scar, Mufasa's brother—and former heir to the throne—has plans of his own. The battle for Pride Rock is ravaged with betrayal, tragedy and drama, ultimately resulting in Simba's exile. With help from a curious pair of newfound friends, Simba will have to figure out how to grow up and take back what is rightfully his.","genres":"Adventure, Drama, Family"}
+]);

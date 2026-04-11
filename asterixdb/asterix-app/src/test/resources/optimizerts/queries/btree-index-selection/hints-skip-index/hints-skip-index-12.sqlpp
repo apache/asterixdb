@@ -53,7 +53,7 @@ create index idx_2k on tenk(twothousand);
  * disjunctive predicate is translated into an index join, use skip-index to disable idx_1k for index join.
  * explain plan -> expect index join using idx_1k_2k
  */
-
+SET `compiler.disjunction.as.join` "true";
 select value unique1
 from tenk
 where thousand /* +skip-index(idx_1k) */ = 0 or thousand = 1

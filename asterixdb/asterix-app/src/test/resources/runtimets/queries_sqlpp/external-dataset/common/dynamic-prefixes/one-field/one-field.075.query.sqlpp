@@ -18,7 +18,7 @@
  */
 
 USE test;
-
+SET `compiler.disjunction.as.join` "true";
 EXPLAIN
 SELECT VALUE d
 FROM Department d

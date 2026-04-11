@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.meta;
 
+import static org.apache.hyracks.dataflow.std.util.ProfilingUtils.profiling;
+
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,13 +30,13 @@ import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.INestedTupleSourceRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
-import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
@@ -42,7 +44,6 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -133,9 +134,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         protected final IHyracksTaskContext ctx;
 
-        protected final NestedTupleSourceRuntime[] startOfPipelines;
-
-        private final boolean profile;
+        protected final INestedTupleSourceRuntime[] startOfPipelines;
 
         private final List<IProfiledPushRuntime> timedMicroOps;
 
@@ -143,7 +142,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         protected SubplanPushRuntime(IHyracksTaskContext ctx, boolean ignoreFailures) throws HyracksDataException {
             this.ctx = ctx;
-            this.profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
+            boolean profile = profiling(ctx);
             this.first = true;
             if (profile) {
                 timedMicroOps = new ArrayList<>();
@@ -157,7 +156,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
             }
 
             int pipelineCount = pipelines.size();
-            startOfPipelines = new NestedTupleSourceRuntime[pipelineCount];
+            startOfPipelines = new INestedTupleSourceRuntime[pipelineCount];
             PipelineAssembler[] pipelineAssemblers = new PipelineAssembler[pipelineCount];
             for (int i = 0; i < pipelineCount; i++) {
                 AlgebricksPipeline pipeline = pipelines.get(i);
@@ -192,7 +191,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 if (profile) {
                     timedMicroOps.addAll(pa.getProfiledPushRuntimes());
                 }
-                startOfPipelines[i] = (NestedTupleSourceRuntime) head;
+                startOfPipelines[i] = (INestedTupleSourceRuntime) head;
                 pipelineAssemblers[i] = pa;
             }
         }
@@ -230,14 +229,14 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         }
 
         private void processTuple(ByteBuffer buffer, int t) throws HyracksDataException {
-            for (NestedTupleSourceRuntime nts : startOfPipelines) {
+            for (INestedTupleSourceRuntime nts : startOfPipelines) {
                 nts.writeTuple(buffer, t);
             }
 
             int n = 0;
             try {
                 for (; n < startOfPipelines.length; n++) {
-                    NestedTupleSourceRuntime nts = startOfPipelines[n];
+                    INestedTupleSourceRuntime nts = startOfPipelines[n];
                     try {
                         nts.open();
                     } catch (Exception e) {
