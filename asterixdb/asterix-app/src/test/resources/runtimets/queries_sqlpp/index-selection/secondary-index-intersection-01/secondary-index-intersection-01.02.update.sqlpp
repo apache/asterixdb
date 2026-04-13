@@ -1,0 +1,49 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+INSERT INTO orders (
+    SELECT VALUE {
+        "order_id" : i,
+        "cust_id" : i % 100,
+        "status" : CASE (i % 4) WHEN 0 THEN "pending" WHEN 1 THEN "shipped" WHEN 2 THEN "delivered" ELSE "cancelled" END,
+        "total" : round(i * 1.5, 2),
+        "region" : CASE (i % 5) WHEN 0 THEN "east" WHEN 1 THEN "west" WHEN 2 THEN "north" WHEN 3 THEN "south" ELSE "central" END,
+        "priority" : (i % 3) + 1,
+        "o_orderline" : [
+            { "ol_id" : 1, "ol_item" : "item_" || to_string((i % 50) + 1), "ol_qty" : (i % 10) + 1, "ol_delivery_d" : "2024-0" || to_string((i % 9) + 1) || "-15" },
+            { "ol_id" : 2, "ol_item" : "item_" || to_string((i % 30) + 51), "ol_qty" : (i % 5) + 1, "ol_delivery_d" : "2024-0" || to_string((i % 9) + 1) || "-20" }
+        ],
+        "tags" : CASE (i % 3) WHEN 0 THEN ["urgent", "wholesale"] WHEN 1 THEN ["retail", "regular"] ELSE ["online", "discount", "clearance"] END
+    }
+    FROM range(1, 5000) i
+);
+
+INSERT INTO customers (
+    SELECT VALUE {
+        "cust_id" : i,
+        "name" : "customer_" || to_string(i),
+        "city" : CASE (i % 5) WHEN 0 THEN "New York" WHEN 1 THEN "Chicago" WHEN 2 THEN "Houston" WHEN 3 THEN "Phoenix" ELSE "San Jose" END,
+        "tier" : CASE (i % 3) WHEN 0 THEN "gold" WHEN 1 THEN "silver" ELSE "bronze" END,
+        "interests" : CASE (i % 4) WHEN 0 THEN ["sports", "music"] WHEN 1 THEN ["travel", "food", "music"] WHEN 2 THEN ["tech", "gaming"] ELSE ["books", "travel", "sports"] END,
+        "age" : 20 + (i % 50)
+    }
+    FROM range(1, 500) i
+);

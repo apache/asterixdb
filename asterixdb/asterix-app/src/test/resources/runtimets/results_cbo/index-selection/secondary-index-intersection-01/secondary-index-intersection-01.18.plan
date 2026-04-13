@@ -1,0 +1,48 @@
+distribute result [$$68] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$68] <- [{"$1": $$70}] project: [$$68] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$70] <- [agg-sql-sum($$73)] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$73] <- [agg-sql-count(1)] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+          -- AGGREGATE  |PARTITIONED|
+            select (eq($$ol.getField("ol_delivery_d"), "2024-01-15")) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+            -- STREAM_SELECT  |PARTITIONED|
+              unnest $$ol <- scan-collection($$71) project: [$$ol] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+              -- UNNEST  |PARTITIONED|
+                select (and(or(eq($$54, "pending"), eq($$54, "delivered")), or(eq($$57, "east"), eq($$57, "central")))) project: [$$71] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$57, $$54, $$71] <- [$$o.getField("region"), $$o.getField("status"), $$o.getField("o_orderline")] project: [$$57, $$54, $$71] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$o]) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$69, $$o] <- index-search("orders", 0, "Default", "test", "orders", true, false, 1, $$76, 1, $$76, true, true, true) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            distinct ([$$76]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$76) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$76]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        unnest-map [$$75, $$76] <- index-search("idx_orderline_delivery", 0, "Default", "test", "orders", true, false, 1, $$74, 1, $$74, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$74] <- ["2024-01-15"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

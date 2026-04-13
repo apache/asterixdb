@@ -1,0 +1,30 @@
+distribute result [$$63] [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$63] <- [{"$1": $$65}] project: [$$63] [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$65] <- [agg-sql-sum($$68)] [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$68] <- [agg-sql-count(1)] [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+          -- AGGREGATE  |PARTITIONED|
+            select (eq($$i, "sports")) [cardinality: 50.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              unnest $$i <- scan-collection($$67) project: [$$i] [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+              -- UNNEST  |PARTITIONED|
+                select (and(eq($$c.getField("tier"), "gold"), or(eq($$51, "New York"), eq($$51, "Chicago"), eq($$51, "Houston")))) project: [$$67] [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$51, $$67] <- [$$c.getField("city"), $$c.getField("interests")] [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$c]) [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$64, $$c] <- test.customers [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

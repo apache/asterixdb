@@ -1,0 +1,70 @@
+distribute result [$$57] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$57] <- [{"$1": $$59}] project: [$$57] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$59] <- [agg-sql-sum($$62)] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$62] <- [agg-sql-count(1)] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+          -- AGGREGATE  |PARTITIONED|
+            select (eq($$t, "urgent")) [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+            -- STREAM_SELECT  |PARTITIONED|
+              unnest $$t <- scan-collection($$61) project: [$$t] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+              -- UNNEST  |PARTITIONED|
+                select (eq($$o.getField("status"), "pending")) project: [$$61] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$61] <- [$$o.getField("tags")] [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$o]) [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$58, $$o] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$71, 1, $$71, true, true, true) [cardinality: 437.44, doc-size: 0.0, op-cost: 0.0, total-cost: 6535.03]
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            intersect [$$71] <- [[$$66], [$$70]] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- INTERSECT  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                distinct ([$$66]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    order (ASC, $$66) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STABLE_SORT [$$66(ASC)]  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        project ([$$66]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            unnest-map [$$65, $$66] <- index-search("idx_order_tags", 0, "Default", "test", "orders", false, false, 1, $$63, 1, $$64, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$63, $$64] <- ["urgent", "urgent"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$70) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STABLE_SORT [$$70(ASC)]  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$70]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        unnest-map [$$69, $$70] <- index-search("idx_order_status", 0, "Default", "test", "orders", false, false, 1, $$67, 1, $$68, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$67, $$68] <- ["pending", "pending"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

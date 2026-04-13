@@ -475,16 +475,6 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             afterSelectRefs.add(opRef);
         }
 
-        // Recursively check the plan and try to optimize it. We first check the children of the given operator
-        // to make sure an earlier select in the path is optimized first.
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context,
-                    checkApplicableOnly, chosenIndexes, analyzedAMs);
-            if (selectFoundAndOptimizationApplied) {
-                return true;
-            }
-        }
-
         // Traverse the plan until we find a SELECT operator.
         if (isSelectOp) {
             // Restore the information from this operator since it might have been be set to null
@@ -647,6 +637,16 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             selectRef = null;
             selectOp = null;
             afterSelectRefs.add(opRef);
+        }
+
+        // Recursively check the plan and try to optimize it. We first check the current operator
+        // and then recursively check the children
+        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
+            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context,
+                    checkApplicableOnly, chosenIndexes, analyzedAMs);
+            if (selectFoundAndOptimizationApplied) {
+                return true;
+            }
         }
 
         // Cleans the path after SELECT operator by removing the current operator in the list.
