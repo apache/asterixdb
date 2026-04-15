@@ -1,0 +1,50 @@
+distribute result [$$66]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$66])
+    -- STREAM_PROJECT  |LOCAL|
+      assign [$$66] <- [{"$1": $$71}]
+      -- ASSIGN  |LOCAL|
+        aggregate [$$71] <- [agg-sql-sum($$74)]
+        -- AGGREGATE  |LOCAL|
+          aggregate [$$74] <- [agg-sql-count(1)]
+          -- AGGREGATE  |LOCAL|
+            limit 1
+            -- STREAM_LIMIT  |UNPARTITIONED|
+              project ([])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- SORT_MERGE_EXCHANGE [$$68(ASC) ]  |PARTITIONED|
+                  limit 1
+                  -- STREAM_LIMIT  |PARTITIONED|
+                    project ([$$68])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      select (eq($$ds3.getField("field1"), "f150"))
+                      -- STREAM_SELECT  |PARTITIONED|
+                        project ([$$68, $$ds3])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            unnest-map [$$68, $$ds3] <- index-search("ds3", 0, "test", "ds3", true, true, 1, $$69, 1, $$69, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$69)
+                                -- STABLE_SORT [$$69(ASC)]  |PARTITIONED|
+                                  exchange
+                                  -- HASH_PARTITION_EXCHANGE [$$69]  |PARTITIONED|
+                                    project ([$$69])
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      assign [$$69] <- [int64($$ds4.getField("sk_id"))]
+                                      -- ASSIGN  |PARTITIONED|
+                                        project ([$$ds4])
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            data-scan []<-[$$67, $$ds4] <- test.ds4
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source
+                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

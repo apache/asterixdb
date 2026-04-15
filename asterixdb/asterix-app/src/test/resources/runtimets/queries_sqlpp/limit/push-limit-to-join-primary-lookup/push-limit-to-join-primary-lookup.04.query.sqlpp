@@ -16,25 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Description: Tests that LIMIT is pushed down to index-search in indexnl join
+ * Description: Tests that LIMIT is NOT pushed down to index-search in indexnl join when there are other predicates that
+ * cannot _currently_ be evaluated at the same time as when the LIMIT is evaluated at the index-search level.
+ * (i.e., the predicate on ds3.field1 in this test cannot be evaluated at the index-search). In other words, LIMIT can't
+ * be pushed down alone without the complete WHERE condition.
  */
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
-
-CREATE TYPE openType AS OPEN {
-  id:string
-};
-
-CREATE DATASET ds1(openType) PRIMARY KEY id;
-CREATE DATASET ds2(openType) PRIMARY KEY id;
-
-CREATE TYPE openType2 AS OPEN {
-  id:int
-};
-
-CREATE DATASET ds3(openType2) PRIMARY KEY id;
-CREATE DATASET ds4(openType2) PRIMARY KEY id;
+SELECT COUNT(*) FROM (
+SELECT *
+FROM ds4 AS ds4 JOIN ds3 AS ds3 ON int(ds4.sk_id) /*+ indexnl */ = ds3.id
+WHERE ds3.field1 = "f150"
+LIMIT 1) AS sub;
