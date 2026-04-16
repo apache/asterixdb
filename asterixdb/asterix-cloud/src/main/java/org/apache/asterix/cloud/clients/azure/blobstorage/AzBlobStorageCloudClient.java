@@ -82,12 +82,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
 public class AzBlobStorageCloudClient implements ICloudClient {
 
@@ -398,41 +396,41 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     }
 
     private static BlobServiceClient buildClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config);
+        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config, false);
         return blobServiceClientBuilder.buildClient();
     }
 
     private static BlobServiceAsyncClient buildAsyncClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config);
+        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config, true);
         return blobServiceClientBuilder.buildAsyncClient();
     }
 
-    private static BlobServiceClientBuilder getBlobServiceClientBuilder(AzBlobStorageClientConfig config) {
+    private static BlobServiceClientBuilder getBlobServiceClientBuilder(AzBlobStorageClientConfig config,
+            boolean async) {
         BlobServiceClientBuilder blobServiceClientBuilder = new BlobServiceClientBuilder();
         blobServiceClientBuilder.endpoint(getEndpoint(config));
         blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
         configCredentialsToAzClient(blobServiceClientBuilder, config);
 
-        // Disable SSL verification if the config property is set
+        ConnectionProvider.Builder builder = ConnectionProvider.builder("azblob-client-" + (async ? "async" : "sync"))
+                .maxConnections(config.getRequestsMaxHttpConnections())
+                .pendingAcquireMaxCount(config.getRequestsMaxPendingHttpConnections());
+        if (config.getMaxIdleSeconds() > 0) {
+            builder.maxIdleTime(Duration.ofSeconds(config.getMaxIdleSeconds()));
+        }
+        if (config.getMaxLifetimeSeconds() > 0) {
+            builder.maxLifeTime(Duration.ofSeconds(config.getMaxLifetimeSeconds()));
+        }
+        if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
+            builder.pendingAcquireTimeout(Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
+        }
+        ConnectionProvider connectionProvider = builder.build();
+
+        HttpClient httpClient = HttpClient.create(connectionProvider);
         if (config.isStorageDisableSSLVerify()) {
-            try {
-                // Create SSL context that trusts all certificates
-                SslContext sslContext =
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-
-                // Create a base Reactor Netty HttpClient with SSL verification disabled
-                HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
-
-                // Configure the Azure HTTP client with the base client
-                blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to disable SSL verification", e);
-            }
+            httpClient = disableSslVerify(httpClient);
         }
-        boolean disableSslVerify = config.isStorageDisableSSLVerify();
-        if (disableSslVerify) {
-            disableSslVerify(blobServiceClientBuilder);
-        }
+        blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
 
         return blobServiceClientBuilder;
     }

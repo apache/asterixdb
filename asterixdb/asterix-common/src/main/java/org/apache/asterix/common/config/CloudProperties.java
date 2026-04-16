@@ -44,9 +44,14 @@ import org.apache.hyracks.util.StorageUtil;
 
 public class CloudProperties extends AbstractProperties implements ICloudProperties {
 
-    public static final int MAX_HTTP_CONNECTIONS = 1000;
-    public static final int MAX_PENDING_HTTP_CONNECTIONS = 10000;
-    public static final int HTTP_CONNECTION_ACQUIRE_TIMEOUT = 120;
+    // TODO(mblow): these should not be being used for external datasets- extract separate properties
+    //              for these and make these defaults private to this class
+    public static final int MAX_HTTP_CONNECTIONS_DEFAULT = 1000;
+    public static final int MAX_PENDING_HTTP_CONNECTIONS_DEFAULT = 10000;
+    public static final int HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT = 120;
+    public static final int HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT = 120;
+    // TODO(mblow): this seems way too conservative, we should consider reducing this in a future release
+    public static final int HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT = (int) TimeUnit.HOURS.toSeconds(1);
 
     public CloudProperties(PropertiesAccessor accessor) {
         super(accessor);
@@ -77,9 +82,13 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
-        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_HTTP_CONNECTIONS),
-        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_PENDING_HTTP_CONNECTIONS),
-        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, HTTP_CONNECTION_ACQUIRE_TIMEOUT),
+        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_HTTP_CONNECTIONS_DEFAULT),
+        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_PENDING_HTTP_CONNECTIONS_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS(NONNEGATIVE_INTEGER, HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS(
+                NONNEGATIVE_INTEGER,
+                HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
         CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),
@@ -129,6 +138,8 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
                 case CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS:
                 case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS:
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS:
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                 case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
@@ -200,6 +211,10 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                     return "The maximum number of HTTP connections allowed to wait for a connection per node";
                 case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
                     return "The waiting time (in seconds) to acquire an HTTP connection before failing the request";
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS:
+                    return "The time (in seconds) after which an idle cloud connection will be closed. (0 == unlimited idle)";
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS:
+                    return "The time (in seconds) after which an cloud connection will no longer be reused. (0 == unlimited lifetime)";
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                     return "Indicates whether or not to force path style when accessing the cloud storage";
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
@@ -332,6 +347,16 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
 
     public int getRequestsHttpConnectionAcquireTimeout() {
         return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT);
+    }
+
+    @Override
+    public int getRequestsHttpConnectionMaxIdleSeconds() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS);
+    }
+
+    @Override
+    public int getRequestsHttpConnectionMaxLifetimeSeconds() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS);
     }
 
     public boolean isStorageForcePathStyle() {

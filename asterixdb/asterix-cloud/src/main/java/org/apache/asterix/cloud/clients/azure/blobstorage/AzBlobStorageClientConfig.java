@@ -51,19 +51,26 @@ public class AzBlobStorageClientConfig {
     private final int requestsMaxPendingHttpConnections;
     private final int requestsHttpConnectionAcquireTimeout;
     private final AccessTier accessTier;
+    private final int maxIdleSeconds;
+    private final int maxLifetimeSeconds;
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, int writeBufferSize) {
+        // TODO(mblow): using the same values as our defaults for blob storage seems sus, refactor to configurable and
+        //              and use reasonable defaults
         this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false,
-                null, CloudProperties.MAX_HTTP_CONNECTIONS, CloudProperties.MAX_PENDING_HTTP_CONNECTIONS,
-                CloudProperties.HTTP_CONNECTION_ACQUIRE_TIMEOUT);
+                null, CloudProperties.MAX_HTTP_CONNECTIONS_DEFAULT,
+                CloudProperties.MAX_PENDING_HTTP_CONNECTIONS_DEFAULT,
+                CloudProperties.HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT,
+                CloudProperties.HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT,
+                CloudProperties.HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT);
     }
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
             int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify, AccessTier accessTier,
             int requestsMaxHttpConnections, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout) {
+            int requestsHttpConnectionAcquireTimeout, int maxIdleSeconds, int maxLifetimeSeconds) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -80,6 +87,8 @@ public class AzBlobStorageClientConfig {
                 getRequestsMaxPendingHttpConnections(requestsMaxPendingHttpConnections);
         this.requestsHttpConnectionAcquireTimeout = requestsHttpConnectionAcquireTimeout;
         this.accessTier = accessTier;
+        this.maxIdleSeconds = maxIdleSeconds;
+        this.maxLifetimeSeconds = maxLifetimeSeconds;
     }
 
     public static AzBlobStorageClientConfig of(ICloudProperties cloudProperties) {
@@ -90,7 +99,9 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
                 cloudProperties.isStorageDisableSSLVerify(), INTERNAL_STORAGE_ACCESS_TIER,
                 cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.getRequestsMaxPendingHttpConnections(),
-                cloudProperties.getRequestsHttpConnectionAcquireTimeout());
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout(),
+                cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds());
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -178,5 +189,13 @@ public class AzBlobStorageClientConfig {
             throw new IllegalArgumentException("requestsMaxPendingHttpConnections must be greater than 0");
         }
         return requestsMaxPendingHttpConnections;
+    }
+
+    public int getMaxIdleSeconds() {
+        return maxIdleSeconds;
+    }
+
+    public int getMaxLifetimeSeconds() {
+        return maxLifetimeSeconds;
     }
 }
