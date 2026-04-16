@@ -263,6 +263,8 @@
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>IllegalArgumentException: Pathname /playground/copy-to-result/parquet:errorchecks25 from /playground/copy-to-result/parquet:errorchecks25 is not a valid DFS filename.</expected-error>
+        <expected-error>ASX0049: Parameter(s) input-format must be specified (in line 23, at column 1)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

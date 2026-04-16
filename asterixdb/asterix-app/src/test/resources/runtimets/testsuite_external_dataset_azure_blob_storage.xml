@@ -247,6 +247,7 @@
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX1108: External source error. Invalid URI abfss://playground</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
