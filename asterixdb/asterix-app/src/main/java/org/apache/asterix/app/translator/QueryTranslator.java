@@ -2474,7 +2474,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doTruncateDataset(String databaseName, DataverseName dataverseName, String datasetName,
+    protected boolean doTruncateDataset(String databaseName, DataverseName dataverseName, String datasetName,
             MetadataProvider metadataProvider, boolean ifExists, SourceLocation sourceLoc) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2491,7 +2491,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase())));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
                             .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
@@ -2501,7 +2501,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (ds == null) {
                 if (ifExists) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                             MetadataUtil.dataverseName(databaseName, dataverseName,
@@ -2519,6 +2519,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             DatasetUtil.truncate(metadataProvider, ds);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
         } catch (Exception e) {
             LOGGER.error("failed to truncate collection {}",
                     new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName), e);
@@ -5454,11 +5455,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
+        lockUtil.compactBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, datasetName);
+        try {
+            doCompactStatement(metadataProvider, hcc, databaseName, dataverseName, datasetName, sourceLoc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected boolean doCompactStatement(MetadataProvider metadataProvider, IHyracksClientConnection hcc,
+            String databaseName, DataverseName dataverseName, String datasetName, SourceLocation sourceLoc)
+            throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<JobSpecification> jobsToExecute = new ArrayList<>();
-        lockUtil.compactBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, datasetName);
         try {
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
@@ -5493,13 +5504,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec);
             }
+            return true;
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
             throw e;
-        } finally {
-            metadataProvider.getLocks().unlock();
         }
     }
 
