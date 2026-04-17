@@ -46,6 +46,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.parquet.filter2.predicate.FilterApi;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
@@ -74,14 +75,28 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         return parquetFilterPredicate;
     }
 
-    private FilterPredicate createComparisonExpression(ILogicalExpression columnName, ILogicalExpression constValue,
+    private FilterPredicate createComparisonExpression(ILogicalExpression arg1, ILogicalExpression arg2,
             FunctionIdentifier fid) throws AlgebricksException {
-        ConstantExpression constExpr = (ConstantExpression) constValue;
+        ILogicalExpression columnName;
+        ConstantExpression constExpr;
+        if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+            constExpr = (ConstantExpression) arg1;
+            columnName = arg2;
+        } else if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+            constExpr = (ConstantExpression) arg2;
+            columnName = arg1;
+        } else {
+            return null;
+        }
+
         if (constExpr.getValue().isNull() || constExpr.getValue().isMissing()) {
-            throw new RuntimeException("Unsupported literal type: " + constExpr.getValue());
+            return null;
         }
         AsterixConstantValue constantValue = (AsterixConstantValue) constExpr.getValue();
         String fieldName = createColumnExpression(columnName);
+        if (fieldName == null) {
+            return null;
+        }
         switch (constantValue.getObject().getType().getTypeTag()) {
             case STRING:
                 return createComparisionFunction(FilterApi.binaryColumn(fieldName),
@@ -114,7 +129,7 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
                 return createComparisionFunction(FilterApi.longColumn(fieldName),
                         TimeUnit.MILLISECONDS.toMicros(millis), fid);
             default:
-                throw new RuntimeException("Unsupported literal type: " + constantValue.getObject().getType());
+                return null;
         }
     }
 
@@ -125,20 +140,33 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
 
     private FilterPredicate createFilterExpression(ILogicalExpression expr) throws AlgebricksException {
         if (expr == null || expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            throw new RuntimeException("Unsupported expression: " + expr);
+            LOGGER.info("Unsupported expression for row group filter: "
+                    + LogRedactionUtil.userData(expr == null ? "NULL" : expr.toString()));
+            return null;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         IFunctionDescriptor fd = resolveFunction(funcExpr);
         FunctionIdentifier fid = fd.getIdentifier();
         if (funcExpr.getArguments().size() != 2
                 && !(fid.equals(AlgebricksBuiltinFunctions.AND) || fid.equals(AlgebricksBuiltinFunctions.OR))) {
-            throw new RuntimeException("Unsupported function: " + funcExpr);
+            LOGGER.info("Unsupported function for row group filter: Unsupported function: "
+                    + LogRedactionUtil.userData(expr.toString()));
+            return null;
         }
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
         if (fid.equals(AlgebricksBuiltinFunctions.AND) || fid.equals(AlgebricksBuiltinFunctions.OR)) {
-            return createAndOrPredicate(fid, args, 0);
+            FilterPredicate filterPredicate = createAndOrPredicate(fid, args, 0, args.size());
+            if (filterPredicate == null) {
+                LOGGER.info("Unable to construct row group filter with OR/AND expression");
+            }
+            return filterPredicate;
         } else {
-            return createComparisonExpression(args.get(0).getValue(), args.get(1).getValue(), fid);
+            FilterPredicate filterPredicate =
+                    createComparisonExpression(args.get(0).getValue(), args.get(1).getValue(), fid);
+            if (filterPredicate == null) {
+                LOGGER.info("Unable to construct row group filter");
+            }
+            return filterPredicate;
         }
     }
 
@@ -155,14 +183,14 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         } else if (fid.equals(AlgebricksBuiltinFunctions.LT)) {
             return FilterApi.lt(column, value);
         } else {
-            throw new RuntimeException("Unsupported function: " + fid);
+            return null;
         }
     }
 
     protected String createColumnExpression(ILogicalExpression expression) {
         ARecordType path = filterPaths.get(expression);
         if (path.getFieldNames().length != 1) {
-            throw new RuntimeException("Unsupported column expression: " + expression);
+            return null;
         } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.OBJECT) {
             // The field could be a nested field
             List<String> fieldList = new ArrayList<>();
@@ -171,13 +199,13 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
             return path.getFieldNames()[0];
         } else {
-            throw new RuntimeException("Unsupported column expression: " + expression);
+            return null;
         }
     }
 
     private List<String> createPathExpression(ARecordType path, List<String> fieldList) {
         if (path.getFieldNames().length != 1) {
-            throw new RuntimeException("Error creating column expression");
+            return null;
         } else {
             fieldList.add(path.getFieldNames()[0]);
         }
@@ -186,29 +214,57 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
             return fieldList;
         } else {
-            throw new RuntimeException("Error creating column expression");
+            return null;
         }
     }
 
     // Converts or(pred1, pred2, pred3) to or(pred1, or(pred2, pred3))
     private FilterPredicate createAndOrPredicate(FunctionIdentifier function, List<Mutable<ILogicalExpression>> args,
-            int index) throws AlgebricksException {
-        if (index == args.size() - 2) {
-            if (function.equals(AlgebricksBuiltinFunctions.AND)) {
-                return FilterApi.and(createFilterExpression(args.get(0).getValue()),
-                        createFilterExpression(args.get(1).getValue()));
-            } else {
-                return FilterApi.or(createFilterExpression(args.get(0).getValue()),
-                        createFilterExpression(args.get(1).getValue()));
-            }
+            int leftInclusive, int rightExclusive) throws AlgebricksException {
+        if (rightExclusive - leftInclusive == 1) {
+            return createLeafFilterPredicate(args.get(leftInclusive));
         } else {
-            if (function.equals(AlgebricksBuiltinFunctions.AND)) {
-                return FilterApi.and(createFilterExpression(args.get(index).getValue()),
-                        createAndOrPredicate(function, args, index + 1));
+            FilterPredicate left, right;
+            if (rightExclusive - leftInclusive == 2) {
+                left = createLeafFilterPredicate(args.get(leftInclusive));
+                right = createLeafFilterPredicate(args.get(leftInclusive + 1));
             } else {
-                return FilterApi.or(createFilterExpression(args.get(index).getValue()),
-                        createAndOrPredicate(function, args, index + 1));
+                int middle = (leftInclusive + rightExclusive) / 2;
+                left = createAndOrPredicate(function, args, leftInclusive, middle);
+                right = createAndOrPredicate(function, args, middle, rightExclusive);
             }
+
+            if (function.equals(AlgebricksBuiltinFunctions.AND)) {
+                if (left == null && right == null) {
+                    return null;
+                } else if (left == null) {
+                    return right;
+                } else if (right == null) {
+                    return left;
+                } else {
+                    return FilterApi.and(left, right);
+                }
+
+            } else {
+                if (left == null || right == null) {
+                    return null;
+                }
+                return FilterApi.or(left, right);
+            }
+        }
+    }
+
+    private FilterPredicate createLeafFilterPredicate(Mutable<ILogicalExpression> expression)
+            throws AlgebricksException {
+        if (expression.get().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expression.get();
+            if (functionCall.getArguments().size() != 2) {
+                return null;
+            }
+            return createComparisonExpression(functionCall.getArguments().get(0).get(),
+                    functionCall.getArguments().get(1).get(), functionCall.getFunctionIdentifier());
+        } else {
+            return null;
         }
     }
 }
