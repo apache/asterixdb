@@ -195,9 +195,10 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
-        ICloudProperties cloudProperties = appCtx.getCloudProperties();
+
         S3ChecksumBehavior checksumBehavior;
-        if (cloudProperties != null) {
+        if (appCtx != null && appCtx.getCloudProperties() != null) {
+            ICloudProperties cloudProperties = appCtx.getCloudProperties();
             checksumBehavior = cloudProperties.getS3ChecksumBehavior();
         } else {
             // No cloud properties (external data context): default based on whether a custom endpoint is in use

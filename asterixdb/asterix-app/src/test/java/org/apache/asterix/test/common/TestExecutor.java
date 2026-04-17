@@ -102,6 +102,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
@@ -112,6 +113,7 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.asterix.test.iceberg.IcebergTest;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -2472,6 +2474,10 @@ public class TestExecutor {
         str = str.replace(TENANT_ID_PLACEHOLDER, TENANT_ID_DEFAULT);
         str = replaceExternalEndpoint(str);
 
+        str = str.replace("%NESSIE_SERVER_URI%", IcebergTest.NESSIE_URI);
+        if (LocalCloudUtilAdobeMock.DOCKER_ADOBE_S3_MOCK_URI != null) {
+            str = str.replace("%DOCKER_S3_CONTAINER%", LocalCloudUtilAdobeMock.DOCKER_ADOBE_S3_MOCK_URI);
+        }
         return str;
     }
 

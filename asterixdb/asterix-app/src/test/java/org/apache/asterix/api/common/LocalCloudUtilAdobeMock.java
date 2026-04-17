@@ -19,6 +19,7 @@
 package org.apache.asterix.api.common;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -54,12 +55,14 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 public class LocalCloudUtilAdobeMock {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String S3MOCK_CONTAINER_NAME = "adobe-s3-mock";
 
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
     public static final String S3MOCK_VERSION_TAG = "4.7.0";
     public static final String PLAYGROUND_BUCKET = "playground";
     public static final String CLOUD_URL_KEY = "cloudUrl";
     private static S3MockContainer s3Mock;
+    public static String DOCKER_ADOBE_S3_MOCK_URI;
 
     private LocalCloudUtilAdobeMock() {
         throw new AssertionError("Do not instantiate");
@@ -86,7 +89,8 @@ public class LocalCloudUtilAdobeMock {
         }
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
-        s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart);
+        s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart)
+                .withCreateContainerCmdModifier(cmd -> cmd.withName(S3MOCK_CONTAINER_NAME));
         if (!cleanStart) {
             Path s3MockDataDir = Path.of("target", "s3mock");
             boolean existingData = s3MockDataDir.toFile().exists();
@@ -99,6 +103,7 @@ public class LocalCloudUtilAdobeMock {
         }
         s3Mock.start();
         LOGGER.info("S3 mock server started successfully");
+        DOCKER_ADOBE_S3_MOCK_URI = MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort();
 
         S3ClientBuilder builder = S3Client.builder();
         URI endpoint = URI.create(s3Mock.getHttpEndpoint()); // endpoint pointing to S3 mock server

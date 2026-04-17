@@ -174,7 +174,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
                 return;
             case TIMESTAMP:
             case TIMESTAMP_NANO:
-                serializeTimestamp(value, out);
+                serializeTimestamp(fieldType, value, out);
                 return;
             case GEOMETRY:
             case GEOGRAPHY:
@@ -212,21 +212,8 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             NestedField field = schema.fields().get(i);
             String fieldName = field.name();
             Type fieldType = field.type();
-            Object sourceValue = structLike.get(i, Object.class);
-            ATypeTag typeTag = getTypeTag(fieldType, sourceValue == null, parserContext);
-            IValueReference value;
-            if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
-                value = valueEmbedder.getEmbeddedValue();
-            } else {
-                valueBuffer.reset();
-                parseValue(fieldType, sourceValue, valueBuffer.getDataOutput());
-                value = valueBuffer;
-            }
-
-            if (value != null) {
-                // Ignore missing values
-                objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), value);
-            }
+            Object fieldValue = structLike.get(i, Object.class);
+            parseValueAndAddObjectField(valueBuffer, objectBuilder, fieldType, fieldName, fieldValue);
         }
 
         embedMissingValues(objectBuilder, parserContext, valueEmbedder);
@@ -236,31 +223,46 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     private void parseMap(Types.MapType mapSchema, Map<?, ?> map, DataOutput out) throws IOException {
-        final IMutableValueStorage item = parserContext.enterCollection();
-        final IMutableValueStorage valueBuffer = parserContext.enterObject();
+        IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        IAsterixListBuilder listBuilder =
-                parserContext.getCollectionBuilder(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
+        valueEmbedder.enterObject();
 
         Type keyType = mapSchema.keyType();
         Type valueType = mapSchema.valueType();
 
-        for (Map.Entry<?, ?> entry : map.entrySet()) {
-            objectBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-            valueBuffer.reset();
-            parseValue(keyType, entry.getKey(), valueBuffer.getDataOutput());
-            objectBuilder.addField(parserContext.getSerializedFieldName("key"), valueBuffer);
-            valueBuffer.reset();
-            parseValue(valueType, entry.getValue(), valueBuffer.getDataOutput());
-            objectBuilder.addField(parserContext.getSerializedFieldName("value"), valueBuffer);
-            item.reset();
-            objectBuilder.write(item.getDataOutput(), true);
-            listBuilder.addItem(item);
+        // TODO: we can't support non-string keys since we map MAP-TYPE to OBJECT-TYPE in AsterixDB
+        if (keyType != Types.StringType.get()) {
+            throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Iceberg Parser", "MAP with non-string keys");
         }
 
-        listBuilder.write(out, true);
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String fieldName = (String) entry.getKey();
+            Object fieldValue = entry.getValue();
+            parseValueAndAddObjectField(valueBuffer, objectBuilder, valueType, fieldName, fieldValue);
+        }
+
+        embedMissingValues(objectBuilder, parserContext, valueEmbedder);
+        objectBuilder.write(out, true);
+        valueEmbedder.exitObject();
         parserContext.exitObject(valueBuffer, null, objectBuilder);
-        parserContext.exitCollection(item, listBuilder);
+    }
+
+    private void parseValueAndAddObjectField(IMutableValueStorage valueBuffer, IARecordBuilder objectBuilder,
+            Type valueType, String fieldName, Object fieldValue) throws IOException {
+        ATypeTag typeTag = getTypeTag(valueType, fieldValue == null, parserContext);
+        IValueReference value;
+        if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
+            value = valueEmbedder.getEmbeddedValue();
+        } else {
+            valueBuffer.reset();
+            parseValue(valueType, fieldValue, valueBuffer.getDataOutput());
+            value = valueBuffer;
+        }
+
+        if (value != null) {
+            // Ignore missing values
+            objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), value);
+        }
     }
 
     private void serializeInteger(Object value, DataOutput out) throws HyracksDataException {
@@ -276,9 +278,9 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     private void serializeFloat(Object value, DataOutput out) throws HyracksDataException {
-        float floatValue = (Float) value;
-        aDouble.setValue(floatValue);
-        doubleSerde.serialize(aDouble, out);
+        Float floatValue = (Float) value;
+        aFloat.setValue(floatValue);
+        floatSerde.serialize(aFloat, out);
     }
 
     private void serializeDouble(Object value, DataOutput out) throws HyracksDataException {
@@ -337,21 +339,31 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    public void serializeTimestamp(Object value, DataOutput output) throws HyracksDataException {
-        long timeStampInMillis;
-        if (value instanceof OffsetDateTime) {
-            // Timezone aware: Iceberg returns OffsetDateTime
-            timeStampInMillis = ((OffsetDateTime) value).toInstant().toEpochMilli();
-        } else {
-            // No timezone: Iceberg returns LocalDateTime
-            LocalDateTime localDateTime = (LocalDateTime) value;
-            ZoneId zoneId = parserContext.getTimeZoneId();
-            timeStampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+    public void serializeTimestamp(Type type, Object value, DataOutput output) throws HyracksDataException {
+        long timestampInMillis;
+        switch (value) {
+            case OffsetDateTime offsetDateTime ->
+                    timestampInMillis = offsetDateTime.toInstant().toEpochMilli();
+
+            case LocalDateTime localDateTime -> {
+                ZoneId zoneId = parserContext.getTimeZoneId();
+                timestampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+            }
+
+            case null, default -> {
+                throw RuntimeDataException.create(
+                        ErrorCode.EXTERNAL_SOURCE_ERROR,
+                        value == null
+                                ? "unexpected null value for field type (" + type + ")"
+                                : "unexpected value type (" + value.getClass() + ") for field type (" + type + ")");
+            }
         }
+
         if (parserContext.isTimestampAsLong()) {
-            serializeLong(timeStampInMillis, output);
+            serializeLong(timestampInMillis, output);
         } else {
-            parserContext.serializeDateTime(timeStampInMillis, output);
+            aDateTime.setValue(timestampInMillis);
+            datetimeSerde.serialize(aDateTime, output);
         }
     }
 
@@ -376,7 +388,8 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         return switch (type.typeId()) {
             case BOOLEAN -> ATypeTag.BOOLEAN;
             case INTEGER, LONG -> ATypeTag.BIGINT;
-            case FLOAT, DOUBLE -> ATypeTag.DOUBLE;
+            case FLOAT -> ATypeTag.FLOAT;
+            case DOUBLE -> ATypeTag.DOUBLE;
             case STRING -> ATypeTag.STRING;
             case UUID -> ATypeTag.UUID;
             case FIXED, BINARY -> ATypeTag.BINARY;
@@ -384,8 +397,8 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
                 ensureDecimalToDoubleEnabled(type, parserContext);
                 yield ATypeTag.DOUBLE;
             }
-            case STRUCT -> ATypeTag.OBJECT;
-            case LIST, MAP -> ATypeTag.ARRAY;
+            case STRUCT, MAP -> ATypeTag.OBJECT;
+            case LIST -> ATypeTag.ARRAY;
             case DATE -> {
                 if (parserContext.isDateAsInt()) {
                     yield ATypeTag.INTEGER;

@@ -18,48 +18,56 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
-  <test-group name="iceberg">
-    <test-case FilePath="iceberg/catalog/">
-      <compilation-unit name="all-supported-types">
-        <output-dir compare="Text">all-supported-types</output-dir>
+  <test-group name="data">
+    <test-case FilePath="iceberg">
+      <compilation-unit name="all-supported-catalog-types">
+        <output-dir compare="Text">all-supported-catalog-types</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/">
+    <test-case FilePath="iceberg">
       <compilation-unit name="check-catalog-record">
         <output-dir compare="Text">check-catalog-record</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg">
+      <compilation-unit name="all-data-types">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">all-data-types</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-catalog-type">
         <output-dir compare="Text">bad-catalog-type</output-dir>
         <expected-error>ASX1228: Unsupported catalog type: 'FakeIcebergCatalog'</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-source-type">
         <output-dir compare="Text">bad-source-type</output-dir>
         <expected-error>ASX1230: Unsupported Iceberg catalog source: 'FAKE_AWS_GLUE'</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="missing-source-type">
         <output-dir compare="Text">missing-source-type</output-dir>
         <expected-error>ASX0049: Parameter(s) catalogSource must be specified</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="catalog-already-exists">
         <output-dir compare="Text">catalog-already-exists</output-dir>
         <expected-error>ASX1226: A catalog with this name myGlueCatalog already exists</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="drop-does-not-exist">
         <output-dir compare="Text">drop-does-not-exist</output-dir>
         <expected-error>ASX1227: Cannot find catalog with name myDoesNotExistGlueCatalog</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="drop-has-dependent-collections">
         <output-dir compare="Text">drop-has-dependent-collections</output-dir>
         <expected-error>ASX1148: Cannot drop catalog myGlueCatalog being used by collection Default.Default.test</expected-error>
