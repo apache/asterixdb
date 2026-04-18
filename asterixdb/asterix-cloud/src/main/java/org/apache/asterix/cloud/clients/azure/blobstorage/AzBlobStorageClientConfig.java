@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.clients.azure.blobstorage;
 
+import static org.apache.hyracks.util.StringUtil.quoteNullableString;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,58 +27,57 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import com.azure.core.util.Configuration;
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.models.AccessTier;
 
 public class AzBlobStorageClientConfig {
+    private static final Logger LOGGER = LogManager.getLogger();
     // Ref: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch?tabs=microsoft-entra-id
     static final int MAX_CONCURRENT_REQUESTS = 20;
 
     private static final AccessTier INTERNAL_STORAGE_ACCESS_TIER = AccessTier.HOT;
-    private final int writeBufferSize;
-    private final String region;
     private final String endpoint;
+    private final String container;
     private final String prefix;
-
-    private final boolean anonymousAuth;
-    private final long profilerLogInterval;
-    private final String bucket;
+    private final AccessTier accessTier;
+    private final int writeBufferSize;
     private final long tokenAcquireTimeout;
     private final int writeMaxRequestsPerSeconds;
     private final int readMaxRequestsPerSeconds;
+    private final long profilerLogInterval;
     private final boolean storageDisableSSLVerify;
     private final int requestsMaxHttpConnections;
     private final int requestsMaxPendingHttpConnections;
     private final int requestsHttpConnectionAcquireTimeout;
-    private final AccessTier accessTier;
     private final int maxIdleSeconds;
     private final int maxLifetimeSeconds;
+    private final String clientId;
 
-    public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, String bucket, int writeBufferSize) {
+    public AzBlobStorageClientConfig(String endpoint, String prefix, long profilerLogInterval, String container,
+            int writeBufferSize) {
         // TODO(mblow): using the same values as our defaults for blob storage seems sus, refactor to configurable and
         //              and use reasonable defaults
-        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize, false,
-                null, CloudProperties.MAX_HTTP_CONNECTIONS_DEFAULT,
-                CloudProperties.MAX_PENDING_HTTP_CONNECTIONS_DEFAULT,
+        this(endpoint, container, prefix, profilerLogInterval, 1, 0, 0, writeBufferSize, false, null,
+                CloudProperties.MAX_HTTP_CONNECTIONS_DEFAULT, CloudProperties.MAX_PENDING_HTTP_CONNECTIONS_DEFAULT,
                 CloudProperties.HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT,
                 CloudProperties.HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT,
-                CloudProperties.HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT);
+                CloudProperties.HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT, null);
     }
 
-    public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
-            int readMaxRequestsPerSeconds, int writeBufferSize, boolean storageDisableSSLVerify, AccessTier accessTier,
-            int requestsMaxHttpConnections, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout, int maxIdleSeconds, int maxLifetimeSeconds) {
-        this.region = Objects.requireNonNull(region, "region");
+    public AzBlobStorageClientConfig(String endpoint, String container, String prefix, long profilerLogInterval,
+            long tokenAcquireTimeout, int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds,
+            int writeBufferSize, boolean storageDisableSSLVerify, AccessTier accessTier, int requestsMaxHttpConnections,
+            int requestsMaxPendingHttpConnections, int requestsHttpConnectionAcquireTimeout, int maxIdleSeconds,
+            int maxLifetimeSeconds, String clientId) {
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
-        this.anonymousAuth = anonymousAuth;
         this.profilerLogInterval = profilerLogInterval;
-        this.bucket = bucket;
+        this.container = container;
         this.tokenAcquireTimeout = tokenAcquireTimeout;
         this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
@@ -89,19 +90,21 @@ public class AzBlobStorageClientConfig {
         this.accessTier = accessTier;
         this.maxIdleSeconds = maxIdleSeconds;
         this.maxLifetimeSeconds = maxLifetimeSeconds;
+        this.clientId = clientId;
     }
 
     public static AzBlobStorageClientConfig of(ICloudProperties cloudProperties) {
-        return new AzBlobStorageClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
-                cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
-                cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),
+        // TODO(mblow): the client id should be coming in by way fo the cloud properties
+        String clientId = System.getenv(Configuration.PROPERTY_AZURE_CLIENT_ID);
+        return new AzBlobStorageClientConfig(cloudProperties.getStorageEndpoint(), cloudProperties.getStorageBucket(),
+                cloudProperties.getStoragePrefix(), cloudProperties.getProfilerLogInterval(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
                 cloudProperties.isStorageDisableSSLVerify(), INTERNAL_STORAGE_ACCESS_TIER,
                 cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.getRequestsMaxPendingHttpConnections(),
                 cloudProperties.getRequestsHttpConnectionAcquireTimeout(),
                 cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
-                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds());
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(), clientId);
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -114,14 +117,8 @@ public class AzBlobStorageClientConfig {
         // Dummy values;
         String region = "";
         String prefix = "";
-        boolean anonymousAuth = false;
 
-        return new AzBlobStorageClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, bucket,
-                writeBufferSize);
-    }
-
-    public String getRegion() {
-        return region;
+        return new AzBlobStorageClientConfig(endPoint, prefix, profilerLogInterval, bucket, writeBufferSize);
     }
 
     public String getEndpoint() {
@@ -132,16 +129,12 @@ public class AzBlobStorageClientConfig {
         return prefix;
     }
 
-    public String getBucket() {
-        return bucket;
+    public String getContainer() {
+        return container;
     }
 
     public long getProfilerLogInterval() {
         return profilerLogInterval;
-    }
-
-    public boolean isAnonymousAuth() {
-        return anonymousAuth;
     }
 
     public boolean isStorageDisableSSLVerify() {
@@ -149,7 +142,7 @@ public class AzBlobStorageClientConfig {
     }
 
     public DefaultAzureCredential createCredentialsProvider() {
-        return new DefaultAzureCredentialBuilder().build();
+        return new DefaultAzureCredentialBuilder().managedIdentityClientId(clientId).build();
     }
 
     public long getTokenAcquireTimeout() {
@@ -197,5 +190,24 @@ public class AzBlobStorageClientConfig {
 
     public int getMaxLifetimeSeconds() {
         return maxLifetimeSeconds;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    @Override
+    public String toString() {
+        return "AzBlobStorageClientConfig{" + "endpoint=" + quoteNullableString(endpoint) + ", " + "container="
+                + quoteNullableString(container) + ", " + "prefix=" + quoteNullableString(prefix) + ", " + "accessTier="
+                + accessTier + ", " + "writeBufferSize=" + writeBufferSize + ", " + "tokenAcquireTimeout="
+                + tokenAcquireTimeout + ", " + "writeMaxRequestsPerSeconds=" + writeMaxRequestsPerSeconds + ", "
+                + "readMaxRequestsPerSeconds=" + readMaxRequestsPerSeconds + ", " + "profilerLogInterval="
+                + profilerLogInterval + ", " + "storageDisableSSLVerify=" + storageDisableSSLVerify + ", "
+                + "requestsMaxHttpConnections=" + requestsMaxHttpConnections + ", "
+                + "requestsMaxPendingHttpConnections=" + requestsMaxPendingHttpConnections + ", "
+                + "requestsHttpConnectionAcquireTimeout=" + requestsHttpConnectionAcquireTimeout + ", "
+                + "maxIdleSeconds=" + maxIdleSeconds + ", " + "maxLifetimeSeconds=" + maxLifetimeSeconds + ", "
+                + "clientId=" + quoteNullableString(clientId) + '}';
     }
 }

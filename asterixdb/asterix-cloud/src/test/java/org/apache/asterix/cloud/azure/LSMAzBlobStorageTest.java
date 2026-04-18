@@ -116,8 +116,8 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         int writeBufferSize = StorageUtil.getIntSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
         URI blobStore = URI.create(blobServiceClient.getAccountUrl());
         String endpoint = blobStore.getScheme() + "://" + blobStore.getAuthority() + "/devstoreaccount1";
-        AzBlobStorageClientConfig config = new AzBlobStorageClientConfig(MOCK_SERVER_REGION, endpoint, "", false, 0,
-                PLAYGROUND_CONTAINER, 1, 0, 0, writeBufferSize, true, null, 1000, 10000, 120, 120, 0);
+        AzBlobStorageClientConfig config = new AzBlobStorageClientConfig(endpoint, PLAYGROUND_CONTAINER, "", 0, 1, 0, 0,
+                writeBufferSize, true, null, 1000, 10000, 120, 120, 0, null);
         CLOUD_CLIENT = new AzBlobStorageCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 

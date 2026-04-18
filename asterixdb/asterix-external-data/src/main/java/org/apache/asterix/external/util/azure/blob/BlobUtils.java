@@ -58,6 +58,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.azure.core.credential.AzureSasCredential;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
@@ -75,7 +76,6 @@ import com.azure.storage.common.policy.RequestRetryOptions;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import reactor.netty.http.client.HttpClient;
 
 public class BlobUtils {

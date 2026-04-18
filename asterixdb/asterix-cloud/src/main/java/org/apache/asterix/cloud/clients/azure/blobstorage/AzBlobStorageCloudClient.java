@@ -90,10 +90,6 @@ import reactor.netty.resources.ConnectionProvider;
 public class AzBlobStorageCloudClient implements ICloudClient {
 
     private static final String BUCKET_ROOT_PATH = "";
-    public static final String AZURITE_ENDPOINT = "http://127.0.0.1:15055/devstoreaccount1/";
-    private static final String AZURITE_ACCOUNT_NAME = "devstoreaccount1";
-    private static final String AZURITE_ACCOUNT_KEY =
-            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
     private final ICloudGuardian guardian;
     private final BlobContainerClient blobContainerClient;
     private final BlobContainerAsyncClient blobContainerAsyncClient;
@@ -108,8 +104,8 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
             BlobServiceAsyncClient asyncBlobServiceClient, ICloudGuardian guardian) {
-        this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getBucket());
-        this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getBucket());
+        this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getContainer());
+        this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getContainer());
         this.config = config;
         this.guardian = guardian;
         this.accessTier = config.getAccessTier();
@@ -121,6 +117,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             profiler = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
+        LOGGER.debug("Created Azure Cloud Client with config: {}", config);
     }
 
     @Override
@@ -442,17 +439,12 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
         if (storageAccount != null && storageKey != null) {
             builder.credential(new StorageSharedKeyCredential(storageAccount, storageKey));
-        } else if (config.isAnonymousAuth()) {
-            // TODO(mblow): this mapping anonymous auth -> Azurite default account (hack) should be removed ASAP
-            builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY));
         } else {
             builder.credential(config.createCredentialsProvider());
         }
     }
 
     private static String getEndpoint(AzBlobStorageClientConfig config) {
-        // TODO(mblow): this mapping anonymous auth -> Azurite default endpoint (hack) should be removed ASAP
-        return config.isAnonymousAuth() ? AZURITE_ENDPOINT + config.getBucket()
-                : config.getEndpoint() + "/" + config.getBucket();
+        return config.getEndpoint() + "/" + config.getContainer();
     }
 }
