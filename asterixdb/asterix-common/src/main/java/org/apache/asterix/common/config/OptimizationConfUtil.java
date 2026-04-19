@@ -101,6 +101,8 @@ public class OptimizationConfUtil {
         int maxVariableOccurrencesForInlining =
                 getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
         int maxExpressionTreeSize = getMaxExpressionTreeSize(compilerProperties, querySpecificConfig, sourceLoc);
+        int commonExpressionLimitSize =
+                getCommonExpressionLimitSize(compilerProperties, querySpecificConfig, sourceLoc);
         boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 compilerProperties.isOrderedFields());
 
@@ -134,6 +136,7 @@ public class OptimizationConfUtil {
         physOptConf.setMinWindowFrames(compilerProperties.getMinWindowMemoryFrames());
         physOptConf.setMaxVariableOccurrencesForInlining(maxVariableOccurrencesForInlining);
         physOptConf.setMaxExpressionTreeSize(maxExpressionTreeSize);
+        physOptConf.setCommonExpressionLimit(commonExpressionLimitSize);
         physOptConf.setOrderFields(orderFields);
 
         // We should have already validated the parameter names at this point...
@@ -261,6 +264,18 @@ public class OptimizationConfUtil {
             Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
         String valueInQuery =
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getMaxExpressionTreeSize()
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
+    private static int getCommonExpressionLimitSize(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery =
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY);
         try {
             return valueInQuery == null ? compilerProperties.getMaxExpressionTreeSize()
                     : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);

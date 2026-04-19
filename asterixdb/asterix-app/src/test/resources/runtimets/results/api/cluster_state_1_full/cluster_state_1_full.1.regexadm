@@ -20,6 +20,8 @@
     "cloud.max.write.requests.per.second" : 250,
     "cloud.profiler.log.interval" : 5,
     "cloud.requests.http.connection.acquire.timeout" : 120,
+    "cloud.requests.http.connection.max.idle.seconds" : 120,
+    "cloud.requests.http.connection.max.lifetime.seconds" : 3600,
     "cloud.requests.max.http.connections" : 1000,
     "cloud.requests.max.pending.http.connections" : 10000,
     "cloud.storage.allocation.percentage" : 0.8,

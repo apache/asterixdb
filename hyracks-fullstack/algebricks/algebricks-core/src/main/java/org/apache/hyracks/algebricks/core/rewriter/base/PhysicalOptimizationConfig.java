@@ -65,7 +65,7 @@ public class PhysicalOptimizationConfig {
     private static final String MIN_WINDOW_FRAMES = "MIN_WINDOW_FRAMES";
     private static final String MAX_VARIABLE_OCCURRENCES_INLINING = "MAX_VARIABLE_OCCURRENCES_INLINING";
     private static final String MAX_EXPRESSION_TREE_SIZE = "MAX_EXPRESSION_TREE_SIZE";
-    private static final String COMMON_EXPRESSION_LIMIT = "COMMON_EXPRESSION_LIMIT";
+    private static final String COMMON_EXPRESSION_LIMIT = "EXTRACT_COMMON_EXPRESSION_LIMIT";
 
     private static final String ORDER_FIELDS = "ORDERED_FIELDS";
 
@@ -417,12 +417,16 @@ public class PhysicalOptimizationConfig {
         return getInt(MAX_EXPRESSION_TREE_SIZE, AlgebricksConfig.MAX_EXPRESSION_TREE_SIZE_DEFAULT);
     }
 
+    public void setMaxExpressionTreeSize(int maxExpressionTreeSize) {
+        setInt(MAX_EXPRESSION_TREE_SIZE, maxExpressionTreeSize);
+    }
+
     public int getCommonExpressionLimit() {
         return getInt(COMMON_EXPRESSION_LIMIT, AlgebricksConfig.COMMON_EXPRESSION_LIMIT_DEFAULT);
     }
 
-    public void setMaxExpressionTreeSize(int maxExpressionTreeSize) {
-        setInt(MAX_EXPRESSION_TREE_SIZE, maxExpressionTreeSize);
+    public void setCommonExpressionLimit(int commonExpressionLimit) {
+        setInt(COMMON_EXPRESSION_LIMIT, commonExpressionLimit);
     }
 
     private void setInt(String property, int value) {
