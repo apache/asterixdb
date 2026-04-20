@@ -97,8 +97,8 @@ public class IcebergSnapshotUtils {
                     IcebergUtils.filterCatalogProperties(catalogAndCollectionProperties);
             Catalog icebergCatalog = IcebergUtils.initializeCatalog(catalogProperties, namespace, false);
 
-            Namespace actualNamespace = Namespace.of(namespace);
-            TableIdentifier tableIdentifier = TableIdentifier.of(actualNamespace, tableName);
+            Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
+            TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
             Table table = icebergCatalog.loadTable(tableIdentifier);
 
             Optional<Long> snapshotIdOptional = getSnapshotId(catalogAndCollectionProperties, table);

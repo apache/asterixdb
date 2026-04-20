@@ -167,6 +167,17 @@ public class IcebergUtils {
     }
 
     /**
+     * Parses a dot-separated namespace string into an Iceberg {@link Namespace}.
+     * For example, "namespace.subnamespace" returns Namespace.of("namespace", "subnamespace").
+     *
+     * @param namespace dot-separated namespace string
+     * @return Iceberg Namespace
+     */
+    public static Namespace parseNamespace(String namespace) {
+        return Namespace.of(namespace.split("\\."));
+    }
+
+    /**
      * Extracts and returns the iceberg catalog properties from the provided configuration
      * Also, prefixes the collection auths with ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL to avoid conflicts
      *
@@ -317,7 +328,7 @@ public class IcebergUtils {
 
     private static void validateNamespacePresence(SupportsNamespaces catalog, String namespace)
             throws CompilationException {
-        if (namespace != null && !catalog.namespaceExists(Namespace.of(namespace))) {
+        if (namespace != null && !catalog.namespaceExists(IcebergUtils.parseNamespace(namespace))) {
             throw CompilationException.create(ErrorCode.ICEBERG_NAMESPACE_DOES_NOT_EXIST, namespace);
         }
     }

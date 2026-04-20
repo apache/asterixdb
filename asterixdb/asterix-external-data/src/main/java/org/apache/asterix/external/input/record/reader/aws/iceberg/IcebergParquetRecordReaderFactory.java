@@ -134,7 +134,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
             catalogProperties = IcebergUtils.filterCatalogProperties(configuration);
             catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
-            TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(namespace), tableName);
+            Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
+            TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
             if (!catalog.tableExists(tableIdentifier)) {
                 throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
             }
