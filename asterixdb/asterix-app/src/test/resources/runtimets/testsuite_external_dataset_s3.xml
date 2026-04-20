@@ -210,6 +210,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-empty-schema">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">parquet-empty-schema</output-dir>
+        <expected-error>ASX1245: Parquet writer error: Cannot write a schema with an empty group: message asterix_schema {
+}</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="parquet-type-hierarchy">
         <placeholder name="adapter" value="S3" />
         <placeholder name="pathprefix" value="" />
