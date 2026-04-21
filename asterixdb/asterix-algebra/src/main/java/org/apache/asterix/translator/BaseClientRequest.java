@@ -129,8 +129,17 @@ public abstract class BaseClientRequest implements IClientRequest {
 
     private double getElapsedTimeInSecs() {
         // this is just an estimation as the request might have been received on a node with a different system time
+        return getElapsedTimeMillis() / 1000d;
+    }
+
+    public long getElapsedTimeMillis() {
+        // this is just an estimation as the request might have been received on a node with a different system time
         long runningTime = completionTime > 0 ? completionTime : System.currentTimeMillis();
-        return (runningTime - requestReference.getTime()) / 1000d;
+        return (runningTime - requestReference.getTime());
+    }
+
+    public long getRequestTimeMillis() {
+        return requestReference.getTime();
     }
 
     protected abstract void doCancel(ICcApplicationContext appCtx) throws HyracksDataException;

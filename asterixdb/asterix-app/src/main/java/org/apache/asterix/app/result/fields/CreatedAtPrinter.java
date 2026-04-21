@@ -27,16 +27,16 @@ import org.apache.asterix.common.api.IResponseFieldPrinter;
 public class CreatedAtPrinter implements IResponseFieldPrinter {
 
     public static final String FIELD_NAME = "createdAt";
-    private final long createdAt;
+    private final long createdAtMillis;
 
-    public CreatedAtPrinter(long createdAt) {
-        this.createdAt = createdAt;
+    public CreatedAtPrinter(long createdAtMillis) {
+        this.createdAtMillis = createdAtMillis;
     }
 
     @Override
     public void print(PrintWriter pw) {
         pw.append("\t\"").append(FIELD_NAME).append("\": \"")
-                .append(DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(createdAt))).append("\"");
+                .append(DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(createdAtMillis))).append("\"");
     }
 
     @Override

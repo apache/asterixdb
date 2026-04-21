@@ -30,21 +30,26 @@ public class ClientInfoResponseMessage implements INcAddressedMessage {
     private final long reqId;
     private final boolean validRequestId;
     // All time are in millis
-    private final long requestCreateTime;
+    private final long requestTime;
     private final long jobCreateTime;
+    private final long elapsedTime;
     private final long jobStartTime;
     private final long jobEndTime;
     private final long jobQueueWaitTime;
 
+    private final long compileTimeNanos;
+
     public ClientInfoResponseMessage(long reqId, boolean validRequestId) {
-        this(reqId, validRequestId, 0, 0, 0, 0, 0);
+        this(reqId, validRequestId, 0, 0, 0, 0, 0, 0, 0);
     }
 
-    public ClientInfoResponseMessage(long reqId, boolean validRequestId, long requestCreateTime, long jobCreateTime,
-            long jobStartTime, long jobEndTime, long jobQueueWaitTime) {
+    public ClientInfoResponseMessage(long reqId, boolean validRequestId, long requestTime, long compileTimeNanos,
+            long elapsedTime, long jobCreateTime, long jobStartTime, long jobEndTime, long jobQueueWaitTime) {
         this.reqId = reqId;
         this.validRequestId = validRequestId;
-        this.requestCreateTime = requestCreateTime;
+        this.requestTime = requestTime;
+        this.compileTimeNanos = compileTimeNanos;
+        this.elapsedTime = elapsedTime;
         this.jobStartTime = jobStartTime;
         this.jobCreateTime = jobCreateTime;
         this.jobEndTime = jobEndTime;
@@ -64,8 +69,16 @@ public class ClientInfoResponseMessage implements INcAddressedMessage {
         return validRequestId;
     }
 
-    public long getRequestCreateTime() {
-        return requestCreateTime;
+    public long getRequestTime() {
+        return requestTime;
+    }
+
+    public long getCompileTimeNanos() {
+        return compileTimeNanos;
+    }
+
+    public long getElapsedTime() {
+        return elapsedTime;
     }
 
     public long getJobCreateTime() {

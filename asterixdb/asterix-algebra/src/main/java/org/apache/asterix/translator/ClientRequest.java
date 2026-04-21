@@ -50,6 +50,7 @@ public class ClientRequest extends BaseClientRequest {
     protected final JobState jobState;
     protected volatile JobId jobId;
     private volatile String plan; // can be null
+    private volatile long compileTimeNanos;
 
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
@@ -106,6 +107,14 @@ public class ClientRequest extends BaseClientRequest {
 
     public long getCreationSystemTime() {
         return creationSystemTime;
+    }
+
+    public void setCompileTimeNanos(long compileTimeNanos) {
+        this.compileTimeNanos = compileTimeNanos;
+    }
+
+    public long getCompileTimeNanos() {
+        return compileTimeNanos;
     }
 
     @Override

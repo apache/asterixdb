@@ -125,17 +125,17 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         List<Entry> entries = new ArrayList<>();
 
         if (isSelected(Metrics.ELAPSED_TIME))
-            entries.add(
-                    new StringEntry(Metrics.ELAPSED_TIME, Duration.formatNanos(metrics.getElapsedTime(), useAscii)));
+            entries.add(new StringEntry(Metrics.ELAPSED_TIME,
+                    Duration.formatNanos(metrics.getElapsedTimeNanos(), useAscii)));
         if (isSelected(Metrics.EXECUTION_TIME))
             entries.add(new StringEntry(Metrics.EXECUTION_TIME,
-                    Duration.formatNanos(metrics.getExecutionTime(), useAscii)));
+                    Duration.formatNanos(metrics.getExecutionTimeNanos(), useAscii)));
         if (isSelected(Metrics.COMPILE_TIME))
-            entries.add(
-                    new StringEntry(Metrics.COMPILE_TIME, Duration.formatNanos(metrics.getCompileTime(), useAscii)));
+            entries.add(new StringEntry(Metrics.COMPILE_TIME,
+                    Duration.formatNanos(metrics.getCompileTimeNanos(), useAscii)));
         if (isSelected(Metrics.QUEUE_WAIT_TIME))
             entries.add(new StringEntry(Metrics.QUEUE_WAIT_TIME,
-                    Duration.formatNanos(metrics.getQueueWaitTime(), useAscii)));
+                    Duration.formatNanos(metrics.getQueueWaitTimeNanos(), useAscii)));
         if (isSelected(Metrics.RESULT_COUNT))
             entries.add(new LongEntry(Metrics.RESULT_COUNT, metrics.getResultCount()));
         if (isSelected(Metrics.RESULT_SIZE))

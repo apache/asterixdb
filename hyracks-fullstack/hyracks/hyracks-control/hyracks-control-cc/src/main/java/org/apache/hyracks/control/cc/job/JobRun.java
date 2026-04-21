@@ -222,7 +222,7 @@ public class JobRun implements IJobStatusConditionVariable {
         this.profile.setEndTime(endTime);
     }
 
-    public long getQueueWaitTimeInMillis() {
+    public long getQueueWaitTime() {
         return startTime > 0 ? startTime - createTime : System.currentTimeMillis() - createTime;
     }
 

@@ -315,7 +315,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             ResultDelivery delivery) {
         final ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart, executionState.duration(),
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
-                stats.getTotalWarningsCount(), stats.getCompileTime(), stats.getQueueWaitTime(),
+                stats.getTotalWarningsCount(), stats.getCompileTimeNanos(), stats.getQueueWaitTimeNanos(),
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
                 stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
         if (ResultDelivery.ASYNC != delivery) {

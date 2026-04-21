@@ -4376,7 +4376,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                stats.setCompileTime(System.nanoTime() - compileStart);
+                stats.setCompileTimeNanos(System.nanoTime() - compileStart);
+                clientRequest.setCompileTimeNanos(stats.getCompileTimeNanos());
                 bActiveTxn = false;
                 return isCompileOnly() ? null : jobSpec;
             } catch (Exception e) {
@@ -5570,15 +5571,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 org.apache.asterix.translator.ResultMetadata resultMetadata =
                         new org.apache.asterix.translator.ResultMetadata(sessionConfig.fmt());
-                resultMetadata.setCreateTime(System.currentTimeMillis());
+                resultMetadata.setCreateTimeMillis(clientRequest.getRequestTimeMillis());
                 final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
                         requestParameters, resultMetadata);
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                stats.setCompileTime(System.nanoTime() - compileStart);
-                resultMetadata.setCompileTime(stats.getCompileTime());
+                stats.setCompileTimeNanos(System.nanoTime() - compileStart);
+                clientRequest.setCompileTimeNanos(stats.getCompileTimeNanos());
+                resultMetadata.setCompileTimeNanos(stats.getCompileTimeNanos());
                 bActiveTxn = false;
                 return query.isExplain() || query.isAdvise() || isCompileOnly() ? null : jobSpec;
             } catch (Exception e) {
@@ -5673,7 +5675,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (org.apache.asterix.translator.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
-        stats.setQueueWaitTime(resultMetadata.getQueueWaitTimeInNanos());
+        stats.setQueueWaitTimeNanos(resultMetadata.getQueueWaitTimeNanos());
         stats.setBufferCacheHitRatio(resultMetadata.getBufferCacheHitRatio());
         stats.setBufferCachePageReadCount(resultMetadata.getBufferCachePageReadCount());
         stats.setCloudReadRequestsCount(resultMetadata.getCloudReadRequestsCount());

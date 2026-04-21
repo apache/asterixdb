@@ -215,8 +215,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         stats.setJobProfile(responseStats.getJobProfile());
         stats.setProcessedObjects(responseStats.getProcessedObjects());
         stats.updateTotalWarningsCount(responseStats.getTotalWarningsCount());
-        stats.setCompileTime(responseStats.getCompileTime());
-        stats.setQueueWaitTime(responseStats.getQueueWaitTime());
+        stats.setCompileTimeNanos(responseStats.getCompileTimeNanos());
+        stats.setQueueWaitTimeNanos(responseStats.getQueueWaitTimeNanos());
         stats.setBufferCacheHitRatio(responseStats.getBufferCacheHitRatio());
         stats.setBufferCachePageReadCount(responseStats.getBufferCachePageReadCount());
         stats.setCloudReadRequestsCount(responseStats.getCloudReadRequestsCount());

@@ -62,7 +62,8 @@ public class NCQueryStatusApiServlet extends QueryStatusApiServlet {
             if (responseMessage == null || !responseMessage.isValidRequestId()) {
                 return;
             }
-            printMetrics(printer, request, status, responseMessage.getRequestCreateTime(),
+            printMetricsWithoutMetadata(printer, request, status, responseMessage.getRequestTime(),
+                    responseMessage.getCompileTimeNanos(), responseMessage.getElapsedTime(),
                     responseMessage.getJobCreateTime(), responseMessage.getJobStartTime(),
                     responseMessage.getJobQueueWaitTime());
         } catch (Exception e) {
