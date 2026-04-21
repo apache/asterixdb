@@ -36,15 +36,19 @@ public interface IOptionType<T> {
 
     /**
      * @return the value in a format suitable for serialized JSON
+     * @deprecated this is intended for internal use by <code>IOption</code>, as it does not mask sensitive options
      */
-    default Object serializeToJSON(Object value) {
+    @Deprecated
+    default Object serializeToJSONUnsafe(Object value) {
         return value;
     }
 
     /**
      * Serializes the value as a field in the provided object node
+     * @deprecated this is intended for internal use by <code>IOption</code>, as it does not mask sensitive options
      */
-    void serializeJSONField(String fieldName, Object value, ObjectNode node);
+    @Deprecated
+    void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node);
 
     /**
      * @return the value in a format suitable for serialized ini file

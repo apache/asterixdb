@@ -39,6 +39,8 @@ public class LogRedactionUtil {
     };
     private static ILogRedactor redactor = DEFAULT_LOG_REDACTOR;
 
+    public static final String REDACTED_SENSITIVE_VALUE = "<redacted sensitive value>";
+
     private LogRedactionUtil() {
     }
 

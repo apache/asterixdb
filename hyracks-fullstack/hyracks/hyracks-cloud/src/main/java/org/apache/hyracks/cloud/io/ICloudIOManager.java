@@ -112,4 +112,6 @@ public interface ICloudIOManager {
     void evict(String resourcePath) throws HyracksDataException;
 
     IIOManager getLocalIOManager();
+
+    void reloadConfiguration(ICloudProperties newProperties) throws HyracksDataException;
 }

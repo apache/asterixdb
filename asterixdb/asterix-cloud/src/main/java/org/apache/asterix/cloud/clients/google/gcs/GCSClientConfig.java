@@ -24,8 +24,8 @@ import static org.apache.asterix.external.util.google.GCSConstants.STORAGE_PREFI
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;

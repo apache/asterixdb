@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.COLLECTION_TYPES;
+import static org.apache.hyracks.util.LogRedactionUtil.REDACTED_SENSITIVE_VALUE;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -164,7 +165,9 @@ public class ConfigManager implements IConfigManager, Serializable {
                         if (isDefault) {
                             LOGGER.trace("defaulting {} to {} for node {}", option.toIniString(), value, node);
                         } else {
-                            LOGGER.debug("setting {} to {} for node {}", option.toIniString(), value, node);
+                            LOGGER.debug("setting {} to {} for node {}", option.toIniString(),
+                                    option.sensitive() ? (value == null ? "null" : REDACTED_SENSITIVE_VALUE) : value,
+                                    node);
                         }
                     });
                 }

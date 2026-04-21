@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.cloud.io;
 
 import static org.apache.hyracks.util.annotations.AiProvenance.Agent.GPT_5_MINI;
 import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.GENERATED;
@@ -24,7 +24,6 @@ import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPIL
 
 import java.util.Collection;
 
-import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
@@ -46,8 +45,6 @@ public interface ICloudProperties {
     boolean isStorageAnonymousAuth();
 
     Collection<String> getStorageCertificates();
-
-    CloudCachePolicy getCloudCachePolicy();
 
     double getStorageAllocationPercentage();
 
@@ -87,11 +84,15 @@ public interface ICloudProperties {
 
     boolean isStorageDisableSSLVerify();
 
-    boolean isStorageListEventuallyConsistent();
-
     String getS3ParallelDownloaderClientType();
 
     int getS3ReadTimeoutInSeconds();
 
     boolean useRoundRobinDnsResolver();
+
+    String getS3AccessKeyId();
+
+    String getS3SecretAccessKey();
+
+    String getAzureClientId();
 }

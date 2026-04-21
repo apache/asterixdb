@@ -177,7 +177,7 @@ public class ConfigUtils {
         Map<String, Object> sectionConfig = new TreeMap<>();
         for (IOption option : cfg.getOptions(section)) {
             if (selector.test(option)) {
-                sectionConfig.put(option.ini(), option.type().serializeToJSON(cfg.get(option)));
+                sectionConfig.put(option.ini(), option.serializeToJSON(cfg.get(option)));
             }
         }
         return sectionConfig;
@@ -201,7 +201,7 @@ public class ConfigUtils {
         IOption option = configManager.lookupOption(entry.getKey());
         if (option != null) {
             // use the type system for the option to serialize this
-            return option.type().serializeToJSON(entry.getValue());
+            return option.serializeToJSON(entry.getValue());
         }
         // not much we can do, let default JSON serialization do its thing
         return entry.getValue();

@@ -54,6 +54,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -91,24 +92,30 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     private static final String BUCKET_ROOT_PATH = "";
     private final ICloudGuardian guardian;
-    private final BlobContainerClient blobContainerClient;
-    private final BlobContainerAsyncClient blobContainerAsyncClient;
-    private final AzBlobStorageClientConfig config;
+    private volatile BlobContainerClient blobContainerClient;
+    private volatile ConnectionProvider syncConnProvider;
+    private volatile BlobContainerAsyncClient blobContainerAsyncClient;
+    private volatile ConnectionProvider asyncConnProvider;
+    private volatile AzBlobStorageClientConfig config;
     private final IRequestProfilerLimiter profiler;
     private static final Logger LOGGER = LogManager.getLogger();
-    private final AccessTier accessTier;
+    private volatile AccessTier accessTier;
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, ICloudGuardian guardian) {
-        this(config, buildClient(config), buildAsyncClient(config), guardian);
+        this(config, buildSyncClient(config), buildAsyncClient(config), guardian);
     }
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
-            BlobServiceAsyncClient asyncBlobServiceClient, ICloudGuardian guardian) {
-        this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getContainer());
-        this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getContainer());
-        this.config = config;
+            BlobServiceAsyncClient blobServiceAsyncClient, ICloudGuardian.NoOpCloudGuardian instance) {
+        this(config, ConnectionClientPair.of(blobServiceClient, null),
+                ConnectionClientPair.of(blobServiceAsyncClient, null), instance);
+    }
+
+    private AzBlobStorageCloudClient(AzBlobStorageClientConfig config,
+            ConnectionClientPair<BlobServiceClient> syncClient,
+            ConnectionClientPair<BlobServiceAsyncClient> asyncClient, ICloudGuardian guardian) {
+        applyConfig(config, syncClient, asyncClient);
         this.guardian = guardian;
-        this.accessTier = config.getAccessTier();
         long profilerInterval = config.getProfilerLogInterval();
         AzureRequestRateLimiter limiter = new AzureRequestRateLimiter(config);
         if (profilerInterval > 0) {
@@ -117,7 +124,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             profiler = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
-        LOGGER.debug("Created Azure Cloud Client with config: {}", config);
+        LOGGER.debug("created Azure cloud client with config: {}", config);
     }
 
     @Override
@@ -381,10 +388,29 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     @Override
     public void close() {
-        // Closing Azure Blob Clients is not required as the underlying netty connection pool
-        // handles the same for the apps.
-        // Ref: https://github.com/Azure/azure-sdk-for-java/issues/17903
-        // Hence this implementation is a no op.
+        syncConnProvider.dispose();
+        asyncConnProvider.dispose();
+    }
+
+    @Override
+    public void reloadConfiguration(ICloudProperties newProperties) {
+        AzBlobStorageClientConfig newConfig = AzBlobStorageClientConfig.of(newProperties);
+        ConnectionProvider oldSyncConnProvider = syncConnProvider;
+        ConnectionProvider oldAsyncConnProvider = asyncConnProvider;
+        applyConfig(newConfig, buildSyncClient(newConfig), buildAsyncClient(newConfig));
+        oldSyncConnProvider.dispose();
+        oldAsyncConnProvider.dispose();
+        LOGGER.debug("reloaded Azure cloud client with config: {}", config);
+    }
+
+    private void applyConfig(AzBlobStorageClientConfig config, ConnectionClientPair<BlobServiceClient> syncBuilder,
+            ConnectionClientPair<BlobServiceAsyncClient> asyncBuilder) {
+        this.config = config;
+        syncConnProvider = syncBuilder.connectionProvider();
+        blobContainerClient = syncBuilder.client().getBlobContainerClient(config.getContainer());
+        asyncConnProvider = asyncBuilder.connectionProvider();
+        blobContainerAsyncClient = asyncBuilder.client().getBlobContainerAsyncClient(config.getContainer());
+        accessTier = config.getAccessTier();
     }
 
     @Override
@@ -392,17 +418,17 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         return ex -> (ex instanceof BlobStorageException bse) && bse.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND);
     }
 
-    private static BlobServiceClient buildClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config, false);
-        return blobServiceClientBuilder.buildClient();
+    private static ConnectionClientPair<BlobServiceClient> buildSyncClient(AzBlobStorageClientConfig config) {
+        ConnectionClientPair<BlobServiceClientBuilder> clientBuilder = getBlobServiceClient(config, false);
+        return ConnectionClientPair.of(clientBuilder.client().buildClient(), clientBuilder.connectionProvider());
     }
 
-    private static BlobServiceAsyncClient buildAsyncClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config, true);
-        return blobServiceClientBuilder.buildAsyncClient();
+    private static ConnectionClientPair<BlobServiceAsyncClient> buildAsyncClient(AzBlobStorageClientConfig config) {
+        ConnectionClientPair<BlobServiceClientBuilder> clientBuilder = getBlobServiceClient(config, true);
+        return ConnectionClientPair.of(clientBuilder.client().buildAsyncClient(), clientBuilder.connectionProvider());
     }
 
-    private static BlobServiceClientBuilder getBlobServiceClientBuilder(AzBlobStorageClientConfig config,
+    private static ConnectionClientPair<BlobServiceClientBuilder> getBlobServiceClient(AzBlobStorageClientConfig config,
             boolean async) {
         BlobServiceClientBuilder blobServiceClientBuilder = new BlobServiceClientBuilder();
         blobServiceClientBuilder.endpoint(getEndpoint(config));
@@ -429,7 +455,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         }
         blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
 
-        return blobServiceClientBuilder;
+        return ConnectionClientPair.of(blobServiceClientBuilder, connectionProvider);
     }
 
     private static void configCredentialsToAzClient(BlobServiceClientBuilder builder,
@@ -447,4 +473,15 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     private static String getEndpoint(AzBlobStorageClientConfig config) {
         return config.getEndpoint() + "/" + config.getContainer();
     }
-}
+
+    /**
+     * Simple generic container that associates a client object with its ConnectionProvider.
+     */
+    private record ConnectionClientPair<T>(
+    T client, ConnectionProvider connectionProvider)
+    {
+
+    public static <T> ConnectionClientPair<T> of(T client, ConnectionProvider connectionProvider) {
+        return new ConnectionClientPair<>(client, connectionProvider);
+    }
+}}

@@ -40,6 +40,7 @@ import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.util.StorageUtil;
 
 public class CloudProperties extends AbstractProperties implements ICloudProperties {
@@ -91,13 +92,15 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
-        CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),
         CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT(INTEGER, -1),
         CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, (Function<IApplicationConfig, String>) app -> {
             String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
             return (endpoint == null || endpoint.isEmpty()) ? "crt" : "async";
         }),
-        CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),;
+        CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),
+        CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
+        CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
+        CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),;
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -142,10 +145,15 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS:
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
-                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
+                case CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT:
+                case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
+                case CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER:
+                case CLOUD_STORAGE_S3_ACCESS_KEY_ID:
+                case CLOUD_STORAGE_S3_SECRET_ACCESS_KEY:
+                case CLOUD_STORAGE_AZURE_CLIENT_ID:
                     return Section.COMMON;
                 default:
-                    return Section.NC;
+                    throw new IllegalStateException("NYI: " + this);
             }
         }
 
@@ -219,9 +227,6 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                     return "Indicates whether or not to force path style when accessing the cloud storage";
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                     return "Indicates whether or not to disable SSL certificate verification on the cloud storage";
-                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
-                    return "Indicates whether or not deleted objects may be contained in list operations for some time"
-                            + "after they are deleted";
                 case CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT:
                     return "The read timeout (in seconds) for S3 sync client (-1 means SDK default)";
                 case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
@@ -229,6 +234,12 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER:
                     return "Whether or not to use a round-robin DNS resolver for S3 client connections. Currently"
                             + " only applicable when using the async S3 client for parallel downloads.";
+                case CLOUD_STORAGE_S3_ACCESS_KEY_ID:
+                    return "The S3 access key ID for static credential authentication (defaults to null, which indicates to use default credential chain)";
+                case CLOUD_STORAGE_S3_SECRET_ACCESS_KEY:
+                    return "The S3 secret access key for static credential authentication (defaults to null, which indicates to use default credential chain)";
+                case CLOUD_STORAGE_AZURE_CLIENT_ID:
+                    return "The Azure user managed identity client ID (defaults to null, which takes the system managed identity client ID)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -250,6 +261,11 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 return "crt if no custom endpoint is set; async otherwise";
             }
             return IOption.super.usageDefaultOverride(accessor, optionPrinter);
+        }
+
+        @Override
+        public boolean sensitive() {
+            return this == CLOUD_STORAGE_S3_SECRET_ACCESS_KEY;
         }
     }
 
@@ -367,10 +383,6 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         return accessor.getBoolean(Option.CLOUD_STORAGE_DISABLE_SSL_VERIFY);
     }
 
-    public boolean isStorageListEventuallyConsistent() {
-        return accessor.getBoolean(Option.CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT);
-    }
-
     public String getS3ParallelDownloaderClientType() {
         return accessor.getString(Option.CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE).toUpperCase();
     }
@@ -381,5 +393,17 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
 
     public boolean useRoundRobinDnsResolver() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER);
+    }
+
+    public String getS3AccessKeyId() {
+        return accessor.getString(Option.CLOUD_STORAGE_S3_ACCESS_KEY_ID);
+    }
+
+    public String getS3SecretAccessKey() {
+        return accessor.getString(Option.CLOUD_STORAGE_S3_SECRET_ACCESS_KEY);
+    }
+
+    public String getAzureClientId() {
+        return accessor.getString(Option.CLOUD_STORAGE_AZURE_CLIENT_ID);
     }
 }

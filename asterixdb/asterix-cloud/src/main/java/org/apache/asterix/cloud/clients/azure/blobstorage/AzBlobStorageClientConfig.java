@@ -24,22 +24,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
-import org.apache.asterix.common.config.ICloudProperties;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 
-import com.azure.core.util.Configuration;
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.models.AccessTier;
 
 public class AzBlobStorageClientConfig {
-    private static final Logger LOGGER = LogManager.getLogger();
-    // Ref: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch?tabs=microsoft-entra-id
-    static final int MAX_CONCURRENT_REQUESTS = 20;
-
     private static final AccessTier INTERNAL_STORAGE_ACCESS_TIER = AccessTier.HOT;
     private final String endpoint;
     private final String container;
@@ -94,8 +87,6 @@ public class AzBlobStorageClientConfig {
     }
 
     public static AzBlobStorageClientConfig of(ICloudProperties cloudProperties) {
-        // TODO(mblow): the client id should be coming in by way fo the cloud properties
-        String clientId = System.getenv(Configuration.PROPERTY_AZURE_CLIENT_ID);
         return new AzBlobStorageClientConfig(cloudProperties.getStorageEndpoint(), cloudProperties.getStorageBucket(),
                 cloudProperties.getStoragePrefix(), cloudProperties.getProfilerLogInterval(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
@@ -104,7 +95,7 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.getRequestsMaxPendingHttpConnections(),
                 cloudProperties.getRequestsHttpConnectionAcquireTimeout(),
                 cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
-                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(), clientId);
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(), cloudProperties.getAzureClientId());
     }
 
     public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {

@@ -60,6 +60,7 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.cloud.filesystem.PhysicalDrive;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
 import org.apache.hyracks.cloud.io.request.ICloudRequest;
 import org.apache.hyracks.cloud.io.stream.CloudInputStream;
@@ -525,5 +526,10 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public IIOManager getLocalIOManager() {
         return localIoManager;
+    }
+
+    @Override
+    public void reloadConfiguration(ICloudProperties newProperties) throws HyracksDataException {
+        cloudClient.reloadConfiguration(newProperties);
     }
 }

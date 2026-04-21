@@ -55,6 +55,7 @@ import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
@@ -93,8 +94,8 @@ import software.amazon.awssdk.utils.AttributeMap;
 public final class S3CloudClient implements ICloudClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private final S3ClientConfig config;
-    private final CloseableAwsClients awsClients;
-    private final S3Client s3Client;
+    private volatile CloseableAwsClients awsClients;
+    private volatile S3Client s3Client;
     private final ICloudGuardian guardian;
     private final IRequestProfilerLimiter profiler;
     private final int writeBufferSize;
@@ -117,6 +118,7 @@ public final class S3CloudClient implements ICloudClient {
             profiler = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
+        LOGGER.debug("created S3 cloud client with config: {}", config);
     }
 
     @Override
@@ -132,7 +134,7 @@ public final class S3CloudClient implements ICloudClient {
     @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         ICloudBufferedWriter bufferedWriter =
-                new S3BufferedWriter(s3Client, profiler, guardian, bucket, config.getPrefix() + path);
+                new S3BufferedWriter(() -> s3Client, profiler, guardian, bucket, config.getPrefix() + path);
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
     }
 
@@ -357,15 +359,20 @@ public final class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
-        return ex -> ex instanceof NoSuchKeyException;
+    public void reloadConfiguration(ICloudProperties newProperties) {
+        S3ClientConfig newConfig = S3ClientConfig.of(newProperties);
+        CloseableAwsClients newAwsClients = buildClient(newConfig);
+        CloseableAwsClients oldAwsClients = awsClients;
+        awsClients = newAwsClients;
+        s3Client = (S3Client) newAwsClients.getConsumingClient();
+        LOGGER.debug("reloaded S3 cloud client with config: {}", config);
+        // TODO(mblow): configurable delay before closing the old clients to allow in-flight requests to complete.
+        AwsUtils.closeClients(oldAwsClients);
     }
 
-    /**
-     * FOR TESTING ONLY
-     */
-    public ICloudBufferedWriter createBufferedWriter(String bucket, String path) {
-        return new S3BufferedWriter(s3Client, profiler, guardian, bucket, config.getPrefix() + path);
+    @Override
+    public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
+        return ex -> ex instanceof NoSuchKeyException;
     }
 
     public static CloseableAwsClients buildClient(S3ClientConfig config) {
