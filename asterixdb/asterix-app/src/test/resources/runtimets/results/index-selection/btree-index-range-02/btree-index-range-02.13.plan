@@ -20,13 +20,13 @@ distribute result [$$50] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                   -- STABLE_SORT [$$62(ASC)]  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      select (and(eq($$54, 15), lt($$53, 3), or(eq($$39, 0), eq($$39, 1)))) project: [$$62] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select (and(lt($$54, 3), eq($$53, 15), or(eq($$39, 0), eq($$39, 1)))) project: [$$62] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
-                        project ([$$54, $$39, $$53, $$62]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        project ([$$53, $$39, $$54, $$62]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$54, $$39, $$53, $$62] <- index-search("idx_bac", 0, "Default", "test", "A", true, true, 2, $$56, $$57, 3, $$56, $$57, $$58, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            unnest-map [$$53, $$39, $$54, $$62] <- index-search("idx_bac", 0, "Default", "test", "A", true, true, 2, $$56, $$57, 3, $$56, $$57, $$58, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- BTREE_SEARCH  |PARTITIONED|
                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- BROADCAST_EXCHANGE  |PARTITIONED|

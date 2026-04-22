@@ -1,44 +1,44 @@
-distribute result [$$53] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+distribute result [$$60] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$53] <- [{"$1": $$55}] project: [$$53] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+    assign [$$60] <- [{"$1": $$62}] project: [$$60] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$55] <- [agg-sql-sum($$57)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+      aggregate [$$62] <- [agg-sql-sum($$64)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
       -- AGGREGATE  |UNPARTITIONED|
         exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+          aggregate [$$64] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
           -- AGGREGATE  |PARTITIONED|
-            select (and(eq($$A.getField("b"), $$58), eq($$A.getField("e"), 2), or(or(eq($$38, 122), eq($$38, 242), eq($$38, 602), eq($$38, 1202), eq($$38, 2402), eq($$38, 10), eq($$38, 11), eq($$38, 12)), and(gt($$38, 6000), lt($$38, 9000))))) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+            select (and(eq($$A.getField("e"), 2), eq($$A.getField("b"), $$65), or(or(eq($$45, 122), eq($$45, 242), eq($$45, 602), eq($$45, 1202), eq($$45, 2402), eq($$45, 10), eq($$45, 11), eq($$45, 12)), and(gt($$45, 6000), lt($$45, 9000))))) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$38] <- [$$A.getField("d")] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+              assign [$$45] <- [$$A.getField("d")] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
               -- ASSIGN  |PARTITIONED|
-                project ([$$58, $$A]) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+                project ([$$65, $$A]) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$54, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$63, 1, $$63, true, true, true) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
+                    unnest-map [$$61, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$70, 1, $$70, true, true, true) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 90.31]
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        order (ASC, $$63) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- STABLE_SORT [$$63(ASC)]  |PARTITIONED|
+                        order (ASC, $$70) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STABLE_SORT [$$70(ASC)]  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            select (and(eq($$60, $$58), eq($$61, 2), or(or(eq($$62, 122), eq($$62, 242), eq($$62, 602), eq($$62, 1202), eq($$62, 2402), eq($$62, 10), eq($$62, 11), eq($$62, 12)), and(gt($$62, 6000), lt($$62, 9000))))) project: [$$58, $$63] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            select (and(eq($$68, 2), eq($$67, $$65), or(or(eq($$69, 122), eq($$69, 242), eq($$69, 602), eq($$69, 1202), eq($$69, 2402), eq($$69, 10), eq($$69, 11), eq($$69, 12)), and(gt($$69, 6000), lt($$69, 9000))))) project: [$$65, $$70] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_SELECT  |PARTITIONED|
-                              project ([$$58, $$60, $$61, $$62, $$63]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              project ([$$65, $$67, $$68, $$69, $$70]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_PROJECT  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  unnest-map [$$60, $$61, $$62, $$63] <- index-search("idx_bed", 0, "Default", "test", "A", true, true, 2, $$58, $$59, 2, $$58, $$59, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  unnest-map [$$67, $$68, $$69, $$70] <- index-search("idx_bed", 0, "Default", "test", "A", true, true, 2, $$65, $$66, 2, $$65, $$66, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- BTREE_SEARCH  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                      assign [$$59] <- [2] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      assign [$$66] <- [2] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ASSIGN  |PARTITIONED|
-                                        unnest $$58 <- scan-collection(array: [ 0, 1, 2 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        unnest $$65 <- scan-collection(array: [ 0, 1, 2 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |PARTITIONED|
                                           empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

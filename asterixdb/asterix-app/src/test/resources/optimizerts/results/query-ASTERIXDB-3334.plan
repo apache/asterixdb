@@ -1,44 +1,44 @@
-distribute result [$$800]
+distribute result [$$921]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$800] <- [{"Employee Name": $$Employee Name, "avg:Employee Salary:ok": $$812}] project: [$$800]
+    assign [$$921] <- [{"Employee Name": $$Employee Name, "avg:Employee Salary:ok": $$933}] project: [$$921]
     -- ASSIGN  |PARTITIONED|
       exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        group by ([$$Employee Name := $$1036]) decor ([]) {
-                  aggregate [$$812] <- [agg-global-sql-avg($$1035)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        group by ([$$Employee Name := $$1157]) decor ([]) {
+                  aggregate [$$933] <- [agg-global-sql-avg($$1156)]
                   -- AGGREGATE  |LOCAL|
-                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- SORT_GROUP_BY[$$1036]  |PARTITIONED|
+        -- SORT_GROUP_BY[$$1157]  |PARTITIONED|
           exchange
-          -- HASH_PARTITION_EXCHANGE [$$1036]  |PARTITIONED|
-            group by ([$$1036 := $$1037]) decor ([]) {
-                      aggregate [$$1035] <- [agg-local-sql-avg($$798)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- HASH_PARTITION_EXCHANGE [$$1157]  |PARTITIONED|
+            group by ([$$1157 := $$1158]) decor ([]) {
+                      aggregate [$$1156] <- [agg-local-sql-avg($$919)]
                       -- AGGREGATE  |LOCAL|
-                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- SORT_GROUP_BY[$$1037]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$1158]  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                assign [$$798] <- [double-default-null($$845)] project: [$$798, $$1037]
+                assign [$$919] <- [double-default-null($$951)] project: [$$919, $$1158]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$1037, $$845])
+                  project ([$$1158, $$951])
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      join (and(eq($$1037, $$Employee Name), eq($$808, $$Call Center Region)))
-                      -- HYBRID_HASH_JOIN [$$1037, $$808][$$Employee Name, $$Call Center Region]  |PARTITIONED|
+                      join (and(eq($$1158, $$Employee Name), eq($$929, $$Call Center Region)))
+                      -- HYBRID_HASH_JOIN [$$1158, $$929][$$Employee Name, $$Call Center Region]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$808, $$1037]  |PARTITIONED|
-                          assign [$$808] <- [string-default-null($$842)] project: [$$1037, $$845, $$808]
+                        -- HASH_PARTITION_EXCHANGE [$$929, $$1158]  |PARTITIONED|
+                          assign [$$929] <- [string-default-null($$954)] project: [$$1158, $$951, $$929]
                           -- ASSIGN  |PARTITIONED|
-                            select (and(not(is-null(int64-default-null($#6.getField("Item Count")))), not(is-null(string-default-null($#6.getField("Ship Priority")))), not(is-null(string-default-null($#6.getField("Order Priority")))), not(is-null(string-default-null($#6.getField("Order Status")))), not(is-null(double-default-null($#6.getField("Order Quantity")))), not(is-null(double-default-null($#6.getField("Sales Total")))), not(is-null(double-default-null($#6.getField("Discount")))), not(is-null(double-default-null($#6.getField("Tax Rate")))), not(is-null(string-default-null($#6.getField("Ship Mode")))), not(is-null(double-default-null($#6.getField("Fill Time")))), not(is-null(double-default-null($#6.getField("Gross Profit")))), not(is-null(double-default-null($#6.getField("Price")))), not(is-null(double-default-null($#6.getField("Ship Handle Cost")))), not(is-null($$1037)), not(is-null(string-default-null($#6.getField("Employee Dept")))), not(is-null(string-default-null($#6.getField("Manager Name")))), not(is-null(double-default-null($#6.getField("Employee Yrs Exp")))), not(is-null(double-default-null($$845))), not(is-null(string-default-null($#6.getField("Customer Name")))), not(is-null(string-default-null($#6.getField("Customer State")))), not(is-null(string-default-null($$842))), not(is-null(double-default-null($#6.getField("Customer Balance")))), not(is-null(string-default-null($#6.getField("Customer Segment")))), not(is-null(string-default-null($#6.getField("Prod Type1")))), not(is-null(string-default-null($#6.getField("Prod Type2")))), not(is-null(string-default-null($#6.getField("Prod Type3")))), not(is-null(string-default-null($#6.getField("Prod Type4")))), not(is-null(string-default-null($#6.getField("Product Name")))), not(is-null(string-default-null($#6.getField("Product Container")))), not(is-null(string-default-null($#6.getField("Ship Promo")))), not(is-null(string-default-null($#6.getField("Supplier Name")))), not(is-null(double-default-null($#6.getField("Supplier Balance")))), not(is-null(string-default-null($#6.getField("Supplier Region")))), not(is-null(string-default-null($#6.getField("Supplier State")))), not(is-null(string-default-null($#6.getField("Order ID")))), not(is-null(int64-default-null($#6.getField("Order Year")))), not(is-null(int64-default-null($#6.getField("Order Month")))), not(is-null(int64-default-null($#6.getField("Order Day")))), not(is-null(datetime-default-null($#6.getField("Order Date")))), not(is-null(string-default-null($#6.getField("Order Quarter")))), not(is-null(double-default-null($#6.getField("Product Base Margin")))), not(is-null(string-default-null($#6.getField("Product ID")))), not(is-null(double-default-null($#6.getField("Receive Time")))), not(is-null(datetime-default-null($#6.getField("Received Date")))), not(is-null(datetime-default-null($#6.getField("Ship Date")))), not(is-null(double-default-null($#6.getField("Ship Charge")))), not(is-null(double-default-null($#6.getField("Total Cycle Time")))), not(is-null(string-default-null($#6.getField("Product In Stock")))), not(is-null(int64-default-null($#6.getField("PID")))), not(is-null(string-default-null($#6.getField("Market Segment")))))) project: [$$1037, $$845, $$842]
+                            select (and(not(is-null(string-default-null($#6.getField("Prod Type3")))), not(is-null(int64-default-null($#6.getField("Item Count")))), not(is-null(string-default-null($#6.getField("Ship Priority")))), not(is-null(string-default-null($#6.getField("Order Priority")))), not(is-null(string-default-null($#6.getField("Order Status")))), not(is-null(double-default-null($#6.getField("Order Quantity")))), not(is-null(double-default-null($#6.getField("Sales Total")))), not(is-null(double-default-null($#6.getField("Discount")))), not(is-null(double-default-null($#6.getField("Tax Rate")))), not(is-null(string-default-null($#6.getField("Ship Mode")))), not(is-null(double-default-null($#6.getField("Fill Time")))), not(is-null(double-default-null($#6.getField("Gross Profit")))), not(is-null(double-default-null($#6.getField("Price")))), not(is-null(double-default-null($#6.getField("Ship Handle Cost")))), not(is-null($$1158)), not(is-null(string-default-null($#6.getField("Employee Dept")))), not(is-null(string-default-null($#6.getField("Manager Name")))), not(is-null(double-default-null($#6.getField("Employee Yrs Exp")))), not(is-null(double-default-null($$951))), not(is-null(string-default-null($#6.getField("Customer Name")))), not(is-null(string-default-null($#6.getField("Customer State")))), not(is-null(string-default-null($$954))), not(is-null(double-default-null($#6.getField("Customer Balance")))), not(is-null(string-default-null($#6.getField("Customer Segment")))), not(is-null(string-default-null($#6.getField("Prod Type1")))), not(is-null(string-default-null($#6.getField("Prod Type2")))), not(is-null(string-default-null($#6.getField("Prod Type4")))), not(is-null(string-default-null($#6.getField("Product Name")))), not(is-null(string-default-null($#6.getField("Product Container")))), not(is-null(string-default-null($#6.getField("Ship Promo")))), not(is-null(string-default-null($#6.getField("Supplier Name")))), not(is-null(double-default-null($#6.getField("Supplier Balance")))), not(is-null(string-default-null($#6.getField("Supplier Region")))), not(is-null(string-default-null($#6.getField("Supplier State")))), not(is-null(string-default-null($#6.getField("Order ID")))), not(is-null(int64-default-null($#6.getField("Order Year")))), not(is-null(int64-default-null($#6.getField("Order Month")))), not(is-null(int64-default-null($#6.getField("Order Day")))), not(is-null(datetime-default-null($#6.getField("Order Date")))), not(is-null(string-default-null($#6.getField("Order Quarter")))), not(is-null(double-default-null($#6.getField("Product Base Margin")))), not(is-null(string-default-null($#6.getField("Product ID")))), not(is-null(double-default-null($#6.getField("Receive Time")))), not(is-null(datetime-default-null($#6.getField("Received Date")))), not(is-null(datetime-default-null($#6.getField("Ship Date")))), not(is-null(double-default-null($#6.getField("Ship Charge")))), not(is-null(double-default-null($#6.getField("Total Cycle Time")))), not(is-null(string-default-null($#6.getField("Product In Stock")))), not(is-null(int64-default-null($#6.getField("PID")))), not(is-null(string-default-null($#6.getField("Market Segment")))))) project: [$$1158, $$951, $$954]
                             -- STREAM_SELECT  |PARTITIONED|
-                              assign [$$1037, $$845, $$842] <- [string-default-null($#6.getField("Employee Name")), $#6.getField("Employee Salary"), $#6.getField("Call Center Region")]
+                              assign [$$1158, $$951, $$954] <- [string-default-null($#6.getField("Employee Name")), $#6.getField("Employee Salary"), $#6.getField("Call Center Region")]
                               -- ASSIGN  |PARTITIONED|
                                 assign [$#6] <- [$#6] project: [$#6]
                                 -- ASSIGN  |PARTITIONED|
@@ -52,7 +52,7 @@ distribute result [$$800]
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            data-scan []<-[$$805, $#6] <- test.collection0
+                                            data-scan []<-[$$926, $#6] <- test.collection0
                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -60,33 +60,33 @@ distribute result [$$800]
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          select (and(ge($$811, 102499.99999999898), le($$810, 110000.0000000011))) project: [$$Employee Name, $$Call Center Region]
+                          select (and(ge($$932, 102499.99999999898), le($$931, 110000.0000000011))) project: [$$Employee Name, $$Call Center Region]
                           -- STREAM_SELECT  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              group by ([$$Call Center Region := $$1033; $$Employee Name := $$1034]) decor ([]) {
-                                        aggregate [$$810, $$811] <- [agg-global-sql-avg($$1031), agg-global-sql-avg($$1032)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              group by ([$$Call Center Region := $$1154; $$Employee Name := $$1155]) decor ([]) {
+                                        aggregate [$$931, $$932] <- [agg-global-sql-avg($$1152), agg-global-sql-avg($$1153)]
                                         -- AGGREGATE  |LOCAL|
-                                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                      }
-                              -- SORT_GROUP_BY[$$1033, $$1034]  |PARTITIONED|
+                              -- SORT_GROUP_BY[$$1154, $$1155]  |PARTITIONED|
                                 exchange
-                                -- HASH_PARTITION_EXCHANGE [$$1033, $$1034]  |PARTITIONED|
-                                  group by ([$$1033 := $$801; $$1034 := $$802]) decor ([]) {
-                                            aggregate [$$1031, $$1032] <- [agg-local-sql-avg($$771), agg-local-sql-avg($$771)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- HASH_PARTITION_EXCHANGE [$$1154, $$1155]  |PARTITIONED|
+                                  group by ([$$1154 := $$922; $$1155 := $$923]) decor ([]) {
+                                            aggregate [$$1152, $$1153] <- [agg-local-sql-avg($$892), agg-local-sql-avg($$892)]
                                             -- AGGREGATE  |LOCAL|
-                                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                                          }
-                                  -- SORT_GROUP_BY[$$801, $$802]  |PARTITIONED|
+                                  -- SORT_GROUP_BY[$$922, $$923]  |PARTITIONED|
                                     exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      assign [$$802, $$801, $$771] <- [string-default-null($$949), string-default-null($$942), double-default-null($$945)] project: [$$771, $$801, $$802]
+                                      assign [$$923, $$922, $$892] <- [string-default-null($$1072), string-default-null($$1079), double-default-null($$1076)] project: [$$892, $$922, $$923]
                                       -- ASSIGN  |PARTITIONED|
-                                        select (and(not(is-null(int64-default-null($#6.getField("Item Count")))), not(is-null(string-default-null($#6.getField("Ship Priority")))), not(is-null(string-default-null($#6.getField("Order Priority")))), not(is-null(string-default-null($#6.getField("Order Status")))), not(is-null(double-default-null($#6.getField("Order Quantity")))), not(is-null(double-default-null($#6.getField("Sales Total")))), not(is-null(double-default-null($#6.getField("Discount")))), not(is-null(double-default-null($#6.getField("Tax Rate")))), not(is-null(string-default-null($#6.getField("Ship Mode")))), not(is-null(double-default-null($#6.getField("Fill Time")))), not(is-null(double-default-null($#6.getField("Gross Profit")))), not(is-null(double-default-null($#6.getField("Price")))), not(is-null(double-default-null($#6.getField("Ship Handle Cost")))), not(is-null(string-default-null($$949))), not(is-null(string-default-null($#6.getField("Employee Dept")))), not(is-null(string-default-null($#6.getField("Manager Name")))), not(is-null(double-default-null($#6.getField("Employee Yrs Exp")))), not(is-null(double-default-null($$945))), not(is-null(string-default-null($#6.getField("Customer Name")))), not(is-null(string-default-null($#6.getField("Customer State")))), not(is-null(string-default-null($$942))), not(is-null(double-default-null($#6.getField("Customer Balance")))), not(is-null(string-default-null($#6.getField("Customer Segment")))), not(is-null(string-default-null($#6.getField("Prod Type1")))), not(is-null(string-default-null($#6.getField("Prod Type2")))), not(is-null(string-default-null($#6.getField("Prod Type3")))), not(is-null(string-default-null($#6.getField("Prod Type4")))), not(is-null(string-default-null($#6.getField("Product Name")))), not(is-null(string-default-null($#6.getField("Product Container")))), not(is-null(string-default-null($#6.getField("Ship Promo")))), not(is-null(string-default-null($#6.getField("Supplier Name")))), not(is-null(double-default-null($#6.getField("Supplier Balance")))), not(is-null(string-default-null($#6.getField("Supplier Region")))), not(is-null(string-default-null($#6.getField("Supplier State")))), not(is-null(string-default-null($#6.getField("Order ID")))), not(is-null(int64-default-null($#6.getField("Order Year")))), not(is-null(int64-default-null($#6.getField("Order Month")))), not(is-null(int64-default-null($#6.getField("Order Day")))), not(is-null(datetime-default-null($#6.getField("Order Date")))), not(is-null(string-default-null($#6.getField("Order Quarter")))), not(is-null(double-default-null($#6.getField("Product Base Margin")))), not(is-null(string-default-null($#6.getField("Product ID")))), not(is-null(double-default-null($#6.getField("Receive Time")))), not(is-null(datetime-default-null($#6.getField("Received Date")))), not(is-null(datetime-default-null($#6.getField("Ship Date")))), not(is-null(double-default-null($#6.getField("Ship Charge")))), not(is-null(double-default-null($#6.getField("Total Cycle Time")))), not(is-null(string-default-null($#6.getField("Product In Stock")))), not(is-null(int64-default-null($#6.getField("PID")))), not(is-null(string-default-null($#6.getField("Market Segment")))))) project: [$$949, $$945, $$942]
+                                        select (and(not(is-null(string-default-null($#6.getField("Prod Type2")))), not(is-null(int64-default-null($#6.getField("Item Count")))), not(is-null(string-default-null($#6.getField("Ship Priority")))), not(is-null(string-default-null($#6.getField("Order Priority")))), not(is-null(string-default-null($#6.getField("Order Status")))), not(is-null(double-default-null($#6.getField("Order Quantity")))), not(is-null(double-default-null($#6.getField("Sales Total")))), not(is-null(double-default-null($#6.getField("Discount")))), not(is-null(double-default-null($#6.getField("Tax Rate")))), not(is-null(string-default-null($#6.getField("Ship Mode")))), not(is-null(double-default-null($#6.getField("Fill Time")))), not(is-null(double-default-null($#6.getField("Gross Profit")))), not(is-null(double-default-null($#6.getField("Price")))), not(is-null(double-default-null($#6.getField("Ship Handle Cost")))), not(is-null(string-default-null($$1072))), not(is-null(string-default-null($#6.getField("Employee Dept")))), not(is-null(string-default-null($#6.getField("Manager Name")))), not(is-null(double-default-null($#6.getField("Employee Yrs Exp")))), not(is-null(double-default-null($$1076))), not(is-null(string-default-null($#6.getField("Customer Name")))), not(is-null(string-default-null($#6.getField("Customer State")))), not(is-null(string-default-null($$1079))), not(is-null(double-default-null($#6.getField("Customer Balance")))), not(is-null(string-default-null($#6.getField("Customer Segment")))), not(is-null(string-default-null($#6.getField("Prod Type1")))), not(is-null(string-default-null($#6.getField("Prod Type3")))), not(is-null(string-default-null($#6.getField("Prod Type4")))), not(is-null(string-default-null($#6.getField("Product Name")))), not(is-null(string-default-null($#6.getField("Product Container")))), not(is-null(string-default-null($#6.getField("Ship Promo")))), not(is-null(string-default-null($#6.getField("Supplier Name")))), not(is-null(double-default-null($#6.getField("Supplier Balance")))), not(is-null(string-default-null($#6.getField("Supplier Region")))), not(is-null(string-default-null($#6.getField("Supplier State")))), not(is-null(string-default-null($#6.getField("Order ID")))), not(is-null(int64-default-null($#6.getField("Order Year")))), not(is-null(int64-default-null($#6.getField("Order Month")))), not(is-null(int64-default-null($#6.getField("Order Day")))), not(is-null(datetime-default-null($#6.getField("Order Date")))), not(is-null(string-default-null($#6.getField("Order Quarter")))), not(is-null(double-default-null($#6.getField("Product Base Margin")))), not(is-null(string-default-null($#6.getField("Product ID")))), not(is-null(double-default-null($#6.getField("Receive Time")))), not(is-null(datetime-default-null($#6.getField("Received Date")))), not(is-null(datetime-default-null($#6.getField("Ship Date")))), not(is-null(double-default-null($#6.getField("Ship Charge")))), not(is-null(double-default-null($#6.getField("Total Cycle Time")))), not(is-null(string-default-null($#6.getField("Product In Stock")))), not(is-null(int64-default-null($#6.getField("PID")))), not(is-null(string-default-null($#6.getField("Market Segment")))))) project: [$$1072, $$1076, $$1079]
                                         -- STREAM_SELECT  |PARTITIONED|
-                                          assign [$$949, $$945, $$942] <- [$#6.getField("Employee Name"), $#6.getField("Employee Salary"), $#6.getField("Call Center Region")]
+                                          assign [$$1072, $$1076, $$1079] <- [$#6.getField("Employee Name"), $#6.getField("Employee Salary"), $#6.getField("Call Center Region")]
                                           -- ASSIGN  |PARTITIONED|
                                             exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -98,7 +98,7 @@ distribute result [$$800]
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      data-scan []<-[$$805, $#6] <- test.collection0
+                                                      data-scan []<-[$$926, $#6] <- test.collection0
                                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

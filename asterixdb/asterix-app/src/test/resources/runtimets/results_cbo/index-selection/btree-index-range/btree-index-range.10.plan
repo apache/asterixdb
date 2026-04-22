@@ -4,7 +4,7 @@ distribute result [$$43] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     assign [$$43] <- [{"A": $$A}] project: [$$43] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
-      select (and(eq($$A.getField("f"), 2), lt($$A.getField("g"), 1), lt($$A.getField("h"), 1), eq($$A.getField("a"), 0), lt($$44, 4), ge($$44, -1), lt($$45, 2500), gt($$45, 2000), lt($$46, 3), gt($$46, 1), le($$47, 4), ge($$47, -1))) project: [$$A] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total-cost: 0.0]
+      select (and(eq($$A.getField("f"), 2), eq($$A.getField("a"), 0), lt($$A.getField("g"), 1), lt($$A.getField("h"), 1), lt($$44, 4), ge($$44, -1), lt($$45, 2500), gt($$45, 2000), lt($$46, 3), gt($$46, 1), le($$47, 4), ge($$47, -1))) project: [$$A] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_SELECT  |PARTITIONED|
         assign [$$47, $$46, $$45, $$44] <- [$$A.getField("b"), $$A.getField("c"), $$A.getField("d"), $$A.getField("e")] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$43] [cardinality: 2.1, doc-size: 216.0, op-cost: 0.0, total
                   -- STABLE_SORT [$$77(ASC)]  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      select (and(eq($$72, 2), lt($$73, 1), lt($$74, 1), eq($$67, 0), lt($$71, 4), ge($$71, -1), lt($$70, 2500), gt($$70, 2000), lt($$69, 3), gt($$69, 1), le($$68, 4), ge($$68, -1))) project: [$$77] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select (and(eq($$72, 2), eq($$67, 0), lt($$73, 1), lt($$74, 1), lt($$71, 4), ge($$71, -1), lt($$70, 2500), gt($$70, 2000), lt($$69, 3), gt($$69, 1), le($$68, 4), ge($$68, -1))) project: [$$77] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
                         project ([$$67, $$68, $$69, $$70, $$71, $$72, $$73, $$74, $$77]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|

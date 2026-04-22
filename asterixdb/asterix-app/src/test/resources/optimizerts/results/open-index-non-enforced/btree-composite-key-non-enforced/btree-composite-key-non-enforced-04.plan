@@ -1,32 +1,32 @@
-distribute result [$$21]
+distribute result [$$23]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    select (and(eq($$t.getField("c_x"), "x2"), gt($$t.getField("c_y"), 1), eq($$t.getField("c_z"), "z2"))) project: [$$21]
+    select (and(gt($$t.getField("c_y"), 1), eq($$t.getField("c_z"), "z2"), eq($$t.getField("c_x"), "x2"))) project: [$$23]
     -- STREAM_SELECT  |PARTITIONED|
-      assign [$$21] <- [$$t.getField("c_value")]
+      assign [$$23] <- [$$t.getField("c_value")]
       -- ASSIGN  |PARTITIONED|
         project ([$$t])
         -- STREAM_PROJECT  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            unnest-map [$$22, $$t] <- index-search("TestOpen", 0, "Default", "test", "TestOpen", false, false, 1, $$33, 1, $$33, true, true, true)
+            unnest-map [$$24, $$t] <- index-search("TestOpen", 0, "Default", "test", "TestOpen", false, false, 1, $$35, 1, $$35, true, true, true)
             -- BTREE_SEARCH  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, $$33)
-                -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+                order (ASC, $$35)
+                -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$33])
+                    project ([$$35])
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$30, $$31, $$32, $$33] <- index-search("idx_xyz", 0, "Default", "test", "TestOpen", false, false, 3, $$26, $$27, $$28, 1, $$29, true, true, true)
+                        unnest-map [$$32, $$33, $$34, $$35] <- index-search("idx_xyz", 0, "Default", "test", "TestOpen", false, false, 3, $$28, $$29, $$30, 1, $$31, true, true, true)
                         -- BTREE_SEARCH  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$26, $$27, $$28, $$29] <- ["x2", 1, "z2", "x2"]
+                            assign [$$28, $$29, $$30, $$31] <- ["x2", 1, "z2", "x2"]
                             -- ASSIGN  |PARTITIONED|
                               empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

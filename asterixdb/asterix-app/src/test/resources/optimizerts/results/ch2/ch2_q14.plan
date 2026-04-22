@@ -1,52 +1,52 @@
-distribute result [$$86]
+distribute result [$$96]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$86] <- [{"promo_revenue": numeric-divide(numeric-multiply(100.0, $$94), numeric-add(1, $$95))}] project: [$$86]
+    assign [$$96] <- [{"promo_revenue": numeric-divide(numeric-multiply(100.0, $$104), numeric-add(1, $$105))}] project: [$$96]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$94, $$95] <- [agg-global-sql-sum($$99), agg-global-sql-sum($$100)]
+      aggregate [$$104, $$105] <- [agg-global-sql-sum($$109), agg-global-sql-sum($$110)]
       -- AGGREGATE  |UNPARTITIONED|
         exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$99, $$100] <- [agg-local-sql-sum($$77), agg-local-sql-sum($$91)]
+          aggregate [$$109, $$110] <- [agg-local-sql-sum($$87), agg-local-sql-sum($$101)]
           -- AGGREGATE  |PARTITIONED|
-            assign [$$77] <- [switch-case(true, and(ge($$90, "pr"), lt($$90, "ps")), $$91, 0)] project: [$$77, $$91]
+            assign [$$87] <- [switch-case(true, and(ge($$100, "pr"), lt($$100, "ps")), $$101, 0)] project: [$$87, $$101]
             -- ASSIGN  |PARTITIONED|
-              project ([$$90, $$91])
+              project ([$$100, $$101])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$92, $$93))
-                  -- HYBRID_HASH_JOIN [$$93][$$92]  |PARTITIONED|
+                  join (eq($$102, $$103))
+                  -- HYBRID_HASH_JOIN [$$103][$$102]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$93]  |PARTITIONED|
-                      assign [$$90, $$93] <- [$$i.getField("i_data"), $$i.getField("i_id")] project: [$$90, $$93]
+                    -- HASH_PARTITION_EXCHANGE [$$103]  |PARTITIONED|
+                      assign [$$100, $$103] <- [$$i.getField("i_data"), $$i.getField("i_id")] project: [$$100, $$103]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$i])
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$88, $$i] <- test.item
+                            data-scan []<-[$$98, $$i] <- test.item
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$92]  |PARTITIONED|
-                      select (and(ge($$87, "2017-09-01 00:00:00.000000"), lt($$87, "2017-10-01 00:00:00.000000"))) project: [$$91, $$92]
+                    -- HASH_PARTITION_EXCHANGE [$$102]  |PARTITIONED|
+                      select (and(lt($$97, "2017-10-01 00:00:00.000000"), ge($$97, "2017-09-01 00:00:00.000000"))) project: [$$101, $$102]
                       -- STREAM_SELECT  |PARTITIONED|
-                        assign [$$91, $$92, $$87] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_i_id"), $$ol.getField("ol_delivery_d")] project: [$$91, $$92, $$87]
+                        assign [$$101, $$102, $$97] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_i_id"), $$ol.getField("ol_delivery_d")] project: [$$101, $$102, $$97]
                         -- ASSIGN  |PARTITIONED|
-                          unnest $$ol <- scan-collection($$96) project: [$$ol]
+                          unnest $$ol <- scan-collection($$106) project: [$$ol]
                           -- UNNEST  |PARTITIONED|
-                            assign [$$96] <- [$$o.getField("o_orderline")] project: [$$96]
+                            assign [$$106] <- [$$o.getField("o_orderline")] project: [$$106]
                             -- ASSIGN  |PARTITIONED|
                               project ([$$o])
                               -- STREAM_PROJECT  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$89, $$o] <- test.orders
+                                  data-scan []<-[$$99, $$o] <- test.orders
                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                     exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

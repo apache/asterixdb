@@ -38,7 +38,7 @@ distribute result [$$67]
                 -- STABLE_SORT [$$86(ASC)]  |PARTITIONED|
                   exchange
                   -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
-                    group by ([$$86 := $$68; $$87 := $$69]) decor ([$$a1; $$72; $$89 := $$a21; $$90 := $$73; $$91 := $$74; $$92 := $$77; $$88 := $$83]) {
+                    group by ([$$86 := $$68; $$87 := $$69]) decor ([$$a1; $$72; $$89 := $$a21; $$90 := $$73; $$91 := $$76; $$92 := $$79; $$88 := $$83]) {
                               aggregate [$$85] <- [agg-count({ "$1": 1 })]
                               -- AGGREGATE  |LOCAL|
                                 select (not(is-missing($$81)))
@@ -55,14 +55,14 @@ distribute result [$$67]
                         -- STABLE_SORT [$$68(ASC), $$69(ASC)]  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            project ([$$72, $$a1, $$81, $$68, $$69, $$83, $$a21, $$73, $$74, $$77])
+                            project ([$$72, $$a1, $$81, $$68, $$69, $$83, $$a21, $$73, $$76, $$79])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                left outer join (and(eq($$74, $$75), gt($$76, $$77), eq($$73, $$79)))
-                                -- HYBRID_HASH_JOIN [$$74, $$73][$$75, $$79]  |PARTITIONED|
+                                left outer join (and(eq($$73, $$75), eq($$76, $$77), gt($$78, $$79)))
+                                -- HYBRID_HASH_JOIN [$$73, $$76][$$75, $$77]  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$74, $$73]  |PARTITIONED|
+                                  -- HASH_PARTITION_EXCHANGE [$$73, $$76]  |PARTITIONED|
                                     left outer join (eq($$72, $$73))
                                     -- HYBRID_HASH_JOIN [$$72][$$73]  |PARTITIONED|
                                       exchange
@@ -79,7 +79,7 @@ distribute result [$$67]
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                       exchange
                                       -- HASH_PARTITION_EXCHANGE [$$73]  |PARTITIONED|
-                                        assign [$$83, $$77, $$73, $$74] <- [true, $$a21.getField("tm"), $$a21.getField("c_id"), $$a21.getField("part")]
+                                        assign [$$83, $$79, $$76, $$73] <- [true, $$a21.getField("tm"), $$a21.getField("part"), $$a21.getField("c_id")]
                                         -- ASSIGN  |PARTITIONED|
                                           assign [$$69, $$a21] <- [$$70, $$a22] project: [$$69, $$a21]
                                           -- ASSIGN  |PARTITIONED|
@@ -96,8 +96,8 @@ distribute result [$$67]
                                                       empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$75, $$79]  |PARTITIONED|
-                                    assign [$$81, $$79, $$76, $$75] <- [true, $$a22.getField("c_id"), $$a22.getField("tm"), $$a22.getField("part")] project: [$$81, $$75, $$76, $$79]
+                                  -- HASH_PARTITION_EXCHANGE [$$75, $$77]  |PARTITIONED|
+                                    assign [$$81, $$78, $$77, $$75] <- [true, $$a22.getField("tm"), $$a22.getField("part"), $$a22.getField("c_id")] project: [$$81, $$75, $$77, $$78]
                                     -- ASSIGN  |PARTITIONED|
                                       project ([$$a22])
                                       -- STREAM_PROJECT  |PARTITIONED|

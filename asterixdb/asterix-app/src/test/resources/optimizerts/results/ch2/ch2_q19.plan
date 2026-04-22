@@ -1,54 +1,54 @@
-distribute result [$$120]
+distribute result [$$132]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$120] <- [{"revenue": $$128}] project: [$$120]
+    assign [$$132] <- [{"revenue": $$140}] project: [$$132]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$128] <- [agg-global-sql-sum($$133)]
+      aggregate [$$140] <- [agg-global-sql-sum($$145)]
       -- AGGREGATE  |UNPARTITIONED|
         exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$133] <- [agg-local-sql-sum($$118)]
+          aggregate [$$145] <- [agg-local-sql-sum($$130)]
           -- AGGREGATE  |PARTITIONED|
-            select (or(and(like($$123, "%h"), ge($$122, 7), le($$122, 17), and($$134, le($$121, 5)), or(eq($$69, 37), eq($$69, 29), eq($$69, 70))), and(like($$123, "%t"), ge($$122, 16), le($$122, 26), and($$134, le($$121, 10)), or(eq($$69, 78), eq($$69, 17), eq($$69, 6))), and(like($$123, "%m"), ge($$122, 24), le($$122, 34), and($$134, $$135), or(eq($$69, 91), eq($$69, 95), eq($$69, 15))))) project: [$$118]
+            select (or(and(like($$135, "%h"), ge($$134, 7), le($$134, 17), and($$146, le($$133, 5)), or(eq($$81, 37), eq($$81, 29), eq($$81, 70))), and(like($$135, "%t"), ge($$134, 16), le($$134, 26), and($$146, le($$133, 10)), or(eq($$81, 78), eq($$81, 17), eq($$81, 6))), and(like($$135, "%m"), ge($$134, 24), le($$134, 34), and($$146, $$147), or(eq($$81, 91), eq($$81, 95), eq($$81, 15))))) project: [$$130]
             -- STREAM_SELECT  |PARTITIONED|
-              project ([$$118, $$122, $$69, $$123, $$121, $$135, $$134])
+              project ([$$130, $$134, $$81, $$135, $$133, $$147, $$146])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$126, $$127))
-                  -- HYBRID_HASH_JOIN [$$126][$$127]  |PARTITIONED|
+                  join (eq($$138, $$139))
+                  -- HYBRID_HASH_JOIN [$$138][$$139]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$126]  |PARTITIONED|
-                      assign [$$118, $$122, $$126] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_quantity"), $$ol.getField("ol_i_id")] project: [$$118, $$122, $$69, $$126]
+                    -- HASH_PARTITION_EXCHANGE [$$138]  |PARTITIONED|
+                      assign [$$130, $$134, $$138] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_quantity"), $$ol.getField("ol_i_id")] project: [$$130, $$134, $$81, $$138]
                       -- ASSIGN  |PARTITIONED|
-                        unnest $$ol <- scan-collection($$129) project: [$$69, $$ol]
+                        unnest $$ol <- scan-collection($$141) project: [$$81, $$ol]
                         -- UNNEST  |PARTITIONED|
-                          assign [$$69, $$129] <- [$$o.getField("o_w_id"), $$o.getField("o_orderline")] project: [$$69, $$129]
+                          assign [$$81, $$141] <- [$$o.getField("o_w_id"), $$o.getField("o_orderline")] project: [$$81, $$141]
                           -- ASSIGN  |PARTITIONED|
                             project ([$$o])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$124, $$o] <- test.orders
+                                data-scan []<-[$$136, $$o] <- test.orders
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$127]  |PARTITIONED|
-                      select (and($$134, $$135))
+                    -- HASH_PARTITION_EXCHANGE [$$139]  |PARTITIONED|
+                      select (and($$147, $$146))
                       -- STREAM_SELECT  |PARTITIONED|
-                        assign [$$135, $$134] <- [le($$121, 15), ge($$121, 1)]
+                        assign [$$147, $$146] <- [le($$133, 15), ge($$133, 1)]
                         -- ASSIGN  |PARTITIONED|
-                          assign [$$123, $$121, $$127] <- [$$i.getField("i_data"), $$i.getField("i_price"), $$i.getField("i_id")] project: [$$123, $$121, $$127]
+                          assign [$$135, $$133, $$139] <- [$$i.getField("i_data"), $$i.getField("i_price"), $$i.getField("i_id")] project: [$$135, $$133, $$139]
                           -- ASSIGN  |PARTITIONED|
                             project ([$$i])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$125, $$i] <- test.item
+                                data-scan []<-[$$137, $$i] <- test.item
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

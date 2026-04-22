@@ -1,24 +1,24 @@
-distribute result [$$38]
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$38] <- [{"c0": $$47, "c1": $$48}] project: [$$38]
+    assign [$$42] <- [{"c0": $$51, "c1": $$52}] project: [$$42]
     -- ASSIGN  |PARTITIONED|
-      project ([$$47, $$48])
+      project ([$$51, $$52])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          join (and(eq($$41, $$42), eq($$43, $$44), eq($$45, $$46)))
-          -- HYBRID_HASH_JOIN [$$41, $$43, $$45][$$42, $$44, $$46]  |PARTITIONED|
+          join (and(eq($$45, $$46), eq($$47, $$48), eq($$49, $$50)))
+          -- HYBRID_HASH_JOIN [$$45, $$47, $$49][$$46, $$48, $$50]  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              assign [$$47, $$45, $$43, $$41] <- [$$t1.getField(4), $$t1.getField(1), $$t1.getField(3), $$t1.getField(2)] project: [$$47, $$41, $$43, $$45]
+              assign [$$51, $$49, $$47, $$45] <- [$$t1.getField(4), $$t1.getField(1), $$t1.getField(2), $$t1.getField(3)] project: [$$51, $$45, $$47, $$49]
               -- ASSIGN  |PARTITIONED|
                 project ([$$t1])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$39, $$t1] <- test.t1
+                    data-scan []<-[$$43, $$t1] <- test.t1
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -26,13 +26,13 @@ distribute result [$$38]
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             exchange
             -- BROADCAST_EXCHANGE  |PARTITIONED|
-              assign [$$48, $$46, $$44, $$42] <- [$$t2.getField(4), $$t2.getField(1), $$t2.getField(3), $$t2.getField(2)] project: [$$48, $$42, $$44, $$46]
+              assign [$$52, $$50, $$48, $$46] <- [$$t2.getField(4), $$t2.getField(1), $$t2.getField(2), $$t2.getField(3)] project: [$$52, $$46, $$48, $$50]
               -- ASSIGN  |PARTITIONED|
                 project ([$$t2])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$40, $$t2] <- test.t2
+                    data-scan []<-[$$44, $$t2] <- test.t2
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

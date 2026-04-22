@@ -1,16 +1,16 @@
-distribute result [$$emp] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$emp]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    select (and(lt($$22, "Tomes"), gt($$22, "Kevin"), gt($$23, "Craig"), le($$23, "Mary"))) project: [$$emp] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    select (and(lt($$24, "Tomes"), gt($$24, "Kevin"), le($$25, "Mary"), gt($$25, "Craig"))) project: [$$emp]
     -- STREAM_SELECT  |PARTITIONED|
-      assign [$$23, $$22] <- [$$emp.getField(1), $$emp.getField(2)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      assign [$$25, $$24] <- [$$emp.getField(1), $$emp.getField(2)]
       -- ASSIGN  |PARTITIONED|
-        project ([$$emp]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$emp])
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            data-scan []<-[$$24, $$emp] <- test.testdst [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+            data-scan []<-[$$26, $$emp] <- test.testdst
             -- DATASOURCE_SCAN  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

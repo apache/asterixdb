@@ -14,15 +14,15 @@ distribute result [$$485]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$565, $$566, $$567, $$568] <- [$$617.getField("join_key2"), $$617.getField("wsc"), $$617.getField("lcd"), $$617.getField("wsd")]
               -- ASSIGN  |PARTITIONED|
-                select (and(like($$494, "%"), not(is-missing($$494)))) project: [$$617]
+                select (and(not(is-missing($$494)), like($$494, "%"))) project: [$$617]
                 -- STREAM_SELECT  |PARTITIONED|
                   assign [$$494] <- [$$617.getField("bco")]
                   -- ASSIGN  |PARTITIONED|
-                    assign [$$617] <- [object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$627, "wsm": $$628, "wsc": $$549, "scKey": $$626, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))})] project: [$$617]
+                    assign [$$617] <- [object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$627, "wsm": $$628, "wsc": $$549, "scKey": $$625, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))})] project: [$$617]
                     -- ASSIGN  |PARTITIONED|
-                      select (and(like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$626, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("bch"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$626, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("scKey"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$626, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("wsc"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$626, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("join_key2"), "%"))) project: [$$366, $$504, $$627, $$628, $$549, $$626, $$545, $$561, $$562]
+                      select (and(like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$625, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("join_key2"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$625, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("wsc"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$625, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("scKey"), "%"), like(object-concat-strict(to-object-var-str($$366), {"lov_cKey": $$504, "wsd": $$431.getField(3), "wsm": $$431.getField(4), "wsc": $$431.getField("wsc"), "scKey": $$625, "wpdi": $$545, "bch": $$561, "omaa": $$562, "bco": uppercase(substring($$561, 0, position($$561, "_")))}).getField("bch"), "%"))) project: [$$366, $$504, $$627, $$628, $$549, $$625, $$545, $$561, $$562]
                       -- STREAM_SELECT  |PARTITIONED|
-                        project ([$$366, $$504, $$627, $$628, $$549, $$626, $$545, $$431, $$561, $$562])
+                        project ([$$366, $$504, $$627, $$628, $$549, $$625, $$545, $$431, $$561, $$562])
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -30,14 +30,14 @@ distribute result [$$485]
                             -- HYBRID_HASH_JOIN [$$545][$$511]  |PARTITIONED|
                               exchange
                               -- HASH_PARTITION_EXCHANGE [$$545]  |PARTITIONED|
-                                project ([$$366, $$504, $$627, $$628, $$549, $$626, $$545, $$431])
+                                project ([$$366, $$504, $$627, $$628, $$549, $$625, $$545, $$431])
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    join (and(eq($$623, $$625), eq($$504, $$626)))
-                                    -- HYBRID_HASH_JOIN [$$623, $$504][$$625, $$626]  |PARTITIONED|
+                                    join (and(eq($$504, $$625), eq($$623, $$626)))
+                                    -- HYBRID_HASH_JOIN [$$504, $$623][$$625, $$626]  |PARTITIONED|
                                       exchange
-                                      -- HASH_PARTITION_EXCHANGE [$$623, $$504]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$504, $$623]  |PARTITIONED|
                                         project ([$$366, $$504, $$623])
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           exchange
@@ -164,7 +164,7 @@ distribute result [$$485]
                                                 -- UNNEST  |PARTITIONED|
                                                   assign [$$541] <- [array-star($$p.getField("members")).getField("uniqueID")] project: [$$504, $$541]
                                                   -- ASSIGN  |PARTITIONED|
-                                                    select (and(eq($$p.getField("r"), "uuu"), eq($$p.getField("t"), "ccc"), not(is-missing($$504))))
+                                                    select (and(eq($$p.getField("t"), "ccc"), eq($$p.getField("r"), "uuu"), not(is-missing($$504))))
                                                     -- STREAM_SELECT  |PARTITIONED|
                                                       assign [$$504] <- [$$p.getField("cKey")]
                                                       -- ASSIGN  |PARTITIONED|
@@ -188,9 +188,9 @@ distribute result [$$485]
                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                       exchange
                                       -- HASH_PARTITION_EXCHANGE [$$625, $$626]  |PARTITIONED|
-                                        assign [$$431] <- [{"join_key1": $$625, "wpdi": $$545, "wsc": $$549, "scKey": $$626, "wwlps": $$424, "wsd": $$627, "wsm": $$628}] project: [$$627, $$628, $$549, $$626, $$545, $$431, $$625]
+                                        assign [$$431] <- [{"join_key1": $$626, "wpdi": $$545, "wsc": $$549, "scKey": $$625, "wwlps": $$424, "wsd": $$627, "wsm": $$628}] project: [$$627, $$628, $$549, $$625, $$545, $$431, $$626]
                                         -- ASSIGN  |PARTITIONED|
-                                          assign [$$628, $$627, $$626, $$625] <- [substring($$552, 0, 7), substring($$552, 0, 10), uppercase(substring($$549, 0, position($$549, "_"))), substring($$547, 0, 38)] project: [$$549, $$545, $$424, $$628, $$627, $$626, $$625]
+                                          assign [$$628, $$627, $$626, $$625] <- [substring($$552, 0, 7), substring($$552, 0, 10), substring($$547, 0, 38), uppercase(substring($$549, 0, position($$549, "_")))] project: [$$549, $$545, $$424, $$628, $$627, $$626, $$625]
                                           -- ASSIGN  |PARTITIONED|
                                             project ([$$549, $$545, $$552, $$547, $$424])
                                             -- STREAM_PROJECT  |PARTITIONED|

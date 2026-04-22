@@ -20,7 +20,7 @@ distribute result [$$54] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                   -- STABLE_SORT [$$65(ASC)]  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      select (and(or(eq($$40, 0), eq($$40, 1), eq($$40, 2), eq($$40, 3), eq($$40, 4), eq($$40, 5), eq($$40, 6), eq($$40, 7), eq($$40, 8), eq($$40, 9), eq($$40, 10), eq($$40, 11), eq($$40, 12), eq($$40, 13), eq($$40, 14), eq($$40, 15), eq($$40, 16), eq($$40, 17), eq($$40, 18), eq($$40, 19), eq($$40, 20), eq($$40, 21), eq($$40, 22), eq($$40, 23), eq($$40, 24), eq($$40, 25), eq($$40, 26), eq($$40, 27), eq($$40, 28), eq($$40, 29)), eq($$57, 1), or(eq($$45, 0), eq($$45, 1), eq($$45, 2), eq($$45, 3), eq($$45, 4)))) project: [$$65] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select (and(eq($$57, 1), or(eq($$40, 0), eq($$40, 1), eq($$40, 2), eq($$40, 3), eq($$40, 4), eq($$40, 5), eq($$40, 6), eq($$40, 7), eq($$40, 8), eq($$40, 9), eq($$40, 10), eq($$40, 11), eq($$40, 12), eq($$40, 13), eq($$40, 14), eq($$40, 15), eq($$40, 16), eq($$40, 17), eq($$40, 18), eq($$40, 19), eq($$40, 20), eq($$40, 21), eq($$40, 22), eq($$40, 23), eq($$40, 24), eq($$40, 25), eq($$40, 26), eq($$40, 27), eq($$40, 28), eq($$40, 29)), or(eq($$45, 0), eq($$45, 1), eq($$45, 2), eq($$45, 3), eq($$45, 4)))) project: [$$65] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
                         project ([$$40, $$57, $$45, $$65]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|

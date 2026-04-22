@@ -15,7 +15,7 @@ distribute result [$$55]
                       -- ASSIGN  |LOCAL|
                         unnest $$x <- scan-collection(ordered-list-constructor($$ds)) project: [$$x]
                         -- UNNEST  |LOCAL|
-                          select (and(lt($$56, "ie"), ge($$56, "id"))) project: [$$ds]
+                          select (and(ge($$56, "id"), lt($$56, "ie"))) project: [$$ds]
                           -- STREAM_SELECT  |LOCAL|
                             nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
