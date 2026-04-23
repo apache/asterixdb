@@ -920,6 +920,10 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-netty</artifactId>
+    </dependency>
     <!-- Needed for inferring the schema for writing Parquet files -->
     <dependency>
       <groupId>org.kitesdk</groupId>
