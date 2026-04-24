@@ -42,7 +42,8 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         MERGE_POLICY,
         NODE_GROUP,
         SYNONYM,
-        CATALOG
+        CATALOG,
+        CRS
     }
 
     private final EntityKind entityKind;
@@ -166,5 +167,9 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     static MetadataLockKey createCatalogLockKey(String catalogName) {
         return new MetadataLockKey(EntityKind.CATALOG, null, null, null, catalogName);
+    }
+
+    static MetadataLockKey createCRSLockKey(String database, DataverseName dataverseName, int srid) {
+        return new MetadataLockKey(EntityKind.CRS, null, database, dataverseName, String.valueOf(srid));
     }
 }

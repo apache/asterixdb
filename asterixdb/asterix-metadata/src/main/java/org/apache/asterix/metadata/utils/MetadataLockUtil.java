@@ -413,6 +413,22 @@ public class MetadataLockUtil implements IMetadataLockUtil {
         lockMgr.acquireCatalogWriteLock(locks, catalogName);
     }
 
+    @Override
+    public void createCRSBegin(IMetadataLockManager lockMgr, LockList locks, String database,
+            DataverseName dataverseName, int srid) throws AlgebricksException {
+        lockMgr.acquireDatabaseReadLock(locks, database);
+        lockMgr.acquireDataverseReadLock(locks, database, dataverseName);
+        lockMgr.acquireCRSWriteLock(locks, database, dataverseName, srid);
+    }
+
+    @Override
+    public void dropCRSBegin(IMetadataLockManager lockMgr, LockList locks, String database, DataverseName dataverseName,
+            int srid) throws AlgebricksException {
+        lockMgr.acquireDatabaseReadLock(locks, database);
+        lockMgr.acquireDataverseReadLock(locks, database, dataverseName);
+        lockMgr.acquireCRSWriteLock(locks, database, dataverseName, srid);
+    }
+
     private static void lockIfDifferentNamespace(IMetadataLockManager lockMgr, LockList locks, String lockedDatabase,
             DataverseName lockedDataverse, String toBeLockedDatabase, DataverseName toBeLockedDataverse)
             throws AlgebricksException {

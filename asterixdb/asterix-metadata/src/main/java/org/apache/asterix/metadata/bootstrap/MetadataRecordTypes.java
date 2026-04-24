@@ -134,6 +134,11 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_CATALOG_TYPE = "CatalogType";
     public static final String FIELD_NAME_CATALOG_DETAILS = "CatalogDetails";
 
+    //-------------------------------------- CRS ---------------------------------------//
+    public static final String FIELD_NAME_CRS_SRID = "SRID";
+    public static final String FIELD_NAME_CRS_NAME = "CRSName";
+    public static final String FIELD_NAME_CRS_WKT = "CrsWKT";
+
     //open field
     public static final String FIELD_NAME_CREATOR_NAME = "Name";
     public static final String FIELD_NAME_CREATOR_UUID = "Uuid";
@@ -305,6 +310,9 @@ public final class MetadataRecordTypes {
 
     //-------------------------------------- Catalog ---------------------------------------//
     public static final String RECORD_NAME_CATALOG = "CatalogRecordType";
+
+    //-------------------------------------- CRS ---------------------------------------//
+    public static final String RECORD_NAME_CRS = "CoordinateReferenceSystemRecordType";
     public static final int CATALOG_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 0;
     public static final int CATALOG_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 1;
     public static final ARecordType CATALOG_DETAILS_RECORDTYPE =

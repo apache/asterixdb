@@ -1125,6 +1125,10 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ST_SYM_DIFFERENCE = FunctionConstants.newAsterix("st-sym-difference", 2);
     public static final FunctionIdentifier ST_POLYGONIZE = FunctionConstants.newAsterix("st-polygonize", 1);
 
+    public static final FunctionIdentifier ST_TRANSFORM = FunctionConstants.newAsterix("st-transform", 3);
+    public static final FunctionIdentifier ST_DISTANCE_SPHEROID =
+            FunctionConstants.newAsterix("st-distance-spheroid", 2);
+
     public static final FunctionIdentifier ST_MBR = FunctionConstants.newAsterix("st-mbr", 1);
     public static final FunctionIdentifier ST_MBR_ENLARGE = FunctionConstants.newAsterix("st-mbr-enlarge", 2);
 
@@ -2015,6 +2019,8 @@ public class BuiltinFunctions {
         addPrivateFunction(ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_UNION_SQL_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_TRANSFORM, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_DISTANCE_SPHEROID, ADoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(ST_MBR, ARectangleTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_MBR_ENLARGE, ARectangleTypeComputer.INSTANCE, true);

@@ -26,6 +26,8 @@ import static org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVER
 import static org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.CATALOG_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.COMPACTION_POLICY_EXISTS;
+import static org.apache.asterix.common.exceptions.ErrorCode.CRS_ALREADY_EXISTS;
+import static org.apache.asterix.common.exceptions.ErrorCode.CRS_NOT_FOUND;
 import static org.apache.asterix.common.exceptions.ErrorCode.DATABASE_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.DATASET_EXISTS;
 import static org.apache.asterix.common.exceptions.ErrorCode.DATAVERSE_EXISTS;
@@ -114,6 +116,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.CoordinateReferenceSystem;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -134,6 +137,7 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entities.ViewDetails;
+import org.apache.asterix.metadata.entitytupletranslators.CRSTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.CatalogTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatabaseTupleTranslator;
@@ -159,6 +163,7 @@ import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
@@ -810,6 +815,12 @@ public class MetadataNode implements IMetadataNode {
                 dropSynonym(txnId, databaseName, synonym.getDataverseName(), synonym.getSynonymName(), true);
             }
 
+            // Drop all CRS definitions in this database.
+            List<CoordinateReferenceSystem> databaseCRSList = getDatabaseCRSList(txnId, databaseName);
+            for (CoordinateReferenceSystem crs : databaseCRSList) {
+                dropCRS(txnId, databaseName, crs.getDataverseName(), crs.getSrid());
+            }
+
             // Drop all datasets and indexes in this database.
             // Datasets depend on datatypes
             List<Dataset> databaseDatasets = getDatabaseDatasets(txnId, databaseName);
@@ -930,6 +941,12 @@ public class MetadataNode implements IMetadataNode {
                 dropSynonym(txnId, database, dataverseName, synonym.getSynonymName(), true);
             }
 
+            // Drop all CRS definitions in this dataverse.
+            List<CoordinateReferenceSystem> dataverseCRSList = getDataverseCRSList(txnId, database, dataverseName);
+            for (CoordinateReferenceSystem crs : dataverseCRSList) {
+                dropCRS(txnId, database, dataverseName, crs.getSrid());
+            }
+
             // Drop all datasets and indexes in this dataverse.
             // Datasets depend on datatypes
             List<Dataset> dataverseDatasets = getDataverseDatasets(txnId, database, dataverseName);
@@ -996,6 +1013,7 @@ public class MetadataNode implements IMetadataNode {
                 || !getDataverseFeedPolicies(txnId, database, dataverseName).isEmpty()
                 || !getDataverseFeeds(txnId, database, dataverseName).isEmpty()
                 || !getDataverseSynonyms(txnId, database, dataverseName).isEmpty()
+                || !getDataverseCRSList(txnId, database, dataverseName).isEmpty()
                 || !getDataverseFullTextConfigs(txnId, database, dataverseName).isEmpty()
                 || !getDataverseFullTextFilters(txnId, database, dataverseName).isEmpty();
     }
@@ -3232,6 +3250,113 @@ public class MetadataNode implements IMetadataNode {
             String collectionName = collection.getDatasetName();
             throw new AsterixException(CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "catalog", catalogName, "collection",
                     String.join(".", database, dataverseName, collectionName));
+        }
+    }
+
+    @Override
+    public void addCRS(TxnId txnId, CoordinateReferenceSystem crs) throws AlgebricksException {
+        try {
+            CRSTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCRSTupleTranslator(true);
+            ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(crs);
+            insertTupleIntoIndex(txnId, mdIndexesProvider.getCRSEntity().getIndex(), tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
+                throw new AsterixException(CRS_ALREADY_EXISTS, e, crs.getSrid());
+            } else {
+                throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public CoordinateReferenceSystem getCRS(TxnId txnId, String database, DataverseName dataverseName, int srid)
+            throws AlgebricksException {
+        try {
+            ITupleReference searchKey = createCRSTuple(database, dataverseName, srid);
+            CRSTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCRSTupleTranslator(false);
+            IValueExtractor<CoordinateReferenceSystem> valueExtractor =
+                    new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<CoordinateReferenceSystem> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getCRSEntity().getIndex(), searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+        }
+    }
+
+    @Override
+    public void dropCRS(TxnId txnId, String database, DataverseName dataverseName, int srid)
+            throws AlgebricksException {
+        try {
+            CoordinateReferenceSystem crs = getCRS(txnId, database, dataverseName, srid);
+            if (crs == null) {
+                throw new AsterixException(CRS_NOT_FOUND, srid);
+            }
+            ITupleReference searchKey = createCRSTuple(database, dataverseName, srid);
+            MetadataIndex crsIndex = mdIndexesProvider.getCRSEntity().getIndex();
+            ITupleReference tuple = getTupleToBeDeleted(txnId, crsIndex, searchKey);
+            deleteTupleFromIndex(txnId, crsIndex, tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
+                throw new AsterixException(CRS_NOT_FOUND, e, srid);
+            } else {
+                throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public List<CoordinateReferenceSystem> getDataverseCRSList(TxnId txnId, String database,
+            DataverseName dataverseName) throws AlgebricksException {
+        return getCRSListImpl(txnId, createTuple(database, dataverseName));
+    }
+
+    private List<CoordinateReferenceSystem> getDatabaseCRSList(TxnId txnId, String database)
+            throws AlgebricksException {
+        return getCRSListImpl(txnId, createTuple(database));
+    }
+
+    private List<CoordinateReferenceSystem> getCRSListImpl(TxnId txnId, ITupleReference searchKey)
+            throws AlgebricksException {
+        try {
+            CRSTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getCRSTupleTranslator(false);
+            IValueExtractor<CoordinateReferenceSystem> valueExtractor =
+                    new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<CoordinateReferenceSystem> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getCRSEntity().getIndex(), searchKey, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new AsterixException(METADATA_ERROR, e, e.getMessage());
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "deprecation" })
+    private ITupleReference createCRSTuple(String database, DataverseName dataverseName, int srid) {
+        try {
+            ISerializerDeserializer<AString> strSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+            ISerializerDeserializer<AInt32> intSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+            AMutableString aStr = new AMutableString("");
+            AMutableInt32 aInt = new AMutableInt32(srid);
+            boolean usingDb = mdIndexesProvider.isUsingDatabase();
+            int numFields = usingDb ? 3 : 2;
+            ArrayTupleBuilder tb = new ArrayTupleBuilder(numFields);
+            if (usingDb) {
+                aStr.setValue(database);
+                tb.addField(strSerde, aStr);
+            }
+            aStr.setValue(dataverseName.getCanonicalForm());
+            tb.addField(strSerde, aStr);
+            tb.addField(intSerde, aInt);
+            ArrayTupleReference t = new ArrayTupleReference();
+            t.reset(tb.getFieldEndOffsets(), tb.getByteArray());
+            return t;
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException("Failed to create CRS search tuple", e);
         }
     }
 }

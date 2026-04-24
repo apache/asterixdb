@@ -47,6 +47,11 @@ public abstract class AbstractSTDoubleGeometryDescriptor extends AbstractScalarF
 
     abstract protected Object evaluateOGCGeometry(Geometry geometry0, Geometry geometry1) throws HyracksDataException;
 
+    protected Object evaluateOGCGeometry(Geometry geometry0, Geometry geometry1, IEvaluatorContext ctx)
+            throws HyracksDataException {
+        return evaluateOGCGeometry(geometry0, geometry1);
+    }
+
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
@@ -67,6 +72,7 @@ public abstract class AbstractSTDoubleGeometryDescriptor extends AbstractScalarF
         private final IPointable argPtr1;
         private final IScalarEvaluator eval0;
         private final IScalarEvaluator eval1;
+        private final IEvaluatorContext ctx;
 
         public AbstractSTDoubleGeometryEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
@@ -76,6 +82,7 @@ public abstract class AbstractSTDoubleGeometryDescriptor extends AbstractScalarF
             argPtr1 = new VoidPointable();
             eval0 = args[0].createScalarEvaluator(ctx);
             eval1 = args[1].createScalarEvaluator(ctx);
+            this.ctx = ctx;
         }
 
         @Override
@@ -112,7 +119,7 @@ public abstract class AbstractSTDoubleGeometryDescriptor extends AbstractScalarF
                 Geometry geometry0 = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn0).getGeometry();
                 DataInputStream dataIn1 = new DataInputStream(new ByteArrayInputStream(bytes1, offset1 + 1, len1 - 1));
                 Geometry geometry1 = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn1).getGeometry();
-                Object finalResult = evaluateOGCGeometry(geometry0, geometry1);
+                Object finalResult = evaluateOGCGeometry(geometry0, geometry1, ctx);
                 if (finalResult instanceof Geometry) {
                     out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
                     AGeometrySerializerDeserializer.INSTANCE.serialize((Geometry) finalResult, out);

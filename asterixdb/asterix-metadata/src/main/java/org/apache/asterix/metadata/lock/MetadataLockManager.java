@@ -328,4 +328,12 @@ public class MetadataLockManager implements IMetadataLockManager {
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
+
+    @Override
+    public void acquireCRSWriteLock(LockList locks, String database, DataverseName dataverseName, int srid)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createCRSLockKey(database, dataverseName, srid);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
 }

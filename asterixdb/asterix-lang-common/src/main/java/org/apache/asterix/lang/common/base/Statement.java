@@ -125,6 +125,8 @@ public interface Statement extends ILangExpression {
         COPY_FROM,
         COPY_TO,
         CATALOG_CREATE,
-        CATALOG_DROP
+        CATALOG_DROP,
+        CRS_CREATE,
+        CRS_DROP
     }
 }

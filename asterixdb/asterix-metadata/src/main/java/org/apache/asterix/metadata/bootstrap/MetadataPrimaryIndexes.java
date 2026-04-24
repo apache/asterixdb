@@ -64,6 +64,8 @@ public class MetadataPrimaryIndexes {
             new MetadataIndexImmutableProperties(MetadataConstants.DATABASE_DATASET_NAME, 18, 18);
     public static final MetadataIndexImmutableProperties PROPERTIES_CATALOG =
             new MetadataIndexImmutableProperties(MetadataConstants.CATALOG_DATASET_NAME, 19, 19);
+    public static final MetadataIndexImmutableProperties PROPERTIES_CRS =
+            new MetadataIndexImmutableProperties(MetadataConstants.CRS_DATASET_NAME, 20, 20);
 
     private MetadataPrimaryIndexes() {
     }

@@ -31,6 +31,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.CoordinateReferenceSystem;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -93,6 +94,8 @@ public class MetadataCache {
             new HashMap<>();
     // Key is catalog name
     protected final Map<String, Catalog> catalogs = new HashMap<>();
+    // Key is database name, then dataverse name, then SRID
+    protected final Map<String, Map<DataverseName, Map<Integer, CoordinateReferenceSystem>>> crs = new HashMap<>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -134,20 +137,23 @@ public class MetadataCache {
                                                 synchronized (libraries) {
                                                     synchronized (compactionPolicies) {
                                                         synchronized (synonyms) {
-                                                            databases.clear();
-                                                            dataverses.clear();
-                                                            nodeGroups.clear();
-                                                            datasets.clear();
-                                                            indexes.clear();
-                                                            datatypes.clear();
-                                                            functions.clear();
-                                                            fullTextConfigs.clear();
-                                                            fullTextFilters.clear();
-                                                            adapters.clear();
-                                                            libraries.clear();
-                                                            compactionPolicies.clear();
-                                                            synonyms.clear();
-                                                            catalogs.clear();
+                                                            synchronized (crs) {
+                                                                databases.clear();
+                                                                dataverses.clear();
+                                                                nodeGroups.clear();
+                                                                datasets.clear();
+                                                                indexes.clear();
+                                                                datatypes.clear();
+                                                                functions.clear();
+                                                                fullTextConfigs.clear();
+                                                                fullTextFilters.clear();
+                                                                adapters.clear();
+                                                                libraries.clear();
+                                                                compactionPolicies.clear();
+                                                                synonyms.clear();
+                                                                catalogs.clear();
+                                                                crs.clear();
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -649,6 +655,59 @@ public class MetadataCache {
     public Catalog getCatalog(String name) {
         synchronized (catalogs) {
             return catalogs.get(name);
+        }
+    }
+
+    public CoordinateReferenceSystem addOrUpdateCrs(CoordinateReferenceSystem crsEntity) {
+        synchronized (crs) {
+            Map<DataverseName, Map<Integer, CoordinateReferenceSystem>> databaseDataverses =
+                    crs.computeIfAbsent(crsEntity.getDatabaseName(), k -> new HashMap<>());
+            Map<Integer, CoordinateReferenceSystem> crsInDataverse =
+                    databaseDataverses.computeIfAbsent(crsEntity.getDataverseName(), k -> new HashMap<>());
+            return crsInDataverse.put(crsEntity.getSrid(), crsEntity);
+        }
+    }
+
+    public CoordinateReferenceSystem dropCrs(CoordinateReferenceSystem crsEntity) {
+        synchronized (crs) {
+            Map<DataverseName, Map<Integer, CoordinateReferenceSystem>> databaseDataverses =
+                    crs.get(crsEntity.getDatabaseName());
+            if (databaseDataverses == null) {
+                return null;
+            }
+            Map<Integer, CoordinateReferenceSystem> crsInDataverse =
+                    databaseDataverses.get(crsEntity.getDataverseName());
+            if (crsInDataverse != null) {
+                return crsInDataverse.remove(crsEntity.getSrid());
+            }
+            return null;
+        }
+    }
+
+    public CoordinateReferenceSystem getCrs(String database, DataverseName dataverseName, int srid) {
+        synchronized (crs) {
+            Map<DataverseName, Map<Integer, CoordinateReferenceSystem>> databaseDataverses = crs.get(database);
+            if (databaseDataverses == null) {
+                return null;
+            }
+            Map<Integer, CoordinateReferenceSystem> crsInDataverse = databaseDataverses.get(dataverseName);
+            if (crsInDataverse != null) {
+                return crsInDataverse.get(srid);
+            }
+            return null;
+        }
+    }
+
+    public CoordinateReferenceSystem addCrsIfNotExists(CoordinateReferenceSystem crsEntity) {
+        synchronized (crs) {
+            Map<DataverseName, Map<Integer, CoordinateReferenceSystem>> databaseDataverses =
+                    crs.computeIfAbsent(crsEntity.getDatabaseName(), k -> new HashMap<>());
+            Map<Integer, CoordinateReferenceSystem> crsInDataverse =
+                    databaseDataverses.computeIfAbsent(crsEntity.getDataverseName(), k -> new HashMap<>());
+            if (!crsInDataverse.containsKey(crsEntity.getSrid())) {
+                return crsInDataverse.put(crsEntity.getSrid(), crsEntity);
+            }
+            return null;
         }
     }
 

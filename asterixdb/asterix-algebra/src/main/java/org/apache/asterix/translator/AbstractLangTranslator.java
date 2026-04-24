@@ -68,6 +68,8 @@ import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
+import org.apache.asterix.lang.common.statement.crs.CRSCreateStatement;
+import org.apache.asterix.lang.common.statement.crs.CRSDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -406,6 +408,22 @@ public abstract class AbstractLangTranslator {
                 invalidOperation = isSystemNamespace(namespace);
                 if (invalidOperation) {
                     message = formatObjectDdlMessage("analyze drop", dataset(), namespace, usingDb);
+                }
+                break;
+
+            case CRS_CREATE:
+                namespace = getStatementNamespace(((CRSCreateStatement) stmt).getNamespace(), activeNamespace);
+                invalidOperation = isSystemNamespace(namespace);
+                if (invalidOperation) {
+                    message = formatObjectDdlMessage("create", "coordinate reference system", namespace, usingDb);
+                }
+                break;
+
+            case CRS_DROP:
+                namespace = getStatementNamespace(((CRSDropStatement) stmt).getNamespace(), activeNamespace);
+                invalidOperation = isSystemNamespace(namespace);
+                if (invalidOperation) {
+                    message = formatObjectDdlMessage("drop", "coordinate reference system", namespace, usingDb);
                 }
                 break;
         }

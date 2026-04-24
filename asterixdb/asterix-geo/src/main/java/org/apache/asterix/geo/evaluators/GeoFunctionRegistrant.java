@@ -39,6 +39,7 @@ import org.apache.asterix.geo.evaluators.functions.STDimensionDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STDisjointDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STDistanceDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STDistanceSphereDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STDistanceSpheroidDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STEndPointDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STEnvelopeDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STEqualsDescriptor;
@@ -80,6 +81,7 @@ import org.apache.asterix.geo.evaluators.functions.STSRIDDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STStartPointDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STSymDifferenceDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STTouchesDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STTransformDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STUnionDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STWithinDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STXDescriptor;
@@ -176,5 +178,7 @@ public class GeoFunctionRegistrant implements IFunctionRegistrant {
         fc.add(STDistanceSphereDescriptor.FACTORY);
         fc.add(STDWithinDescriptor.FACTORY);
         fc.add(STBufferDescriptor.FACTORY);
+        fc.add(STTransformDescriptor.FACTORY);
+        fc.add(STDistanceSpheroidDescriptor.FACTORY);
     }
 }

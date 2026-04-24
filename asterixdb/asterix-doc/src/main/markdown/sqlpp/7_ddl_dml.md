@@ -623,6 +623,21 @@ The following example shows how to bulk load the `customers` dataset from an ext
      LOAD DATASET customers USING localfs
         (("path"="127.0.0.1:///Users/bignosqlfan/commercenew/gbu.adm"),("format"="adm"));
 
+### <a id="CRS_statements">Coordinate Reference System (CRS) Statements</a>
+
+CRS statements manage CRS definitions used by geospatial functions such as `st_transform`.
+CRS metadata is stored in `Metadata.\`CoordinateReferenceSystem\`` with the fields `SRID`, `CRSName`, and `CrsWKT`.
+
+Create a CRS definition:
+
+    CREATE COORDINATE REFERENCE SYSTEM 4326 IF NOT EXISTS
+      NAME 'WGS 84'
+      AS 'GEOGCS["WGS 84", ... ]';
+
+Drop a CRS definition:
+
+    DROP COORDINATE REFERENCE SYSTEM 4326 IF EXISTS;
+
 ## <a id="Modification_statements">Modification statements</a>
 
 ### <a id="Inserts">Insert Statement</a>

@@ -344,6 +344,34 @@ There are primitive functions that take as input geometry/es and return a primit
 
         111195.0662708989
 
+### st_distance_spheroid ###
+* Return the minimum geodesic distance in meters between two geometries using the WGS84 ellipsoid.
+* If an input geometry has a known SRID that is not `4326`, the function emits a warning and still computes distance using WGS84.
+
+* Example:
+  * Command:
+
+        st_distance_spheroid(st_geom_from_text('POINT(-73.985428 40.748817)', 4326), st_geom_from_text('POINT(-0.118092 51.509865)', 4326));
+  * Result:
+
+        5581421.87552557
+
+### st_transform ###
+* Transform geometry coordinates from a source SRID to a target SRID.
+* Syntax: `st_transform(geometry, source_srid, target_srid)`
+* `source_srid` and `target_srid` must be integer constants.
+* CRS definitions are resolved from metadata. Register them with:
+  * `CREATE COORDINATE REFERENCE SYSTEM ...`
+  * `LOAD COORDINATE REFERENCE SYSTEM FROM PATH ...`
+
+* Example:
+  * Command:
+
+        round(st_x(st_transform(st_geom_from_text('POINT(-0.118092 51.509865)', 4326), 4326, 3857)));
+  * Result:
+
+        -13146
+
 ## <a id="predicate">Spatial Predicate</a>
 Spatial predicate functions test for a relationship between two geometries and return a Boolean value (true/false).
 

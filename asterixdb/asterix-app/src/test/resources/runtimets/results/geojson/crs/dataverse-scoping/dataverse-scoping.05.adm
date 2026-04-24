@@ -1,0 +1,3 @@
+{ "DataverseName": "CRSTestDV2", "SRID": 3857, "CRSName": "WGS 84 / Pseudo-Mercator" }
+{ "DataverseName": "CRSTestDV2", "SRID": 4326, "CRSName": "WGS 84 (DV2)" }
+{ "DataverseName": "Default", "SRID": 32633, "CRSName": "WGS 84 / UTM zone 33N (Default)" }

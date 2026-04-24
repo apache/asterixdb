@@ -186,6 +186,8 @@ import org.apache.asterix.lang.common.statement.catalog.CatalogCreateStatement;
 import org.apache.asterix.lang.common.statement.catalog.CatalogDropStatement;
 import org.apache.asterix.lang.common.statement.catalog.IcebergCatalogCreateStatement;
 import org.apache.asterix.lang.common.statement.catalog.IcebergCatalogDetailsDecl;
+import org.apache.asterix.lang.common.statement.crs.CRSCreateStatement;
+import org.apache.asterix.lang.common.statement.crs.CRSDropStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -288,6 +290,10 @@ class SQLPPParser extends ScopeChecker implements IParser {
     protected static final String CATALOG = "CATALOG";
     private static final String SOURCE = "SOURCE";
     private static final String CASCADE = "CASCADE";
+    private static final String COORDINATE = "COORDINATE";
+    private static final String REFERENCE = "REFERENCE";
+    private static final String SYSTEM = "SYSTEM";
+    private static final String NAME = "NAME";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -1114,6 +1120,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateFeedPolicyStatement(startToken)
     | stmt = CreateFullTextStatement(startToken)
     | LOOKAHEAD({laIdentifier(CATALOG)}) stmt = CreateCatalogStatement(startToken)
+    | LOOKAHEAD({laIdentifier(COORDINATE)}) stmt = CreateCRSStatement(startToken)
     | stmt = CreateViewStatement(startToken, false)
   )
   {
@@ -1291,6 +1298,46 @@ CatalogCreateStatement CatalogSpecification(Token startStmtToken) throws ParseEx
     } catch (CompilationException e) {
       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
     }
+  }
+}
+
+CRSCreateStatement CreateCRSStatement(Token startStmtToken) throws ParseException:
+{
+  int srid;
+  boolean ifNotExists = false;
+  String crsName = null;
+  String crsWkt = null;
+}
+{
+  // consume "COORDINATE"
+  <IDENTIFIER> { expectToken(COORDINATE); }
+  // consume "REFERENCE"
+  <IDENTIFIER> { expectToken(REFERENCE); }
+  // consume "SYSTEM"
+  <IDENTIFIER> { expectToken(SYSTEM); }
+  <INTEGER_LITERAL>
+  {
+    long sridLong;
+    try {
+      sridLong = Long.parseLong(token.image);
+    } catch (NumberFormatException e) {
+      throw new SqlppParseException(getSourceLocation(token), "Invalid SRID value: " + token.image);
+    }
+    if (sridLong < 1 || sridLong > Integer.MAX_VALUE) {
+      throw new SqlppParseException(getSourceLocation(token),
+        "SRID must be a positive integer (1 to " + Integer.MAX_VALUE + "), got: " + sridLong);
+    }
+    srid = (int) sridLong;
+  }
+  ifNotExists = IfNotExists()
+  // consume "NAME"
+  <IDENTIFIER> { expectToken(NAME); }
+  crsName = StringLiteral()
+  <AS>
+  crsWkt = StringLiteral()
+  {
+    CRSCreateStatement stmt = new CRSCreateStatement(defaultNamespace, srid, crsName, crsWkt, ifNotExists);
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -2621,6 +2668,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropSynonymStatement(startToken)
     | stmt = DropFullTextStatement(startToken)
     | LOOKAHEAD({laIdentifier(CATALOG)}) stmt = DropCatalogStatement(startToken)
+    | LOOKAHEAD({laIdentifier(COORDINATE)}) stmt = DropCRSStatement(startToken)
     | stmt = DropViewStatement(startToken)
   )
   {
@@ -2653,6 +2701,39 @@ DropDatasetStatement DropDatasetSpecification(Token startStmtToken) throws Parse
    }
   {
     DropDatasetStatement stmt = new DropDatasetStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+CRSDropStatement DropCRSStatement(Token startStmtToken) throws ParseException:
+{
+  int srid;
+  boolean ifExists = false;
+}
+{
+  // consume "COORDINATE"
+  <IDENTIFIER> { expectToken(COORDINATE); }
+  // consume "REFERENCE"
+  <IDENTIFIER> { expectToken(REFERENCE); }
+  // consume "SYSTEM"
+  <IDENTIFIER> { expectToken(SYSTEM); }
+  <INTEGER_LITERAL>
+  {
+    long sridLong;
+    try {
+      sridLong = Long.parseLong(token.image);
+    } catch (NumberFormatException e) {
+      throw new SqlppParseException(getSourceLocation(token), "Invalid SRID value: " + token.image);
+    }
+    if (sridLong < 1 || sridLong > Integer.MAX_VALUE) {
+      throw new SqlppParseException(getSourceLocation(token),
+        "SRID must be a positive integer (1 to " + Integer.MAX_VALUE + "), got: " + sridLong);
+    }
+    srid = (int) sridLong;
+  }
+  ifExists = IfExists()
+  {
+    CRSDropStatement stmt = new CRSDropStatement(defaultNamespace, srid, ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }

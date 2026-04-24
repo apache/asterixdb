@@ -45,6 +45,7 @@ import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.CoordinateReferenceSystem;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -1420,6 +1421,54 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         ctx.dropCatalog(catalogName);
+    }
+
+    @Override
+    public void addCRS(MetadataTransactionContext ctx, CoordinateReferenceSystem crs) throws AlgebricksException {
+        try {
+            metadataNode.addCRS(ctx.getTxnId(), crs);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.addCRS(crs);
+    }
+
+    @Override
+    public CoordinateReferenceSystem getCRS(MetadataTransactionContext ctx, String database,
+            DataverseName dataverseName, int srid) throws AlgebricksException {
+        Objects.requireNonNull(database);
+        CoordinateReferenceSystem crs = ctx.getCrs(database, dataverseName, srid);
+        if (crs != null) {
+            return crs;
+        }
+        if (ctx.crsIsDropped(database, dataverseName, srid)) {
+            return null;
+        }
+        crs = cache.getCrs(database, dataverseName, srid);
+        if (crs != null) {
+            return crs;
+        }
+        try {
+            crs = metadataNode.getCRS(ctx.getTxnId(), database, dataverseName, srid);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        if (crs != null) {
+            ctx.addCRS(crs);
+        }
+        return crs;
+    }
+
+    @Override
+    public void dropCRS(MetadataTransactionContext ctx, String database, DataverseName dataverseName, int srid)
+            throws AlgebricksException {
+        try {
+            Objects.requireNonNull(database);
+            metadataNode.dropCRS(ctx.getTxnId(), database, dataverseName, srid);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.dropCRS(database, dataverseName, srid);
     }
 
     private static class CCMetadataManagerImpl extends MetadataManager {

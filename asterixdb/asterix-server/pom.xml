@@ -670,6 +670,11 @@
               <contentFile>xmlenc_0.52_LICENSE.txt</contentFile>
             </license>
             <license>
+              <displayName>a BSD 3-clause license</displayName>
+              <url>https://raw.githubusercontent.com/unitsofmeasurement/unit-api/refs/heads/master/LICENSE</url>
+              <contentFile>javax.measure--unit-api--2.1.3_LICENSE.txt</contentFile>
+            </license>
+            <license>
               <displayName>The Apache Software License, Version 2.0</displayName>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
               <aliasUrls>
@@ -721,6 +726,7 @@
                 <aliasUrl>https://raw.githubusercontent.com/RoaringBitmap/RoaringBitmap/0.9.39/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/JetBrains/java-annotations/master/LICENSE.txt</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/awslabs/aws-crt-java/v0.27.1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/opengeospatial/geoapi/master/LICENSE.txt</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>

@@ -31,6 +31,7 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Catalog;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.CoordinateReferenceSystem;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -933,4 +934,12 @@ public interface IMetadataManager extends IMetadataBootstrap {
     Catalog getCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
 
     void dropCatalog(MetadataTransactionContext ctx, String catalogName) throws AlgebricksException;
+
+    void addCRS(MetadataTransactionContext ctx, CoordinateReferenceSystem crs) throws AlgebricksException;
+
+    CoordinateReferenceSystem getCRS(MetadataTransactionContext ctx, String database, DataverseName dataverseName,
+            int srid) throws AlgebricksException;
+
+    void dropCRS(MetadataTransactionContext ctx, String database, DataverseName dataverseName, int srid)
+            throws AlgebricksException;
 }

@@ -93,6 +93,7 @@ import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnknownCheckForKnownTypeExpressionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
+import org.apache.asterix.optimizer.rules.STTransformResolveCRSRule;
 import org.apache.asterix.optimizer.rules.SetAsterixMemoryRequirementsRule;
 import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
@@ -194,6 +195,10 @@ public final class RuleCollections {
 
     public static List<IAlgebraicRewriteRule> buildFulltextContainsRuleCollection() {
         return Collections.singletonList(new FullTextContainsParameterCheckAndSetRule());
+    }
+
+    public static List<IAlgebraicRewriteRule> buildSTTransformRuleCollection() {
+        return Collections.singletonList(new STTransformResolveCRSRule());
     }
 
     public static List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {

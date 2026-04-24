@@ -47,4 +47,61 @@
             <output-dir compare="Text">joins</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="functions">
+            <output-dir compare="Text">functions</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-invalid-wkt">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>Invalid CRS WKT for SRID 9999</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-duplicate">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>CRS definition already exists for SRID 32632</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-drop-not-found">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>CRS definition not found for SRID 99998</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-transform-not-found">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>CRS definition not found for SRID 99999</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-transform-srid-zero">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>Compilation error: SRID must be a positive integer (1 to 2147483647), got: 0</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-transform-srid-too-large">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>Compilation error: SRID must be a positive integer (1 to 2147483647), got: 2147483648</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-distance-spheroid-srid">
+            <output-dir compare="Text">negative</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="dataverse-scoping">
+            <output-dir compare="Text">dataverse-scoping</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="geojson/crs">
+        <compilation-unit name="negative/crs-create-metadata-namespace">
+            <output-dir compare="Text">negative</output-dir>
+            <expected-error>Compilation error: Invalid operation - Cannot create a coordinate reference system belonging to the dataverse: Metadata</expected-error>
+        </compilation-unit>
+    </test-case>
 </test-group>

@@ -68,6 +68,7 @@ import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
+import org.apache.asterix.app.translator.handlers.CRSStatementHandler;
 import org.apache.asterix.app.translator.handlers.IcebergCatalogStatementHandler;
 import org.apache.asterix.app.translator.helpers.IcebergStatementValidationHelper;
 import org.apache.asterix.column.validation.ColumnPropertiesValidationUtil;
@@ -183,6 +184,7 @@ import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
+import org.apache.asterix.lang.common.statement.crs.CRSStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -597,6 +599,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case CATALOG_CREATE:
                     case CATALOG_DROP:
                         handleCatalogStatement(kind, metadataProvider, stmt, hcc, requestParameters);
+                        break;
+                    case CRS_CREATE:
+                    case CRS_DROP:
+                        handleCRSStatement(kind, metadataProvider, stmt);
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
@@ -5907,6 +5913,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         IcebergCatalogStatementHandler statement = new IcebergCatalogStatementHandler(appCtx, kind, metadataProvider,
                 stmt, Creator.DEFAULT_CREATOR, sessionConfig, lockUtil, lockManager, requestParameters);
         statement.handle();
+    }
+
+    protected void handleCRSStatement(Statement.Kind kind, MetadataProvider metadataProvider, Statement stmt)
+            throws Exception {
+        Namespace resolvedNamespace = getActiveNamespace(((CRSStatement) stmt).getNamespace());
+        CRSStatementHandler handler = new CRSStatementHandler(kind, metadataProvider, stmt, sessionConfig, lockUtil,
+                lockManager, resolvedNamespace);
+        handler.handle();
     }
 
     @Override

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import java.io.Serial;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -28,14 +30,14 @@ import org.locationtech.jts.geom.Geometry;
 
 public class STFlipCoordinatesDescriptor extends AbstractSTSingleGeometryDescriptor {
 
+    @Serial
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = STFlipCoordinatesDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        Geometry flipped = geometry.copy();
-        flipped.apply(FlipCoordinatesFilter.INSTANCE);
-        return flipped;
+        geometry.apply(FlipCoordinatesFilter.INSTANCE);
+        return geometry;
     }
 
     @Override

@@ -19,6 +19,8 @@
 package org.apache.asterix.geo.evaluators;
 
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
@@ -49,6 +51,20 @@ public class GeoFunctionTypeInferers {
             } else {
                 throw new NotImplementedException("parse-geojson for data of type " + t);
             }
+        }
+    }
+
+    public static final class STTransformTypeInferer implements IFunctionTypeInferer {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps, IMetadataProvider<?, ?> mp) throws AlgebricksException {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+            Object[] opaque = fce.getOpaqueParameters();
+            if (opaque == null || opaque.length < 2) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
+                        "ST_Transform CRS resolution rule did not run");
+            }
+            fd.setImmutableStates(opaque[0], opaque[1]);
         }
     }
 

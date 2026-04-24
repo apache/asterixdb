@@ -1,0 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- Exercise the warn-and-null path of ST_Transform's arg-0 type-mismatch
+-- branch. Row 1 feeds a string into arg 0: the evaluator emits a
+-- TYPE_MISMATCH_FUNCTION warning and returns null. Row 2 feeds a valid
+-- geometry: it transforms normally. Both rows must appear in the result
+-- (i.e. the evaluator must not abort the query on the bad row).
+
+USE GeoJSONCRS;
+
+FROM [
+  {"id": 1, "val": "not-a-geometry"},
+  {"id": 2, "val": st_geom_from_text('POINT(0 0)', 4326)}
+] AS r
+SELECT r.id, st_transform(r.val, 4326, 3857) IS NULL AS transformed_is_null
+ORDER BY r.id;

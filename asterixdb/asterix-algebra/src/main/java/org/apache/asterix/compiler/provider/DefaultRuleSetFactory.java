@@ -98,6 +98,7 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx, true)));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildSTTransformRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildCBORuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));

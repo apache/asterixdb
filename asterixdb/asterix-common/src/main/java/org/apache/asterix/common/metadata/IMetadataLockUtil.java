@@ -177,4 +177,11 @@ public interface IMetadataLockUtil {
 
     void dropCatalogBegin(IMetadataLockManager lockManager, LockList locks, String catalogName)
             throws AlgebricksException;
+
+    // CRS helpers
+    void createCRSBegin(IMetadataLockManager lockManager, LockList locks, String database, DataverseName dataverseName,
+            int srid) throws AlgebricksException;
+
+    void dropCRSBegin(IMetadataLockManager lockManager, LockList locks, String database, DataverseName dataverseName,
+            int srid) throws AlgebricksException;
 }

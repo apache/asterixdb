@@ -177,6 +177,7 @@ public class MetadataBootstrap {
                 insertSynonymEntitiesIfNotExist(mdTxnCtx, mdIndexesProvider);
                 insertFullTextConfigAndFilterIfNotExist(mdTxnCtx, mdIndexesProvider);
                 insertCatalogIfNotExist(mdTxnCtx, mdIndexesProvider);
+                insertCRSIfNotExist(mdTxnCtx, mdIndexesProvider);
             }
             // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
@@ -387,6 +388,24 @@ public class MetadataBootstrap {
                 MetadataConstants.METADATA_DATAVERSE_NAME, MetadataConstants.CATALOG_DATASET_NAME) == null) {
             insertMetadataDatasets(mdTxnCtx,
                     new IMetadataIndex[] { metadataIndexesProvider.getCatalogEntity().getIndex() });
+        }
+    }
+
+    // For backward-compatibility: for old datasets created by an older version of AsterixDB, they
+    // may not have a CRS dataset in the metadata catalog.
+    private static void insertCRSIfNotExist(MetadataTransactionContext mdTxnCtx,
+            MetadataIndexesProvider metadataIndexesProvider) throws AlgebricksException {
+        // We need to insert data types first because datasets depend on data types
+        IAType crsRecordType = metadataIndexesProvider.getCRSEntity().getRecordType();
+        if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, crsRecordType.getTypeName()) == null) {
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.SYSTEM_DATABASE,
+                    MetadataConstants.METADATA_DATAVERSE_NAME, crsRecordType.getTypeName(), crsRecordType, false));
+        }
+        if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, MetadataConstants.CRS_DATASET_NAME) == null) {
+            insertMetadataDatasets(mdTxnCtx,
+                    new IMetadataIndex[] { metadataIndexesProvider.getCRSEntity().getIndex() });
         }
     }
 
@@ -627,10 +646,12 @@ public class MetadataBootstrap {
                 // Backward-compatibility:
                 // - FULLTEXT_ENTITY_DATASET entity
                 // - Catalog entity
+                // - CRS entity
                 // is added to AsterixDB recently and may not exist in an older dataverse
                 && index != mdIndexesProvider.getFullTextConfigEntity().getIndex()
                 && index != mdIndexesProvider.getFullTextFilterEntity().getIndex()
-                && index != mdIndexesProvider.getCatalogEntity().getIndex()) {
+                && index != mdIndexesProvider.getCatalogEntity().getIndex()
+                && index != mdIndexesProvider.getCRSEntity().getIndex()) {
             throw new IllegalStateException(
                     "attempt to create metadata index " + index.getIndexName() + ". Index should already exist");
         }

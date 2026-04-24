@@ -125,6 +125,7 @@
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
     <implementation.vendor>${project.organization.name}</implementation.vendor>
+    <sis.version>1.6</sis.version>
   </properties>
 
   <build>
@@ -2024,6 +2025,16 @@
         <groupId>org.projectnessie.nessie</groupId>
         <artifactId>nessie-client</artifactId>
         <version>${nessieproject.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-bundled-guava</artifactId>
+        <version>${icebergjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.sis.core</groupId>
+        <artifactId>sis-referencing</artifactId>
+        <version>${sis.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

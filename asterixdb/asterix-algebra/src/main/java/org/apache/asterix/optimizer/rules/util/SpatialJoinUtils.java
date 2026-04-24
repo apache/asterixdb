@@ -86,7 +86,7 @@ public class SpatialJoinUtils {
     protected static boolean trySpatialJoinAssignment(AbstractBinaryJoinOperator op, IOptimizationContext context,
             ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
-        // Check if the join condition contains spatial join
+        // Check if the join condition contains spatial joinbut
         AbstractFunctionCallExpression spatialJoinFuncExpr = null;
         // Maintain conditions which is not spatial_intersect in the join condition
         List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();

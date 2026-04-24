@@ -107,4 +107,8 @@ public class MetadataTupleTranslatorProvider {
     public CatalogTupleTranslator getCatalogTupleTranslator(boolean getTuple) {
         return new CatalogTupleTranslator(getTuple, mdIndexesProvider.getCatalogEntity());
     }
+
+    public CRSTupleTranslator getCRSTupleTranslator(boolean getTuple) {
+        return new CRSTupleTranslator(getTuple, mdIndexesProvider.getCRSEntity());
+    }
 }
