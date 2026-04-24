@@ -16,25 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+SET `compiler.sort.parallel` "false";
+USE MovieTest;
 
-/*
- * Description: Tests that LIMIT is pushed down to index-search in indexnl join
- */
-
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
-
-CREATE TYPE openType AS OPEN {
-  id:string
-};
-
-CREATE DATASET ds1(openType) PRIMARY KEY id;
-CREATE DATASET ds2(openType) PRIMARY KEY id;
-
-CREATE TYPE openType2 AS OPEN {
-  id:int
-};
-
-CREATE DATASET ds3(openType2) PRIMARY KEY id;
-CREATE DATASET ds4(openType2) PRIMARY KEY id;
+FROM movies m
+SELECT m.*, (FROM movies im
+LET diff = ABS(m.runtime - im.runtime)
+SELECT im.*
+ORDER BY diff, im.id
+LIMIT 3
+) AS close
+ORDER BY m.id;

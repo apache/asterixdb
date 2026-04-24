@@ -50,7 +50,7 @@ distribute result [$$166] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    unnest-map [$$173, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$181, 1, $$181, true, true, true) limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                    unnest-map [$$173, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$181, 1, $$181, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                                                     -- BTREE_SEARCH  |PARTITIONED|
                                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -144,7 +144,7 @@ distribute result [$$166] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    unnest-map [$$178, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$190, 1, $$190, true, true, true) limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                    unnest-map [$$178, $$web_page] <- index-search("web_page", 0, "tpcds", "web_page", true, true, 1, $$190, 1, $$190, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                                                     -- BTREE_SEARCH  |PARTITIONED|
                                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

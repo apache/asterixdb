@@ -16,25 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Description: Tests that LIMIT is pushed down to index-search in indexnl join
+ * Description  : This test case is to verify the fix for issue 3752.
+ * Issue link   : https://issues.apache.org/jira/browse/ASTERIXDB-3752
  */
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
+DROP DATAVERSE MovieTest IF EXISTS;
+CREATE DATAVERSE MovieTest;
 
-CREATE TYPE openType AS OPEN {
-  id:string
-};
-
-CREATE DATASET ds1(openType) PRIMARY KEY id;
-CREATE DATASET ds2(openType) PRIMARY KEY id;
-
-CREATE TYPE openType2 AS OPEN {
-  id:int
-};
-
-CREATE DATASET ds3(openType2) PRIMARY KEY id;
-CREATE DATASET ds4(openType2) PRIMARY KEY id;
+USE MovieTest;
+CREATE TYPE MovieType AS {id: int};
+CREATE DATASET movies (MovieType) PRIMARY KEY id;
