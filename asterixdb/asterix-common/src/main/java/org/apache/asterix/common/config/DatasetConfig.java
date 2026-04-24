@@ -48,7 +48,8 @@ public class DatasetConfig {
         LENGTH_PARTITIONED_WORD_INVIX,
         LENGTH_PARTITIONED_NGRAM_INVIX,
         ARRAY,
-        SAMPLE
+        SAMPLE,
+        VTREE
     }
 
     public enum TransactionState {

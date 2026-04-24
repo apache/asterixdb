@@ -175,6 +175,10 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             case BTREE:
                 indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
+            case VTREE:
+                indexOperationsHelper =
+                        new SecondaryVectorOperationsHelper(dataset, index, metadataProvider, sourceLoc);
+                break;
             case RTREE:
                 ensureNotColumnar(dataset, indexType, sourceLoc);
                 indexOperationsHelper = new SecondaryRTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
@@ -218,6 +222,13 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
 
     @Override
     public abstract JobSpecification buildLoadingJobSpec() throws AlgebricksException;
+
+    @Override
+    public JobSpecification buildStaticStructureJobSpec() throws AlgebricksException {
+        // Default implementation - only VECTOR indexes support static structure creation
+        throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, sourceLoc,
+                "Static structure creation not supported for index type: " + index.getIndexType());
+    }
 
     @Override
     public abstract JobSpecification buildCompactJobSpec() throws AlgebricksException;

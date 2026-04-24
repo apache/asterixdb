@@ -39,6 +39,7 @@ import org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicyFactory
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.dataflow.data.common.AListElementTokenFactory;
 import org.apache.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
+import org.apache.asterix.dataflow.data.common.AOrderedListVectorBinaryAccessorFactory;
 import org.apache.asterix.dataflow.data.common.AUnorderedListBinaryTokenizerFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
@@ -161,6 +162,10 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         registeredClasses.put("LSMRTreeWithAntiMatterLocalResource", LSMRTreeWithAntiMatterLocalResource.class);
         registeredClasses.put("LSMInvertedIndexLocalResource", LSMInvertedIndexLocalResource.class);
         registeredClasses.put("LSMColumnBTreeLocalResource", LSMColumnBTreeLocalResource.class);
+
+        // IVTreeBinaryAccessorFactory — registered so LSMVTreeLocalResource can JSON-round-trip the
+        // factory via IPersistedResourceRegistry.deserialize() instead of Class.forName lookup.
+        registeredClasses.put("AOrderedListVectorBinaryAccessorFactory", AOrderedListVectorBinaryAccessorFactory.class);
 
         // ILSMMergePolicyFactory
         registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);

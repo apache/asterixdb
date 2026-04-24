@@ -50,6 +50,7 @@ public interface IRecoveryManager {
         public static final byte LSM_BTREE = 0;
         public static final byte LSM_RTREE = 1;
         public static final byte LSM_INVERTED_INDEX = 2;
+        public static final byte LSM_VTREE = 3;
     }
 
     /**

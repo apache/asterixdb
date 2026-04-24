@@ -105,7 +105,6 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String DATASET_STATS_OPERATOR_NAME = "Sample.DatasetStats";
-
     private final MetadataProvider metadataProvider;
     private final Dataset dataset;
     private final Index sampleIdx;
@@ -432,13 +431,6 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         return spec;
     }
 
-    private static int getSortNumFrames(MetadataProvider metadataProvider, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        return OptimizationConfUtil.getSortNumFrames(metadataProvider.getApplicationContext().getCompilerProperties(),
-                metadataProvider.getConfig(), sourceLoc,
-                metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
-    }
-
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor,
             long numElementHint) throws AlgebricksException {
@@ -494,5 +486,17 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         return OptimizationConfUtil.getGroupByNumFrames(
                 metadataProvider.getApplicationContext().getCompilerProperties(), metadataProvider.getConfig(),
                 sourceLoc, metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
+    }
+
+    private static int getSortNumFrames(MetadataProvider metadataProvider, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        return OptimizationConfUtil.getSortNumFrames(metadataProvider.getApplicationContext().getCompilerProperties(),
+                metadataProvider.getConfig(), sourceLoc,
+                metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
+    }
+
+    @Override
+    public JobSpecification buildStaticStructureJobSpec() {
+        throw new UnsupportedOperationException();
     }
 }

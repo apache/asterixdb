@@ -37,6 +37,8 @@ public interface ISecondaryIndexOperationsHelper {
 
     JobSpecification buildLoadingJobSpec() throws AlgebricksException;
 
+    JobSpecification buildStaticStructureJobSpec() throws AlgebricksException;
+
     JobSpecification buildCompactJobSpec() throws AlgebricksException;
 
     JobSpecification buildDropJobSpec(Set<IndexDropOperatorDescriptor.DropOption> options) throws AlgebricksException;

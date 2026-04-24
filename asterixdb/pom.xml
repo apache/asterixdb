@@ -1467,6 +1467,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-storage-am-lsm-vtree</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
         <version>${hyracks.version}</version>
       </dependency>

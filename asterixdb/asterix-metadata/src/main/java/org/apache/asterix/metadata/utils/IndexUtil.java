@@ -149,6 +149,7 @@ public class IndexUtil {
                 numSecondaryKeys = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
                 return new int[] { numPrimaryKeys + numSecondaryKeys };
             case RTREE:
+            case VTREE:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
@@ -220,6 +221,13 @@ public class IndexUtil {
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildCompactJobSpec();
+    }
+
+    public static JobSpecification buildSecondaryIndexStaticStructureJobSpec(Dataset dataset, Index index,
+            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
+        return secondaryIndexHelper.buildStaticStructureJobSpec();
     }
 
     /**

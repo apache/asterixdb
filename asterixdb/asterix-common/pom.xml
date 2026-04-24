@@ -203,5 +203,10 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-cloud</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-storage-am-vtree</artifactId>
+          <version>${hyracks.version}</version>
+      </dependency>
   </dependencies>
 </project>

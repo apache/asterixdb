@@ -248,18 +248,18 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ARRAY_BINARY_SEARCH = FunctionConstants.newAsterix("array-binary-search", 2);
 
     // objects
-    public static final FunctionIdentifier RECORD_TRANSFORM = FunctionConstants.newAsterix("object-transform", 2);
     public static final FunctionIdentifier RECORD_MERGE = FunctionConstants.newAsterix("object-merge", 2);
     public static final FunctionIdentifier RECORD_MERGE_IGNORE_DUPLICATES =
             FunctionConstants.newAsterix("object-merge-ignore-duplicates", 2);
-    public static final FunctionIdentifier RECORD_REMOVE_RECURSIVE =
-            FunctionConstants.newAsterix("object-remove-recursive", 2);
     public static final FunctionIdentifier RECORD_CONCAT =
             FunctionConstants.newAsterix("object-concat", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RECORD_CONCAT_STRICT =
             FunctionConstants.newAsterix("object-concat-strict", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier REMOVE_FIELDS = FunctionConstants.newAsterix("object-remove-fields", 2);
     public static final FunctionIdentifier ADD_FIELDS = FunctionConstants.newAsterix("object-add-fields", 2);
+    public static final FunctionIdentifier RECORD_TRANSFORM = FunctionConstants.newAsterix("object-transform", 2);
+    public static final FunctionIdentifier RECORD_REMOVE_RECURSIVE =
+            FunctionConstants.newAsterix("object-remove-recursive", 2);
 
     public static final FunctionIdentifier CLOSED_RECORD_CONSTRUCTOR =
             FunctionConstants.newAsterix("closed-object-constructor", FunctionIdentifier.VARARGS);
@@ -457,6 +457,8 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("agg-local-sampling", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RANGE_MAP =
             FunctionConstants.newAsterix("agg-range-map", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier QUANTIZATION_CONSTANTS =
+            FunctionConstants.newAsterix("agg-quantization-constants", 1);
     public static final FunctionIdentifier STDDEV_POP = FunctionConstants.newAsterix("agg-stddev_pop", 1);
     public static final FunctionIdentifier GLOBAL_STDDEV_POP = FunctionConstants.newAsterix("agg-global-stddev_pop", 1);
     public static final FunctionIdentifier INTERMEDIATE_STDDEV_POP =
@@ -508,6 +510,13 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SKEWNESS = FunctionConstants.newAsterix("skewness", 1);
     public static final FunctionIdentifier SCALAR_KURTOSIS = FunctionConstants.newAsterix("kurtosis", 1);
     public static final FunctionIdentifier SCALAR_UNION_MBR = FunctionConstants.newAsterix("union_mbr", 1);
+
+    // aggregates for clustering
+    public static final FunctionIdentifier KMEANS_ACCUMULATE = FunctionConstants.newAsterix("agg-kmeans-accumulate", 1);
+    public static final FunctionIdentifier LOCAL_KMEANS_ACCUMULATE =
+            FunctionConstants.newAsterix("agg-local-kmeans-accumulate", 1);
+    public static final FunctionIdentifier GLOBAL_KMEANS_ACCUMULATE =
+            FunctionConstants.newAsterix("agg-global-kmeans-accumulate", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG = FunctionConstants.newAsterix("avg-serial", 1);
@@ -840,10 +849,10 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("win-mark-first-missing-impl", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier WIN_MARK_FIRST_NULL_IMPL =
             FunctionConstants.newAsterix("win-mark-first-null-impl", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier WIN_PARTITION_LENGTH_IMPL =
-            FunctionConstants.newAsterix("win-partition-length-impl", 0);
     public static final FunctionIdentifier WIN_MARK_VALID_TUPLES_IMPL =
             FunctionConstants.newAsterix("win-mark-valid-tuple-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier WIN_PARTITION_LENGTH_IMPL =
+            FunctionConstants.newAsterix("win-partition-length-impl", 0);
 
     // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION = FunctionConstants.newAsterix("scan-collection", 1);
@@ -1679,6 +1688,7 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SAMPLING, ABinaryTypeComputer.INSTANCE, true);
         addPrivateFunction(RANGE_MAP, ABinaryTypeComputer.INSTANCE, true);
+        addPrivateFunction(QUANTIZATION_CONSTANTS, ABinaryTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1970,8 +1980,8 @@ public class BuiltinFunctions {
         addFunction(PERCENT_RANK_IMPL, ADoubleTypeComputer.INSTANCE, false);
         addPrivateFunction(WIN_MARK_FIRST_MISSING_IMPL, ABooleanTypeComputer.INSTANCE, false);
         addPrivateFunction(WIN_MARK_FIRST_NULL_IMPL, ABooleanTypeComputer.INSTANCE, false);
-        addPrivateFunction(WIN_PARTITION_LENGTH_IMPL, AInt64TypeComputer.INSTANCE, false);
         addPrivateFunction(WIN_MARK_VALID_TUPLES_IMPL, ABooleanTypeComputer.INSTANCE, false);
+        addPrivateFunction(WIN_PARTITION_LENGTH_IMPL, AInt64TypeComputer.INSTANCE, false);
 
         // Similarity functions
         addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
@@ -2152,12 +2162,12 @@ public class BuiltinFunctions {
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);
         addPrivateFunction(RECORD_MERGE_IGNORE_DUPLICATES, RecordMergeTypeComputer.INSTANCE_IGNORE_DUPLICATES, true);
-        addPrivateFunction(RECORD_REMOVE_RECURSIVE, RecordRemoveRecursiveTypeComputer.INSTANCE, true);
-        addPrivateFunction(RECORD_TRANSFORM, RecordTransformTypeComputer.INSTANCE, true);
         addFunction(RECORD_CONCAT, OpenARecordTypeComputer.INSTANCE, true);
         addPrivateFunction(RECORD_CONCAT_STRICT, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(ADD_FIELDS, RecordAddFieldsTypeComputer.INSTANCE, true);
         addFunction(REMOVE_FIELDS, RecordRemoveFieldsTypeComputer.INSTANCE, true);
+        addPrivateFunction(RECORD_REMOVE_RECURSIVE, RecordRemoveRecursiveTypeComputer.INSTANCE, true);
+        addPrivateFunction(RECORD_TRANSFORM, RecordTransformTypeComputer.INSTANCE, true);
         addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE, true);
         addPrivateFunction(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE, true);
         addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE, true);
@@ -2595,6 +2605,11 @@ public class BuiltinFunctions {
         addIntermediateAgg(LOCAL_SAMPLING, RANGE_MAP);
         addIntermediateAgg(RANGE_MAP, RANGE_MAP);
         addGlobalAgg(RANGE_MAP, RANGE_MAP);
+
+        // QUANTIZATION_CONSTANTS
+        addAgg(QUANTIZATION_CONSTANTS);
+        addIntermediateAgg(QUANTIZATION_CONSTANTS, QUANTIZATION_CONSTANTS);
+        addGlobalAgg(QUANTIZATION_CONSTANTS, QUANTIZATION_CONSTANTS);
 
         addAgg(NULL_WRITER);
         addLocalAgg(NULL_WRITER, NULL_WRITER);
@@ -3076,8 +3091,8 @@ public class BuiltinFunctions {
         addWindowFunction(ROW_NUMBER, ROW_NUMBER_IMPL, NO_FRAME_CLAUSE);
         addWindowFunction(null, WIN_MARK_FIRST_MISSING_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
         addWindowFunction(null, WIN_MARK_FIRST_NULL_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
-        addWindowFunction(null, WIN_PARTITION_LENGTH_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
         addWindowFunction(null, WIN_MARK_VALID_TUPLES_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
+        addWindowFunction(null, WIN_PARTITION_LENGTH_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
     }
 
     static {
