@@ -101,19 +101,18 @@
         <awscrt.version>0.38.1</awscrt.version>
       -->
     <awsjavasdk.version>2.29.27</awsjavasdk.version>
+    <parquet.version>1.17.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
     <awsjavasdk.crt.version>0.33.3</awsjavasdk.crt.version>
-
-    <parquet.version>1.16.0</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.788</hadoop-awsjavasdk.version>
 
     <azureblobjavasdk.version>12.31.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.30.1</azurecommonjavasdk.version>
     <azureidentity.version>1.17.0</azureidentity.version>
     <azuredatalakejavasdk.version>12.24.1</azuredatalakejavasdk.version>
-    <azurecore.version>1.56.0</azurecore.version>
-    <azurecorehttpnetty.version>1.16.0</azurecorehttpnetty.version>
+    <azurecore.version>1.57.1</azurecore.version>
+    <azurecorehttpnetty.version>1.16.3</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.62.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.64.1</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
@@ -1273,7 +1272,7 @@
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>stax2-api</artifactId>
-        <version>4.2.2</version>
+        <version>4.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
@@ -1293,7 +1292,7 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.3.4</version>
+        <version>1.3.6</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
@@ -1678,6 +1677,12 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
         <version>${gcsjavasdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- Google Cloud Storage end -->
       <!-- Azure Data Lake start -->
@@ -1780,7 +1785,7 @@
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
-        <version>1.5.6-6</version>
+        <version>1.5.7-7</version>
       </dependency>
       <dependency>
         <groupId>commons-pool</groupId>
@@ -1852,13 +1857,17 @@
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-compat-qual</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <!-- Hadoop GCS end -->
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
-        <version>1.5.4</version>
+        <version>1.5.5</version>
       </dependency>
       <!-- CVE-2024-8184 -->
       <dependency>
@@ -1872,16 +1881,22 @@
         <version>9.4.57.v20241219</version>
       </dependency>
       <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-tcnative-boringssl-static</artifactId>
-        <version>2.0.73.Final</version>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>1.80.0</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-bom</artifactId>
-        <version>1.79.0</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <artifactId>grpc-netty</artifactId>
+        <version>1.80.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.opencensus</groupId>

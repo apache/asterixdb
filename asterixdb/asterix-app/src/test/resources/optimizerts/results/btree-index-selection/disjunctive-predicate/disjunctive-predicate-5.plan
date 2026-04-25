@@ -18,7 +18,7 @@ distribute result [$$x]
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$23, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", true, false, 1, $$27, 1, $$27, true, true, true) limit 2
+                    unnest-map [$$23, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", true, false, 1, $$27, 1, $$27, true, true, true)
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

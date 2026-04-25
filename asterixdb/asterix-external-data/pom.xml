@@ -504,6 +504,10 @@
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-netty</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-core</artifactId>
     </dependency>

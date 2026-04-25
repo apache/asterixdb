@@ -434,15 +434,20 @@ public abstract class LicenseMojo extends AbstractMojo {
         for (String extraDependency : extraDependencies) {
             String[] gavParts = StringUtils.split(extraDependency, ':');
             String gav = gavParts[0] + ":" + gavParts[1] + ":" + gavParts[2];
-            if (!dependencyGavMap.containsKey(gav)) {
+            MavenProject existingEntry = dependencyGavMap.get(gav);
+            boolean shadowed = false;
+            if (gavParts.length > 3) {
+                shadowed = "shadowed".equals(gavParts[3]);
+            }
+            if (existingEntry == null) {
                 ArtifactHandler handler = new DefaultArtifactHandler("jar");
                 Artifact manualDep = new DefaultArtifact(gavParts[0], gavParts[1], gavParts[2], Artifact.SCOPE_COMPILE,
                         "jar", null, handler);
-                boolean shadowed = false;
-                if (gavParts.length > 3) {
-                    shadowed = "shadowed".equals(gavParts[3]);
-                }
                 processArtifact(manualDep, dependencyLicenseMap, dependencyGavMap, shadowed);
+            } else if (!shadowed && (boolean) existingEntry.getContextValue(SHADOWED_KEY)) {
+                getLog().warn(
+                        "escalating formerly shadowed " + gav + " as non shadowed per extra dependency declaration");
+                existingEntry.setContextValue(SHADOWED_KEY, false);
             } else {
                 getLog().warn("not adding extra dependency " + gav + " as it is already added");
             }
