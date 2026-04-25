@@ -3450,9 +3450,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 "Transform function definition can not use collections/views");
                     }
                     validateTransformFunction(metadataProvider, rewrittenQuery, sourceLoc);
+                    boolean generateJobSpec = sessionOutput.config().isGenerateJobSpec();
+                    sessionOutput.config().setGenerateJobSpec(false);
                     apiFramework.compileQuery(hcc, metadataProvider, (Query) rewrittenQuery.first,
                             rewrittenQuery.second, null, sessionOutput, null, null, responsePrinter, warningCollector,
                             requestParameters, jobFlags);
+                    sessionOutput.config().setGenerateJobSpec(generateJobSpec);
                 }
                 appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
 

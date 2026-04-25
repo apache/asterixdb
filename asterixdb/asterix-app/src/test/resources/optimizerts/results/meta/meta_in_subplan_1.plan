@@ -1,0 +1,35 @@
+distribute result [$$55]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$55] <- [{"$1": $$54}] project: [$$55]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$54])
+      -- STREAM_PROJECT  |PARTITIONED|
+        subplan {
+                  aggregate [$$54] <- [listify($$52)]
+                  -- AGGREGATE  |LOCAL|
+                    limit 1
+                    -- STREAM_LIMIT  |LOCAL|
+                      assign [$$52] <- [{"x": $$x}] project: [$$52]
+                      -- ASSIGN  |LOCAL|
+                        unnest $$x <- scan-collection(ordered-list-constructor($$ds)) project: [$$x]
+                        -- UNNEST  |LOCAL|
+                          select (and(lt($$56, "ie"), ge($$56, "id"))) project: [$$ds]
+                          -- STREAM_SELECT  |LOCAL|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+               }
+        -- SUBPLAN  |PARTITIONED|
+          assign [$$56] <- [$$58.getField(0)] project: [$$ds, $$56]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$ds, $$58])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$57, $$ds, $$58] <- test.ds
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

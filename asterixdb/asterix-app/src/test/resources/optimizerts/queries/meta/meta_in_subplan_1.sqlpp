@@ -18,13 +18,30 @@
  */
 
 /*
- * Description: use of meta() after group by requires meta() be assigned to a variable in a LET clause
- * Result     : failure
+ * Description: tests that meta() inside a subplan can be resolved to the meta of the dataset in the outer plan.
  */
 
-USE test;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-FROM DS AS d
-GROUP BY d.hobby AS hobby
-SELECT hobby, COUNT(meta().id) AS count
-ORDER BY hobby;
+create type MetaType as open {
+  id:int32
+};
+
+create type DataType as open {
+  id:int32,
+  text: string
+};
+
+create dataset ds(DataType) with meta(MetaType) primary key id;
+
+CREATE OR REPLACE TRANSFORM FUNCTION trans_func(input) {
+  SELECT VALUE d FROM (
+     SELECT * FROM [input] x
+     WHERE meta().id LIKE "id%"
+  ) as d
+  LIMIT 1
+};
+
+select trans_func(ds) from ds;

@@ -163,7 +163,7 @@ public class SessionConfig implements Serializable {
 
     // Standard execution flags.
     private boolean executeQuery;
-    private final boolean generateJobSpec;
+    private boolean generateJobSpec;
     private final boolean optimize;
     private long maxWarnings;
     private long timeout;
@@ -309,6 +309,10 @@ public class SessionConfig implements Serializable {
      */
     public boolean isGenerateJobSpec() {
         return generateJobSpec;
+    }
+
+    public void setGenerateJobSpec(boolean generateJobSpec) {
+        this.generateJobSpec = generateJobSpec;
     }
 
     /**
