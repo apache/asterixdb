@@ -78,7 +78,11 @@
     <netty.version>4.1.132.Final</netty.version>
     <asm.version>9.3</asm.version>
     <awsjavasdk.version>2.29.27</awsjavasdk.version>
-    <gcsjavasdk.version>2.45.0</gcsjavasdk.version>
+
+    <!-- keep in sync with asterixdb/pom.xml -->
+    <google-cloud-storage.version>2.67.0</google-cloud-storage.version>
+    <!-- keep this in sync w/ the dependency of the same artifact in google-cloud-storage's pom.xml -->
+    <google-cloud-core.version>2.69.0</google-cloud-core.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -211,6 +215,11 @@
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-core</artifactId>
+        <version>${google-cloud-core.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

@@ -112,7 +112,8 @@
     <azurecore.version>1.57.1</azurecore.version>
     <azurecorehttpnetty.version>1.16.3</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.64.1</gcsjavasdk.version>
+    <!-- keep in sync with hyracks-fullstack/pom.xml -->
+    <google-cloud-storage.version>2.67.0</google-cloud-storage.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
@@ -1676,7 +1677,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>${gcsjavasdk.version}</version>
+        <version>${google-cloud-storage.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>
