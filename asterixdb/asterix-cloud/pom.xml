@@ -218,7 +218,7 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob-batch</artifactId>
-            <version>12.23.0</version>
+            <version>12.23.1</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>

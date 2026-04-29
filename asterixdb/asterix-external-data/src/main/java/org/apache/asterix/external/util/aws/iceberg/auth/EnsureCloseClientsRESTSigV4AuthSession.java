@@ -36,7 +36,6 @@ import org.apache.iceberg.rest.auth.AuthSession;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.signer.Aws4Signer;
-import software.amazon.awssdk.auth.signer.internal.SignerConstant;
 import software.amazon.awssdk.auth.signer.params.Aws4SignerParams;
 import software.amazon.awssdk.auth.signer.params.SignerChecksumParams;
 import software.amazon.awssdk.core.checksums.Algorithm;
@@ -52,6 +51,8 @@ public class EnsureCloseClientsRESTSigV4AuthSession implements AuthSession {
 
     static final String EMPTY_BODY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     static final String RELOCATED_HEADER_PREFIX = "Original-";
+    // Header name used by SigV4 for content checksum. Avoid depending on internal SDK constants.
+    static final String X_AMZ_CONTENT_SHA256 = "x-amz-content-sha256";
 
     private final Aws4Signer signer;
     private final AuthSession delegate;
@@ -87,7 +88,7 @@ public class EnsureCloseClientsRESTSigV4AuthSession implements AuthSession {
         Aws4SignerParams params = Aws4SignerParams.builder().signingName(signingName).signingRegion(signingRegion)
                 .awsCredentials(credentialsProvider.resolveCredentials())
                 .checksumParams(SignerChecksumParams.builder().algorithm(Algorithm.SHA256).isStreamingRequest(false)
-                        .checksumHeaderName(SignerConstant.X_AMZ_CONTENT_SHA256).build())
+                        .checksumHeaderName(X_AMZ_CONTENT_SHA256).build())
                 .build();
 
         SdkHttpFullRequest.Builder sdkRequestBuilder = SdkHttpFullRequest.builder();
@@ -100,7 +101,7 @@ public class EnsureCloseClientsRESTSigV4AuthSession implements AuthSession {
         if (body == null) {
             // This is a workaround for the signer implementation incorrectly producing
             // an invalid content checksum for empty body requests.
-            sdkRequestBuilder.putHeader(SignerConstant.X_AMZ_CONTENT_SHA256, EMPTY_BODY_SHA256);
+            sdkRequestBuilder.putHeader(X_AMZ_CONTENT_SHA256, EMPTY_BODY_SHA256);
         } else {
             sdkRequestBuilder.contentStreamProvider(() -> IOUtils.toInputStream(body, StandardCharsets.UTF_8));
         }

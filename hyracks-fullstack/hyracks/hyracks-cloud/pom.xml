@@ -35,8 +35,8 @@
   </licenses>
   <properties>
     <root.dir>${basedir}/../..</root.dir>
-    <jnr-posix.version>3.1.19</jnr-posix.version>
-    <jnr-ffi.version>2.2.16</jnr-ffi.version>
+    <jnr-posix.version>3.1.22</jnr-posix.version>
+    <jnr-ffi.version>2.2.19</jnr-ffi.version>
   </properties>
   <dependencies>
     <dependency>

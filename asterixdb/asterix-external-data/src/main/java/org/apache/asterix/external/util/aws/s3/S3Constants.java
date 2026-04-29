@@ -48,6 +48,11 @@ public class S3Constants {
     public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
     public static final String HADOOP_REGION = "fs.s3a.endpoint.region";
 
+    // input stream
+    public static final String HADOOP_INPUT_STREAM_TYPE = "fs.s3a.input.stream.type";
+    public static final String HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC = "classic";
+    public static final String HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS = "analytics";
+
     /*
      * Internal configurations
      */

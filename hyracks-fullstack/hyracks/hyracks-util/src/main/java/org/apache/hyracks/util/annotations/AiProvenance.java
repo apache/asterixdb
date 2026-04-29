@@ -66,7 +66,7 @@ public @interface AiProvenance {
 
     Tool tool();
 
-    ContributionKind contributionKind();
+    ContributionKind contributionKind() default GENERATED;
 
     String notes() default "";
 

@@ -91,38 +91,35 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.10-SNAPSHOT</hyracks.version>
-    <hadoop.version>3.4.2</hadoop.version>
+    <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.25.3</log4j.version>
+    <log4j.version>2.25.4</log4j.version>
     <avro.version>1.12.1</avro.version>
-    <!-- IMPORTANT: please keep the aws-crt version in sync with that defined in the AWS SDK BOM -->
-    <!-- you can get this by inspecting the aws-sdk-java-pom for the SDK version. e.g.
-     $ curl -s https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.31.57/aws-sdk-java-pom-2.31.57.pom | grep awscrt.version
-        <awscrt.version>0.38.1</awscrt.version>
-      -->
-    <awsjavasdk.version>2.29.27</awsjavasdk.version>
     <parquet.version>1.17.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
-    <awsjavasdk.crt.version>0.33.3</awsjavasdk.crt.version>
 
-    <azureblobjavasdk.version>12.31.1</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.30.1</azurecommonjavasdk.version>
+    <awsjavasdk.version>2.43.1</awsjavasdk.version>
+    <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
+    <awsjavasdk.crt.version>0.45.1</awsjavasdk.crt.version>
+
+    <azureblobjavasdk.version>12.31.3</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.30.3</azurecommonjavasdk.version>
     <azureidentity.version>1.17.0</azureidentity.version>
-    <azuredatalakejavasdk.version>12.24.1</azuredatalakejavasdk.version>
+    <azuredatalakejavasdk.version>12.24.3</azuredatalakejavasdk.version>
     <azurecore.version>1.57.1</azurecore.version>
-    <azurecorehttpnetty.version>1.16.3</azurecorehttpnetty.version>
+    <azurecorehttpnetty.version>1.16.4</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <google-cloud-storage.version>2.67.0</google-cloud-storage.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
-    <protobuf-java.version>3.25.8</protobuf-java.version>
+    <protobuf-java.version>3.25.9</protobuf-java.version>
 
-    <icebergjavasdk.version>1.10.0</icebergjavasdk.version>
+    <icebergjavasdk.version>1.10.1</icebergjavasdk.version>
 
     <!-- match with Nessie version used in Iceberg -->
-    <nessieproject.version>0.104.5</nessieproject.version>
+    <nessieproject.version>0.104.10</nessieproject.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -379,7 +376,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
+          <version>3.8.1</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
@@ -525,7 +522,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.1.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -555,7 +552,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -587,7 +584,7 @@
         <plugin>
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>
-          <version>2.2.3</version>
+          <version>2.2.6</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -1026,12 +1023,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
-        <version>3.8.4</version>
+        <version>3.8.9</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-model</artifactId>
-        <version>3.8.4</version>
+        <version>3.8.9</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -1283,7 +1280,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.27.1</version>
+        <version>1.28.0</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
@@ -1508,7 +1505,7 @@
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
-        <version>3.4.13</version>
+        <version>3.4.14</version>
         <exclusions>
           <exclusion>
             <groupId>com.sun.jmx</groupId>
@@ -1521,6 +1518,10 @@
           <exclusion>
             <groupId>javax.jms</groupId>
             <artifactId>jms</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1543,12 +1544,12 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.17.1</version>
+        <version>1.17.2</version>
       </dependency>
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.6</version>
+        <version>8.5.18</version>
       </dependency>
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
@@ -1558,7 +1559,7 @@
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
-        <version>2.3.2</version>
+        <version>2.3.9</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -1573,12 +1574,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
-        <version>3.8.4</version>
+        <version>3.8.9</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-compat</artifactId>
-        <version>3.8.4</version>
+        <version>3.8.9</version>
       </dependency>
       <dependency>
         <groupId>org.locationtech.jts</groupId>
@@ -1601,13 +1602,13 @@
       <dependency>
         <groupId>io.findify</groupId>
         <artifactId>s3mock_2.12</artifactId>
-        <version>0.2.5</version>
+        <version>0.2.6</version>
       </dependency>
       <!-- Needed for the s3 mock -->
       <dependency>
         <groupId>com.typesafe.akka</groupId>
         <artifactId>akka-http-core_2.12</artifactId>
-        <version>10.1.0</version>
+        <version>10.1.15</version>
       </dependency>
       <!-- Azure Blob Storage start -->
       <dependency>
@@ -1706,22 +1707,22 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.12.0</version>
+        <version>1.14.1</version>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>postgresql</artifactId>
-        <version>1.16.2</version>
+        <version>1.16.3</version>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.2.24</version>
+        <version>42.2.29</version>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>azure</artifactId>
-        <version>1.21.3</version>
+        <version>1.21.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
@@ -1782,23 +1783,25 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <!-- BEGIN: transitive from parquet, please validate with any update of ${parquet.version} -->
+      <!-- transitive from parquet; please review on any update of ${parquet.version} -->
+      <!-- @pinned-with: ${parquet.version} -->
       <dependency>
         <groupId>io.airlift</groupId>
         <artifactId>aircompressor</artifactId>
         <version>2.0.3</version>
       </dependency>
+      <!-- @pinned-with: ${parquet.version} -->
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
         <version>1.5.7-7</version>
       </dependency>
+      <!-- @pinned-with: ${parquet.version} -->
       <dependency>
         <groupId>commons-pool</groupId>
         <artifactId>commons-pool</artifactId>
         <version>1.6</version>
       </dependency>
-      <!-- END: transitive from parquet, please validate with any update of ${parquet.version} -->
       <dependency>
         <groupId>org.kitesdk</groupId>
         <artifactId>kite-data-core</artifactId>
@@ -1991,11 +1994,6 @@
         <artifactId>protobuf-java-util</artifactId>
         <version>${protobuf-java.version}</version>
       </dependency>
-      <!-- IMPORTANT: please keep the aws-crt version in sync with that defined in the AWS SDK BOM -->
-      <!-- you can get this by inspecting the aws-sdk-java-pom for the SDK version:
-       $ curl -s https://repo1.maven.org/maven2/software/amazon/awssdk/aws-sdk-java-pom/2.31.57/aws-sdk-java-pom-2.31.57.pom | grep awscrt.version
-        <awscrt.version>0.38.1</awscrt.version>
-        -->
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>

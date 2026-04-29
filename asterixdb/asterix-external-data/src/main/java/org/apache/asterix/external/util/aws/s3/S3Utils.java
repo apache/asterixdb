@@ -56,6 +56,8 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIAL_PROVIDER_KEY;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INSTANCE_PROFILE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_PATH_STYLE_ACCESS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_REGION;
@@ -104,10 +106,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.SdkHttpConfigurationOption;
@@ -180,9 +185,25 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
+        if (serviceEndpoint != null) {
+            configureS3CompatibleSettings(serviceEndpoint, builder);
+        }
         awsClients.setConsumingClient(builder.build());
         return awsClients;
 
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT)
+    private static void configureS3CompatibleSettings(String serviceEndpoint, S3ClientBuilder builder) {
+        // AWS SDK 2.43+ sends CRC64NVME request checksums by default for all eligible operations.
+        // S3-compatible endpoints (non-AWS) and older mock servers do not understand this header and
+        // may reject or mishandle requests, returning empty or error responses. When a custom endpoint
+        // is configured (i.e. not talking to real AWS S3), disable automatic checksum calculation so
+        // only operations that explicitly require a checksum will include one.
+        if (serviceEndpoint != null) {
+            builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
+            builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+        }
     }
 
     static SdkHttpClient createHttpClient(String pemCertificates) throws CompilationException {
@@ -264,6 +285,13 @@ public class S3Utils {
         if (serviceEndpoint != null) {
             // Validation of the URL should be done at hadoop-aws level
             jobConf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
+
+            // The analytics-accelerator stream factory (default in Hadoop 3.4+) performs a HeadObject call during
+            // stream initialization to fetch the ETag. Non-AWS S3-compatible endpoints (e.g. mock servers) may not
+            // return an ETag on HeadObject, which causes a NullPointerException. Fall back to the classic stream
+            // implementation when a custom service endpoint is in use.
+            // TODO: make configurable
+            jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
         }
 
         boolean pathStyleAddressing =

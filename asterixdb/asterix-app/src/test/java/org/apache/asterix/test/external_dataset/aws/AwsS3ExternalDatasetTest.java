@@ -245,6 +245,10 @@ public class AwsS3ExternalDatasetTest {
         CONF.set("fs.s3a.change.detection.version.required", "false");
         CONF.set(S3Constants.HADOOP_ACCESS_KEY_ID, TestConstants.S3_ACCESS_KEY_ID_DEFAULT);
         CONF.set(S3Constants.HADOOP_SECRET_ACCESS_KEY, TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT);
+        // The analytics-accelerator stream factory (default in Hadoop 3.4+) performs a HeadObject during stream
+        // initialization to retrieve ETag, which the S3 mock does not return; this causes a NullPointerException.
+        // Use the classic (non-analytics) input stream type to avoid this.
+        CONF.set(S3Constants.HADOOP_INPUT_STREAM_TYPE, S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
     }
 
     public static void prepareIcebergTableContainer() {
@@ -317,7 +321,6 @@ public class AwsS3ExternalDatasetTest {
                 FileFormat.PARQUET.name(), TableProperties.FORMAT_VERSION, "1"), ICEBERG_TABLE_PATH_EMPTY);
 
         // multiple data files
-
         Table multipleDataFiles = tables.create(SCHEMA,
                 PartitionSpec.unpartitioned(), ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT,
                         FileFormat.PARQUET.name(), TableProperties.FORMAT_VERSION, "1"),
@@ -409,7 +412,12 @@ public class AwsS3ExternalDatasetTest {
         S3ClientBuilder builder = S3Client.builder();
         URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
-                .endpointOverride(endpoint);
+                .endpointOverride(endpoint)
+                // AWS SDK 2.43+ sends CRC64NVME checksums by default; the S3 mock does not support them.
+                .requestChecksumCalculation(
+                        software.amazon.awssdk.core.checksums.RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(
+                        software.amazon.awssdk.core.checksums.ResponseChecksumValidation.WHEN_REQUIRED);
         client = builder.build();
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(DYNAMIC_PREFIX_AT_START_CONTAINER).build());
