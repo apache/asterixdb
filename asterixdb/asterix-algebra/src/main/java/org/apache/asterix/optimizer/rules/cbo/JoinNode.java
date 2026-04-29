@@ -455,24 +455,14 @@ public class JoinNode {
 
     private List<Integer> getNewJoinConditionsOnly() {
         List<Integer> newJoinConditions = new ArrayList<>();
-        JoinNode leftJn = this.leftJn;
-        JoinNode rightJn = this.rightJn;
-        // find the new table being added. This assume only zig zag trees for now.
-        DatasetRegistry.DatasetSubset newTableBits = joinEnum.datasetRegistry.new DatasetSubset();
-        if (leftJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = leftJn.datasetSubset;
-        } else if (rightJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = rightJn.datasetSubset;
-        }
+        DatasetRegistry.DatasetSubset leftSubset = this.leftJn.datasetSubset, rightSubset = this.rightJn.datasetSubset;
 
-        if (LOGGER.isTraceEnabled() && newTableBits.size() == 0) {
-            LOGGER.trace("newTable Bits == 0");
-        }
-
-        // All the new join predicates will have these bits turned on
         for (int idx : this.applicableJoinConditions) {
-            if (joinEnum.datasetRegistry.intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), newTableBits)
-                    .size() > 0) {
+            if (joinEnum.datasetRegistry.intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), leftSubset)
+                    .size() > 0
+                    && joinEnum.datasetRegistry
+                            .intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), rightSubset)
+                            .size() > 0) {
                 newJoinConditions.add(idx);
             }
         }
