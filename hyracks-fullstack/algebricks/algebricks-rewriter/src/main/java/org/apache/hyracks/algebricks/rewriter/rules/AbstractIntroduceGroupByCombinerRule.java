@@ -107,8 +107,8 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
                 VariableReferenceExpression varRef = new VariableReferenceExpression(var);
                 varRef.setSourceLocation(gbyOp.getSourceLocation());
                 newGbyOp.addDecorExpression(newDecorVar, varRef);
-                VariableUtilities.substituteVariables(gbyOp.getNestedPlans().get(0).getRoots().get(0).getValue(), var,
-                        newDecorVar, context);
+                VariableUtilities.substituteVariablesInDescendantsAndSelf(
+                        gbyOp.getNestedPlans().get(0).getRoots().get(0).getValue(), var, newDecorVar, context);
             }
         }
 
