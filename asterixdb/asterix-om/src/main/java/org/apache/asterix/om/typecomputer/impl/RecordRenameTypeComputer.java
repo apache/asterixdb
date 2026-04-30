@@ -45,9 +45,9 @@ public class RecordRenameTypeComputer extends AbstractRecordFunctionTypeComputer
     }
 
     @Override
-    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IVariableTypeEnvironment env,
-            ARecordType inputRecordType, boolean isOutputMissable, boolean isOutputNullable)
-            throws AlgebricksException {
+    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IAType arg0InRecType,
+            IVariableTypeEnvironment env, ARecordType inputRecordType, boolean isOutputMissable,
+            boolean isOutputNullable) throws AlgebricksException {
         // Our third argument should be of type "string".
         ILogicalExpression arg2 = functionCallExpression.getArguments().get(2).getValue();
         IAType type2 = (IAType) env.getType(arg2);
