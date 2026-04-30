@@ -141,6 +141,11 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="object_mod">
+      <output-dir compare="Text">object_mod</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="object_names">
       <output-dir compare="Text">object_names</output-dir>
     </compilation-unit>

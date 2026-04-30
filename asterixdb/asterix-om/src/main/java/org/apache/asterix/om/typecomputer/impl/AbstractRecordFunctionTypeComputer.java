@@ -82,11 +82,11 @@ public abstract class AbstractRecordFunctionTypeComputer implements IResultTypeC
         isOutputNullable |= TypeHelper.canBeNull(type1);
 
         // Compute our type.
-        return computeTypeImpl(functionCallExpression, env, inputRecordType, isOutputMissable, isOutputNullable);
+        return computeTypeImpl(functionCallExpression, type0, env, inputRecordType, isOutputMissable, isOutputNullable);
     }
 
     protected abstract IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression,
-            IVariableTypeEnvironment env, ARecordType inputRecordType, boolean isOutputMissable,
+            IAType arg0InRecType, IVariableTypeEnvironment env, ARecordType inputRecordType, boolean isOutputMissable,
             boolean isOutputNullable) throws AlgebricksException;
 
     protected static IAType wrapTypeWithUnknown(IAType originalType, boolean isMissable, boolean isNullable) {

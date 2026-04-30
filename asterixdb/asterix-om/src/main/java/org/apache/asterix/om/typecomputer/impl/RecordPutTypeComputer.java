@@ -41,9 +41,9 @@ public class RecordPutTypeComputer extends AbstractRecordFunctionTypeComputer {
     }
 
     @Override
-    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IVariableTypeEnvironment env,
-            ARecordType inputRecordType, boolean isOutputMissable, boolean isOutputNullable)
-            throws AlgebricksException {
+    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IAType arg0InRecType,
+            IVariableTypeEnvironment env, ARecordType inputRecordType, boolean isOutputMissable,
+            boolean isOutputNullable) throws AlgebricksException {
         // Extract the type of our third argument. If it is MISSING, then we are performing a field removal.
         ILogicalExpression arg2 = functionCallExpression.getArguments().get(2).getValue();
         IAType type2 = (IAType) env.getType(arg2);
@@ -62,6 +62,7 @@ public class RecordPutTypeComputer extends AbstractRecordFunctionTypeComputer {
 
         // Remove or replace our field name and type (dependent on the type of our third argument).
         boolean fieldFound = false;
+        boolean makeOpen = false;
         List<String> outputFieldNames = new ArrayList<>();
         List<IAType> outputFieldTypes = new ArrayList<>();
         for (int i = 0; i < inputRecordType.getFieldNames().length; i++) {
@@ -70,10 +71,15 @@ public class RecordPutTypeComputer extends AbstractRecordFunctionTypeComputer {
             if (!inputFieldName.equals(newFieldName)) {
                 outputFieldNames.add(inputFieldName);
                 outputFieldTypes.add(inputFieldType);
-
             } else {
                 fieldFound = true;
-                if (!isFieldRemoval) {
+                // we cannot add a field to the record type (schema) if it is ANY. fields that are part of the record
+                // type need to have a known type so that the proper (non-tagged) SerializerDeserializer can be used
+                // fields with ANY need to go to the open part of the record type, and we need to make the record type
+                // open if it is not already
+                if (actualType2.getTypeTag() == ATypeTag.ANY) {
+                    makeOpen = true;
+                } else if (!isFieldRemoval) {
                     // Replace our input field type.
                     outputFieldNames.add(inputFieldName);
                     outputFieldTypes.add(type2);
@@ -94,14 +100,18 @@ public class RecordPutTypeComputer extends AbstractRecordFunctionTypeComputer {
             // We have replaced our argument field.
             String outputTypeName = doesRecordHaveTypeName ? inputTypeName + "_replaced_" + newFieldName : null;
             outputRecordType = new ARecordType(outputTypeName, outputFieldNames.toArray(String[]::new),
-                    outputFieldTypes.toArray(IAType[]::new), inputRecordType.isOpen());
+                    outputFieldTypes.toArray(IAType[]::new), inputRecordType.isOpen() || makeOpen);
         } else if (!isFieldRemoval) { // && !wasFieldFound
-            // We need to insert our argument field.
-            outputFieldNames.add(newFieldName);
-            outputFieldTypes.add(type2);
+            if (actualType2.getTypeTag() != ATypeTag.ANY) {
+                // We need to insert our argument field.
+                outputFieldNames.add(newFieldName);
+                outputFieldTypes.add(type2);
+            } else {
+                makeOpen = true;
+            }
             String outputTypeName = doesRecordHaveTypeName ? inputTypeName + "_add_" + newFieldName : null;
             outputRecordType = new ARecordType(outputTypeName, outputFieldNames.toArray(String[]::new),
-                    outputFieldTypes.toArray(IAType[]::new), inputRecordType.isOpen());
+                    outputFieldTypes.toArray(IAType[]::new), inputRecordType.isOpen() || makeOpen);
         } else { // isFieldRemoval && !wasFieldFound
             // We have not found the field to remove.
             outputRecordType = inputRecordType;
