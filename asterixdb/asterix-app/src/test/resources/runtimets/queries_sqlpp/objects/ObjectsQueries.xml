@@ -202,6 +202,11 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="object_transform">
+      <output-dir compare="Text">object_transform</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="object_values">
       <output-dir compare="Text">object_values</output-dir>
     </compilation-unit>

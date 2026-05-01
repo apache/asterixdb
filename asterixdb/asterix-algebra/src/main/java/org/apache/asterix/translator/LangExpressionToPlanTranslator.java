@@ -1103,6 +1103,12 @@ abstract class LangExpressionToPlanTranslator
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE, sourceLoc);
         }
 
+        if (BuiltinFunctions.RECORD_TRANSFORM.equals(f.getFunctionIdentifier())) {
+            for (int i = 0; i < args.size(); i++) {
+                annotateTransformRecord(args.get(i).getValue());
+            }
+        }
+
         // Put hints into function call expr.
         if (fcall.hasHints()) {
             f.putAnnotations(fcall.getHints());
@@ -1115,6 +1121,24 @@ abstract class LangExpressionToPlanTranslator
         op.setSourceLocation(sourceLoc);
 
         return new Pair<>(op, v);
+    }
+
+    /** Annotates {@code expr} and every nested record-constructor reachable via field values. */
+    private static void annotateTransformRecord(ILogicalExpression expr) {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return;
+        }
+        AbstractFunctionCallExpression call = (AbstractFunctionCallExpression) expr;
+        FunctionIdentifier fid = call.getFunctionIdentifier();
+        if (!BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR.equals(fid)
+                && !BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR.equals(fid)) {
+            return;
+        }
+        call.putAnnotation(isTransformRecordAnnotation.INSTANCE);
+        List<Mutable<ILogicalExpression>> a = call.getArguments();
+        for (int i = 1; i < a.size(); i += 2) {
+            annotateTransformRecord(a.get(i).getValue());
+        }
     }
 
     protected ILogicalExpression translateVariableRef(VariableExpr varExpr) throws CompilationException {
