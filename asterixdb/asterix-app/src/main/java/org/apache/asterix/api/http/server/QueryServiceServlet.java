@@ -322,10 +322,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
         } else {
-            // in case of ASYNC mode and compilation/parsing error, we need to print the statust
-            if (executionState.getResultStatus() == ResultStatus.FATAL) {
-                responsePrinter.addFooterPrinter(new StatusPrinter(ResultStatus.FATAL));
-            }
+            // in case of ASYNC mode and compilation/parsing error, we need to print the status
+            responsePrinter.addFooterPrinter(new StatusPrinter(getAsyncResultStatus(executionState.getResultStatus())));
             // Only print selected metrics for async requests
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset,
                     Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.QUEUE_WAIT_TIME,
@@ -337,6 +335,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             responsePrinter.addFooterPrinter(new ProfilePrinter(stats.getJobProfile()));
         }
         return metrics;
+    }
+
+    private static ResultStatus getAsyncResultStatus(ResultStatus resultStatus) {
+        return switch (resultStatus) {
+            case FATAL -> ResultStatus.FATAL;
+            case TIMEOUT -> ResultStatus.TIMEOUT;
+            case FAILED -> ResultStatus.FAILED;
+            default -> ResultStatus.QUEUED;
+        };
     }
 
     protected void validateStatement(String statement) throws RuntimeDataException {

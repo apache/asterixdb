@@ -181,7 +181,10 @@ public class ClientRequest extends BaseClientRequest {
         putTime(json, state.createTime, "jobCreateTime", dateTime);
         putTime(json, state.startTime, "jobStartTime", dateTime);
         putTime(json, state.endTime, "jobEndTime", dateTime);
-        long queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+        long queueTime = 0;
+        if (state.createTime > 0) {
+            queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+        }
         json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
         json.put("jobStatus", String.valueOf(state.status));
         json.put("jobRequiredCPUs", state.requiredCPUs);

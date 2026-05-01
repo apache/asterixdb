@@ -59,7 +59,6 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.api.common.APIFramework;
-import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
@@ -69,7 +68,6 @@ import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
-import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.app.translator.handlers.IcebergCatalogStatementHandler;
 import org.apache.asterix.app.translator.helpers.IcebergStatementValidationHelper;
 import org.apache.asterix.column.validation.ColumnPropertiesValidationUtil;
@@ -5705,7 +5703,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     jobIdFuture.complete(id);
                     final ResultHandle handle = sessionConfig.isIncludeHost() ? new ResultHandle(id, resultSetId, null)
                             : new ResultHandle(id, resultSetId, requestParameters.getRequestReference().getUuid());
-                    responsePrinter.addResultPrinter(new StatusPrinter(AbstractQueryApiServlet.ResultStatus.QUEUED));
                     responsePrinter.addResultPrinter(new ResultHandlePrinter(sessionOutput, handle));
                     responsePrinter.printResults();
                     synchronized (printed) {
