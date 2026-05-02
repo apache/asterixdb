@@ -107,11 +107,16 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         try {
             ResultJobRecord.Status status = resultReader.getStatus();
             final HttpResponseStatus httpStatus = ResultUtil.getHttpStatusFromResultStatus(status);
-            response.setStatus(httpStatus);
             if (httpStatus != HttpResponseStatus.OK) {
+                response.setStatus(httpStatus);
                 return;
             }
             ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
+            if (metadata == null) {
+                response.setStatus(HttpResponseStatus.NOT_FOUND);
+                return;
+            }
+            response.setStatus(httpStatus);
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
             processResults(handle, resultReader, sessionOutput, metadata, request);
         } catch (HyracksDataException e) {

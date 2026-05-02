@@ -90,15 +90,23 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         printer.begin();
         printer.addHeaderPrinter(new StatusPrinter(resultStatus));
         printer.printHeaders();
+        ResultMetadata metadata = null;
+        if (uriMode || resultStatus == ResultStatus.SUCCESS) {
+            metadata = (ResultMetadata) resultReader.getMetadata();
+        }
         switch (resultStatus) {
-            case SUCCESS -> handleSuccessfulResult(request, strHandle, uriMode, printer, resultReader);
+            case SUCCESS -> {
+                if (metadata != null) {
+                    handleSuccessfulResult(request, strHandle, uriMode, printer, resultReader, metadata);
+                }
+            }
             case TIMEOUT -> handleTimeout(handle, executionState, printer, response);
             case FATAL, FAILED -> handleFailure(handle, executionState, printer, response, resultReaderStatus);
             case QUEUED, RUNNING -> {}
         }
         printer.printResults();
         if (uriMode) {
-            printMetricsAndFooters(printer, resultReader, request, handle.getRequestId(), handle.getJobId(), resultStatus);
+            printMetricsAndFooters(printer, metadata, request, handle.getRequestId(), handle.getJobId(), resultStatus);
         }
         printer.end();
         if (response.writer().checkError()) {
@@ -107,7 +115,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
     }
 
     private void handleSuccessfulResult(IServletRequest request, String strHandle, boolean uriMode,
-            ResponsePrinter printer, ResultReader resultReader) throws HyracksDataException {
+            ResponsePrinter printer, ResultReader resultReader, ResultMetadata metadata) throws HyracksDataException {
         String servletPath = servletPath(request).replace("status", "result");
         String resHandle;
         if (uriMode) {
@@ -117,9 +125,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
         printer.addResultPrinter(new ResultHandlePrinter(resHandle));
         if (uriMode) {
-            ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
-            printer.addResultPrinter(new ResultCountPrinter(
-                    ((ResultMetadata) (resultReader.getResultSetReader().getResultMetadata())).getResultCount()));
+            printer.addResultPrinter(new ResultCountPrinter(metadata.getResultCount()));
             printer.addResultPrinter(new PartitionInfoPrinter(resultReader.getResultSetReader().getResultRecords(),
                     resHandle, metadata.isResultSetOrdered()));
         }
@@ -172,9 +178,8 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private void printMetricsAndFooters(ResponsePrinter printer, ResultReader resultReader, IServletRequest request,
+    private void printMetricsAndFooters(ResponsePrinter printer, ResultMetadata metadata, IServletRequest request,
             String requestId, JobId jobId, ResultStatus status) throws HyracksDataException {
-        ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
         if (metadata != null && status != ResultStatus.QUEUED && status != ResultStatus.RUNNING) {
             printMetricsWithResultMetadata(printer, request, metadata);
         } else {

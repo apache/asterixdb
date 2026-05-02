@@ -183,7 +183,11 @@ public class ClientRequest extends BaseClientRequest {
         putTime(json, state.endTime, "jobEndTime", dateTime);
         long queueTime = 0;
         if (state.createTime > 0) {
-            queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+            // startTime - createTime, if job has started
+            // endTime - createTime, if job has ended but not started (failed while in the queue, cancelled/timeout)
+            // currentTime - createTime, if job is still in the queue
+            queueTime = (state.startTime > 0 ? state.startTime
+                    : (state.endTime > 0 ? state.endTime : System.currentTimeMillis())) - state.createTime;
         }
         json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
         json.put("jobStatus", String.valueOf(state.status));

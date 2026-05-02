@@ -39,6 +39,7 @@ import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -55,7 +56,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class AsyncRequestsAPIUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long RESULT_PARTITIONS_FETCH_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(1);
+    private static final long RESULT_PARTITIONS_FETCH_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
     public static final long NC_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
 
     /**
@@ -71,12 +72,22 @@ public class AsyncRequestsAPIUtil {
             String requestId) throws HyracksDataException {
         IResultDirectoryService resultDirectoryService =
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService())
-                        .getResultDirectoryService();;
+                        .getResultDirectoryService();
         // Check if result is in a valid state for discarding
         ResultJobRecord.Status status = resultDirectoryService.getResultStatus(jobId, resultSetId);
         if (status.getState() != ResultJobRecord.State.SUCCESS) {
             LOGGER.log(Level.WARN, "Cannot discard result for job {}, result set {}, request {} - status is {}", jobId,
                     resultSetId, requestId, status);
+            return;
+        }
+        IResultMetadata resultMetadata = resultDirectoryService.getResultMetadata(jobId, resultSetId);
+        if (resultMetadata == null) {
+            LOGGER.debug(
+                    "Result metadata not found for job {}, result set {}, request id {}. Removing async req tracking info",
+                    jobId, resultSetId, requestId);
+            if (requestId != null) {
+                appCtx.getRequestTracker().removeAsyncOrDeferredRequest(requestId);
+            }
             return;
         }
 

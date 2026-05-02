@@ -108,7 +108,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
             if (resultJobRecord == null) {
                 return;
             }
-            resultJobRecord.finish();
+            resultJobRecord.finish(jobStatus);
             jobResultCallback.completed(jobId, resultJobRecord);
         } else {
             reportJobFailure(jobId, exceptions);

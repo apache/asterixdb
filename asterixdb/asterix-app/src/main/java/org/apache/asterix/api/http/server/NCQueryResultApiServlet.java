@@ -50,6 +50,7 @@ public class NCQueryResultApiServlet extends QueryResultApiServlet {
         DiscardResultRequestMessage request =
                 new DiscardResultRequestMessage(serviceCtx.getNodeId(), jobId, resultSetId, requestId);
         try {
+            //TODO: handle receive response
             messageBroker.sendMessageToPrimaryCC(request);
         } catch (Exception e) {
             throw HyracksDataException.create(e);

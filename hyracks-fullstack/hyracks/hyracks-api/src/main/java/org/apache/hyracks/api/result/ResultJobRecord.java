@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -110,8 +111,14 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.RUNNING);
     }
 
-    public void finish() {
+    public void finish(JobStatus jobStatus) {
         jobEndTime = System.nanoTime();
+        if (jobStatus != null && (status.state == State.RUNNING || status.state == State.IDLE)) {
+            switch (jobStatus) {
+                case TERMINATED -> updateState(State.SUCCESS);
+                case FAILURE, FAILURE_BEFORE_EXECUTION ->  updateState(State.FAILED);
+            }
+        }
     }
 
     public long getJobDuration() {
