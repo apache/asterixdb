@@ -19,9 +19,12 @@
 package org.apache.hyracks.util.annotations;
 
 import static org.apache.hyracks.util.annotations.AiProvenance.AiProvenances;
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
 import static org.apache.hyracks.util.annotations.AiProvenance.Agent.GPT_5_3;
 import static org.apache.hyracks.util.annotations.AiProvenance.Agent.GPT_5_MINI;
 import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.GENERATED;
+import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
+import static org.apache.hyracks.util.annotations.AiProvenance.Provider.*;
 import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CHATGPT_UI;
 import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 
@@ -66,7 +69,7 @@ public @interface AiProvenance {
 
     Tool tool();
 
-    ContributionKind contributionKind();
+    ContributionKind contributionKind() default ContributionKind.GENERATED;
 
     String notes() default "";
 
@@ -99,101 +102,190 @@ public @interface AiProvenance {
         DOC_GENERATED
     }
 
+    @AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT, contributionKind = REFACTORED)
+    enum Provider {
+        OPENAI("openai", "OpenAI"),
+        ANTHROPIC("anthropic", "Anthropic"),
+        GOOGLE("google", "Google"),
+        META("meta", "Meta"),
+        MISTRAL("mistral", "Mistral"),
+        COHERE("cohere", "Cohere"),
+        XAI("xai", "xAI"),
+        DEEPSEEK("deepseek", "DeepSeek"),
+        ALIBABA("alibaba", "Alibaba"),
+        MICROSOFT("microsoft", "Microsoft"),
+        GITHUB("github", "GitHub"),
+        JETBRAINS("jetbrains", "JetBrains"),
+        FACTORY("factory", "Factory.ai"),
+        LANGCHAIN("langchain", "LangChain"),
+        LLAMAINDEX("llamaindex", "LlamaIndex"),
+        PERPLEXITY("perplexity", "Perplexity"),
+        CURSOR("cursor", "Cursor"),
+        WINDSURF("windsurf", "Windsurf"),
+        TABNINE("tabnine", "Tabnine"),
+        CODEIUM("codeium", "Codeium"),
+        AMAZON("amazon", "Amazon"),
+        CUSTOM("custom", "Custom"),
+        GENERIC("generic", "Generic"),
+        OTHER("other", "Other");
+
+        private final String id;
+        private final String displayName;
+
+        Provider(String id, String displayName) {
+            this.id = id;
+            this.displayName = displayName;
+        }
+
+        /** Returns the canonical provider identifier (e.g. "openai", "anthropic"). */
+        public String id() {
+            return id;
+        }
+
+        /** Human-friendly display name for the  */
+        public String displayName() {
+            return displayName;
+        }
+    }
+
     enum Agent {
         // OpenAI
-        GPT_5_4("openai", "gpt-5.4", "GPT-5.4"),
-        GPT_5_3("openai", "gpt-5.3", "GPT-5.3"),
-        GPT_5_2("openai", "gpt-5.2", "GPT-5.2"),
-        GPT_5_MINI("openai", "gpt-5-mini", "GPT-5 Mini"),
-        GPT_5_1_CODEX("openai", "gpt-5.1-codex", "GPT-5.1 Codex"),
-        GPT_5_3_CODEX("openai", "gpt-5.3-codex", "GPT-5.3 Codex"),
+        GPT_5_5(OPENAI, "gpt-5.5", "GPT-5.5"),
+        GPT_5_4(OPENAI, "gpt-5.4", "GPT-5.4"),
+        GPT_5_4_MINI(OPENAI, "gpt-5.4-mini", "GPT-5.4 Mini"),
+        GPT_5_4_NANO(OPENAI, "gpt-5.4-nano1", "GPT-5.4 Nano"),
+        GPT_5_3(OPENAI, "gpt-5.3", "GPT-5.3"),
+        GPT_5_2(OPENAI, "gpt-5.2", "GPT-5.2"),
+        GPT_5_MINI(OPENAI, "gpt-5-mini", "GPT-5 Mini"),
+
+        // =========================
+        // OpenAI — Codex
+        // =========================
+        GPT_5_1_CODEX(OPENAI, "gpt-5.1-codex", "GPT-5.1 Codex"),
+        GPT_5_2_CODEX(OPENAI, "gpt-5.2-codex", "GPT-5.2 Codex"),
+        GPT_5_3_CODEX(OPENAI, "gpt-5.3-codex", "GPT-5.3 Codex"),
 
         // =========================
         // OpenAI — GPT-4.x Family
         // =========================
-        GPT_4_1("openai", "gpt-4.1", "GPT-4.1"),
-        GPT_4_1_MINI("openai", "gpt-4.1-mini", "GPT-4.1 Mini"),
-        GPT_4_1_NANO("openai", "gpt-4.1-nano", "GPT-4.1 Nano"),
+        GPT_4_1(OPENAI, "gpt-4.1", "GPT-4.1"),
+        GPT_4_1_MINI(OPENAI, "gpt-4.1-mini", "GPT-4.1 Mini"),
+        GPT_4_1_NANO(OPENAI, "gpt-4.1-nano", "GPT-4.1 Nano"),
 
-        GPT_4O("openai", "gpt-4o", "GPT-4o"),
-        GPT_4O_MINI("openai", "gpt-4o-mini", "GPT-4o Mini"),
+        GPT_4O(OPENAI, "gpt-4o", "GPT-4o"),
+        GPT_4O_MINI(OPENAI, "gpt-4o-mini", "GPT-4o Mini"),
 
         // =========================
         // OpenAI — Reasoning (o-series)
         // =========================
-        O1("openai", "o1", "o1"),
-        O1_MINI("openai", "o1-mini", "o1 Mini"),
+        O1(OPENAI, "o1", "o1"),
+        O1_MINI(OPENAI, "o1-mini", "o1 Mini"),
 
-        O3("openai", "o3", "o3"),
-        O3_MINI("openai", "o3-mini", "o3 Mini"),
+        O3(OPENAI, "o3", "o3"),
+        O3_MINI(OPENAI, "o3-mini", "o3 Mini"),
 
-        O4("openai", "o4", "o4"),
-        O4_MINI("openai", "o4-mini", "o4 Mini"),
+        O4(OPENAI, "o4", "o4"),
+        O4_MINI(OPENAI, "o4-mini", "o4 Mini"),
 
         // =========================
         // Anthropic — Claude Opus
         // =========================
-        CLAUDE_OPUS_4("anthropic", "claude-4-opus", "Claude Opus 4"),
-        CLAUDE_OPUS_4_6("anthropic", "claude-4-opus-4.6", "Claude Opus 4.6"),
+        CLAUDE_OPUS_4(ANTHROPIC, "claude-4-opus", "Claude Opus 4"),
+        CLAUDE_OPUS_4_7(ANTHROPIC, "claude-4-opus-4.7", "Claude Opus 4.7"),
+        CLAUDE_OPUS_4_6(ANTHROPIC, "claude-4-opus-4.6", "Claude Opus 4.6"),
+        CLAUDE_OPUS_4_6_FAST(ANTHROPIC, "claude-4-opus-4.6-fast", "Claude Opus 4.6 Fast"),
+        CLAUDE_OPUS_4_5(ANTHROPIC, "claude-4-opus-4.5", "Claude Opus 4.5"),
 
-        CLAUDE_OPUS_3("anthropic", "claude-3-opus", "Claude Opus 3"),
+        CLAUDE_OPUS_3(ANTHROPIC, "claude-3-opus", "Claude Opus 3"),
 
         // =========================
         // Anthropic — Claude Sonnet
         // =========================
-        CLAUDE_SONNET_4("anthropic", "claude-4-sonnet", "Claude Sonnet 4"),
-        CLAUDE_SONNET_4_5("anthropic", "claude-4-sonnet-4.5", "Claude Sonnet 4.5"),
-        CLAUDE_SONNET_4_6("anthropic", "claude-4-sonnet-4.6", "Claude Sonnet 4.6"),
+        CLAUDE_SONNET_4(ANTHROPIC, "claude-4-sonnet", "Claude Sonnet 4"),
+        CLAUDE_SONNET_4_5(ANTHROPIC, "claude-4-sonnet-4.5", "Claude Sonnet 4.5"),
+        CLAUDE_SONNET_4_6(ANTHROPIC, "claude-4-sonnet-4.6", "Claude Sonnet 4.6"),
 
-        CLAUDE_SONNET_3("anthropic", "claude-3-sonnet", "Claude Sonnet 3"),
-        CLAUDE_SONNET_3_5("anthropic", "claude-3-5-sonnet", "Claude Sonnet 3.5"),
+        CLAUDE_SONNET_3(ANTHROPIC, "claude-3-sonnet", "Claude Sonnet 3"),
+        CLAUDE_SONNET_3_5(ANTHROPIC, "claude-3-5-sonnet", "Claude Sonnet 3.5"),
 
         // =========================
         // Anthropic — Claude Haiku
         // =========================
-        CLAUDE_HAIKU_4("anthropic", "claude-4-haiku", "Claude Haiku 4"),
-        CLAUDE_HAIKU_3("anthropic", "claude-3-haiku", "Claude Haiku 3"),
+        CLAUDE_HAIKU_4(ANTHROPIC, "claude-4-haiku", "Claude Haiku 4"),
+        CLAUDE_HAIKU_4_5(ANTHROPIC, "claude-4-haiku-4.5", "Claude Haiku 4.5"),
+        CLAUDE_HAIKU_3(ANTHROPIC, "claude-3-haiku", "Claude Haiku 3"),
 
-        // Google
-        GEMINI_1_5_PRO("google", "gemini-1.5-pro", "Gemini 1.5 Pro"),
-        GEMINI_1_5_FLASH("google", "gemini-1.5-flash", "Gemini 1.5 Flash"),
+        // =========================
+        // Google — Gemini
+        // =========================
+        GEMINI_3_1_PRO(GOOGLE, "gemini-3.1-pro", "Gemini 3.1 Pro"),
+        GEMINI_3_FLASH(GOOGLE, "gemini-3-flash", "Gemini 3 Flash"),
+        GEMINI_2_5_PRO(GOOGLE, "gemini-2.5-pro", "Gemini 2.5 Pro"),
+        GEMINI_1_5_PRO(GOOGLE, "gemini-1.5-pro", "Gemini 1.5 Pro"),
+        GEMINI_1_5_FLASH(GOOGLE, "gemini-1.5-flash", "Gemini 1.5 Flash"),
 
+        // =========================
         // Meta
-        LLAMA_3_70B("meta", "llama-3-70b", "LLaMA 3 70B"),
-        LLAMA_3_8B("meta", "llama-3-8b", "LLaMA 3 8B"),
+        // =========================
+        LLAMA_3_70B(META, "llama-3-70b", "LLaMA 3 70B"),
+        LLAMA_3_8B(META, "llama-3-8b", "LLaMA 3 8B"),
 
+        // =========================
         // Mistral
-        MISTRAL_LARGE("mistral", "mistral-large", "Mistral Large"),
-        MISTRAL_SMALL("mistral", "mistral-small", "Mistral Small"),
-        MIXTRAL_8X7B("mistral", "mixtral-8x7b", "Mixtral 8x7B"),
+        // =========================
+        MISTRAL_LARGE(MISTRAL, "mistral-large", "Mistral Large"),
+        MISTRAL_SMALL(MISTRAL, "mistral-small", "Mistral Small"),
+        MIXTRAL_8X7B(MISTRAL, "mixtral-8x7b", "Mixtral 8x7B"),
 
+        // =========================
         // Cohere
-        COMMAND_R_PLUS("cohere", "command-r-plus", "Command R+"),
-        COMMAND_R("cohere", "command-r", "Command R"),
+        // =========================
+        COMMAND_R_PLUS(COHERE, "command-r-plus", "Command R+"),
+        COMMAND_R(COHERE, "command-r", "Command R"),
 
+        // =========================
+        // xAI
+        // =========================
+        GROK_CODE_FAST_1(XAI, "grok-code-fast-1", "Grok Code Fast 1"),
+
+        // =========================
         // OSS / local
-        DEEPSEEK_CHAT("deepseek", "deepseek-chat", "DeepSeek Chat"),
-        DEEPSEEK_CODER("deepseek", "deepseek-coder", "DeepSeek Coder"),
-        QWEN_2("alibaba", "qwen-2", "Qwen 2"),
-        PHI_3("microsoft", "phi-3", "Phi-3"),
+        // =========================
+        DEEPSEEK_CHAT(DEEPSEEK, "deepseek-chat", "DeepSeek Chat"),
+        DEEPSEEK_CODER(DEEPSEEK, "deepseek-coder", "DeepSeek Coder"),
+        QWEN_2(ALIBABA, "qwen-2", "Qwen 2"),
+        PHI_3(MICROSOFT, "phi-3", "Phi-3"),
+
+        // =========================
+        // Fine-tuned / tool-specific
+        // =========================
+        RAPTOR_MINI(GITHUB, "raptor-mini", "Raptor Mini"),
+        GOLDENEYE(GITHUB, "goldeneye", "Goldeneye"),
+
+        // =========================
+        // Droid Core / OSS-backed
+        // =========================
+        DROID_CORE_MINIMAX_M2_7(FACTORY, "droid-core-minimax-m2.7", "Droid Core (MiniMax M2.7)"),
+        DROID_CORE_GLM_5_1(FACTORY, "droid-core-glm-5.1", "Droid Core (GLM-5.1)"),
+        DROID_CORE_GLM_5(FACTORY, "droid-core-glm-5", "Droid Core (GLM-5)"),
+        DROID_CORE_KIMI_K2_6(FACTORY, "droid-core-kimi-k2.6", "Droid Core (Kimi K2.6)"),
+        DROID_CORE_KIMI_K2_5(FACTORY, "droid-core-kimi-k2.5", "Droid Core (Kimi K2.5)"),
 
         // Fallback
-        OTHER("other", "other", "Other");
+        OTHER(Provider.OTHER, "other", "Other");
 
-        private final String provider;
+        private final Provider provider;
         private final String modelId;
         private final String displayName;
 
-        Agent(String provider, String modelId, String displayName) {
+        Agent(Provider provider, String modelId, String displayName) {
             this.provider = provider;
             this.modelId = modelId;
             this.displayName = displayName;
         }
 
-        /**
-         * Returns the provider identifier (e.g. "openai", "anthropic").
-         */
-        public String provider() {
+        /** Returns the {@link Provider} for this agent. */
+        public Provider provider() {
             return provider;
         }
 
@@ -205,9 +297,7 @@ public @interface AiProvenance {
             return modelId;
         }
 
-        /**
-         * Human-friendly display name for the model.
-         */
+        /** Human-friendly display name for the model. */
         public String displayName() {
             return displayName;
         }
@@ -234,53 +324,51 @@ public @interface AiProvenance {
     enum Tool {
 
         // Web / Chat UIs
-        CHATGPT_UI("openai", "chatgpt-ui", "ChatGPT"),
-        CLAUDE_UI("anthropic", "claude-ui", "Claude UI"),
-        GEMINI_UI("google", "gemini-ui", "Gemini UI"),
-        PERPLEXITY("perplexity", "perplexity", "Perplexity"),
+        CHATGPT_UI(OPENAI, "chatgpt-ui", "ChatGPT"),
+        CLAUDE_UI(ANTHROPIC, "claude-ui", "Claude UI"),
+        GEMINI_UI(GOOGLE, "gemini-ui", "Gemini UI"),
+        PERPLEXITY(Provider.PERPLEXITY, "perplexity", "Perplexity"),
 
         // IDE integrations
-        GITHUB_COPILOT("github", "copilot", "GitHub Copilot"),
-        GEMINI_CODE_ASSIST("google", "gemini-code-assist", "Gemini Code Assist"),
-        CURSOR("cursor", "cursor", "Cursor"),
-        WINDSURF("windsurf", "windsurf", "Windsurf"),
-        INTELLIJ_AI_ASSISTANT("jetbrains", "ai-assistant", "JetBrains AI Assistant"),
-        VSCODE_AI_EXTENSION("microsoft", "vscode-ai", "VS Code AI Extension"),
+        GITHUB_COPILOT(GITHUB, "copilot", "GitHub Copilot"),
+        GEMINI_CODE_ASSIST(GOOGLE, "gemini-code-assist", "Gemini Code Assist"),
+        CURSOR(Provider.CURSOR, "cursor", "Cursor"),
+        WINDSURF(Provider.WINDSURF, "windsurf", "Windsurf"),
+        INTELLIJ_AI_ASSISTANT(JETBRAINS, "ai-assistant", "JetBrains AI Assistant"),
+        VSCODE_AI_EXTENSION(MICROSOFT, "vscode-ai", "VS Code AI Extension"),
 
         // APIs / SDK usage
-        OPENAI_API("openai", "api", "OpenAI API"),
-        ANTHROPIC_API("anthropic", "api", "Anthropic API"),
-        GOOGLE_AI_API("google", "api", "Google AI API"),
-        GENERIC_API("generic", "api", "Generic API"),
+        OPENAI_API(OPENAI, "api", "OpenAI API"),
+        ANTHROPIC_API(ANTHROPIC, "api", "Anthropic API"),
+        GOOGLE_AI_API(GOOGLE, "api", "Google AI API"),
+        GENERIC_API(GENERIC, "api", "Generic API"),
 
         // Agent / orchestration platforms
-        FACTORY("factory", "factory-ai", "Factory.ai"),
-        LANGCHAIN("langchain", "langchain", "LangChain"),
-        LLAMAINDEX("llamaindex", "llamaindex", "LlamaIndex"),
-        CUSTOM_AGENT("custom", "custom-agent", "Custom Agent Runtime"),
+        FACTORY(Provider.FACTORY, "factory-ai", "Factory.ai"),
+        LANGCHAIN(Provider.LANGCHAIN, "langchain", "LangChain"),
+        LLAMAINDEX(Provider.LLAMAINDEX, "llamaindex", "LlamaIndex"),
+        CUSTOM_AGENT(CUSTOM, "custom-agent", "Custom Agent Runtime"),
 
         // CLI tools
-        OPENAI_CLI("openai", "cli", "OpenAI CLI"),
-        ANTHROPIC_CLI("anthropic", "cli", "Anthropic CLI"),
-        FACTORY_CLI("factory", "factory-cli", "Factory.ai CLI"),
+        OPENAI_CLI(OPENAI, "cli", "OpenAI CLI"),
+        ANTHROPIC_CLI(ANTHROPIC, "cli", "Anthropic CLI"),
+        FACTORY_CLI(Provider.FACTORY, "factory-cli", "Factory.ai CLI"),
 
         // Fallback
-        OTHER("other", "other", "Other");
+        OTHER(Provider.OTHER, "other", "Other");
 
-        private final String provider;
+        private final Provider provider;
         private final String id;
         private final String displayName;
 
-        Tool(String provider, String id, String displayName) {
+        Tool(Provider provider, String id, String displayName) {
             this.provider = provider;
             this.id = id;
             this.displayName = displayName;
         }
 
-        /**
-         * Returns the provider identifier (e.g. "openai", "anthropic").
-         */
-        public String provider() {
+        /** Returns the {@link Provider} for this tool. */
+        public Provider provider() {
             return provider;
         }
 
@@ -292,9 +380,7 @@ public @interface AiProvenance {
             return id;
         }
 
-        /**
-         * Human-friendly display name for the tool.
-         */
+        /** Human-friendly display name for the tool. */
         public String displayName() {
             return displayName;
         }
@@ -304,7 +390,7 @@ public @interface AiProvenance {
          * is useful for logging and tagging (for example "factory/factory-cli").
          */
         public String qualifiedName() {
-            return provider + "/" + id;
+            return id() + "/" + id;
         }
     }
 }
