@@ -18,11 +18,18 @@
  */
 package org.apache.hyracks.util;
 
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
+import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+import org.apache.hyracks.util.annotations.AiProvenance;
+
+@AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT, contributionKind = REFACTORED, notes = "Renamed init() to startElapsed(), made ELAPSED an immutable sentinel, fixed elapsed() >= off-by-one, added startElapsed() with do/while Javadoc")
 public class Span {
 
     public static final Span INFINITE = new Span() {
@@ -83,7 +90,62 @@ public class Span {
         }
     };
 
-    public static final Span ELAPSED = start(0, TimeUnit.NANOSECONDS);
+    public static final Span ELAPSED = new Span() {
+        @Override
+        public void reset() {
+            // no-op
+        }
+
+        @Override
+        public long getSpanNanos() {
+            return 0;
+        }
+
+        @Override
+        public long getSpan(TimeUnit unit) {
+            return 0;
+        }
+
+        @Override
+        public boolean elapsed() {
+            return true;
+        }
+
+        @Override
+        public long elapsed(TimeUnit unit) {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public void sleep() {
+            // no-op: already elapsed
+        }
+
+        @Override
+        public void sleep(long sleep, TimeUnit unit) {
+            // no-op: already elapsed
+        }
+
+        @Override
+        public long remaining(TimeUnit unit) {
+            return 0;
+        }
+
+        @Override
+        public void wait(Object monitor) {
+            // no-op: already elapsed
+        }
+
+        @Override
+        public boolean await(CountDownLatch latch) {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "<ELAPSED>";
+        }
+    };
 
     private final long spanNanos;
     private volatile long startNanos;
@@ -114,12 +176,32 @@ public class Span {
         return s;
     }
 
-    public static Span init(long span, TimeUnit unit) {
-        return new Span(span, unit);
+    /**
+     * Creates a span that is immediately elapsed, analogous to a do/while loop: the elapsed condition is true on the
+     * first check, triggering immediate action, after which {@link #reset()} begins the countdown for subsequent
+     * iterations. Contrast with {@link #start(long, TimeUnit)}, which is analogous to a while/do loop: the span must
+     * actually expire before the elapsed condition becomes true.
+     * <p>
+     * Typical usage: bootstrapping state that has a TTL, where the first fetch should happen immediately and
+     * subsequent refreshes should be rate-limited by the span duration.
+     * <pre>
+     *   Span refreshSpan = Span.startElapsed(ttlSeconds, TimeUnit.SECONDS);
+     *   while (running) {
+     *       if (refreshSpan.elapsed()) {
+     *           refresh();
+     *           refreshSpan.reset();
+     *       }
+     *   }
+     * </pre>
+     */
+    public static Span startElapsed(long span, TimeUnit unit) {
+        Span s = new Span(span, unit);
+        s.startNanos = System.nanoTime() - s.spanNanos;
+        return s;
     }
 
     public boolean elapsed() {
-        return elapsed(TimeUnit.NANOSECONDS) > spanNanos;
+        return elapsed(TimeUnit.NANOSECONDS) >= spanNanos;
     }
 
     public long elapsed(TimeUnit unit) {
@@ -239,7 +321,7 @@ public class Span {
         if (micros > 0) {
             builder.append(micros).append("us");
         }
-        if (nanos > 0 || builder.length() == 0) {
+        if (nanos > 0 || builder.isEmpty()) {
             builder.append(nanos).append("ns");
         }
         return builder.toString();

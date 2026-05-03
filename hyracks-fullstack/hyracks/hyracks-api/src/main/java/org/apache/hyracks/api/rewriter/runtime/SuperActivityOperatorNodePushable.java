@@ -297,9 +297,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         for (Future<Void> task : tasks) {
             task.cancel(true);
         }
-        Span completionPoll = Span.init(TASKS_COMPLETION_POLL_SECONDS, TimeUnit.SECONDS);
+        Span completionPoll = Span.start(TASKS_COMPLETION_POLL_SECONDS, TimeUnit.SECONDS);
         while (true) {
-            completionPoll.reset();
             if (completionPoll.tryAcquireUninterruptibly(completeSemaphore)) {
                 return true;
             }
@@ -314,6 +313,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 preCancelStackTraces.put(runningThread, runningThread.getStackTrace());
             }
             interruptRunningThreads(runningThreads);
+            completionPoll.reset();
         }
     }
 
