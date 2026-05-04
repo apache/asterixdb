@@ -1,0 +1,1 @@
+{ "orders": { "orderno": 1006, "items": [ { "itemno": 501, "qty": 24, "price": 46 }, { "itemno": 345, "qty": 20, "price": 10.5 }, { "itemno": 550, "qty": 60, "price": 20 } ], "custid": "C41", "order_date": "2020-09-02", "ship_date": "2020-09-04" } }

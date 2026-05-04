@@ -1,0 +1,83 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE TYPE CustomerType AS {
+  custid: string
+};
+
+CREATE DATASET customers(CustomerType) PRIMARY KEY custid;
+
+INSERT INTO customers [
+  {
+    "custid": "C47",
+    "name": "S. Logan",
+    "address": {
+      "street": "Via del Corso",
+      "city": "Rome, Italy"
+    },
+    "rating": 625
+  },
+  {
+    "custid": "C48",
+    "name": "S. Paul",
+    "address": {
+      "city": "San Jose, United States",
+      "street" : "North First Street",
+      "zipcode" : 95134
+    },
+    "rating": 775
+  }
+];
+
+
+CREATE TYPE OrderType AS {
+  orderno: int
+};
+
+CREATE DATASET orders(OrderType) PRIMARY KEY orderno;
+
+INSERT INTO orders [
+ {
+ "orderno": 1006,
+ "custid": "C41",
+ "order_date": "2020-09-02",
+ "ship_date": "2020-09-04",
+ "items": [
+   {
+     "itemno": 680,
+     "qty": 51,
+     "price": 25.98
+   },
+   {
+     "itemno": 120,
+     "qty": 65,
+     "price": 85
+   },
+   {
+     "itemno": 460,
+     "qty": 120,
+     "price": 99.98
+   }
+ ]
+}
+];

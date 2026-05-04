@@ -1,0 +1,2 @@
+{ "customers": { "custid": "C47", "address": { "city": "San Jose, United States", "street": "Santana Row", "zipcode": 95128 }, "rating": 675, "name": "S. Logan" } }
+{ "customers": { "custid": "C48", "name": "S. Paul", "address": { "city": "San Jose, United States", "street": "North First Street", "zipcode": 95134 }, "rating": 775 } }

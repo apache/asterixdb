@@ -1,0 +1,2 @@
+{ "customers": { "custid": "C47", "address": { "city": "Rome, Italy" }, "name": "S. Logan", "rating": 625 } }
+{ "customers": { "custid": "C48", "name": "S. Paul", "address": { "city": "San Jose, United States", "street": "North First Street", "zipcode": 95134 }, "rating": 775 } }
