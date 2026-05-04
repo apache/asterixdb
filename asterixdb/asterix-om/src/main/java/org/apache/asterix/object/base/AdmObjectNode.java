@@ -97,6 +97,14 @@ public class AdmObjectNode implements IAdmNode {
         return this;
     }
 
+    public AdmObjectNode update(String fieldName, IAdmNode value) {
+        if (value == null) {
+            value = AdmNullNode.INSTANCE;
+        }
+        children.put(fieldName, value);
+        return this;
+    }
+
     public IAdmNode remove(String fieldName) {
         return children.remove(fieldName);
     }

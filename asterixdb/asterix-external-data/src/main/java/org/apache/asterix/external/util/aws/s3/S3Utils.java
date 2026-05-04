@@ -43,6 +43,7 @@ import static org.apache.asterix.external.util.aws.AwsUtils.getAuthenticationTyp
 import static org.apache.asterix.external.util.aws.AwsUtils.getCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.getPathStyleAddressing;
 import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.CHANGE_DETECTION_MODE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
@@ -54,9 +55,15 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_REGION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_DURATION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_NONE;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIAL_PROVIDER_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_AUTO;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INSTANCE_PROFILE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_PATH_STYLE_ACCESS;
@@ -67,6 +74,7 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SERVICE
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SIMPLE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORARY;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
@@ -190,7 +198,6 @@ public class S3Utils {
         }
         awsClients.setConsumingClient(builder.build());
         return awsClients;
-
     }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT)
@@ -285,14 +292,10 @@ public class S3Utils {
         if (serviceEndpoint != null) {
             // Validation of the URL should be done at hadoop-aws level
             jobConf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
-
-            // The analytics-accelerator stream factory (default in Hadoop 3.4+) performs a HeadObject call during
-            // stream initialization to fetch the ETag. Non-AWS S3-compatible endpoints (e.g. mock servers) may not
-            // return an ETag on HeadObject, which causes a NullPointerException. Fall back to the classic stream
-            // implementation when a custom service endpoint is in use.
-            // TODO: make configurable
-            jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
         }
+
+        setInputStreamType(configuration, jobConf, serviceEndpoint);
+        setChangeDetectionMode(configuration, jobConf, serviceEndpoint);
 
         boolean pathStyleAddressing =
                 validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
@@ -307,6 +310,48 @@ public class S3Utils {
          */
         if (numberOfPartitions != 0) {
             jobConf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
+        }
+    }
+
+    private static void setInputStreamType(Map<String, String> configuration, JobConf jobConf, String serviceEndpoint) {
+        String configuredInputStreamType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
+        if (configuredInputStreamType == null) {
+            configuredInputStreamType = HADOOP_INPUT_STREAM_TYPE_VAL_AUTO;
+        }
+
+        if (HADOOP_INPUT_STREAM_TYPE_VAL_AUTO.equals(configuredInputStreamType)) {
+            // Auto mode: decide based on endpoint
+            if (serviceEndpoint != null) {
+                // The analytics-accelerator stream factory (default in Hadoop 3.4+) performs a HeadObject call during
+                // stream initialization to fetch the ETag. Non-AWS S3-compatible endpoints may not return an ETag on
+                // HeadObject, which causes a NullPointerException. Fall back to the classic stream
+                // implementation when a custom service endpoint is in use.
+                jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
+            } else {
+                jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS);
+            }
+        } else {
+            // Explicit override: use the user-specified stream type
+            jobConf.set(HADOOP_INPUT_STREAM_TYPE, configuredInputStreamType);
+        }
+    }
+
+    private static void setChangeDetectionMode(Map<String, String> configuration, JobConf jobConf,
+            String serviceEndpoint) {
+        String configuredChangeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
+        if (configuredChangeDetectionMode == null) {
+            configuredChangeDetectionMode = HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO;
+        }
+
+        String inputStreamType = jobConf.get(HADOOP_INPUT_STREAM_TYPE);
+        if (HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO.equals(configuredChangeDetectionMode)) {
+            // If using a custom endpoint with classic streams, default to no change detection as
+            // S3-compatible implementations may not support ETag/version metadata consistently.
+            if (serviceEndpoint != null && HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC.equals(inputStreamType)) {
+                jobConf.set(S3Constants.HADOOP_CHANGE_DETECTION_MODE, HADOOP_CHANGE_DETECTION_MODE_VAL_NONE);
+            }
+        } else {
+            jobConf.set(S3Constants.HADOOP_CHANGE_DETECTION_MODE, configuredChangeDetectionMode);
         }
     }
 
@@ -417,6 +462,9 @@ public class S3Utils {
         else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
+
+        validateAndNormalizeStreamInputType(configuration);
+        validateAndNormalizeChangeDetectionMode(configuration);
 
         // container is not needed for iceberg tables, skip validation
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -742,5 +790,42 @@ public class S3Utils {
             throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, PATH_STYLE_ADDRESSING_FIELD_NAME,
                     "true, false");
         }
+    }
+
+    public static void validateAndNormalizeStreamInputType(Map<String, String> configuration)
+            throws CompilationException {
+        String streamInputType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
+        if (streamInputType == null || streamInputType.isBlank()) {
+            configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, HADOOP_INPUT_STREAM_TYPE_VAL_AUTO);
+            return;
+        }
+
+        if (!HADOOP_INPUT_STREAM_TYPE_VAL_AUTO.equalsIgnoreCase(streamInputType)
+                && !HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS.equalsIgnoreCase(streamInputType)
+                && !HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC.equalsIgnoreCase(streamInputType)) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INPUT_STREAM_TYPE_FIELD_NAME,
+                    HADOOP_INPUT_STREAM_TYPE_VAL_AUTO + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS + ", "
+                            + HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
+        }
+        configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, streamInputType.toLowerCase());
+    }
+
+    public static void validateAndNormalizeChangeDetectionMode(Map<String, String> configuration)
+            throws CompilationException {
+        String changeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
+        if (changeDetectionMode == null || changeDetectionMode.isBlank()) {
+            configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO);
+            return;
+        }
+
+        if (!HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO.equalsIgnoreCase(changeDetectionMode)
+                && !HADOOP_CHANGE_DETECTION_MODE_VAL_NONE.equalsIgnoreCase(changeDetectionMode)
+                && !HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT.equalsIgnoreCase(changeDetectionMode)
+                && !HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER.equalsIgnoreCase(changeDetectionMode)) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHANGE_DETECTION_MODE_FIELD_NAME,
+                    HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_NONE + ", "
+                            + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
+        }
+        configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, changeDetectionMode.toLowerCase());
     }
 }
