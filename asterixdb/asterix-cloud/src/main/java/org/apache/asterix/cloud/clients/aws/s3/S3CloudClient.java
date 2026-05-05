@@ -52,6 +52,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.util.aws.AwsUtils;
 import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
@@ -382,6 +383,7 @@ public final class S3CloudClient implements ICloudClient {
         builder.credentialsProvider(credentialsProvider);
         builder.region(Region.of(config.getRegion()));
         builder.forcePathStyle(config.isForcePathStyle());
+        S3Utils.applyChecksumBehavior(builder, config.getChecksumBehavior());
 
         AttributeMap.Builder customHttpConfigBuilder = AttributeMap.builder();
         if (config.getRequestsMaxHttpConnections() > 0) {

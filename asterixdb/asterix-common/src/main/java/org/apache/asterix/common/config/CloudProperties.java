@@ -41,6 +41,7 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.cloud.io.ICloudProperties;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.hyracks.util.StorageUtil;
 
 public class CloudProperties extends AbstractProperties implements ICloudProperties {
@@ -100,7 +101,11 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),
         CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
         CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
-        CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),;
+        CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),
+        CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR(STRING, (Function<IApplicationConfig, String>) app -> {
+            String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
+            return S3ChecksumBehavior.defaultForEndpoint(endpoint).name().toLowerCase();
+        });
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -151,6 +156,7 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_STORAGE_S3_ACCESS_KEY_ID:
                 case CLOUD_STORAGE_S3_SECRET_ACCESS_KEY:
                 case CLOUD_STORAGE_AZURE_CLIENT_ID:
+                case CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR:
                     return Section.COMMON;
                 default:
                     throw new IllegalStateException("NYI: " + this);
@@ -240,6 +246,13 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                     return "The S3 secret access key for static credential authentication (defaults to null, which indicates to use default credential chain)";
                 case CLOUD_STORAGE_AZURE_CLIENT_ID:
                     return "The Azure user managed identity client ID (defaults to null, which takes the system managed identity client ID)";
+                case CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR:
+                    return "The checksum behavior for S3 requests and responses. Accepted values: "
+                            + "'when_required' (only checksums mandated by the operation), "
+                            + "'when_supported' (checksums on all eligible operations, SDK >= 2.30 default), "
+                            + "'auto' (no explicit override, defer to SDK default). "
+                            + "Defaults to 'when_required' when a custom endpoint is configured "
+                            + "(S3-compatible stores), 'auto' for native AWS S3.";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -259,6 +272,9 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             if (this == CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE) {
                 return "crt if no custom endpoint is set; async otherwise";
+            }
+            if (this == CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR) {
+                return "when_required if a custom endpoint is set; auto otherwise";
             }
             return IOption.super.usageDefaultOverride(accessor, optionPrinter);
         }
@@ -405,5 +421,10 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
 
     public String getAzureClientId() {
         return accessor.getString(Option.CLOUD_STORAGE_AZURE_CLIENT_ID);
+    }
+
+    // Parses the stored string value to the S3ChecksumBehavior enum
+    public S3ChecksumBehavior getS3ChecksumBehavior() {
+        return S3ChecksumBehavior.fromString(accessor.getString(Option.CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR));
     }
 }

@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.hyracks.cloud.io.ICloudProperties;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -56,12 +57,14 @@ public final class S3ClientConfig {
     private final boolean roundRobinDnsResolver;
     private final String accessKeyId;
     private final String secretAccessKey;
+    private final S3ChecksumBehavior checksumBehavior;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
-                false, false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "");
+                false, false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "",
+                S3ChecksumBehavior.defaultForEndpoint(endpoint));
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
@@ -70,7 +73,7 @@ public final class S3ClientConfig {
             boolean forcePathStyle, boolean disableSslVerify, int requestsMaxPendingHttpConnections,
             int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver,
-            String accessKeyId, String secretAccessKey) {
+            String accessKeyId, String secretAccessKey, S3ChecksumBehavior checksumBehavior) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -91,6 +94,7 @@ public final class S3ClientConfig {
         this.roundRobinDnsResolver = roundRobinDnsResolver;
         this.accessKeyId = accessKeyId;
         this.secretAccessKey = secretAccessKey;
+        this.checksumBehavior = Objects.requireNonNull(checksumBehavior, "checksumBehavior");
     }
 
     public static S3ClientConfig of(ICloudProperties cloudProperties) {
@@ -104,7 +108,7 @@ public final class S3ClientConfig {
                 cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
                 S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()),
                 cloudProperties.useRoundRobinDnsResolver(), cloudProperties.getS3AccessKeyId(),
-                cloudProperties.getS3SecretAccessKey());
+                cloudProperties.getS3SecretAccessKey(), cloudProperties.getS3ChecksumBehavior());
     }
 
     public enum S3ParallelDownloaderClientType {
@@ -126,7 +130,6 @@ public final class S3ClientConfig {
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
-        // Used to determine local vs. actual S3
         String endPoint = configuration.getOrDefault(AwsConstants.SERVICE_END_POINT_FIELD_NAME, "");
         // Disabled
         long profilerLogInterval = 0;
@@ -226,5 +229,9 @@ public final class S3ClientConfig {
 
     public boolean useRoundRobinDnsResolver() {
         return roundRobinDnsResolver;
+    }
+
+    public S3ChecksumBehavior getChecksumBehavior() {
+        return checksumBehavior;
     }
 }

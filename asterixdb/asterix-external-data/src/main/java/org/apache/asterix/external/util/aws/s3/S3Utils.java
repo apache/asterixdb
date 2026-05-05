@@ -89,6 +89,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
@@ -114,7 +115,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.hyracks.cloud.io.ICloudProperties;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -193,23 +195,33 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
-        if (serviceEndpoint != null) {
-            configureS3CompatibleSettings(serviceEndpoint, builder);
+        ICloudProperties cloudProperties = appCtx.getCloudProperties();
+        S3ChecksumBehavior checksumBehavior;
+        if (cloudProperties != null) {
+            checksumBehavior = cloudProperties.getS3ChecksumBehavior();
+        } else {
+            // No cloud properties (external data context): default based on whether a custom endpoint is in use
+            checksumBehavior = S3ChecksumBehavior.defaultForEndpoint(serviceEndpoint);
         }
+        applyChecksumBehavior(builder, checksumBehavior);
         awsClients.setConsumingClient(builder.build());
         return awsClients;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT)
-    private static void configureS3CompatibleSettings(String serviceEndpoint, S3ClientBuilder builder) {
-        // AWS SDK 2.43+ sends CRC64NVME request checksums by default for all eligible operations.
-        // S3-compatible endpoints (non-AWS) and older mock servers do not understand this header and
-        // may reject or mishandle requests, returning empty or error responses. When a custom endpoint
-        // is configured (i.e. not talking to real AWS S3), disable automatic checksum calculation so
-        // only operations that explicitly require a checksum will include one.
-        if (serviceEndpoint != null) {
-            builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
-            builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+    public static void applyChecksumBehavior(S3ClientBuilder builder, S3ChecksumBehavior behavior) {
+        Objects.requireNonNull(behavior, "checksumBehavior");
+        switch (behavior) {
+            case WHEN_REQUIRED:
+                builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
+                builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+                break;
+            case WHEN_SUPPORTED:
+                builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_SUPPORTED);
+                builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_SUPPORTED);
+                break;
+            case AUTO:
+                // leave SDK defaults untouched
+                break;
         }
     }
 
