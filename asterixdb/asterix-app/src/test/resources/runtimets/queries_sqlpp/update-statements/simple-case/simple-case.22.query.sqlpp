@@ -19,6 +19,16 @@
 
 Use test;
 
+upsert into UserTypes([{ "userId": 3, "email": "michael.brown@example.com", "username": "michaelb", "isActive": true, "u1": { "u2": null, "u3": 1 }, "age": "five", "occupation": 4 },
+{ "userId": 4, "email": "emily.davis@example.com", "username": "emilyd", "isActive": true, "u1": { "u2": null, "u3": 1 }, "age": 23.1 } ,
+ { "userId": 5, "email": "chris.jones@example.com", "username": "chrisj", "isActive": false, "u1": { "u2": null, "u3": 1 }, "age": "old" }
+,{ "userId": 6, "email": "patricia.garcia@example.com", "username": "patriciag", "isActive": true, "u1": { "u2": null, "u3": 1 }, "age": "45" },
+{ "userId": 7, "email": "linda.martinez@example.com", "username": "lindam", "isActive": false, "u1": { "u2": null, "u3": 1 } },
+{ "userId": 8, "email": "robert.lee@example.com", "username": "robertl", "isActive": true, "u1": { "u2": null, "u3": 1 }, "age": 31 },
+ { "userId": 9, "email": "james.wilson@example.com", "username": "jamesw", "isActive": true, "u1": { "u2": null, "u3": 1 }, "age": "65"  },
+ { "userId": 10, "email": "mary.moore@example.com", "username": "marym", "isActive": false, "u1": { "u2": null, "u3": 1 }, "timeZone": "PT", "age": 32, "addresses": [ { "city": "Riverside", "zipcode": 92510 } ] } ,
+{ "userId": 11, "email": "jack.moore@example.com", "username": "jk", "isActive": true, "age": 31, "addresses": [{ "city": "Irvine, United States", "street": "Second st", "zipcode": 98128 }, { "city": "iii, United States", "street": "Second st", "zipcode": 9000 } ], "job": "pilot2", "u1": { "u2": null, "u3": 1, "u1": 1 }, "age2": null, "job3": null  }
+]);
 
 UPDATE UserTypes as u
  SET u.age=30

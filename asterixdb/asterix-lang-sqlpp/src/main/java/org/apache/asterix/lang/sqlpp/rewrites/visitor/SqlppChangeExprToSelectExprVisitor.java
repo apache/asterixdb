@@ -206,7 +206,9 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
             dataTransformRecord = substituteVariableInExpression(dataTransformRecord, originalVarName,
                     currentContextVariable, changeExpr);
             changeExpr.setPriorExpr(projectExpr);
-            if (dataTransformRecord.getKind() == Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
+            if (changeExpr.assignsWholeRecord()) {
+                projectExpr = dataTransformRecord;
+            } else if (dataTransformRecord.getKind() == Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
                 projectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.RECORD_TRANSFORM),
                         new ArrayList<>(Arrays.asList(dataTransformRecord, projectExpr)));
                 ((CallExpr) projectExpr).setSourceLocation(rewrittenFirstExpr.getSourceLocation());
