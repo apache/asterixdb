@@ -332,6 +332,21 @@
             </configuration>
           </execution>
           <execution>
+          <id>checkout-ch2</id>
+          <phase>${prepare-env.stage}</phase>
+          <goals>
+            <goal>exec</goal>
+          </goals>
+          <configuration>
+            <executable>git</executable>
+            <workingDirectory>${project.build.directory}/ch2</workingDirectory>
+            <arguments>
+              <argument>checkout</argument>
+              <argument>f8fea792672c3bcb1c40166fcabda48e8aac4942</argument>
+            </arguments>
+          </configuration>
+          </execution>
+          <execution>
             <id>numpy-install</id>
             <phase>${prepare-env.stage}</phase>
             <goals>
