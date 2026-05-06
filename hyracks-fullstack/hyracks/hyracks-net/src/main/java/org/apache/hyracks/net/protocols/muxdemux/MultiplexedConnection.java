@@ -472,4 +472,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         state.set("channels", channels);
         return Optional.of(state);
     }
+
+    synchronized boolean hasConnectionFailure() {
+        return connectionFailure;
+    }
 }

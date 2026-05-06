@@ -142,11 +142,16 @@ public class MuxDemux {
             public void connectionClosed(TCPConnection connection) {
                 synchronized (MuxDemux.this) {
                     if (connection.getType() == TCPConnection.ConnectionType.OUTGOING) {
-                        if (outgoingConnectionMap.remove(connection.getRemoteAddress()) == null) {
+                        MultiplexedConnection current = outgoingConnectionMap.get(connection.getRemoteAddress());
+                        if (current == connection.getAttachment()) {
+                            outgoingConnectionMap.remove(connection.getRemoteAddress());
+                            LOGGER.debug("removed outgoing connection to {} on close", connection.getRemoteAddress());
+                        } else if (current == null) {
                             LOGGER.warn("outgoing connection to {} already removed on close",
                                     connection.getRemoteAddress());
                         } else {
-                            LOGGER.debug("removed outgoing connection to {} on close", connection.getRemoteAddress());
+                            LOGGER.debug("ignored close for stale outgoing connection to {}",
+                                    connection.getRemoteAddress());
                         }
                     } else if (connection.getType() == TCPConnection.ConnectionType.INCOMING) {
                         if (incomingConnectionMap.remove(connection.getRemoteAddress()) == null) {
@@ -187,6 +192,14 @@ public class MuxDemux {
         MultiplexedConnection mConn;
         synchronized (this) {
             mConn = outgoingConnectionMap.get(remoteAddress);
+            if (mConn != null && mConn.hasConnectionFailure()) {
+                if (outgoingConnectionMap.remove(remoteAddress) == null) {
+                    LOGGER.warn("failed connection to {} was already removed", remoteAddress);
+                } else {
+                    LOGGER.debug("removed failed connection to {} before reconnect", remoteAddress);
+                }
+                mConn = null;
+            }
             if (mConn == null) {
                 mConn = new MultiplexedConnection(this);
                 outgoingConnectionMap.put(remoteAddress, mConn);
