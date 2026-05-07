@@ -73,7 +73,8 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.4</log4j.version>
     <snappy.version>1.1.10.8</snappy.version>
-    <jackson.version>2.19.4</jackson.version>
+    <jackson.version>2.21.3</jackson.version>
+    <jackson-annotations.version>2.21</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.1.132.Final</netty.version>
     <asm.version>9.3</asm.version>
@@ -351,7 +352,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson-annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
