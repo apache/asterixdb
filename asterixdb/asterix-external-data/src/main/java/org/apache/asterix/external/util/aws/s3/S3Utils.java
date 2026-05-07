@@ -44,6 +44,7 @@ import static org.apache.asterix.external.util.aws.AwsUtils.getCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.getPathStyleAddressing;
 import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.CHANGE_DETECTION_MODE_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.CHECKSUM_BEHAVIOR_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
@@ -77,6 +78,8 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -85,6 +88,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +97,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -115,8 +120,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -144,6 +149,8 @@ import software.amazon.awssdk.utils.AttributeMap;
 
 public class S3Utils {
     private static final Logger LOGGER = LogManager.getLogger();
+    static final String CHECKSUM_BEHAVIOR_ALLOWED_VALUES = Arrays.stream(S3ChecksumBehavior.values())
+            .map(v -> v.name().toLowerCase()).collect(Collectors.joining(", "));
 
     private static final class StaticTrustManagersProvider implements TlsTrustManagersProvider {
         private final TrustManager[] trustManagers;
@@ -195,16 +202,7 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
-
-        S3ChecksumBehavior checksumBehavior;
-        if (appCtx != null && appCtx.getCloudProperties() != null) {
-            ICloudProperties cloudProperties = appCtx.getCloudProperties();
-            checksumBehavior = cloudProperties.getS3ChecksumBehavior();
-        } else {
-            // No cloud properties (external data context): default based on whether a custom endpoint is in use
-            checksumBehavior = S3ChecksumBehavior.defaultForEndpoint(serviceEndpoint);
-        }
-        applyChecksumBehavior(builder, checksumBehavior);
+        applyChecksumBehavior(builder, resolveChecksumBehavior(configuration, serviceEndpoint));
         awsClients.setConsumingClient(builder.build());
         return awsClients;
     }
@@ -784,6 +782,47 @@ public class S3Utils {
 
     public static boolean isRetryableError(String errorCode) {
         return errorCode.equals(ERROR_INTERNAL_ERROR) || errorCode.equals(ERROR_SLOW_DOWN);
+    }
+
+    /**
+     * Resolves the effective checksum behavior for external data (link) operations using a two-level priority chain:
+     * <ol>
+     *   <li>Per-link {@code checksumBehavior} parameter in the configuration map (explicit override)</li>
+     *   <li>Endpoint-based default: {@link S3ChecksumBehavior#AUTO} for native AWS S3,
+     *       {@link S3ChecksumBehavior#WHEN_REQUIRED} for S3-compatible storage</li>
+     * </ol>
+     * Cloud properties are intentionally not consulted here — this method is for external data (link) operations
+     * only, not for blob storage.
+     */
+    @AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT)
+    public static S3ChecksumBehavior resolveChecksumBehavior(Map<String, String> configuration, String serviceEndpoint)
+            throws CompilationException {
+        String perLink = configuration.get(CHECKSUM_BEHAVIOR_FIELD_NAME);
+        if (perLink != null) {
+            try {
+                return S3ChecksumBehavior.fromString(perLink);
+            } catch (IllegalArgumentException e) {
+                throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHECKSUM_BEHAVIOR_FIELD_NAME,
+                        CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
+            }
+        }
+        return S3ChecksumBehavior.defaultForEndpoint(serviceEndpoint);
+    }
+
+    /**
+     * Validates a {@code checksumBehavior} string value.
+     * Throws {@link CompilationException} if the value is non-null and not a recognized enum value.
+     */
+    public static void validateChecksumBehavior(String value) throws CompilationException {
+        if (value == null) {
+            return;
+        }
+        try {
+            S3ChecksumBehavior.fromString(value);
+        } catch (IllegalArgumentException e) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHECKSUM_BEHAVIOR_FIELD_NAME,
+                    CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
+        }
     }
 
     public static boolean validateAndGetPathStyleAddressing(String pathStyleAddressing, String endpoint)

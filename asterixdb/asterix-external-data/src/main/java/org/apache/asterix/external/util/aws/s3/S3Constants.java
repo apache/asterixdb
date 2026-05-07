@@ -27,6 +27,7 @@ public class S3Constants {
     public static final int MAX_KEY_LENGTH_IN_BYTES = 1024;
 
     public static final String PATH_STYLE_ADDRESSING_FIELD_NAME = "pathStyleAddressing";
+    public static final String CHECKSUM_BEHAVIOR_FIELD_NAME = "checksumBehavior";
 
     /*
      * Hadoop-AWS

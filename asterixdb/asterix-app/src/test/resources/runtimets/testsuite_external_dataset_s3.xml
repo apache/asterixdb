@@ -1290,6 +1290,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="checksum-behavior/valid-value">
+        <output-dir compare="Text">checksum-behavior/valid-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="checksum-behavior/invalid-value">
+        <output-dir compare="Text">checksum-behavior/invalid-value</output-dir>
+        <expected-error>ASX1173: Invalid value for parameter 'checksumBehavior', allowed value(s): when_required, when_supported, auto</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
       <compilation-unit name="anonymous_no_auth">
         <output-dir compare="Text">anonymous_no_auth</output-dir>
         <expected-error>ASX3119: Parameter 'secretAccessKey' is required if 'accessKeyId' is provided</expected-error>

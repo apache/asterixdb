@@ -134,7 +134,7 @@ public final class S3ClientConfig {
         // Disabled
         long profilerLogInterval = 0;
 
-        // Dummy values;
+        // Dummy values
         String region = "";
         String prefix = "";
         Collection<String> certificates = Collections.emptyList();
