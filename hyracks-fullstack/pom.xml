@@ -78,7 +78,7 @@
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.1.132.Final</netty.version>
     <asm.version>9.3</asm.version>
-    <awsjavasdk.version>2.43.1</awsjavasdk.version>
+    <awsjavasdk.version>2.44.3</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.67.0</google-cloud-storage.version>

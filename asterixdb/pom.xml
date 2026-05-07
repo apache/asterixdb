@@ -98,7 +98,7 @@
     <parquet.version>1.17.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <awsjavasdk.version>2.43.1</awsjavasdk.version>
+    <awsjavasdk.version>2.44.3</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.45.1</awsjavasdk.crt.version>
 
@@ -114,7 +114,7 @@
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
-    <protobuf-java.version>4.33.2</protobuf-java.version>
+    <protobuf-java.version>4.33.6</protobuf-java.version>
 
     <icebergjavasdk.version>1.10.1</icebergjavasdk.version>
 
@@ -1732,7 +1732,7 @@
       <dependency>
         <groupId>org.msgpack</groupId>
         <artifactId>msgpack-core</artifactId>
-        <version>0.9.11</version>
+        <version>0.9.12</version>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
