@@ -28,6 +28,30 @@
 
   <artifactId>license-automation-plugin</artifactId>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <usedDependencies combine.children="append">
+            <usedDependency>org.codehaus.plexus:plexus-utils</usedDependency>
+          </usedDependencies>
+          <ignoredUsedUndeclaredDependencies combine.children="append">
+            <dependency>org.codehaus.plexus:plexus-xml</dependency>
+          </ignoredUsedUndeclaredDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <configuration>
+          <goalPrefix>license-automation</goalPrefix>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
   </properties>
