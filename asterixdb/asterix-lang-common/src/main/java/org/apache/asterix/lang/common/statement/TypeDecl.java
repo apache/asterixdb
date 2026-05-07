@@ -67,7 +67,7 @@ public class TypeDecl extends AbstractStatement {
 
     @Override
     public Kind getKind() {
-        return Statement.Kind.TYPE_DECL;
+        return Statement.Kind.CREATE_TYPE;
     }
 
     @Override

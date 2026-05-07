@@ -386,7 +386,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
-        boolean stmtWithAsyncSupportUsed = false;
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -415,7 +414,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
                                 Creator.DEFAULT_CREATOR);
                         break;
-                    case DATASET_DECL:
+                    case CREATE_DATASET:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters,
                                 Creator.DEFAULT_CREATOR);
                         break;
@@ -429,10 +428,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case CREATE_FULL_TEXT_CONFIG:
                         handleCreateFullTextConfigStatement(metadataProvider, stmt);
                         break;
-                    case TYPE_DECL:
+                    case CREATE_TYPE:
                         handleCreateTypeStatement(metadataProvider, stmt);
                         break;
-                    case NODEGROUP_DECL:
+                    case CREATE_NODEGROUP:
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
                     case DATABASE_DROP:
@@ -516,7 +515,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
                                 requestParameters, stmtParams, stats);
-                        stmtWithAsyncSupportUsed = true;
                         break;
                     case INSERT:
                     case UPDATE:
@@ -526,7 +524,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
                             metadataProvider.setMaxResultReads(maxResultReads);
-                            stmtWithAsyncSupportUsed = true;
                         }
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
@@ -572,7 +569,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
                                 requestParameters, stmtParams, stmtRewriter);
-                        stmtWithAsyncSupportUsed = true;
                         break;
                     case ANALYZE:
                         handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -608,7 +604,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw ex;
         } finally {
             // async queries are completed after their job completes
-            if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery || !stmtWithAsyncSupportUsed) {
+            if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery) {
                 appCtx.getRequestTracker().complete(requestParameters.getRequestReference().getUuid());
             }
             Thread.currentThread().setName(threadName);
@@ -6012,6 +6008,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDecl requestDataverseDecl = getRequestDataverseDecl(requestParameters);
         if (requestDataverseDecl != null) {
             statements.add(0, requestDataverseDecl);
+        }
+        validateAsyncSupported(requestParameters);
+    }
+
+    private void validateAsyncSupported(IRequestParameters requestParameters) throws CompilationException {
+        if (requestParameters.getResultProperties().getDelivery() == ResultDelivery.ASYNC) {
+            Optional<Statement> stmsOpt = statements.stream().findAny().filter(s -> !s.getKind().isSupportAsync());
+            if (stmsOpt.isPresent()) {
+                Statement stmt = stmsOpt.get();
+                throw new CompilationException(ErrorCode.ASYNC_NOT_SUPPORTED_FOR_STATEMENT, stmt.getSourceLocation(),
+                        stmt.getKind().getDisplayName());
+            }
         }
     }
 

@@ -38,7 +38,7 @@
         <output-dir compare="Text">readonly-request</output-dir>
         <expected-error>ASX0044: CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: DATAVERSE_DROP statement is not supported in read-only mode</expected-error>
-        <expected-error>ASX0044: DATASET_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: CREATE_DATASET statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: DATASET_DROP statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: CREATE_INDEX statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: INDEX_DROP statement is not supported in read-only mode</expected-error>
@@ -129,7 +129,7 @@
       <compilation-unit name="get-non-query">
         <output-dir compare="Text">get-non-query</output-dir>
         <expected-error>CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
-        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_TYPE statement is not supported in read-only mode</expected-error>
         <expected-error>CREATE_FUNCTION statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
@@ -141,7 +141,7 @@
     <test-case FilePath="api">
       <compilation-unit name="post-non-query">
         <output-dir compare="Text">post-non-query</output-dir>
-        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_TYPE statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">

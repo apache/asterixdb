@@ -172,7 +172,7 @@ public class AsterixJavaClient {
                 continue;
             }
 
-            if (s.getKind() == Statement.Kind.DATASET_DECL) {
+            if (s.getKind() == Statement.Kind.CREATE_DATASET) {
                 DatasetDecl dsDecl = (DatasetDecl) s;
                 String dsName = dsDecl.getName().getValue();
                 String dv = currentDv;

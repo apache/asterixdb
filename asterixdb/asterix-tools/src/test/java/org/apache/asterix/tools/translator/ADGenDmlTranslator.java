@@ -59,7 +59,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         typeDataGenMap = new HashMap<>();
 
         for (Statement stmt : statements) {
-            if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
+            if (stmt.getKind() == Statement.Kind.CREATE_TYPE) {
                 TypeDecl td = (TypeDecl) stmt;
                 DataverseName typeDataverse =
                         td.getNamespace() == null ? defaultDv : td.getNamespace().getDataverseName();
