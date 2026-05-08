@@ -81,9 +81,9 @@
     <awsjavasdk.version>2.44.4</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
-    <google-cloud-storage.version>2.67.0</google-cloud-storage.version>
-    <!-- keep this in sync w/ the dependency of the same artifact in google-cloud-storage's pom.xml -->
-    <google-cloud-core.version>2.69.0</google-cloud-core.version>
+    <google-cloud-storage.version>2.68.0</google-cloud-storage.version>
+    <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
+    <google-cloud-core.version>2.70.0</google-cloud-core.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
