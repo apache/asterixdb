@@ -98,7 +98,7 @@
     <parquet.version>1.17.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <awsjavasdk.version>2.44.3</awsjavasdk.version>
+    <awsjavasdk.version>2.44.4</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.45.1</awsjavasdk.crt.version>
 
@@ -1544,7 +1544,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.17.2</version>
+        <version>1.22.0</version>
       </dependency>
       <dependency>
         <groupId>it.unimi.dsi</groupId>
