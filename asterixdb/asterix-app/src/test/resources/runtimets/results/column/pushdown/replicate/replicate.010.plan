@@ -1,242 +1,232 @@
-distribute result [$$223] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$250] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$223] <- [{"su_suppkey": $$230, "su_name": $$272, "su_address": $$273, "su_phone": $$274, "total_revenue": $$231}] project: [$$223] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$250] <- [{"su_suppkey": $$257, "su_name": $$299, "su_address": $$300, "su_phone": $$301, "total_revenue": $$258}] project: [$$250] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-      -- SORT_MERGE_EXCHANGE [$$230(ASC) ]  |PARTITIONED|
-        order (ASC, $$230) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- STABLE_SORT [$$230(ASC)]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$257(ASC) ]  |PARTITIONED|
+        order (ASC, $$257) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$257(ASC)]  |PARTITIONED|
           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$230, $$272, $$273, $$274, $$231]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            project ([$$257, $$299, $$300, $$301, $$258]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (eq($$230, $#1)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- HYBRID_HASH_JOIN [$#1][$$230]  |PARTITIONED|
+                join (eq($$257, $#1)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- HYBRID_HASH_JOIN [$#1][$$257]  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$#1]  |PARTITIONED|
-                    project ([$$231, $#1]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    project ([$$258, $#1]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        join (eq($$231, $$268)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- HYBRID_HASH_JOIN [$$231][$$268]  |PARTITIONED|
+                        join (eq($$258, $$295)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- HYBRID_HASH_JOIN [$$258][$$295]  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- HASH_PARTITION_EXCHANGE [$$231]  |PARTITIONED|
-                            assign [$$231] <- [{"supplier_no": $#1, "total_rev": $$240}.getField("total_revenue")] project: [$$231, $#1] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- HASH_PARTITION_EXCHANGE [$$258]  |PARTITIONED|
+                            assign [$$267, $#1, $$258] <- [$$292, $$274, $$237] project: [$$258, $#1] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                group by ([$#1 := $$280]) decor ([]) {
-                                          aggregate [$$240] <- [agg-global-sql-sum($$279)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- AGGREGATE  |LOCAL|
-                                            nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                       } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- SORT_GROUP_BY[$$280]  |PARTITIONED|
+                                replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- REPLICATE  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- HASH_PARTITION_EXCHANGE [$$280]  |PARTITIONED|
-                                    group by ([$$280 := $$225]) decor ([]) {
-                                              aggregate [$$279] <- [agg-local-sql-sum($$169)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                              -- AGGREGATE  |LOCAL|
-                                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                           } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- SORT_GROUP_BY[$$225]  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$237] <- [{"supplier_no": $$274, "total_rev": $$292}.getField("total_revenue")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ASSIGN  |PARTITIONED|
                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        assign [$$225] <- [numeric-mod(numeric-multiply($$228, $$229), 10000)] project: [$$169, $$225] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- ASSIGN  |PARTITIONED|
-                                          project ([$$228, $$229, $$169]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              join (and(eq($$262, $$229), eq($$263, $$228))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                              -- HYBRID_HASH_JOIN [$$229, $$228][$$262, $$263]  |PARTITIONED|
-                                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  assign [$$228, $$229] <- [$$250, $$251] project: [$$228, $$229] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- ASSIGN  |PARTITIONED|
+                                        group by ([$$274 := $$310]) decor ([]) {
+                                                  aggregate [$$292] <- [agg-global-sql-sum($$309)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- AGGREGATE  |LOCAL|
+                                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- SORT_GROUP_BY[$$310]  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- HASH_PARTITION_EXCHANGE [$$310]  |PARTITIONED|
+                                            group by ([$$310 := $$276]) decor ([]) {
+                                                      aggregate [$$309] <- [agg-local-sql-sum($$286)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- AGGREGATE  |LOCAL|
+                                                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                   } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- SORT_GROUP_BY[$$276]  |PARTITIONED|
+                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$276] <- [numeric-mod(numeric-multiply($$277, $$278), 10000)] project: [$$286, $$276] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- ASSIGN  |PARTITIONED|
+                                                  project ([$$277, $$278, $$286]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- STREAM_PROJECT  |PARTITIONED|
                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- REPLICATE  |PARTITIONED|
+                                                      join (and(eq($$293, $$278), eq($$294, $$277))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- HYBRID_HASH_JOIN [$$278, $$277][$$293, $$294]  |PARTITIONED|
                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- HASH_PARTITION_EXCHANGE [$$251, $$250]  |PARTITIONED|
-                                                          assign [$$251, $$250] <- [$$253.getField("s_i_id"), $$253.getField("s_w_id")] project: [$$250, $$251] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- HASH_PARTITION_EXCHANGE [$$278, $$277]  |PARTITIONED|
+                                                          assign [$$278, $$277] <- [$$280.getField("s_i_id"), $$280.getField("s_w_id")] project: [$$277, $$278] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- ASSIGN  |PARTITIONED|
-                                                            project ([$$253]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            project ([$$280]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                data-scan []<-[$$258, $$253] <- test.stock project ({s_w_id:any,s_i_id:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                data-scan []<-[$$285, $$280] <- test.stock project ({s_w_id:any,s_i_id:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$262, $$263]  |PARTITIONED|
-                                                  select (and(ge($$227, "2018-01-01 00:00:00.000000"), lt($$227, "2018-04-01 00:00:00.000000"))) project: [$$169, $$262, $$263] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- STREAM_SELECT  |PARTITIONED|
-                                                    assign [$$169, $$263, $$262, $$227] <- [$$259, $$267, $$266, $$256] project: [$$169, $$263, $$262, $$227] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                    -- ASSIGN  |PARTITIONED|
-                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- REPLICATE  |PARTITIONED|
-                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            assign [$$259, $$267, $$266, $$256] <- [$$255.getField("ol_amount"), $$255.getField("ol_supply_w_id"), $$255.getField("ol_i_id"), $$255.getField("ol_delivery_d")] project: [$$259, $$267, $$266, $$256] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- HASH_PARTITION_EXCHANGE [$$293, $$294]  |PARTITIONED|
+                                                          select (and(lt($$283, "2018-04-01 00:00:00.000000"), ge($$283, "2018-01-01 00:00:00.000000"))) project: [$$286, $$293, $$294] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- STREAM_SELECT  |PARTITIONED|
+                                                            assign [$$286, $$294, $$293, $$283] <- [$$282.getField("ol_amount"), $$282.getField("ol_supply_w_id"), $$282.getField("ol_i_id"), $$282.getField("ol_delivery_d")] project: [$$286, $$294, $$293, $$283] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- ASSIGN  |PARTITIONED|
-                                                              unnest $$255 <- scan-collection($$270) project: [$$255] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              unnest $$282 <- scan-collection($$297) project: [$$282] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- UNNEST  |PARTITIONED|
-                                                                assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                assign [$$297] <- [$$281.getField("o_orderline")] project: [$$297] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                 -- ASSIGN  |PARTITIONED|
-                                                                  project ([$$254]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  project ([$$281]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      unnest-map [$$284, $$281] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$318, 1, $$318, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(lt(scan-collection($$281.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000"), ge(scan-collection($$281.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                       -- BTREE_SEARCH  |PARTITIONED|
                                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          distinct ([$$291]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          distinct ([$$318]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                           -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              order (ASC, $$291) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                              -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
+                                                                              order (ASC, $$318) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- STABLE_SORT [$$318(ASC)]  |PARTITIONED|
                                                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  project ([$$291]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                  project ([$$318]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      unnest-map [$$317, $$318] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$315, 1, $$316, true, false, false) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                       -- BTREE_SEARCH  |PARTITIONED|
                                                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          assign [$$315, $$316] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                           -- ASSIGN  |PARTITIONED|
                                                                                             empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- HASH_PARTITION_EXCHANGE [$$268]  |PARTITIONED|
-                            assign [$$268] <- [get-item($$213, 0)] project: [$$268] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- HASH_PARTITION_EXCHANGE [$$295]  |PARTITIONED|
+                            assign [$$295] <- [get-item($$240, 0)] project: [$$295] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |UNPARTITIONED|
-                              aggregate [$$213] <- [listify($$278)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              aggregate [$$240] <- [listify($$305)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- AGGREGATE  |UNPARTITIONED|
-                                aggregate [$$278] <- [agg-global-sql-max($$281)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                aggregate [$$305] <- [agg-global-sql-max($$308)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- AGGREGATE  |UNPARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-                                    aggregate [$$281] <- [agg-local-sql-max($$210)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    aggregate [$$308] <- [agg-local-sql-max($$237)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- AGGREGATE  |PARTITIONED|
-                                      assign [$$210] <- [{"supplier_no": $$247, "total_rev": $$265}.getField("total_revenue")] project: [$$210] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- ASSIGN  |PARTITIONED|
+                                      project ([$$237]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_PROJECT  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          group by ([$$247 := $$283]) decor ([]) {
-                                                    aggregate [$$265] <- [agg-global-sql-sum($$282)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                    -- AGGREGATE  |LOCAL|
-                                                      nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- SORT_GROUP_BY[$$283]  |PARTITIONED|
+                                          replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- REPLICATE  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- HASH_PARTITION_EXCHANGE [$$283]  |PARTITIONED|
-                                              group by ([$$283 := $$249]) decor ([]) {
-                                                        aggregate [$$282] <- [agg-local-sql-sum($$259)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- AGGREGATE  |LOCAL|
-                                                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                     } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                              -- SORT_GROUP_BY[$$249]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$237] <- [{"supplier_no": $$274, "total_rev": $$292}.getField("total_revenue")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ASSIGN  |PARTITIONED|
                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  assign [$$249] <- [numeric-mod(numeric-multiply($$250, $$251), 10000)] project: [$$259, $$249] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- ASSIGN  |PARTITIONED|
-                                                    project ([$$250, $$251, $$259]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                    -- STREAM_PROJECT  |PARTITIONED|
-                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        join (and(eq($$266, $$251), eq($$267, $$250))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- HYBRID_HASH_JOIN [$$251, $$250][$$266, $$267]  |PARTITIONED|
-                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- REPLICATE  |PARTITIONED|
-                                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                              -- HASH_PARTITION_EXCHANGE [$$251, $$250]  |PARTITIONED|
-                                                                assign [$$251, $$250] <- [$$253.getField("s_i_id"), $$253.getField("s_w_id")] project: [$$250, $$251] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- ASSIGN  |PARTITIONED|
-                                                                  project ([$$253]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      data-scan []<-[$$258, $$253] <- test.stock project ({s_w_id:any,s_i_id:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
-                                                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- HASH_PARTITION_EXCHANGE [$$266, $$267]  |PARTITIONED|
-                                                            select (and(lt($$256, "2018-04-01 00:00:00.000000"), ge($$256, "2018-01-01 00:00:00.000000"))) project: [$$259, $$266, $$267] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- STREAM_SELECT  |PARTITIONED|
+                                                  group by ([$$274 := $$310]) decor ([]) {
+                                                            aggregate [$$292] <- [agg-global-sql-sum($$309)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- AGGREGATE  |LOCAL|
+                                                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                         } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- SORT_GROUP_BY[$$310]  |PARTITIONED|
+                                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- HASH_PARTITION_EXCHANGE [$$310]  |PARTITIONED|
+                                                      group by ([$$310 := $$276]) decor ([]) {
+                                                                aggregate [$$309] <- [agg-local-sql-sum($$286)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- AGGREGATE  |LOCAL|
+                                                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                             } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- SORT_GROUP_BY[$$276]  |PARTITIONED|
+                                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          assign [$$276] <- [numeric-mod(numeric-multiply($$277, $$278), 10000)] project: [$$286, $$276] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            project ([$$277, $$278, $$286]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- STREAM_PROJECT  |PARTITIONED|
                                                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- REPLICATE  |PARTITIONED|
+                                                                join (and(eq($$293, $$278), eq($$294, $$277))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- HYBRID_HASH_JOIN [$$278, $$277][$$293, $$294]  |PARTITIONED|
                                                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    assign [$$259, $$267, $$266, $$256] <- [$$255.getField("ol_amount"), $$255.getField("ol_supply_w_id"), $$255.getField("ol_i_id"), $$255.getField("ol_delivery_d")] project: [$$259, $$267, $$266, $$256] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- HASH_PARTITION_EXCHANGE [$$278, $$277]  |PARTITIONED|
+                                                                    assign [$$278, $$277] <- [$$280.getField("s_i_id"), $$280.getField("s_w_id")] project: [$$277, $$278] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- ASSIGN  |PARTITIONED|
-                                                                      unnest $$255 <- scan-collection($$270) project: [$$255] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                      -- UNNEST  |PARTITIONED|
-                                                                        assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                        -- ASSIGN  |PARTITIONED|
-                                                                          project ([$$254]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                      project ([$$280]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      -- STREAM_PROJECT  |PARTITIONED|
+                                                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          data-scan []<-[$$285, $$280] <- test.stock project ({s_w_id:any,s_i_id:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- DATASOURCE_SCAN  |PARTITIONED|
                                                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                              -- BTREE_SEARCH  |PARTITIONED|
-                                                                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  distinct ([$$291]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                  -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-                                                                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      order (ASC, $$291) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                      -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
-                                                                                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          project ([$$291]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                          -- STREAM_PROJECT  |PARTITIONED|
-                                                                                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                              -- BTREE_SEARCH  |PARTITIONED|
-                                                                                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                  -- ASSIGN  |PARTITIONED|
-                                                                                                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- HASH_PARTITION_EXCHANGE [$$293, $$294]  |PARTITIONED|
+                                                                    select (and(lt($$283, "2018-04-01 00:00:00.000000"), ge($$283, "2018-01-01 00:00:00.000000"))) project: [$$286, $$293, $$294] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                                      assign [$$286, $$294, $$293, $$283] <- [$$282.getField("ol_amount"), $$282.getField("ol_supply_w_id"), $$282.getField("ol_i_id"), $$282.getField("ol_delivery_d")] project: [$$286, $$294, $$293, $$283] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      -- ASSIGN  |PARTITIONED|
+                                                                        unnest $$282 <- scan-collection($$297) project: [$$282] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                        -- UNNEST  |PARTITIONED|
+                                                                          assign [$$297] <- [$$281.getField("o_orderline")] project: [$$297] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ASSIGN  |PARTITIONED|
+                                                                            project ([$$281]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                unnest-map [$$284, $$281] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$318, 1, $$318, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(lt(scan-collection($$281.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000"), ge(scan-collection($$281.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    distinct ([$$318]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                    -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        order (ASC, $$318) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                        -- STABLE_SORT [$$318(ASC)]  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            project ([$$318]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                unnest-map [$$317, $$318] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$315, 1, $$316, true, false, false) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                    assign [$$315, $$316] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- ASSIGN  |PARTITIONED|
+                                                                                                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$230]  |PARTITIONED|
-                    assign [$$274, $$273, $$272, $$230] <- [$$su.getField("su_phone"), $$su.getField("su_address"), $$su.getField("su_name"), $$su.getField("su_suppkey")] project: [$$230, $$272, $$273, $$274] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- HASH_PARTITION_EXCHANGE [$$257]  |PARTITIONED|
+                    assign [$$301, $$300, $$299, $$257] <- [$$su.getField("su_phone"), $$su.getField("su_address"), $$su.getField("su_name"), $$su.getField("su_suppkey")] project: [$$257, $$299, $$300, $$301] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$su]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$234, $$su] <- test.supplier project ({su_phone:any,su_suppkey:any,su_name:any,su_address:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          data-scan []<-[$$261, $$su] <- test.supplier project ({su_phone:any,su_suppkey:any,su_name:any,su_address:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

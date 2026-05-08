@@ -1,0 +1,2 @@
+{ "id": 1, "name": "Alice", "order_id": 101, "amount": 250.0 }
+{ "id": 3, "name": "Charlie", "order_id": 301, "amount": 500.0 }

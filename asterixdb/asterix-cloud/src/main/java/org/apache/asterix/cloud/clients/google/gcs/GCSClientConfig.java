@@ -24,8 +24,8 @@ import static org.apache.asterix.external.util.google.GCSConstants.STORAGE_PREFI
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;
@@ -64,7 +64,7 @@ public class GCSClientConfig {
         this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize, prefix);
     }
 
-    public static GCSClientConfig of(CloudProperties cloudProperties) {
+    public static GCSClientConfig of(ICloudProperties cloudProperties) {
         return new GCSClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.isStorageAnonymousAuth(), cloudProperties.getProfilerLogInterval(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),

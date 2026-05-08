@@ -163,7 +163,7 @@ public class NessieUtils {
     private static void setBasicProperties(Map<String, String> catalogProperties) throws CompilationException {
         String username = catalogProperties.get(USERNAME_FIELD_NAME);
         String password = catalogProperties.get(PASSWORD_FIELD_NAME);
-        if (password != null) {
+        if (password == null) {
             throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, PASSWORD_FIELD_NAME,
                     USERNAME_FIELD_NAME);
         }

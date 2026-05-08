@@ -33,4 +33,5 @@ public abstract class AbstractAggregatorDescriptorFactory implements IAggregator
     public void setSourceLocation(SourceLocation sourceLoc) {
         this.sourceLoc = sourceLoc;
     }
+
 }

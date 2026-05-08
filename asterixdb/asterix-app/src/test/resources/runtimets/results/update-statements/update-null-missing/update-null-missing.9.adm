@@ -1,0 +1,1 @@
+{ "userId": 2, "email": "bob@example.com", "username": "bob", "roles": [ { "roleId": "role1", "roleName": "user" }, { "roleId": "role2", "roleName": "contributor" } ], "newf": null, "isActive": false }

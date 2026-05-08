@@ -25,6 +25,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+@FunctionalInterface
 public interface ILangExpressionToPlanTranslatorFactory {
 
     /**

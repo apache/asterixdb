@@ -84,7 +84,7 @@ distribute result [$$158]
                                                           -- HYBRID_HASH_JOIN [$$102][$$164]  |PARTITIONED|
                                                             exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              assign [$$102, $$180, $$176, $$174, $$172, $$169] <- [substring1($$c.getField("c_phone"), 1, 1), $$c.getField("c_state"), $$c.getField("c_w_id"), $$c.getField("c_id"), $$c.getField("c_d_id"), $$c.getField("c_balance")] project: [$$169, $$180, $$172, $$174, $$176, $$102]
+                                                              assign [$$102, $$180, $$176, $$174, $$172, $$169] <- [substring1($$c.getField("c_phone"), 1, 1), $$c.getField("c_state"), $$c.getField("c_d_id"), $$c.getField("c_w_id"), $$c.getField("c_id"), $$c.getField("c_balance")] project: [$$169, $$180, $$172, $$174, $$176, $$102]
                                                               -- ASSIGN  |PARTITIONED|
                                                                 assign [$$c] <- [$$c1] project: [$$c]
                                                                 -- ASSIGN  |PARTITIONED|
@@ -176,7 +176,7 @@ distribute result [$$158]
                                             -- ASSIGN  |PARTITIONED|
                                               select (and(ge($$160, "2013-12-01 00:00:00"), le($$160, "2013-12-31 00:00:00"))) project: [$$175, $$173, $$171]
                                               -- STREAM_SELECT  |PARTITIONED|
-                                                assign [$$175, $$173, $$171, $$160] <- [$$o.getField("o_w_id"), $$o.getField("o_c_id"), $$o.getField("o_d_id"), $$o.getField("o_entry_d")] project: [$$175, $$173, $$171, $$160]
+                                                assign [$$175, $$173, $$171, $$160] <- [$$o.getField("o_d_id"), $$o.getField("o_w_id"), $$o.getField("o_c_id"), $$o.getField("o_entry_d")] project: [$$175, $$173, $$171, $$160]
                                                 -- ASSIGN  |PARTITIONED|
                                                   project ([$$o])
                                                   -- STREAM_PROJECT  |PARTITIONED|

@@ -20,7 +20,10 @@ package org.apache.hyracks.api.config;
 
 import java.util.function.Function;
 
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.StringUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IOption {
 
@@ -60,6 +63,10 @@ public interface IOption {
         return false;
     }
 
+    default boolean sensitive() {
+        return false;
+    }
+
     default String cmdline() {
         return "-" + name().toLowerCase().replace("_", "-");
     }
@@ -82,5 +89,21 @@ public interface IOption {
 
     default SerializedOption toSerializable() {
         return new SerializedOption(this);
+    }
+
+    default Object serializeToJSON(Object value) {
+        return value == null ? null
+                : sensitive() ? LogRedactionUtil.REDACTED_SENSITIVE_VALUE : type().serializeToJSONUnsafe(value);
+    }
+
+    default void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        if (value == null) {
+            node.putNull(fieldName);
+        } else if (sensitive()) {
+            node.put(fieldName, LogRedactionUtil.REDACTED_SENSITIVE_VALUE);
+        } else {
+            type().serializeJSONFieldUnsafe(fieldName, value, node);
+        }
+
     }
 }

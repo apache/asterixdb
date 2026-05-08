@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ActivityClusterGraph implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private int version;
 
@@ -47,6 +47,8 @@ public class ActivityClusterGraph implements Serializable {
     private int frameSize;
 
     private long maxWarnings;
+
+    private long resultTtlInNanos = -1L; // -1 means use system default
 
     private int maxReattempts;
 
@@ -112,6 +114,14 @@ public class ActivityClusterGraph implements Serializable {
 
     public long getMaxWarnings() {
         return maxWarnings;
+    }
+
+    public void setResultTtlInNanos(long resultTtlInNanos) {
+        this.resultTtlInNanos = resultTtlInNanos;
+    }
+
+    public long getResultTtlInNanos() {
+        return resultTtlInNanos;
     }
 
     public void setMaxReattempts(int maxReattempts) {

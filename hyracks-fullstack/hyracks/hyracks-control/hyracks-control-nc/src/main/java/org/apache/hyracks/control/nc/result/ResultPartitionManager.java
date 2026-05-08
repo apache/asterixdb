@@ -33,6 +33,7 @@ import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.result.AbstractResultManager;
 import org.apache.hyracks.control.common.result.ResultStateSweeper;
+import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
@@ -78,7 +79,9 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
         synchronized (this) {
             dpw = new ResultPartitionWriter(ctx, this, jobId, rsId, asyncMode, metadata, partition, nPartitions,
                     resultMemoryManager, fileFactory, maxReads);
-            ResultSetMap rsIdMap = partitionResultStateMap.computeIfAbsent(jobId, k -> new ResultSetMap());
+            long resultTtlInNanos = ((Joblet) ctx.getJobletContext()).getActivityClusterGraph().getResultTtlInNanos();
+            ResultSetMap rsIdMap =
+                    partitionResultStateMap.computeIfAbsent(jobId, k -> new ResultSetMap(resultTtlInNanos));
             ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
             resultStates[partition] = dpw.getResultState();
         }

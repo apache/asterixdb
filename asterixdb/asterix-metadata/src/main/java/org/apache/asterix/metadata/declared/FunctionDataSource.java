@@ -124,7 +124,7 @@ public abstract class FunctionDataSource extends DataSource {
     }
 
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
-            AlgebricksAbsolutePartitionConstraint locations);
+            AlgebricksAbsolutePartitionConstraint locations) throws AlgebricksException;
 
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
         String[] locations = md.getClusterLocations().getLocations();

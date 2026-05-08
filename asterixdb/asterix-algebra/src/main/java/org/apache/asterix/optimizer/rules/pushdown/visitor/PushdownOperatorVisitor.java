@@ -122,9 +122,27 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
         if (visitedOperators.contains(op)) {
             return;
         }
+        visitChildren(op);
+        processOperator(op, producedVariables);
+    }
+
+    /**
+     * Visits all children of an operator. Scope-bumping operators (e.g., INTERSECT, JOIN) encountered in the
+     * subtree will advance the scope counter as a side effect.
+     */
+    private void visitChildren(ILogicalOperator op) throws AlgebricksException {
         for (Mutable<ILogicalOperator> child : op.getInputs()) {
             child.getValue().accept(this, null);
         }
+    }
+
+    /**
+     * Processes the operator itself: enters its scope, builds the def-use chain for its expressions, and marks it
+     * as visited. Must be called after {@link #visitChildren} and after any dataset registration so that
+     * expressions referencing the scan's record variable are correctly linked in the def-use chain.
+     */
+    private void processOperator(ILogicalOperator op, List<LogicalVariable> producedVariables)
+            throws AlgebricksException {
         visitedOperators.add(op);
         // Enter scope for (new stage) for operators like GROUP and JOIN
         pushdownContext.enterScope(op);
@@ -163,21 +181,35 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      */
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
+        if (visitedOperators.contains(op)) {
+            return null;
+        }
+        visitChildren(op);
         DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable((DataSource) op.getDataSource());
         registerDatasetIfApplicable(datasetDataSource, op);
-        visitInputs(op);
+        processOperator(op, null);
         return null;
     }
 
     /**
      * From the {@link UnnestMapOperator}, we need to register the payload variable (record variable) to check
      * which expression in the plan is using it.
+     * <p>
+     * Registration must happen after visiting children (so that any scope-bumping operators in the input subtree,
+     * e.g. an INTERSECT used for secondary-index intersection, have already advanced the scope counter) but before
+     * processing the operator's own expressions (so that the scan's record variable is in the def-use chain when
+     * the selectCondition — which may have been pushed into the UNNEST_MAP by PushLimitIntoPrimarySearchRule — is
+     * processed).
      */
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
+        if (visitedOperators.contains(op)) {
+            return null;
+        }
+        visitChildren(op);
         DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable(getDataSourceFromUnnestMapOperator(op));
         registerDatasetIfApplicable(datasetDataSource, op);
-        visitInputs(op);
+        processOperator(op, null);
         return null;
     }
 
@@ -187,9 +219,13 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      */
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
+        if (visitedOperators.contains(op)) {
+            return null;
+        }
+        visitChildren(op);
         DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable(getDataSourceFromUnnestMapOperator(op));
         registerDatasetIfApplicable(datasetDataSource, op);
-        visitInputs(op);
+        processOperator(op, null);
         return null;
     }
 

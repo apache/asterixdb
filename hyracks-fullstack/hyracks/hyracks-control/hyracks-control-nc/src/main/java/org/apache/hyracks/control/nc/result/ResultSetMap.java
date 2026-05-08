@@ -34,16 +34,23 @@ class ResultSetMap implements IResultStateRecord, Serializable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final long timestamp;
+    private final long resultTtlInNanos;
     private final HashMap<ResultSetId, ResultState[]> resultStateMap;
 
-    ResultSetMap() {
+    ResultSetMap(long resultTtlInNanos) {
         timestamp = System.nanoTime();
+        this.resultTtlInNanos = resultTtlInNanos;
         resultStateMap = new HashMap<>();
     }
 
     @Override
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public long getResultTtlInNanos() {
+        return resultTtlInNanos;
     }
 
     ResultState[] getResultStates(ResultSetId rsId) {

@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
@@ -46,6 +48,7 @@ import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmb
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.avro.AvroFileRecordReader;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
@@ -56,11 +59,13 @@ import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
@@ -132,6 +137,12 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         configureHdfsConf(hdfsConf, configuration);
     }
 
+    private boolean getParquetFileSplitsConfig(Map<String, String> configuration, ICcApplicationContext appCtx) {
+        String fileSplits = configuration.get(CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY);
+        return fileSplits != null ? Boolean.parseBoolean(fileSplits)
+                : appCtx.getCompilerProperties().isParquetFileSplitsEnabled();
+    }
+
     private void extractRequiredFiles(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory,
             JobConf hdfsConf) throws HyracksDataException, AlgebricksException {
@@ -177,7 +188,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         this.configuration = configuration;
         this.filterEvaluatorFactory = filterEvaluatorFactory;
         init((ICCServiceContext) serviceCtx);
-        return HDFSUtils.configureHDFSJobConf(configuration);
+        return HDFSUtils.configureHDFSJobConf(configuration,
+                (ICcApplicationContext) serviceCtx.getApplicationContext());
     }
 
     protected void configureHdfsConf(JobConf conf, Map<String, String> configuration)
@@ -225,11 +237,26 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         }
     }
 
-    private InputSplit[] getInputSplits(JobConf conf, int numPartitions) throws IOException {
-        if (HDFSUtils.isEmpty(conf)) {
-            return Scheduler.EMPTY_INPUT_SPLITS;
+    private InputSplit[] getInputSplits(JobConf conf, int numPartitions) throws IOException, CompilationException {
+        try {
+            if (HDFSUtils.isEmpty(conf)) {
+                return Scheduler.EMPTY_INPUT_SPLITS;
+            }
+            boolean useFileSplits = getParquetFileSplitsConfig(configuration,
+                    (ICcApplicationContext) serviceCtx.getApplicationContext());
+            if (useFileSplits && conf.getInputFormat() instanceof MapredParquetInputFormat) {
+                FileStatus[] fs = ((MapredParquetInputFormat) conf.getInputFormat()).listStatus(conf);
+                List<InputSplit> splits = new ArrayList<>();
+                for (FileStatus file : fs) {
+                    splits.add(new FileSplit(file.getPath(), 0, file.getLen(), conf));
+                }
+                return splits.toArray(new InputSplit[0]);
+            }
+            return conf.getInputFormat().getSplits(conf, numPartitions);
+        } catch (IllegalArgumentException e) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e)
+                    + " . If your file path contains colons then this can lead to this error. HDFS does not support colons in file paths.");
         }
-        return conf.getInputFormat().getSplits(conf, numPartitions);
     }
 
     /*

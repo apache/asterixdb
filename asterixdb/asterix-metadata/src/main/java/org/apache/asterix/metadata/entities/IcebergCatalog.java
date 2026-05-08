@@ -18,22 +18,21 @@
  */
 package org.apache.asterix.metadata.entities;
 
-import org.apache.asterix.metadata.ICatalogDetails;
 import org.apache.asterix.metadata.utils.Creator;
 
 public class IcebergCatalog extends Catalog {
 
     private static final long serialVersionUID = 1L;
 
-    private final ICatalogDetails catalogDetails;
+    private final IcebergCatalogDetails catalogDetails;
 
-    public IcebergCatalog(String catalogName, String catalogType, ICatalogDetails catalogDetails, int pendingOp,
+    public IcebergCatalog(String catalogName, String catalogType, IcebergCatalogDetails catalogDetails, int pendingOp,
             Creator creator) {
         super(catalogName, catalogType, pendingOp, creator);
         this.catalogDetails = catalogDetails;
     }
 
-    public ICatalogDetails getCatalogDetails() {
+    public IcebergCatalogDetails getCatalogDetails() {
         return catalogDetails;
     }
 }

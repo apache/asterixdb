@@ -99,4 +99,6 @@ public class AzureConstants {
     public static final String HADOOP_MANAGED_IDENTITY_ENDPOINT = "fs.azure.account.oauth2.msi.endpoint";
     public static final String HADOOP_MANAGED_IDENTITY_ENDPOINT_VALUE =
             "http://169.254.169.254/metadata/identity/oauth2/token";
+
+    public static final String TOKEN_REQUEST_CONTEXT_SCOPE = "https://storage.azure.com/.default";
 }

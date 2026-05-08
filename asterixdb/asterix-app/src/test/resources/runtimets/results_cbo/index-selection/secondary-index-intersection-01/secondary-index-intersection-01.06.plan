@@ -1,0 +1,24 @@
+distribute result [$$44] [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$44] <- [{"$1": $$46}] project: [$$44] [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$46] <- [agg-sql-sum($$49)] [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$49] <- [agg-sql-count(1)] [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+          -- AGGREGATE  |PARTITIONED|
+            select (and(eq($$c.getField("city"), "Houston"), gt($$c.getField("age"), 40))) [cardinality: 60.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              project ([$$c]) [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$45, $$c] <- test.customers [cardinality: 500.0, doc-size: 0.0, op-cost: 0.0, total-cost: 500.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

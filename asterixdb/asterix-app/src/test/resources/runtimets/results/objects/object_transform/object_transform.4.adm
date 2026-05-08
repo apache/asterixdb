@@ -1,0 +1,1 @@
+{ "UserTypes2": { "userId": 3, "c_purchase_history": { "c_recent_orders": [ { "orderId": "101" }, { "cro_shipping_info": { "cro_si_address": { "cro_si_state": "CA" } }, "orderId": "102" }, { "orderId": "103" } ] }, "items": { "a": 3 }, "email": "carol@example.com", "username": "carol", "isActive": true, "roles": [ { "roleId": "role1", "roleName": "moderator" } ] } }

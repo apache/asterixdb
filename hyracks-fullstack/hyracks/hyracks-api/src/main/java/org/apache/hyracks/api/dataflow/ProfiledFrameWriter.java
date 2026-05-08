@@ -45,7 +45,7 @@ public class ProfiledFrameWriter implements ITimedWriter {
     private int minSz = Integer.MAX_VALUE;
     private int maxSz = -1;
 
-    private final ICounter totalTime;
+    protected final ICounter totalTime;
 
     public ProfiledFrameWriter(IFrameWriter writer) {
         this.writer = writer;

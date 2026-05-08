@@ -21,7 +21,6 @@ package org.apache.asterix.lang.common.util;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -348,58 +347,6 @@ public class FunctionUtil {
 
         return BuiltinFunctions.FIELD_ACCESS_BY_INDEX.equals(fid) || BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid)
                 || BuiltinFunctions.FIELD_ACCESS_NESTED.equals(fid);
-    }
-
-    /**
-     * Compares two commutative expressions
-     * TODO It doesn't support add and multiply (e.g., add(x, add(y, z) & add(add(x, y), z) will return false)
-     *
-     * @param expr1 left expression
-     * @param expr2 right expression
-     * @return true if equals, false otherwise
-     */
-    public static boolean commutativeEquals(ILogicalExpression expr1, ILogicalExpression expr2) {
-        if (expr1.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL
-                || expr2.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return expr1.equals(expr2);
-        }
-
-        AbstractFunctionCallExpression funcExpr1 = (AbstractFunctionCallExpression) expr1;
-        AbstractFunctionCallExpression funcExpr2 = (AbstractFunctionCallExpression) expr2;
-
-        FunctionIdentifier fid1 = funcExpr1.getFunctionIdentifier();
-        FunctionIdentifier fid2 = funcExpr2.getFunctionIdentifier();
-
-        if (!fid1.equals(fid2) || funcExpr1.getArguments().size() != funcExpr2.getArguments().size()) {
-            return false;
-        } else if (!COMMUTATIVE_FUNCTIONS.contains(fid1)) {
-            return expr1.equals(expr2);
-        }
-
-        List<Mutable<ILogicalExpression>> args1 = funcExpr1.getArguments();
-        List<Mutable<ILogicalExpression>> args2 = funcExpr2.getArguments();
-
-        BitSet matched = new BitSet();
-        int numberOfMatches = 0;
-        for (Mutable<ILogicalExpression> arg1 : args1) {
-            int prevNumberOfMatches = numberOfMatches;
-
-            for (int i = 0; i < args2.size(); i++) {
-                Mutable<ILogicalExpression> arg2 = args2.get(i);
-                if (!matched.get(i) && commutativeEquals(arg1.getValue(), arg2.getValue())) {
-                    matched.set(i);
-                    numberOfMatches++;
-                    break;
-                }
-            }
-
-            if (numberOfMatches == prevNumberOfMatches) {
-                // Early exit as one operand didn't match with any of the other operands
-                return false;
-            }
-        }
-
-        return numberOfMatches == args1.size();
     }
 
     public static CallExpr makeDatasetCallExpr(String database, DataverseName dataverse, String dataset) {

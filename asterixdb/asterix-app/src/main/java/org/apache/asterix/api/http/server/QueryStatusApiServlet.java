@@ -90,15 +90,23 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         printer.begin();
         printer.addHeaderPrinter(new StatusPrinter(resultStatus));
         printer.printHeaders();
+        ResultMetadata metadata = null;
+        if (uriMode || resultStatus == ResultStatus.SUCCESS) {
+            metadata = (ResultMetadata) resultReader.getMetadata();
+        }
         switch (resultStatus) {
-            case SUCCESS -> handleSuccessfulResult(request, strHandle, uriMode, printer, resultReader);
+            case SUCCESS -> {
+                if (metadata != null) {
+                    handleSuccessfulResult(request, strHandle, uriMode, printer, resultReader, metadata);
+                }
+            }
             case TIMEOUT -> handleTimeout(handle, executionState, printer, response);
             case FATAL, FAILED -> handleFailure(handle, executionState, printer, response, resultReaderStatus);
             case QUEUED, RUNNING -> {}
         }
         printer.printResults();
         if (uriMode) {
-            printMetricsAndFooters(printer, resultReader, request, handle.getRequestId(), handle.getJobId(), resultStatus);
+            printMetricsAndFooters(printer, metadata, request, handle.getRequestId(), handle.getJobId(), resultStatus);
         }
         printer.end();
         if (response.writer().checkError()) {
@@ -107,7 +115,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
     }
 
     private void handleSuccessfulResult(IServletRequest request, String strHandle, boolean uriMode,
-            ResponsePrinter printer, ResultReader resultReader) throws HyracksDataException {
+            ResponsePrinter printer, ResultReader resultReader, ResultMetadata metadata) throws HyracksDataException {
         String servletPath = servletPath(request).replace("status", "result");
         String resHandle;
         if (uriMode) {
@@ -117,9 +125,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
         printer.addResultPrinter(new ResultHandlePrinter(resHandle));
         if (uriMode) {
-            ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
-            printer.addResultPrinter(new ResultCountPrinter(
-                    ((ResultMetadata) (resultReader.getResultSetReader().getResultMetadata())).getResultCount()));
+            printer.addResultPrinter(new ResultCountPrinter(metadata.getResultCount()));
             printer.addResultPrinter(new PartitionInfoPrinter(resultReader.getResultSetReader().getResultRecords(),
                     resHandle, metadata.isResultSetOrdered()));
         }
@@ -172,9 +178,8 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private void printMetricsAndFooters(ResponsePrinter printer, ResultReader resultReader, IServletRequest request,
+    private void printMetricsAndFooters(ResponsePrinter printer, ResultMetadata metadata, IServletRequest request,
             String requestId, JobId jobId, ResultStatus status) throws HyracksDataException {
-        ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
         if (metadata != null && status != ResultStatus.QUEUED && status != ResultStatus.RUNNING) {
             printMetricsWithResultMetadata(printer, request, metadata);
         } else {
@@ -185,16 +190,17 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
 
     public void printMetricsWithResultMetadata(ResponsePrinter printer, IServletRequest request,
             ResultMetadata metadata) {
-        long endTime = System.currentTimeMillis();
-        ResponseMetrics metrics = ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTime()),
+        //TODO: check elapsedTime calculation.
+        ResponseMetrics metrics = ResponseMetrics.of(
+                metadata.getCompileTimeNanos() + metadata.getQueueWaitTimeNanos() + metadata.getJobDuration(),
                 metadata.getJobDuration(), 0, 0, metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
-                metadata.getCompileTime(), metadata.getQueueWaitTimeInNanos(), 0, 0, 0, 0, 0);
+                metadata.getCompileTimeNanos(), metadata.getQueueWaitTimeNanos(), 0, 0, 0, 0, 0);
         printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
                 Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
                         MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME,
                         MetricsPrinter.Metrics.WARNING_COUNT, MetricsPrinter.Metrics.ERROR_COUNT,
                         MetricsPrinter.Metrics.PROCESSED_OBJECTS_COUNT)));
-        printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTime()));
+        printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTimeMillis()));
     }
 
     public void printMetricsWithoutResultMetadata(ResponsePrinter printer, IServletRequest request, String requestId,
@@ -202,31 +208,38 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         try {
             ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
             JobRun run = ccs.getJobManager().get(jobId);
-            Optional<IClientRequest> clientRequest =
+            Optional<IClientRequest> clientRequestOpt =
                     ((ICcApplicationContext) appCtx).getRequestTracker().getAsyncOrDeferredRequest(requestId);
 
-            long requestCreateTime = ((ClientRequest) clientRequest.get()).getCreationSystemTime();
-            printMetrics(printer, request, status, requestCreateTime, run.getCreateTime(), run.getStartTime(),
-                    run.getQueueWaitTimeInMillis());
+            long requestTimeMillis = 0;
+            long compileTimeNanos = 0;
+            long elapsedTimeMillis = 0;
+            if (clientRequestOpt.isPresent()) {
+                ClientRequest clientRequest = (ClientRequest) clientRequestOpt.get();
+                requestTimeMillis = clientRequest.getRequestTimeMillis();
+                compileTimeNanos = clientRequest.getCompileTimeNanos();
+                elapsedTimeMillis = clientRequest.getElapsedTimeMillis();
+            }
+            printMetricsWithoutMetadata(printer, request, status, requestTimeMillis, compileTimeNanos,
+                    elapsedTimeMillis, run.getCreateTime(), run.getStartTime(), run.getQueueWaitTime());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
     }
 
-    protected void printMetrics(ResponsePrinter printer, IServletRequest request, ResultStatus status,
-            long requestCreateTime, long jobCreateTime, long jobStartTime, long queueWaitTime) {
+    protected void printMetricsWithoutMetadata(ResponsePrinter printer, IServletRequest request, ResultStatus status,
+            long requestTimeMillis, long compileTimeNanos, long elapsedTimeMillis, long jobCreateTimeMillis,
+            long jobStartTimeMillis, long queueWaitTimeMillis) {
         long currentTime = System.currentTimeMillis();
-        long elapsedTime = TimeUnit.MILLISECONDS.toNanos(currentTime - requestCreateTime);
-        long compileTime = TimeUnit.MILLISECONDS.toNanos(jobCreateTime - requestCreateTime);
-        long executionTime =
-                status == ResultStatus.RUNNING ? TimeUnit.MILLISECONDS.toNanos(currentTime - jobStartTime) : 0;
+        long elapsedTimeNanos = TimeUnit.MILLISECONDS.toNanos(elapsedTimeMillis);
+        long executionTimeNanos = status == ResultStatus.RUNNING ? elapsedTimeNanos : 0;
 
-        ResponseMetrics metrics = ResponseMetrics.of(elapsedTime, executionTime, 0, 0, 0, 0, 0, compileTime,
-                queueWaitTime, 0, 0, 0, 0, 0);
+        ResponseMetrics metrics = ResponseMetrics.of(elapsedTimeNanos, executionTimeNanos, 0, 0, 0, 0, 0,
+                compileTimeNanos, TimeUnit.MILLISECONDS.toNanos(queueWaitTimeMillis), 0, 0, 0, 0, 0);
 
         printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
                 Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
                         MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME)));
-        printer.addFooterPrinter(new CreatedAtPrinter(requestCreateTime));
+        printer.addFooterPrinter(new CreatedAtPrinter(requestTimeMillis));
     }
 }

@@ -439,7 +439,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> newPartitionExprs = new ArrayList<>();
-        deepCopyExpressionRefs(op.getPartitionExpressions(), newPartitionExprs);
+        deepCopyExpressionRefs(newPartitionExprs, op.getPartitionExpressions());
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrderExprs =
                 deepCopyOrderAndExpression(op.getOrderExpressions());
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newFrameValueExprs =

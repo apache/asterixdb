@@ -54,18 +54,19 @@ public class ClientInfoRequestMessage implements ICcAddressedMessage {
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException {
         CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
-        Optional<IClientRequest> clientRequest = appCtx.getRequestTracker().getAsyncOrDeferredRequest(requestId);
+        Optional<IClientRequest> clientRequestOpt = appCtx.getRequestTracker().getAsyncOrDeferredRequest(requestId);
         ClientInfoResponseMessage response;
-        if (clientRequest.isEmpty() || !jobId.equals(((ClientRequest) clientRequest.get()).getJobId())) {
+        if (clientRequestOpt.isEmpty() || !jobId.equals(((ClientRequest) clientRequestOpt.get()).getJobId())) {
             response = new ClientInfoResponseMessage(ncReqId, false);
         } else {
             if (metricsRequired) {
                 ClusterControllerService ccs =
                         (ClusterControllerService) appCtx.getServiceContext().getControllerService();
                 JobRun run = ccs.getJobManager().get(jobId);
-                response = new ClientInfoResponseMessage(ncReqId, true,
-                        ((ClientRequest) clientRequest.get()).getCreationSystemTime(), run.getCreateTime(),
-                        run.getStartTime(), run.getEndTime(), run.getQueueWaitTimeInMillis());
+                ClientRequest clientRequest = (ClientRequest) clientRequestOpt.get();
+                response = new ClientInfoResponseMessage(ncReqId, true, clientRequest.getRequestTimeMillis(),
+                        clientRequest.getCompileTimeNanos(), clientRequest.getElapsedTimeMillis(), run.getCreateTime(),
+                        run.getStartTime(), run.getEndTime(), run.getQueueWaitTime());
             } else {
                 response = new ClientInfoResponseMessage(ncReqId, true);
             }

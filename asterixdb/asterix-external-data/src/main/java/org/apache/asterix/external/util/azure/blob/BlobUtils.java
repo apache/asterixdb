@@ -53,11 +53,13 @@ import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.azure.AzureUtils;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.azure.core.credential.AzureSasCredential;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
@@ -115,9 +117,11 @@ public class BlobUtils {
         BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
         builder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
 
-        int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
-        RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
-        builder.retryOptions(requestRetryOptions);
+        if (appCtx != null) {
+            int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
+            RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
+            builder.retryOptions(requestRetryOptions);
+        }
 
         // Endpoint is required
         if (endpoint == null) {
@@ -130,7 +134,8 @@ public class BlobUtils {
         }
 
         if (disableSslVerify) {
-            disableSslVerify(builder);
+            HttpClient httpClient = disableSslVerify(HttpClient.create());
+            builder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
         }
 
         // Shared Key
@@ -221,18 +226,21 @@ public class BlobUtils {
         }
     }
 
-    public static void disableSslVerify(BlobServiceClientBuilder builder) {
+    /**
+     * Returns a new {@link HttpClient} derived from {@code baseClient} with SSL verification disabled.
+     * The caller is responsible for setting the resulting client on the builder via
+     * {@code builder.httpClient(new NettyAsyncHttpClientBuilder(result).build())}.
+     *
+     * @param baseClient the base Reactor Netty {@link HttpClient} to apply SSL disabling on top of
+     * @return a new {@link HttpClient} with an insecure trust manager applied
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.DOC_GENERATED)
+    public static HttpClient disableSslVerify(HttpClient baseClient) {
         try {
-            // Create SSL context that trusts all certificates
             SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
             SslContext sslContext = sslContextBuilder.build();
-
-            // Create a base Reactor Netty HttpClient with SSL verification disabled
-            HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
-
-            // Configure the Azure HTTP client with the base client
-            builder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
+            return baseClient.secure(sslSpec -> sslSpec.sslContext(sslContext));
         } catch (Exception e) {
             throw new RuntimeException("Failed to disable SSL verification", e);
         }
@@ -305,7 +313,7 @@ public class BlobUtils {
      * @param configuration properties
      * @throws CompilationException Compilation exception
      */
-    public static void validateAzureBlobProperties(Map<String, String> configuration, SourceLocation srcLoc,
+    public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
         if (isDeltaTable(configuration)) {
             throw new CompilationException(ErrorCode.EXTERNAL_COLLECTION_NOT_SUPPORTED, "delta-table",
@@ -313,6 +321,11 @@ public class BlobUtils {
         } else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             // check if the format property is present
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+        }
+
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        if (IcebergUtils.isIcebergTable(configuration)) {
+            return;
         }
 
         validateIncludeExclude(configuration);
@@ -326,7 +339,6 @@ public class BlobUtils {
         // Check if the bucket is present
         BlobServiceClient blobServiceClient;
         try {
-            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
             blobServiceClient = buildClient(appCtx, configuration);
             BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 
@@ -361,4 +373,8 @@ public class BlobUtils {
         return AzureUtils.extractEndPoint(builder.buildClient().getAccountUrl());
     }
 
+    public static boolean isBlobAdapter(String type) {
+        return type.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB)
+                || type.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB_ALIAS);
+    }
 }

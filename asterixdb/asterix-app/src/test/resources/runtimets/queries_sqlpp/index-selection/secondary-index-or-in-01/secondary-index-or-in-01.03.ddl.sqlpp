@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Create typed secondary indexes on orders and customers.
+ */
+
+use test;
+
+
+-- Heterogeneous indexes (no type specified)
+CREATE INDEX idx_order_status_het ON orders(status);
+CREATE INDEX idx_order_region_het ON orders(region);
+CREATE INDEX idx_cust_city_het ON customers(city);
+CREATE INDEX idx_cust_age_het ON customers(age);
+
+-- Array indexes (typed, on array elements)
+CREATE INDEX idx_order_tags ON orders(UNNEST tags : string) EXCLUDE UNKNOWN KEY;
+CREATE INDEX idx_cust_interests ON customers(UNNEST interests : string) EXCLUDE UNKNOWN KEY;
+
+-- Array index on nested field within array of objects
+CREATE INDEX idx_orderline_item ON orders(UNNEST o_orderline SELECT ol_item : string) EXCLUDE UNKNOWN KEY;
+CREATE INDEX idx_orderline_delivery ON orders(UNNEST o_orderline SELECT ol_delivery_d : string) EXCLUDE UNKNOWN KEY;

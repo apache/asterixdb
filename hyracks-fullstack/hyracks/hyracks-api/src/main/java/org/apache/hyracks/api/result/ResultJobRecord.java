@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,9 +79,10 @@ public class ResultJobRecord implements IResultStateRecord {
         }
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = LogManager.getLogger();
     private final long timestamp;
+    private final long resultTtlInNanos; // per-request TTL in nanoseconds, -1 for system default
     private long jobStartTime;
     private long jobEndTime;
     private Status status;
@@ -89,8 +91,9 @@ public class ResultJobRecord implements IResultStateRecord {
     private long resultCount;
     private boolean resultSetOrdered;
 
-    public ResultJobRecord(boolean resultSetOrdered) {
+    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos) {
         this.timestamp = System.nanoTime();
+        this.resultTtlInNanos = resultTtlInNanos;
         this.status = new Status();
         this.resultCount = 0;
         this.resultSetOrdered = resultSetOrdered;
@@ -108,8 +111,14 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.RUNNING);
     }
 
-    public void finish() {
+    public void finish(JobStatus jobStatus) {
         jobEndTime = System.nanoTime();
+        if (jobStatus != null && (status.state == State.RUNNING || status.state == State.IDLE)) {
+            switch (jobStatus) {
+                case TERMINATED -> updateState(State.SUCCESS);
+                case FAILURE, FAILURE_BEFORE_EXECUTION ->  updateState(State.FAILED);
+            }
+        }
     }
 
     public long getJobDuration() {
@@ -145,6 +154,11 @@ public class ResultJobRecord implements IResultStateRecord {
     @Override
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public long getResultTtlInNanos() {
+        return resultTtlInNanos;
     }
 
     public Status getStatus() {

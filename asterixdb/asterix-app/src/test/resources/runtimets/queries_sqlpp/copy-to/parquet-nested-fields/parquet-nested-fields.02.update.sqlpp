@@ -1,0 +1,75 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+
+COPY (
+select c.*
+    from
+    [
+      {
+        "id" : 1,
+        "name" : "Alice",
+        "address" : { "street" : "100 MG Road", "city" : "Bangalore", "zip" : "560001" },
+        "phones" : ["9876543210", "9123456780"],
+        "orders" : [
+          { "order_id" : 101, "amount" : 250.0, "items" : ["laptop", "mouse"] },
+          { "order_id" : 102, "amount" : 30.5, "items" : ["keyboard"] }
+        ]
+      },
+      {
+        "id" : 2,
+        "name" : "Bob",
+        "address" : { "street" : "200 Wall St", "city" : "New York", "zip" : "10005" },
+        "phones" : ["2125551234"],
+        "orders" : [
+          { "order_id" : 201, "amount" : 99.99, "items" : ["monitor"] }
+        ]
+      },
+      {
+        "id" : 3,
+        "name" : "Charlie",
+        "address" : { "street" : "50 Indiranagar", "city" : "Bangalore", "zip" : "560038" },
+        "phones" : [],
+        "orders" : [
+          { "order_id" : 301, "amount" : 500.0, "items" : ["phone", "case", "charger"] },
+          { "order_id" : 302, "amount" : 15.0, "items" : ["cable"] },
+          { "order_id" : 303, "amount" : 75.0, "items" : ["headphones", "adapter"] }
+        ]
+      },
+      {
+        "id" : 4,
+        "name" : "Diana",
+        "address" : { "street" : "10 Downing St", "city" : "London", "zip" : "SW1A 2AA" },
+        "phones" : ["4420712345", "4420798765"],
+        "orders" : []
+      }
+    ] c
+
+
+    ) toWriter
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "parquet-nested-fields")
+WITH {
+    %template_colons%,
+    %additionalProperties%
+    "format":"parquet",
+    "version" : "2"
+};

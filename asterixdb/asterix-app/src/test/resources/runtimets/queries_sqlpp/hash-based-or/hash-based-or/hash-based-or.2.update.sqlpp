@@ -1,0 +1,95 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE gby;
+
+INSERT INTO Employee (
+  [
+   { 'name': 'Bill',
+      'id' : 2,
+     'deptno': 'K55',
+     'salary': 2000,
+     'age':20,
+     'level':2,
+      'salary':234 },
+
+   { 'name': 'Fred',
+     'deptno': 'K55',
+      'id' : 12,
+     'salary': 3000,
+     'age':42,
+     'level':"2" },
+
+   { 'name': 'Fred2',
+     'deptno': 'K15',
+      'id' : 13,
+     'salary': 2500,
+     'age':23,
+     'level':"2" },
+
+   { 'name': 'Fred1',
+     'deptno': null,
+      'id' : 31,
+     'salary': 2500,
+     'age':42,
+     'level':"2" },
+   { 'name': 'Fred11',
+     'deptno': null,
+     'id' : 33,
+     'salary': null,
+     'age':0,
+     'level':"2" }
+
+  ]
+);
+
+
+INSERT INTO Employee2 (
+  [
+   {
+     'id' : 2,
+     'age':20,
+     'level':2.2 },
+
+   {
+   'id' : 112,
+   'age':20,
+   'level':2.0 },
+    {
+      'id' : 12,
+      'age':20,
+      'level':2.1 },
+    {
+     'id' : 21,
+     'age':20,
+     'level':2 },
+     {
+      'id' : 22,
+      'age':20,
+      'level':"2" },
+      {
+       'id' : 24,
+       'age':20,
+        'level':null },
+        {
+        'id' : 25,
+         'age':20 }
+
+
+  ]);

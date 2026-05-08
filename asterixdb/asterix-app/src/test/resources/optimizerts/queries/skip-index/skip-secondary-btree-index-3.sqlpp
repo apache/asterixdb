@@ -36,7 +36,7 @@ create type test.TestType as
 create  dataset testdst(TestType) primary key id;
 
 create  index sec_Idx  on testdst (fname) type btree;
-
+SET `compiler.disjunction.as.join` "true";
 select element emp
 from  testdst as emp
 where emp.fname /*+ skip-index */ in ['Max', 'Roger']

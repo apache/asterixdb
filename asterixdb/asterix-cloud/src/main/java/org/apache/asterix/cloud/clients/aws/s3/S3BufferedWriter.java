@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
@@ -47,7 +48,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     private static final String PUT_UPLOAD_ID = "putUploadId";
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final S3Client s3Client;
+    private final Supplier<S3Client> s3ClientSupplier;
     private final IRequestProfilerLimiter profiler;
     private final ICloudGuardian guardian;
     private final String bucket;
@@ -57,9 +58,9 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     private String uploadId;
     private int partNumber;
 
-    public S3BufferedWriter(S3Client s3client, IRequestProfilerLimiter profiler, ICloudGuardian guardian, String bucket,
-            String path) {
-        this.s3Client = s3client;
+    public S3BufferedWriter(Supplier<S3Client> s3ClientSupplier, IRequestProfilerLimiter profiler,
+            ICloudGuardian guardian, String bucket, String path) {
+        this.s3ClientSupplier = s3ClientSupplier;
         this.profiler = profiler;
         this.guardian = guardian;
         this.bucket = bucket;
@@ -74,7 +75,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         setUploadId();
         UploadPartRequest upReq =
                 UploadPartRequest.builder().uploadId(uploadId).partNumber(partNumber).bucket(bucket).key(path).build();
-        String etag = s3Client.uploadPart(upReq, RequestBody.fromInputStream(stream, length)).eTag();
+        String etag = s3ClientSupplier.get().uploadPart(upReq, RequestBody.fromInputStream(stream, length)).eTag();
         partQueue.add(CompletedPart.builder().partNumber(partNumber).eTag(etag).build());
         partNumber++;
     }
@@ -84,7 +85,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         if (uploadId == null) {
             profiler.objectWrite();
             PutObjectRequest request = PutObjectRequest.builder().bucket(bucket).key(path).build();
-            s3Client.putObject(request, RequestBody.fromByteBuffer(buffer));
+            s3ClientSupplier.get().putObject(request, RequestBody.fromByteBuffer(buffer));
             // Only set the uploadId if the putObject succeeds
             uploadId = PUT_UPLOAD_ID;
         } else {
@@ -121,7 +122,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         if (uploadId == null || PUT_UPLOAD_ID.equals(uploadId)) {
             return;
         }
-        s3Client.abortMultipartUpload(
+        s3ClientSupplier.get().abortMultipartUpload(
                 AbortMultipartUploadRequest.builder().bucket(bucket).key(path).uploadId(uploadId).build());
         LOGGER.warn("Multipart upload for {} was aborted", path);
     }
@@ -130,7 +131,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         guardian.checkWriteAccess(bucket, path);
         profiler.objectMultipartUpload();
         try {
-            s3Client.completeMultipartUpload(request);
+            s3ClientSupplier.get().completeMultipartUpload(request);
         } catch (Exception e) {
             throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
         }
@@ -140,7 +141,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         if (uploadId == null) {
             CreateMultipartUploadRequest uploadRequest =
                     CreateMultipartUploadRequest.builder().bucket(bucket).key(path).build();
-            CreateMultipartUploadResponse uploadResp = s3Client.createMultipartUpload(uploadRequest);
+            CreateMultipartUploadResponse uploadResp = s3ClientSupplier.get().createMultipartUpload(uploadRequest);
             uploadId = uploadResp.uploadId();
             partNumber = 1;
             log("STARTED");

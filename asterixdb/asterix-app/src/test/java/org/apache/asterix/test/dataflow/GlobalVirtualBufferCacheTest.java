@@ -155,7 +155,7 @@ public class GlobalVirtualBufferCacheTest {
             }
             if (exceptionRef.get() != null) {
                 exceptionRef.get().printStackTrace();
-                Assert.fail();
+                Assert.fail("Exception in insert threads: " + exceptionRef.get());
             }
             for (int i = 0; i < NUM_PARTITIONS; i++) {
                 List<ILSMDiskComponent> diskComponents = new ArrayList<>(primaryIndexes[i].getDiskComponents());
@@ -166,8 +166,28 @@ public class GlobalVirtualBufferCacheTest {
                 List<ILSMDiskComponent> filteredDiskComponents =
                         new ArrayList<>(filteredPrimaryIndexes[i].getDiskComponents());
                 Assert.assertFalse(filteredDiskComponents.isEmpty());
-                Assert.assertTrue(filteredDiskComponents.stream().allMatch(c -> ((AbstractTreeIndex) c.getIndex())
-                        .getFileReference().getFile().length() <= FILTERED_MEMORY_COMPONENT_SIZE));
+
+                // Collect exact sizes for debugging
+                List<Long> filteredSizes = new ArrayList<>();
+                for (ILSMDiskComponent c : filteredDiskComponents) {
+                    filteredSizes.add(((AbstractTreeIndex) c.getIndex()).getFileReference().getFile().length());
+                }
+                List<Long> unfilteredSizes = new ArrayList<>();
+                for (ILSMDiskComponent c : diskComponents) {
+                    unfilteredSizes.add(((AbstractTreeIndex) c.getIndex()).getFileReference().getFile().length());
+                }
+
+                int cIdx = 0;
+                for (ILSMDiskComponent c : filteredDiskComponents) {
+                    long fileLength = ((AbstractTreeIndex) c.getIndex()).getFileReference().getFile().length();
+                    Assert.assertTrue(
+                            "Partition " + i + " Filtered disk component " + cIdx + " length " + fileLength
+                                    + " exceeds limit " + FILTERED_MEMORY_COMPONENT_SIZE
+                                    + ".\nAll filtered sizes for partition: " + filteredSizes
+                                    + ".\nAll unfiltered sizes for partition: " + unfilteredSizes,
+                            fileLength <= FILTERED_MEMORY_COMPONENT_SIZE);
+                    cIdx++;
+                }
             }
 
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());

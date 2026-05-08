@@ -82,6 +82,7 @@ public class JobGenContext {
     private final ITypingContext typingContext;
     private final IWarningCollector warningCollector;
     private final long maxWarnings;
+    private final ICompilationContext compilationContext;
 
     public JobGenContext(IOperatorSchema outerFlowSchema, IMetadataProvider<?, ?> metadataProvider, Object appContext,
             ISerializerDeserializerProvider serializerDeserializerProvider,
@@ -99,7 +100,8 @@ public class JobGenContext {
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
             AlgebricksAbsolutePartitionConstraint clusterLocations, IWarningCollector warningCollector,
-            long maxWarnings, PhysicalOptimizationConfig physicalOptimizationConfig) {
+            long maxWarnings, PhysicalOptimizationConfig physicalOptimizationConfig,
+            ICompilationContext compilationContext) {
         this.outerFlowSchema = outerFlowSchema;
         this.metadataProvider = metadataProvider;
         this.appContext = appContext;
@@ -126,6 +128,7 @@ public class JobGenContext {
         this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
         this.frameSize = frameSize;
         this.physicalOptimizationConfig = physicalOptimizationConfig;
+        this.compilationContext = compilationContext;
         this.varCounter = 0;
         this.warningCollector = warningCollector;
         this.maxWarnings = maxWarnings;
@@ -255,5 +258,9 @@ public class JobGenContext {
 
     public PhysicalOptimizationConfig getPhysicalOptimizationConfig() {
         return physicalOptimizationConfig;
+    }
+
+    public ICompilationContext getCompilationContext() {
+        return compilationContext;
     }
 }

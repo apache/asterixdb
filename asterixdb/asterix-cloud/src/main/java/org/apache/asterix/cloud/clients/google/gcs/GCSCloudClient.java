@@ -49,6 +49,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,8 +73,8 @@ import com.google.cloud.storage.StorageOptions;
 
 public class GCSCloudClient implements ICloudClient {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Storage gcsClient;
-    private final GCSClientConfig config;
+    private volatile Storage gcsClient;
+    private volatile GCSClientConfig config;
     private final ICloudGuardian guardian;
     private final IRequestProfilerLimiter profiler;
     private final int writeBufferSize;
@@ -91,6 +92,7 @@ public class GCSCloudClient implements ICloudClient {
             profiler = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
+        LOGGER.debug("created GCS cloud client with config: {}", config);
     }
 
     public GCSCloudClient(GCSClientConfig config, ICloudGuardian guardian) throws HyracksDataException {
@@ -314,6 +316,22 @@ public class GCSCloudClient implements ICloudClient {
             gcsClient.close();
         } catch (Exception ex) {
             throw HyracksDataException.create(ex);
+        }
+    }
+
+    @Override
+    public void reloadConfiguration(ICloudProperties newProperties) throws HyracksDataException {
+        GCSClientConfig newConfig = GCSClientConfig.of(newProperties);
+        Storage newGcsClient = buildClient(newConfig);
+        Storage oldGcsClient = gcsClient;
+        gcsClient = newGcsClient;
+        config = newConfig;
+        LOGGER.debug("reloaded GCS cloud client with config: {}", config);
+        try {
+            // TODO(mblow): configurable delay before closing the old clients to allow in-flight requests to complete.
+            oldGcsClient.close();
+        } catch (Exception e) {
+            LOGGER.warn("error closing old GCS client after reload", e);
         }
     }
 

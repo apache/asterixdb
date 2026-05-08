@@ -22,7 +22,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED
 import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.SERVICE_END_POINT_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsUtils.buildCredentialsProvider;
-import static org.apache.asterix.external.util.aws.AwsUtils.validateAndGetRegion;
+import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SOURCE_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_URI_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
@@ -75,7 +75,7 @@ public class GlueUtils {
         String regionId = configuration.get(REGION_FIELD_NAME);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
-        Region region = validateAndGetRegion(regionId);
+        Region region = getRegion(regionId);
         AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration, awsClients);
 
         GlueClientBuilder builder = GlueClient.builder();

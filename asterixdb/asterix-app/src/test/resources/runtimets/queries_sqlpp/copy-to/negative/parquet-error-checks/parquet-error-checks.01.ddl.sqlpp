@@ -23,8 +23,10 @@ USE test;
 
 
 CREATE TYPE ColumnType1 AS {
-  id: int
-};
+    id: int
+    };
+
+CREATE TYPE ColumnType2 AS {};
 
 CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
 

@@ -96,7 +96,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
                     bufferCache.deleteFile(file);
                 }
             } catch (HyracksDataException hde) {
-                getFailure().addSuppressed(hde);
+                ExceptionUtils.suppress(failure, hde);
             }
         }
     }

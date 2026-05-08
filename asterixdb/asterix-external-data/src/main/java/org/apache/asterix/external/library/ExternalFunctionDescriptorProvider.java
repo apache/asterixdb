@@ -36,7 +36,7 @@ public class ExternalFunctionDescriptorProvider {
             IVariableTypeEnvironment inputTypeEnv, JobGenContext context) throws AlgebricksException {
         IExternalFunctionDescriptor fd = getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
         CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
-        FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, inputTypeEnv, props);
+        FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, inputTypeEnv, props, context.getMetadataProvider());
         fd.setSourceLocation(expr.getSourceLocation());
         return fd;
     }

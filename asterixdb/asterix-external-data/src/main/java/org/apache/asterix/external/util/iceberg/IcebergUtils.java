@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNSUPPORTED_ICEBERG_DATA_FORMAT;
 import static org.apache.asterix.external.util.aws.EnsureCloseClientsFactoryRegistry.FACTORY_INSTANCE_ID_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_AVRO_FORMAT;
@@ -30,6 +29,7 @@ import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,17 +45,21 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.EnsureCloseClientsFactoryRegistry;
 import org.apache.asterix.external.util.aws.iceberg.glue.GlueUtils;
+import org.apache.asterix.external.util.azure.blob.BlobUtils;
+import org.apache.asterix.external.util.azure.datalake.DatalakeUtils;
 import org.apache.asterix.external.util.google.iceberg.biglake_metastore.BiglakeMetastoreUtils;
 import org.apache.asterix.external.util.google.iceberg.fileio.GCSFileIO;
 import org.apache.asterix.external.util.iceberg.nessie.NessieUtils;
 import org.apache.asterix.external.util.iceberg.rest.RestUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.iceberg.CatalogProperties;
+import org.apache.iceberg.Table;
 import org.apache.iceberg.aws.AwsProperties;
 import org.apache.iceberg.aws.glue.GlueCatalog;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.SupportsNamespaces;
+import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.nessie.NessieCatalog;
 import org.apache.iceberg.rest.RESTCatalog;
 import org.apache.logging.log4j.LogManager;
@@ -161,6 +165,17 @@ public class IcebergUtils {
         }
 
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
+    }
+
+    /**
+     * Parses a dot-separated namespace string into an Iceberg {@link Namespace}.
+     * For example, "namespace.subnamespace" returns Namespace.of("namespace", "subnamespace").
+     *
+     * @param namespace dot-separated namespace string
+     * @return Iceberg Namespace
+     */
+    public static Namespace parseNamespace(String namespace) {
+        return Namespace.of(namespace.split("\\."));
     }
 
     /**
@@ -314,7 +329,7 @@ public class IcebergUtils {
 
     private static void validateNamespacePresence(SupportsNamespaces catalog, String namespace)
             throws CompilationException {
-        if (namespace != null && !catalog.namespaceExists(Namespace.of(namespace))) {
+        if (namespace != null && !catalog.namespaceExists(IcebergUtils.parseNamespace(namespace))) {
             throw CompilationException.create(ErrorCode.ICEBERG_NAMESPACE_DOES_NOT_EXIST, namespace);
         }
     }
@@ -365,7 +380,8 @@ public class IcebergUtils {
         }
     }
 
-    public static void setFileIoProperties(Map<String, String> catalogProperties, IcebergCatalogSource catalogSource) {
+    public static void setFileIoProperties(Map<String, String> catalogProperties, IcebergCatalogSource catalogSource)
+            throws CompilationException {
         if (catalogSource == IcebergCatalogSource.NESSIE_REST) {
             // NESSIE_REST should not set any FileIO properties, it is provided by Nessie server
             return;
@@ -379,6 +395,9 @@ public class IcebergUtils {
             setIcebergS3FileIoProperties(catalogProperties);
         } else if (ioType.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_GCS)) {
             setIcebergGcsFileIoProperties(catalogProperties);
+        } else if (BlobUtils.isBlobAdapter(ioType) || DatalakeUtils.isDatalakeAdapter(ioType)) {
+            // ADLSFileIO is used for both Blob storage and Datalake storage
+            setIcebergAzureAdlsFileIoProperties(catalogProperties);
         }
     }
 
@@ -391,9 +410,65 @@ public class IcebergUtils {
         properties.put(CatalogProperties.FILE_IO_IMPL, GCSFileIO.class.getName());
     }
 
+    public static void setIcebergAzureAdlsFileIoProperties(Map<String, String> properties) throws CompilationException {
+        properties.put(CatalogProperties.FILE_IO_IMPL, IcebergConstants.Azure.ADLS_FILE_IO);
+        DatalakeUtils.setIcebergAdlsAuthParams(properties);
+    }
+
     public static void putCatalogProperties(Map<String, String> addTo, Map<String, String> toAdd) {
         for (Map.Entry<String, String> entry : toAdd.entrySet()) {
             addTo.putIfAbsent(ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL + entry.getKey(), entry.getValue());
         }
+    }
+
+    public static List<Namespace> listNamespaces(Catalog catalog, CatalogConfig.IcebergCatalogSource source) {
+        return switch (source) {
+            case AWS_GLUE -> {
+                GlueCatalog glueCatalog = (GlueCatalog) catalog;
+                yield glueCatalog.listNamespaces();
+            }
+            case REST, AWS_GLUE_REST, BIGLAKE_METASTORE, S3_TABLES, NESSIE_REST -> {
+                RESTCatalog restCatalog = (RESTCatalog) catalog;
+                yield restCatalog.listNamespaces();
+            }
+            case NESSIE -> {
+                NessieCatalog nessieCatalog = (NessieCatalog) catalog;
+                yield nessieCatalog.listNamespaces();
+            }
+        };
+    }
+
+    public static List<TableIdentifier> listTables(Catalog catalog, Namespace namespace, CatalogConfig.IcebergCatalogSource source) {
+        return switch (source) {
+            case AWS_GLUE -> {
+                GlueCatalog glueCatalog = (GlueCatalog) catalog;
+                yield glueCatalog.listTables(namespace);
+            }
+            case REST, AWS_GLUE_REST, BIGLAKE_METASTORE, S3_TABLES, NESSIE_REST -> {
+                RESTCatalog restCatalog = (RESTCatalog) catalog;
+                yield restCatalog.listTables(namespace);
+            }
+            case NESSIE -> {
+                NessieCatalog nessieCatalog = (NessieCatalog) catalog;
+                yield nessieCatalog.listTables(namespace);
+            }
+        };
+    }
+
+    public static Table loadTable(Catalog catalog, TableIdentifier tableIdentifier, CatalogConfig.IcebergCatalogSource source) {
+        return switch (source) {
+            case AWS_GLUE -> {
+                GlueCatalog glueCatalog = (GlueCatalog) catalog;
+                yield glueCatalog.loadTable(tableIdentifier);
+            }
+            case REST, AWS_GLUE_REST, BIGLAKE_METASTORE, S3_TABLES, NESSIE_REST -> {
+                RESTCatalog restCatalog = (RESTCatalog) catalog;
+                yield restCatalog.loadTable(tableIdentifier);
+            }
+            case NESSIE -> {
+                NessieCatalog nessieCatalog = (NessieCatalog) catalog;
+                yield nessieCatalog.loadTable(tableIdentifier);
+            }
+        };
     }
 }

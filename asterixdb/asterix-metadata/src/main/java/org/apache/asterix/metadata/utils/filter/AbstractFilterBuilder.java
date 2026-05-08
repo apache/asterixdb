@@ -110,7 +110,7 @@ abstract class AbstractFilterBuilder {
         IFunctionTypeInferer fnTypeInfer = functionManager.lookupFunctionTypeInferer(fnId);
         if (fnTypeInfer != null) {
             CompilerProperties compilerProps = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
-            fnTypeInfer.infer(funcExpr, fd, typeEnv, compilerProps);
+            fnTypeInfer.infer(funcExpr, fd, typeEnv, compilerProps, context.getMetadataProvider());
         }
         return fd;
     }

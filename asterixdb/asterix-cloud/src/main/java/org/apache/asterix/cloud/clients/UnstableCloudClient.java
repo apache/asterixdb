@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.clients;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Random;
@@ -37,6 +38,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -154,6 +156,11 @@ public class UnstableCloudClient implements ICloudClient {
         return cloudClient.getObjectNotFoundExceptionPredicate();
     }
 
+    @Override
+    public void reloadConfiguration(ICloudProperties newProperties) throws HyracksDataException {
+        cloudClient.reloadConfiguration(newProperties);
+    }
+
     private static void fail() throws HyracksDataException {
         double prob = RANDOM.nextInt(100) / 100.0d;
         if (prob < ERROR_RATE.get()) {
@@ -163,8 +170,8 @@ public class UnstableCloudClient implements ICloudClient {
 
     private static ICloudWriter createUnstableWriter(S3CloudClient cloudClient, String bucket, String path,
             IWriteBufferProvider bufferProvider) {
-        ICloudBufferedWriter bufferedWriter =
-                new UnstableCloudBufferedWriter(cloudClient.createBufferedWriter(bucket, path));
+        ICloudWriter cloudWriter = cloudClient.createWriter(bucket, path, bufferProvider);
+        ICloudBufferedWriter bufferedWriter = CloudResettableInputStreamHelper.getBufferedWriter(cloudWriter);
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
     }
 
@@ -252,6 +259,30 @@ public class UnstableCloudClient implements ICloudClient {
         @Override
         public void abort() throws HyracksDataException {
             bufferedWriter.abort();
+        }
+    }
+
+    /**
+     * Holder for the 'bufferedWriter' Field of CloudResettableInputStream, initialized just-in-time.
+     * Any exception in static initialization is wrapped in ExceptionInInitializerError.
+     */
+    private static class CloudResettableInputStreamHelper {
+        static final Field BUFFERED_WRITER_FIELD;
+        static {
+            try {
+                BUFFERED_WRITER_FIELD = CloudResettableInputStream.class.getDeclaredField("bufferedWriter");
+                BUFFERED_WRITER_FIELD.setAccessible(true);
+            } catch (Exception e) {
+                throw new ExceptionInInitializerError(e);
+            }
+        }
+
+        static ICloudBufferedWriter getBufferedWriter(ICloudWriter instance) {
+            try {
+                return (ICloudBufferedWriter) BUFFERED_WRITER_FIELD.get(instance);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to access bufferedWriter field", e);
+            }
         }
     }
 }

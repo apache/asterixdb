@@ -69,6 +69,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpression
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinalityAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -454,24 +455,14 @@ public class JoinNode {
 
     private List<Integer> getNewJoinConditionsOnly() {
         List<Integer> newJoinConditions = new ArrayList<>();
-        JoinNode leftJn = this.leftJn;
-        JoinNode rightJn = this.rightJn;
-        // find the new table being added. This assume only zig zag trees for now.
-        DatasetRegistry.DatasetSubset newTableBits = joinEnum.datasetRegistry.new DatasetSubset();
-        if (leftJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = leftJn.datasetSubset;
-        } else if (rightJn.jnArrayIndex <= joinEnum.numberOfTerms) {
-            newTableBits = rightJn.datasetSubset;
-        }
+        DatasetRegistry.DatasetSubset leftSubset = this.leftJn.datasetSubset, rightSubset = this.rightJn.datasetSubset;
 
-        if (LOGGER.isTraceEnabled() && newTableBits.size() == 0) {
-            LOGGER.trace("newTable Bits == 0");
-        }
-
-        // All the new join predicates will have these bits turned on
         for (int idx : this.applicableJoinConditions) {
-            if (joinEnum.datasetRegistry.intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), newTableBits)
-                    .size() > 0) {
+            if (joinEnum.datasetRegistry.intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), leftSubset)
+                    .size() > 0
+                    && joinEnum.datasetRegistry
+                            .intersection(joinEnum.joinConditions.get(idx).getDatasetSubset(), rightSubset)
+                            .size() > 0) {
                 newJoinConditions.add(idx);
             }
         }
@@ -650,9 +641,40 @@ public class JoinNode {
         ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
 
+        Map<LogicalVariable, List<ILogicalExpression>> variableListMap =
+                new TreeMap<>(Comparator.comparingInt(LogicalVariable::getId));
         for (i = 0; i < pairs.size(); i++) {
-            IOptimizableFuncExpr expr = exprs.get(pairs.get(i).getFirst());
-            andExpr.getArguments().add(new MutableObject<>(expr.getFuncExpr()));
+            IOptimizableFuncExpr funcExpr = exprs.get(pairs.get(i).getFirst());
+            ILogicalExpression expr = funcExpr.getFuncExpr();
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) expr;
+
+                if (afce.getFunctionIdentifier() == AlgebricksBuiltinFunctions.EQ) {
+                    for (Mutable<ILogicalExpression> arg : afce.getArguments()) {
+                        if (arg.get().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                            LogicalVariable var = ((VariableReferenceExpression) arg.get()).getVariableReference();
+                            variableListMap.computeIfAbsent(var, k -> new ArrayList<>()).add(expr);
+                        }
+                    }
+                } else {
+                    andExpr.getArguments().add(new MutableObject<>(funcExpr.getFuncExpr()));
+                }
+
+            }
+
+        }
+
+        for (List<ILogicalExpression> exprList : variableListMap.values()) {
+            if (exprList.size() == 1) {
+                andExpr.getArguments().add(new MutableObject<>(exprList.get(0)));
+            } else {
+                ScalarFunctionCallExpression orExpr = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.OR));
+                for (ILogicalExpression expr : exprList) {
+                    orExpr.getArguments().add(new MutableObject<>(expr));
+                }
+                andExpr.getArguments().add(new MutableObject<>(orExpr));
+            }
         }
         return andExpr;
     }

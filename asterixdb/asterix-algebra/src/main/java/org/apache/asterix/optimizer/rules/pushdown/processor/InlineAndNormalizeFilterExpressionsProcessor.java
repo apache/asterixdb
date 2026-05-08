@@ -96,7 +96,8 @@ public class InlineAndNormalizeFilterExpressionsProcessor extends AbstractPushdo
 
         // Remove redundant expressions from AND/OR
         if (isAnd(funcExpr) || isOr(funcExpr)) {
-            InlineAndRemoveRedundantBooleanExpressionsRule.removeRedundantExpressions(args);
+            InlineAndRemoveRedundantBooleanExpressionsRule.removeRedundantExpressions(args,
+                    context.getPhysicalOptimizationConfig().getMaxExpressionTreeSize());
             if (args.size() == 1) {
                 // InlineAndRemoveRedundantBooleanExpressionsRule produced a single argument return it
                 return args.get(0).getValue();

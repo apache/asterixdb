@@ -57,13 +57,16 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        if (context.checkIfInDontApplySet(this, opRef.get())) {
+            return false;
+        }
         Map<LogicalVariable, Integer> nspAggVars = new HashMap<>();
         Map<LogicalVariable, Integer> nspAggVarToPlanIndex = new HashMap<>();
         Map<LogicalVariable, AbstractOperatorWithNestedPlans> nspWithAgg = new HashMap<>();
         Map<ILogicalExpression, ILogicalExpression> aggExprToVarExpr = new HashMap<>();
         // first collect vars. referring to listified sequences
-        boolean changed =
-                collectVarsBottomUp(opRef, context, nspAggVars, nspWithAgg, nspAggVarToPlanIndex, aggExprToVarExpr);
+        boolean changed = collectVarsBottomUp(opRef, context, nspAggVars, nspWithAgg, nspAggVarToPlanIndex,
+                aggExprToVarExpr, true);
         if (changed) {
             removeRedundantListifies(nspAggVars, nspWithAgg, nspAggVarToPlanIndex);
         }
@@ -116,13 +119,16 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
             Map<LogicalVariable, Integer> nspListifyVarsCount,
             Map<LogicalVariable, AbstractOperatorWithNestedPlans> nspWithAgg,
             Map<LogicalVariable, Integer> nspAggVarToPlanIndex,
-            Map<ILogicalExpression, ILogicalExpression> aggregateExprToVarExpr) throws AlgebricksException {
+            Map<ILogicalExpression, ILogicalExpression> aggregateExprToVarExpr, boolean first)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        context.addToDontApplySet(this, op1);
+        if (!first) {
+            context.addToDontApplySet(this, op1);
+        }
         boolean change = false;
         for (Mutable<ILogicalOperator> child : op1.getInputs()) {
             if (collectVarsBottomUp(child, context, nspListifyVarsCount, nspWithAgg, nspAggVarToPlanIndex,
-                    aggregateExprToVarExpr)) {
+                    aggregateExprToVarExpr, false)) {
                 change = true;
             }
         }

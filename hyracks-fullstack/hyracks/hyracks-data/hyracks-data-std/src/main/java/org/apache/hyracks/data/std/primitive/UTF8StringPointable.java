@@ -278,65 +278,131 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
-        final int srcStart = src.getMetaDataLength();
-        final int pttnStart = pattern.getMetaDataLength();
-        int codePointCount = 0;
+        if (pttnUtfLen == 0) {
+            return resultInByte ? startMatchPos : 0;
+        }
 
-        int maxStart = srcUtfLen - pttnUtfLen;
-        boolean prevHighSurrogate = false;
-        while (startMatchPos <= maxStart) {
-            int c1 = startMatchPos;
-            int c2 = 0;
-            while (c1 < srcUtfLen && c2 < pttnUtfLen) {
-                char ch1 = src.charAt(srcStart + c1);
-                char ch2 = pattern.charAt(pttnStart + c2);
+        char[] patternChars = getPatternChars(pattern, ignoreCase);
+        int[] lps = computeLPS(patternChars);
+        return kmpMatch(src, patternChars, lps, ignoreCase, startMatchPos, resultInByte);
+    }
 
-                if (ch1 != ch2) {
-                    // Currently, the ignoreCase is only valid for one-surrogate characters
-                    // (e.g. characters whose UTF-16 encoding is 2-byte (1 Java char) instead of 4-byte (2 Java chars).
-                    // We may need to support the two-surrogate characters in the future
-                    //
-                    // Another edge case is that one letter may have different forms of lower cases in different languages
-                    // For example, the letter I may have "i" as the lower case in English but "ı" in Turkish.
-                    // We may need to use methods such as String.toLowerCase(Locale locale) to support other languages in the future
-                    // Reference: https://stackoverflow.com/questions/11063102/using-locales-with-javas-tolowercase-and-touppercase
-                    if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
-                        break;
-                    }
+    private static char[] getPatternChars(UTF8StringPointable pattern, boolean ignoreCase) {
+        int pttnUtfLen = pattern.getUTF8Length();
+        int pttnStart = pattern.getMetaDataLength();
+        char[] chars = new char[pttnUtfLen];
+        int byteIdx = 0;
+        int charIdx = 0;
+        while (byteIdx < pttnUtfLen) {
+            char ch = pattern.charAt(pttnStart + byteIdx);
+            if (ignoreCase && !Character.isHighSurrogate(ch) && !Character.isLowSurrogate(ch)) {
+                ch = Character.toLowerCase(ch);
+            }
+            chars[charIdx++] = ch;
+            byteIdx += pattern.charSize(pttnStart + byteIdx);
+        }
+        char[] exactChars = new char[charIdx];
+        System.arraycopy(chars, 0, exactChars, 0, charIdx);
+        return exactChars;
+    }
+
+    private static int[] computeLPS(char[] patternChars) {
+        int[] lps = new int[patternChars.length];
+        int len = 0;
+        int i = 1;
+        lps[0] = 0;
+        while (i < patternChars.length) {
+            if (patternChars[i] == patternChars[len]) {
+                len++;
+                lps[i] = len;
+                i++;
+            } else {
+                if (len != 0) {
+                    len = lps[len - 1];
+                } else {
+                    lps[i] = 0;
+                    i++;
                 }
-                c1 += src.charSize(srcStart + c1);
-                c2 += pattern.charSize(pttnStart + c2);
+            }
+        }
+        return lps;
+    }
+
+    private static int kmpMatch(UTF8StringPointable src, char[] patternChars, int[] lps, boolean ignoreCase,
+            int startMatchPos, boolean resultInByte) throws HyracksDataException {
+        final int srcUtfLen = src.getUTF8Length();
+        final int srcStart = src.getMetaDataLength();
+        int codePointCount = 0;
+        int c1 = startMatchPos; // index in bytes for src
+        int j = 0; // index for patternChars
+
+        boolean prevHigh = false;
+
+        int[] ringBytes = new int[patternChars.length + 1];
+        int[] ringCPs = new int[patternChars.length + 1];
+        int ringIdx = 0;
+
+        while (c1 < srcUtfLen) {
+            char ch1 = src.charAt(srcStart + c1);
+            char matchCh1 = (ignoreCase && !Character.isHighSurrogate(ch1) && !Character.isLowSurrogate(ch1))
+                    ? Character.toLowerCase(ch1) : ch1;
+
+            if (j == 0) {
+                ringBytes[ringIdx % ringBytes.length] = c1;
+                ringCPs[ringIdx % ringCPs.length] = codePointCount;
             }
 
-            if (c2 == pttnUtfLen) {
-                if (resultInByte) {
-                    return startMatchPos;
-                } else {
-                    if (prevHighSurrogate) {
+            if (matchCh1 == patternChars[j]) {
+                j++;
+                int size = src.charSize(srcStart + c1);
+                c1 += size;
+
+                if (!resultInByte) {
+                    if (Character.isHighSurrogate(ch1)) {
+                        prevHigh = true;
+                    } else if (Character.isLowSurrogate(ch1)) {
+                        if (prevHigh) {
+                            codePointCount++;
+                            prevHigh = false;
+                        } else {
+                            throw HyracksDataException.create(INVALID_STRING_UNICODE,
+                                    LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                        }
+                    } else {
+                        codePointCount++;
+                    }
+                }
+
+                if (j == patternChars.length) {
+                    if (!resultInByte && prevHigh) {
                         throw HyracksDataException.create(INVALID_STRING_UNICODE, HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                     }
-                    return codePointCount;
+                    return resultInByte ? ringBytes[ringIdx % ringBytes.length] : ringCPs[ringIdx % ringCPs.length];
                 }
-            }
-
-            // The result is counted in code point instead of bytes
-            if (!resultInByte) {
-                char ch = src.charAt(srcStart + startMatchPos);
-                if (Character.isHighSurrogate(ch)) {
-                    prevHighSurrogate = true;
-                } else if (Character.isLowSurrogate(ch)) {
-                    if (prevHighSurrogate) {
-                        codePointCount++;
-                        prevHighSurrogate = false;
-                    } else {
-                        throw HyracksDataException.create(INVALID_STRING_UNICODE, LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
-                    }
+            } else {
+                if (j != 0) {
+                    j = lps[j - 1];
+                    ringIdx++;
                 } else {
-                    codePointCount++;
+                    int size = src.charSize(srcStart + c1);
+                    c1 += size;
+                    if (!resultInByte) {
+                        if (Character.isHighSurrogate(ch1)) {
+                            prevHigh = true;
+                        } else if (Character.isLowSurrogate(ch1)) {
+                            if (prevHigh) {
+                                codePointCount++;
+                                prevHigh = false;
+                            } else {
+                                throw HyracksDataException.create(INVALID_STRING_UNICODE,
+                                        LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                            }
+                        } else {
+                            codePointCount++;
+                        }
+                    }
                 }
             }
-
-            startMatchPos += src.charSize(srcStart + startMatchPos);
         }
         return -1;
     }

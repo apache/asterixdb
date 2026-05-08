@@ -20,19 +20,13 @@
 package org.apache.asterix.runtime.evaluators.comparisons;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.dataflow.data.common.ILogicalBinaryComparator.Result;
-import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IEvaluatorContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 
 @MissingNullInOutFunction
 public class EqualsDescriptor extends AbstractComparisonDescriptor {
@@ -57,29 +51,8 @@ public class EqualsDescriptor extends AbstractComparisonDescriptor {
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new IScalarEvaluatorFactory() {
-            private static final long serialVersionUID = 1L;
+        return new EqualsDescriptorFactory(args[0], leftType, args[1], rightType, sourceLoc);
 
-            @Override
-            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractValueComparisonEvaluator(args[0], leftType, args[1], rightType, ctx, sourceLoc,
-                        true) {
-
-                    @Override
-                    protected boolean getComparisonResult(Result r) {
-                        return r == Result.EQ;
-                    }
-
-                    @Override
-                    protected void handleIncomparable(IPointable result) throws HyracksDataException {
-                        resultStorage.reset();
-                        serde.serialize(ABoolean.FALSE, out);
-                        result.set(resultStorage);
-                    }
-                };
-            }
-
-        };
     }
 
 }

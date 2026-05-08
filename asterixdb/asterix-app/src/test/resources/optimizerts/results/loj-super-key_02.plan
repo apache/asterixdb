@@ -1,57 +1,57 @@
-distribute result [$$48]
+distribute result [$$54]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$48] <- [{"partsupp": $$ps, "li": $$46}] project: [$$48]
+    assign [$$54] <- [{"partsupp": $$ps, "li": $$52}] project: [$$54]
     -- ASSIGN  |PARTITIONED|
-      project ([$$46, $$ps])
+      project ([$$52, $$ps])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$$60 := $$49; $$61 := $$50]) decor ([$$ps]) {
-                    aggregate [$$46] <- [listify($$li)]
+          group by ([$$66 := $$55; $$67 := $$56]) decor ([$$ps]) {
+                    aggregate [$$52] <- [listify($$li)]
                     -- AGGREGATE  |LOCAL|
-                      select (not(is-missing($$59)))
+                      select (not(is-missing($$65)))
                       -- STREAM_SELECT  |LOCAL|
-                        project ([$$li, $$59])
+                        project ([$$li, $$65])
                         -- STREAM_PROJECT  |LOCAL|
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- PRE_CLUSTERED_GROUP_BY[$$49, $$50]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$55, $$56]  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (ASC, $$49) (ASC, $$50)
-              -- STABLE_SORT [$$49(ASC), $$50(ASC)]  |PARTITIONED|
+              order (ASC, $$55) (ASC, $$56)
+              -- STABLE_SORT [$$55(ASC), $$56(ASC)]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$ps, $$li, $$59, $$49, $$50])
+                  project ([$$ps, $$li, $$65, $$55, $$56])
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      left outer join (and(eq($$53, $$54), eq($$51, $$49), eq($$57, $$50)))
-                      -- HYBRID_HASH_JOIN [$$54, $$49, $$50][$$53, $$51, $$57]  |PARTITIONED|
+                      left outer join (and(eq($$57, $$55), eq($$61, $$56), eq($$63, $$64)))
+                      -- HYBRID_HASH_JOIN [$$55, $$56, $$64][$$57, $$61, $$63]  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          assign [$$54] <- [$$ps.getField(3)]
+                          assign [$$64] <- [$$ps.getField(3)]
                           -- ASSIGN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$49, $$50, $$ps] <- `loj-super-key_02`.PartSupp
+                              data-scan []<-[$$55, $$56, $$ps] <- `loj-super-key_02`.PartSupp
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$51, $$57]  |PARTITIONED|
-                          assign [$$59, $$57, $$53] <- [true, $$li.getField(2), $$li.getField(5)]
+                        -- HASH_PARTITION_EXCHANGE [$$57, $$61]  |PARTITIONED|
+                          assign [$$65, $$63, $$61] <- [true, $$li.getField(5), $$li.getField(2)]
                           -- ASSIGN  |PARTITIONED|
-                            project ([$$51, $$li])
+                            project ([$$57, $$li])
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$51, $$52, $$li] <- `loj-super-key_02`.LineItems
+                                data-scan []<-[$$57, $$58, $$li] <- `loj-super-key_02`.LineItems
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

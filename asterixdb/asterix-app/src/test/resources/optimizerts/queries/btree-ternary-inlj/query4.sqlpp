@@ -185,7 +185,7 @@ CREATE DATASET customer_address(customer_address_type) PRIMARY KEY ca_address_sk
 CREATE DATASET item(item_type) PRIMARY KEY i_item_sk;
 
 CREATE DATASET date_dim(date_dim_type) PRIMARY KEY d_date_sk;
-
+SET `compiler.disjunction.as.join` "true";
 SELECT count (*)
 FROM customer c, customer_demographics cd2, customer_address ca
 WHERE

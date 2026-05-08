@@ -28,6 +28,30 @@
 
   <artifactId>license-automation-plugin</artifactId>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <usedDependencies combine.children="append">
+            <usedDependency>org.codehaus.plexus:plexus-utils</usedDependency>
+          </usedDependencies>
+          <ignoredUsedUndeclaredDependencies combine.children="append">
+            <dependency>org.codehaus.plexus:plexus-xml</dependency>
+          </ignoredUsedUndeclaredDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <configuration>
+          <goalPrefix>license-automation</goalPrefix>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
   </properties>
@@ -53,7 +77,7 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-      <version>2.3.31</version>
+      <version>2.3.34</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -78,7 +102,7 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.1.0</version>
+      <version>3.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

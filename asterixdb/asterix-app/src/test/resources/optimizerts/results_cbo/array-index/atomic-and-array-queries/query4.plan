@@ -1,37 +1,37 @@
-distribute result [$$37]
+distribute result [$$41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$37] <- [{"D": $$D}] project: [$$37]
+    assign [$$41] <- [{"D": $$D}] project: [$$41]
     -- ASSIGN  |PARTITIONED|
-      select ($$32) project: [$$D]
+      select ($$36) project: [$$D]
       -- STREAM_SELECT  |PARTITIONED|
-        project ([$$D, $$32])
+        project ([$$D, $$36])
         -- STREAM_PROJECT  |PARTITIONED|
           subplan {
-                    aggregate [$$32] <- [non-empty-stream()]
+                    aggregate [$$36] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
-                      select (and(eq($$43, 2), eq($$42, 3)))
+                      select (and(eq($$47, 2), eq($$46, 3)))
                       -- STREAM_SELECT  |LOCAL|
-                        assign [$$43, $$42] <- [$$DI.getField("field2"), $$DI.getField("field3")] project: [$$43, $$42]
+                        assign [$$47, $$46] <- [$$DI.getField("field2"), $$DI.getField("field3")] project: [$$47, $$46]
                         -- ASSIGN  |LOCAL|
-                          unnest $$DI <- scan-collection($$41) project: [$$DI]
+                          unnest $$DI <- scan-collection($$45) project: [$$DI]
                           -- UNNEST  |LOCAL|
-                            project ([$$41])
+                            project ([$$45])
                             -- STREAM_PROJECT  |LOCAL|
                               nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
-            select (and(eq($$D.getField("field1"), 1), eq($$D.getField("field4"), 4)))
+            select (and(eq($$D.getField("field4"), 4), eq($$D.getField("field1"), 1)))
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$41] <- [$$D.getField("items")]
+              assign [$$45] <- [$$D.getField("items")]
               -- ASSIGN  |PARTITIONED|
                 project ([$$D])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$38, $$D] <- TestDataverse.Dataset1
+                    data-scan []<-[$$42, $$D] <- TestDataverse.Dataset1
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

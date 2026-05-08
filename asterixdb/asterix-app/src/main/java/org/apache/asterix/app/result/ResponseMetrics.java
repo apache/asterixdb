@@ -39,20 +39,20 @@ public class ResponseMetrics {
     private ResponseMetrics() {
     }
 
-    public static ResponseMetrics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
-            long processedObjects, long errorCount, long warnCount, long compileTime, long queueWaitTime,
+    public static ResponseMetrics of(long elapsedTimeNanos, long executionTimeNanos, long resultCount, long resultSize,
+            long processedObjects, long errorCount, long warnCount, long compileTimeNanos, long queueWaitTimeNanos,
             double bufferCacheHitRatio, long bufferCachePageReadCount, long cloudRequestsCount,
             long cloudPagesReadCount, long cloudPagesPersistedCount) {
         ResponseMetrics metrics = new ResponseMetrics();
-        metrics.elapsedTime = elapsedTime;
-        metrics.executionTime = executionTime;
+        metrics.elapsedTime = elapsedTimeNanos;
+        metrics.executionTime = executionTimeNanos;
         metrics.resultCount = resultCount;
         metrics.resultSize = resultSize;
         metrics.processedObjects = processedObjects;
         metrics.errorCount = errorCount;
         metrics.warnCount = warnCount;
-        metrics.compileTime = compileTime;
-        metrics.queueWaitTime = queueWaitTime;
+        metrics.compileTime = compileTimeNanos;
+        metrics.queueWaitTime = queueWaitTimeNanos;
         metrics.bufferCacheHitRatio = bufferCacheHitRatio;
         metrics.bufferCachePageReadCount = bufferCachePageReadCount;
         metrics.cloudReadRequestsCount = cloudRequestsCount;
@@ -61,11 +61,11 @@ public class ResponseMetrics {
         return metrics;
     }
 
-    public long getElapsedTime() {
+    public long getElapsedTimeNanos() {
         return elapsedTime;
     }
 
-    public long getExecutionTime() {
+    public long getExecutionTimeNanos() {
         return executionTime;
     }
 
@@ -89,11 +89,11 @@ public class ResponseMetrics {
         return warnCount;
     }
 
-    public long getCompileTime() {
+    public long getCompileTimeNanos() {
         return compileTime;
     }
 
-    public long getQueueWaitTime() {
+    public long getQueueWaitTimeNanos() {
         return queueWaitTime;
     }
 

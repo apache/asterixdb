@@ -29,6 +29,7 @@ import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.cloud.io.request.ICloudRetryPredicate;
 import org.apache.hyracks.control.nc.io.IOManager;
 
@@ -185,4 +186,6 @@ public interface ICloudClient {
     default ICloudRetryPredicate getRetryUnlessNotFound() {
         return ex -> Predicate.not(getObjectNotFoundExceptionPredicate()).test(ex);
     }
+
+    void reloadConfiguration(ICloudProperties newProperties) throws HyracksDataException;
 }

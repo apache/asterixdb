@@ -1333,11 +1333,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         FunctionIdentifier fi = afcExpr.getFunctionIdentifier();
         List<Mutable<ILogicalExpression>> arguments = afcExpr.getArguments();
 
-        if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
+        if (fi.equals(AlgebricksBuiltinFunctions.AND) || fi.equals(AlgebricksBuiltinFunctions.OR)) {
             for (Mutable<ILogicalExpression> iLogicalExpressionMutable : arguments) {
                 ILogicalExpression argument = iLogicalExpressionMutable.getValue();
+                if (argument.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                    continue;
+                }
                 AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) argument;
-                expr.putAnnotation(anno);
+                setAnnotation(expr, anno);
             }
         } else {
             afcExpr.putAnnotation(anno);

@@ -69,6 +69,8 @@ public class OptimizationConfUtil {
                 compilerProperties.getSortParallel());
         boolean indexOnly = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INDEXONLY_KEY,
                 compilerProperties.isIndexOnly());
+        boolean rewriteOrToJoin = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_REWRITE_DISJUNCTION_KEY,
+                compilerProperties.rewriteDisjunctionToJoin());
         boolean sanityCheck = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
                 compilerProperties.isSanityCheck());
         boolean externalFieldPushdown = getBoolean(querySpecificConfig,
@@ -98,8 +100,14 @@ public class OptimizationConfUtil {
                 compilerProperties.isColumnFilter());
         int maxVariableOccurrencesForInlining =
                 getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
+        int maxExpressionTreeSize = getMaxExpressionTreeSize(compilerProperties, querySpecificConfig, sourceLoc);
+        int commonExpressionLimitSize =
+                getCommonExpressionLimitSize(compilerProperties, querySpecificConfig, sourceLoc);
         boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 compilerProperties.isOrderedFields());
+        boolean useFileSplits = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY,
+                compilerProperties.isParquetFileSplitsEnabled());
+        int hdfsSplitParallelism = getHdfsSplitParellelism(compilerProperties, querySpecificConfig, sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -111,6 +119,9 @@ public class OptimizationConfUtil {
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);
+        physOptConf.setRewriteOrToJoin(rewriteOrToJoin);
+        physOptConf.setParquetFileSplit(useFileSplits);
+        physOptConf.setHdfsSplitParallelism(hdfsSplitParallelism);
         physOptConf.setSanityCheckEnabled(sanityCheck);
         physOptConf.setExternalFieldPushdown(externalFieldPushdown);
         physOptConf.setSubplanMerge(subplanMerge);
@@ -129,6 +140,8 @@ public class OptimizationConfUtil {
         physOptConf.setMinGroupFrames(compilerProperties.getMinGroupMemoryFrames());
         physOptConf.setMinWindowFrames(compilerProperties.getMinWindowMemoryFrames());
         physOptConf.setMaxVariableOccurrencesForInlining(maxVariableOccurrencesForInlining);
+        physOptConf.setMaxExpressionTreeSize(maxExpressionTreeSize);
+        physOptConf.setCommonExpressionLimit(commonExpressionLimitSize);
         physOptConf.setOrderFields(orderFields);
 
         // We should have already validated the parameter names at this point...
@@ -251,4 +264,40 @@ public class OptimizationConfUtil {
             throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
         }
     }
+
+    private static int getMaxExpressionTreeSize(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery =
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getMaxExpressionTreeSize()
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
+    private static int getCommonExpressionLimitSize(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery =
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getMaxExpressionTreeSize()
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
+    private static int getHdfsSplitParellelism(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getHdfsSplitParallelism()
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
 }

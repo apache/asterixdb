@@ -80,6 +80,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-nested-fields">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">parquet-nested-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="parquet-null1">
         <placeholder name="adapter" value="S3" />
         <placeholder name="pathprefix" value="" />
@@ -197,6 +207,18 @@
         <placeholder name="additionalProperties" value='"container":"playground",' />
         <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">parquet-empty-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-empty-schema">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">parquet-empty-schema</output-dir>
+        <expected-error>ASX1245: Parquet writer error: Cannot write a schema with an empty group: message asterix_schema {
+}</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
@@ -324,6 +346,7 @@
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
+        <expected-error>ASX1108: External source error. java.lang.IllegalArgumentException: java.net.URISyntaxException: Relative path in absolute URI: parquet:errorchecks25 . If your file path contains colons then this can lead to this error. HDFS does not support colons in file paths.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
@@ -378,6 +401,16 @@
         <placeholder name="additionalProperties" value='"container":"playground",' />
         <placeholder name="additional_Properties" value='("container"="playground"),' />
         <output-dir compare="Text">simple-csv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="multibyte-chars">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">multibyte-chars</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
@@ -1232,12 +1265,6 @@
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/no-files-returned/include-no-files</output-dir>
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/s3">
-      <compilation-unit name="non-s3-region">
-        <output-dir compare="Text">non-s3-region</output-dir>
-        <expected-error>Provided S3 region is not supported: 'some-new-region'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">

@@ -88,7 +88,11 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
         if (partitionsOrdered == null) {
             partitionsOrdered = false;
         }
-        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(partitionsOrdered), null));
+        Long resultTtl = (Long) spec.getProperty(HyracksJobProperty.RESULT_TTL);
+        if (resultTtl == null) {
+            resultTtl = -1L;
+        }
+        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(partitionsOrdered, resultTtl), null));
     }
 
     @Override
@@ -104,7 +108,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
             if (resultJobRecord == null) {
                 return;
             }
-            resultJobRecord.finish();
+            resultJobRecord.finish(jobStatus);
             jobResultCallback.completed(jobId, resultJobRecord);
         } else {
             reportJobFailure(jobId, exceptions);

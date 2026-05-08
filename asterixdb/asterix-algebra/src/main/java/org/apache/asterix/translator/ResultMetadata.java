@@ -155,12 +155,12 @@ public class ResultMetadata implements IResultMetadata {
         return outputTypes;
     }
 
-    public long getQueueWaitTimeInNanos() {
+    public long getQueueWaitTimeNanos() {
         return queueWaitTimeInNanos;
     }
 
-    public void setQueueWaitTimeInNanos(long queueWaitTimeInNanos) {
-        this.queueWaitTimeInNanos = queueWaitTimeInNanos;
+    public void setQueueWaitTimeNanos(long queueWaitTimeNanos) {
+        this.queueWaitTimeInNanos = queueWaitTimeNanos;
     }
 
     public void setResultCount(long resultCount) {
@@ -171,28 +171,28 @@ public class ResultMetadata implements IResultMetadata {
         return resultCount;
     }
 
-    public long getCompileTime() {
+    public long getCompileTimeNanos() {
         return compileTime;
     }
 
-    public void setCompileTime(long compileTime) {
-        this.compileTime = compileTime;
+    public void setCompileTimeNanos(long compileTimeNanos) {
+        this.compileTime = compileTimeNanos;
     }
 
-    public long getCreateTime() {
+    public long getCreateTimeMillis() {
         return createTime;
     }
 
-    public void setCreateTime(long createTime) {
-        this.createTime = createTime;
+    public void setCreateTimeMillis(long createTimeMillis) {
+        this.createTime = createTimeMillis;
     }
 
-    public long getEndTime() {
+    public long getEndTimeMillis() {
         return endTime;
     }
 
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
+    public void setEndTimeMillis(long endTimeMillis) {
+        this.endTime = endTimeMillis;
     }
 
     public boolean isResultSetOrdered() {

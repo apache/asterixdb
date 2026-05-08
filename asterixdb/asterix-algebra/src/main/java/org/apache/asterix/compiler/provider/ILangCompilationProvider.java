@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
+import org.apache.asterix.lang.common.base.ICompilationContextFactory;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 
@@ -56,6 +57,11 @@ public interface ILangCompilationProvider {
      * @return the rule set factory of a language implementation
      */
     IRuleSetFactory getRuleSetFactory();
+
+    /**
+     * @return the compilation context containing information useful during compilation and job generation
+     */
+    ICompilationContextFactory getCompilationContextFactory();
 
     /**
      * @return all configurable parameters of a language implementation.

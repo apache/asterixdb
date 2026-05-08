@@ -1,90 +1,90 @@
-distribute result [$$79]
+distribute result [$$87]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$79] <- [{"D2": $$D2, "D1": $$D1}] project: [$$79]
+    assign [$$87] <- [{"D2": $$D2, "D1": $$D1}] project: [$$87]
     -- ASSIGN  |PARTITIONED|
-      select ($$72) project: [$$D2, $$D1]
+      select ($$80) project: [$$D2, $$D1]
       -- STREAM_SELECT  |PARTITIONED|
-        project ([$$D2, $$D1, $$72])
+        project ([$$D2, $$D1, $$80])
         -- STREAM_PROJECT  |PARTITIONED|
           subplan {
-                    aggregate [$$72] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    aggregate [$$80] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
-                      select ($$70) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select ($$78)
                       -- STREAM_SELECT  |LOCAL|
-                        project ([$$70]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        project ([$$78])
                         -- STREAM_PROJECT  |LOCAL|
                           subplan {
-                                    aggregate [$$70] <- [non-empty-stream()] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    aggregate [$$78] <- [non-empty-stream()]
                                     -- AGGREGATE  |LOCAL|
-                                      select (and(eq($$96, to-bigint($$97)), eq($$94, to-bigint($$95)), eq($$92, to-bigint($$93)))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      select (and(eq($$104, to-bigint($$105)), eq($$102, to-bigint($$103)), eq($$100, to-bigint($$101))))
                                       -- STREAM_SELECT  |LOCAL|
-                                        assign [$$96, $$94, $$92] <- [$$DII.getField("field2"), $$DII.getField("field3"), $$DII.getField("field3_notindexed")] project: [$$97, $$95, $$93, $$96, $$94, $$92] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        assign [$$104, $$102, $$100] <- [$$DII.getField("field3"), $$DII.getField("field3_notindexed"), $$DII.getField("field2")] project: [$$105, $$103, $$101, $$104, $$102, $$100]
                                         -- ASSIGN  |LOCAL|
-                                          unnest $$DII <- scan-collection($$91) project: [$$97, $$95, $$93, $$DII] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          unnest $$DII <- scan-collection($$99) project: [$$105, $$103, $$101, $$DII]
                                           -- UNNEST  |LOCAL|
-                                            project ([$$97, $$95, $$93, $$91]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            project ([$$105, $$103, $$101, $$99])
                                             -- STREAM_PROJECT  |LOCAL|
-                                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                 }
                           -- SUBPLAN  |LOCAL|
-                            select (eq($$89, to-bigint($$90))) project: [$$97, $$95, $$93, $$91] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            select (eq($$97, to-bigint($$98))) project: [$$105, $$103, $$101, $$99]
                             -- STREAM_SELECT  |LOCAL|
-                              assign [$$91, $$89] <- [$$DOI.getField("inner_items"), $$DOI.getField("field2_notindexed")] project: [$$97, $$95, $$93, $$90, $$91, $$89] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              assign [$$99, $$97] <- [$$DOI.getField("inner_items"), $$DOI.getField("field2_notindexed")] project: [$$105, $$103, $$101, $$98, $$99, $$97]
                               -- ASSIGN  |LOCAL|
-                                unnest $$DOI <- scan-collection($$88) project: [$$97, $$95, $$93, $$90, $$DOI] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                unnest $$DOI <- scan-collection($$96) project: [$$105, $$103, $$101, $$98, $$DOI]
                                 -- UNNEST  |LOCAL|
-                                  project ([$$97, $$95, $$93, $$90, $$88]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  project ([$$105, $$103, $$101, $$98, $$96])
                                   -- STREAM_PROJECT  |LOCAL|
-                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
-            select (and(eq($$D1.getField("field4"), $$85), eq($$D1.getField("field1"), $$83))) project: [$$D2, $$D1, $$97, $$95, $$93, $$90, $$88]
+            select (and(eq($$D1.getField("field4"), $$91), eq($$D1.getField("field1"), $$93))) project: [$$D2, $$D1, $$105, $$103, $$101, $$98, $$96]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$88] <- [$$D1.getField("outer_items")]
+              assign [$$96] <- [$$D1.getField("outer_items")]
               -- ASSIGN  |PARTITIONED|
-                project ([$$D2, $$97, $$95, $$93, $$90, $$85, $$83, $$D1])
+                project ([$$D2, $$105, $$103, $$101, $$98, $$91, $$93, $$D1])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$81, $$D1] <- index-search("Dataset1", 0, "Default", "TestDataverse", "Dataset1", true, false, 1, $$108, 1, $$108, true, true, true)
+                    unnest-map [$$89, $$D1] <- index-search("Dataset1", 0, "Default", "TestDataverse", "Dataset1", true, false, 1, $$116, 1, $$116, true, true, true)
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        project ([$$108, $$D2, $$97, $$95, $$93, $$90, $$85, $$83])
+                        project ([$$116, $$D2, $$105, $$103, $$101, $$98, $$91, $$93])
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            distinct ([$$108, $$109])
+                            distinct ([$$116, $$117])
                             -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                order (ASC, $$108) (ASC, $$109)
-                                -- STABLE_SORT [$$108(ASC), $$109(ASC)]  |PARTITIONED|
+                                order (ASC, $$116) (ASC, $$117)
+                                -- STABLE_SORT [$$116(ASC), $$117(ASC)]  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    project ([$$D2, $$97, $$95, $$93, $$90, $$85, $$83, $$108, $$109])
+                                    project ([$$D2, $$105, $$103, $$101, $$98, $$91, $$93, $$116, $$117])
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        unnest-map [$$104, $$105, $$106, $$107, $$108] <- index-search("d1Idx", 0, "Default", "TestDataverse", "Dataset1", true, true, 4, $$83, $$100, $$101, $$85, 4, $$83, $$100, $$101, $$85, true, true, true)
+                                        unnest-map [$$112, $$113, $$114, $$115, $$116] <- index-search("d1Idx", 0, "Default", "TestDataverse", "Dataset1", true, true, 4, $$93, $$110, $$108, $$91, 4, $$93, $$110, $$108, $$91, true, true, true)
                                         -- BTREE_SEARCH  |PARTITIONED|
                                           exchange
                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                            running-aggregate [$$109] <- [create-query-uid()]
+                                            running-aggregate [$$117] <- [create-query-uid()]
                                             -- RUNNING_AGGREGATE  |PARTITIONED|
-                                              assign [$$101, $$100] <- [to-bigint($$95), to-bigint($$97)]
+                                              assign [$$110, $$108] <- [to-bigint($$101), to-bigint($$105)]
                                               -- ASSIGN  |PARTITIONED|
-                                                assign [$$85, $$83, $$97, $$95, $$93, $$90] <- [to-bigint($$D2.getField("field4")), to-bigint($$D2.getField("field1")), $$D2.getField("field2"), $$D2.getField("field3"), $$D2.getField("field3_notindexed"), $$D2.getField("field2_notindexed")]
+                                                assign [$$93, $$91, $$105, $$103, $$101, $$98] <- [to-bigint($$D2.getField("field1")), to-bigint($$D2.getField("field4")), $$D2.getField("field3"), $$D2.getField("field3_notindexed"), $$D2.getField("field2"), $$D2.getField("field2_notindexed")]
                                                 -- ASSIGN  |PARTITIONED|
                                                   project ([$$D2])
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      data-scan []<-[$$80, $$D2] <- TestDataverse.Dataset2
+                                                      data-scan []<-[$$88, $$D2] <- TestDataverse.Dataset2
                                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

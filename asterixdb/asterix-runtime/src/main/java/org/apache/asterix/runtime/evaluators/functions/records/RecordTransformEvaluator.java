@@ -35,7 +35,7 @@ public class RecordTransformEvaluator extends RecordMergeEvaluator {
     RecordTransformEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
             SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isRecursiveRemoval)
             throws HyracksDataException {
-        super(ctx, args, argTypes, sourceLocation, identifier, true);
+        super(ctx, args, argTypes, sourceLocation, identifier, true, isRecursiveRemoval);
     }
 
     @Override

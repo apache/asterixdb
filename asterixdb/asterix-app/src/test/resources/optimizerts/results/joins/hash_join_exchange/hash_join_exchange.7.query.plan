@@ -1,22 +1,22 @@
-distribute result [$$43]
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$43] <- [object-concat-strict({"c_id": $$46}, to-object-var-str($$o))] project: [$$43]
+    assign [$$47] <- [object-concat-strict({"c_id": $$50}, to-object-var-str($$o))] project: [$$47]
     -- ASSIGN  |PARTITIONED|
-      project ([$$46, $$o])
+      project ([$$50, $$o])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          left outer join (and(eq($$46, $$51), eq($$44, $$47), eq($$45, $$48)))
-          -- HYBRID_HASH_JOIN [$$46, $$44, $$45][$$51, $$47, $$48]  |PARTITIONED|
+          left outer join (and(eq($$48, $$51), eq($$49, $$52), eq($$50, $$59)))
+          -- HYBRID_HASH_JOIN [$$48, $$49, $$50][$$51, $$52, $$59]  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$46, $$44, $$45])
+              project ([$$50, $$48, $$49])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$44, $$45, $$46, $$c] <- test.customer
+                  data-scan []<-[$$48, $$49, $$50, $$c] <- test.customer
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -26,13 +26,13 @@ distribute result [$$43]
             -- BROADCAST_EXCHANGE  |PARTITIONED|
               select (gt($$o.getField("o_carrier_id"), 8))
               -- STREAM_SELECT  |PARTITIONED|
-                assign [$$51] <- [$$o.getField("o_c_id")]
+                assign [$$59] <- [$$o.getField("o_c_id")]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$47, $$48, $$o])
+                  project ([$$51, $$52, $$o])
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$47, $$48, $$49, $$o] <- test.orders
+                      data-scan []<-[$$51, $$52, $$53, $$o] <- test.orders
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

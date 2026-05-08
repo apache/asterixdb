@@ -50,6 +50,7 @@ public class ClientRequest extends BaseClientRequest {
     protected final JobState jobState;
     protected volatile JobId jobId;
     private volatile String plan; // can be null
+    private volatile long compileTimeNanos;
 
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
@@ -106,6 +107,14 @@ public class ClientRequest extends BaseClientRequest {
 
     public long getCreationSystemTime() {
         return creationSystemTime;
+    }
+
+    public void setCompileTimeNanos(long compileTimeNanos) {
+        this.compileTimeNanos = compileTimeNanos;
+    }
+
+    public long getCompileTimeNanos() {
+        return compileTimeNanos;
     }
 
     @Override
@@ -172,7 +181,14 @@ public class ClientRequest extends BaseClientRequest {
         putTime(json, state.createTime, "jobCreateTime", dateTime);
         putTime(json, state.startTime, "jobStartTime", dateTime);
         putTime(json, state.endTime, "jobEndTime", dateTime);
-        long queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+        long queueTime = 0;
+        if (state.createTime > 0) {
+            // startTime - createTime, if job has started
+            // endTime - createTime, if job has ended but not started (failed while in the queue, cancelled/timeout)
+            // currentTime - createTime, if job is still in the queue
+            queueTime = (state.startTime > 0 ? state.startTime
+                    : (state.endTime > 0 ? state.endTime : System.currentTimeMillis())) - state.createTime;
+        }
         json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
         json.put("jobStatus", String.valueOf(state.status));
         json.put("jobRequiredCPUs", state.requiredCPUs);

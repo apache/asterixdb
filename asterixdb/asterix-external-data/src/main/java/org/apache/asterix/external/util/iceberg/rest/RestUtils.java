@@ -29,7 +29,6 @@ import static org.apache.asterix.external.util.http.HttpConstants.OAUTH_TOKEN_UR
 import static org.apache.asterix.external.util.http.HttpConstants.PASSWORD_FIELD_NAME;
 import static org.apache.asterix.external.util.http.HttpConstants.USERNAME_FIELD_NAME;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_URI_PROPERTY_KEY;
-import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 
 import java.util.Map;
@@ -61,7 +60,6 @@ public class RestUtils {
 
     public static void validateRequiredProperties(Map<String, String> catalogProperties) throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
-        validatePropertyExists(catalogProperties, ICEBERG_WAREHOUSE_PROPERTY_KEY, PARAMETERS_REQUIRED);
     }
 
     private static void setAuthentication(Map<String, String> catalogProperties) throws CompilationException {
@@ -142,7 +140,7 @@ public class RestUtils {
     private static void setBasicProperties(Map<String, String> catalogProperties) throws CompilationException {
         String username = catalogProperties.get(USERNAME_FIELD_NAME);
         String password = catalogProperties.get(PASSWORD_FIELD_NAME);
-        if (password != null) {
+        if (password == null) {
             throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, PASSWORD_FIELD_NAME,
                     USERNAME_FIELD_NAME);
         }

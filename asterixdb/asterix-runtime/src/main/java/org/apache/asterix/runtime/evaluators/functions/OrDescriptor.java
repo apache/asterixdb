@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.runtime.functions.FunctionTypeInferers.SET_OR_TYPE;
+
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
@@ -26,9 +28,12 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -43,12 +48,31 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = OrDescriptor::new;
+
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new OrDescriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return SET_OR_TYPE;
+        }
+    };
+
+    protected IAType elementType;
 
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.OR;
+    }
+
+    @Override
+    public void setImmutableStates(Object... types) {
+        elementType = (IAType) types[0];
     }
 
     @Override
@@ -58,6 +82,14 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
+                // elementType is non-null when hash-based optimization is applicable:
+                // - all OR arguments are EQ comparisons with the same field/variable
+                // - all constants have compatible types for a single hash map
+                // elementType is null when optimization is not possible:
+                // - mixed comparison types, different variables, or incompatible constant types
+                if (elementType != null) {
+                    return new HashBasedOrEval(elementType, ctx, args);
+                }
                 final IPointable argPtr = new VoidPointable();
                 final IScalarEvaluator[] evals = new IScalarEvaluator[args.length];
                 for (int i = 0; i < evals.length; i++) {

@@ -1,0 +1,1 @@
+{ "address": { "zip": "560001", "city": "Bangalore", "street": "100 MG Road" }, "name": "Alice", "phones": [ "9876543210", "9123456780" ], "orders": [ { "amount": 250.0, "order_id": 101, "items": [ "laptop", "mouse" ] }, { "amount": 30.5, "order_id": 102, "items": [ "keyboard" ] } ], "id": 1 }

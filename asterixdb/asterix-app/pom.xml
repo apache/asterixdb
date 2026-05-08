@@ -332,6 +332,21 @@
             </configuration>
           </execution>
           <execution>
+          <id>checkout-ch2</id>
+          <phase>${prepare-env.stage}</phase>
+          <goals>
+            <goal>exec</goal>
+          </goals>
+          <configuration>
+            <executable>git</executable>
+            <workingDirectory>${project.build.directory}/ch2</workingDirectory>
+            <arguments>
+              <argument>checkout</argument>
+              <argument>f8fea792672c3bcb1c40166fcabda48e8aac4942</argument>
+            </arguments>
+          </configuration>
+          </execution>
+          <execution>
             <id>numpy-install</id>
             <phase>${prepare-env.stage}</phase>
             <goals>
@@ -481,7 +496,6 @@
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
           <configuration>
             <lifecycleMappingMetadata>
               <pluginExecutions>
@@ -1153,6 +1167,11 @@
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-netty</artifactId>
+    </dependency>
+    <!-- Needed for inferring the schema for writing Parquet files -->
+    <dependency>
       <groupId>org.apache.iceberg</groupId>
       <artifactId>iceberg-core</artifactId>
       <scope>test</scope>
@@ -1188,7 +1207,7 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-      <version>2.3.31</version>
+      <version>2.3.34</version>
       <scope>test</scope>
    </dependency>
     <dependency>

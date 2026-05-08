@@ -139,6 +139,7 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
     };
 
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
+
     private static final Map<FunctionIdentifier, IAObject> FUNC_ID_TO_CONSTANT = ImmutableMap
             .of(BuiltinFunctions.NUMERIC_E, new ADouble(Math.E), BuiltinFunctions.NUMERIC_PI, new ADouble(Math.PI));
     private final JobGenContext jobGenCtx;
@@ -159,7 +160,7 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
                 UnnestingPositionWriterFactory.INSTANCE, null,
                 new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
                 ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null,
-                NoOpWarningCollector.INSTANCE, 0, new PhysicalOptimizationConfig());
+                NoOpWarningCollector.INSTANCE, 0, new PhysicalOptimizationConfig(), null);
     }
 
     public void reset(IOptimizationContext context) {
@@ -191,10 +192,18 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
     @Override
     public Pair<Boolean, ILogicalExpression> visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr,
             Void arg) throws AlgebricksException {
+        FunctionIdentifier fid = expr.getFunctionIdentifier();
+
+        // Guard against O(N^2) behavior for large OR/AND trees (e.g. IN with a long list expands
+        // into O(N) OR nodes; visiting each one and iterating all siblings is O(N^2) total).
+        if ((BuiltinFunctions.OR.equals(fid) || BuiltinFunctions.AND.equals(fid))
+                && expr.getArguments().size() > optContext.getPhysicalOptimizationConfig().getMaxExpressionTreeSize()) {
+            return new Pair<>(false, expr);
+        }
+
         boolean changed = constantFoldArgs(expr, arg);
         List<Mutable<ILogicalExpression>> argList = expr.getArguments();
         int argConstantCount = countConstantArgs(argList);
-        FunctionIdentifier fid = expr.getFunctionIdentifier();
         if (argConstantCount != argList.size()) {
             if (argConstantCount > 0 && (BuiltinFunctions.OR.equals(fid) || BuiltinFunctions.AND.equals(fid))) {
                 if (foldOrAndArgs(expr)) {

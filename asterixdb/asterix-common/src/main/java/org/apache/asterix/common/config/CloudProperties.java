@@ -25,9 +25,13 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNI
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -36,13 +40,19 @@ import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.util.StorageUtil;
 
-public class CloudProperties extends AbstractProperties {
+public class CloudProperties extends AbstractProperties implements ICloudProperties {
 
-    public static final int MAX_HTTP_CONNECTIONS = 1000;
-    public static final int MAX_PENDING_HTTP_CONNECTIONS = 10000;
-    public static final int HTTP_CONNECTION_ACQUIRE_TIMEOUT = 120;
+    // TODO(mblow): these should not be being used for external datasets- extract separate properties
+    //              for these and make these defaults private to this class
+    public static final int MAX_HTTP_CONNECTIONS_DEFAULT = 1000;
+    public static final int MAX_PENDING_HTTP_CONNECTIONS_DEFAULT = 10000;
+    public static final int HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT = 120;
+    public static final int HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT = 120;
+    // TODO(mblow): this seems way too conservative, we should consider reducing this in a future release
+    public static final int HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT = (int) TimeUnit.HOURS.toSeconds(1);
 
     public CloudProperties(PropertiesAccessor accessor) {
         super(accessor);
@@ -54,6 +64,7 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_PREFIX(STRING, ""),
         CLOUD_STORAGE_REGION(STRING, ""),
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
+        CLOUD_STORAGE_CERTIFICATES(STRING_ARRAY, new String[0]),
         CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
         CLOUD_STORAGE_CACHE_POLICY(STRING, "selective"),
         // 80% of the total disk space
@@ -72,18 +83,24 @@ public class CloudProperties extends AbstractProperties {
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
         CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50),
-        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_HTTP_CONNECTIONS),
-        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_PENDING_HTTP_CONNECTIONS),
-        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, HTTP_CONNECTION_ACQUIRE_TIMEOUT),
+        CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_HTTP_CONNECTIONS_DEFAULT),
+        CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS(POSITIVE_INTEGER, MAX_PENDING_HTTP_CONNECTIONS_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT(POSITIVE_INTEGER, HTTP_CONNECTION_ACQUIRE_TIMEOUT_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS(NONNEGATIVE_INTEGER, HTTP_CONNECTION_MAX_IDLE_SECONDS_DEFAULT),
+        CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS(
+                NONNEGATIVE_INTEGER,
+                HTTP_CONNECTION_MAX_LIFETIME_SECONDS_DEFAULT),
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
-        CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT(BOOLEAN, false),
         CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT(INTEGER, -1),
         CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, (Function<IApplicationConfig, String>) app -> {
             String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
             return (endpoint == null || endpoint.isEmpty()) ? "crt" : "async";
         }),
-        CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),;
+        CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),
+        CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
+        CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
+        CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),;
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -106,6 +123,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_PREFIX:
                 case CLOUD_STORAGE_REGION:
                 case CLOUD_STORAGE_ENDPOINT:
+                case CLOUD_STORAGE_CERTIFICATES:
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                 case CLOUD_STORAGE_CACHE_POLICY:
                 case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
@@ -123,12 +141,19 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_REQUESTS_MAX_HTTP_CONNECTIONS:
                 case CLOUD_REQUESTS_MAX_PENDING_HTTP_CONNECTIONS:
                 case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS:
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS:
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
-                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
+                case CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT:
+                case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
+                case CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER:
+                case CLOUD_STORAGE_S3_ACCESS_KEY_ID:
+                case CLOUD_STORAGE_S3_SECRET_ACCESS_KEY:
+                case CLOUD_STORAGE_AZURE_CLIENT_ID:
                     return Section.COMMON;
                 default:
-                    return Section.NC;
+                    throw new IllegalStateException("NYI: " + this);
             }
         }
 
@@ -147,6 +172,8 @@ public class CloudProperties extends AbstractProperties {
                     return "The cloud storage endpoint";
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                     return "Indicates whether or not anonymous auth should be used for the cloud storage";
+                case CLOUD_STORAGE_CERTIFICATES:
+                    return "The certificates to use to validate the cloud storage server";
                 case CLOUD_STORAGE_CACHE_POLICY:
                     return "The caching policy (either eager, lazy or selective). 'eager' caching will download"
                             + "all partitions upon booting, whereas 'lazy' caching will download a file upon"
@@ -192,13 +219,14 @@ public class CloudProperties extends AbstractProperties {
                     return "The maximum number of HTTP connections allowed to wait for a connection per node";
                 case CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT:
                     return "The waiting time (in seconds) to acquire an HTTP connection before failing the request";
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS:
+                    return "The time (in seconds) after which an idle cloud connection will be closed. (0 == unlimited idle)";
+                case CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS:
+                    return "The time (in seconds) after which an cloud connection will no longer be reused. (0 == unlimited lifetime)";
                 case CLOUD_STORAGE_FORCE_PATH_STYLE:
                     return "Indicates whether or not to force path style when accessing the cloud storage";
                 case CLOUD_STORAGE_DISABLE_SSL_VERIFY:
                     return "Indicates whether or not to disable SSL certificate verification on the cloud storage";
-                case CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT:
-                    return "Indicates whether or not deleted objects may be contained in list operations for some time"
-                            + "after they are deleted";
                 case CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT:
                     return "The read timeout (in seconds) for S3 sync client (-1 means SDK default)";
                 case CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE:
@@ -206,6 +234,12 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER:
                     return "Whether or not to use a round-robin DNS resolver for S3 client connections. Currently"
                             + " only applicable when using the async S3 client for parallel downloads.";
+                case CLOUD_STORAGE_S3_ACCESS_KEY_ID:
+                    return "The S3 access key ID for static credential authentication (defaults to null, which indicates to use default credential chain)";
+                case CLOUD_STORAGE_S3_SECRET_ACCESS_KEY:
+                    return "The S3 secret access key for static credential authentication (defaults to null, which indicates to use default credential chain)";
+                case CLOUD_STORAGE_AZURE_CLIENT_ID:
+                    return "The Azure user managed identity client ID (defaults to null, which takes the system managed identity client ID)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -227,6 +261,11 @@ public class CloudProperties extends AbstractProperties {
                 return "crt if no custom endpoint is set; async otherwise";
             }
             return IOption.super.usageDefaultOverride(accessor, optionPrinter);
+        }
+
+        @Override
+        public boolean sensitive() {
+            return this == CLOUD_STORAGE_S3_SECRET_ACCESS_KEY;
         }
     }
 
@@ -252,6 +291,11 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean isStorageAnonymousAuth() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_ANONYMOUS_AUTH);
+    }
+
+    public Collection<String> getStorageCertificates() {
+        String[] certificates = accessor.getStringArray(Option.CLOUD_STORAGE_CERTIFICATES);
+        return certificates == null || certificates.length == 0 ? Collections.emptyList() : List.of(certificates);
     }
 
     public CloudCachePolicy getCloudCachePolicy() {
@@ -321,16 +365,22 @@ public class CloudProperties extends AbstractProperties {
         return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_ACQUIRE_TIMEOUT);
     }
 
+    @Override
+    public int getRequestsHttpConnectionMaxIdleSeconds() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_MAX_IDLE_SECONDS);
+    }
+
+    @Override
+    public int getRequestsHttpConnectionMaxLifetimeSeconds() {
+        return accessor.getInt(Option.CLOUD_REQUESTS_HTTP_CONNECTION_MAX_LIFETIME_SECONDS);
+    }
+
     public boolean isStorageForcePathStyle() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_FORCE_PATH_STYLE);
     }
 
     public boolean isStorageDisableSSLVerify() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_DISABLE_SSL_VERIFY);
-    }
-
-    public boolean isStorageListEventuallyConsistent() {
-        return accessor.getBoolean(Option.CLOUD_STORAGE_LIST_EVENTUALLY_CONSISTENT);
     }
 
     public String getS3ParallelDownloaderClientType() {
@@ -343,5 +393,17 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean useRoundRobinDnsResolver() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER);
+    }
+
+    public String getS3AccessKeyId() {
+        return accessor.getString(Option.CLOUD_STORAGE_S3_ACCESS_KEY_ID);
+    }
+
+    public String getS3SecretAccessKey() {
+        return accessor.getString(Option.CLOUD_STORAGE_S3_SECRET_ACCESS_KEY);
+    }
+
+    public String getAzureClientId() {
+        return accessor.getString(Option.CLOUD_STORAGE_AZURE_CLIENT_ID);
     }
 }

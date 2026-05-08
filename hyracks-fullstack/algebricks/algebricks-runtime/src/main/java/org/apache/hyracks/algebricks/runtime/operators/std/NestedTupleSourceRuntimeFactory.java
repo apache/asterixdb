@@ -20,11 +20,15 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.algebricks.runtime.base.INestedTupleSourceRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.ProfiledPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.util.HyracksThrowingBiConsumer;
 
 public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory {
 
@@ -43,12 +47,14 @@ public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory 
         return new IPushRuntime[] { new NestedTupleSourceRuntime(ctx) };
     }
 
-    public static class NestedTupleSourceRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
+    public static class NestedTupleSourceRuntime extends AbstractOneInputOneOutputOneFramePushRuntime
+            implements INestedTupleSourceRuntime {
 
         public NestedTupleSourceRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
             initAccessAppend(ctx);
         }
 
+        @Override
         public void writeTuple(ByteBuffer inputBuffer, int tIndex) throws HyracksDataException {
             tAccess.reset(inputBuffer);
             appendTupleToFrame(tIndex);
@@ -63,5 +69,33 @@ public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory 
         public void flush() throws HyracksDataException {
             appender.flush(writer);
         }
+    }
+
+    public static class ProfiledNestedTupleSourceRuntime extends ProfiledPushRuntime
+            implements INestedTupleSourceRuntime {
+
+        private final INestedTupleSourceRuntime nestedWrapped;
+
+        public ProfiledNestedTupleSourceRuntime(INestedTupleSourceRuntime push, IOperatorStats stats, boolean last) {
+            super(push, stats, last);
+            nestedWrapped = push;
+        }
+
+        private void timeMethod(HyracksThrowingBiConsumer<ByteBuffer, Integer> c, ByteBuffer buffer, int index)
+                throws HyracksDataException {
+            long nt = 0;
+            try {
+                nt = System.nanoTime();
+                c.accept(buffer, index);
+            } finally {
+                totalTime.update(System.nanoTime() - nt);
+            }
+        }
+
+        @Override
+        public void writeTuple(ByteBuffer inputBuffer, int tIndex) throws HyracksDataException {
+            timeMethod(nestedWrapped::writeTuple, inputBuffer, tIndex);
+        }
+
     }
 }

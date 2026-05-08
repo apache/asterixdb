@@ -24,6 +24,7 @@ import org.apache.asterix.utils.AsyncRequestsAPIUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,11 @@ public class DiscardResultRequestMessage implements ICcAddressedMessage {
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException {
-        AsyncRequestsAPIUtil.discardResultPartitions((ICcApplicationContext) appCtx, jobId, resultSetId, requestId);
+        try {
+            AsyncRequestsAPIUtil.discardResultPartitions((ICcApplicationContext) appCtx, jobId, resultSetId, requestId);
+        } catch (Throwable th) {
+            // catching Throwable to prevent any unexpected exception from crashing the CC
+            LOGGER.log(Level.WARN, "unexpected exception while processing discard result request message", th);
+        }
     }
 }

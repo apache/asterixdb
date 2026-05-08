@@ -78,6 +78,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperato
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.FunctionUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -263,8 +264,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         SelectOperator selectOpArg = (SelectOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = op.getCondition().getValue().equals(selectOpArg.getCondition().getValue());
-        return isomorphic;
+
+        return FunctionUtil.commutativeEquals(op.getCondition().get(), selectOpArg.getCondition().get());
     }
 
     @Override

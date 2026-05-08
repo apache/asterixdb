@@ -103,16 +103,11 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
      * variables if they are used afterwards.
      */
     private Set<LogicalVariable> removeAssignVarFromConsideration(Mutable<ILogicalOperator> opRef) {
+        ILogicalOperator op = opRef.getValue();
         Set<LogicalVariable> assignVarsSetForThisOp = null;
-        Set<LogicalVariable> usedVarsSetForThisOp = null;
+        Set<LogicalVariable> usedVarsSetForThisOp = accumulatedUsedVarFromRootMap.get(opRef);
 
-        if (accumulatedUsedVarFromRootMap.containsKey(opRef)) {
-            usedVarsSetForThisOp = accumulatedUsedVarFromRootMap.get(opRef);
-        }
-
-        if (assignedVarMap.containsKey(opRef)) {
-            assignVarsSetForThisOp = assignedVarMap.get(opRef);
-        }
+        assignVarsSetForThisOp = assignedVarMap.get(opRef);
 
         if (assignVarsSetForThisOp != null && !assignVarsSetForThisOp.isEmpty()) {
             Iterator<LogicalVariable> varIter = assignVarsSetForThisOp.iterator();
@@ -128,9 +123,9 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         // The source variables of the UNIONALL operator should be survived
         // since we are sure that the output of UNIONALL operator is used
         // afterwards.
-        if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+        if (op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
             Iterator<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> iter =
-                    ((UnionAllOperator) opRef.getValue()).getVariableMappings().iterator();
+                    ((UnionAllOperator) op).getVariableMappings().iterator();
             while (iter.hasNext()) {
                 Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping = iter.next();
                 survivedUnionSourceVarSet.add(varMapping.first);
@@ -408,8 +403,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                         // definition, which is for rebinding the referred variable.
                         VariableReferenceExpression varExpr =
                                 (VariableReferenceExpression) decorMapping.second.getValue();
-                        LogicalVariable reboundDecorVar = varExpr.getVariableReference();
-                        assignVarsSetInThisOp.add(reboundDecorVar);
+                        assignVarsSetInThisOp.add(varExpr.getVariableReference());
                     }
                 }
                 break;
@@ -417,6 +411,8 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 WindowOperator winOp = (WindowOperator) op;
                 assignVarsSetInThisOp.addAll(winOp.getVariables());
                 targetOpFound = true;
+                break;
+            default:
                 break;
         }
 
@@ -433,10 +429,10 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             if (accumulatedUsedVarFromRootMap.containsKey(opRef)) {
                 accumulatedUsedVarFromRootMap.get(opRef).addAll(accumulatedUsedVarFromRootSet);
             } else {
-                accumulatedUsedVarFromRootMap.put(opRef, new HashSet<LogicalVariable>(accumulatedUsedVarFromRootSet));
+                accumulatedUsedVarFromRootMap.put(opRef, accumulatedUsedVarFromRootSet);
             }
         } else {
-            accumulatedUsedVarFromRootMap.put(opRef, new HashSet<LogicalVariable>(accumulatedUsedVarFromRootSet));
+            accumulatedUsedVarFromRootMap.put(opRef, accumulatedUsedVarFromRootSet);
         }
 
         for (Mutable<ILogicalOperator> c : op.getInputs()) {

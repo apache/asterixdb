@@ -1,44 +1,44 @@
-distribute result [$$43]
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$43] <- [{"ds1_x": $$49, "ds1_st": $$45, "ds2_x": $$ds2.getField("x"), "ds2_st": $$ds2.getField("st"), "ds2_et": $$51}] project: [$$43]
+    assign [$$47] <- [{"ds1_x": $$52, "ds1_st": $$49, "ds2_x": $$ds2.getField("x"), "ds2_st": $$ds2.getField("st"), "ds2_et": $$55}] project: [$$47]
     -- ASSIGN  |PARTITIONED|
       exchange
-      -- SORT_MERGE_EXCHANGE [$$51(ASC) ]  |PARTITIONED|
-        order (ASC, $$51)
-        -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$55(ASC) ]  |PARTITIONED|
+        order (ASC, $$55)
+        -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$49, $$45, $$51, $$ds2])
+            project ([$$52, $$49, $$55, $$ds2])
             -- STREAM_PROJECT  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                left outer join (and(gt($$45, $$48), eq($$49, $$50), lt($$45, $$51)))
-                -- HYBRID_HASH_JOIN [$$49][$$50]  |PARTITIONED|
+                left outer join (and(eq($$52, $$53), gt($$49, $$54), lt($$49, $$55)))
+                -- HYBRID_HASH_JOIN [$$52][$$53]  |PARTITIONED|
                   exchange
-                  -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
-                    assign [$$49, $$45] <- [$$ds1.getField("x"), $$ds1.getField("st")] project: [$$49, $$45]
+                  -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                    assign [$$52, $$49] <- [$$ds1.getField("x"), $$ds1.getField("st")] project: [$$52, $$49]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$ds1])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$46, $$ds1] <- test.ds1
+                          data-scan []<-[$$50, $$ds1] <- test.ds1
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange
-                  -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
-                    assign [$$51, $$50, $$48] <- [$$ds2.getField("et"), $$ds2.getField("x"), $$ds2.getField("st")]
+                  -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                    assign [$$55, $$54, $$53] <- [$$ds2.getField("et"), $$ds2.getField("st"), $$ds2.getField("x")]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$ds2])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$47, $$ds2] <- test.ds2
+                          data-scan []<-[$$51, $$ds2] <- test.ds2
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

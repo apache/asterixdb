@@ -154,8 +154,8 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB_ALIAS = "AZURE_BLOB";
-    public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE = "AZUREDATALAKE";
-    public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE_ALIAS = "AZURE_DATALAKE";
+    public static final String KEY_ADAPTER_NAME_AZURE_DATALAKE = "AZUREDATALAKE";
+    public static final String KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS = "AZURE_DATALAKE";
     public static final String KEY_ADAPTER_NAME_GCS = "GCS";
     public static final String KEY_ADAPTER_NAME_HDFS = "HDFS";
     public static final String KEY_ADAPTER_NAME_HTTP_ADAPTER = "http";
@@ -164,7 +164,7 @@ public class ExternalDataConstants {
             KEY_ADAPTER_NAME_PUSH_TWITTER, KEY_ADAPTER_NAME_TWITTER_PULL, KEY_ADAPTER_NAME_PULL_TWITTER,
             KEY_ADAPTER_NAME_TWITTER_USER_STREAM, KEY_ADAPTER_NAME_LOCALFS, KEY_ADAPTER_NAME_SOCKET,
             KEY_ADAPTER_NAME_HTTP, KEY_ADAPTER_NAME_AWS_S3, KEY_ADAPTER_NAME_AZURE_BLOB,
-            KEY_ADAPTER_NAME_AZURE_DATA_LAKE, KEY_ADAPTER_NAME_GCS, KEY_ADAPTER_NAME_HDFS);
+            KEY_ADAPTER_NAME_AZURE_DATALAKE, KEY_ADAPTER_NAME_GCS, KEY_ADAPTER_NAME_HDFS);
 
     /**
      * HDFS class names
@@ -356,6 +356,7 @@ public class ExternalDataConstants {
     public static final String CONTAINER_NAME_FIELD_NAME = "container";
     public static final String SUBPATH = "subpath";
     public static final String PREFIX_DEFAULT_DELIMITER = "/";
+    public static final String CERTIFICATES_FIELD_NAME = "certificates";
     public static final String DISABLE_SSL_VERIFY_FIELD_NAME = "disableSslVerify";
     public static final Pattern COMPUTED_FIELD_PATTERN = Pattern.compile("\\{[^{}:]+:[^{}:]+}");
 

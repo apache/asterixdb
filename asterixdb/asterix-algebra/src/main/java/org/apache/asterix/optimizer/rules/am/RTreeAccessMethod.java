@@ -192,12 +192,11 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         analysisCtx.setIndexOnlyPlanInfo(indexOnlyPlanInfo);
 
-        ILogicalOperator primaryIndexUnnestOp =
-                createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
-                        subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex, analysisCtx,
-                        AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
-                                subTree.getDataSourceRef().getValue(), afterSelectRefs),
-                        false, false, context, null, null);
+        ILogicalOperator primaryIndexUnnestOp = createIndexSearchPlan(afterSelectRefs, selectRef,
+                selectOp.getCondition(), subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex,
+                analysisCtx, AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
+                        subTree.getDataSourceRef().getValue(), afterSelectRefs),
+                false, false, context, null, null, new ArrayList<>());
 
         if (primaryIndexUnnestOp == null) {
             return false;
@@ -228,7 +227,8 @@ public class RTreeAccessMethod implements IAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTopRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
             throws AlgebricksException {
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
@@ -319,7 +319,8 @@ public class RTreeAccessMethod implements IAccessMethod {
                 : AccessMethodUtils.createRestOfIndexSearchPlan(afterTopRefs, topRef, conditionRef, assignBeforeTopRefs,
                         dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true,
                         retainInput, retainNull, false, chosenIndex, analysisCtx, indexSubTree, null,
-                        newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, returnedSearchKeyExpr.third);
+                        newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, returnedSearchKeyExpr.third,
+                        optimizableDisjunctionConditions);
     }
 
     @Override
@@ -368,7 +369,7 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
                 indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
-                isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue);
+                isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue, new ArrayList<>());
 
         if (indexSearchOp == null) {
             return false;

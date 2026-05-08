@@ -140,7 +140,6 @@ public class DatasetDataSource extends DataSource {
                         addExternalProjectionInfo(projectionFiltrationInfo, edd.getProperties());
                 properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
-                setExternalCollectionCompilerProperties(metadataProvider, properties);
                 IExternalFilterEvaluatorFactory filterEvaluatorFactory = metadataProvider
                         .createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
                 ITypedAdapterFactory adapterFactory =
@@ -226,12 +225,22 @@ public class DatasetDataSource extends DataSource {
         return dataset.getDatasetType() == DatasetType.EXTERNAL;
     }
 
-    private void setExternalCollectionCompilerProperties(MetadataProvider metadataProvider,
+    public static void setExternalCollectionCompilerProperties(MetadataProvider metadataProvider,
             Map<String, String> configuration) {
-        String fileSplits =
+        String deltaFileSplits =
                 (String) metadataProvider.getConfig().get(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY);
-        if (fileSplits != null) {
-            configuration.put(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY, fileSplits);
+        if (deltaFileSplits != null) {
+            configuration.put(CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY, deltaFileSplits);
+        }
+        String parquetFileSplits =
+                (String) metadataProvider.getConfig().get(CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY);
+        if (parquetFileSplits != null) {
+            configuration.put(CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY, parquetFileSplits);
+        }
+        String hdfsSplitParallelism =
+                (String) metadataProvider.getConfig().get(CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY);
+        if (hdfsSplitParallelism != null) {
+            configuration.put(CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY, hdfsSplitParallelism);
         }
     }
 }

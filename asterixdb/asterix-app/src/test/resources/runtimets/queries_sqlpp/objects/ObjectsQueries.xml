@@ -161,6 +161,11 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="object_mod">
+      <output-dir compare="Text">object_mod</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="object_names">
       <output-dir compare="Text">object_names</output-dir>
     </compilation-unit>
@@ -194,6 +199,11 @@
   <test-case FilePath="objects">
     <compilation-unit name="object_put">
       <output-dir compare="Text">object_put</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="object_transform">
+      <output-dir compare="Text">object_transform</output-dir>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">

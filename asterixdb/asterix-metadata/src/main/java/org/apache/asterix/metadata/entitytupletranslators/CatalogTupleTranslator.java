@@ -23,7 +23,6 @@ import java.util.Calendar;
 import java.util.Map;
 
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
-import org.apache.asterix.metadata.ICatalogDetails;
 import org.apache.asterix.metadata.bootstrap.CatalogEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Catalog;
@@ -76,7 +75,7 @@ public class CatalogTupleTranslator extends AbstractTupleTranslator<Catalog> {
             IACursor cursor = ((AOrderedList) catalogDetailsRecord
                     .getValueByPos(MetadataRecordTypes.CATALOG_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX)).getCursor();
             Map<String, String> properties = TupleTranslatorUtils.getPropertiesFromIaCursor(cursor);
-            ICatalogDetails catalogDetails = new IcebergCatalogDetails(adapter, properties);
+            IcebergCatalogDetails catalogDetails = new IcebergCatalogDetails(adapter, properties);
             return new IcebergCatalog(catalogName, catalogType, catalogDetails, pendingOp, creator);
         }
         return new Catalog(catalogName, catalogType, pendingOp, creator);

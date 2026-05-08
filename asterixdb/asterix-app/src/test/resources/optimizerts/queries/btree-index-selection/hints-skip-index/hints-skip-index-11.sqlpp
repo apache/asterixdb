@@ -53,7 +53,7 @@ create index idx_2k on tenk(twothousand);
  * disjunctive predicate is translated into an index join, use skip-index to disable index join.
  * explain plan -> expect broadcast hash join
  */
-
+SET `compiler.disjunction.as.join` "true";
 select value unique1
 from tenk
 where thousand /* +skip-index */ = 0 or thousand = 1

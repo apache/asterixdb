@@ -41,6 +41,71 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 
 public class UTF8StringPointableTest {
+
+    @Test
+    public void testFindWithKMP() throws Exception {
+        // Standard matching (returns byte pos)
+        assertTrue(findReturnPos("hello world", "world") >= 0);
+        assertEquals(0, findReturnPos("hello world", "hello"));
+        assertTrue(findReturnPos("hello world", "o w") >= 0);
+
+        // Exact same pattern boundary overlaps (KMP jump testing)
+        assertEquals(0, findReturnPos("abacababc", "abacab"));
+        assertTrue(findReturnPos("abacababc", "ababc") >= 0);
+
+        // Match not found
+        assertEquals(-1, findReturnPos("hello world", "xyz"));
+
+        // Multi-byte Unicode Characters (length checking bytes vs codepoints)
+        // 'é' (U+00E9) is 2 bytes in UTF-8, 1 code point
+        // '€' (U+20AC) is 3 bytes in UTF-8, 1 code point
+        // '😀' (U+1F600) is a surrogate pair in Java, encoded as 6 bytes in Modified UTF-8!
+
+        // Testing 2-byte character: expected w byte pos = 5(hello) + 2(é) = 7
+        assertEquals(7, findReturnPos("helloéworld", "w"));
+        assertEquals(6, findReturnCodePointPos("helloéworld", "w")); // 5(hello) + 1(é) = 6
+
+        // Testing 3-byte character: expected w byte pos = 5(hello) + 3(€) = 8
+        assertEquals(8, findReturnPos("hello€world", "w"));
+        assertEquals(6, findReturnCodePointPos("hello€world", "w"));
+
+        // Testing Surrogate Pair (Modified UTF-8 encodes as 2x 3-byte characters = 6 bytes)
+        assertEquals(11, findReturnPos("hello😀world", "w")); // 5 + 6 = 11
+        assertEquals(6, findReturnCodePointPos("hello😀world", "w")); // 5 + 1 = 6
+
+        // Find the emoji itself
+        assertTrue(findReturnPos("hello😀world", "😀") > 0);
+        assertEquals(0, findReturnCodePointPos("😀😀😀", "😀😀"));
+
+        // Case insensitivity
+        assertTrue(findReturnPosIgnoreCase("hello WORLD", "world") >= 0);
+        assertTrue(findReturnPosIgnoreCase("hello WORLD", "WOrLd") >= 0);
+        assertEquals(-1, findReturnPosIgnoreCase("hello WORLD", "XYZ"));
+    }
+
+    private int findReturnPos(String srcStr, String patternStr) throws Exception {
+        return findReturnPosInternal(srcStr, patternStr, false, true);
+    }
+
+    private int findReturnCodePointPos(String srcStr, String patternStr) throws Exception {
+        return findReturnPosInternal(srcStr, patternStr, false, false);
+    }
+
+    private int findReturnPosIgnoreCase(String srcStr, String patternStr) throws Exception {
+        return findReturnPosInternal(srcStr, patternStr, true, true);
+    }
+
+    private int findReturnPosInternal(String srcStr, String patternStr, boolean ignoreCase, boolean resultInByte)
+            throws Exception {
+        UTF8StringPointable src = generateUTF8Pointable(srcStr);
+        UTF8StringPointable pattern = generateUTF8Pointable(patternStr);
+        if (resultInByte) {
+            return UTF8StringPointable.find(src, pattern, ignoreCase, 0);
+        } else {
+            return UTF8StringPointable.findInCodePoint(src, pattern, ignoreCase, 0);
+        }
+    }
+
     public static UTF8StringPointable STRING_EMPTY = generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
     public static UTF8StringPointable STRING_UTF8_MIX = generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX);
     public static UTF8StringPointable STRING_UTF8_MIX_LOWERCASE =
@@ -76,6 +141,17 @@ public class UTF8StringPointableTest {
         assertEquals(7, UTF8StringPointable.findInCodePoint(strp, pattern, false));
 
         assertEquals(7, UTF8StringPointable.findInCodePoint(strp, pattern, true));
+    }
+
+    @Test
+    public void testFindWithOffset() throws HyracksDataException {
+        UTF8StringPointable src = generateUTF8Pointable("this is the king's palace");
+        UTF8StringPointable pattern = generateUTF8Pointable("'s");
+
+        // startMatchPos points to 'i' at byte offset 2 (index 2)
+        assertEquals(16, UTF8StringPointable.find(src, pattern, false, 2));
+        // code point difference: from index 2 to index 16 -> 14
+        assertEquals(14, UTF8StringPointable.findInCodePoint(src, pattern, false, 2));
     }
 
     @Test

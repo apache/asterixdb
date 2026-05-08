@@ -24,8 +24,8 @@ import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientCon
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
-import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 
 public class CloudClientProvider {
@@ -38,17 +38,21 @@ public class CloudClientProvider {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
+    public static ICloudClient getClient(ICloudProperties cloudProperties, ICloudGuardian guardian)
+            throws HyracksDataException {
+        ICloudClient cloudClient = createClient(cloudProperties, guardian);
+        return UNSTABLE ? new UnstableCloudClient(cloudClient) : cloudClient;
+    }
+
+    static ICloudClient createClient(ICloudProperties cloudProperties, ICloudGuardian guardian)
             throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
-        ICloudClient cloudClient = switch (storageScheme.toLowerCase()) {
+        return switch (storageScheme.toLowerCase()) {
             case S3 -> new S3CloudClient(S3ClientConfig.of(cloudProperties), guardian);
             case GCS -> new GCSCloudClient(GCSClientConfig.of(cloudProperties), guardian);
             case AZ_BLOB -> new AzBlobStorageCloudClient(AzBlobStorageClientConfig.of(cloudProperties), guardian);
             default -> throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
         };
-
-        return UNSTABLE ? new UnstableCloudClient(cloudClient) : cloudClient;
     }
 
     private static boolean isUnstable() {

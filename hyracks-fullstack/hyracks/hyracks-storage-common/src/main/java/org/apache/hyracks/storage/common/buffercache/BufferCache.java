@@ -1011,6 +1011,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         sweepAndFlush(fInfo, false);
         try {
             if (fInfo.getReferenceCount() > 0) {
+                LOGGER.info(
+                        "Resource leak detected: Force-deleting file with active references. fileId: {}, referenceCount: {}",
+                        fileId, fInfo.getReferenceCount());
                 throw new HyracksDataException("Deleting open file");
             }
         } finally {

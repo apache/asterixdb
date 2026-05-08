@@ -54,6 +54,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,39 +83,39 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
 public class AzBlobStorageCloudClient implements ICloudClient {
 
     private static final String BUCKET_ROOT_PATH = "";
-    public static final String AZURITE_ENDPOINT = "http://127.0.0.1:15055/devstoreaccount1/";
-    private static final String AZURITE_ACCOUNT_NAME = "devstoreaccount1";
-    private static final String AZURITE_ACCOUNT_KEY =
-            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
     private final ICloudGuardian guardian;
-    private final BlobContainerClient blobContainerClient;
-    private final BlobContainerAsyncClient blobContainerAsyncClient;
-    private final AzBlobStorageClientConfig config;
+    private volatile BlobContainerClient blobContainerClient;
+    private volatile ConnectionProvider syncConnProvider;
+    private volatile BlobContainerAsyncClient blobContainerAsyncClient;
+    private volatile ConnectionProvider asyncConnProvider;
+    private volatile AzBlobStorageClientConfig config;
     private final IRequestProfilerLimiter profiler;
     private static final Logger LOGGER = LogManager.getLogger();
-    private final AccessTier accessTier;
+    private volatile AccessTier accessTier;
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, ICloudGuardian guardian) {
-        this(config, buildClient(config), buildAsyncClient(config), guardian);
+        this(config, buildSyncClient(config), buildAsyncClient(config), guardian);
     }
 
     public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
-            BlobServiceAsyncClient asyncBlobServiceClient, ICloudGuardian guardian) {
-        this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getBucket());
-        this.blobContainerAsyncClient = asyncBlobServiceClient.getBlobContainerAsyncClient(config.getBucket());
-        this.config = config;
+            BlobServiceAsyncClient blobServiceAsyncClient, ICloudGuardian.NoOpCloudGuardian instance) {
+        this(config, ConnectionClientPair.of(blobServiceClient, null),
+                ConnectionClientPair.of(blobServiceAsyncClient, null), instance);
+    }
+
+    private AzBlobStorageCloudClient(AzBlobStorageClientConfig config,
+            ConnectionClientPair<BlobServiceClient> syncClient,
+            ConnectionClientPair<BlobServiceAsyncClient> asyncClient, ICloudGuardian guardian) {
+        applyConfig(config, syncClient, asyncClient);
         this.guardian = guardian;
-        this.accessTier = config.getAccessTier();
         long profilerInterval = config.getProfilerLogInterval();
         AzureRequestRateLimiter limiter = new AzureRequestRateLimiter(config);
         if (profilerInterval > 0) {
@@ -123,6 +124,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             profiler = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
+        LOGGER.debug("created Azure cloud client with config: {}", config);
     }
 
     @Override
@@ -386,10 +388,29 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     @Override
     public void close() {
-        // Closing Azure Blob Clients is not required as the underlying netty connection pool
-        // handles the same for the apps.
-        // Ref: https://github.com/Azure/azure-sdk-for-java/issues/17903
-        // Hence this implementation is a no op.
+        syncConnProvider.dispose();
+        asyncConnProvider.dispose();
+    }
+
+    @Override
+    public void reloadConfiguration(ICloudProperties newProperties) {
+        AzBlobStorageClientConfig newConfig = AzBlobStorageClientConfig.of(newProperties);
+        ConnectionProvider oldSyncConnProvider = syncConnProvider;
+        ConnectionProvider oldAsyncConnProvider = asyncConnProvider;
+        applyConfig(newConfig, buildSyncClient(newConfig), buildAsyncClient(newConfig));
+        oldSyncConnProvider.dispose();
+        oldAsyncConnProvider.dispose();
+        LOGGER.debug("reloaded Azure cloud client with config: {}", config);
+    }
+
+    private void applyConfig(AzBlobStorageClientConfig config, ConnectionClientPair<BlobServiceClient> syncBuilder,
+            ConnectionClientPair<BlobServiceAsyncClient> asyncBuilder) {
+        this.config = config;
+        syncConnProvider = syncBuilder.connectionProvider();
+        blobContainerClient = syncBuilder.client().getBlobContainerClient(config.getContainer());
+        asyncConnProvider = asyncBuilder.connectionProvider();
+        blobContainerAsyncClient = asyncBuilder.client().getBlobContainerAsyncClient(config.getContainer());
+        accessTier = config.getAccessTier();
     }
 
     @Override
@@ -397,44 +418,44 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         return ex -> (ex instanceof BlobStorageException bse) && bse.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND);
     }
 
-    private static BlobServiceClient buildClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config);
-        return blobServiceClientBuilder.buildClient();
+    private static ConnectionClientPair<BlobServiceClient> buildSyncClient(AzBlobStorageClientConfig config) {
+        ConnectionClientPair<BlobServiceClientBuilder> clientBuilder = getBlobServiceClient(config, false);
+        return ConnectionClientPair.of(clientBuilder.client().buildClient(), clientBuilder.connectionProvider());
     }
 
-    private static BlobServiceAsyncClient buildAsyncClient(AzBlobStorageClientConfig config) {
-        BlobServiceClientBuilder blobServiceClientBuilder = getBlobServiceClientBuilder(config);
-        return blobServiceClientBuilder.buildAsyncClient();
+    private static ConnectionClientPair<BlobServiceAsyncClient> buildAsyncClient(AzBlobStorageClientConfig config) {
+        ConnectionClientPair<BlobServiceClientBuilder> clientBuilder = getBlobServiceClient(config, true);
+        return ConnectionClientPair.of(clientBuilder.client().buildAsyncClient(), clientBuilder.connectionProvider());
     }
 
-    private static BlobServiceClientBuilder getBlobServiceClientBuilder(AzBlobStorageClientConfig config) {
+    private static ConnectionClientPair<BlobServiceClientBuilder> getBlobServiceClient(AzBlobStorageClientConfig config,
+            boolean async) {
         BlobServiceClientBuilder blobServiceClientBuilder = new BlobServiceClientBuilder();
         blobServiceClientBuilder.endpoint(getEndpoint(config));
         blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
         configCredentialsToAzClient(blobServiceClientBuilder, config);
 
-        // Disable SSL verification if the config property is set
+        ConnectionProvider.Builder builder = ConnectionProvider.builder("azblob-client-" + (async ? "async" : "sync"))
+                .maxConnections(config.getRequestsMaxHttpConnections())
+                .pendingAcquireMaxCount(config.getRequestsMaxPendingHttpConnections());
+        if (config.getMaxIdleSeconds() > 0) {
+            builder.maxIdleTime(Duration.ofSeconds(config.getMaxIdleSeconds()));
+        }
+        if (config.getMaxLifetimeSeconds() > 0) {
+            builder.maxLifeTime(Duration.ofSeconds(config.getMaxLifetimeSeconds()));
+        }
+        if (config.getRequestsHttpConnectionAcquireTimeout() > 0) {
+            builder.pendingAcquireTimeout(Duration.ofSeconds(config.getRequestsHttpConnectionAcquireTimeout()));
+        }
+        ConnectionProvider connectionProvider = builder.build();
+
+        HttpClient httpClient = HttpClient.create(connectionProvider);
         if (config.isStorageDisableSSLVerify()) {
-            try {
-                // Create SSL context that trusts all certificates
-                SslContext sslContext =
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-
-                // Create a base Reactor Netty HttpClient with SSL verification disabled
-                HttpClient baseHttpClient = HttpClient.create().secure(sslSpec -> sslSpec.sslContext(sslContext));
-
-                // Configure the Azure HTTP client with the base client
-                blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(baseHttpClient).build());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to disable SSL verification", e);
-            }
+            httpClient = disableSslVerify(httpClient);
         }
-        boolean disableSslVerify = config.isStorageDisableSSLVerify();
-        if (disableSslVerify) {
-            disableSslVerify(blobServiceClientBuilder);
-        }
+        blobServiceClientBuilder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
 
-        return blobServiceClientBuilder;
+        return ConnectionClientPair.of(blobServiceClientBuilder, connectionProvider);
     }
 
     private static void configCredentialsToAzClient(BlobServiceClientBuilder builder,
@@ -444,17 +465,23 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
         if (storageAccount != null && storageKey != null) {
             builder.credential(new StorageSharedKeyCredential(storageAccount, storageKey));
-        } else if (config.isAnonymousAuth()) {
-            // TODO(mblow): this mapping anonymous auth -> Azurite default account (hack) should be removed ASAP
-            builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME, AZURITE_ACCOUNT_KEY));
         } else {
             builder.credential(config.createCredentialsProvider());
         }
     }
 
     private static String getEndpoint(AzBlobStorageClientConfig config) {
-        // TODO(mblow): this mapping anonymous auth -> Azurite default endpoint (hack) should be removed ASAP
-        return config.isAnonymousAuth() ? AZURITE_ENDPOINT + config.getBucket()
-                : config.getEndpoint() + "/" + config.getBucket();
+        return config.getEndpoint() + "/" + config.getContainer();
     }
-}
+
+    /**
+     * Simple generic container that associates a client object with its ConnectionProvider.
+     */
+    private record ConnectionClientPair<T>(
+    T client, ConnectionProvider connectionProvider)
+    {
+
+    public static <T> ConnectionClientPair<T> of(T client, ConnectionProvider connectionProvider) {
+        return new ConnectionClientPair<>(client, connectionProvider);
+    }
+}}

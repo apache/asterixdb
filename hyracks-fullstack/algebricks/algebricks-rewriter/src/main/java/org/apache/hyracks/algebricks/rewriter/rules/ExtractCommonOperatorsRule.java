@@ -414,13 +414,15 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
     private void genCandidates() throws AlgebricksException {
         List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<>();
-        while (equivalenceClasses.size() > 0) {
+        boolean grown = true;
+        while (equivalenceClasses.size() > 0 && grown) {
             previousEquivalenceClasses.clear();
             for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
                 List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<>(candidates);
                 previousEquivalenceClasses.add(candidatesCopy);
             }
             List<Mutable<ILogicalOperator>> currentLevelOpRefs = new ArrayList<>();
+            grown = false;
             for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
                 if (candidates.size() > 0) {
                     for (Mutable<ILogicalOperator> opRef : candidates) {
@@ -433,10 +435,19 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 if (currentLevelOpRefs.size() == 0) {
                     continue;
                 }
-                candidatesGrow(currentLevelOpRefs, candidates);
+                grown |= candidatesGrow(currentLevelOpRefs, candidates);
             }
             if (currentLevelOpRefs.size() == 0) {
                 break;
+            }
+
+            for (int i = equivalenceClasses.size() - 1; i >= 0; i--) {
+                for (int j = i - 1; j >= 0; j--) {
+                    if (equivalenceClasses.get(i).equals(equivalenceClasses.get(j))) {
+                        equivalenceClasses.remove(i);
+                        break;
+                    }
+                }
             }
             prune();
         }
@@ -473,15 +484,14 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void candidatesGrow(List<Mutable<ILogicalOperator>> opList, List<Mutable<ILogicalOperator>> candidates) {
+    private boolean candidatesGrow(List<Mutable<ILogicalOperator>> opList, List<Mutable<ILogicalOperator>> candidates) {
         List<Mutable<ILogicalOperator>> previousCandidates = new ArrayList<>(candidates);
         candidates.clear();
-        boolean validCandidate = false;
         for (Mutable<ILogicalOperator> op : opList) {
             List<Mutable<ILogicalOperator>> inputs = op.getValue().getInputs();
+            boolean validCandidate = false;
             for (int i = 0; i < inputs.size(); i++) {
                 Mutable<ILogicalOperator> inputRef = inputs.get(i);
-                validCandidate = false;
                 for (Mutable<ILogicalOperator> candidate : previousCandidates) {
                     // if current input is in candidates
                     if (inputRef.getValue().equals(candidate.getValue())) {
@@ -509,6 +519,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 candidates.add(op);
             }
         }
+        if (candidates.isEmpty()) {
+            candidates.addAll(previousCandidates);
+            return false;
+        }
+        return true;
     }
 
     private void prune() throws AlgebricksException {

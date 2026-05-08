@@ -1,0 +1,26 @@
+distribute result [$$55] [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$55] <- [{"$1": $$57}] project: [$$55] [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$57] <- [agg-sql-sum($$58)] [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+          -- AGGREGATE  |PARTITIONED|
+            select (and(or(or(eq($$40, "pending"), eq($$40, "shipped")), eq($$40, "cancelled")), or(eq($$46, 1), eq($$46, 2)))) [cardinality: 2676.39, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              assign [$$46, $$40] <- [$$o.getField("priority"), $$o.getField("status")] project: [$$46, $$40] [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$o]) [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$56, $$o] <- test.orders [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,48 @@
+distribute result [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$58] <- [{"$1": $$60}] project: [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$60] <- [agg-sql-sum($$64)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$64] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+          -- AGGREGATE  |PARTITIONED|
+            select (eq($$ol.getField("ol_item"), "item_5")) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+            -- STREAM_SELECT  |PARTITIONED|
+              unnest $$ol <- scan-collection($$62) project: [$$ol] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+              -- UNNEST  |PARTITIONED|
+                select (eq($$o.getField("region"), "west")) project: [$$62] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$62] <- [$$o.getField("o_orderline")] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$o]) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$59, $$o] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$68, 1, $$68, true, true, true) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            distinct ([$$68]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$68) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STABLE_SORT [$$68(ASC)]  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$68]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        unnest-map [$$67, $$68] <- index-search("idx_orderline_item", 0, "Default", "test", "orders", false, false, 1, $$65, 1, $$66, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$65, $$66] <- ["item_5", "item_5"] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

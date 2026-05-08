@@ -66,7 +66,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (short) value);
         }
     };
@@ -92,7 +92,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (String) value);
         }
     };
@@ -116,7 +116,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (boolean) value);
         }
     };
@@ -145,7 +145,7 @@ public class OptionTypes {
         }
 
         @Override
-        public String serializeToJSON(Object value) {
+        public String serializeToJSONUnsafe(Object value) {
             return value == null ? null : ((Level) value).name();
         }
 
@@ -155,8 +155,8 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, serializeToJSON(value));
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, serializeToJSONUnsafe(value));
         }
     };
 
@@ -191,7 +191,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             if (value == null) {
                 node.putNull(fieldName);
             } else {
@@ -222,7 +222,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, value == null ? null : String.valueOf(value));
         }
     };
@@ -262,7 +262,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (int) value);
         }
     }
@@ -412,7 +412,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (long) value);
         }
     }
@@ -434,7 +434,7 @@ public class OptionTypes {
         }
 
         @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (double) value);
         }
     }

@@ -84,9 +84,9 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
 
     @Override
     public void abort() throws HyracksDataException {
-        opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
-        fail(null);
         try {
+            opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
+            fail(null);
             try {
                 componentBulkLoader.abort();
             } finally {

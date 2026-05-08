@@ -121,4 +121,18 @@
             <output-dir compare="Clean-JSON">async-json</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="async-deferred-improved">
+        <compilation-unit name="async-result-ttl">
+            <output-dir compare="Clean-JSON">async-result-ttl</output-dir>
+            <parameter name="profile" value="timings" type="string"/>
+            <expected-error>HTTP/1.1 404 Not Found</expected-error>
+            <source-location>false</source-location>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="async-deferred-improved">
+        <compilation-unit name="async-result-ttl-basic">
+            <output-dir compare="Clean-JSON">async-result-ttl-basic</output-dir>
+            <parameter name="profile" value="timings" type="string"/>
+        </compilation-unit>
+    </test-case>
 </test-group>

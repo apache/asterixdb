@@ -1,0 +1,26 @@
+distribute result [$$54] [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$54] <- [{"$1": $$56}] project: [$$54] [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$56] <- [agg-sql-sum($$58)] [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+          -- AGGREGATE  |PARTITIONED|
+            select (and(eq($$A.getField("a"), 1), or(eq($$40, 0), eq($$40, 1), eq($$40, 2), eq($$40, 3), eq($$40, 4), eq($$40, 5), eq($$40, 6), eq($$40, 7), eq($$40, 8), eq($$40, 9), eq($$40, 10), eq($$40, 11), eq($$40, 12), eq($$40, 13), eq($$40, 14), eq($$40, 15), eq($$40, 16), eq($$40, 17), eq($$40, 18), eq($$40, 19), eq($$40, 20), eq($$40, 21), eq($$40, 22), eq($$40, 23), eq($$40, 24), eq($$40, 25), eq($$40, 26), eq($$40, 27), eq($$40, 28), eq($$40, 29)), or(eq($$45, 0), eq($$45, 1), eq($$45, 2), eq($$45, 3), eq($$45, 4)))) [cardinality: 6095.95, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              assign [$$45, $$40] <- [$$A.getField("c"), $$A.getField("b")] [cardinality: 12000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$A]) [cardinality: 12000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 12000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$55, $$A] <- test.A [cardinality: 12000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 12000.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

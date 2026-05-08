@@ -158,8 +158,29 @@ public class CompilerProperties extends AbstractProperties {
                 getRangedIntegerType(0, Integer.MAX_VALUE),
                 128,
                 "Maximum occurrences of a variable allowed in an expression for inlining"),
+        COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS(
+                getRangedIntegerType(1, Integer.MAX_VALUE),
+                AlgebricksConfig.MAX_EXPRESSION_TREE_SIZE_DEFAULT,
+                "Avoid costly O(N^2) expression optimization passes (e.g. constant folding, CSE) on large IN-list queries when the number of OR/AND function arguments >= the specified value"),
+        COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT(
+                getRangedIntegerType(1, Integer.MAX_VALUE),
+                AlgebricksConfig.COMMON_EXPRESSION_LIMIT_DEFAULT,
+                "The maximum number of common expressions to extract"),
         COMPILER_ORDERED_FIELDS(BOOLEAN, AlgebricksConfig.ORDERED_FIELDS, "Enable/disable select order list"),
-        COMPILER_DELTALAKE_FILESPLITS(BOOLEAN, false, "Enable/disable delta lake file splits");
+        COMPILER_DELTALAKE_FILESPLITS(BOOLEAN, false, "Enable/disable delta lake file splits"),
+        COMPILER_DISJUNCTION_AS_JOIN(
+                BOOLEAN,
+                AlgebricksConfig.REWRITE_DISJUNCTION_DEFAULT,
+                "Rewrite disjunctions to joins in query plans"),
+        COMPILER_DISJUNCTION_HASH_THRESHOLD(
+                getRangedIntegerType(-1, Integer.MAX_VALUE),
+                AlgebricksConfig.HASH_BASED_OR_THRESHOLD_DEFAULT,
+                "The number of disjunctions after which a hash-based approach is used for evaluating OR operation (-1 disables using the hash-based approach)"),
+        COMPILER_PARQUET_FILESPLITS(BOOLEAN, false, "Enable/disable parquet file splits"),
+        COMPILER_HDFS_SPLIT_PARALLELISM(
+                INTEGER,
+                Runtime.getRuntime().availableProcessors(),
+                "Number of threads to use for generating file splits for HDFS files");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -217,6 +238,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_INDEXONLY_KEY = Option.COMPILER_INDEX_COVERING.ini();
 
+    public static final String COMPILER_REWRITE_DISJUNCTION_KEY = Option.COMPILER_DISJUNCTION_AS_JOIN.ini();
+
+    public static final String COMPILER_DISJUNCTION_HASH_THRESHOLD = Option.COMPILER_DISJUNCTION_HASH_THRESHOLD.ini();
+
     public static final String COMPILER_INTERNAL_SANITYCHECK_KEY = Option.COMPILER_INTERNAL_SANITYCHECK.ini();
 
     public static final String COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY = Option.COMPILER_EXTERNAL_FIELD_PUSHDOWN.ini();
@@ -246,10 +271,18 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY =
             Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING.ini();
 
+    public static final String COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY =
+            Option.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS.ini();
+
+    public static final String COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY =
+            Option.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT.ini();
+
     public static final String COMPILER_ORDERED_FIELDS_KEY = Option.COMPILER_ORDERED_FIELDS.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
     public static final String COMPILER_DELTALAKE_FILESPLITS_KEY = Option.COMPILER_DELTALAKE_FILESPLITS.ini();
+    public static final String COMPILER_PARQUET_FILESPLITS_KEY = Option.COMPILER_PARQUET_FILESPLITS.ini();
+    public static final String COMPILER_HDFS_SPLIT_PARALLELISM_KEY = Option.COMPILER_HDFS_SPLIT_PARALLELISM.ini();
 
     public CompilerProperties(PropertiesAccessor accessor) {
         super(accessor);
@@ -313,6 +346,14 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean isIndexOnly() {
         return accessor.getBoolean(Option.COMPILER_INDEX_COVERING);
+    }
+
+    public boolean rewriteDisjunctionToJoin() {
+        return accessor.getBoolean(Option.COMPILER_DISJUNCTION_AS_JOIN);
+    }
+
+    public int getHashBasedORThreshold() {
+        return accessor.getInt(Option.COMPILER_DISJUNCTION_HASH_THRESHOLD);
     }
 
     public boolean isSanityCheck() {
@@ -393,7 +434,20 @@ public class CompilerProperties extends AbstractProperties {
         return accessor.getInt(Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING);
     }
 
+    public int getMaxExpressionTreeSize() {
+        return accessor.getInt(Option.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS);
+    }
+
     public boolean isDeltaLakeFileSplitsEnabled() {
         return accessor.getBoolean(Option.COMPILER_DELTALAKE_FILESPLITS);
     }
+
+    public boolean isParquetFileSplitsEnabled() {
+        return accessor.getBoolean(Option.COMPILER_PARQUET_FILESPLITS);
+    }
+
+    public int getHdfsSplitParallelism() {
+        return accessor.getInt(Option.COMPILER_HDFS_SPLIT_PARALLELISM);
+    }
+
 }

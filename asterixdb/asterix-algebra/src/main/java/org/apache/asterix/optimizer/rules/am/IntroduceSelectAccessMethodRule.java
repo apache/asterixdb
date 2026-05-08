@@ -270,7 +270,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     .getExecutionMode() == ExecutionMode.UNPARTITIONED;
             ILogicalOperator subRoot = pair.getAccessMethod().createIndexSearchPlan(afterSelectRefs, selectRef,
                     conditionRef, subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.getIndex(), analysisCtx,
-                    retainInput, false, requiresBroadcast, context, null, null);
+                    retainInput, false, requiresBroadcast, context, null, null, new ArrayList<>());
+
             if (subRoot == null) {
                 return false;
             }
@@ -474,16 +475,6 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             afterSelectRefs.add(opRef);
         }
 
-        // Recursively check the plan and try to optimize it. We first check the children of the given operator
-        // to make sure an earlier select in the path is optimized first.
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context,
-                    checkApplicableOnly, chosenIndexes, analyzedAMs);
-            if (selectFoundAndOptimizationApplied) {
-                return true;
-            }
-        }
-
         // Traverse the plan until we find a SELECT operator.
         if (isSelectOp) {
             // Restore the information from this operator since it might have been be set to null
@@ -505,6 +496,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             // whether an available index can be applicable or not.
             if (!checkApplicableOnly && continueCheck) {
                 analyzedAMs = new TreeMap<>();
+                // we need to clear the chosenIndexes as well, if we do not
+                // in nested queries we might get to a situation where we
+                // have chosenIndexes from the previous check.
+                chosenIndexes = new ArrayList<>();
             }
 
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
@@ -642,6 +637,16 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             selectRef = null;
             selectOp = null;
             afterSelectRefs.add(opRef);
+        }
+
+        // Recursively check the plan and try to optimize it. We first check the current operator
+        // and then recursively check the children
+        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
+            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context,
+                    checkApplicableOnly, chosenIndexes, analyzedAMs);
+            if (selectFoundAndOptimizationApplied) {
+                return true;
+            }
         }
 
         // Cleans the path after SELECT operator by removing the current operator in the list.

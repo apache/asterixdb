@@ -20,5 +20,6 @@ package org.apache.hyracks.api.job;
 
 public enum HyracksJobProperty implements IJobProperty {
     JOB_KIND,
-    RESULT_SET_ORDERED
+    RESULT_SET_ORDERED,
+    RESULT_TTL
 }

@@ -45,6 +45,9 @@ public class PhysicalOptimizationConfig {
     private static final String SORT_PARALLEL = "SORT_PARALLEL";
     private static final String SORT_SAMPLES = "SORT_SAMPLES";
     private static final String INDEX_ONLY = "INDEX_ONLY";
+    private static final String REWRITE_OR_TO_JOIN = "REWRITE_OR_TO_JOIN";
+    private static final String ENABLE_PARQUET_FILE_SPLIT = "ENABLE_PARQUET_FILE_SPLIT";
+    private static final String HDFS_SPLIT_PARALLELISM = "HDFS_SPLIT_PARALLELISM";
     private static final String SANITY_CHECK = "SANITY_CHECK";
     private static final String EXTERNAL_FIELD_PUSHDOWN = "EXTERNAL_FIELD_PUSHDOWN";
     private static final String SUBPLAN_MERGE = "SUBPLAN_MERGE";
@@ -63,6 +66,8 @@ public class PhysicalOptimizationConfig {
     private static final String MIN_GROUP_FRAMES = "MIN_GROUP_FRAMES";
     private static final String MIN_WINDOW_FRAMES = "MIN_WINDOW_FRAMES";
     private static final String MAX_VARIABLE_OCCURRENCES_INLINING = "MAX_VARIABLE_OCCURRENCES_INLINING";
+    private static final String MAX_EXPRESSION_TREE_SIZE = "MAX_EXPRESSION_TREE_SIZE";
+    private static final String COMMON_EXPRESSION_LIMIT = "EXTRACT_COMMON_EXPRESSION_LIMIT";
 
     private static final String ORDER_FIELDS = "ORDERED_FIELDS";
 
@@ -262,8 +267,28 @@ public class PhysicalOptimizationConfig {
         setBoolean(INDEX_ONLY, indexOnly);
     }
 
+    public void setRewriteOrToJoin(boolean rewriteDisjunction) {
+        setBoolean(REWRITE_OR_TO_JOIN, rewriteDisjunction);
+    }
+
+    public boolean rewriteOrToJoin() {
+        return getBoolean(REWRITE_OR_TO_JOIN, AlgebricksConfig.REWRITE_DISJUNCTION_DEFAULT);
+    }
+
     public boolean isIndexOnly() {
         return getBoolean(INDEX_ONLY, AlgebricksConfig.INDEX_ONLY_DEFAULT);
+    }
+
+    public void setParquetFileSplit(boolean parquetFileSplit) {
+        setBoolean(ENABLE_PARQUET_FILE_SPLIT, parquetFileSplit);
+    }
+
+    public void setHdfsSplitParallelism(int hdfsSplitParallelism) {
+        setInt(HDFS_SPLIT_PARALLELISM, hdfsSplitParallelism);
+    }
+
+    public int getHdfsSplitParallelism() {
+        return getInt(HDFS_SPLIT_PARALLELISM, AlgebricksConfig.HDFS_SPLIT_PARALLEL_DEFAULT);
     }
 
     public void setSanityCheckEnabled(boolean sanityCheck) {
@@ -402,6 +427,22 @@ public class PhysicalOptimizationConfig {
         setInt(MAX_VARIABLE_OCCURRENCES_INLINING, maxVariableOccurrencesForInlining);
     }
 
+    public int getMaxExpressionTreeSize() {
+        return getInt(MAX_EXPRESSION_TREE_SIZE, AlgebricksConfig.MAX_EXPRESSION_TREE_SIZE_DEFAULT);
+    }
+
+    public void setMaxExpressionTreeSize(int maxExpressionTreeSize) {
+        setInt(MAX_EXPRESSION_TREE_SIZE, maxExpressionTreeSize);
+    }
+
+    public int getCommonExpressionLimit() {
+        return getInt(COMMON_EXPRESSION_LIMIT, AlgebricksConfig.COMMON_EXPRESSION_LIMIT_DEFAULT);
+    }
+
+    public void setCommonExpressionLimit(int commonExpressionLimit) {
+        setInt(COMMON_EXPRESSION_LIMIT, commonExpressionLimit);
+    }
+
     private void setInt(String property, int value) {
         properties.setProperty(property, Integer.toString(value));
     }
@@ -437,4 +478,5 @@ public class PhysicalOptimizationConfig {
         String value = properties.getProperty(property);
         return value == null ? defaultValue : value;
     }
+
 }

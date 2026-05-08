@@ -1,42 +1,42 @@
-distribute result [$$88]
+distribute result [$$98]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$88] <- [{"o_ol_cnt": $$o_ol_cnt, "high_line_COUNT": $$93, "low_line_COUNT": $$94}] project: [$$88]
+    assign [$$98] <- [{"o_ol_cnt": $$o_ol_cnt, "high_line_COUNT": $$103, "low_line_COUNT": $$104}] project: [$$98]
     -- ASSIGN  |PARTITIONED|
       exchange
       -- SORT_MERGE_EXCHANGE [$$o_ol_cnt(ASC) ]  |PARTITIONED|
-        group by ([$$o_ol_cnt := $$100]) decor ([]) {
-                  aggregate [$$93, $$94] <- [agg-global-sql-sum($$98), agg-global-sql-sum($$99)]
+        group by ([$$o_ol_cnt := $$110]) decor ([]) {
+                  aggregate [$$103, $$104] <- [agg-global-sql-sum($$108), agg-global-sql-sum($$109)]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- SORT_GROUP_BY[$$100]  |PARTITIONED|
+        -- SORT_GROUP_BY[$$110]  |PARTITIONED|
           exchange
-          -- HASH_PARTITION_EXCHANGE [$$100]  |PARTITIONED|
-            group by ([$$100 := $$89]) decor ([]) {
-                      aggregate [$$98, $$99] <- [agg-local-sql-sum(switch-case(true, or(eq($$92, 1), eq($$92, 2)), 1, 0)), agg-local-sql-sum(switch-case(true, and(neq($$92, 1), neq($$92, 2)), 1, 0))]
+          -- HASH_PARTITION_EXCHANGE [$$110]  |PARTITIONED|
+            group by ([$$110 := $$99]) decor ([]) {
+                      aggregate [$$108, $$109] <- [agg-local-sql-sum(switch-case(true, or(eq($$102, 1), eq($$102, 2)), 1, 0)), agg-local-sql-sum(switch-case(true, and(neq($$102, 1), neq($$102, 2)), 1, 0))]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- SORT_GROUP_BY[$$89]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$99]  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                select (and(le($$o.getField("o_entry_d"), $$90), ge($$90, "2016-01-01 00:00:00.000000"), lt($$90, "2017-01-01 00:00:00.000000"))) project: [$$92, $$89]
+                select (and(ge($$100, "2016-01-01 00:00:00.000000"), lt($$100, "2017-01-01 00:00:00.000000"), le($$o.getField("o_entry_d"), $$100))) project: [$$102, $$99]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$90] <- [$$ol.getField("ol_delivery_d")] project: [$$o, $$89, $$92, $$90]
+                  assign [$$100] <- [$$ol.getField("ol_delivery_d")] project: [$$o, $$99, $$102, $$100]
                   -- ASSIGN  |PARTITIONED|
-                    unnest $$ol <- scan-collection($$95) project: [$$o, $$89, $$92, $$ol]
+                    unnest $$ol <- scan-collection($$105) project: [$$o, $$99, $$102, $$ol]
                     -- UNNEST  |PARTITIONED|
-                      assign [$$89, $$95, $$92] <- [$$o.getField("o_ol_cnt"), $$o.getField("o_orderline"), $$o.getField("o_carrier_id")]
+                      assign [$$99, $$105, $$102] <- [$$o.getField("o_ol_cnt"), $$o.getField("o_orderline"), $$o.getField("o_carrier_id")]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$o])
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$91, $$o] <- test.orders
+                            data-scan []<-[$$101, $$o] <- test.orders
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

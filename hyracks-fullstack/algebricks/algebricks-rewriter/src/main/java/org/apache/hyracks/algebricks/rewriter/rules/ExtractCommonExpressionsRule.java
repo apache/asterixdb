@@ -272,33 +272,59 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         private IOptimizationContext context;
         private ILogicalOperator op;
 
+        // Cached live/used variables for the current operator. Avoids recomputing them for every
+        // expression node visited within the same operator (which is O(plan-size) each time).
+        private Set<LogicalVariable> cachedLiveVars;
+        private List<LogicalVariable> cachedUsedVars;
+
         public void setContext(IOptimizationContext context) {
             this.context = context;
         }
 
         public void setOperator(ILogicalOperator op) throws AlgebricksException {
             this.op = op;
+            // Invalidate the live/used variable caches whenever the target operator changes.
+            cachedLiveVars = null;
+            cachedUsedVars = null;
+        }
+
+        /**
+         * Lazily computes and caches the live and used variables for the current operator.
+         * Call this before any code path that needs liveVars / usedVars.
+         */
+        private void ensureLiveVarsCached() throws AlgebricksException {
+            if (cachedLiveVars == null) {
+                cachedLiveVars = new HashSet<>();
+                cachedUsedVars = new ArrayList<>();
+                VariableUtilities.getLiveVariables(op, cachedLiveVars);
+                VariableUtilities.getUsedVariables(op, cachedUsedVars);
+            }
         }
 
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
+
+            // Skip variable references and constants early — no CSE benefit, and avoids map lookup cost.
+            LogicalExpressionTag tag = expr.getExpressionTag();
+            if (tag == LogicalExpressionTag.VARIABLE || tag == LogicalExpressionTag.CONSTANT) {
+                return false;
+            }
+
             boolean modified = false;
             ExprEquivalenceClass exprEqClass = exprEqClassMap.get(expr);
             if (exprEqClass != null) {
                 // Replace common subexpression with existing variable.
                 if (exprEqClass.variableIsSet()) {
                     if (expr.isFunctional()) {
-                        Set<LogicalVariable> liveVars = new HashSet<>();
-                        List<LogicalVariable> usedVars = new ArrayList<>();
-                        VariableUtilities.getLiveVariables(op, liveVars);
-                        VariableUtilities.getUsedVariables(op, usedVars);
+                        ensureLiveVarsCached();
                         // Check if the replacing variable is live at this op.
                         // However, if the op is already using variables that are not live,
                         // then a replacement may enable fixing the plan.
                         // This behavior is necessary to, e.g., properly deal with distinct by.
                         // Also just replace the expr if we are replacing common exprs from within the same operator.
-                        if (liveVars.contains(exprEqClass.getVariable()) || !liveVars.containsAll(usedVars)
+                        if (cachedLiveVars.contains(exprEqClass.getVariable())
+                                || !cachedLiveVars.containsAll(cachedUsedVars)
                                 || op == exprEqClass.getFirstOperator()) {
                             VariableReferenceExpression varRef =
                                     new VariableReferenceExpression(exprEqClass.getVariable());
@@ -311,11 +337,13 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 } else {
                     if (expr.isFunctional() && assignCommonExpression(exprEqClass, expr)) {
                         modified = true;
-                        //re-obtain the live vars after rewriting in the method called in the if condition
-                        Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-                        VariableUtilities.getLiveVariables(op, liveVars);
-                        //rewrite only when the variable is live
-                        if (liveVars.contains(exprEqClass.getVariable())) {
+                        // assignCommonExpression inserts a new AssignOperator into the plan, so the
+                        // previously cached live variables are stale — recompute them now.
+                        cachedLiveVars = null;
+                        cachedUsedVars = null;
+                        ensureLiveVarsCached();
+                        // Rewrite only when the variable is live.
+                        if (cachedLiveVars.contains(exprEqClass.getVariable())) {
                             VariableReferenceExpression varRef =
                                     new VariableReferenceExpression(exprEqClass.getVariable());
                             varRef.setSourceLocation(expr.getSourceLocation());
@@ -326,15 +354,17 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                     }
                 }
             } else {
-                if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE
-                        && expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                // Guard against unbounded map growth for very large expression trees (e.g. IN with a
+                // long list expands into O(N) OR nodes). Beyond the limit the map lookups themselves
+                // become O(N) due to equals() chain traversal, making the whole pass O(N^2).
+                if (exprEqClassMap.size() < context.getPhysicalOptimizationConfig().getCommonExpressionLimit()) {
                     exprEqClass = new ExprEquivalenceClass(op, exprRef);
                     exprEqClassMap.put(expr, exprEqClass);
                 }
             }
 
             // Descend into function arguments.
-            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            if (tag == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                 for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
                     if (transform(arg)) {

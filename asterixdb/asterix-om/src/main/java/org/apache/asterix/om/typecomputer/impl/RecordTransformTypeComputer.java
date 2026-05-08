@@ -19,8 +19,11 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -47,8 +50,20 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
  * </ul>
  */
 public class RecordTransformTypeComputer implements IResultTypeComputer {
-
     public static final RecordTransformTypeComputer INSTANCE = new RecordTransformTypeComputer();
+
+    private static boolean isRecordAndSubfieldsOpen(ARecordType rec) {
+        if (!rec.isOpen()) {
+            return false;
+        }
+        for (IAType fieldType : rec.getFieldTypes()) {
+            IAType actual = TypeComputeUtils.getActualType(fieldType);
+            if (actual.getTypeTag() == ATypeTag.OBJECT && !isRecordAndSubfieldsOpen((ARecordType) actual)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -64,6 +79,10 @@ public class RecordTransformTypeComputer implements IResultTypeComputer {
                 resultType = t1;
             }
             return resultType;
+        }
+        if (!isRecordAndSubfieldsOpen(recType0)) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
+                    "The operation cannot be performed since the arguments provided to the object-transform function are defined as closed types.");
         }
 
         /** Infer merged type only if t0 is a record of type 'transform' and t1 is a record */

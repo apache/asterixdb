@@ -89,7 +89,8 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         String tableName = originalConfiguration.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
         catalogProperties = IcebergUtils.filterCatalogProperties(originalConfiguration);
         catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
-        TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(namespace), tableName);
+        Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
+        TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
         if (!catalog.tableExists(tableIdentifier)) {
             throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
         }

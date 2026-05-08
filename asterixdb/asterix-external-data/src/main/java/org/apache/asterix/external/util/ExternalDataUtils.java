@@ -30,6 +30,8 @@ import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.DISABLE_SSL_VERIFY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
@@ -37,10 +39,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.aws.s3.S3Utils.configureAwsS3HdfsJobConf;
-import static org.apache.asterix.external.util.azure.blob.BlobUtils.validateAzureBlobProperties;
-import static org.apache.asterix.external.util.azure.datalake.DatalakeUtils.validateAzureDataLakeProperties;
 import static org.apache.asterix.external.util.google.GCSUtils.configureHdfsJobConf;
-import static org.apache.asterix.external.util.google.GCSUtils.validateProperties;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.isIcebergTable;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
@@ -750,13 +749,13 @@ public class ExternalDataUtils {
                 S3Utils.validateProperties(appCtx, configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-                validateAzureBlobProperties(configuration, srcLoc, collector, appCtx);
+                BlobUtils.validateProperties(configuration, srcLoc, collector, appCtx);
                 break;
-            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
-                validateAzureDataLakeProperties(configuration, srcLoc, collector, appCtx);
+            case KEY_ADAPTER_NAME_AZURE_DATALAKE, KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS:
+                DatalakeUtils.validateProperties(configuration, srcLoc, collector, appCtx);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
-                validateProperties(appCtx, configuration, srcLoc, collector);
+                GCSUtils.validateProperties(appCtx, configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
                 HDFSUtils.validateProperties(configuration, srcLoc, collector);
@@ -1166,8 +1165,8 @@ public class ExternalDataUtils {
                 protocol = AzureConstants.HADOOP_AZURE_PROTOCOL;
                 String blobEndpoint = BlobUtils.getEndpointFromClient(configurations);
                 return protocol + "://" + container + "@" + blobEndpoint + "/";
-            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
-            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE_ALIAS:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS:
                 protocol = AzureConstants.HADOOP_AZURE_PROTOCOL;
                 String dataLakeEndpoint = DatalakeUtils.getEndpointFromClient(configurations);
                 return protocol + "://" + container + "@" + dataLakeEndpoint + "/";
@@ -1202,7 +1201,7 @@ public class ExternalDataUtils {
         switch (normalizedAdapter) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE:
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
                 return ExternalDataConstants.DEFINITION_FIELD_NAME;
             default:

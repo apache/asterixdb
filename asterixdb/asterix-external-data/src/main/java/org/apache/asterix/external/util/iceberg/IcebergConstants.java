@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.google.GCSConstants;
+import org.apache.iceberg.aws.s3.S3FileIO;
+import org.apache.iceberg.azure.adlsv2.ADLSFileIO;
 
 public class IcebergConstants {
     private IcebergConstants() {
@@ -53,7 +55,7 @@ public class IcebergConstants {
         public static final String REST_SIG4_GLUE_SIGNING_NAME = "glue";
 
         // catalog properties
-        public static final String S3_FILE_IO = "org.apache.iceberg.aws.s3.S3FileIO";
+        public static final String S3_FILE_IO = S3FileIO.class.getName();
         public static final String REST_SIG4_SIGNING_NAME = "rest.signing-name";
         public static final String REST_SIG4_SIGNING_REGION = "rest.signing-region";
     }
@@ -61,6 +63,10 @@ public class IcebergConstants {
     public static class Gcp {
         public static final String QUOTA_PROJECT_ID_HEADER_KEY = "header.x-goog-user-project";
         public static final String QUOTA_PROJECT_ID_KEY = "quotaProjectId";
+    }
+
+    public static class Azure {
+        public static final String ADLS_FILE_IO = ADLSFileIO.class.getName();
     }
 
     public static class Rest {

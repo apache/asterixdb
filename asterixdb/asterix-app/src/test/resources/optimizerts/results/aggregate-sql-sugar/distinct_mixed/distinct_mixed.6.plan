@@ -18,16 +18,16 @@ distribute result [$$65]
                 -- AGGREGATE  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    join (true)
-                    -- NESTED_LOOP  |PARTITIONED|
+                    assign [$$75] <- [$$53] project: [$$75]
+                    -- ASSIGN  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [$$75] <- [$$53] project: [$$75]
-                        -- ASSIGN  |PARTITIONED|
+                        replicate
+                        -- REPLICATE  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            replicate
-                            -- REPLICATE  |PARTITIONED|
+                            join (true)
+                            -- NESTED_LOOP  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 assign [$$53] <- [$$x.getField(1)] project: [$$53]
@@ -42,14 +42,6 @@ distribute result [$$65]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                      exchange
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [] <- [] project: []
-                        -- ASSIGN  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            replicate
-                            -- REPLICATE  |PARTITIONED|
                               exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 project ([])
@@ -76,12 +68,12 @@ distribute result [$$65]
                     -- STABLE_SORT [$$53(ASC)]  |PARTITIONED|
                       exchange
                       -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
-                        join (true)
-                        -- NESTED_LOOP  |PARTITIONED|
+                        replicate
+                        -- REPLICATE  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            replicate
-                            -- REPLICATE  |PARTITIONED|
+                            join (true)
+                            -- NESTED_LOOP  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 assign [$$53] <- [$$x.getField(1)] project: [$$53]
@@ -96,10 +88,6 @@ distribute result [$$65]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            replicate
-                            -- REPLICATE  |PARTITIONED|
                               exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 project ([])

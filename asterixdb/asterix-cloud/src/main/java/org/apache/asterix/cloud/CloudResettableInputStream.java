@@ -78,6 +78,7 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
 
     @Override
     public void write(int b) throws HyracksDataException {
+        open();
         if (writeBuffer.remaining() == 0) {
             uploadAndWait();
         }

@@ -22,6 +22,7 @@ create  dataverse test;
 
 use test;
 
+SET `compiler.disjunction.as.join` "true";
 
 create type test.TestType as
 {

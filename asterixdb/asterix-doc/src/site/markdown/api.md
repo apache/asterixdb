@@ -49,6 +49,9 @@ __Parameters__
   [DECLARE FUNCTION](sqlpp/manual.html#Declarations), and [SET](sqlpp/manual.html#Performance_tuning)
 * `args` - (SQL++ only) A JSON array where each item is a value of a [positional query parameter](sqlpp/manual.html#Parameter_references)
 * `$parameter_name` - (SQL++ only) a JSON value of a [named query parameter](sqlpp/manual.html#Parameter_references).
+* `result-ttl` - Specifies how long the result set should be retained for `async` or `deferred` queries before being
+  automatically discarded. The value can be specified as a duration string (e.g., `30m`, `1h`, `2d`) or as milliseconds.
+  If not specified, the system default `result.ttl` configuration is used. This parameter is ignored for `immediate` mode.
 
 __Command (immediate result delivery)__
 

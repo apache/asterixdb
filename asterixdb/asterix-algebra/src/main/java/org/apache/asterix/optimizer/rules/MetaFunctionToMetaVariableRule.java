@@ -21,7 +21,9 @@ package org.apache.asterix.optimizer.rules;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -50,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -69,12 +72,12 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             return false;
         }
         hasApplied = true;
-        visit(opRef);
+        visit(opRef, new HashSet<>(), true);
         return rewritten;
     }
 
-    private ILogicalExpressionReferenceTransformWithCondition visit(Mutable<ILogicalOperator> opRef)
-            throws AlgebricksException {
+    private ILogicalExpressionReferenceTransformWithCondition visit(Mutable<ILogicalOperator> opRef,
+            Set<ILogicalExpressionReferenceTransformWithCondition> outerPlanTransformers, boolean topPlan) throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
 
         // reaches NTS or ETS.
@@ -84,7 +87,7 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
         // datascan returns a useful transform if the meta part is present in the dataset.
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scanOp = (DataSourceScanOperator) op;
-            ILogicalExpressionReferenceTransformWithCondition inputTransformer = visit(op.getInputs().get(0));
+            ILogicalExpressionReferenceTransformWithCondition inputTransformer = visit(op.getInputs().get(0), outerPlanTransformers, topPlan);
             DataSource dataSource = (DataSource) scanOp.getDataSource();
             List<ILogicalExpressionReferenceTransformWithCondition> transformers = null;
             List<LogicalVariable> allVars = scanOp.getVariables();
@@ -136,7 +139,7 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
         // visit children in the depth-first order.
         List<ILogicalExpressionReferenceTransformWithCondition> transformers = new ArrayList<>();
         for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-            ILogicalExpressionReferenceTransformWithCondition transformer = visit(childRef);
+            ILogicalExpressionReferenceTransformWithCondition transformer = visit(childRef, outerPlanTransformers, topPlan);
             if (!transformer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
                 transformers.add(transformer);
             }
@@ -154,11 +157,33 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             currentTransformer = new CompositeExpressionReferenceTransform(transformers);
         }
 
+        if (topPlan && !currentTransformer.equals(NoOpExpressionReferenceTransform.INSTANCE)) {
+            outerPlanTransformers.add(currentTransformer);
+        }
         if (((AbstractLogicalOperator) op).hasNestedPlans()) {
             AbstractOperatorWithNestedPlans opWithNestedPlans = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan nestedPlan : opWithNestedPlans.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> root : nestedPlan.getRoots()) {
-                    visit(root);
+                    visit(root, outerPlanTransformers, false);
+                }
+            }
+        }
+        if (!topPlan) {
+            // this is currently to handle a special case for operators with nested plans (e.g. subplan) that may
+            // contain meta() in their nested plans. The transformer from the outer plan will be pushed into the nested
+            // plan to rewrite meta() in the nested plan. The checks could be relaxed for a broader use if we want to
+            // allow more cases of pushing down the transformer. The current checks ensure that the transformer is only
+            // pushed into the nested plan when the nested plan has meta() and there is only one transformer from the
+            // outer plan (i.e. there is only one data source with meta in the outer plan) to avoid ambiguity.
+            if (NoOpExpressionReferenceTransform.INSTANCE.equals(currentTransformer) && outerPlanTransformers.size() == 1) {
+                ILogicalExpressionReferenceTransformWithCondition transformer = outerPlanTransformers.iterator().next();
+                if (transformer instanceof LogicalExpressionReferenceTransform t && op.acceptExpressionTransform(ContainsMetaFunctionVisitor.INSTANCE)) {
+                    Set<LogicalVariable> liveVars = new HashSet<>();
+                    VariableUtilities.getLiveVariables(op, liveVars);
+                    if (liveVars.contains(t.getMetaVar())) {
+                        rewritten |= op.acceptExpressionTransform(t);
+                        return currentTransformer;
+                    }
                 }
             }
         }
@@ -206,6 +231,10 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
     LogicalExpressionReferenceTransform(LogicalVariable dataVar, LogicalVariable metaVar) {
         this.dataVar = dataVar;
         this.metaVar = metaVar;
+    }
+
+    public LogicalVariable getMetaVar() {
+        return metaVar;
     }
 
     @Override
@@ -391,5 +420,17 @@ class MetaKeyExpressionReferenceTransform implements ILogicalExpressionReference
             }
         }
         return false;
+    }
+}
+
+class ContainsMetaFunctionVisitor implements ILogicalExpressionReferenceTransform {
+
+    static final ContainsMetaFunctionVisitor INSTANCE = new ContainsMetaFunctionVisitor();
+
+    @Override
+    public boolean transform(Mutable<ILogicalExpression> expression) throws AlgebricksException {
+        ILogicalExpression expr = expression.get();
+        return (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL)
+                && ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().equals(BuiltinFunctions.META);
     }
 }

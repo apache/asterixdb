@@ -185,7 +185,7 @@ public interface IStatementExecutor {
             this.size = size;
         }
 
-        public long getQueueWaitTime() {
+        public long getQueueWaitTimeNanos() {
             return queueWaitTime;
         }
 
@@ -207,8 +207,8 @@ public interface IStatementExecutor {
             }
         }
 
-        public void setQueueWaitTime(long queueWaitTime) {
-            this.queueWaitTime = queueWaitTime;
+        public void setQueueWaitTimeNanos(long queueWaitTimeNanos) {
+            this.queueWaitTime = queueWaitTimeNanos;
         }
 
         public void setJobProfile(ObjectNode profile) {
@@ -227,11 +227,11 @@ public interface IStatementExecutor {
             this.profileType = profileType;
         }
 
-        public void setCompileTime(long compileTime) {
-            this.compileTime = compileTime;
+        public void setCompileTimeNanos(long compileTimeNanos) {
+            this.compileTime = compileTimeNanos;
         }
 
-        public long getCompileTime() {
+        public long getCompileTimeNanos() {
             return compileTime;
         }
 

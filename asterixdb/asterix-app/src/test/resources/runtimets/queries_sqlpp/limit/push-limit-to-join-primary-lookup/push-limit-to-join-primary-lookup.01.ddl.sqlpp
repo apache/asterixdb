@@ -31,3 +31,10 @@ CREATE TYPE openType AS OPEN {
 
 CREATE DATASET ds1(openType) PRIMARY KEY id;
 CREATE DATASET ds2(openType) PRIMARY KEY id;
+
+CREATE TYPE openType2 AS OPEN {
+  id:int
+};
+
+CREATE DATASET ds3(openType2) PRIMARY KEY id;
+CREATE DATASET ds4(openType2) PRIMARY KEY id;

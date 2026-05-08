@@ -107,11 +107,16 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         try {
             ResultJobRecord.Status status = resultReader.getStatus();
             final HttpResponseStatus httpStatus = ResultUtil.getHttpStatusFromResultStatus(status);
-            response.setStatus(httpStatus);
             if (httpStatus != HttpResponseStatus.OK) {
+                response.setStatus(httpStatus);
                 return;
             }
             ResultMetadata metadata = (ResultMetadata) resultReader.getMetadata();
+            if (metadata == null) {
+                response.setStatus(HttpResponseStatus.NOT_FOUND);
+                return;
+            }
+            response.setStatus(httpStatus);
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
             processResults(handle, resultReader, sessionOutput, metadata, request);
         } catch (HyracksDataException e) {
@@ -150,7 +155,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                     printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
                 }
                 if (handle.getRequestId() != null) {
-                    printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTime()));
+                    printer.addFooterPrinter(new CreatedAtPrinter(metadata.getCreateTimeMillis()));
                 }
                 printer.printFooters();
                 printer.end();
@@ -166,18 +171,18 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
     }
 
     private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata) {
-        long endTime = System.nanoTime();
+        long endTime = System.currentTimeMillis();
         stats.setProcessedObjects(metadata.getProcessedObjects());
-        stats.setQueueWaitTime(metadata.getQueueWaitTimeInNanos());
+        stats.setQueueWaitTimeNanos(metadata.getQueueWaitTimeNanos());
         stats.setBufferCacheHitRatio(metadata.getBufferCacheHitRatio());
         stats.setBufferCachePageReadCount(metadata.getBufferCachePageReadCount());
         stats.setCloudReadRequestsCount(metadata.getCloudReadRequestsCount());
         stats.setCloudPagesReadCount(metadata.getCloudPagesReadCount());
         stats.setCloudPagesPersistedCount(metadata.getCloudPagesPersistedCount());
         stats.updateTotalWarningsCount(metadata.getTotalWarningsCount());
-        return ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTime()),
+        return ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTimeMillis()),
                 metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
-                metadata.getTotalWarningsCount(), metadata.getCompileTime(), stats.getQueueWaitTime(),
+                metadata.getTotalWarningsCount(), metadata.getCompileTimeNanos(), stats.getQueueWaitTimeNanos(),
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
                 stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
     }

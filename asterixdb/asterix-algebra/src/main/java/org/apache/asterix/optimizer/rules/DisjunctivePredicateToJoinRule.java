@@ -66,10 +66,10 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        boolean rewrite = context.getPhysicalOptimizationConfig().rewriteOrToJoin();
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         if (isRuleEnabled == null) {
-            isRuleEnabled =
-                    metadataProvider.getBooleanProperty(REWRITE_OR_AS_JOIN_OPTION, REWRITE_OR_AS_JOIN_OPTION_DEFAULT);
+            isRuleEnabled = metadataProvider.getBooleanProperty(REWRITE_OR_AS_JOIN_OPTION, rewrite);
         }
         if (!isRuleEnabled) {
             return false;
@@ -205,7 +205,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
      *            another type
      * @return true, if types are equal
      */
-    private static boolean isCompatible(IAType t1, IAType t2) {
+    public static boolean isCompatible(IAType t1, IAType t2) {
         return t1.equals(t2);
     }
 

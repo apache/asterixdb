@@ -206,7 +206,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         IFunctionTypeInferer fnTypeInfer = functionManager.lookupFunctionTypeInferer(fnId);
         if (fnTypeInfer != null) {
             CompilerProperties compilerProps = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
-            fnTypeInfer.infer(expr, fd, env, compilerProps);
+            fnTypeInfer.infer(expr, fd, env, compilerProps, context.getMetadataProvider());
         }
         return fd;
     }

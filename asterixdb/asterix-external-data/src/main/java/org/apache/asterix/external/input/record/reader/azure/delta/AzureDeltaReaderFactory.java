@@ -20,7 +20,6 @@ package org.apache.asterix.external.input.record.reader.azure.delta;
 
 import static org.apache.asterix.external.util.azure.AzureConstants.HADOOP_AZURE_PROTOCOL;
 import static org.apache.asterix.external.util.azure.AzureUtils.extractEndPoint;
-import static org.apache.asterix.external.util.azure.blob.BlobUtils.buildClient;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +39,7 @@ import com.azure.storage.file.datalake.DataLakeServiceClient;
 public class AzureDeltaReaderFactory extends DeltaReaderFactory {
     private static final long serialVersionUID = 1L;
     private static final List<String> RECORD_READER_NAMES =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE);
+            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE);
 
     @Override
     protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)

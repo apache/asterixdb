@@ -111,10 +111,14 @@ public class CloudRetryableRequestUtil {
                 try {
                     return doRun(request, retry, RETRY_ALWAYS_PREDICATE);
                 } catch (Throwable e) {
-                    // First, clear the interrupted flag
-                    interrupted |= Thread.interrupted();
-                    if (ExceptionUtils.causedByInterrupt(e)) {
+                    // clear & check any interrupted status
+                    boolean currentCycleInterrupted = Thread.interrupted();
+                    interrupted |= currentCycleInterrupted;
+                    if (ExceptionUtils.causedByInterrupt(e) || currentCycleInterrupted) {
                         interrupted = true;
+                        LOGGER.debug(
+                                "Suppressing interrupt in run(). causedByInterrupt: {}, currentCycleInterrupted: {}",
+                                ExceptionUtils.causedByInterrupt(e), currentCycleInterrupted);
                     } else {
                         // The cause isn't an interruption, rethrow
                         throw e;
@@ -197,9 +201,12 @@ public class CloudRetryableRequestUtil {
                 }
                 try {
                     if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
+                        LOGGER.debug("Exiting doRun() loop. isInterrupted: {}, attempt: {}/{}",
+                                Thread.currentThread().isInterrupted(), attempt, NUMBER_OF_RETRIES);
                         throw HyracksDataException.create(e);
                     }
                 } catch (InterruptedException interruptedEx) {
+                    LOGGER.debug("Thread interrupted while waiting for retry policy backoff.");
                     throw HyracksDataException.create(interruptedEx);
                 }
                 attempt++;

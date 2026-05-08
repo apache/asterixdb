@@ -55,7 +55,7 @@ public abstract class AbstractConditionExpressionRule implements IAlgebraicRewri
 
         this.context = context;
 
-        boolean changed = transform(condRef);
+        boolean changed = transform(condRef, context);
         if (changed) {
             context.computeAndSetTypeEnvironmentForOperator(op);
         }
@@ -82,5 +82,5 @@ public abstract class AbstractConditionExpressionRule implements IAlgebraicRewri
      * @return {@code <code>true</code>} condition has been modified
      * {@code <code>false</code>} otherwise.
      */
-    protected abstract boolean transform(Mutable<ILogicalExpression> condRef);
+    protected abstract boolean transform(Mutable<ILogicalExpression> condRef, IOptimizationContext context);
 }

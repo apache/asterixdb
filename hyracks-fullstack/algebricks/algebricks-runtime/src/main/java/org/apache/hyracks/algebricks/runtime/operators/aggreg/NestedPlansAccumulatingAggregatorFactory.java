@@ -19,8 +19,16 @@
 package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.INestedTupleSourceRuntime;
+import org.apache.hyracks.algebricks.runtime.base.IProfiledPushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -29,12 +37,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.group.AbstractAccumulatingAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import org.apache.hyracks.dataflow.std.group.IProfiledAggregatorDescriptor;
 
 public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulatingAggregatorDescriptorFactory {
 
@@ -50,101 +60,149 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         this.decorFieldIdx = decorFieldIdx;
     }
 
+    private class NestedPlansAccumulatingAggregator implements IAggregatorDescriptor {
+
+        final INestedTupleSourceRuntime[] pipelines;
+        final AggregatorOutput outputWriter;
+        final long memoryBudget;
+
+        public NestedPlansAccumulatingAggregator(INestedTupleSourceRuntime[] pipelines, AggregatorOutput outputWriter,
+                long memoryBudget) {
+            this.pipelines = pipelines;
+            this.outputWriter = outputWriter;
+            this.memoryBudget = memoryBudget;
+        }
+
+        @Override
+        public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                throws HyracksDataException {
+            ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
+            tb.reset();
+            for (int i = 0; i < keyFieldIdx.length; ++i) {
+                tb.addField(accessor, tIndex, keyFieldIdx[i]);
+            }
+            for (int i = 0; i < decorFieldIdx.length; ++i) {
+                tb.addField(accessor, tIndex, decorFieldIdx[i]);
+            }
+            for (int i = 0; i < pipelines.length; ++i) {
+                pipelines[i].open();
+            }
+            // aggregate the first tuple
+            for (int i = 0; i < pipelines.length; i++) {
+                pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
+            }
+        }
+
+        @Override
+        public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
+                int stateTupleIndex, AggregateState state) throws HyracksDataException {
+            // Checks the memory usage.
+            memoryUsageCheck();
+
+            for (int i = 0; i < pipelines.length; i++) {
+                pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
+            }
+        }
+
+        @Override
+        public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor stateAccessor, int tIndex,
+                AggregateState state) throws HyracksDataException {
+            for (int i = 0; i < pipelines.length; i++) {
+                outputWriter.setInputIdx(i);
+                pipelines[i].close();
+            }
+
+            // Checks the memory usage.
+            memoryUsageCheck();
+
+            tupleBuilder.reset();
+            TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
+
+            return true;
+        }
+
+        @Override
+        public AggregateState createAggregateStates() {
+            return new AggregateState();
+        }
+
+        @Override
+        public void reset() {
+
+        }
+
+        @Override
+        public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                AggregateState state) throws HyracksDataException {
+            throw new IllegalStateException("this method should not be called");
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        // Checks the memory usage.
+        private void memoryUsageCheck() throws HyracksDataException {
+            if (memoryBudget > 0) {
+                ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
+                byte[] data = tb.getByteArray();
+                if (data.length > memoryBudget) {
+                    throw HyracksDataException.create(ErrorCode.GROUP_BY_MEMORY_BUDGET_EXCEEDS, sourceLoc, data.length,
+                            memoryBudget);
+                }
+            }
+        }
+    }
+
+    private class ProfiledNestedPlansAccumulatingAggregator extends NestedPlansAccumulatingAggregator
+            implements IProfiledAggregatorDescriptor {
+        final List<IProfiledPushRuntime> profiledRts;
+
+        public ProfiledNestedPlansAccumulatingAggregator(INestedTupleSourceRuntime[] pipelines,
+                AggregatorOutput outputWriter, long memoryBudget, List<IProfiledPushRuntime> profiledRts) {
+            super(pipelines, outputWriter, memoryBudget);
+            this.profiledRts = profiledRts;
+        }
+
+        @Override
+        public void computeTimings() {
+            profiledRts.forEach(IProfiledPushRuntime::computeTimings);
+        }
+    }
+
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys, long memoryBudget)
             throws HyracksDataException {
         final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length + decorFieldIdx.length);
-        final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
+        final INestedTupleSourceRuntime[] pipelines = new INestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
             pipelines[i] =
                     (NestedTupleSourceRuntime) PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx, null);
         }
+        return new NestedPlansAccumulatingAggregator(pipelines, outputWriter, memoryBudget);
+    }
 
-        return new IAggregatorDescriptor() {
-
-            @Override
-            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
-                tb.reset();
-                for (int i = 0; i < keyFieldIdx.length; ++i) {
-                    tb.addField(accessor, tIndex, keyFieldIdx[i]);
-                }
-                for (int i = 0; i < decorFieldIdx.length; ++i) {
-                    tb.addField(accessor, tIndex, decorFieldIdx[i]);
-                }
-                for (int i = 0; i < pipelines.length; ++i) {
-                    pipelines[i].open();
-                }
-                // aggregate the first tuple
-                for (int i = 0; i < pipelines.length; i++) {
-                    pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
-                }
+    @Override
+    public IProfiledAggregatorDescriptor createProfiledAggregator(IHyracksTaskContext ctx,
+            RecordDescriptor inRecordDesc, RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys,
+            long memoryBudget, IOperatorStats stats) throws HyracksDataException {
+        final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length + decorFieldIdx.length);
+        final INestedTupleSourceRuntime[] pipelines = new INestedTupleSourceRuntime[subplans.length];
+        List<IProfiledPushRuntime> profiledRts = new ArrayList<>(subplans.length);
+        for (int i = 0; i < subplans.length; i++) {
+            Map<IPushRuntimeFactory, IOperatorStats> microOpStats =
+                    AlgebricksMetaOperatorDescriptor.makeMicroOpStats(subplans[i], stats, "." + i);
+            for (IOperatorStats stat : microOpStats.values()) {
+                ctx.getStatsCollector().add(stat);
             }
-
-            @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
-                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                // Checks the memory usage.
-                memoryUsageCheck();
-
-                for (int i = 0; i < pipelines.length; i++) {
-                    pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
-                }
-            }
-
-            @Override
-            public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor stateAccessor,
-                    int tIndex, AggregateState state) throws HyracksDataException {
-                for (int i = 0; i < pipelines.length; i++) {
-                    outputWriter.setInputIdx(i);
-                    pipelines[i].close();
-                }
-
-                // Checks the memory usage.
-                memoryUsageCheck();
-
-                tupleBuilder.reset();
-                TupleUtils.addFields(outputWriter.getTupleBuilder(), tupleBuilder);
-
-                return true;
-            }
-
-            @Override
-            public AggregateState createAggregateStates() {
-                return new AggregateState();
-            }
-
-            @Override
-            public void reset() {
-
-            }
-
-            @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                throw new IllegalStateException("this method should not be called");
-            }
-
-            @Override
-            public void close() {
-
-            }
-
-            // Checks the memory usage.
-            private void memoryUsageCheck() throws HyracksDataException {
-                if (memoryBudget > 0) {
-                    ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
-                    byte[] data = tb.getByteArray();
-                    if (data.length > memoryBudget) {
-                        throw HyracksDataException.create(ErrorCode.GROUP_BY_MEMORY_BUDGET_EXCEEDS, sourceLoc,
-                                data.length, memoryBudget);
-                    }
-                }
-            }
-
-        };
+            Pair<IFrameWriter, List<IProfiledPushRuntime>> pipesAndStats =
+                    PipelineAssembler.assemblePipeline(subplans[i], outputWriter, ctx, null, microOpStats);
+            pipelines[i] = (INestedTupleSourceRuntime) pipesAndStats.getLeft();
+            profiledRts.addAll(pipesAndStats.getRight());
+        }
+        return new ProfiledNestedPlansAccumulatingAggregator(pipelines, outputWriter, memoryBudget, profiledRts);
     }
 
     /**

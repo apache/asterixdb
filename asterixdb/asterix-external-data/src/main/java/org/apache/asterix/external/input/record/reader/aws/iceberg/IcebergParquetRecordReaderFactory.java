@@ -69,8 +69,9 @@ import org.apache.iceberg.io.CloseableIterable;
 public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFactory<Record> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> RECORD_READER_NAMES =
-            Arrays.asList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3, ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
+    private static final List<String> RECORD_READER_NAMES = Arrays.asList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3,
+            ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB, ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE,
+            ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
 
     private final List<FileScanTask> fileScanTasks = new ArrayList<>();
     private final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
@@ -134,7 +135,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
             catalogProperties = IcebergUtils.filterCatalogProperties(configuration);
             catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
-            TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(namespace), tableName);
+            Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
+            TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
             if (!catalog.tableExists(tableIdentifier)) {
                 throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
             }

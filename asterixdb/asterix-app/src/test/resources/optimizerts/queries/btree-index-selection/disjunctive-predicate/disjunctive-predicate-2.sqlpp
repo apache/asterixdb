@@ -34,6 +34,7 @@ create  dataset TestSet(TestType) primary key id;
 
 create  index TestSetIndex  on TestSet (idx) type btree;
 
+SET `compiler.disjunction.as.join` "true";
 select element x
 from  TestSet as x
 where ((x.idx = 'one') or (x.idx = 'two') or (x.idx = 'two'))

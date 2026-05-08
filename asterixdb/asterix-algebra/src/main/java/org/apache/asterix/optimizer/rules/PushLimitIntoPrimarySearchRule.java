@@ -141,17 +141,12 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
                 break;
             case UNNEST_MAP:
                 UnnestMapOperator unnestMap = (UnnestMapOperator) child;
-                if (isUnnestMapPushable(unnestMap, selectedVariables)) {
-                    // set only the limit if the unnest-map is propagating the input vars.
-                    // when the unnest-map op is propagating the input vars, currently the index-search runtime fails to
-                    // evaluate the select-condition because at the time the select-condition is evaluated, the tuple
-                    // has only the index-search vars while the select-condition expects the tuple to have both the
-                    // input vars + index-search vars. the index-search runtime needs to be fixed to construct the
-                    // complete tuple vars first, then evaluate the select-condition.
-                    if (unnestMap.propagatesInput()) {
-                        unnestMap.setOutputLimit(outputLimit);
-                        return true;
-                    }
+                // when the unnest-map op is propagating the input vars, currently the index-search runtime fails to
+                // evaluate the select-condition because at the time the select-condition is evaluated, the tuple
+                // has only the index-search vars while the select-condition expects the tuple to have both the
+                // input vars + index-search vars. the index-search runtime needs to be fixed to construct the
+                // complete tuple vars first (input vars + index-search vars), then evaluate the select-condition.
+                if (!unnestMap.propagatesInput() && isUnnestMapPushable(unnestMap, selectedVariables)) {
                     unnestMap.setSelectCondition(selectConditionRef);
                     unnestMap.setOutputLimit(outputLimit);
                     changed = true;

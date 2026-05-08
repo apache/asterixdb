@@ -26,5 +26,5 @@ USE test;
 
 FROM DS AS d
 GROUP BY d.hobby AS hobby
-SELECT hobby, COUNT(meta().id)
+SELECT hobby, COUNT(meta().id) AS count
 ORDER BY hobby;

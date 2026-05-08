@@ -88,7 +88,7 @@ public class RemoveRedundantBooleanExpressionsInJoinRule extends InlineAndRemove
         Mutable<ILogicalExpression> joinCondRef = joinOp.getCondition();
         Mutable<ILogicalExpression> clonedCondition = new MutableObject<>(joinCondRef.getValue().cloneExpression());
 
-        if (normalizeVariables(leftEqMap, rightEqMap, clonedCondition) && transform(clonedCondition)) {
+        if (normalizeVariables(leftEqMap, rightEqMap, clonedCondition) && transform(clonedCondition, context)) {
             // replace the join condition iff the normalization led to a minimized circuit
             joinCondRef.setValue(clonedCondition.getValue());
             return true;

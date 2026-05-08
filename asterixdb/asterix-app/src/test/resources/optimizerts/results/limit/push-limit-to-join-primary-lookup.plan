@@ -1,0 +1,42 @@
+distribute result [$$75]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$75] <- [{"$1": $$80}] project: [$$75]
+    -- ASSIGN  |LOCAL|
+      aggregate [$$80] <- [agg-sql-sum($$83)]
+      -- AGGREGATE  |LOCAL|
+        aggregate [$$83] <- [agg-sql-count(1)]
+        -- AGGREGATE  |LOCAL|
+          limit 1
+          -- STREAM_LIMIT  |UNPARTITIONED|
+            exchange
+            -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+              limit 1
+              -- STREAM_LIMIT  |PARTITIONED|
+                select (eq($$ds3.getField("field1"), "f150")) project: []
+                -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$ds3])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      unnest-map [$$77, $$ds3] <- index-search("ds3", 0, "Default", "test", "ds3", true, true, 1, $$78, 1, $$78, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$78)
+                          -- STABLE_SORT [$$78(ASC)]  |PARTITIONED|
+                            exchange
+                            -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                              assign [$$78] <- [int64($$ds4.getField("sk_id"))] project: [$$78]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$ds4])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan []<-[$$76, $$ds4] <- test.ds4
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

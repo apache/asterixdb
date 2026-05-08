@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
+import org.apache.asterix.lang.common.base.ICompilationContextFactory;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
@@ -42,6 +43,7 @@ import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslatorFactory;
+import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
 
 public class SqlppCompilationProvider implements ILangCompilationProvider {
 
@@ -82,13 +84,19 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
     }
 
     @Override
+    public ICompilationContextFactory getCompilationContextFactory() {
+        return request -> ICompilationContext.INSTANCE;
+    }
+
+    @Override
     public Set<String> getCompilerOptions() {
         return new HashSet<>(Set.of(CompilerProperties.COMPILER_JOINMEMORY_KEY,
                 CompilerProperties.COMPILER_GROUPMEMORY_KEY, CompilerProperties.COMPILER_SORTMEMORY_KEY,
                 CompilerProperties.COMPILER_WINDOWMEMORY_KEY, CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
                 CompilerProperties.COMPILER_PARALLELISM_KEY, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
                 CompilerProperties.COMPILER_SORT_SAMPLES_KEY, CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY,
-                CompilerProperties.COMPILER_INDEXONLY_KEY, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
+                CompilerProperties.COMPILER_REWRITE_DISJUNCTION_KEY, CompilerProperties.COMPILER_INDEXONLY_KEY,
+                CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
                 CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY, CompilerProperties.COMPILER_SUBPLAN_MERGE_KEY,
                 CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 CompilerProperties.COMPILER_ARRAYINDEX_KEY, CompilerProperties.COMPILER_CBO_KEY,
@@ -96,12 +104,17 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
                 CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY, CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY,
                 CompilerProperties.COMPILER_COLUMN_FILTER_KEY, CompilerProperties.COMPILER_BATCH_LOOKUP_KEY,
                 CompilerProperties.COMPILER_FRAMESIZE_KEY, FunctionUtil.IMPORT_PRIVATE_FUNCTIONS,
+                CompilerProperties.COMPILER_DISJUNCTION_HASH_THRESHOLD,
                 CompilerProperties.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY,
-                CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
-                FuzzyUtils.SIM_THRESHOLD_PROP_NAME, StartFeedStatement.WAIT_FOR_COMPLETION,
-                FeedActivityDetails.FEED_POLICY_NAME, FeedActivityDetails.COLLECT_LOCATIONS,
-                SqlppQueryRewriter.INLINE_WITH_OPTION, SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION,
-                "hash_merge", "output-record-type", DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
+                CompilerProperties.COMPILER_DELTALAKE_FILESPLITS_KEY,
+                CompilerProperties.COMPILER_OPTIMIZE_EXPRESSION_MAX_ARGS_KEY, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
+                CompilerProperties.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT_KEY, FuzzyUtils.SIM_THRESHOLD_PROP_NAME,
+                StartFeedStatement.WAIT_FOR_COMPLETION, FeedActivityDetails.FEED_POLICY_NAME,
+                FeedActivityDetails.COLLECT_LOCATIONS, SqlppQueryRewriter.INLINE_WITH_OPTION,
+                SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION, "hash_merge", "output-record-type",
+                CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY,
+                CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY,
+                DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
                 SetAsterixPhysicalOperatorsRule.REWRITE_ATTEMPT_BATCH_ASSIGN,
                 EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK, SqlppQueryRewriter.SQL_COMPAT_OPTION,
                 JoinEnum.CBO_FULL_ENUM_LEVEL_KEY, JoinEnum.CBO_CP_ENUM_KEY));

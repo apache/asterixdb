@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -174,6 +175,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             case TIMESTAMP:
             case TIMESTAMP_NANO:
                 serializeTimestamp(value, out);
+                return;
             case GEOMETRY:
             case GEOGRAPHY:
             case VARIANT:
@@ -336,9 +338,16 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     public void serializeTimestamp(Object value, DataOutput output) throws HyracksDataException {
-        LocalDateTime localDateTime = (LocalDateTime) value;
-        ZoneId zoneId = parserContext.getTimeZoneId();
-        long timeStampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+        long timeStampInMillis;
+        if (value instanceof OffsetDateTime) {
+            // Timezone aware: Iceberg returns OffsetDateTime
+            timeStampInMillis = ((OffsetDateTime) value).toInstant().toEpochMilli();
+        } else {
+            // No timezone: Iceberg returns LocalDateTime
+            LocalDateTime localDateTime = (LocalDateTime) value;
+            ZoneId zoneId = parserContext.getTimeZoneId();
+            timeStampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+        }
         if (parserContext.isTimestampAsLong()) {
             serializeLong(timeStampInMillis, output);
         } else {

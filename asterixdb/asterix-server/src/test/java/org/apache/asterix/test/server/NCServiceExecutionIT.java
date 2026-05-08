@@ -254,6 +254,7 @@ public class NCServiceExecutionIT {
 
     @Test
     @Ignore
+    // ignore for now because something is causing the NC to get into a memory starvation loop on recovery intermittently
     public void test() throws Exception {
         if (tcCtx != null) {
             testExecutor.executeTest(ACTUAL_RESULTS_DIR.getPath(), tcCtx, null, false);

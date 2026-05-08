@@ -19,16 +19,16 @@ distribute result [$$176]
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     group by ([$$s_i_id := $$214]) decor ([]) {
-                              aggregate [$$187, $$188] <- [agg-global-sql-sum($$212), agg-global-sql-sum($$213)]
+                              aggregate [$$187, $$188] <- [agg-global-sql-sum($$212), agg-global-sql-sum($$213)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- AGGREGATE  |LOCAL|
-                                nested tuple source
+                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                            }
                     -- SORT_GROUP_BY[$$214]  |PARTITIONED|
                       exchange
                       -- HASH_PARTITION_EXCHANGE [$$214]  |PARTITIONED|
                         group by ([$$214 := $$178]) decor ([]) {
-                                  aggregate [$$212, $$213] <- [agg-local-sql-sum($$142), agg-local-sql-sum($$142)]
+                                  aggregate [$$212, $$213] <- [agg-local-sql-sum($$142), agg-local-sql-sum($$142)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- AGGREGATE  |LOCAL|
                                     nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -43,21 +43,21 @@ distribute result [$$176]
                                 join (eq($$185, $$186))
                                 -- HYBRID_HASH_JOIN [$$186][$$185]  |PARTITIONED|
                                   exchange
-                                  -- HASH_PARTITION_EXCHANGE [$$186]  |PARTITIONED|
-                                    project ([$$186])
-                                    -- STREAM_PROJECT  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$186] <- [$$201] project: [$$186]
+                                    -- ASSIGN  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        join (eq($$197, $$198))
-                                        -- HYBRID_HASH_JOIN [$$198][$$197]  |PARTITIONED|
+                                        replicate
+                                        -- REPLICATE  |PARTITIONED|
                                           exchange
-                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            assign [$$198] <- [$$203] project: [$$198]
-                                            -- ASSIGN  |PARTITIONED|
+                                          -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
+                                            project ([$$201])
+                                            -- STREAM_PROJECT  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                replicate
-                                                -- REPLICATE  |PARTITIONED|
+                                                join (eq($$202, $$203))
+                                                -- HYBRID_HASH_JOIN [$$203][$$202]  |PARTITIONED|
                                                   exchange
                                                   -- HASH_PARTITION_EXCHANGE [$$203]  |PARTITIONED|
                                                     select (eq($$191.getField("n_name"), "Germany")) project: [$$203]
@@ -74,14 +74,6 @@ distribute result [$$176]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                 empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                          exchange
-                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            assign [$$186, $$197] <- [$$201, $$202] project: [$$186, $$197]
-                                            -- ASSIGN  |PARTITIONED|
-                                              exchange
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                replicate
-                                                -- REPLICATE  |PARTITIONED|
                                                   exchange
                                                   -- HASH_PARTITION_EXCHANGE [$$202]  |PARTITIONED|
                                                     assign [$$201, $$202] <- [$$192.getField("su_suppkey"), $$192.getField("su_nationkey")] project: [$$201, $$202]
@@ -139,17 +131,17 @@ distribute result [$$176]
                                     join (eq($$200, $$201))
                                     -- HYBRID_HASH_JOIN [$$201][$$200]  |PARTITIONED|
                                       exchange
-                                      -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
-                                        project ([$$201])
-                                        -- STREAM_PROJECT  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
+                                        -- REPLICATE  |PARTITIONED|
                                           exchange
-                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            join (eq($$202, $$203))
-                                            -- HYBRID_HASH_JOIN [$$203][$$202]  |PARTITIONED|
+                                          -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
+                                            project ([$$201])
+                                            -- STREAM_PROJECT  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                replicate
-                                                -- REPLICATE  |PARTITIONED|
+                                                join (eq($$202, $$203))
+                                                -- HYBRID_HASH_JOIN [$$203][$$202]  |PARTITIONED|
                                                   exchange
                                                   -- HASH_PARTITION_EXCHANGE [$$203]  |PARTITIONED|
                                                     select (eq($$191.getField("n_name"), "Germany")) project: [$$203]
@@ -166,10 +158,6 @@ distribute result [$$176]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                 empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                              exchange
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                replicate
-                                                -- REPLICATE  |PARTITIONED|
                                                   exchange
                                                   -- HASH_PARTITION_EXCHANGE [$$202]  |PARTITIONED|
                                                     assign [$$201, $$202] <- [$$192.getField("su_suppkey"), $$192.getField("su_nationkey")] project: [$$201, $$202]

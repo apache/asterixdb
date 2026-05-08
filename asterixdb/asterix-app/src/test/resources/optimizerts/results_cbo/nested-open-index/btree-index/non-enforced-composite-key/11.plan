@@ -1,26 +1,26 @@
-distribute result [$$23] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$25]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$23] <- [{"res": $$30}] project: [$$23] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    assign [$$25] <- [{"res": $$32}] project: [$$25]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-      -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
-        order (ASC, $$30) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-        -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      exchange
+      -- SORT_MERGE_EXCHANGE [$$32(ASC) ]  |PARTITIONED|
+        order (ASC, $$32)
+        -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            select (and(gt($$26, 499), lt($$26, 99999))) project: [$$30] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            select (and(lt($$28, 99999), gt($$28, 499))) project: [$$32]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$30, $$26] <- [$$32.getField("c_x"), $$32.getField("c_i8")] project: [$$30, $$26] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              assign [$$32, $$28] <- [$$34.getField("c_x"), $$34.getField("c_i8")] project: [$$32, $$28]
               -- ASSIGN  |PARTITIONED|
-                assign [$$32] <- [$$t.getField("nested")] project: [$$32] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                assign [$$34] <- [$$t.getField("nested")] project: [$$34]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$t]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  project ([$$t])
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$28, $$t] <- test.TestOpen [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      data-scan []<-[$$30, $$t] <- test.TestOpen
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

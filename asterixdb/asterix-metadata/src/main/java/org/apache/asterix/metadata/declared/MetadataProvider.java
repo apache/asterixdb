@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.metadata.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.metadata.declared.DatasetDataSource.setExternalCollectionCompilerProperties;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -169,6 +170,7 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreePartitionSearchOperator
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
@@ -348,10 +350,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public IDataFormat getDataFormat() {
         return dataFormat;
-    }
-
-    public void setDataFormat(IDataFormat dataFormat) {
-        this.dataFormat = dataFormat;
     }
 
     public INamespaceResolver getNamespaceResolver() {
@@ -702,6 +700,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     datasetPartitioningProp.getNumberOfPartitions());
         }
 
+        ITupleFilterFactory extTupleFilterFactory = getExtTupleFilterFactory(context, dataset, primaryKeyFields);
+        if (extTupleFilterFactory != null) {
+            tupleFilterFactory = tupleFilterFactory == null ? extTupleFilterFactory
+                    : andTupleFilter(tupleFilterFactory, extTupleFilterFactory);
+        }
+
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             btreeSearchOp = !isSecondary && isPrimaryIndexPointSearch
                     ? new LSMBTreeBatchPointSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
@@ -726,6 +730,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             btreeSearchOp = null;
         }
         return new Pair<>(btreeSearchOp, datasetPartitioningProp.getConstraints());
+    }
+
+    private static ITupleFilterFactory andTupleFilter(ITupleFilterFactory tupleFilterFactory,
+            ITupleFilterFactory extTupleFilterFactory) {
+        return ctx -> {
+            ITupleFilter tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
+            ITupleFilter extTupleFilter = extTupleFilterFactory.createTupleFilter(ctx);
+
+            return (ITupleFilter) tuple -> tupleFilter.accept(tuple) && extTupleFilter.accept(tuple);
+        };
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRtreeSearchRuntime(JobSpecification jobSpec,
@@ -1009,6 +1023,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             configuration.put(ExternalDataConstants.KEY_DATASET_DATABASE, dataset.getDatabaseName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
+            setExternalCollectionCompilerProperties(this, configuration);
             setExternalEntityId(configuration);
             setSourceType(configuration, adapterName);
 
@@ -1029,7 +1044,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             String catalogName = configuration.get(IcebergConstants.ICEBERG_CATALOG_NAME);
             IcebergCatalog catalog =
                     (IcebergCatalog) MetadataManager.INSTANCE.getCatalog(getMetadataTxnContext(), catalogName);
-            IcebergCatalogDetails details = (IcebergCatalogDetails) catalog.getCatalogDetails();
+            IcebergCatalogDetails details = catalog.getCatalogDetails();
             IcebergUtils.putCatalogProperties(configuration, details.getProperties());
         }
     }
@@ -2021,6 +2036,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Set<EntityDetails> getAccessedEntities() {
         return Collections.unmodifiableSet(accessedEntities);
+    }
+
+    protected ITupleFilterFactory getExtTupleFilterFactory(JobGenContext ctx, Dataset ds, int[] pkFields)
+            throws AlgebricksException {
+        return null;
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {

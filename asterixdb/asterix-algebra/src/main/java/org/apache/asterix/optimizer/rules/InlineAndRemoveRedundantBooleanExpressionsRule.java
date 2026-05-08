@@ -20,12 +20,13 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.util.FunctionUtil;
 
 /**
  * Inline and remove redundant boolean expressions
@@ -40,7 +41,12 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class InlineAndRemoveRedundantBooleanExpressionsRule extends AbstractConditionExpressionRule {
 
     @Override
-    protected boolean transform(Mutable<ILogicalExpression> condRef) {
+    protected boolean transform(Mutable<ILogicalExpression> condRef, IOptimizationContext context) {
+        int maxExprTreeSize = context.getPhysicalOptimizationConfig().getMaxExpressionTreeSize();
+        return transform(condRef, maxExprTreeSize);
+    }
+
+    private boolean transform(Mutable<ILogicalExpression> condRef, int maxExprTreeSize) {
         AbstractFunctionCallExpression function = getFunctionExpression(condRef.getValue());
         if (function == null) {
             return false;
@@ -48,18 +54,20 @@ public class InlineAndRemoveRedundantBooleanExpressionsRule extends AbstractCond
 
         boolean changed = false;
         for (Mutable<ILogicalExpression> argRef : function.getArguments()) {
-            changed |= transform(argRef);
+            changed |= transform(argRef, maxExprTreeSize);
         }
 
         final FunctionIdentifier fid = function.getFunctionIdentifier();
         if (AlgebricksBuiltinFunctions.AND.equals(fid) || AlgebricksBuiltinFunctions.OR.equals(fid)) {
-            changed |= inlineCondition(function);
-            changed |= removeRedundantExpressions(function.getArguments());
+            if (function.getArguments().size() <= maxExprTreeSize) {
+                changed |= inlineCondition(function);
+                changed |= removeRedundantExpressions(function.getArguments(), maxExprTreeSize);
 
-            //Special case: disjuncts/conjuncts have been factored out into a single (non-disjunct/conjunct) expression
-            if (function.getArguments().size() == 1) {
-                final ILogicalExpression newCond = function.getArguments().get(0).getValue();
-                condRef.setValue(newCond);
+                //Special case: disjuncts/conjuncts have been factored out into a single (non-disjunct/conjunct) expression
+                if (function.getArguments().size() == 1) {
+                    final ILogicalExpression newCond = function.getArguments().get(0).getValue();
+                    condRef.setValue(newCond);
+                }
             }
         }
 
@@ -86,7 +94,10 @@ public class InlineAndRemoveRedundantBooleanExpressionsRule extends AbstractCond
         return changed;
     }
 
-    public static boolean removeRedundantExpressions(List<Mutable<ILogicalExpression>> exprs) {
+    public static boolean removeRedundantExpressions(List<Mutable<ILogicalExpression>> exprs, int maxExprTreeSize) {
+        if (exprs.size() > maxExprTreeSize) {
+            return false;
+        }
         final int originalSize = exprs.size();
         int i = 0;
         while (i < exprs.size()) {

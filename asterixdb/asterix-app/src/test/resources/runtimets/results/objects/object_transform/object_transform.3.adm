@@ -1,0 +1,2 @@
+{ "UserTypes2": { "userId": 4, "items": { "a": 3, "orderId": "101" }, "email": "carol@example.com", "username": "carol", "isActive": true, "roles": [ { "roleId": "role1", "roleName": "moderator" } ] } }
+{ "UserTypes2": { "userId": 3, "items": { "a": 3 }, "email": "carol@example.com", "username": "carol", "isActive": true, "roles": [ { "roleId": "role1", "roleName": "moderator" } ], "c_purchase_history": { "c_recent_orders": [ { "orderId": "101" }, { "orderId": "102" }, { "orderId": "103" } ] } } }
