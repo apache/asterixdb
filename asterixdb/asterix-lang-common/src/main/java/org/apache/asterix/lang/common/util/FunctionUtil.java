@@ -88,6 +88,7 @@ public class FunctionUtil {
     /**
      * @deprecated use {@link BuiltinFunctions#getBuiltinFunctionInfo(FunctionIdentifier)} instead
      */
+    @Deprecated
     public static BuiltinFunctionInfo getFunctionInfo(FunctionIdentifier fi) {
         return BuiltinFunctions.getBuiltinFunctionInfo(fi);
     }

@@ -95,7 +95,7 @@ public class FeedSpillerUnitTest extends TestCase {
             removeSpillFiles();
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             FrameSpiller spiller = new FrameSpiller(ctx, TEST_DATAVERSE + "_" + TEST_FEED + "_" + TEST_DATASET,
-                    new Long(NUM_FRAMES * DEFAULT_FRAME_SIZE));
+                    NUM_FRAMES * DEFAULT_FRAME_SIZE);
             spiller.open();
             VSizeFrame frame = new VSizeFrame(ctx);
             spiller.spill(frame.getBuffer());
@@ -144,7 +144,7 @@ public class FeedSpillerUnitTest extends TestCase {
             removeSpillFiles();
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             FrameSpiller spiller = new FrameSpiller(ctx, TEST_DATAVERSE + "_" + TEST_FEED + "_" + TEST_DATASET,
-                    new Long(NUM_FRAMES * DEFAULT_FRAME_SIZE));
+                    NUM_FRAMES * DEFAULT_FRAME_SIZE);
             spiller.open();
             VSizeFrame frame = new VSizeFrame(ctx);
             for (int i = 0; i < 1047; i++) {

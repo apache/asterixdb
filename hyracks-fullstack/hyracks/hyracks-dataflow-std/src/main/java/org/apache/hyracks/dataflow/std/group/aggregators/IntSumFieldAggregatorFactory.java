@@ -129,7 +129,7 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
             }
 
             public AggregateState createState() {
-                return new AggregateState(new Integer(0));
+                return new AggregateState(0);
             }
 
             @Override

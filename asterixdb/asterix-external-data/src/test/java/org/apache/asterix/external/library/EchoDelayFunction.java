@@ -35,7 +35,7 @@ public class EchoDelayFunction implements IExternalScalarFunction {
     public void initialize(IFunctionHelper functionHelper) {
         sleepIntervalMin = 50;
         sleepIntervalMax = 100;
-        range = (new Long(sleepIntervalMax - sleepIntervalMin)).intValue();
+        range = (int) (sleepIntervalMax - sleepIntervalMin);
     }
 
     @Override
