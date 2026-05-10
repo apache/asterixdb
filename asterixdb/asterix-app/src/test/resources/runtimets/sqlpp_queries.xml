@@ -11205,6 +11205,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="regexp_invalid_pattern_negative">
+        <output-dir compare="Text">regexp_invalid_pattern_negative</output-dir>
+        <expected-error>ASX1113: Invalid pattern [</expected-error>
+        <expected-error>ASX1113: Invalid pattern (abc</expected-error>
+        <expected-error>ASX1113: Invalid pattern *xyz</expected-error>
+        <expected-error>ASX1113: Invalid pattern [z-a]</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="regexp_contains/regex_contains">
         <output-dir compare="Text">regexp_contains/regex_contains</output-dir>
       </compilation-unit>
