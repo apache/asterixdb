@@ -87,6 +87,7 @@ public class LocalCloudUtilAdobeMock {
         if (System.getProperty("api.version") == null) {
             System.setProperty("api.version", "1.44");
         }
+        shutdownSilently();
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
         s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart)
