@@ -19,17 +19,7 @@
 
 USE test;
 
-upsert INTO UserTypes([
-  { "id": "1", "roles": [
-      { "roleId": "r1", "roleName": "Dev" },
-      { "roleId": "r2", "roleName": "QA" },
-      { "roleId": "r3", "roleName": "Ops" }
-  ]}
-]);
-
 UPDATE UserTypes AS p
-  (UPDATE p.roles AS r AT pos
-   SET r.roleName = "Lead Ops"
-   WHERE pos = -1)
+  (INSERT INTO p.hobbies AT -3 (["Sketching"]))
 WHERE p.id = "1"
 RETURNING p;

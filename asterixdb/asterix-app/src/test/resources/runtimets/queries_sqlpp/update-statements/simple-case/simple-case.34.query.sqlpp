@@ -20,11 +20,7 @@
 
 USE test;
 
-upsert INTO UserTypes([
-{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
-]);
-
-UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 3 ([{"d":3}]))
+UPDATE  UserTypes AS p
+(INSERT INTO p.hobbies at -1 (["Sketching"]))
 WHERE p.id = "1"
-RETURNING p;
+returning p;

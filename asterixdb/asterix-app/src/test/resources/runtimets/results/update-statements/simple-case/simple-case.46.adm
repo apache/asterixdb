@@ -1,1 +1,1 @@
-{ "id": "1", "roles": [ { "roleId": "r1", "roleName": "Dev" } ] }
+{ "id": "1", "hobbies": [ { "a": 5 }, { "b": 4 }, { "c": 4 } ] }

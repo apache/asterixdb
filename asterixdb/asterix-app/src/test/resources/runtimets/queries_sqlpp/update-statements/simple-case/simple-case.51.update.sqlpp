@@ -20,16 +20,5 @@
 USE test;
 
 upsert INTO UserTypes([
-  { "id": "1", "roles": [
-      { "roleId": "r1", "roleName": "Dev" },
-      { "roleId": "r2", "roleName": "QA" },
-      { "roleId": "r3", "roleName": "Ops" }
-  ]}
+{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
 ]);
-
-UPDATE UserTypes AS p
-  (UPDATE p.roles AS r AT pos
-   SET r.roleName = "Sr. Dev"
-   WHERE pos = 0)
-WHERE p.id = "1"
-RETURNING p;

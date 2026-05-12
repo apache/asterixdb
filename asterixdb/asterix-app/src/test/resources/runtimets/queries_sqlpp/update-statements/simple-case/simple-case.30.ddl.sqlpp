@@ -17,9 +17,20 @@
  * under the License.
  */
 
+
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
-UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 99 (["Sketching"]))
-WHERE p.id = "1"
-RETURNING p;
+CREATE TYPE UserType AS {
+id: string
+};
+
+CREATE DATASET UserTypes(UserType)
+PRIMARY KEY id;
+
+
+
+
+

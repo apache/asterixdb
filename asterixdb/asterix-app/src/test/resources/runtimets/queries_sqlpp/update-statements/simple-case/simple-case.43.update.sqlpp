@@ -17,38 +17,9 @@
  * under the License.
  */
 
-
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
 
-CREATE TYPE UserType AS {
-id: string
-};
-
-CREATE DATASET UserTypes(UserType)
-PRIMARY KEY id;
-
-
-
-USE test;
-
-INSERT INTO UserTypes(
-[
-  {
-    "id": "1",
-    "hobbies": [
-      "a",
-      "b"
-    ],
-    "name": "awbclpdc alcerunkz",
-    "age": 29,
-    "email": "agoyooytf@abfbt.com"
-  }
-
+upsert INTO UserTypes([
+{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
 ]);
 
-UPDATE  UserTypes AS p
-(INSERT INTO p.hobbies at -1 (["Sketching"]))
-WHERE p.id = "1"
-returning p;

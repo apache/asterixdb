@@ -17,9 +17,36 @@
  * under the License.
  */
 
+
+
 USE test;
 
-UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 99 (["Sketching"]))
-WHERE p.id = "1"
-RETURNING p;
+Upsert INTO UserTypes(
+[
+  {
+    "id": "1",
+    "hobbies": [
+      "a",
+      "b"
+    ],
+    "name": "awbclpdc alcerunkz",
+    "age": 29,
+    "email": "agoyooytf@abfbt.com"
+  },
+  {
+      "id": "2",
+      "hobbies": [
+        "a",
+        "b"
+      ],
+      "name": "awbclpdc alcerunkz",
+      "age": 29,
+      "email": "agoyooytf@abfbt.com"
+    }
+
+]);
+
+UPDATE UserTypes AS u
+(update u.hobbies as p at o
+set p="44"
+where o=1);

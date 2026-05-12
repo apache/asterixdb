@@ -20,6 +20,8 @@
 USE test;
 
 UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 99 (["Sketching"]))
+  (UPDATE p.roles AS r AT pos
+   SET r.roleName = "Lead Ops"
+   WHERE pos = -1)
 WHERE p.id = "1"
 RETURNING p;

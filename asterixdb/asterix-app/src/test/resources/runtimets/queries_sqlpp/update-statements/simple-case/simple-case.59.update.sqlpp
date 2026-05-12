@@ -19,7 +19,10 @@
 
 USE test;
 
-UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 99 (["Sketching"]))
-WHERE p.id = "1"
-RETURNING p;
+upsert INTO UserTypes([
+  { "id": "1", "roles": [
+      { "roleId": "r1", "roleName": "Dev" },
+      { "roleId": "r2", "roleName": "QA" },
+      { "roleId": "r3", "roleName": "Ops" }
+  ]}
+]);

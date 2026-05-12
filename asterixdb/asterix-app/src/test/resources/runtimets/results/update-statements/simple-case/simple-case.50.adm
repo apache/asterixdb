@@ -1,2 +1,1 @@
-{ "UserTypes": { "id": "1", "age": { "num": 28, "unit": "year" }, "hobbies": [ "a", "b" ], "name": "awbclpdc alcerunkz", "email": "agoyooytf@abfbt.com" } }
-{ "UserTypes": { "id": "2", "age": { "num": 28, "unit": "year" }, "hobbies": [ "a", "b" ], "name": "awbclpdc alcerunkz", "email": "agoyooytf@abfbt.com" } }
+{ "id": "1", "hobbies": [ { "b": 4 }, { "c": 4 } ] }

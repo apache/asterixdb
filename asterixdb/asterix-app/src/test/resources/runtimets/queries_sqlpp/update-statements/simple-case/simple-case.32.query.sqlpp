@@ -18,37 +18,13 @@
  */
 
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
 
-CREATE TYPE UserType AS {
-id: string
-};
-
-CREATE DATASET UserTypes(UserType)
-PRIMARY KEY id;
-
-
-
-USE test;
-
-INSERT INTO UserTypes(
-[
-  {
-    "id": "1",
-    "hobbies": [
-      "a",
-      "b"
-    ],
-    "name": "awbclpdc alcerunkz",
-    "age": 29,
-    "email": "agoyooytf@abfbt.com"
-  }
-
-]);
 
 UPDATE  UserTypes AS p
-(INSERT INTO p.hobbies at -100 (["Sketching"]))
+(INSERT INTO p.hobbies at -2 (["Sketching"]))
 WHERE p.id = "1"
 returning p;
+
+
+

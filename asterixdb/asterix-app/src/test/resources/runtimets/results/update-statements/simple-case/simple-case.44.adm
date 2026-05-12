@@ -1,1 +1,1 @@
-{ "id": "1", "roles": [ { "roleId": "r1", "roleName": "Dev" }, { "roleId": "r2", "roleName": "QA" }, { "roleName": "Lead Ops", "roleId": "r3" } ] }
+{ "id": "1", "hobbies": [ { "a": 5 }, "Sketching", { "b": 4 }, { "c": 4 } ] }

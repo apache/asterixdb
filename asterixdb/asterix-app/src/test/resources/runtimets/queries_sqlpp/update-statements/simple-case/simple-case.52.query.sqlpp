@@ -19,7 +19,9 @@
 
 USE test;
 
+
+
 UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 99 (["Sketching"]))
+  (DELETE FROM p.hobbies AT pos WHERE pos = -1)
 WHERE p.id = "1"
 RETURNING p;

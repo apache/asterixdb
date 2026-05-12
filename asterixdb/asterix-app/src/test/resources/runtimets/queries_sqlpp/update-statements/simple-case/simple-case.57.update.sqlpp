@@ -17,53 +17,12 @@
  * under the License.
  */
 
-
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
 
-CREATE TYPE UserType AS {
-id: string,
-hobbies:[string]
-};
-
-CREATE DATASET UserTypes(UserType)
-PRIMARY KEY id;
-
-
-
-USE test;
-
-INSERT INTO UserTypes(
-[
-  {
-    "id": "1",
-    "hobbies": [
-      "a",
-      "b"
-    ],
-    "name": "awbclpdc alcerunkz",
-    "age": 29,
-    "email": "agoyooytf@abfbt.com"
-  },
-  {
-      "id": "2",
-      "hobbies": [
-        "a",
-        "b"
-      ],
-      "name": "awbclpdc alcerunkz",
-      "age": 29,
-      "email": "agoyooytf@abfbt.com"
-    }
-
+upsert INTO UserTypes([
+  { "id": "1", "roles": [
+      { "roleId": "r1", "roleName": "Dev" },
+      { "roleId": "r2", "roleName": "QA" },
+      { "roleId": "r3", "roleName": "Ops" }
+  ]}
 ]);
-
-UPDATE UserTypes AS u
-(update u.hobbies as p at o
-set p="44"
-where o=1);
-
-select *
-from UserTypes
-order by id;

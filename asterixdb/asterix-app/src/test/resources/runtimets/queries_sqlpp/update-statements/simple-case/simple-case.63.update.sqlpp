@@ -17,22 +17,11 @@
  * under the License.
  */
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
 
-CREATE TYPE UserType AS {
-  id: string
-};
 
-CREATE DATASET UserTypes(UserType)
-PRIMARY KEY id;
-
-INSERT INTO UserTypes([
-  { "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
+upsert INTO UserTypes([
+  { "id": "1", "roles": [
+      { "roleId": "r1", "roleName": "Dev" }
+  ]}
 ]);
-
-UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT 0 ([{"d":3}]))
-WHERE p.id = "1"
-RETURNING p;

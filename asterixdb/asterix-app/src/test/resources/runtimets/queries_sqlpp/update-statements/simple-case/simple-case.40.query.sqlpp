@@ -17,13 +17,10 @@
  * under the License.
  */
 
+
 USE test;
 
-upsert INTO UserTypes([
-{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
-]);
-
 UPDATE UserTypes AS p
-  (DELETE FROM p.hobbies AT pos WHERE pos = -1)
+  (INSERT INTO p.hobbies AT 3 ([{"d":3}]))
 WHERE p.id = "1"
 RETURNING p;

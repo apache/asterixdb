@@ -26,10 +26,3 @@ upsert INTO UserTypes([
       { "roleId": "r3", "roleName": "Ops" }
   ]}
 ]);
-
-UPDATE UserTypes AS p
-  (UPDATE p.roles AS r AT pos
-   SET r.roleName = "Edge"
-   WHERE pos IN [0, -1])
-WHERE p.id = "1"
-RETURNING p;

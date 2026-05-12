@@ -18,19 +18,6 @@
  */
 
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
-
-CREATE TYPE UserType AS {
-id: string
-};
-
-CREATE DATASET UserTypes(UserType)
-PRIMARY KEY id;
-
-
-
 USE test;
 
 INSERT INTO UserTypes(
@@ -42,24 +29,11 @@ INSERT INTO UserTypes(
       "b"
     ],
     "name": "awbclpdc alcerunkz",
+    "age": 29,
     "email": "agoyooytf@abfbt.com"
-  },
-  {
-      "id": "2",
-      "hobbies": [
-        "a",
-        "b"
-      ],
-      "name": "awbclpdc alcerunkz",
-      "age": 29,
-      "email": "agoyooytf@abfbt.com"
-    }
+  }
 
 ]);
 
-UPDATE UserTypes AS u
-set u.age={"num":28,"unit":"year"};
 
-select *
-from UserTypes
-order by id;
+

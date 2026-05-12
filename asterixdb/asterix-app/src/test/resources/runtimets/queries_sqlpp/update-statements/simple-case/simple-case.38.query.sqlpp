@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-USE test;
-
-upsert INTO UserTypes([
-{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
-]);
+use test;
 
 UPDATE UserTypes AS p
-  (INSERT INTO p.hobbies AT -99 (["Sketching"]))
+  (INSERT INTO p.hobbies AT 0 ([{"d":3}]))
 WHERE p.id = "1"
 RETURNING p;

@@ -19,12 +19,6 @@
 
 USE test;
 
-
 upsert INTO UserTypes([
-  { "id": "1", "hobbies": ["only"] }
+{ "id": "1", "hobbies": [{"a":5},{ "b":4}, {"c":4}] }
 ]);
-
-UPDATE UserTypes AS p
-  (DELETE FROM p.hobbies AT pos WHERE pos = 0)
-WHERE p.id = "1"
-RETURNING p;
