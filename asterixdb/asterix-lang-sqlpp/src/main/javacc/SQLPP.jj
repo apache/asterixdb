@@ -5974,7 +5974,18 @@ FromTerm FromTerm() throws ParseException :
           <AT> posVar = Variable()
         )?
       | posVar = Variable()
-    )
+        (
+          <AT>
+          (
+            LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
+            <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+            { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+          | LOOKAHEAD( { laIdentifier(TIMESTAMP) } )
+            <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+            { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
+          )
+        )?
+      )
   )?
   (
      (
@@ -6067,21 +6078,33 @@ JoinClauseRightInput JoinClauseRightInput() throws ParseException :
   }
   ((<AS>)? rightVar = Variable())?
   (
-    <AT>
-    (
-      LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
-      <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
-      { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+      <AT>
+      (
+        LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
+        <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+        { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+        (
+          <AT> posVar = Variable()
+        )?
       | LOOKAHEAD( { laIdentifier(TIMESTAMP) } )
-      <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
-      { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
-    )
-  )?
-  (
-    <AT>
-    (
-      posVar = Variable()
-    )
+        <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+        { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
+        (
+          <AT> posVar = Variable()
+        )?
+      | posVar = Variable()
+        (
+          <AT>
+          (
+            LOOKAHEAD( { laIdentifier(SNAPSHOT) } )
+            <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+            { timeTravelType = TimeTravel.Type.SNAPSHOT_ID; }
+          | LOOKAHEAD( { laIdentifier(TIMESTAMP) } )
+            <IDENTIFIER> snapshotOrTimestamp = StringLiteral()
+            { timeTravelType = TimeTravel.Type.SNAPSHOT_TIMESTAMP; }
+          )
+        )?
+      )
   )?
   {
     if (rightVar == null) {
