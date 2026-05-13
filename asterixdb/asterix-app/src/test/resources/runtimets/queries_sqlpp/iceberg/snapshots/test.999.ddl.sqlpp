@@ -17,8 +17,7 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
+DROP COLLECTION usersNoSnapshot;
+DROP COLLECTION usersYesSnapshot;
+DROP TYPE users;
 DROP CATALOG myNessieCatalog;

@@ -17,8 +17,5 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP CATALOG myNessieCatalog;
+SELECT count(*) as count
+FROM goodSnapshot AT timestamp "Hello!";

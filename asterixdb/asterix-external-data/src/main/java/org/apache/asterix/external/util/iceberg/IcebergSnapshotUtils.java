@@ -129,7 +129,7 @@ public class IcebergSnapshotUtils {
             String tableName = catalogAndCollectionProperties.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
             Map<String, String> catalogProperties =
                     IcebergUtils.filterCatalogProperties(catalogAndCollectionProperties);
-            Catalog icebergCatalog = IcebergUtils.initializeCatalog(catalogProperties, namespace, false);
+            Catalog icebergCatalog = IcebergUtils.initializeCatalog(catalogProperties, namespace, true);
 
             Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
             TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);

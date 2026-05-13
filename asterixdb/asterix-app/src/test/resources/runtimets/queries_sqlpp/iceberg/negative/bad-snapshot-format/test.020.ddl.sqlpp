@@ -17,8 +17,24 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP CATALOG myNessieCatalog;
+DROP COLLECTION users IF EXISTS;
+DROP TYPE users IF EXISTS;
+
+CREATE TYPE users AS open {};
+CREATE EXTERNAL COLLECTION badSnapshot(users)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="users"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet"),
+    ("decimal-to-double"="true"),
+    ("date-to-int"="true"),
+    ("time-to-int"="true"),
+    ("timestamp-to-long"="true"),
+    ("snapshotTimestamp"="2024-12-12 11:11:11.123")
+);

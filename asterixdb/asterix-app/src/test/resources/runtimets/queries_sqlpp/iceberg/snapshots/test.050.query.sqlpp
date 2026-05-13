@@ -17,8 +17,6 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP CATALOG myNessieCatalog;
+// collection created with no snapshot expecting 1000 records, but snapshot in statement takes priority, snapshot expects 800 records
+SELECT count(*) as count
+FROM usersNoSnapshot AT timestamp "%SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER%";

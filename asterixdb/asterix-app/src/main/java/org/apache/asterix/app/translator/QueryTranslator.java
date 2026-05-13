@@ -1068,7 +1068,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    validateIfIcebergTable(metadataProvider, requestParameters, properties, mdTxnCtx, sourceLoc);
+                    validateIfIcebergTable(metadataProvider, requestParameters, properties, mdTxnCtx, sourceLoc,
+                            externalDetails.getAdapter());
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx, metadataProvider);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
@@ -1182,9 +1183,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateIfIcebergTable(MetadataProvider metadataProvider, IRequestParameters requestParameters,
-            Map<String, String> properties, MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc)
+            Map<String, String> properties, MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc, String adapter)
             throws AlgebricksException {
-        IcebergStatementValidationHelper.validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, properties, srcLoc);
+        IcebergStatementValidationHelper.validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, properties, srcLoc,
+                adapter);
     }
 
     protected boolean isDatasetWithoutTypeSpec(DatasetDecl datasetDecl, ARecordType aRecordType,

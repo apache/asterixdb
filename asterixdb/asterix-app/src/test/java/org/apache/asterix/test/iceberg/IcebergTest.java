@@ -31,9 +31,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -204,11 +207,21 @@ public class IcebergTest {
         LOGGER.info("[TABLE] spec={}", table.spec());
         LOGGER.info("[TABLE] schema(v1)={}", table.schema());
         GenericRecord templateV1 = GenericRecord.create(table.schema());
+
         long snap1 = writeSnapshot(table, templateV1, 1, 800);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+        TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_VALUE = snap1;
+        TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_VALUE = System.currentTimeMillis();
+        Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+
         evolveSchemaAddColumn(table);
         LOGGER.info("[SCHEMA EVOLUTION] schema(now)={}", table.schema());
         GenericRecord templateV2 = GenericRecord.create(table.schema());
         long snap2 = writeSnapshot(table, templateV2, 801, 1000);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+        TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE =
+                LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).toString();
+        Thread.sleep(TimeUnit.SECONDS.toMillis(3));
 
         LOGGER.info("[DELETE] Committing equality deletes for ids=[10, 20, 30]");
         int[] idsToDelete = { 10, 20, 30 };
@@ -222,6 +235,7 @@ public class IcebergTest {
         delta.commit();
 
         long snap3 = table.currentSnapshot().snapshotId();
+        TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_VALUE = LocalDate.now(ZoneOffset.UTC).plusDays(1).toString();
         LOGGER.info("[DELETE] Committed RowDelta snapshotId={} snapshotTimestamp={}", snap3,
                 table.currentSnapshot().timestampMillis());
         printSnapshotSummary(table);

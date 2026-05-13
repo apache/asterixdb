@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
@@ -41,15 +42,16 @@ public class IcebergStatementValidationHelper {
     }
 
     public static void validateIfIcebergTable(ICcApplicationContext appCtx, MetadataProvider metadataProvider,
-            MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties, SourceLocation srcLoc)
-            throws AlgebricksException {
-        validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, collectionProperties, Collections.emptyMap(),
-                srcLoc);
+            MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties, SourceLocation srcLoc,
+            String adapter) throws AlgebricksException {
+        validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, collectionProperties, Collections.emptyMap(), srcLoc,
+                adapter);
     }
 
     public static void validateIfIcebergTable(ICcApplicationContext appCtx, MetadataProvider metadataProvider,
             MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties,
-            Map<String, String> extraCollectionProperties, SourceLocation srcLoc) throws AlgebricksException {
+            Map<String, String> extraCollectionProperties, SourceLocation srcLoc, String adapter)
+            throws AlgebricksException {
         if (!IcebergUtils.isIcebergTable(collectionProperties)) {
             return;
         }
@@ -58,6 +60,7 @@ public class IcebergStatementValidationHelper {
 
         // work on a copy of the properties from now onward to avoid modifying the original collection properties
         Map<String, String> propertiesCopy = new HashMap<>(collectionProperties);
+        propertiesCopy.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
 
         // ensure the specified catalog exists
         String catalogName = propertiesCopy.get(IcebergConstants.ICEBERG_CATALOG_NAME);
