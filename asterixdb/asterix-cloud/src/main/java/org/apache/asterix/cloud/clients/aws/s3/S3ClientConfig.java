@@ -50,6 +50,8 @@ public final class S3ClientConfig {
     private final int requestsMaxHttpConnections;
     private final int requestsMaxPendingHttpConnections;
     private final int requestsHttpConnectionAcquireTimeout;
+    private final int maxIdleSeconds;
+    private final int maxLifetimeSeconds;
     private final boolean forcePathStyle;
     private final boolean disableSslVerify;
     private final int s3ReadTimeoutInSeconds;
@@ -63,7 +65,7 @@ public final class S3ClientConfig {
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
-                false, false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "",
+                false, false, 0, 0, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "",
                 S3ChecksumBehavior.defaultForEndpoint(endpoint));
     }
 
@@ -71,9 +73,10 @@ public final class S3ClientConfig {
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout,
             int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds, int requestsMaxHttpConnections,
             boolean forcePathStyle, boolean disableSslVerify, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
-            S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver,
-            String accessKeyId, String secretAccessKey, S3ChecksumBehavior checksumBehavior) {
+            int requestsHttpConnectionAcquireTimeout, int maxIdleSeconds, int maxLifetimeSeconds,
+            int s3ReadTimeoutInSeconds, S3ParallelDownloaderClientType parallelDownloaderClientType,
+            boolean roundRobinDnsResolver, String accessKeyId, String secretAccessKey,
+            S3ChecksumBehavior checksumBehavior) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -87,6 +90,8 @@ public final class S3ClientConfig {
         this.requestsMaxHttpConnections = requestsMaxHttpConnections;
         this.requestsMaxPendingHttpConnections = requestsMaxPendingHttpConnections;
         this.requestsHttpConnectionAcquireTimeout = requestsHttpConnectionAcquireTimeout;
+        this.maxIdleSeconds = maxIdleSeconds;
+        this.maxLifetimeSeconds = maxLifetimeSeconds;
         this.forcePathStyle = forcePathStyle;
         this.disableSslVerify = disableSslVerify;
         this.s3ReadTimeoutInSeconds = s3ReadTimeoutInSeconds;
@@ -105,7 +110,10 @@ public final class S3ClientConfig {
                 cloudProperties.getWriteMaxRequestsPerSecond(), cloudProperties.getReadMaxRequestsPerSecond(),
                 cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.isStorageForcePathStyle(),
                 cloudProperties.isStorageDisableSSLVerify(), cloudProperties.getRequestsMaxPendingHttpConnections(),
-                cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout(),
+                cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(),
+                cloudProperties.getS3ReadTimeoutInSeconds(),
                 S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()),
                 cloudProperties.useRoundRobinDnsResolver(), cloudProperties.getS3AccessKeyId(),
                 cloudProperties.getS3SecretAccessKey(), cloudProperties.getS3ChecksumBehavior());
@@ -201,6 +209,14 @@ public final class S3ClientConfig {
 
     public int getRequestsHttpConnectionAcquireTimeout() {
         return requestsHttpConnectionAcquireTimeout;
+    }
+
+    public int getMaxIdleSeconds() {
+        return maxIdleSeconds;
+    }
+
+    public int getMaxLifetimeSeconds() {
+        return maxLifetimeSeconds;
     }
 
     public boolean isDisableSslVerify() {

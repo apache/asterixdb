@@ -226,6 +226,13 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         NettyNioAsyncHttpClient.Builder nettyBuilder =
                 NettyNioAsyncHttpClient.builder().eventLoopGroup(SHARED_EVENT_LOOP);
 
+        if (config.getMaxIdleSeconds() > 0) {
+            nettyBuilder.connectionMaxIdleTime(Duration.ofSeconds(config.getMaxIdleSeconds()));
+        }
+        if (config.getMaxLifetimeSeconds() > 0) {
+            nettyBuilder.connectionTimeToLive(Duration.ofSeconds(config.getMaxLifetimeSeconds()));
+        }
+
         if (!config.isDisableSslVerify() && !config.getCertificates().isEmpty()) {
             nettyBuilder.tlsTrustManagersProvider(S3TrustManagerProvider.create(config.getCertificates()));
         }

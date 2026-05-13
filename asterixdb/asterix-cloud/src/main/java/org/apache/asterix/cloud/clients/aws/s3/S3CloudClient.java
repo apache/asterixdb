@@ -406,6 +406,12 @@ public final class S3CloudClient implements ICloudClient {
             builder.endpointOverride(URI.create(config.getEndpoint()));
         }
         ApacheHttpClient.Builder apacheBuilder = ApacheHttpClient.builder();
+        if (config.getMaxIdleSeconds() > 0) {
+            apacheBuilder.connectionMaxIdleTime(Duration.ofSeconds(config.getMaxIdleSeconds()));
+        }
+        if (config.getMaxLifetimeSeconds() > 0) {
+            apacheBuilder.connectionTimeToLive(Duration.ofSeconds(config.getMaxLifetimeSeconds()));
+        }
         if (config.isDisableSslVerify()) {
             customHttpConfigBuilder.put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true);
         } else if (!config.getCertificates().isEmpty()) {
