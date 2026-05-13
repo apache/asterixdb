@@ -4264,7 +4264,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4291,8 +4291,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Stats stats) throws Exception {
         CopyToStatement copyTo = (CopyToStatement) stmt;
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        final ClientRequest clientRequest =
-                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws RuntimeDataException, InterruptedException {
@@ -4300,7 +4300,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     compilationLock.readLock().lockInterruptibly();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                     throw e;
                 }
             }
@@ -4469,7 +4469,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4541,7 +4541,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4565,6 +4565,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private static JobId runTrackJob(IHyracksClientConnection hcc, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags,
             String reqId, String clientCtxId, ClientRequest clientRequest, JobKind jobKind) throws Exception {
+        // Guard before submitting the job: if the request was cancelled and removed from the tracker,
+        // clientRequest will be null here; treat that as a cancellation rather than NPE on setJobId.
+        ensureNotCancelled(clientRequest, reqId);
         jobSpec.setRequestId(reqId);
         jobSpec.setProperty(JOB_KIND, jobKind);
         JobId jobId = JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, false);
@@ -5540,8 +5543,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
             throws Exception {
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        final ClientRequest clientRequest =
-                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws RuntimeDataException, InterruptedException {
@@ -5549,7 +5552,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     compilationLock.readLock().lockInterruptibly();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                     throw e;
                 }
             }
@@ -5789,6 +5792,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String reqId = requestParameters.getRequestReference().getUuid();
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
         final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
+        // Guard before markCancellable: request may have been cancelled and deregistered already.
+        ensureNotCancelled(clientRequest, reqId);
         if (cancellable) {
             clientRequest.markCancellable();
         }
@@ -5804,7 +5809,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     SchedulableClientRequest.of(clientRequest, requestParameters, metadataProvider, jobSpec);
             appCtx.getReceptionist().ensureSchedulable(schedulableRequest);
             // ensure request not cancelled before running job
-            ensureNotCancelled(clientRequest);
+            ensureNotCancelled(clientRequest, reqId);
             if (atomicStatement != null) {
                 Dataset ds = metadataProvider.findDataset(((InsertStatement) atomicStatement).getDatabaseName(),
                         ((InsertStatement) atomicStatement).getDataverseName(),
@@ -5838,7 +5843,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 hcc.waitForCompletion(jobId);
             } else {
                 hcc.waitForCompletion(jobId);
-                ensureNotCancelled(clientRequest);
+                ensureNotCancelled(clientRequest, reqId);
                 printer.print(jobId);
             }
             if (atomic) {
@@ -6096,9 +6101,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), dataset, sourceLoc);
     }
 
-    private static void ensureNotCancelled(ClientRequest clientRequest) throws RuntimeDataException {
-        if (clientRequest.isCancelled()) {
-            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+    private static void ensureNotCancelled(ClientRequest clientRequest, String reqId) throws RuntimeDataException {
+        // clientRequest may be null if the request was cancelled and deregistered from the tracker
+        // between when it was looked up and when this check is reached; treat that as cancelled.
+        if (clientRequest == null || clientRequest.isCancelled()) {
+            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
         }
     }
 
