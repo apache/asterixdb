@@ -76,7 +76,7 @@
     <jackson.version>2.21.3</jackson.version>
     <jackson-annotations.version>2.21</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <netty.version>4.1.132.Final</netty.version>
+    <netty.version>4.1.133.Final</netty.version>
     <asm.version>9.3</asm.version>
     <awsjavasdk.version>2.44.4</awsjavasdk.version>
 
