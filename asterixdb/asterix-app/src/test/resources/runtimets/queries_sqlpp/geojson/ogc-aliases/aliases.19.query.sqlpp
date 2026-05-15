@@ -1,0 +1,46 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+{
+"concavehull_null":             st_concavehull(null, 1.0),
+"simplify_null":                st_simplify(null, 0.1),
+"simplifypt_null":              st_simplifypreservetopology(null, 0.1),
+"pointonsurface_null":          st_pointonsurface(null),
+"linemerge_null":               st_linemerge(null),
+"geomtype_ogc_null":            st_geometrytype(null),
+"pointn_null":                  st_pointn(null, 1),
+"geometryn_null":               st_geometryn(null, 1),
+"interiorringn_null":           st_interiorringn(null, 1),
+"concavehull_arg1_null":        st_concavehull(st_geomfromtext("MULTIPOINT(0 0, 1 1)"), null),
+"simplify_arg1_null":           st_simplify(st_geomfromtext("LINESTRING(0 0, 1 1)"), null),
+"simplifypt_arg1_null":         st_simplifypreservetopology(st_geomfromtext("LINESTRING(0 0, 1 1)"), null),
+"pointn_arg1_null":             st_pointn(st_geomfromtext("LINESTRING(0 0, 1 1)"), null),
+"geometryn_arg1_null":          st_geometryn(st_geomfromtext("MULTIPOINT(0 0, 1 1)"), null),
+"interiorringn_arg1_null":      st_interiorringn(st_geomfromtext("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))"), null),
+"concavehull_missing":          st_concavehull(missing, 1.0),
+"simplify_missing":             st_simplify(missing, 0.1),
+"pointonsurface_missing":       st_pointonsurface(missing),
+"linemerge_missing":            st_linemerge(missing),
+"geomtype_ogc_missing":         st_geometrytype(missing),
+"pointn_missing":               st_pointn(missing, 1),
+"concavehull_arg1_missing":     st_concavehull(st_geomfromtext("MULTIPOINT(0 0, 1 1)"), missing),
+"simplify_arg1_missing":        st_simplify(st_geomfromtext("LINESTRING(0 0, 1 1)"), missing),
+"pointn_arg1_missing":          st_pointn(st_geomfromtext("LINESTRING(0 0, 1 1)"), missing),
+"geometryn_arg1_missing":       st_geometryn(st_geomfromtext("MULTIPOINT(0 0, 1 1)"), missing),
+"interiorringn_arg1_missing":   st_interiorringn(st_geomfromtext("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))"), missing)
+};

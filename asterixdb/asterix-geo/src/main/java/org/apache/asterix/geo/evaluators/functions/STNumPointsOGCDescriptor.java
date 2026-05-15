@@ -20,34 +20,34 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.LineString;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * OGC SFA ST_NumPoints: returns the number of vertices in a {@code LINESTRING}.
+ * Returns {@code NULL} for any other geometry type. Distinct from the
+ * existing {@code st-n-points} which counts vertices across all geometry
+ * types.
+ */
+public class STNumPointsOGCDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = STNumPointsOGCDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
+        // OGC SFA ST_NumPoints is line-only; instanceof captures both LineString
+        // and its LinearRing subclass (getGeometryType() would not).
+        if (!(geometry instanceof LineString)) {
+            return null;
         }
+        return geometry.getNumPoints();
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_NUM_POINTS_OGC;
     }
-
 }

@@ -1141,6 +1141,30 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ST_DISTANCE_SPHERE = FunctionConstants.newAsterix("st-distance-sphere", 2);
     public static final FunctionIdentifier ST_DWITHIN = FunctionConstants.newAsterix("st-dwithin", 3);
     public static final FunctionIdentifier ST_BUFFER = FunctionConstants.newAsterix("st-buffer", 2);
+    public static final FunctionIdentifier ST_CONCAVE_HULL = FunctionConstants.newAsterix("st-concave-hull", 2);
+    public static final FunctionIdentifier ST_SIMPLIFY = FunctionConstants.newAsterix("st-simplify", 2);
+    public static final FunctionIdentifier ST_SIMPLIFY_PRESERVE_TOPOLOGY =
+            FunctionConstants.newAsterix("st-simplify-preserve-topology", 2);
+    public static final FunctionIdentifier ST_POINT_ON_SURFACE = FunctionConstants.newAsterix("st-point-on-surface", 1);
+    public static final FunctionIdentifier ST_LINE_MERGE = FunctionConstants.newAsterix("st-line-merge", 1);
+    // OGC SFA conformant siblings of existing functions: 1-indexed N-functions
+    // and a GeometryType that returns "ST_Point" form. Kept separate so the existing
+    // 0-indexed N-functions and JTS-form geometry-type continue to behave unchanged.
+    public static final FunctionIdentifier ST_GEOMETRYTYPE = FunctionConstants.newAsterix("st-geometrytype", 1);
+    public static final FunctionIdentifier ST_POINTN = FunctionConstants.newAsterix("st-pointn", 2);
+    public static final FunctionIdentifier ST_GEOMETRYN = FunctionConstants.newAsterix("st-geometryn", 2);
+    public static final FunctionIdentifier ST_INTERIORRINGN = FunctionConstants.newAsterix("st-interiorringn", 2);
+    // Additional OGC-standard functions, all JTS one-liners.
+    // ST_NUM_POINTS_OGC is line-only vertex count (OGC SFA); distinct from
+    // ST_N_POINTS which counts vertices across all geometry types.
+    public static final FunctionIdentifier ST_NUM_POINTS_OGC = FunctionConstants.newAsterix("st-num-points", 1);
+    public static final FunctionIdentifier ST_MULTI = FunctionConstants.newAsterix("st-multi", 1);
+    public static final FunctionIdentifier ST_COLLECTION_EXTRACT =
+            FunctionConstants.newAsterix("st-collection-extract", 2);
+    public static final FunctionIdentifier ST_UNARY_UNION = FunctionConstants.newAsterix("st-unary-union", 1);
+    public static final FunctionIdentifier ST_NORMALIZE = FunctionConstants.newAsterix("st-normalize", 1);
+    public static final FunctionIdentifier ST_IS_VALID_REASON = FunctionConstants.newAsterix("st-is-valid-reason", 1);
+    public static final FunctionIdentifier ST_RELATE_MATCH = FunctionConstants.newAsterix("st-relate-match", 2);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = FunctionConstants.newAsterix("get-year", 1);
@@ -2033,6 +2057,22 @@ public class BuiltinFunctions {
         addFunction(ST_DISTANCE_SPHERE, ADoubleTypeComputer.INSTANCE, true);
         addFunction(ST_DWITHIN, ABooleanTypeComputer.INSTANCE, true);
         addFunction(ST_BUFFER, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_CONCAVE_HULL, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_SIMPLIFY, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_SIMPLIFY_PRESERVE_TOPOLOGY, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_POINT_ON_SURFACE, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_LINE_MERGE, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_GEOMETRYTYPE, AStringTypeComputer.INSTANCE, true);
+        addFunction(ST_POINTN, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_GEOMETRYN, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_INTERIORRINGN, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_NUM_POINTS_OGC, AInt32TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(ST_MULTI, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_COLLECTION_EXTRACT, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_UNARY_UNION, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_NORMALIZE, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(ST_IS_VALID_REASON, AStringTypeComputer.INSTANCE, true);
+        addFunction(ST_RELATE_MATCH, ABooleanTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);

@@ -39,11 +39,6 @@ import org.locationtech.jts.geom.CoordinateXYZM;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
-/**
- * TODO: Support writing geometry with 4 dimensions
- * JTS WKBWriter currently does not support writing 4 dimensions and loses the detail.
- * See https://github.com/locationtech/jts/issues/733 for more details.
- */
 public class STMakePoint3DWithMDescriptor extends AbstractGetValDescriptor {
 
     private static final long serialVersionUID = 1L;

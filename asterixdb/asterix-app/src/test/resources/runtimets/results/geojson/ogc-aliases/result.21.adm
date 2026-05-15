@@ -1,0 +1,1 @@
+{ "mixed_case_isempty": true, "mixed_case_makepoint": "POINT (1 2)", "mixed_case_pointn": "POINT (0 0)", "mixed_case_geomtype": "ST_Point", "mixed_case_numgeometries": 3, "mixed_case_xmax": 5.0, "mixed_case_geomfromgeojson": 7.5 }

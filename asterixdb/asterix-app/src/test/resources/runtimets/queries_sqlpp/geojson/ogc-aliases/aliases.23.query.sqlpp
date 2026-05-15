@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+{
+"numpoints_null":               st_numpoints(null),
+"multi_null":                   st_multi(null),
+"unaryunion_null":              st_unaryunion(null),
+"normalize_null":               st_normalize(null),
+"isvalidreason_null":           st_isvalidreason(null),
+"collectionextract_null":       st_collectionextract(null, 1),
+"collectionextract_arg1_null":  st_collectionextract(st_geomfromtext("GEOMETRYCOLLECTION(POINT(0 0))"), null),
+"collectionextract_bad_type":   st_collectionextract(st_geomfromtext("GEOMETRYCOLLECTION(POINT(0 0))"), 99),
+"collectionextract_no_match":   st_collectionextract(st_geomfromtext("GEOMETRYCOLLECTION(POINT(0 0))"), 2),
+"relatematch_arg0_null":        st_relatematch(null, "T********"),
+"relatematch_arg1_null":        st_relatematch("FF0FFF212", null),
+"numpoints_missing":            st_numpoints(missing),
+"multi_missing":                st_multi(missing),
+"unaryunion_missing":           st_unaryunion(missing),
+"isvalidreason_missing":        st_isvalidreason(missing),
+"collectionextract_missing":    st_collectionextract(missing, 1),
+"collectionextract_arg1_miss":  st_collectionextract(st_geomfromtext("GEOMETRYCOLLECTION(POINT(0 0))"), missing),
+"relatematch_arg0_missing":     st_relatematch(missing, "T********"),
+"relatematch_arg1_missing":     st_relatematch("FF0FFF212", missing)
+};

@@ -47,6 +47,11 @@
             <output-dir compare="Text">joins</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="geojson">
+        <compilation-unit name="ogc-aliases">
+            <output-dir compare="Text">ogc-aliases</output-dir>
+        </compilation-unit>
+    </test-case>
     <test-case FilePath="geojson/crs">
         <compilation-unit name="functions">
             <output-dir compare="Text">functions</output-dir>

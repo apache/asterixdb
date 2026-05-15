@@ -165,6 +165,80 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("variance", "var_samp");
         addFunctionMapping("variance_samp", "var_samp");
         addFunctionMapping("variance_pop", "var_pop");
+
+        // OGC SFA geospatial function aliases.
+        // Many GIS dialects use CamelCase (e.g. ST_IsEmpty) which lowercases to
+        // compressed forms like st_isempty; these don't normalize to the canonical
+        // hyphenated AsterixDB names (st-is-empty), so register them explicitly here.
+        // Predicates
+        addFunctionMapping("st_isempty", "st-is-empty");
+        addFunctionMapping("st_issimple", "st-is-simple");
+        addFunctionMapping("st_isclosed", "st-is-closed");
+        addFunctionMapping("st_isring", "st-is-ring");
+        addFunctionMapping("st_isvalid", "st-is-valid");
+        addFunctionMapping("st_iscollection", "st-is-collection");
+        // Counts
+        addFunctionMapping("st_npoints", "st-n-points");
+        addFunctionMapping("st_nrings", "st-n-rings");
+        addFunctionMapping("st_numgeometries", "st-num-geometries");
+        addFunctionMapping("st_numinteriorrings", "st-num-interior-rings");
+        addFunctionMapping("st_numinteriorring", "st-num-interior-rings");
+        // Coordinate, type and bounds accessors
+        addFunctionMapping("st_coorddim", "st-coord-dim");
+        addFunctionMapping("st_xmin", "st-x-min");
+        addFunctionMapping("st_xmax", "st-x-max");
+        addFunctionMapping("st_ymin", "st-y-min");
+        addFunctionMapping("st_ymax", "st-y-max");
+        addFunctionMapping("st_zmin", "st-z-min");
+        addFunctionMapping("st_zmax", "st-z-max");
+        // Note: st_geometrytype is a *separate* function (st-geometrytype) that
+        // returns the OGC-format "ST_Point" string, distinct from the existing
+        // `geometry-type` function which returns the JTS "Point" string. No alias
+        // is added here so the two callers stay isolated.
+        // Constructors
+        addFunctionMapping("st_makepoint", "st-make-point");
+        addFunctionMapping("st_makeenvelope", "st-make-envelope");
+        addFunctionMapping("st_geomfromtext", "st-geom-from-text");
+        addFunctionMapping("st_geomfromwkb", "st-geom-from-wkb");
+        addFunctionMapping("st_geomfromgeojson", "st-geom-from-geojson");
+        addFunctionMapping("st_linefrommultipoint", "st-line-from-multipoint");
+        // Geometry selectors.
+        // Note: ST_PointN / ST_GeometryN / ST_InteriorRingN are *not* aliased here.
+        // The compressed forms `st_pointn` / `st_geometryn` / `st_interiorringn`
+        // resolve to distinct, OGC SFA conformant builtins (1-indexed, returning
+        // NULL on out-of-range). The underscore forms `st_point_n` /
+        // `st_geometry_n` / `st_interior_ring_n` still resolve to the legacy
+        // 0-indexed (JTS-native) builtins via the underscore-to-hyphen rewrite.
+        addFunctionMapping("st_startpoint", "st-start-point");
+        addFunctionMapping("st_endpoint", "st-end-point");
+        addFunctionMapping("st_exteriorring", "st-exterior-ring");
+        // Output formats
+        addFunctionMapping("st_astext", "st-as-text");
+        addFunctionMapping("st_aswkt", "st-as-text");
+        addFunctionMapping("st_asbinary", "st-as-binary");
+        addFunctionMapping("st_aswkb", "st-as-binary");
+        addFunctionMapping("st_asgeojson", "st-as-geojson");
+        // Spatial operations
+        addFunctionMapping("st_convexhull", "st-convex-hull");
+        addFunctionMapping("st_symdifference", "st-sym-difference");
+        addFunctionMapping("st_flipcoordinates", "st-flip-coordinates");
+        addFunctionMapping("st_distancesphere", "st-distance-sphere");
+        addFunctionMapping("st_distancespheroid", "st-distance-spheroid");
+        // New JTS-backed OGC SFA functions
+        addFunctionMapping("st_concavehull", "st-concave-hull");
+        addFunctionMapping("st_simplifypreservetopology", "st-simplify-preserve-topology");
+        addFunctionMapping("st_pointonsurface", "st-point-on-surface");
+        addFunctionMapping("st_linemerge", "st-line-merge");
+        // Additional OGC-standard functions.
+        // `st_numpoints` (compressed) → the new OGC SFA line-only count;
+        // `st_num_points` still resolves to the legacy `st-n-points` (all-vertex
+        // count) via the underscore-to-hyphen rewrite — by design, these are
+        // different functions.
+        addFunctionMapping("st_numpoints", "st-num-points");
+        addFunctionMapping("st_unaryunion", "st-unary-union");
+        addFunctionMapping("st_isvalidreason", "st-is-valid-reason");
+        addFunctionMapping("st_relatematch", "st-relate-match");
+        addFunctionMapping("st_collectionextract", "st-collection-extract");
     }
 
     private CommonFunctionMapUtil() {

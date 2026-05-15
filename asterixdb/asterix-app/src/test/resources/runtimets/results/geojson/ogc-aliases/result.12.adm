@@ -1,0 +1,1 @@
+{ "pointonsurface": "POINT (5 5)", "linemerge": "LINESTRING (0 0, 1 1, 2 2)", "simplify": "LINESTRING (0 0, 10 0)", "simplify_pt": "LINESTRING (0 0, 10 0)", "concavehull": "POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))" }

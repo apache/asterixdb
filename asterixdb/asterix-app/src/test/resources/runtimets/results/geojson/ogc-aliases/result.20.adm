@@ -1,0 +1,1 @@
+{ "makepoint_2d": "POINT (1 2)", "makeenvelope": "POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0))", "linefrommultipoint": "LINESTRING (1 2, 4 5, 7 8)", "exteriorring": "LINESTRING (0 0, 10 0, 10 10, 0 10, 0 0)", "symdifference": "MULTIPOLYGON (((10 5, 10 0, 0 0, 0 10, 5 10, 5 5, 10 5)), ((10 5, 10 10, 5 10, 5 15, 15 15, 15 5, 10 5)))", "flipcoordinates": "POINT (2 1)" }

@@ -20,34 +20,37 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.LineString;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * OGC SFA ST_PointN: 1-indexed. {@code ST_PointN(line, 1)} returns the first
+ * point. Returns {@code NULL} when the input is not a {@code LINESTRING} or
+ * when {@code n} is out of range (less than 1 or greater than the number of
+ * points). Distinct from the existing 0-indexed {@code st-point-n}.
+ */
+public class STPointNOGCDescriptor extends AbstractSTGeometryNDescriptor {
+
+    public static final IFunctionDescriptorFactory FACTORY = STPointNOGCDescriptor::new;
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
-
-    @Override
-    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
-        }
-    }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_POINTN;
     }
 
+    @Override
+    protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException {
+        if (!(geometry instanceof LineString)) {
+            return null;
+        }
+        LineString line = (LineString) geometry;
+        if (n < 1 || n > line.getNumPoints()) {
+            return null;
+        }
+        return line.getPointN(n - 1);
+    }
 }

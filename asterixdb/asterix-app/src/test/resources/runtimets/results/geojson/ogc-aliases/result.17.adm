@@ -1,0 +1,1 @@
+{ "as_geojson_xy": "{\"type\":\"Point\",\"coordinates\":[1,2]}", "as_geojson_xyz": "{\"type\":\"Point\",\"coordinates\":[1,2,3]}", "as_geojson_xyzm": "{\"type\":\"Point\",\"coordinates\":[1,2,3,4]}", "from_geojson_xy_x": 1.0, "from_geojson_xyz_z": 3.0, "from_geojson_xyzm_z": 3.0, "from_geojson_xyzm_m": 4.0, "round_trip_xyzm": "{\"type\":\"Point\",\"coordinates\":[1,2,3,4]}" }

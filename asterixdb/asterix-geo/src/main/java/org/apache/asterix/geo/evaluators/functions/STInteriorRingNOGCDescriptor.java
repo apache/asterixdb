@@ -20,34 +20,38 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * OGC SFA ST_InteriorRingN: 1-indexed. {@code ST_InteriorRingN(poly, 1)}
+ * returns the first interior ring. Returns {@code NULL} when the input is
+ * not a {@code POLYGON} or when {@code n} is out of range (less than 1 or
+ * greater than the number of interior rings). Distinct from the existing
+ * 0-indexed {@code st-interior-ring-n}.
+ */
+public class STInteriorRingNOGCDescriptor extends AbstractSTGeometryNDescriptor {
+
+    public static final IFunctionDescriptorFactory FACTORY = STInteriorRingNOGCDescriptor::new;
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
-
-    @Override
-    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
-        }
-    }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_INTERIORRINGN;
     }
 
+    @Override
+    protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException {
+        if (!(geometry instanceof Polygon)) {
+            return null;
+        }
+        Polygon polygon = (Polygon) geometry;
+        if (n < 1 || n > polygon.getNumInteriorRing()) {
+            return null;
+        }
+        return polygon.getInteriorRingN(n - 1);
+    }
 }

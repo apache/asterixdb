@@ -20,34 +20,35 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * ST_Normalize: returns a normalized form of the geometry — vertex order,
+ * ring orientation, and (where applicable) component ordering are
+ * canonicalised. Implemented via JTS {@code Geometry.normalize()}.
+ *
+ * <p>{@code Geometry.normalize()} mutates the receiver in place, but
+ * {@link AbstractSTSingleGeometryDescriptor} deserialises a fresh JTS
+ * {@code Geometry} from the input pointable's WKB on every {@code evaluate()}
+ * call, so the in-memory geometry is a per-call workspace with no other
+ * references — mutating it in place is safe and avoids the cost of a full
+ * coordinate-deep copy.</p>
+ */
+public class STNormalizeDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = STNormalizeDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
-        }
+        geometry.normalize();
+        return geometry;
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_NORMALIZE;
     }
-
 }

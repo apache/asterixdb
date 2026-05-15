@@ -20,34 +20,29 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * ST_PointOnSurface: returns a {@code POINT} guaranteed to lie on the
+ * geometry. For polygons the result is an interior point (useful when
+ * {@code ST_Centroid} would fall outside a concave shape); for points and
+ * lines the result is the geometry's representative interior point.
+ * Implemented via JTS {@code Geometry.getInteriorPoint()}.
+ */
+public class STPointOnSurfaceDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = STPointOnSurfaceDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
-        }
+        return geometry.getInteriorPoint();
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_POINT_ON_SURFACE;
     }
-
 }

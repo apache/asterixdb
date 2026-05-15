@@ -19,7 +19,6 @@
 package org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts;
 
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.CoordinateXYZM;
 import org.locationtech.jts.geom.Geometry;
 
 public class GeoFunctionUtils {
@@ -27,9 +26,13 @@ public class GeoFunctionUtils {
 
     /**
      * Returns the dimension of the coordinate based on whether Z or M is defined.
-     * TODO: Add 4th dimension support
+     * Covers XY (2), XYZ and XYM (3), and XYZM (4) via the polymorphic
+     * {@code Coordinate.getZ()} / {@code Coordinate.getM()} accessors — these
+     * return {@code NaN} on coordinate subclasses that don't store the ordinate
+     * (e.g. plain {@code Coordinate}, {@code CoordinateXY}, {@code CoordinateXYM}
+     * for Z; plain {@code Coordinate}, {@code CoordinateXY} for M).
      * @param geometry The geometry to check.
-     * @return the dimensionality of the coordinate (2 or 3 or 4).
+     * @return the dimensionality of the coordinate (2, 3 or 4).
      */
     public static int getCoordinateDimension(Geometry geometry) {
         int dimension = 2;
@@ -40,12 +43,8 @@ public class GeoFunctionUtils {
         if (!Double.isNaN(sample.getZ())) {
             dimension++;
         }
-
-        if (sample instanceof CoordinateXYZM) {
-            CoordinateXYZM firstCoordXYZM = (CoordinateXYZM) sample;
-            if (!Double.isNaN(firstCoordXYZM.getM())) {
-                dimension = 3;
-            }
+        if (!Double.isNaN(sample.getM())) {
+            dimension++;
         }
         return dimension;
     }

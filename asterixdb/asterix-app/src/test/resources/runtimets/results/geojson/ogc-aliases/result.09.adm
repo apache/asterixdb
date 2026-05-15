@@ -1,0 +1,1 @@
+{ "npoints": 4, "nrings": 2, "numinteriorrings": 1, "numinteriorring": 1, "coorddim": 2, "geomtype_jts": "LineString", "geomtype_ogc": "ST_LineString" }

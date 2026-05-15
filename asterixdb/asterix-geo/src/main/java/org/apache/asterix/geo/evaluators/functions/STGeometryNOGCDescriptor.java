@@ -20,34 +20,39 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 
-public class STMDescriptor extends AbstractSTSingleGeometryDescriptor {
+/**
+ * OGC SFA ST_GeometryN: 1-indexed. {@code ST_GeometryN(coll, 1)} returns the
+ * first geometry. Accepts any geometry type:
+ * <ul>
+ *   <li>{@code GeometryCollection}, {@code MultiPoint}, {@code MultiLineString},
+ *       {@code MultiPolygon} — returns the Nth component (1-indexed).</li>
+ *   <li>Singular geometries ({@code Point}, {@code LineString}, {@code Polygon},
+ *       {@code LinearRing}) — returns the geometry itself when N=1.</li>
+ * </ul>
+ * Returns {@code NULL} when N is less than 1 or greater than the number of
+ * components. Distinct from the existing 0-indexed {@code st-geometry-n},
+ * which only accepts plain {@code GeometryCollection}.
+ */
+public class STGeometryNOGCDescriptor extends AbstractSTGeometryNDescriptor {
+
+    public static final IFunctionDescriptorFactory FACTORY = STGeometryNOGCDescriptor::new;
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = STMDescriptor::new;
-
-    @Override
-    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
-        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
-            Point point = (Point) geometry;
-            // Coordinate.getM() is polymorphic: returns NaN for plain Coordinate /
-            // CoordinateXY / CoordinateXYZ, and the actual M for CoordinateXYM /
-            // CoordinateXYZM.
-            return point.getCoordinate().getM();
-        } else {
-            throw new UnsupportedOperationException("The operation " + getIdentifier()
-                    + " is not supported for the type " + geometry.getGeometryType());
-        }
-    }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ST_M;
+        return BuiltinFunctions.ST_GEOMETRYN;
     }
 
+    @Override
+    protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException {
+        if (n < 1 || n > geometry.getNumGeometries()) {
+            return null;
+        }
+        return geometry.getGeometryN(n - 1);
+    }
 }
