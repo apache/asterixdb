@@ -89,16 +89,18 @@
     <gcs.stage>none</gcs.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
+    <!-- @locked: keep in sync across all testcontainers modules; 2.x not yet available for kafka/postgresql/azure -->
+    <testcontainers.version>1.21.4</testcontainers.version>
     <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.10-SNAPSHOT</hyracks.version>
     <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.4</log4j.version>
     <avro.version>1.12.1</avro.version>
-    <parquet.version>1.17.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <awsjavasdk.version>2.44.4</awsjavasdk.version>
+    <awsjavasdk.version>2.44.6</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.45.1</awsjavasdk.crt.version>
 
@@ -1595,7 +1597,8 @@
       <dependency>
         <groupId>com.adobe.testing</groupId>
         <artifactId>s3mock-testcontainers</artifactId>
-        <version>4.7.0</version>
+        <!-- @locked: s3mock 5.x requires testcontainers 2.x which is incompatible with kafka/postgresql/azure 1.x modules -->
+        <version>4.12.4</version>
         <scope>test</scope>
       </dependency>
       <!-- Mock for AWS S3 -->
@@ -1709,10 +1712,16 @@
         <artifactId>commons-csv</artifactId>
         <version>1.14.1</version>
       </dependency>
+      <!-- @locked: keep in sync across all testcontainers modules; 2.x not yet available for kafka/postgresql/azure -->
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>postgresql</artifactId>
-        <version>1.16.3</version>
+        <version>${testcontainers.version}</version>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
@@ -1722,7 +1731,7 @@
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>azure</artifactId>
-        <version>1.21.4</version>
+        <version>${testcontainers.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
