@@ -91,8 +91,15 @@ public class BasicAuthServlet implements IServlet {
     @Override
     public void handle(IServletRequest request, IServletResponse response) {
         try {
+            // Allow CORS preflight (OPTIONS) through without credentials so the browser can
+            // discover allowed headers/methods before issuing the authenticated request.
+            if (HttpMethod.OPTIONS.equals(request.getHttpRequest().method())) {
+                delegate.handle(request, response);
+                return;
+            }
             boolean authorized = authorize(request);
             if (!authorized) {
+                response.setHeader(HttpHeaderNames.WWW_AUTHENTICATE, "Basic realm=\"AsterixDB\"");
                 response.setStatus(HttpResponseStatus.UNAUTHORIZED);
             } else {
                 delegate.handle(request, response);

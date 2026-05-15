@@ -16,7 +16,9 @@ import { AppComponent } from './app.component';
 import { AppEffects } from './shared/effects/app.effects';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { AuthInterceptor } from './shared/services/auth.interceptor';
+import { LoginDialogComponent } from './dashboard/login-dialog.component';
 import { EffectsModule } from '@ngrx/effects';
 import { DataverseEffects } from './shared/effects/dataverse.effects';
 import { DatasetEffects } from './shared/effects/dataset.effects';
@@ -57,6 +59,7 @@ import {SQLCancelEffects} from "./shared/effects/cancel.effects";
         TreeNodeComponent,
         DialogExportPicker,
         TreeViewComponent,
+        LoginDialogComponent,
     ],
     imports: [
         FormsModule,
@@ -80,7 +83,10 @@ import {SQLCancelEffects} from "./shared/effects/cancel.effects";
         NgxChartsModule
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    providers: [SQLService],
+    providers: [
+        SQLService,
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {}

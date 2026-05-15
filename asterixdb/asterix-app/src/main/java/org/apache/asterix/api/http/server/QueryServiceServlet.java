@@ -136,10 +136,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void options(IServletRequest request, IServletResponse response) throws Exception {
-        if (request.getHeader("Origin") != null) {
-            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
-        }
-        response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        setAccessControlHeaders(request, response);
         String server = getServerHeaderValue();
         if (server != null) {
             HttpUtil.setServerHeader(response, server);
@@ -169,8 +166,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         //CORS
         if (request.getHeader("Origin") != null) {
             response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Vary", "Origin");
         }
-        response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        response.setHeader("Access-Control-Allow-Headers",
+                "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.setHeader("Access-Control-Max-Age", "600");
     }
 
     private static String handlePath(ResultDelivery delivery) {
