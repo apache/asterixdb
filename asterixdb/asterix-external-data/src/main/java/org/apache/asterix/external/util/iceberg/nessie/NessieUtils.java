@@ -49,6 +49,7 @@ import static org.apache.asterix.external.util.iceberg.nessie.NessieConstants.NE
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.external.util.iceberg.rest.RestConstants;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.nessie.NessieCatalog;
 
@@ -158,7 +159,10 @@ public class NessieUtils {
         if (notAllowed != null) {
             throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed, BEARER_TOKEN_FIELD_NAME);
         }
-
+        // strip "Bearer " prefix if present - the Nessie client adds it internally
+        if (bearerToken.startsWith(RestConstants.BEARER_TOKEN_PREFIX)) {
+            bearerToken = bearerToken.substring(RestConstants.BEARER_TOKEN_PREFIX.length());
+        }
         catalogProperties.put(NESSIE_AUTHENTICATION_TYPE_FIELD_NAME, NESSIE_AUTHENTICATION_TYPE_BEARER);
         catalogProperties.put(NESSIE_AUTHENTICATION_BEARER_TOKEN_FIELD_NAME, bearerToken);
     }

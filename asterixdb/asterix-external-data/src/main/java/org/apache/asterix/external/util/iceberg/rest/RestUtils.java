@@ -134,7 +134,10 @@ public class RestUtils {
         if (notAllowed != null) {
             throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed, BEARER_TOKEN_FIELD_NAME);
         }
-
+        // Strip "Bearer " prefix if present - the Iceberg REST client adds it internally
+        if (bearerToken.startsWith(RestConstants.BEARER_TOKEN_PREFIX)) {
+            bearerToken = bearerToken.substring(RestConstants.BEARER_TOKEN_PREFIX.length());
+        }
         catalogProperties.put(AuthProperties.AUTH_TYPE, AuthProperties.AUTH_TYPE_OAUTH2);
         catalogProperties.put(RestConstants.ICEBERG_BEARER_TOKEN_PROPERTY_NAME, bearerToken);
     }

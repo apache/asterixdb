@@ -152,7 +152,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             if (projectedFields != null && projectedFields.length > 0) {
                 projectedSchema = projectedSchema.select(projectedFields);
             }
-            scan.project(projectedSchema);
+            scan = scan.project(projectedSchema);
             Expression filterExpression =
                     ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
             if (filterExpression != null) {

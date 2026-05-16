@@ -139,6 +139,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.projectnessie.client.http.HttpClientException;
+import org.projectnessie.client.rest.NessieServiceException;
 import org.projectnessie.error.BaseNessieClientServerException;
 
 import com.azure.storage.blob.models.BlobStorageException;
@@ -168,6 +169,7 @@ public class CCApplication extends BaseCCApplication {
         registerReplacement(BlobStorageException.class, SerializableExceptionProxy::new);
         registerReplacement(DataLakeStorageException.class, SerializableExceptionProxy::new);
         registerReplacement(BaseNessieClientServerException.class, SerializableExceptionProxy::new);
+        registerReplacement(NessieServiceException.class, SerializableExceptionProxy::new);
         registerReplacement(HttpClientException.class, SerializableExceptionProxy::new);
     }
 

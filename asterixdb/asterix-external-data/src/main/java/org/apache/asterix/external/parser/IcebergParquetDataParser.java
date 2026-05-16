@@ -25,11 +25,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -95,13 +97,14 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             NestedField field = projectedSchema.columns().get(i);
             String fieldName = field.name();
             Type fieldType = field.type();
-            ATypeTag typeTag = getTypeTag(fieldType, record.get(i) == null, parserContext);
+            Object fieldValue = record.getField(fieldName);
+            ATypeTag typeTag = getTypeTag(fieldType, fieldValue == null, parserContext);
             IValueReference value;
             if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
                 value = valueEmbedder.getEmbeddedValue();
             } else {
                 valueBuffer.reset();
-                parseValue(fieldType, record.get(i), valueBuffer.getDataOutput());
+                parseValue(fieldType, fieldValue, valueBuffer.getDataOutput());
                 value = valueBuffer;
             }
 
@@ -308,7 +311,14 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
 
     private void serializeBinary(Object value, DataOutput out) throws HyracksDataException {
         ByteBuffer byteBuffer = (ByteBuffer) value;
-        aBinary.setValue(byteBuffer.array(), 0, byteBuffer.array().length);
+        if (byteBuffer.hasArray()) {
+            aBinary.setValue(byteBuffer.array(), byteBuffer.arrayOffset() + byteBuffer.position(),
+                    byteBuffer.remaining());
+        } else {
+            byte[] bytes = new byte[byteBuffer.remaining()];
+            byteBuffer.duplicate().get(bytes);
+            aBinary.setValue(bytes, 0, bytes.length);
+        }
         binarySerde.serialize(aBinary, out);
     }
 
@@ -340,29 +350,25 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     public void serializeTimestamp(Type type, Object value, DataOutput output) throws HyracksDataException {
-        long timestampInMillis;
+        Instant instant;
         switch (value) {
-            case OffsetDateTime offsetDateTime ->
-                    timestampInMillis = offsetDateTime.toInstant().toEpochMilli();
-
+            case OffsetDateTime offsetDateTime -> instant = offsetDateTime.toInstant();
             case LocalDateTime localDateTime -> {
                 ZoneId zoneId = parserContext.getTimeZoneId();
-                timestampInMillis = localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+                instant = localDateTime.atZone(zoneId).toInstant();
             }
-
-            case null, default -> {
-                throw RuntimeDataException.create(
-                        ErrorCode.EXTERNAL_SOURCE_ERROR,
-                        value == null
-                                ? "unexpected null value for field type (" + type + ")"
-                                : "unexpected value type (" + value.getClass() + ") for field type (" + type + ")");
-            }
+            case null, default -> throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                    value == null ? "unexpected null value for field type (" + type + ")"
+                            : "unexpected value type (" + value.getClass() + ") for field type (" + type + ")");
         }
 
         if (parserContext.isTimestampAsLong()) {
-            serializeLong(timestampInMillis, output);
+            long timestampAsLong = type.typeId() == Type.TypeID.TIMESTAMP_NANO
+                    ? ChronoUnit.NANOS.between(Instant.EPOCH, instant)
+                    : ChronoUnit.MICROS.between(Instant.EPOCH, instant);
+            serializeLong(timestampAsLong, output);
         } else {
-            aDateTime.setValue(timestampInMillis);
+            aDateTime.setValue(instant.toEpochMilli());
             datetimeSerde.serialize(aDateTime, output);
         }
     }
