@@ -44,6 +44,15 @@
   </test-group>
   <test-group name="negative">
     <test-case FilePath="iceberg/negative">
+      <compilation-unit name="bad-catalog-endpoint">
+        <output-dir compare="Text">bad-catalog-endpoint</output-dir>
+        <expected-error>ASX0049: Parameter(s) uri must be specified</expected-error>
+        <expected-error>ASX1108: External source error. java.net.URISyntaxException: Expected authority at index 7: http://</expected-error>
+        <expected-error>ASX1108: External source error. missing URI scheme. received: hello</expected-error>
+        <expected-error>ASX1108: External source error. missing URI scheme. received: 127.0.0.1</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-catalog-type">
         <output-dir compare="Text">bad-catalog-type</output-dir>
         <expected-error>ASX1228: Unsupported catalog type: 'FakeIcebergCatalog'</expected-error>

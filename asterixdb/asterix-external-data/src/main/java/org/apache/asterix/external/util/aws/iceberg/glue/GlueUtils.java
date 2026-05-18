@@ -30,6 +30,7 @@ import static org.apache.asterix.external.util.iceberg.IcebergConstants.Aws.REST
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.Aws.REST_SIG4_SIGNING_NAME_PROPERTY_NAME;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.Aws.REST_SIG4_SIGNING_REGION;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.Aws.REST_SIG4_SIGNING_REGION_PROPERTY_NAME;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.validateIcebergCatalogUri;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 import static org.apache.iceberg.CatalogProperties.CATALOG_IMPL;
 import static org.apache.iceberg.CatalogProperties.URI;
@@ -114,6 +115,7 @@ public class GlueUtils {
     public static void validateGlueRestRequiredProperties(Map<String, String> catalogProperties)
             throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
         validatePropertyExists(catalogProperties, REST_SIG4_SIGNING_REGION_PROPERTY_NAME, PARAMETERS_REQUIRED);
     }
 
@@ -121,6 +123,7 @@ public class GlueUtils {
             throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_WAREHOUSE_PROPERTY_KEY, PARAMETERS_REQUIRED);
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
         validatePropertyExists(catalogProperties, REST_SIG4_SIGNING_NAME_PROPERTY_NAME, PARAMETERS_REQUIRED);
         validatePropertyExists(catalogProperties, REST_SIG4_SIGNING_REGION_PROPERTY_NAME, PARAMETERS_REQUIRED);
     }
