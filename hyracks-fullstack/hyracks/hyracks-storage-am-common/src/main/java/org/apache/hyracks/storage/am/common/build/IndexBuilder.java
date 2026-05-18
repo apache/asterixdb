@@ -65,6 +65,17 @@ public class IndexBuilder implements IIndexBuilder {
         resourceRelPath = resourceRef.getRelativePath();
     }
 
+    /**
+     * Hook for subclasses to configure the freshly created {@link IResource} before it is wrapped in a
+     * {@link LocalResource} and persisted. The base implementation does nothing; index types with extra
+     * per-resource state (e.g. the vector index injecting quantization constants) override it. Keeping this
+     * seam here lets index-type-specific configuration live in the subclass rather than leaking into the
+     * shared builder.
+     */
+    protected void configureResource(IResource resource) throws HyracksDataException {
+        // no-op by default
+    }
+
     @Override
     public void build() throws HyracksDataException {
         IResourceLifecycleManager<IIndex> lcManager = storageManager.getLifecycleManager(ctx);
@@ -79,6 +90,8 @@ public class IndexBuilder implements IIndexBuilder {
         }
         resourceId = resourceIdFactory.createId();
         IResource resource = localResourceFactory.createResource(resourceRef);
+        // Let subclasses inject index-type-specific state (e.g. vector-index quantization constants).
+        configureResource(resource);
         lr = new LocalResource(resourceId, ITreeIndexFrame.Constants.VERSION, durable, resource);
         IIndex index = lcManager.get(resourceRelPath);
         if (index != null) {

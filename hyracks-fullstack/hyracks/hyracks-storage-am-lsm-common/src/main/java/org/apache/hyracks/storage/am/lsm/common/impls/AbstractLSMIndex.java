@@ -712,7 +712,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
      *
      * @throws HyracksDataException
      */
-    private void validateComponentIds() throws HyracksDataException {
+    protected void validateComponentIds() throws HyracksDataException {
         for (int i = 0; i < diskComponents.size() - 1; i++) {
             ILSMComponentId id1 = diskComponents.get(i).getId();
             ILSMComponentId id2 = diskComponents.get(i + 1).getId();
