@@ -562,8 +562,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
-                        metadataProvider
-                                .setMaxResultReads(!sessionConfig.isIncludeHost() ? UNLIMITED_READS : maxResultReads);
+                        metadataProvider.setMaxResultReads(getMaxResultReads(resultDelivery, maxResultReads));
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
@@ -609,6 +608,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             Thread.currentThread().setName(threadName);
         }
+    }
+
+    private long getMaxResultReads(ResultDelivery mode, long maxResultReads) {
+        // !sessionConfig.isIncludeHost() typically means the request is via the new request API
+        return mode == ResultDelivery.ASYNC && !sessionConfig.isIncludeHost() ? UNLIMITED_READS : maxResultReads;
     }
 
     protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,

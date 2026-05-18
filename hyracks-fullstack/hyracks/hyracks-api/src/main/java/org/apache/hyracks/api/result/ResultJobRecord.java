@@ -83,15 +83,17 @@ public class ResultJobRecord implements IResultStateRecord {
     private static final Logger LOGGER = LogManager.getLogger();
     private final long timestamp;
     private final long resultTtlInNanos; // per-request TTL in nanoseconds, -1 for system default
+    private final String requestId;
     private long jobStartTime;
     private long jobEndTime;
-    private Status status;
+    private final Status status;
     private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
     private long resultCount;
-    private boolean resultSetOrdered;
+    private final boolean resultSetOrdered;
 
-    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos) {
+    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos, String requestId) {
+        this.requestId = requestId;
         this.timestamp = System.nanoTime();
         this.resultTtlInNanos = resultTtlInNanos;
         this.status = new Status();
@@ -159,6 +161,10 @@ public class ResultJobRecord implements IResultStateRecord {
     @Override
     public long getResultTtlInNanos() {
         return resultTtlInNanos;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     public Status getStatus() {

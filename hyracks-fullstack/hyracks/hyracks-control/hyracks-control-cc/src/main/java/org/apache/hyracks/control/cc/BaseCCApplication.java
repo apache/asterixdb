@@ -123,9 +123,7 @@ public class BaseCCApplication implements ICCApplication {
 
     @Override
     public IJobResultCallback getJobResultCallback() {
-        return (jobId, resultJobRecord) -> {
-            // no op
-        };
+        return IJobResultCallback.INSTANCE_NO_OP;
     }
 
     @Override

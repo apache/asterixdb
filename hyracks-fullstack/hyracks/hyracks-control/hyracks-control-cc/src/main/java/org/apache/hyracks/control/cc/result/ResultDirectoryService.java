@@ -92,7 +92,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
         if (resultTtl == null) {
             resultTtl = -1L;
         }
-        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(partitionsOrdered, resultTtl), null));
+        jobResultLocations.put(jobId,
+                new JobResultInfo(new ResultJobRecord(partitionsOrdered, resultTtl, spec.getRequestId()), null));
     }
 
     @Override
@@ -230,8 +231,19 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
-    public synchronized void sweep(JobId jobId) {
-        jobResultLocations.remove(jobId);
+    public void sweep(JobId jobId) {
+        JobResultInfo removedJob;
+        synchronized (this) {
+            removedJob = jobResultLocations.remove(jobId);
+        }
+        if (removedJob != null) {
+            ResultJobRecord rec = removedJob.getRecord();
+            try {
+                jobResultCallback.notifyResultSweep(jobId, rec);
+            } catch (Throwable t) {
+                LOGGER.warn("failed to notify result sweep for job {}, req {}", jobId, rec.getRequestId(), t);
+            }
+        }
     }
 
     @Override

@@ -101,6 +101,11 @@ public class RequestTracker implements IRequestTracker {
     }
 
     @Override
+    public void notifyResultSweep(JobId jobId, String requestId) {
+        removeAsyncOrDeferredRequest(requestId);
+    }
+
+    @Override
     public boolean cancel(String requestId) throws HyracksDataException {
         final IClientRequest request = runningRequests.get(requestId);
         if (request == null) {

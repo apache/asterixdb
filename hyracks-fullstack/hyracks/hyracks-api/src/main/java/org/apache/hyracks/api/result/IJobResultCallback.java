@@ -22,6 +22,18 @@ import org.apache.hyracks.api.job.JobId;
 
 public interface IJobResultCallback {
 
+    IJobResultCallback INSTANCE_NO_OP = new IJobResultCallback() {
+        @Override
+        public void completed(JobId jobId, ResultJobRecord resultJobRecord) {
+
+        }
+
+        @Override
+        public void notifyResultSweep(JobId jobId, ResultJobRecord resultJobRecord) {
+
+        }
+    };
+
     /**
      * Notifies this callback that writing the result of job {@code jobId} has been completed successfully.
      *
@@ -29,4 +41,12 @@ public interface IJobResultCallback {
      * @param resultJobRecord
      */
     void completed(JobId jobId, ResultJobRecord resultJobRecord);
+
+    /**
+     * Notifies this callback that the result of job {@code jobId} has been swept.
+     *
+     * @param jobId the job id whose result has been swept
+     * @param resultJobRecord the result record of the job
+     */
+    void notifyResultSweep(JobId jobId, ResultJobRecord resultJobRecord);
 }
