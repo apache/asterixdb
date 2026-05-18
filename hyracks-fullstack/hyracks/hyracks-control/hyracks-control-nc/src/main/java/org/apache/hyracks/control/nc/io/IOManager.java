@@ -265,6 +265,21 @@ public class IOManager implements IIOManager {
     }
 
     /**
+     * Writes to local storage only, deliberately skipping any long-term (cloud) upload. Goes through
+     * {@link #syncWrite} (the IoRequest path) rather than {@link #doSyncWrite} so an interrupt on the
+     * calling thread does not close the file channel via {@code ClosedByInterruptException}; cloud IO
+     * managers override it to write the local copy without uploading. Used by multi-pass writers (e.g.
+     * the VTree static-structure builder) that publish a page locally first and upload it later, once.
+     */
+    public int localWriteOnly(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        return syncWrite(fHandle, offset, data);
+    }
+
+    public long localWriteOnly(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException {
+        return syncWrite(fHandle, offset, data);
+    }
+
+    /**
      * Please do check the return value of this read!
      *
      * @param fHandle

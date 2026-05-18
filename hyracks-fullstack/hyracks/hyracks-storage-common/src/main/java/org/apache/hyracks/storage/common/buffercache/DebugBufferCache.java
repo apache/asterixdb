@@ -197,6 +197,11 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
+    public ICachedPage confiscateAndLoad(long dpid) throws HyracksDataException {
+        return bufferCache.confiscateAndLoad(dpid);
+    }
+
+    @Override
     public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
             throws HyracksDataException {
         return bufferCache.confiscateLargePage(dpid, multiplier, extraBlockPageId);

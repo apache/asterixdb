@@ -1180,6 +1180,19 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         return cachedPage;
     }
 
+    @Override
+    public ICachedPage confiscateAndLoad(long dpid) throws HyracksDataException {
+        CachedPage page = (CachedPage) confiscatePage(dpid);
+        try {
+            // Load the on-disk content into the confiscated buffer using the same read path as pin(dpid).
+            tryRead(page, defaultContext);
+        } catch (HyracksDataException e) {
+            returnPage(page, false);
+            throw e;
+        }
+        return page;
+    }
+
     private ICachedPage confiscatePage(long dpid, int multiplier) throws HyracksDataException {
         ICachedPage page = getPageLoop(dpid, multiplier, true);
         page.getBuffer().clear();

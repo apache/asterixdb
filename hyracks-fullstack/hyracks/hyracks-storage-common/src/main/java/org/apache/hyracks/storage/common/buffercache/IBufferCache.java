@@ -160,6 +160,19 @@ public interface IBufferCache {
     ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId) throws HyracksDataException;
 
     /**
+     * Confiscate a page for an <em>already-persisted</em> {@code dpid} and load its on-disk content into the
+     * confiscated buffer (using the same read path as {@link #pin(long)}). This yields a page that carries the
+     * page's current bytes but is invisible to the cleaner and eviction (like any confiscated page), so a
+     * multi-pass writer can re-read, mutate, and re-write it without a background writer racing the write.
+     * Return it with {@link #returnPage(ICachedPage, boolean)} (a FIFO writer's {@code write} does this).
+     *
+     * @param dpid the unique (fileId,pageId) of a page that already exists on disk
+     * @return the confiscated page pre-loaded with the on-disk content, or null if no page is available
+     * @throws HyracksDataException
+     */
+    ICachedPage confiscateAndLoad(long dpid) throws HyracksDataException;
+
+    /**
      * Return and re-insert a confiscated page
      *
      * @param page the confiscated page

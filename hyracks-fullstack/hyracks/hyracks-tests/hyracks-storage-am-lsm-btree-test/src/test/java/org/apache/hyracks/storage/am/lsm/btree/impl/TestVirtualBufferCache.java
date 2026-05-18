@@ -136,6 +136,11 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
+    public ICachedPage confiscateAndLoad(long dpid) throws HyracksDataException {
+        return vbc.confiscateAndLoad(dpid);
+    }
+
+    @Override
     public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
             throws HyracksDataException {
         return vbc.confiscateLargePage(dpid, multiplier, extraBlockPageId);

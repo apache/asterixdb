@@ -411,6 +411,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
+    public ICachedPage confiscateAndLoad(long dpid) throws HyracksDataException {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
     public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
             throws HyracksDataException {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
