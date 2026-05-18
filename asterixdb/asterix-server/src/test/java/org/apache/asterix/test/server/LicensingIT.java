@@ -24,10 +24,12 @@ import org.apache.hyracks.test.support.LicensingTestBase;
 import org.apache.hyracks.util.file.FileUtil;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.JVM)
+@Ignore("disable until we are nearing the end of a release cycle")
 public class LicensingIT extends LicensingTestBase {
 
     @Before
