@@ -48,6 +48,7 @@
     <module>hyracks-storage-am-rtree-test</module>
     <module>hyracks-storage-am-lsm-common-test</module>
     <module>hyracks-storage-am-lsm-btree-test</module>
+    <module>hyracks-storage-am-lsm-vtree-test</module>
     <module>hyracks-storage-am-lsm-rtree-test</module>
     <module>hyracks-storage-am-lsm-invertedindex-test</module>
     <module>hyracks-storage-am-bloomfilter-test</module>
