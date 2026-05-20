@@ -328,7 +328,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         binarySerde.serialize(aBinary, out);
     }
 
-    public void serializeDate(Object value, DataOutput output) throws HyracksDataException {
+    private void serializeDate(Object value, DataOutput output) throws HyracksDataException {
         LocalDate localDate = (LocalDate) value;
         if (parserContext.isDateAsInt()) {
             serializeInteger((int) localDate.toEpochDay(), output);
@@ -338,7 +338,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    public void serializeTime(Object value, DataOutput output) throws HyracksDataException {
+    private void serializeTime(Object value, DataOutput output) throws HyracksDataException {
         LocalTime localTime = (LocalTime) value;
         int timeInMillis = (int) TimeUnit.NANOSECONDS.toMillis(localTime.toNanoOfDay());
         if (parserContext.isTimeAsInt()) {
@@ -349,7 +349,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    public void serializeTimestamp(Type type, Object value, DataOutput output) throws HyracksDataException {
+    private void serializeTimestamp(Type type, Object value, DataOutput output) throws HyracksDataException {
         Instant instant;
         switch (value) {
             case OffsetDateTime offsetDateTime -> instant = offsetDateTime.toInstant();
@@ -385,7 +385,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    public static ATypeTag getTypeTag(Type type, boolean isNull, IcebergConverterContext parserContext)
+    private static ATypeTag getTypeTag(Type type, boolean isNull, IcebergConverterContext parserContext)
             throws HyracksDataException {
         if (isNull) {
             return ATypeTag.NULL;

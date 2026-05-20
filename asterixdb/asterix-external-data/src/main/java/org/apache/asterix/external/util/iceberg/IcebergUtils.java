@@ -359,6 +359,10 @@ public class IcebergUtils {
         return projectedRecordType.getFieldNames();
     }
 
+    public static void setDefaults(Map<String, String> configuration) {
+        setDefaultFormat(configuration);
+    }
+
     /**
      * Sets the default format to Parquet if the format is not provided for Iceberg tables
      * @param configuration configuration
@@ -425,6 +429,8 @@ public class IcebergUtils {
         } else if (BlobUtils.isBlobAdapter(ioType) || DatalakeUtils.isDatalakeAdapter(ioType)) {
             // ADLSFileIO is used for both Blob storage and Datalake storage
             setIcebergAzureAdlsFileIoProperties(catalogProperties);
+        } else {
+            throw CompilationException.create(ErrorCode.UNSUPPORTED_FILE_IO_TYPE, ioType);
         }
     }
 

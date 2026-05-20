@@ -117,6 +117,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -1072,7 +1073,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    validateIfIcebergTable(metadataProvider, requestParameters, properties, mdTxnCtx, sourceLoc,
+                    beforeExternalCollectionValidation(properties);
+
+                    Map<String, String> propertiesCopy = new HashMap<>(properties);
+                    validateIfIcebergTable(metadataProvider, requestParameters, propertiesCopy, mdTxnCtx, sourceLoc,
                             externalDetails.getAdapter());
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx, metadataProvider);
@@ -1184,6 +1188,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         }
         return Optional.of(dataset);
+    }
+
+    /**
+     * extensions can use this method to apply any changes on the original external collection properties
+     * before validation
+     *
+     * @param properties external collection properties
+     */
+    protected void beforeExternalCollectionValidation(Map<String, String> properties) {
+        if (IcebergUtils.isIcebergTable(properties)) {
+            IcebergUtils.setDefaults(properties);
+        }
     }
 
     protected void validateIfIcebergTable(MetadataProvider metadataProvider, IRequestParameters requestParameters,
