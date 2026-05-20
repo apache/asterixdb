@@ -133,6 +133,11 @@ public class RequestTracker implements IRequestTracker {
         return Collections.unmodifiableCollection(new ArrayList<>(completedRequests.values()));
     }
 
+    @Override
+    public synchronized Collection<IClientRequest> getAsyncRequests() {
+        return Collections.unmodifiableCollection(asyncRequests.values());
+    }
+
     private boolean cancel(IClientRequest request) throws HyracksDataException {
         boolean cancelled = request.cancel(ccAppCtx);
         if (cancelled) {

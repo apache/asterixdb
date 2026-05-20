@@ -7544,6 +7544,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="async_requests">
+        <output-dir compare="Text">async_requests</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="limit_after_offset">
         <output-dir compare="Text">limit_after_offset</output-dir>
       </compilation-unit>

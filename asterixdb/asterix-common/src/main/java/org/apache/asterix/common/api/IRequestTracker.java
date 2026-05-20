@@ -80,6 +80,13 @@ public interface IRequestTracker extends IJobLifecycleListener {
     Collection<IClientRequest> getCompletedRequests();
 
     /**
+     * Gets the async requests
+     *
+     * @return the async requests
+     */
+    Collection<IClientRequest> getAsyncRequests();
+
+    /**
      *
      * @return the total number of requests since cluster start/restart
      */

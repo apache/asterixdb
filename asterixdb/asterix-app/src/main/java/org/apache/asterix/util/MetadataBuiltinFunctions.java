@@ -19,6 +19,7 @@
 package org.apache.asterix.util;
 
 import org.apache.asterix.app.function.ActiveRequestsRewriter;
+import org.apache.asterix.app.function.AsyncRequestsRewriter;
 import org.apache.asterix.app.function.CompletedRequestsRewriter;
 import org.apache.asterix.app.function.DatasetResourcesRewriter;
 import org.apache.asterix.app.function.DatasetRewriter;
@@ -82,6 +83,12 @@ public class MetadataBuiltinFunctions {
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(ActiveRequestsRewriter.ACTIVE_REQUESTS, true);
         BuiltinFunctions.addDatasourceFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS, ActiveRequestsRewriter.INSTANCE,
+                BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
+        // Async requests function
+        BuiltinFunctions.addFunction(AsyncRequestsRewriter.ASYNC_REQUESTS,
+                (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(AsyncRequestsRewriter.ASYNC_REQUESTS, true);
+        BuiltinFunctions.addDatasourceFunction(AsyncRequestsRewriter.ASYNC_REQUESTS, AsyncRequestsRewriter.INSTANCE,
                 BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // job-summaries function
         BuiltinFunctions.addPrivateFunction(JobSummariesRewriter.JOBSUMMARIES,
