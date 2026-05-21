@@ -54,6 +54,7 @@ import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.resources.memory.IFrameProfiler;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.PartitionState;
@@ -269,7 +270,17 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             LOGGER.trace(() -> "Freeing leaked " + stillAllocated + " bytes");
             serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
-        nodeController.getExecutor().execute(() -> deallocatableRegistry.close());
+        nodeController.getExecutor().execute(() -> {
+            try {
+                InvokeUtil.tryWithCleanups(deallocatableRegistry::close, () -> {
+                    if (cleanupStatus != JobStatus.TERMINATED) {
+                        nodeController.getResultPartitionManager().sweep(jobId);
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("Failure during joblet clean-up", e);
+            }
+        });
     }
 
     @Override

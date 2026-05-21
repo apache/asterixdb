@@ -154,6 +154,7 @@ public class RequestTracker implements IRequestTracker {
                 clientIdRequests.remove(completedRequest.getClientContextId());
             }
             archive(completedRequest);
+            completedRequest.archived();
         }
     }
 

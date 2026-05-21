@@ -232,17 +232,23 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public void sweep(JobId jobId) {
-        JobResultInfo removedJob;
-        synchronized (this) {
-            removedJob = jobResultLocations.remove(jobId);
-        }
+        JobResultInfo removedJob = sweepJob(jobId);
         if (removedJob != null) {
-            ResultJobRecord rec = removedJob.getRecord();
-            try {
-                jobResultCallback.notifyResultSweep(jobId, rec);
-            } catch (Throwable t) {
-                LOGGER.warn("failed to notify result sweep for job {}, req {}", jobId, rec.getRequestId(), t);
-            }
+            notifyResultSweep(jobId, removedJob);
+        }
+    }
+
+    private synchronized JobResultInfo sweepJob(JobId jobId) {
+        return jobResultLocations.remove(jobId);
+    }
+
+    private void notifyResultSweep(JobId jobId, JobResultInfo removedJob) {
+        // ResultJobRecord should never be null
+        ResultJobRecord rec = removedJob.getRecord();
+        try {
+            jobResultCallback.notifyResultSweep(jobId, rec);
+        } catch (Throwable t) {
+            LOGGER.warn("failed to notify result sweep for job {}, req {}", jobId, rec.getRequestId(), t);
         }
     }
 

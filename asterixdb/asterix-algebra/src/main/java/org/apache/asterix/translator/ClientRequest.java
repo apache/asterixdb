@@ -44,7 +44,7 @@ public class ClientRequest extends BaseClientRequest {
             StorageUtil.getIntSizeInBytes(64, StorageUtil.StorageUnit.KILOBYTE);
     protected final long creationTime = System.nanoTime();
     protected final long creationSystemTime = System.currentTimeMillis();
-    protected final Thread executor;
+    protected Thread executor;
     protected final String statement;
     protected final String clientContextId;
     protected final JobState jobState;
@@ -64,6 +64,11 @@ public class ClientRequest extends BaseClientRequest {
     @Override
     public String getClientContextId() {
         return clientContextId;
+    }
+
+    @Override
+    public void archived() {
+        executor = null;
     }
 
     public void setPlan(String plan) {

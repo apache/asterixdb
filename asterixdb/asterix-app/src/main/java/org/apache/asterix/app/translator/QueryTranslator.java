@@ -372,12 +372,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         validateStatements(requestParameters);
-        trackRequest(requestParameters);
+        boolean trackInAsyncDeferredRequests = shouldTrackAsSeparateRequest(requestParameters);
+        trackRequest(requestParameters, trackInAsyncDeferredRequests);
         Counter resultSetIdCounter = new Counter(0);
         FileSplit outputFile = null;
         String threadName = Thread.currentThread().getName();
-        Thread.currentThread().setName(
-                QueryTranslator.class.getSimpleName() + ":" + requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        Thread.currentThread().setName(QueryTranslator.class.getSimpleName() + ":" + reqId);
         Map<String, String> config = new HashMap<>();
         final IResultSet resultSet = requestParameters.getResultSet();
         final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
@@ -387,6 +388,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
+        boolean hasResultSet = false;
+        Exception exception = null;
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -598,16 +601,52 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
                                 "Unexpected statement: " + kind);
                 }
+                hasResultSet |= metadataProvider.getResultSetId() != null;
             }
         } catch (Exception ex) {
+            // need to handle job and request clean-ups in case of failures
             this.appCtx.getRequestTracker().incrementFailedRequests();
+            exception = ex;
             throw ex;
         } finally {
             // async queries are completed after their job completes
             if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery) {
-                appCtx.getRequestTracker().complete(requestParameters.getRequestReference().getUuid());
+                // this assumes 1-1 mapping between a request and a statement, needs to be adapted for multi-statement
+                appCtx.getRequestTracker().complete(reqId);
+                if (ResultDelivery.ASYNC != resultDelivery) {
+                    completeDeferred(reqId, hasResultSet, exception);
+                }
             }
             Thread.currentThread().setName(threadName);
+        }
+    }
+
+    private void completeDeferred(String reqId, boolean hasResultSet, Exception exception) {
+        try {
+            Optional<IClientRequest> optClientReq = appCtx.getRequestTracker().getAsyncOrDeferredRequest(reqId);
+            if (optClientReq.isPresent()) {
+                ClientRequest clientRequest = (ClientRequest) optClientReq.get();
+                JobId jobId = clientRequest.getJobId();
+                if (jobId == null) {
+                    // jobId = null either means:
+                    // 1. compile error, compile-only, ... resulting in no job created whether query, DML or DDL
+                    // 2. statement currently not setting jobId in the client request, e.g. DDLs
+                    // for 2. it needs to be handled so that the job record is removed also if not producing a result
+                    appCtx.getRequestTracker().removeAsyncOrDeferredRequest(reqId);
+                } else if (!hasResultSet) {
+                    // don't sweep ones that completed successfully and produced a result
+                    // sweeps statements not producing a result, e.g. DMLs without a return clause
+                    // sweeps statements that threw an exception whether query, DML or DDL
+                    ClusterControllerService ccSvs =
+                            (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+                    ccSvs.getResultDirectoryService().sweep(jobId);
+                }
+            }
+        } catch (Throwable th) {
+            if (exception != null) {
+                exception.addSuppressed(th);
+            }
+            LOGGER.log(Level.WARN, "Failed to clean up deferred request", th);
         }
     }
 
@@ -6007,10 +6046,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void trackRequest(IRequestParameters requestParameters) throws HyracksDataException {
+    protected void trackRequest(IRequestParameters requestParameters, boolean trackInAsyncDeferredRequests)
+            throws HyracksDataException {
         final IClientRequest clientRequest = appCtx.getReceptionist().requestReceived(requestParameters);
         this.appCtx.getRequestTracker().track(clientRequest);
-        if (shouldTrackAsSeparateRequest(requestParameters)) {
+        if (trackInAsyncDeferredRequests) {
             appCtx.getRequestTracker().trackAsyncOrDeferredRequest(clientRequest);
         }
     }
