@@ -30,8 +30,8 @@ public abstract class AbstractResultManager implements IResultManager {
 
     private final long nanoResultTTL;
 
-    protected AbstractResultManager(long resultTTL) {
-        this.nanoResultTTL = TimeUnit.MILLISECONDS.toNanos(resultTTL);
+    protected AbstractResultManager(long resultTTLMillis) {
+        this.nanoResultTTL = TimeUnit.MILLISECONDS.toNanos(resultTTLMillis);
     }
 
     @Override
@@ -50,8 +50,13 @@ public abstract class AbstractResultManager implements IResultManager {
     }
 
     private boolean hasExpired(IResultStateRecord state, long currentTime) {
+        long completeTimestamp = state.getCompleteTimestamp();
+        if (completeTimestamp <= 0) {
+            // Not completed yet, not expired
+            return false;
+        }
         // Use per-request TTL if set (> 0), otherwise use system default
         long ttl = state.getResultTtlInNanos() > 0 ? state.getResultTtlInNanos() : nanoResultTTL;
-        return currentTime - state.getTimestamp() - ttl > 0;
+        return currentTime - completeTimestamp - ttl > 0;
     }
 }

@@ -54,6 +54,8 @@ import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.resources.memory.IFrameProfiler;
+import org.apache.hyracks.api.result.IResultPartitionManager;
+import org.apache.hyracks.api.result.IResultStateRecord;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.job.PartitionRequest;
@@ -64,6 +66,7 @@ import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.hyracks.control.nc.result.ResultSetMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -273,8 +276,14 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         nodeController.getExecutor().execute(() -> {
             try {
                 InvokeUtil.tryWithCleanups(deallocatableRegistry::close, () -> {
+                    IResultPartitionManager resultPartitionManager = nodeController.getResultPartitionManager();
                     if (cleanupStatus != JobStatus.TERMINATED) {
-                        nodeController.getResultPartitionManager().sweep(jobId);
+                        resultPartitionManager.sweep(jobId);
+                    } else {
+                        IResultStateRecord state = resultPartitionManager.getState(jobId);
+                        if (state instanceof ResultSetMap) {
+                            ((ResultSetMap) state).recordCompleteTimestamp();
+                        }
                     }
                 });
             } catch (Exception e) {

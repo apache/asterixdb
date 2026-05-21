@@ -104,15 +104,18 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
+        ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
         if (exceptions == null || exceptions.isEmpty()) {
-            final ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
             if (resultJobRecord == null) {
                 return;
             }
-            resultJobRecord.finish(jobStatus);
+            resultJobRecord.finishWithStatus(jobStatus);
             jobResultCallback.completed(jobId, resultJobRecord);
         } else {
-            reportJobFailure(jobId, exceptions);
+            reportJobFailure(jobId, exceptions, resultJobRecord);
+        }
+        if (resultJobRecord != null) {
+            resultJobRecord.finish();
         }
     }
 
@@ -183,6 +186,10 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         ResultJobRecord rjr = getResultJobRecord(jobId);
+        reportJobFailure(jobId, exceptions, rjr);
+    }
+
+    private synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions, ResultJobRecord rjr) {
         if (logFailure(rjr)) {
             LOGGER.debug("job {} failed and is being reported to {}", jobId, getClass().getSimpleName());
         }

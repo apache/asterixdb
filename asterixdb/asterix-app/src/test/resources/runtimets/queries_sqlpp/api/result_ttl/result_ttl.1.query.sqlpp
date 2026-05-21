@@ -16,23 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.result;
 
-public interface IResultStateRecord {
+-- param result-ttl=5s
 
-    /**
-     * Returns the timestamp in nanoseconds when the record is created.
-     */
-    long getTimestamp();
-
-    /**
-     * Returns the per-request result TTL in nanoseconds, or -1 if system default should be used.
-     */
-    long getResultTtlInNanos();
-
-    /**
-     * Returns the timestamp in nanoseconds when the record is completed, or 0 if not completed yet.
-     */
-    long getCompleteTimestamp();
-
-}
+SELECT x*0 FROM range(1, 10) AS t LET x = CASE WHEN t = 1 THEN 3 ELSE sleep(1, 2000) END;

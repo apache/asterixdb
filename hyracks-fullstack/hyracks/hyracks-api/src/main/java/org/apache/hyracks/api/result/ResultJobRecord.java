@@ -85,7 +85,7 @@ public class ResultJobRecord implements IResultStateRecord {
     private final long resultTtlInNanos; // per-request TTL in nanoseconds, -1 for system default
     private final String requestId;
     private long jobStartTime;
-    private long jobEndTime;
+    private volatile long jobEndTime;
     private final Status status;
     private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
@@ -113,8 +113,11 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.RUNNING);
     }
 
-    public void finish(JobStatus jobStatus) {
+    public void finish() {
         jobEndTime = System.nanoTime();
+    }
+
+    public void finishWithStatus(JobStatus jobStatus) {
         if (jobStatus != null && (status.state == State.RUNNING || status.state == State.IDLE)) {
             switch (jobStatus) {
                 case TERMINATED -> updateState(State.SUCCESS);
@@ -156,6 +159,11 @@ public class ResultJobRecord implements IResultStateRecord {
     @Override
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public long getCompleteTimestamp() {
+        return jobEndTime;
     }
 
     @Override

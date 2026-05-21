@@ -19,6 +19,11 @@
 <test-group name="sqlpp_queries">
   <test-group name="api">
     <test-case FilePath="api">
+      <compilation-unit name="result_ttl">
+        <output-dir compare="Text">result_ttl</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="compileonly">
         <output-dir compare="Text">compileonly</output-dir>
       </compilation-unit>
