@@ -118,6 +118,7 @@ public class ResultJobRecord implements IResultStateRecord {
     }
 
     public void finishWithStatus(JobStatus jobStatus) {
+        finish();
         if (jobStatus != null && (status.state == State.RUNNING || status.state == State.IDLE)) {
             switch (jobStatus) {
                 case TERMINATED -> updateState(State.SUCCESS);

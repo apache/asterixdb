@@ -196,8 +196,7 @@ public class AbstractQueryApiServlet extends AbstractServlet {
             return null;
         }
         try {
-            if (handle.getRequestId() != null
-                    && !isValidRequest(handle.getRequestId(), handle.getJobId(), request, response)) {
+            if (!isValidRequest(handle.getRequestId(), handle.getJobId(), request, response)) {
                 return null;
             }
         } catch (HyracksDataException e) {
@@ -209,6 +208,10 @@ public class AbstractQueryApiServlet extends AbstractServlet {
 
     protected boolean isValidRequest(String requestId, JobId jobId, IServletRequest request, IServletResponse response)
             throws HyracksDataException {
+        if (requestId == null) {
+            // for backward compatibility, if requestId is not provided, we assume it's a valid request
+            return true;
+        }
         Optional<IClientRequest> clientRequest =
                 ((ICcApplicationContext) appCtx).getRequestTracker().getAsyncOrDeferredRequest(requestId);
         if (clientRequest.isEmpty() || ((ClientRequest) clientRequest.get()).getJobId() == null) {

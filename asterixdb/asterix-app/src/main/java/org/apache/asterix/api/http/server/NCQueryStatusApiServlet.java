@@ -44,7 +44,8 @@ public class NCQueryStatusApiServlet extends QueryStatusApiServlet {
 
     protected boolean isValidRequest(String requestId, JobId jobId, IServletRequest request, IServletResponse response)
             throws HyracksDataException {
-        return AsyncRequestsAPIUtil.isValidRequest(appCtx, requestId, jobId, response);
+        // for backward compatibility, if requestId is not provided, we assume it's a valid request
+        return requestId == null || AsyncRequestsAPIUtil.isValidRequest(appCtx, requestId, jobId, response);
     }
 
     public void printMetricsWithoutResultMetadata(ResponsePrinter printer, IServletRequest request, String requestId,

@@ -20,7 +20,6 @@ package org.apache.asterix.api.http.server;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
@@ -145,11 +144,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
                     || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON
                     || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON) {
+                long resultDeliveryStart = System.nanoTime();
                 printer.begin();
                 printStarted = true;
                 printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
                 printer.printResults();
-                ResponseMetrics metrics = buildMetrics(stats, metadata);
+                long resultDeliveryElapsed = System.nanoTime() - resultDeliveryStart;
+                ResponseMetrics metrics = buildMetrics(stats, metadata, resultDeliveryElapsed);
                 printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
                 if (metadata.getJobProfile() != null) {
                     printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
@@ -170,8 +171,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata) {
-        long endTime = System.currentTimeMillis();
+    private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata, long resultDeliveryElapsed) {
         stats.setProcessedObjects(metadata.getProcessedObjects());
         stats.setQueueWaitTimeNanos(metadata.getQueueWaitTimeNanos());
         stats.setBufferCacheHitRatio(metadata.getBufferCacheHitRatio());
@@ -180,11 +180,10 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         stats.setCloudPagesReadCount(metadata.getCloudPagesReadCount());
         stats.setCloudPagesPersistedCount(metadata.getCloudPagesPersistedCount());
         stats.updateTotalWarningsCount(metadata.getTotalWarningsCount());
-        return ResponseMetrics.of(TimeUnit.MILLISECONDS.toNanos(endTime - metadata.getCreateTimeMillis()),
-                metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
-                metadata.getTotalWarningsCount(), metadata.getCompileTimeNanos(), stats.getQueueWaitTimeNanos(),
-                stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
-                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
+        return ResponseMetrics.of(resultDeliveryElapsed, metadata.getJobDuration(), stats.getCount(), stats.getSize(),
+                metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(), metadata.getCompileTimeNanos(),
+                stats.getQueueWaitTimeNanos(), stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(),
+                stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
     }
 
     /**
