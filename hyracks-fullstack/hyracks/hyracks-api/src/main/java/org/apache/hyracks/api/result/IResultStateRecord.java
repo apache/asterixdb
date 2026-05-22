@@ -23,7 +23,7 @@ public interface IResultStateRecord {
     /**
      * Returns the timestamp in nanoseconds when the record is created.
      */
-    long getTimestamp();
+    long getTimestampNanos();
 
     /**
      * Returns the per-request result TTL in nanoseconds, or -1 if system default should be used.
@@ -33,6 +33,6 @@ public interface IResultStateRecord {
     /**
      * Returns the timestamp in nanoseconds when the record is completed, or 0 if not completed yet.
      */
-    long getCompleteTimestamp();
+    long getCompleteTimestampNanos();
 
 }

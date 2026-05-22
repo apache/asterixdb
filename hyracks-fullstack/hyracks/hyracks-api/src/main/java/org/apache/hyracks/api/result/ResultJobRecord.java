@@ -156,13 +156,17 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.TIMEOUT);
     }
 
+    public boolean isDone() {
+        return status.state != State.RUNNING && status.state != State.IDLE;
+    }
+
     @Override
-    public long getTimestamp() {
+    public long getTimestampNanos() {
         return timestamp;
     }
 
     @Override
-    public long getCompleteTimestamp() {
+    public long getCompleteTimestampNanos() {
         return jobEndTime;
     }
 

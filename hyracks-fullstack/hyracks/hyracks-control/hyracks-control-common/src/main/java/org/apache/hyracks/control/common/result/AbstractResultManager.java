@@ -50,7 +50,7 @@ public abstract class AbstractResultManager implements IResultManager {
     }
 
     private boolean hasExpired(IResultStateRecord state, long currentTime) {
-        long completeTimestamp = state.getCompleteTimestamp();
+        long completeTimestamp = state.getCompleteTimestampNanos();
         if (completeTimestamp <= 0) {
             // Not completed yet, not expired
             return false;

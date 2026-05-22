@@ -373,7 +373,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         validateStatements(requestParameters);
         boolean trackInAsyncDeferredRequests = shouldTrackAsSeparateRequest(requestParameters);
-        trackRequest(requestParameters, trackInAsyncDeferredRequests);
+        IClientRequest clientRequest = trackRequest(requestParameters, trackInAsyncDeferredRequests);
         Counter resultSetIdCounter = new Counter(0);
         FileSplit outputFile = null;
         String threadName = Thread.currentThread().getName();
@@ -613,34 +613,30 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery) {
                 // this assumes 1-1 mapping between a request and a statement, needs to be adapted for multi-statement
                 appCtx.getRequestTracker().complete(reqId);
-                if (ResultDelivery.ASYNC != resultDelivery) {
-                    completeDeferred(reqId, hasResultSet, exception);
+                if (ResultDelivery.ASYNC != resultDelivery && trackInAsyncDeferredRequests) {
+                    completeDeferred((ClientRequest) clientRequest, hasResultSet, exception);
                 }
             }
             Thread.currentThread().setName(threadName);
         }
     }
 
-    private void completeDeferred(String reqId, boolean hasResultSet, Exception exception) {
+    private void completeDeferred(ClientRequest clientRequest, boolean hasResultSet, Exception exception) {
         try {
-            Optional<IClientRequest> optClientReq = appCtx.getRequestTracker().getAsyncOrDeferredRequest(reqId);
-            if (optClientReq.isPresent()) {
-                ClientRequest clientRequest = (ClientRequest) optClientReq.get();
-                JobId jobId = clientRequest.getJobId();
-                if (jobId == null) {
-                    // jobId = null either means:
-                    // 1. compile error, compile-only, ... resulting in no job created whether query, DML or DDL
-                    // 2. statement currently not setting jobId in the client request, e.g. DDLs
-                    // for 2. it needs to be handled so that the job record is removed also if not producing a result
-                    appCtx.getRequestTracker().removeAsyncOrDeferredRequest(reqId);
-                } else if (!hasResultSet) {
-                    // don't sweep ones that completed successfully and produced a result
-                    // sweeps statements not producing a result, e.g. DMLs without a return clause
-                    // sweeps statements that threw an exception whether query, DML or DDL
-                    ClusterControllerService ccSvs =
-                            (ClusterControllerService) appCtx.getServiceContext().getControllerService();
-                    ccSvs.getResultDirectoryService().sweep(jobId);
-                }
+            JobId jobId = clientRequest.getJobId();
+            if (jobId == null) {
+                // jobId = null either means:
+                // 1. compile error, compile-only, ... resulting in no job created whether query, DML or DDL
+                // 2. statement currently not setting jobId in the client request, e.g. DDLs
+                // for 2. it needs to be handled so that the job record is removed also if not producing a result
+                appCtx.getRequestTracker().removeAsyncOrDeferredRequest(clientRequest.getId());
+            } else if (!hasResultSet) {
+                // don't sweep ones that completed successfully and produced a result
+                // sweeps statements not producing a result, e.g. DMLs without a return clause
+                // sweeps statements that threw an exception whether query, DML or DDL
+                ClusterControllerService ccSvs =
+                        (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+                ccSvs.getResultDirectoryService().removeIfDone(jobId);
             }
         } catch (Throwable th) {
             if (exception != null) {
@@ -6046,13 +6042,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void trackRequest(IRequestParameters requestParameters, boolean trackInAsyncDeferredRequests)
+    protected IClientRequest trackRequest(IRequestParameters requestParameters, boolean trackInAsyncDeferredRequests)
             throws HyracksDataException {
         final IClientRequest clientRequest = appCtx.getReceptionist().requestReceived(requestParameters);
         this.appCtx.getRequestTracker().track(clientRequest);
         if (trackInAsyncDeferredRequests) {
             appCtx.getRequestTracker().trackAsyncOrDeferredRequest(clientRequest);
         }
+        return clientRequest;
     }
 
     /**

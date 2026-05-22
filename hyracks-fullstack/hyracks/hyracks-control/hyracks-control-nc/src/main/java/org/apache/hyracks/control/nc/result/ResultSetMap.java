@@ -45,12 +45,12 @@ public class ResultSetMap implements IResultStateRecord, Serializable {
     }
 
     @Override
-    public long getTimestamp() {
+    public long getTimestampNanos() {
         return timestamp;
     }
 
     @Override
-    public long getCompleteTimestamp() {
+    public long getCompleteTimestampNanos() {
         return completeTimestamp;
     }
 

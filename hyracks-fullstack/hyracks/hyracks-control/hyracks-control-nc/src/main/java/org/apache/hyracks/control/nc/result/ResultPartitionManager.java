@@ -55,9 +55,9 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
 
     private final ResultMemoryManager resultMemoryManager;
 
-    public ResultPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory, long resultTTL,
-            long resultSweepThreshold) {
-        super(resultTTL);
+    public ResultPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory,
+            long resultTTLMillis, long resultSweepThreshold) {
+        super(resultTTLMillis);
         this.ncs = ncs;
         this.executor = executor;
         deallocatableRegistry = new DefaultDeallocatableRegistry();

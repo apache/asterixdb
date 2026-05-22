@@ -66,7 +66,7 @@ public class CCConfig extends ControllerConfig {
         DEAD_NODE_SWEEP_THRESHOLD(LONG, HEARTBEAT_PERIOD),
         PROFILE_DUMP_PERIOD(NONNEGATIVE_INTEGER, 0),
         JOB_HISTORY_SIZE(NONNEGATIVE_INTEGER, 10),
-        RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
+        RESULT_TTL(LONG, 3600000L), // TODO(mblow): add time unit
         RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
         ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/ClusterControllerService"),
@@ -388,12 +388,12 @@ public class CCConfig extends ControllerConfig {
         configManager.set(Option.JOB_HISTORY_SIZE, jobHistorySize);
     }
 
-    public long getResultTTL() {
+    public long getResultTTLMillis() {
         return getAppConfig().getLong(Option.RESULT_TTL);
     }
 
-    public void setResultTTL(long resultTTL) {
-        configManager.set(Option.RESULT_TTL, resultTTL);
+    public void setResultTTLMillis(long resultTTLMillis) {
+        configManager.set(Option.RESULT_TTL, resultTTLMillis);
     }
 
     public long getResultSweepThreshold() {

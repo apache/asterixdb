@@ -39,10 +39,10 @@ import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.api.result.ResultSetMetaData;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.result.IResultDirectoryService;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -74,20 +74,25 @@ public class AsyncRequestsAPIUtil {
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService())
                         .getResultDirectoryService();
         // Check if result is in a valid state for discarding
-        ResultJobRecord.Status status = resultDirectoryService.getResultStatus(jobId, resultSetId);
-        if (status.getState() != ResultJobRecord.State.SUCCESS) {
-            LOGGER.log(Level.WARN, "Cannot discard result for job {}, result set {}, request {} - status is {}", jobId,
-                    resultSetId, requestId, status);
+        ResultJobRecord jobRecord = resultDirectoryService.getJobRecord(jobId);
+        if (jobRecord == null) {
+            LOGGER.warn("Job record not found for job {}, request {}. Removing request tracking info", jobId,
+                    requestId);
+            removeRequest(appCtx, requestId);
             return;
         }
-        IResultMetadata resultMetadata = resultDirectoryService.getResultMetadata(jobId, resultSetId);
-        if (resultMetadata == null) {
+        if (!jobRecord.isDone()) {
+            LOGGER.warn("Cannot discard result for job {}, result set {}, request {} - status is {}", jobId,
+                    resultSetId, requestId, jobRecord.getStatus().getState());
+            return;
+        }
+        ResultSetMetaData resultSetMetaData = jobRecord.getResultSetMetaData();
+        if (resultSetMetaData == null || resultSetMetaData.getMetadata() == null) {
             LOGGER.debug(
-                    "Result metadata not found for job {}, result set {}, request id {}. Removing async req tracking info",
+                    "Result metadata not found for job {}, result set {}, request {}. Removing request tracking info and job record",
                     jobId, resultSetId, requestId);
-            if (requestId != null) {
-                appCtx.getRequestTracker().removeAsyncOrDeferredRequest(requestId);
-            }
+            resultDirectoryService.sweep(jobId);
+            removeRequest(appCtx, requestId);
             return;
         }
 
@@ -105,6 +110,10 @@ public class AsyncRequestsAPIUtil {
 
         // Clean up result directory and request tracking
         resultDirectoryService.sweep(jobId);
+        removeRequest(appCtx, requestId);
+    }
+
+    private static void removeRequest(ICcApplicationContext appCtx, String requestId) {
         if (requestId != null) {
             appCtx.getRequestTracker().removeAsyncOrDeferredRequest(requestId);
         }

@@ -29,6 +29,7 @@ import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.IResultManager;
 import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
+import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -55,4 +56,9 @@ public interface IResultDirectoryService extends IJobLifecycleListener, IResultM
 
     public void getResultPartitionLocations(JobId jobId, ResultSetId rsId, ResultDirectoryRecord[] knownLocations,
             IResultCallback<ResultDirectoryRecord[]> callback) throws HyracksDataException;
+
+    public void removeIfDone(JobId jobId);
+
+    public ResultJobRecord getJobRecord(JobId jobId);
+
 }

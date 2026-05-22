@@ -66,8 +66,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     private final Map<JobId, JobResultInfo> jobResultLocations;
     private IJobResultCallback jobResultCallback;
 
-    public ResultDirectoryService(long resultTTL, long resultSweepThreshold) {
-        super(resultTTL);
+    public ResultDirectoryService(long resultTTLMillis, long resultSweepThreshold) {
+        super(resultTTLMillis);
         this.resultSweepThreshold = resultSweepThreshold;
         jobResultLocations = new LinkedHashMap<>();
     }
@@ -102,6 +102,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
+    //TODO: shouldn't this also be synchronized?
     public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
         ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
@@ -228,12 +229,25 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
+    public synchronized void removeIfDone(JobId jobId) {
+        ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
+        if (resultJobRecord != null && resultJobRecord.isDone()) {
+            sweep(jobId);
+        }
+    }
+
+    @Override
     public synchronized Set<JobId> getJobIds() {
         return jobResultLocations.keySet();
     }
 
     @Override
     public IResultStateRecord getState(JobId jobId) {
+        return getResultJobRecord(jobId);
+    }
+
+    @Override
+    public synchronized ResultJobRecord getJobRecord(JobId jobId) {
         return getResultJobRecord(jobId);
     }
 

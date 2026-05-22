@@ -82,7 +82,7 @@ public class NCConfig extends ControllerConfig {
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/iodevice"),
         NET_THREAD_COUNT(POSITIVE_INTEGER, 1),
         NET_BUFFER_COUNT(POSITIVE_INTEGER, 1),
-        RESULT_TTL(LONG, 86400000L),
+        RESULT_TTL(LONG, 3600000L),
         RESULT_SWEEP_THRESHOLD(LONG, 60000L),
         RESULT_MANAGER_MEMORY(INTEGER_BYTE_UNIT, -1),
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
@@ -568,12 +568,12 @@ public class NCConfig extends ControllerConfig {
         configManager.set(nodeId, Option.NET_BUFFER_COUNT, netBufferCount);
     }
 
-    public long getResultTTL() {
+    public long getResultTTLMillis() {
         return appConfig.getLong(Option.RESULT_TTL);
     }
 
-    public void setResultTTL(long resultTTL) {
-        configManager.set(nodeId, Option.RESULT_TTL, resultTTL);
+    public void setResultTTLMillis(long resultTTLMillis) {
+        configManager.set(nodeId, Option.RESULT_TTL, resultTTLMillis);
     }
 
     public long getResultSweepThreshold() {
