@@ -214,7 +214,9 @@ public class BlobUtils {
                         provided.get());
             }
         }
-
+        if (AzureUtils.IS_AZURITE_EMULATOR) {
+            AzureUtils.fixupForAzuriteEmulator(builder);
+        }
         try {
             if (type == BlobServiceClient.class) {
                 return type.cast(builder.buildClient());

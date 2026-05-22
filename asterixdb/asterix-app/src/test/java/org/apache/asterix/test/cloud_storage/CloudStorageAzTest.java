@@ -55,6 +55,7 @@ import org.testcontainers.utility.MountableFile;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.BlobServiceVersion;
 
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -94,7 +95,7 @@ public class CloudStorageAzTest {
         SslContext insecureSslContext =
                 SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(azBlob.getConnectionString())
+                .serviceVersion(BlobServiceVersion.V2025_07_05).connectionString(azBlob.getConnectionString())
                 .httpClient(new NettyAsyncHttpClientBuilder(
                         HttpClient.create().secure(sslSpec -> sslSpec.sslContext(insecureSslContext).build())).build())
                 .buildClient();

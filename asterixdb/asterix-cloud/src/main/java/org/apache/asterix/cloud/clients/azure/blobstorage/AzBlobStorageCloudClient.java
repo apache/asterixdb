@@ -19,6 +19,7 @@
 
 package org.apache.asterix.cloud.clients.azure.blobstorage;
 
+import static org.apache.asterix.external.util.azure.AzureUtils.IS_AZURITE_EMULATOR;
 import static org.apache.asterix.external.util.azure.blob.BlobUtils.disableSslVerify;
 
 import java.io.ByteArrayInputStream;
@@ -52,6 +53,7 @@ import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.util.azure.AzureConstants;
+import org.apache.asterix.external.util.azure.AzureUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.cloud.io.ICloudProperties;
@@ -433,6 +435,9 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         BlobServiceClientBuilder blobServiceClientBuilder = new BlobServiceClientBuilder();
         blobServiceClientBuilder.endpoint(getEndpoint(config));
         blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
+        if (IS_AZURITE_EMULATOR) {
+            AzureUtils.fixupForAzuriteEmulator(blobServiceClientBuilder);
+        }
         configCredentialsToAzClient(blobServiceClientBuilder, config);
 
         ConnectionProvider.Builder builder = ConnectionProvider.builder("azblob-client-" + (async ? "async" : "sync"))
@@ -460,8 +465,8 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     private static void configCredentialsToAzClient(BlobServiceClientBuilder builder,
             AzBlobStorageClientConfig config) {
-        String storageAccount = System.getenv("AZURE_STORAGE_ACCOUNT");
-        String storageKey = System.getenv("AZURE_STORAGE_KEY");
+        String storageAccount = System.getenv(AzureUtils.AZURE_STORAGE_ACCOUNT);
+        String storageKey = System.getenv(AzureUtils.AZURE_STORAGE_KEY);
 
         if (storageAccount != null && storageKey != null) {
             builder.credential(new StorageSharedKeyCredential(storageAccount, storageKey));
