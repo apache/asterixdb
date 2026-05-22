@@ -282,6 +282,7 @@
       <artifactId>privilegedaccessor</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- TODO: remove this core-io and its uses- DO NOT UPDATE this until that time -->
     <dependency>
       <groupId>com.couchbase.client</groupId>
       <artifactId>core-io</artifactId>
