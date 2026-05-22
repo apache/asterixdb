@@ -104,11 +104,11 @@
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.45.1</awsjavasdk.crt.version>
 
-    <azureblobjavasdk.version>12.31.3</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.30.3</azurecommonjavasdk.version>
-    <azureidentity.version>1.17.0</azureidentity.version>
-    <azuredatalakejavasdk.version>12.24.3</azuredatalakejavasdk.version>
-    <azurecore.version>1.57.1</azurecore.version>
+    <azureblobjavasdk.version>12.34.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.33.0</azurecommonjavasdk.version>
+    <azureidentity.version>1.18.3</azureidentity.version>
+    <azuredatalakejavasdk.version>12.27.0</azuredatalakejavasdk.version>
+    <azurecore.version>1.58.0</azurecore.version>
     <azurecorehttpnetty.version>1.16.4</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
