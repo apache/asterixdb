@@ -29,13 +29,13 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
-public class AsyncRequestsDatasource extends FunctionDataSource {
+public class OpenRequestsDatasource extends FunctionDataSource {
 
-    private static final DataSourceId ASYNC_REQUESTS_DATASOURCE_ID =
-            createDataSourceId(AsyncRequestsRewriter.ASYNC_REQUESTS);
+    private static final DataSourceId OPEN_REQUESTS_DATASOURCE_ID =
+            createDataSourceId(OpenRequestsRewriter.OPEN_REQUESTS);
 
-    public AsyncRequestsDatasource(INodeDomain domain) throws AlgebricksException {
-        super(ASYNC_REQUESTS_DATASOURCE_ID, AsyncRequestsRewriter.ASYNC_REQUESTS, domain);
+    public OpenRequestsDatasource(INodeDomain domain) throws AlgebricksException {
+        super(OPEN_REQUESTS_DATASOURCE_ID, OpenRequestsRewriter.OPEN_REQUESTS, domain);
     }
 
     @Override

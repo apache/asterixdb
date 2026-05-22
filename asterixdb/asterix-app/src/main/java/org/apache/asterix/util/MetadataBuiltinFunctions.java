@@ -19,13 +19,13 @@
 package org.apache.asterix.util;
 
 import org.apache.asterix.app.function.ActiveRequestsRewriter;
-import org.apache.asterix.app.function.AsyncRequestsRewriter;
 import org.apache.asterix.app.function.CompletedRequestsRewriter;
 import org.apache.asterix.app.function.DatasetResourcesRewriter;
 import org.apache.asterix.app.function.DatasetRewriter;
 import org.apache.asterix.app.function.DumpIndexRewriter;
 import org.apache.asterix.app.function.FeedRewriter;
 import org.apache.asterix.app.function.JobSummariesRewriter;
+import org.apache.asterix.app.function.OpenRequestsRewriter;
 import org.apache.asterix.app.function.PingRewriter;
 import org.apache.asterix.app.function.QueryIndexRewriter;
 import org.apache.asterix.app.function.QueryPartitionRewriter;
@@ -85,10 +85,10 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addDatasourceFunction(ActiveRequestsRewriter.ACTIVE_REQUESTS, ActiveRequestsRewriter.INSTANCE,
                 BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // Async requests function
-        BuiltinFunctions.addFunction(AsyncRequestsRewriter.ASYNC_REQUESTS,
+        BuiltinFunctions.addFunction(OpenRequestsRewriter.OPEN_REQUESTS,
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
-        BuiltinFunctions.addUnnestFun(AsyncRequestsRewriter.ASYNC_REQUESTS, true);
-        BuiltinFunctions.addDatasourceFunction(AsyncRequestsRewriter.ASYNC_REQUESTS, AsyncRequestsRewriter.INSTANCE,
+        BuiltinFunctions.addUnnestFun(OpenRequestsRewriter.OPEN_REQUESTS, true);
+        BuiltinFunctions.addDatasourceFunction(OpenRequestsRewriter.OPEN_REQUESTS, OpenRequestsRewriter.INSTANCE,
                 BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
         // job-summaries function
         BuiltinFunctions.addPrivateFunction(JobSummariesRewriter.JOBSUMMARIES,

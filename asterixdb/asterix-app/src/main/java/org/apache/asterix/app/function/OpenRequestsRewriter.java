@@ -25,18 +25,18 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class AsyncRequestsRewriter extends FunctionRewriter {
+public class OpenRequestsRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier ASYNC_REQUESTS = FunctionConstants.newAsterix("async-requests", 0);
-    public static final AsyncRequestsRewriter INSTANCE = new AsyncRequestsRewriter(ASYNC_REQUESTS);
+    public static final FunctionIdentifier OPEN_REQUESTS = FunctionConstants.newAsterix("open-requests", 0);
+    public static final OpenRequestsRewriter INSTANCE = new OpenRequestsRewriter(OPEN_REQUESTS);
 
-    private AsyncRequestsRewriter(FunctionIdentifier functionId) {
+    private OpenRequestsRewriter(FunctionIdentifier functionId) {
         super(functionId);
     }
 
     @Override
     protected FunctionDataSource toDatasource(IOptimizationContext context, AbstractFunctionCallExpression f)
             throws AlgebricksException {
-        return new AsyncRequestsDatasource(context.getComputationNodeDomain());
+        return new OpenRequestsDatasource(context.getComputationNodeDomain());
     }
 }

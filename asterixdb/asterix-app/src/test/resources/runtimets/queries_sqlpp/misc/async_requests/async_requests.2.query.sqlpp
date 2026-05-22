@@ -17,4 +17,4 @@
  * under the License.
  */
 
-SELECT VALUE rqst.clientContextID FROM async_requests() rqst WHERE rqst.clientContextID = "async_query";
+SELECT VALUE rqst.clientContextID FROM open_requests() rqst WHERE rqst.clientContextID = "async_query";

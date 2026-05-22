@@ -18,13 +18,13 @@
  */
 
 /*
- * Test that a query that only uses async_requests() gets assigned a minimal memory budget
+ * Test that a query that only uses open_requests() gets assigned a minimal memory budget
  */
 
 -- param job:string=true
 
 SET `compiler.parallelism` "1";
 
-from async_requests() t
+from open_requests() t
 select value t
 order by t;
