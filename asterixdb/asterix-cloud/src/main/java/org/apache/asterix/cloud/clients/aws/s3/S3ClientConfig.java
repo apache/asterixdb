@@ -250,4 +250,17 @@ public final class S3ClientConfig {
     public S3ChecksumBehavior getChecksumBehavior() {
         return checksumBehavior;
     }
+
+    @Override
+    public String toString() {
+        return "S3ClientConfig{" + "region='" + region + '\'' + ", endpoint='" + endpoint + '\'' + ", prefix='" + prefix
+                + '\'' + ", anonymousAuth=" + anonymousAuth + ", forcePathStyle=" + forcePathStyle
+                + ", disableSslVerify=" + disableSslVerify + ", checksumBehavior=" + checksumBehavior
+                + ", accessKeyId='" + accessKeyId + '\'' + ", secretAccessKey="
+                + (secretAccessKey != null && !secretAccessKey.isEmpty() ? "<redacted>" : "<none>") + ", certificates="
+                + certificates + ", writeBufferSize=" + writeBufferSize + ", requestsMaxHttpConnections="
+                + requestsMaxHttpConnections + ", parallelDownloaderClientType=" + parallelDownloaderClientType
+                + ", roundRobinDnsResolver=" + roundRobinDnsResolver + ", s3ReadTimeoutInSeconds="
+                + s3ReadTimeoutInSeconds + '}';
+    }
 }
