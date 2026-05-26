@@ -1217,6 +1217,10 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier DOT_DISTANCE = FunctionConstants.newAsterix("dot-distance", 2);
     public static final FunctionIdentifier VECTOR_DISTANCE = FunctionConstants.newAsterix("vector-distance", 3);
 
+    // Vector search functions
+    public static final FunctionIdentifier ANN_DISTANCE =
+            FunctionConstants.newAsterix("ann-distance", FunctionIdentifier.VARARGS);
+
     // Temporal functions
     public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS =
             FunctionConstants.newAsterix("unix-time-from-date-in-days", 1);
@@ -1951,6 +1955,9 @@ public class BuiltinFunctions {
         addPrivateFunction(COSINE_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(DOT_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
         addFunction(VECTOR_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+
+        // Ann functions
+        addFunction(ANN_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
 
         // Window functions
 

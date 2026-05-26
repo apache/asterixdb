@@ -122,6 +122,7 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
                 CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY,
                 CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY_KEY,
                 CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_KEY,
+                CompilerProperties.COMPILER_VECTOR_K_MULTIPLIER_KEY,
                 DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
                 SetAsterixPhysicalOperatorsRule.REWRITE_ATTEMPT_BATCH_ASSIGN,
                 EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK, SqlppQueryRewriter.SQL_COMPAT_OPTION,

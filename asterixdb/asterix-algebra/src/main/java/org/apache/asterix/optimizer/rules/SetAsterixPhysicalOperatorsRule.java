@@ -28,6 +28,7 @@ import org.apache.asterix.algebra.operators.physical.AssignBatchPOperator;
 import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
+import org.apache.asterix.algebra.operators.physical.VectorSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -367,6 +368,9 @@ public class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysicalOperat
                 }
                 case RTREE: {
                     return new RTreeSearchPOperator(dsi, storageDomain, requiresBroadcast);
+                }
+                case VTREE: {
+                    return new VectorSearchPOperator(dsi, storageDomain, requiresBroadcast);
                 }
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX: {

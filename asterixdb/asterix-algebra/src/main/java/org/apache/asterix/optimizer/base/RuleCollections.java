@@ -77,6 +77,7 @@ import org.apache.asterix.optimizer.rules.PullSelectOutOfSpatialJoin;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
 import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
+import org.apache.asterix.optimizer.rules.PushFilterIntoVectorSearchRule;
 import org.apache.asterix.optimizer.rules.PushGroupByThroughProduct;
 import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
@@ -106,6 +107,7 @@ import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceLSMComponentFilterRule;
 import org.apache.asterix.optimizer.rules.am.IntroducePrimaryIndexForAggregationRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
+import org.apache.asterix.optimizer.rules.am.IntroduceTopKAccessMethodRule;
 import org.apache.asterix.optimizer.rules.cbo.EnumerateJoinsRule;
 import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdviseIndexRule;
@@ -338,6 +340,7 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<>();
         accessMethod.add(new AttachCompileTimeRangeMapRule());
         accessMethod.add(new IntroduceSelectAccessMethodRule());
+        accessMethod.add(new IntroduceTopKAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
         accessMethod.add(new IntroduceLSMComponentFilterRule());
         accessMethod.add(new IntroducePrimaryIndexForAggregationRule());
@@ -440,7 +443,8 @@ public final class RuleCollections {
         physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
         physicalRewritesTopLevel.add(new PushLimitIntoPrimarySearchRule());
-        // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
+        physicalRewritesTopLevel.add(new PushFilterIntoVectorSearchRule());
+        // remove assigns that could become unused after PushLimitIntoPrimarySearchRule or PushFilterIntoVectorSearchRule
         physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
         //Infer the types for the pushed down condition

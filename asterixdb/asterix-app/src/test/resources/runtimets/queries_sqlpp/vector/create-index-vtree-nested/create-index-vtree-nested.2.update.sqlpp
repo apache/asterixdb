@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+// Two well-separated groups; distances to query point [0,0,0,0] are unique by construction.
+INSERT INTO MovieNested ([
+  {"id": 1, "meta": {"embedding": [0.0, 0.0, 0.0, 0.1], "year": 2001}},
+  {"id": 2, "meta": {"embedding": [0.0, 0.0, 0.0, 0.2], "year": 2002}},
+  {"id": 3, "meta": {"embedding": [0.0, 0.0, 0.0, 0.3], "year": 2003}},
+  {"id": 4, "meta": {"embedding": [0.0, 0.0, 0.0, 0.4], "year": 2004}},
+  {"id": 5, "meta": {"embedding": [0.0, 0.0, 0.0, 0.5], "year": 2005}},
+  {"id": 6, "meta": {"embedding": [0.0, 0.0, 0.0, 0.6], "year": 2006}},
+  {"id": 7, "meta": {"embedding": [0.0, 0.0, 0.0, 0.7], "year": 2007}},
+  {"id": 8, "meta": {"embedding": [0.0, 0.0, 0.0, 0.8], "year": 2008}},
+  {"id": 9, "meta": {"embedding": [0.0, 0.0, 0.0, 0.9], "year": 2009}},
+  {"id": 10, "meta": {"embedding": [0.0, 0.0, 0.0, 0.10], "year": 2010}},
+  {"id": 11, "meta": {"embedding": [0.0, 0.0, 0.0, 0.11], "year": 2011}},
+  {"id": 12, "meta": {"embedding": [0.0, 0.0, 0.0, 0.12], "year": 2012}},
+  {"id": 13, "meta": {"embedding": [0.0, 0.0, 0.0, 0.13], "year": 2013}},
+  {"id": 14, "meta": {"embedding": [0.0, 0.0, 0.0, 0.14], "year": 2014}},
+  {"id": 15, "meta": {"embedding": [0.0, 0.0, 0.0, 0.15], "year": 2015}},
+  {"id": 16, "meta": {"embedding": [10.0, 10.0, 10.0, 0.1], "year": 2016}},
+  {"id": 17, "meta": {"embedding": [10.0, 10.0, 10.0, 0.2], "year": 2017}},
+  {"id": 18, "meta": {"embedding": [10.0, 10.0, 10.0, 0.3], "year": 2018}},
+  {"id": 19, "meta": {"embedding": [10.0, 10.0, 10.0, 0.4], "year": 2019}},
+  {"id": 20, "meta": {"embedding": [10.0, 10.0, 10.0, 0.5], "year": 2020}},
+  {"id": 21, "meta": {"embedding": [10.0, 10.0, 10.0, 0.6], "year": 2021}},
+  {"id": 22, "meta": {"embedding": [10.0, 10.0, 10.0, 0.7], "year": 2022}},
+  {"id": 23, "meta": {"embedding": [10.0, 10.0, 10.0, 0.8], "year": 2023}},
+  {"id": 24, "meta": {"embedding": [10.0, 10.0, 10.0, 0.9], "year": 2024}},
+  {"id": 25, "meta": {"embedding": [10.0, 10.0, 10.0, 0.10], "year": 2025}},
+  {"id": 26, "meta": {"embedding": [10.0, 10.0, 10.0, 0.11], "year": 2026}},
+  {"id": 27, "meta": {"embedding": [10.0, 10.0, 10.0, 0.12], "year": 2027}},
+  {"id": 28, "meta": {"embedding": [10.0, 10.0, 10.0, 0.13], "year": 2028}},
+  {"id": 29, "meta": {"embedding": [10.0, 10.0, 10.0, 0.14], "year": 2029}},
+  {"id": 30, "meta": {"embedding": [10.0, 10.0, 10.0, 0.15], "year": 2030}}
+]);

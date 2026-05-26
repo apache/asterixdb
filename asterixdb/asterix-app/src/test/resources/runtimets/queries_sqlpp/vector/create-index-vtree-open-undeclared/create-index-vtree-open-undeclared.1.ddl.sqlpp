@@ -1,0 +1,32 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// An UNDECLARED vector field on an OPEN type is a supported, indexable case. The vector DDL requires
+// EXCLUDE UNKNOWN KEY, which skips records whose key is missing and indexes those that have it, so an
+// open/undeclared embedding present in the records builds and queries normally (it does not fail with
+// "no training vectors"). This test guards that behavior end to end.
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+// OPEN type: 'embedding' is NOT declared; it exists only in the record data.
+CREATE TYPE MovieType AS OPEN {
+  id: int
+};
+CREATE DATASET MovieOpen(MovieType) PRIMARY KEY id;

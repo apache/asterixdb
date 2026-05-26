@@ -298,6 +298,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String NAME = "NAME";
     private static final String SNAPSHOT = "SNAPSHOT";
     private static final String TIMESTAMP = "TIMESTAMP";
+    private static final String VECTOR = "VECTOR";
+    private static final String VTREE = "VTREE";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -1579,6 +1581,8 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
   Pair<Map<String, String>, Boolean> castConfigDefaultNull;
   Boolean castDefaultNull = null;
   Map<String, String> castConfig = null;
+  RecordConstructor withRecord = null;
+  List<CreateIndexStatement.IndexedElement> nonVectorFieldsList = new ArrayList<CreateIndexStatement.IndexedElement>();
 }
 {
   (
@@ -1602,8 +1606,35 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
         }
       )*
     <RIGHTPAREN>
+
+    // Parse INCLUDE clause for vector index additional fields (e.g., INCLUDE(title, popularity))
+    // Lookahead checks that INCLUDE is followed by LEFTPAREN to disambiguate from INCLUDE UNKNOWN KEY
+    ( LOOKAHEAD({laIdentifier(INCLUDE) && laToken(2, LEFTPAREN)}) <IDENTIFIER>
+      {
+        if (!isToken(INCLUDE)) {
+          throw createUnexpectedTokenError();
+        }
+      }
+      <LEFTPAREN> { startElementToken = token; }
+        indexedElement = IndexedElement(startElementToken) {
+          nonVectorFieldsList.add(indexedElement);
+        }
+        (<COMMA> { startElementToken = token; }
+          indexedElement = IndexedElement(startElementToken) {
+            nonVectorFieldsList.add(indexedElement);
+          }
+        )*
+      <RIGHTPAREN>
+    )?
+
     ( <TYPE> indexParams = IndexType() )? ( <ENFORCED> { enforced = true; } )?
-    ( LOOKAHEAD({laIdentifier(EXCLUDE) || laIdentifier(INCLUDE)}) <IDENTIFIER>
+
+    // Parse WITH clause for vector index configuration
+    ( <WITH> withRecord = RecordConstructor() )?
+
+    // Parse INCLUDE/EXCLUDE UNKNOWN KEY
+    // Lookahead checks that INCLUDE/EXCLUDE is followed by UNKNOWN to disambiguate from INCLUDE(fields)
+    ( LOOKAHEAD({(laIdentifier(EXCLUDE) || laIdentifier(INCLUDE)) && laToken(2, UNKNOWN)}) <IDENTIFIER>
     {
       if (isToken(EXCLUDE)) {
         excludeUnknown = true;
@@ -1623,22 +1654,102 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     )?
   )
   {
-    IndexType indexType;
-    int gramLength;
-    if (indexParams != null) {
-      indexType = indexParams.type;
-      gramLength = indexParams.gramLength;
-      fullTextConfigName = indexParams.fullTextConfig;
-    } else {
-      indexType = hasUnnest ? IndexType.ARRAY : IndexType.BTREE;
-      gramLength = -1;
-      fullTextConfigName = null;
+      // Check if VECTOR field type annotation is present
+      boolean hasVectorField = false;
+      if (indexedElementList.size() == 1) {
+        CreateIndexStatement.IndexedElement field = indexedElementList.get(0);
+        List<Pair<List<String>, IndexedTypeExpression>> projectList = field.getProjectList();
+        if (projectList != null && !projectList.isEmpty()) {
+          IndexedTypeExpression typeExpr = projectList.get(0).second;
+          if (typeExpr != null) {
+            TypeExpression innerType = typeExpr.getType();
+            if (innerType != null && innerType instanceof TypeReferenceExpression) {
+              TypeReferenceExpression typeRef = (TypeReferenceExpression) innerType;
+              Pair<Namespace, Identifier> ident = typeRef.getIdent();
+              if (ident != null && ident.second != null &&
+                  "$$VECTOR_MARKER$$".equals(ident.second.getValue())) {
+                hasVectorField = true;
+              }
+            }
+          }
+        }
+      }
+
+      boolean isVTree = indexParams != null && indexParams.type == IndexType.VTREE;
+
+      // Validate: VECTOR annotation requires TYPE VTREE
+      if (hasVectorField && !isVTree) {
+        throw new SqlppParseException(getSourceLocation(startStmtToken),
+          "VECTOR field annotation requires TYPE VTREE. Expected syntax: CREATE INDEX ... (field VECTOR) TYPE VTREE WITH {...} EXCLUDE UNKNOWN KEY");
+      }
+
+      // Validate: TYPE VTREE requires VECTOR annotation
+      if (isVTree && !hasVectorField) {
+        throw new SqlppParseException(getSourceLocation(startStmtToken),
+          "TYPE VTREE requires VECTOR field annotation. Expected syntax: CREATE INDEX ... (field VECTOR) TYPE VTREE WITH {...} EXCLUDE UNKNOWN KEY");
+      }
+
+      if (isVTree) {
+        // Validate exactly one field for vector index
+        if (indexedElementList.size() != 1) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken),
+            "Vector index requires exactly one field");
+        }
+
+        // Validate that WITH clause is provided
+        if (withRecord == null) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken),
+            "Vector index requires WITH clause specifying index configuration");
+        }
+
+        // Validate that EXCLUDE UNKNOWN KEY is specified
+        if (excludeUnknown == null || !excludeUnknown) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken),
+            "Vector index requires EXCLUDE UNKNOWN KEY");
+        }
+
+        // Create vector index statement
+        try {
+          CreateIndexStatement stmt = new CreateIndexStatement(
+            nameComponents.first, nameComponents.second,
+            new Identifier(indexName), IndexType.VTREE,
+            Collections.singletonList(indexedElementList.get(0)), // vectorField
+            false, 0, null, ifNotExists, null, null, null,
+            nonVectorFieldsList,         // INCLUDE fields
+            withRecord);
+          return addSourceLocation(stmt, startStmtToken);
+        } catch (CompilationException e) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+        }
+      }
+
+      // Validate: INCLUDE clause is only for vector indexes
+      if (!nonVectorFieldsList.isEmpty()) {
+        throw new SqlppParseException(getSourceLocation(startStmtToken),
+          "INCLUDE clause is only supported for vector indexes (TYPE VTREE)");
+      }
+
+      // Handle regular (non-vector) index creation
+      IndexType indexType;
+      int gramLength;
+      if (indexParams != null) {
+        indexType = indexParams.type;
+        gramLength = indexParams.gramLength;
+        fullTextConfigName = indexParams.fullTextConfig;
+      } else {
+        indexType = hasUnnest ? IndexType.ARRAY : IndexType.BTREE;
+        gramLength = -1;
+        fullTextConfigName = null;
+      }
+      try{
+          CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
+          new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists,
+              excludeUnknown, castDefaultNull, castConfig, Collections.emptyList(), null);
+          return addSourceLocation(stmt, startStmtToken);
+      }   catch (CompilationException e) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+      }
     }
-    CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
-      new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists,
-      excludeUnknown, castDefaultNull, castConfig);
-    return addSourceLocation(stmt, startStmtToken);
-  }
 }
 
 CreateIndexStatement.IndexedElement IndexedElement(Token startElementToken) throws ParseException:
@@ -1743,10 +1854,24 @@ Pair<List<String>, IndexedTypeExpression> IndexedField() throws ParseException:
 {
   Triple<List<String>, Token, Token> path = null;
   IndexedTypeExpression type = null;
+  boolean isVectorType = false;
 }
 {
-  path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(true) )?
+  path = MultipartIdentifier()
+  (
+    <COLON> type = IndexedTypeExpr(true)
+    | LOOKAHEAD({laIdentifier(VECTOR)}) <IDENTIFIER> { isVectorType = true; }
+  )?
   {
+    // For VECTOR type annotation, create a special marker TypeExpression
+    // This allows IndexSpecification to distinguish between:
+    // - "embedding" (no annotation) → type = null
+    // - "embedding VECTOR" → type = TypeExpression with typeRefKind = ATOMIC and typeName = "$$VECTOR_MARKER$$"
+    if (isVectorType) {
+      TypeExpression vectorMarker = new TypeReferenceExpression(
+          new Pair<Namespace, Identifier>(null, new Identifier("$$VECTOR_MARKER$$")));
+      type = new IndexedTypeExpression(vectorMarker, false);
+    }
     return new Pair<List<String>, IndexedTypeExpression>(path.first, type);
   }
 }
@@ -1769,10 +1894,14 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
     if (indexName == null) {
       indexName = MetadataConstants.PRIMARY_INDEX_PREFIX + nameComponents.second;
     }
-    CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
+    try {
+      CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
       new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null, null,
-      Collections.emptyMap());
-    return addSourceLocation(stmt, startStmtToken);
+      Collections.emptyMap(), Collections.emptyList(), null);
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+      throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
   }
 }
 
@@ -1823,7 +1952,12 @@ IndexParams IndexType() throws ParseException:
       type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
       gramLength = Integer.valueOf(token.image);
     }
-  <RIGHTPAREN>)
+  <RIGHTPAREN>
+  | LOOKAHEAD({laIdentifier(VTREE)}) <IDENTIFIER>
+    {
+      type = IndexType.VTREE;
+    }
+  )
     {
       return new IndexParams(type, gramLength, fullTextConfig);
     }
@@ -3708,6 +3842,7 @@ Statement AnalyzeStatement() throws ParseException:
   }
 }
 
+
 Statement AnalyzeDatasetStatement(Token startToken, Namespace namespace, Identifier identifier) throws ParseException:
 {
   RecordConstructor withRecord = null;
@@ -3723,6 +3858,7 @@ Statement AnalyzeDatasetStatement(Token startToken, Namespace namespace, Identif
     }
   }
 }
+
 
 Statement AnalyzeDatasetDropStatement(Token startToken, Namespace namespace, Identifier identifier) throws ParseException:
 {

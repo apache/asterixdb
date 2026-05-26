@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -222,6 +223,34 @@ public class MetadataManagerUtil {
     public static DataSource findDataSource(IClusterStateManager clusterStateManager,
             MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
         return lookupSourceInMetadata(clusterStateManager, mdTxnCtx, id);
+    }
+
+    public static SampleDataSource findSampleDataSource(IClusterStateManager clusterStateManager,
+            MetadataTransactionContext mdTxnCtx, String sampleIndexName, DataSourceId id, boolean usingDatabase)
+            throws AlgebricksException {
+        Dataset dataset = findDataset(mdTxnCtx, id.getDatabaseName(), id.getDataverseName(), id.getDatasourceName());
+        if (dataset == null) {
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
+                    MetadataUtil.dataverseName(id.getDatabaseName(), id.getDataverseName(), usingDatabase));
+        }
+        // Only INTERNAL / EXTERNAL datasets can have a sample data source.
+        switch (dataset.getDatasetType()) {
+            case INTERNAL:
+            case EXTERNAL:
+                break;
+            default:
+                throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
+                        MetadataUtil.dataverseName(id.getDatabaseName(), id.getDataverseName(), usingDatabase));
+        }
+
+        IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
+        IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDatabaseName(),
+                dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        itemType = findTypeForDatasetWithoutType(itemType, dataset);
+
+        INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
+        return new SampleDataSource(dataset, sampleIndexName, itemType, metaItemType, domain);
     }
 
     public static DataSource lookupSourceInMetadata(IClusterStateManager clusterStateManager,

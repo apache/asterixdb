@@ -273,8 +273,12 @@ public class FunctionUtil {
         DatasetFullyQualifiedName datasetOrViewName = parseDatasetFunctionArguments(argList, 0,
                 datasetFn.getSourceLocation(), ExpressionUtils::getStringLiteral);
         boolean isView = argList.size() > 3 && Boolean.TRUE.equals(ExpressionUtils.getBooleanLiteral(argList.get(3)));
-        DatasetFullyQualifiedName synonymName = argList.size() > 4 ? parseDatasetFunctionArguments(argList, 4,
-                datasetFn.getSourceLocation(), ExpressionUtils::getStringLiteral) : null;
+        Boolean isSample = argList.size() > 4 ? ExpressionUtils.getBooleanLiteral(argList.get(4)) : null;
+        DatasetFullyQualifiedName synonymName = null;
+        if (isSample == null || !isSample) {
+            synonymName = argList.size() > 4 ? parseDatasetFunctionArguments(argList, 4, datasetFn.getSourceLocation(),
+                    ExpressionUtils::getStringLiteral) : null;
+        }
         return new Triple<>(datasetOrViewName, isView, synonymName);
     }
 
@@ -308,7 +312,7 @@ public class FunctionUtil {
         return new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName);
     }
 
-    private static String getStringConstant(Mutable<ILogicalExpression> arg) {
+    public static String getStringConstant(Mutable<ILogicalExpression> arg) {
         return ConstantExpressionUtil.getStringConstant(arg.getValue());
     }
 

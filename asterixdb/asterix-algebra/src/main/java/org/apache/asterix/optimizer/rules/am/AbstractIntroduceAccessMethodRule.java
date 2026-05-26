@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
+import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1008,6 +1010,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     keySources = textIndexDetails.getKeyFieldSourceIndicators();
                     isOverridingKeyFieldTypes = textIndexDetails.isOverridingKeyFieldTypes();
                     break;
+                case VTREE:
+                    Index.VectorIndexDetails vectorIndexDetails = (Index.VectorIndexDetails) index.getIndexDetails();
+                    keyFieldNames = vectorIndexDetails.getKeyFieldNames();
+                    keyFieldTypes = new ArrayList<>();
+                    keyFieldTypes.add(FULL_OPEN_ORDEREDLIST_TYPE);
+                    keySources = null;
+                    isOverridingKeyFieldTypes = vectorIndexDetails.isOverridingKeyFieldTypes();
+                    break;
+
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                             String.valueOf(index.getIndexType()));

@@ -24,6 +24,7 @@ import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IResource;
+import org.apache.hyracks.storage.common.IResourceWrapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,7 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * A local resource with a dataset id and an assigned partition
  */
-public class DatasetLocalResource implements IResource {
+public class DatasetLocalResource implements IResource, IResourceWrapper {
 
     private static final long serialVersionUID = 1L;
     /**
@@ -72,6 +73,7 @@ public class DatasetLocalResource implements IResource {
         this.partition = partition;
     }
 
+    @Override
     public IResource getResource() {
         return resource;
     }

@@ -46,6 +46,7 @@ import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -84,6 +85,13 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = fetchDataset(metadataProvider, f);
+        // Arg layout: [..., arg4 = isSample (Boolean), arg5 = sample index name (String) when isSample is true].
+        Boolean isSample = f.getArguments().size() > 4
+                ? ConstantExpressionUtil.getBooleanConstant(f.getArguments().get(4).get()) : null;
+        String sampleIndexName = null;
+        if (isSample != null && isSample && f.getArguments().size() > 5) {
+            sampleIndexName = FunctionUtil.getStringConstant(f.getArguments().get(5));
+        }
         List<LogicalVariable> variables = new ArrayList<>();
         switch (dataset.getDatasetType()) {
             case INTERNAL:
@@ -104,7 +112,12 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
 
         DataSourceId dsid =
                 new DataSourceId(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
-        DataSource dataSource = metadataProvider.findDataSource(dsid);
+        DataSource dataSource;
+        if (sampleIndexName != null) {
+            dataSource = metadataProvider.findSampleDataSource(dsid, sampleIndexName);
+        } else {
+            dataSource = metadataProvider.findDataSource(dsid);
+        }
         boolean hasMeta = dataSource.hasMeta();
         if (hasMeta) {
             variables.add(context.newVar());

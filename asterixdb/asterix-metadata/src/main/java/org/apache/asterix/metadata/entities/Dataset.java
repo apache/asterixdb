@@ -69,6 +69,7 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.InvertedIndexResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.TypeUtil;
+import org.apache.asterix.metadata.utils.VTreeResourceFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -143,6 +144,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             RTreeResourceFactoryProvider.INSTANCE;
     private static final InvertedIndexResourceFactoryProvider invertedIndexResourceFactoryProvider =
             InvertedIndexResourceFactoryProvider.INSTANCE;
+    private static final VTreeResourceFactoryProvider vTreeResourceFactoryProvider =
+            VTreeResourceFactoryProvider.INSTANCE;
     /*
      * Members
      */
@@ -487,6 +490,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             case SAMPLE:
                 resourceFactory = BTreeResourceFactoryProvider.INSTANCE.getResourceFactory(mdProvider, this, index,
                         recordType, metaType, mergePolicyFactory, mergePolicyProperties, null, null);
+                break;
+            case VTREE:
+                resourceFactory = vTreeResourceFactoryProvider.getResourceFactory(mdProvider, this, index, recordType,
+                        metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,

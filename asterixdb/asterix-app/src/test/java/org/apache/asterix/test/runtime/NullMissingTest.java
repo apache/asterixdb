@@ -89,12 +89,16 @@ public class NullMissingTest {
             // Include only functions annotated with MissingNullInOutFunction
             if (functionDescriptor.getClass().isAnnotationPresent(MissingNullInOutFunction.class)) {
 
-                // We test all functions except record, cast and full-text contains functions,
-                // which requires type settings or argument settings.
+                // We test all functions except record, cast, full-text contains, and ann-distance
+                // functions, which require type settings or a constant argument (ann-distance requires
+                // its metric argument to be a constant string, so it cannot take a non-constant null/missing).
                 // Instead, we test them in runtime tests.
                 // TODO(ali): ASTERIXDB-2982 do it in a proper way so that it does not exclude classes inadvertently
+                // ann-distance builds its factory via DescriptorFactoryUtil, so its factory class name is
+                // generic; match on the descriptor class name instead.
                 if (!className.contains("record") && !className.contains("Cast")
-                        && !className.contains("FullTextContains")) {
+                        && !className.contains("FullTextContains")
+                        && !functionDescriptor.getClass().getName().contains("ANNDistance")) {
                     tests.add(new Object[] { getTestName(functionDescriptor.getClass()), functionDescriptor });
                 } else {
                     LOGGER.log(Level.INFO, "Excluding " + className);

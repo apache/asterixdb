@@ -22,4 +22,66 @@
             <output-dir compare="Clean-JSON">distance-functions</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree">
+            <output-dir compare="Clean-JSON">create-index-vtree</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-nested">
+            <output-dir compare="Clean-JSON">create-index-vtree-nested</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-include-filter">
+            <output-dir compare="Clean-JSON">create-index-vtree-include-filter</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-include-nested">
+            <output-dir compare="Clean-JSON">create-index-vtree-include-nested</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-similarity-normalize">
+            <output-dir compare="Clean-JSON">create-index-vtree-similarity-normalize</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="ann-distance-invalid-metric">
+            <output-dir compare="Text">ann-distance-invalid-metric</output-dir>
+            <expected-error>unknown ann_distance metric</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-open-undeclared">
+            <output-dir compare="Clean-JSON">create-index-vtree-open-undeclared</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-invalid-field-type">
+            <output-dir compare="Text">create-index-vtree-invalid-field-type</output-dir>
+            <expected-error>cannot be used as a vector key field</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-composite-pk">
+            <output-dir compare="Clean-JSON">create-index-vtree-composite-pk</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-movie">
+            <output-dir compare="Clean-JSON">create-index-vtree-movie</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-glove">
+            <output-dir compare="Clean-JSON">create-index-vtree-glove</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="soft-keyword-identifiers">
+            <output-dir compare="Clean-JSON">soft-keyword-identifiers</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>

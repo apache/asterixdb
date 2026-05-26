@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE testcpk;
+
+// Two well-separated groups. Group (id1=1): near the origin, years 1991..2005.
+// Group (id1=2): near [10,10,10,*], years 2001..2015. Distances to the query point
+// [0,0,0,0] are unique by construction, so top-k is fully hand-derivable.
+// The `year` values (>= 1991) never overlap the id2 values (<= 15): a filter that is
+// mistakenly evaluated against a PK column admits nothing, making the bug observable.
+INSERT INTO MovieCpk ([
+  {"id1": 1, "id2": 1, "year": 1991, "title": "t1_1", "embedding": [0.0, 0.0, 0.0, 0.1]},
+  {"id1": 1, "id2": 2, "year": 1992, "title": "t1_2", "embedding": [0.0, 0.0, 0.0, 0.2]},
+  {"id1": 1, "id2": 3, "year": 1993, "title": "t1_3", "embedding": [0.0, 0.0, 0.0, 0.3]},
+  {"id1": 1, "id2": 4, "year": 1994, "title": "t1_4", "embedding": [0.0, 0.0, 0.0, 0.4]},
+  {"id1": 1, "id2": 5, "year": 1995, "title": "t1_5", "embedding": [0.0, 0.0, 0.0, 0.5]},
+  {"id1": 1, "id2": 6, "year": 1996, "title": "t1_6", "embedding": [0.0, 0.0, 0.0, 0.6]},
+  {"id1": 1, "id2": 7, "year": 1997, "title": "t1_7", "embedding": [0.0, 0.0, 0.0, 0.7]},
+  {"id1": 1, "id2": 8, "year": 1998, "title": "t1_8", "embedding": [0.0, 0.0, 0.0, 0.8]},
+  {"id1": 1, "id2": 9, "year": 1999, "title": "t1_9", "embedding": [0.0, 0.0, 0.0, 0.9]},
+  {"id1": 1, "id2": 10, "year": 2000, "title": "t1_10", "embedding": [0.0, 0.0, 0.0, 1.0]},
+  {"id1": 1, "id2": 11, "year": 2001, "title": "t1_11", "embedding": [0.0, 0.0, 0.0, 1.1]},
+  {"id1": 1, "id2": 12, "year": 2002, "title": "t1_12", "embedding": [0.0, 0.0, 0.0, 1.2]},
+  {"id1": 1, "id2": 13, "year": 2003, "title": "t1_13", "embedding": [0.0, 0.0, 0.0, 1.3]},
+  {"id1": 1, "id2": 14, "year": 2004, "title": "t1_14", "embedding": [0.0, 0.0, 0.0, 1.4]},
+  {"id1": 1, "id2": 15, "year": 2005, "title": "t1_15", "embedding": [0.0, 0.0, 0.0, 1.5]},
+  {"id1": 2, "id2": 1, "year": 2001, "title": "t2_1", "embedding": [10.0, 10.0, 10.0, 0.1]},
+  {"id1": 2, "id2": 2, "year": 2002, "title": "t2_2", "embedding": [10.0, 10.0, 10.0, 0.2]},
+  {"id1": 2, "id2": 3, "year": 2003, "title": "t2_3", "embedding": [10.0, 10.0, 10.0, 0.3]},
+  {"id1": 2, "id2": 4, "year": 2004, "title": "t2_4", "embedding": [10.0, 10.0, 10.0, 0.4]},
+  {"id1": 2, "id2": 5, "year": 2005, "title": "t2_5", "embedding": [10.0, 10.0, 10.0, 0.5]},
+  {"id1": 2, "id2": 6, "year": 2006, "title": "t2_6", "embedding": [10.0, 10.0, 10.0, 0.6]},
+  {"id1": 2, "id2": 7, "year": 2007, "title": "t2_7", "embedding": [10.0, 10.0, 10.0, 0.7]},
+  {"id1": 2, "id2": 8, "year": 2008, "title": "t2_8", "embedding": [10.0, 10.0, 10.0, 0.8]},
+  {"id1": 2, "id2": 9, "year": 2009, "title": "t2_9", "embedding": [10.0, 10.0, 10.0, 0.9]},
+  {"id1": 2, "id2": 10, "year": 2010, "title": "t2_10", "embedding": [10.0, 10.0, 10.0, 1.0]},
+  {"id1": 2, "id2": 11, "year": 2011, "title": "t2_11", "embedding": [10.0, 10.0, 10.0, 1.1]},
+  {"id1": 2, "id2": 12, "year": 2012, "title": "t2_12", "embedding": [10.0, 10.0, 10.0, 1.2]},
+  {"id1": 2, "id2": 13, "year": 2013, "title": "t2_13", "embedding": [10.0, 10.0, 10.0, 1.3]},
+  {"id1": 2, "id2": 14, "year": 2014, "title": "t2_14", "embedding": [10.0, 10.0, 10.0, 1.4]},
+  {"id1": 2, "id2": 15, "year": 2015, "title": "t2_15", "embedding": [10.0, 10.0, 10.0, 1.5]}
+]);

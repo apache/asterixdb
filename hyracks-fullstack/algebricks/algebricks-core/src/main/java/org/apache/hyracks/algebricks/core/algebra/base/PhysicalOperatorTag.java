@@ -84,5 +84,6 @@ public enum PhysicalOperatorTag {
     WRITE_RESULT,
     INTERSECT,
     WINDOW,
-    WINDOW_STREAM
+    WINDOW_STREAM,
+    VECTOR_SEARCH
 }
