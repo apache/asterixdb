@@ -120,8 +120,8 @@
 
     <icebergjavasdk.version>1.10.2</icebergjavasdk.version>
 
-    <!-- match with Nessie version used in Iceberg -->
-    <nessieproject.version>0.104.10</nessieproject.version>
+    <!-- @derived-from: org.apache.iceberg:iceberg-nessie:${icebergjavasdk.version}#dep:nessie-client -->
+    <nessieproject.version>0.104.5</nessieproject.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
