@@ -57,6 +57,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.cloud.io.ICloudProperties;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
@@ -76,6 +77,7 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ChecksumAlgorithm;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -280,8 +282,15 @@ public final class S3CloudClient implements ICloudClient {
             }
 
             Delete delete = Delete.builder().objects(objectIdentifiers).build();
-            DeleteObjectsRequest deleteReq = DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build();
-            DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteReq);
+            DeleteObjectsRequest.Builder deleteReqBuilder =
+                    DeleteObjectsRequest.builder().bucket(bucket).delete(delete);
+            if (config.getChecksumBehavior() == S3ChecksumBehavior.WHEN_REQUIRED) {
+                // DeleteObjects needs a request-body integrity header; when_required suppresses the SDK's flexible
+                // checksum and it no longer adds Content-MD5, so request an explicit checksum for S3-compatible stores
+                // https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
+                deleteReqBuilder.checksumAlgorithm(ChecksumAlgorithm.CRC32_C);
+            }
+            DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteReqBuilder.build());
             if (deleteObjectsResponse.hasErrors()) {
                 List<S3Error> deleteErrors = deleteObjectsResponse.errors();
                 for (S3Error s3Error : deleteErrors) {
