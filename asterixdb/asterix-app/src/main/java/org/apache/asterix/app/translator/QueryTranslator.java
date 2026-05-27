@@ -610,11 +610,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw ex;
         } finally {
             // async queries are completed after their job completes
-            if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery) {
+            if (ResultDelivery.ASYNC != resultDelivery) {
                 // this assumes 1-1 mapping between a request and a statement, needs to be adapted for multi-statement
                 appCtx.getRequestTracker().complete(reqId);
-                if (ResultDelivery.ASYNC != resultDelivery && trackInAsyncDeferredRequests) {
+                if (trackInAsyncDeferredRequests) {
                     completeDeferred((ClientRequest) clientRequest, hasResultSet, exception);
+                }
+            } else {
+                if (statements.isEmpty()) {
+                    appCtx.getRequestTracker().complete(reqId);
+                }
+                if (trackInAsyncDeferredRequests) {
+                    JobId jobId = ((ClientRequest) clientRequest).getJobId();
+                    if (jobId == null) {
+                        appCtx.getRequestTracker().removeAsyncOrDeferredRequest(clientRequest.getId());
+                    }
                 }
             }
             Thread.currentThread().setName(threadName);
