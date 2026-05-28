@@ -71,6 +71,8 @@ public class OptimizationConfUtil {
                 compilerProperties.isIndexOnly());
         boolean rewriteOrToJoin = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_REWRITE_DISJUNCTION_KEY,
                 compilerProperties.rewriteDisjunctionToJoin());
+        boolean countDistinctToHash = getBoolean(querySpecificConfig,
+                CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_KEY, compilerProperties.isAggregateDistinctHash());
         boolean sanityCheck = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
                 compilerProperties.isSanityCheck());
         boolean externalFieldPushdown = getBoolean(querySpecificConfig,
@@ -120,6 +122,7 @@ public class OptimizationConfUtil {
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);
         physOptConf.setRewriteOrToJoin(rewriteOrToJoin);
+        physOptConf.setCountDistinctToHash(countDistinctToHash);
         physOptConf.setParquetFileSplit(useFileSplits);
         physOptConf.setHdfsSplitParallelism(hdfsSplitParallelism);
         physOptConf.setSanityCheckEnabled(sanityCheck);

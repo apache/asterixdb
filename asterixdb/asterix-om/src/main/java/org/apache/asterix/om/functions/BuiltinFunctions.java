@@ -761,6 +761,8 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("agg-sql-count-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_COUNT_DISTINCT =
             FunctionConstants.newAsterix("sql-count-distinct", 1);
+    public static final FunctionIdentifier SQL_COUNT_DISTINCT_HASH =
+            FunctionConstants.newAsterix("agg-sql-count-distinct-hash", 1);
     public static final FunctionIdentifier SQL_COUNTN_DISTINCT =
             FunctionConstants.newAsterix("agg-sql-countn-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_COUNTN_DISTINCT =
@@ -1775,6 +1777,7 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SQL_COUNT_DISTINCT_HASH, AInt64TypeComputer.INSTANCE, true);
         addFunction(SQL_COUNTN, CountNTypeComputer.INSTANCE, true);
         addFunction(SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
@@ -2882,6 +2885,10 @@ public class BuiltinFunctions {
 
         addDistinctAgg(SQL_COUNT_DISTINCT, SQL_COUNT);
         addScalarAgg(SQL_COUNT_DISTINCT, SCALAR_SQL_COUNT_DISTINCT);
+
+        // HASH DISTINCT COUNT: single-pass distinct counter
+
+        addAgg(SQL_COUNT_DISTINCT_HASH);
 
         // SQL COUNTN
 

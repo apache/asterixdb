@@ -92,6 +92,7 @@ import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnknownCheckForKnownTypeExpressionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
+import org.apache.asterix.optimizer.rules.RewriteCountDistinctToHashRule;
 import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
 import org.apache.asterix.optimizer.rules.STTransformResolveCRSRule;
 import org.apache.asterix.optimizer.rules.SetAsterixMemoryRequirementsRule;
@@ -312,6 +313,7 @@ public final class RuleCollections {
         consolidation.add(new ConsolidateSelectsRule());
         consolidation.add(new ConsolidateAssignsRule(false));
         consolidation.add(new InlineAssignIntoAggregateRule());
+        consolidation.add(new RewriteCountDistinctToHashRule());
         consolidation.add(new RewriteDistinctAggregateRule());
         // The following rule should run after RewriteDistinctAggregateRule
         consolidation.add(new AsterixIntroduceGroupByCombinerRule());

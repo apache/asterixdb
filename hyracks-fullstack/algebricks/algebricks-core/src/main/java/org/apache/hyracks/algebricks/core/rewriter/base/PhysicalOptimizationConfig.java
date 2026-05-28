@@ -70,6 +70,7 @@ public class PhysicalOptimizationConfig {
     private static final String COMMON_EXPRESSION_LIMIT = "EXTRACT_COMMON_EXPRESSION_LIMIT";
 
     private static final String ORDER_FIELDS = "ORDERED_FIELDS";
+    private static final String COUNT_DISTINCT_TO_HASH = "COUNT_DISTINCT_TO_HASH";
 
     private final Properties properties = new Properties();
 
@@ -273,6 +274,14 @@ public class PhysicalOptimizationConfig {
 
     public boolean rewriteOrToJoin() {
         return getBoolean(REWRITE_OR_TO_JOIN, AlgebricksConfig.REWRITE_DISJUNCTION_DEFAULT);
+    }
+
+    public void setCountDistinctToHash(boolean countDistinctToHash) {
+        setBoolean(COUNT_DISTINCT_TO_HASH, countDistinctToHash);
+    }
+
+    public boolean isCountDistinctToHash() {
+        return getBoolean(COUNT_DISTINCT_TO_HASH, AlgebricksConfig.AGGREGATE_DISTINCT_HASH_DEFAULT);
     }
 
     public boolean isIndexOnly() {

@@ -39,6 +39,7 @@ public class AlgebricksConfig {
     public static final boolean CBO_TEST_DEFAULT = false;
     public static final boolean FORCE_JOIN_ORDER_DEFAULT = false;
     public static final boolean REWRITE_DISJUNCTION_DEFAULT = false;
+    public static final boolean AGGREGATE_DISTINCT_HASH_DEFAULT = false;
     public static final String QUERY_PLAN_SHAPE_ZIGZAG = "zigzag";
     public static final String QUERY_PLAN_SHAPE_LEFTDEEP = "leftdeep";
     public static final String QUERY_PLAN_SHAPE_RIGHTDEEP = "rightdeep";

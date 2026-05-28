@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.control.common.config.OptionTypes;
 
 /**
  * Implementations of {@link IFunctionTypeInferer} for built-in functions
@@ -125,6 +126,25 @@ public final class FunctionTypeInferers {
 
     public static final IFunctionTypeInferer MEDIAN_MEMORY = (expr, fd, context, compilerProps, metadataProvider) -> fd
             .setImmutableStates(compilerProps.getSortMemoryFrames());
+
+    public static final IFunctionTypeInferer SET_ARGUMENT_TYPE_AND_AGGREGATE_HASH_MEMORY = new IFunctionTypeInferer() {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps, IMetadataProvider<?, ?> mp) throws AlgebricksException {
+            long memoryBudget;
+            Map<String, Object> config = mp.getConfig();
+            Object memoryOptionFromQuery = config.get(CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY_KEY);
+            if (memoryOptionFromQuery != null) {
+                memoryBudget = OptionTypes.LONG_BYTE_UNIT.parse(String.valueOf(memoryOptionFromQuery));
+            } else {
+                memoryBudget = compilerProps.getAggregateDistinctHashMemorySize();
+            }
+            int numFrames = (int) (memoryBudget / compilerProps.getFrameSize());
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+            fd.setImmutableStates(TypeComputeUtils.getActualType(t), numFrames);
+        }
+    };
 
     public static final IFunctionTypeInferer RECORD_MODIFY_INFERER =
             (expr, fd, context, compilerProps, metadataProvider) -> {

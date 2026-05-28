@@ -48,6 +48,8 @@
     "cloud.storage.scheme" : "",
     "cloud.storage.sweep.threshold.percentage" : 0.9,
     "cloud.write.buffer.size" : 8388608,
+    "compiler.aggregate.distinct.hash" : false,
+    "compiler.aggregate.distinct.hash.memory" : 33554432,
     "compiler\.arrayindex" : true,
     "compiler.batch.lookup" : true,
     "compiler.cbo" : true,

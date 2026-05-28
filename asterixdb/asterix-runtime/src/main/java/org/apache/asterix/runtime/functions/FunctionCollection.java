@@ -233,6 +233,7 @@ import org.apache.asterix.runtime.aggregates.std.RangeMapAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlCountDistinctAggregateHashDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlCountNAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlMaxAggregateDescriptor;
@@ -847,6 +848,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarFirstElementAggregateDescriptor.FACTORY);
 
         // SQL aggregates
+        fc.add(SqlCountDistinctAggregateHashDescriptor.FACTORY);
         fc.add(SqlCountAggregateDescriptor.FACTORY);
         fc.add(SqlCountNAggregateDescriptor.FACTORY);
         fc.add(SqlAvgAggregateDescriptor.FACTORY);

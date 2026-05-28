@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * COUNT(DISTINCT) inside a correlated subquery (nested subplan): the aggregate is evaluated once
+ * per outer tuple, exercising the per-group init()/reuse path of the hash aggregate.
+ * Salaries: 100, 100, 200, 300, 300, 400.
+ * id 1 (100) -> distinct salaries >= 100 = {100,200,300,400} = 4
+ * id 2 (100) -> 4
+ * id 3 (200) -> {200,300,400} = 3
+ */
+
+use test;
+
+/* Same query as hashbased.12 but with the hash rewrite disabled: results must be identical. */
+SET `compiler.aggregate.distinct.hash` "false";
+
+SELECT e.id AS id,
+       (SELECT VALUE COUNT(DISTINCT e2.salary) FROM emp e2 WHERE e2.salary >= e.salary)[0] AS ge_distinct
+FROM emp e
+WHERE e.id <= 3
+ORDER BY e.id;

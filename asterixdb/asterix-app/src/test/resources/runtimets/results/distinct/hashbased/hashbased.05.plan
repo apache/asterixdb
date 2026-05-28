@@ -1,0 +1,33 @@
+distribute result [$$54] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$54] <- [{"dept": $$dept, "distinct_salaries": $$57}] project: [$$54] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$dept(ASC) ]  |PARTITIONED|
+        group by ([$$dept := $$55]) decor ([]) {
+                  aggregate [$$57] <- [agg-sql-count-distinct-hash($$52)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- AGGREGATE  |LOCAL|
+                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- PRE_CLUSTERED_GROUP_BY[$$55]  |PARTITIONED|
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$55) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
+                assign [$$52, $$55] <- [$$emp.getField(2), $$emp.getField(1)] project: [$$52, $$55] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ASSIGN  |PARTITIONED|
+                  project ([$$emp]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$56, $$emp] <- test.emp [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

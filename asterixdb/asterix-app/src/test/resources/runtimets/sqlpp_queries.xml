@@ -14913,6 +14913,11 @@
         <output-dir compare="Text">query-issue443-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="distinct">
+      <compilation-unit name="hashbased">
+        <output-dir compare="Text">hashbased</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="rightouterjoin">
     <test-case FilePath="rightouterjoin">

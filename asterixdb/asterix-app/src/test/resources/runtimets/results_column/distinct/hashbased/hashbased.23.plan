@@ -1,0 +1,43 @@
+distribute result [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$82] <- [{"dept": $$dept, "distinct_salaries": $$86, "distinct_ids": $$87, "sum_distinct_salary": $$88, "cnt": $$89}] project: [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$dept(ASC) ]  |PARTITIONED|
+        group by ([$$dept := $$83]) decor ([]) {
+                  aggregate [$$86, $$87, $$89] <- [agg-sql-count-distinct-hash($$67), agg-sql-count-distinct-hash($$85), agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- AGGREGATE  |LOCAL|
+                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+               }
+               {
+                  aggregate [$$88] <- [agg-sql-sum($$67)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- AGGREGATE  |LOCAL|
+                    distinct ([$$67]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                      order (ASC, $$67) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- MICRO_STABLE_SORT [$$67(ASC)]  |LOCAL|
+                        project ([$$67]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- PRE_CLUSTERED_GROUP_BY[$$83]  |PARTITIONED|
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$83) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$83(ASC)]  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- HASH_PARTITION_EXCHANGE [$$83]  |PARTITIONED|
+                assign [$$67, $$83] <- [$$emp.getField(2), $$emp.getField(1)] project: [$$67, $$85, $$83] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ASSIGN  |PARTITIONED|
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$85, $$emp] <- test.emp project ({dept:any,salary:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

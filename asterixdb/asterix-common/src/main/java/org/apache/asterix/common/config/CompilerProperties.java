@@ -63,6 +63,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
+        COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+                "The memory budget (in bytes) for a hash-based distinct aggregate instance in a partition"),
         COMPILER_EXTERNALSCANMEMORY(
                 INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(8, KILOBYTE),
@@ -172,6 +176,10 @@ public class CompilerProperties extends AbstractProperties {
                 BOOLEAN,
                 AlgebricksConfig.REWRITE_DISJUNCTION_DEFAULT,
                 "Rewrite disjunctions to joins in query plans"),
+        COMPILER_AGGREGATE_DISTINCT_HASH(
+                BOOLEAN,
+                AlgebricksConfig.AGGREGATE_DISTINCT_HASH_DEFAULT,
+                "When true, a hash-based approach is used to compute aggregate distinct operations"),
         COMPILER_DISJUNCTION_HASH_THRESHOLD(
                 getRangedIntegerType(-1, Integer.MAX_VALUE),
                 AlgebricksConfig.HASH_BASED_OR_THRESHOLD_DEFAULT,
@@ -234,6 +242,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_TEXTSEARCHMEMORY_KEY = Option.COMPILER_TEXTSEARCHMEMORY.ini();
 
+    public static final String COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY_KEY =
+            Option.COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY.ini();
+
     public static final String COMPILER_PARALLELISM_KEY = Option.COMPILER_PARALLELISM.ini();
 
     public static final String COMPILER_SORT_PARALLEL_KEY = Option.COMPILER_SORT_PARALLEL.ini();
@@ -243,6 +254,8 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_INDEXONLY_KEY = Option.COMPILER_INDEX_COVERING.ini();
 
     public static final String COMPILER_REWRITE_DISJUNCTION_KEY = Option.COMPILER_DISJUNCTION_AS_JOIN.ini();
+
+    public static final String COMPILER_AGGREGATE_DISTINCT_HASH_KEY = Option.COMPILER_AGGREGATE_DISTINCT_HASH.ini();
 
     public static final String COMPILER_DISJUNCTION_HASH_THRESHOLD = Option.COMPILER_DISJUNCTION_HASH_THRESHOLD.ini();
 
@@ -314,6 +327,10 @@ public class CompilerProperties extends AbstractProperties {
         return accessor.getLong(Option.COMPILER_TEXTSEARCHMEMORY);
     }
 
+    public long getAggregateDistinctHashMemorySize() {
+        return accessor.getLong(Option.COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY);
+    }
+
     public int getMinSortMemoryFrames() {
         int numFrames = (int) accessor.getLong(Option.COMPILER_MIN_SORTMEMORY) / getFrameSize();
         return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_SORT);
@@ -356,6 +373,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean rewriteDisjunctionToJoin() {
         return accessor.getBoolean(Option.COMPILER_DISJUNCTION_AS_JOIN);
+    }
+
+    public boolean isAggregateDistinctHash() {
+        return accessor.getBoolean(Option.COMPILER_AGGREGATE_DISTINCT_HASH);
     }
 
     public int getHashBasedORThreshold() {

@@ -120,6 +120,8 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
                 SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION, "hash_merge", "output-record-type",
                 CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY,
                 CompilerProperties.COMPILER_HDFS_SPLIT_PARALLELISM_KEY,
+                CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY_KEY,
+                CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_KEY,
                 DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
                 SetAsterixPhysicalOperatorsRule.REWRITE_ATTEMPT_BATCH_ASSIGN,
                 EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK, SqlppQueryRewriter.SQL_COMPAT_OPTION,

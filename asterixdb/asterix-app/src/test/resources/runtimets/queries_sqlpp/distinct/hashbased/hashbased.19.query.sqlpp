@@ -1,0 +1,34 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * COUNT(DISTINCT) over a self-join, repeated in the HAVING clause. The join multiplies duplicate
+ * salary values per group; the hash aggregate must still count each salary once.
+ */
+
+use test;
+
+/* Same query as hashbased.13 but with the hash rewrite disabled: results must be identical. */
+SET `compiler.aggregate.distinct.hash` "false";
+
+SELECT e1.dept AS dept, COUNT(DISTINCT e2.salary) AS ds
+FROM emp e1 JOIN emp e2 ON e1.dept = e2.dept
+GROUP BY e1.dept
+HAVING COUNT(DISTINCT e2.salary) > 1
+ORDER BY e1.dept;

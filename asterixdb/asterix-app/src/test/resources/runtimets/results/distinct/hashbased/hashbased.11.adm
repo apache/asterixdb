@@ -1,0 +1,2 @@
+{ "dept": "eng", "distinct_salaries": 2, "distinct_ids": 3, "sum_distinct_salary": 300, "cnt": 3 }
+{ "dept": "sales", "distinct_salaries": 2, "distinct_ids": 3, "sum_distinct_salary": 700, "cnt": 3 }

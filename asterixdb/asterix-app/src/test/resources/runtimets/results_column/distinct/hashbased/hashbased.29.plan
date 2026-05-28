@@ -1,0 +1,22 @@
+distribute result [$$70] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$70] <- [{"distinct_salaries": $$73, "distinct_ids": $$74, "salaries": $$75, "sum_salary": $$76}] project: [$$70] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$73, $$74, $$75, $$76] <- [agg-sql-count-distinct-hash($$53), agg-sql-count-distinct-hash($$58), agg-sql-count($$53), agg-sql-sum($$53)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          assign [$$58, $$53] <- [$$emp.getField(0), $$emp.getField(2)] project: [$$53, $$58] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$emp]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$72, $$emp] <- test.emp project ({id:any,salary:any}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
