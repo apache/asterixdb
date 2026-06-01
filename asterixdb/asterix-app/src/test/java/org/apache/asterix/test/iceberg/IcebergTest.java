@@ -127,7 +127,6 @@ public class IcebergTest {
     private static S3MockContainer s3Mock;
 
     // Nessie config
-    private static final String NESSIE_CONTAINER_NAME = "iceberg-nessie";
     private static GenericContainer<?> nessie;
     private static final DockerImageName NESSIE_IMAGE = DockerImageName.parse("ghcr.io/projectnessie/nessie:0.107.5");
     private static final int NESSIE_PORT = 19120;
@@ -148,8 +147,7 @@ public class IcebergTest {
         final TestExecutor testExecutor = new TestExecutor();
         LOGGER.info("Starting S3 mock and Nessie containers");
         s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
-        nessie = new GenericContainer<>(NESSIE_IMAGE).withExposedPorts(NESSIE_PORT)
-                .withCreateContainerCmdModifier(cmd -> cmd.withName(NESSIE_CONTAINER_NAME));
+        nessie = new GenericContainer<>(NESSIE_IMAGE).withExposedPorts(NESSIE_PORT);
         nessie.setPortBindings(List.of(NESSIE_PORT + ":" + NESSIE_PORT));
         nessie.start();
 

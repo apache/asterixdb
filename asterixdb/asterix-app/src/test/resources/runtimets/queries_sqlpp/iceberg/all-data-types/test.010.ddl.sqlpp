@@ -58,3 +58,18 @@ USING S3
     ("time-to-int"="false"),
     ("timestamp-to-long"="false")
 );
+
+CREATE TYPE allTypesTimesDefaultExpectingNotConverted AS open {};
+CREATE EXTERNAL COLLECTION allTypesTimesDefaultExpectingNotConverted(allTypesTimesDefaultExpectingNotConverted)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="allTypes"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet"),
+    ("decimal-to-double"="true")
+);

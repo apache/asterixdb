@@ -55,7 +55,6 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 public class LocalCloudUtilAdobeMock {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String S3MOCK_CONTAINER_NAME = "adobe-s3-mock";
 
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
     public static final String S3MOCK_VERSION_TAG = "4.7.0";
@@ -90,8 +89,7 @@ public class LocalCloudUtilAdobeMock {
         shutdownSilently();
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
-        s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart)
-                .withCreateContainerCmdModifier(cmd -> cmd.withName(S3MOCK_CONTAINER_NAME));
+        s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart);
         if (!cleanStart) {
             Path s3MockDataDir = Path.of("target", "s3mock");
             boolean existingData = s3MockDataDir.toFile().exists();
