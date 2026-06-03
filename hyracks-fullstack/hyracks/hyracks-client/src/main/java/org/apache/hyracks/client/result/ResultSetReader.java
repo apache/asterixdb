@@ -88,7 +88,11 @@ public class ResultSetReader implements IResultSetReader {
         frame.reset();
         int readSize = 0;
         try {
-            if (isFirstRead() && !hasNextRecord()) {
+            boolean firstRead = isFirstRead();
+            if (firstRead) {
+                getResultRecords();
+            }
+            if (firstRead && !hasNextRecord()) {
                 return readSize;
             }
             // read until frame is full or all result records have been read
@@ -164,16 +168,11 @@ public class ResultSetReader implements IResultSetReader {
 
     protected boolean hasNextRecord() throws HyracksDataException {
         currentRecord++;
-        ResultDirectoryRecord record = getRecord(currentRecord);
-        // skip empty records
-        while (record.isEmpty() && ++currentRecord < knownRecords.length) {
-            record = getRecord(currentRecord);
-        }
         if (currentRecord == knownRecords.length) {
             // exhausted all known records
             return false;
         }
-        requestRecordData(record);
+        requestRecordData(getRecord(currentRecord));
         return true;
     }
 

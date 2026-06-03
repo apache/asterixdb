@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultDirectory;
-import org.apache.hyracks.api.result.ResultDirectoryRecord;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.client.net.ClientNetworkManager;
 
@@ -96,12 +95,7 @@ public class PartitionResultSetReader extends ResultSetReader {
             // exhausted all known records
             return false;
         }
-        ResultDirectoryRecord record = getRecord(currentRecord);
-        // skip empty records
-        if (record.isEmpty()) {
-            return false;
-        }
-        requestRecordData(record);
+        requestRecordData(getRecord(currentRecord));
         return true;
     }
 

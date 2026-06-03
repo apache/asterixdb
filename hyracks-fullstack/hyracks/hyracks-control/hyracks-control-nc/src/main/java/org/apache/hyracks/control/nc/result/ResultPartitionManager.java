@@ -157,8 +157,10 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException {
         ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
-        if (rsIdMap != null && rsIdMap.removePartition(jobId, resultSetId, partition)) {
-            partitionResultStateMap.remove(jobId);
+        if (rsIdMap != null) {
+            if (rsIdMap.removePartition(jobId, resultSetId, partition)) {
+                partitionResultStateMap.remove(jobId);
+            }
             reportPartitionConsumed(jobId, resultSetId, partition);
         }
     }
