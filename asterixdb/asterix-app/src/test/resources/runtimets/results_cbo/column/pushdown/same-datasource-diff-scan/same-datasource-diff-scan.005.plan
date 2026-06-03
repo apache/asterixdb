@@ -1,40 +1,40 @@
-distribute result [$$103] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
+distribute result [$$115] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$103]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
+    project ([$$115]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
     -- STREAM_PROJECT  |PARTITIONED|
       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
-      -- SORT_MERGE_EXCHANGE [$$233(ASC) ]  |PARTITIONED|
-        order (ASC, $$233) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
-        -- STABLE_SORT [$$233(ASC)]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$245(ASC) ]  |PARTITIONED|
+        order (ASC, $$245) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
+        -- STABLE_SORT [$$245(ASC)]  |PARTITIONED|
           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            distinct ([$$103]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9.5]
+            distinct ([$$115]) [cardinality: 0.0, doc-size: 0.0, op-cost: 4.75, total-cost: 9.5]
             -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 4.75]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, $$103) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 4.75]
-                -- STABLE_SORT [$$103(ASC)]  |PARTITIONED|
+                order (ASC, $$115) [cardinality: 0.0, doc-size: 0.0, op-cost: 4.75, total-cost: 4.75]
+                -- STABLE_SORT [$$115(ASC)]  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HASH_PARTITION_EXCHANGE [$$103]  |PARTITIONED|
-                    union ($$155, $$95, $$103) ($$234, $$112, $$233) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- HASH_PARTITION_EXCHANGE [$$115]  |PARTITIONED|
+                    union ($$167, $$107, $$115) ($$246, $$124, $$245) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- UNION_ALL  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        union ($$75, $$85, $$155) ($$108, $$110, $$234) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        union ($$87, $$97, $$167) ($$120, $$122, $$246) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- UNION_ALL  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$75] <- [{"user_id": $$108}] project: [$$75, $$108] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$87] <- [{"user_id": $$120}] project: [$$87, $$120] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
-                              select (and(ge($$105, 20), le($$105, 50))) project: [$$108] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              select (and(ge($$117, 20), le($$117, 50))) project: [$$120] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_SELECT  |PARTITIONED|
-                                assign [$$105] <- [$$ds1.getField("val")] project: [$$108, $$105] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                assign [$$117] <- [$$ds1.getField("val")] project: [$$120, $$117] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ASSIGN  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    data-scan []<-[$$108, $$ds1] <- test.ds1 project ({val:any}) filter on: and(ge($$ds1.getField("val"), 20), le($$ds1.getField("val"), 50)) range-filter on: and(ge($$ds1.getField("val"), 20), le($$ds1.getField("val"), 50)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    data-scan []<-[$$120, $$ds1] <- test.ds1 project ({val:any}) filter on: and(ge($$ds1.getField("val"), 20), le($$ds1.getField("val"), 50)) range-filter on: and(ge($$ds1.getField("val"), 20), le($$ds1.getField("val"), 50)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -42,25 +42,25 @@ distribute result [$$103] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$85] <- [{"user_id": $$110}] project: [$$85, $$110] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$97] <- [{"user_id": $$122}] project: [$$97, $$122] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
-                              project ([$$110]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              project ([$$122]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_PROJECT  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  unnest-map [$$110, $$ds1] <- index-search("ds1", 0, "Default", "test", "ds1", true, true, 1, $$109, 1, $$109, true, true, true) project ({}) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
+                                  unnest-map [$$122, $$ds1] <- index-search("ds1", 0, "Default", "test", "ds1", true, true, 1, $$121, 1, $$121, true, true, true) project ({}) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
                                   -- BTREE_SEARCH  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      order (ASC, $$109) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
-                                      -- STABLE_SORT [$$109(ASC)]  |PARTITIONED|
+                                      order (ASC, $$121) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
+                                      -- STABLE_SORT [$$121(ASC)]  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          project ([$$109]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          project ([$$121]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              data-scan []<-[$$109, $$c] <- test.ds_contains project ({}) [cardinality: 3.0, doc-size: 9.0, op-cost: 3.0, total-cost: 3.0]
+                                              data-scan []<-[$$121, $$c] <- test.ds_contains project ({}) [cardinality: 3.0, doc-size: 9.0, op-cost: 3.0, total-cost: 3.0]
                                               -- DATASOURCE_SCAN  |PARTITIONED|
                                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -68,25 +68,25 @@ distribute result [$$103] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [$$95] <- [{"user_id": $$112}] project: [$$95, $$112] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        assign [$$107] <- [{"user_id": $$124}] project: [$$107, $$124] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$112]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          project ([$$124]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              unnest-map [$$112, $$ds1] <- index-search("ds1", 0, "Default", "test", "ds1", true, true, 1, $$111, 1, $$111, true, true, true) project ({}) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
+                              unnest-map [$$124, $$ds1] <- index-search("ds1", 0, "Default", "test", "ds1", true, true, 1, $$123, 1, $$123, true, true, true) project ({}) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
                               -- BTREE_SEARCH  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  order (ASC, $$111) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
-                                  -- STABLE_SORT [$$111(ASC)]  |PARTITIONED|
+                                  order (ASC, $$123) [cardinality: 3.0, doc-size: 18.0, op-cost: 15.0, total-cost: 30.0]
+                                  -- STABLE_SORT [$$123(ASC)]  |PARTITIONED|
                                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      project ([$$111]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      project ([$$123]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          data-scan []<-[$$111, $$d] <- test.ds_disjoint project ({}) [cardinality: 3.0, doc-size: 9.0, op-cost: 3.0, total-cost: 3.0]
+                                          data-scan []<-[$$123, $$d] <- test.ds_disjoint project ({}) [cardinality: 3.0, doc-size: 9.0, op-cost: 3.0, total-cost: 3.0]
                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

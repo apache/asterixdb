@@ -8,7 +8,7 @@ distribute result [$$21] [cardinality: 4.0, doc-size: 100.75, op-cost: 0.0, tota
       -- STREAM_PROJECT  |PARTITIONED|
         exchange [cardinality: 4.0, doc-size: 100.75, op-cost: 0.0, total-cost: 19.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          order (ASC, $$24) [cardinality: 4.0, doc-size: 100.75, op-cost: 0.0, total-cost: 19.0]
+          order (ASC, $$24) [cardinality: 4.0, doc-size: 100.75, op-cost: 8.0, total-cost: 19.0]
           -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
             exchange [cardinality: 4.0, doc-size: 100.75, op-cost: 0.0, total-cost: 11.0]
             -- RANGE_PARTITION_EXCHANGE [$$24(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|

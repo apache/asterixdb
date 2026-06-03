@@ -35,7 +35,7 @@ distribute result [$$83] [cardinality: 45.0, doc-size: 5.0, op-cost: 0.0, total-
                                 -- AGGREGATE  |LOCAL|
                                   nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                             } [cardinality: 45.0, doc-size: 5.0, op-cost: 0.0, total-cost: 610643.36]
+                             } [cardinality: 45.0, doc-size: 5.0, op-cost: 15928.9, total-cost: 610643.36]
                       -- EXTERNAL_GROUP_BY[$$98]  |PARTITIONED|
                         exchange [cardinality: 45.0, doc-size: 5.0, op-cost: 0.0, total-cost: 594714.46]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -48,11 +48,11 @@ distribute result [$$83] [cardinality: 45.0, doc-size: 5.0, op-cost: 0.0, total-
                                         -- STREAM_PROJECT  |LOCAL|
                                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                 } [cardinality: 45.0, doc-size: 5.0, op-cost: 0.0, total-cost: 594714.46]
+                                 } [cardinality: 45.0, doc-size: 5.0, op-cost: 222357.23, total-cost: 594714.46]
                           -- PRE_CLUSTERED_GROUP_BY[$$86]  |PARTITIONED|
                             exchange [cardinality: 6349.95, doc-size: 5.0, op-cost: 0.0, total-cost: 372357.23]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              order (ASC, $$86) [cardinality: 6349.95, doc-size: 5.0, op-cost: 0.0, total-cost: 372357.23]
+                              order (ASC, $$86) [cardinality: 6349.95, doc-size: 5.0, op-cost: 222357.23, total-cost: 372357.23]
                               -- STABLE_SORT [$$86(ASC)]  |PARTITIONED|
                                 exchange [cardinality: 6349.95, doc-size: 5.0, op-cost: 0.0, total-cost: 150000.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

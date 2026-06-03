@@ -17,11 +17,11 @@ distribute result [$$55] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                         -- STREAM_PROJECT  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1328.78]
+                 } [cardinality: 0.0, doc-size: 0.0, op-cost: 664.39, total-cost: 1328.78]
           -- PRE_CLUSTERED_GROUP_BY[$$57]  |PARTITIONED|
             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 664.39]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (ASC, $$57) (ASC, $$74) (ASC, $$75) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 664.39]
+              order (ASC, $$57) (ASC, $$74) (ASC, $$75) [cardinality: 0.0, doc-size: 0.0, op-cost: 664.39, total-cost: 664.39]
               -- STABLE_SORT [$$57(ASC), $$74(ASC), $$75(ASC)]  |PARTITIONED|
                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
