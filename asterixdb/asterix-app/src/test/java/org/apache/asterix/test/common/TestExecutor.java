@@ -608,8 +608,8 @@ public class TestExecutor {
         StringWriter expected = new StringWriter();
         IOUtils.copy(actualFile, actual);
         IOUtils.copy(expectedFile, expected);
-        Pattern pattern = Pattern.compile(expected.toString(), Pattern.DOTALL | Pattern.MULTILINE);
-        if (!pattern.matcher(actual.toString()).matches()) {
+        Pattern pattern = Pattern.compile(expected.toString().trim(), Pattern.DOTALL | Pattern.MULTILINE);
+        if (!pattern.matcher(actual.toString().trim()).matches()) {
             // figure out where the problem first occurs...
             StringBuilder builder = new StringBuilder();
             String[] lines = expected.toString().split("\\n");

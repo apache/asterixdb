@@ -36,28 +36,24 @@ public enum S3ChecksumBehavior {
     /** Calculate/validate checksums whenever supported — the SDK default since 2.30.0. */
     WHEN_SUPPORTED,
     /** Leave the SDK defaults untouched. Appropriate for native AWS S3. */
-    AUTO;
+    SDK_DEFAULT;
 
-    /** Parses the config string (case-insensitive). Returns {@code null} if the input is {@code null}. */
+    public String stringValue() {
+        return name().toLowerCase();
+    }
+
+    /** Parses the config string (case-insensitive). Returns {@code SDK_DEFAULT} if the input is {@code null}. */
     public static S3ChecksumBehavior fromString(String s) {
         if (s == null) {
-            return null;
+            return SDK_DEFAULT;
         }
         for (S3ChecksumBehavior b : values()) {
             if (b.name().equalsIgnoreCase(s)) {
                 return b;
             }
         }
-        throw new IllegalArgumentException(
-                "Unrecognized S3 checksum behavior: '" + s + "'. Valid values: when_required, when_supported, auto");
+        throw new IllegalArgumentException("Unrecognized S3 checksum behavior: '" + s
+                + "'. Valid values: when_required, when_supported, sdk_default");
     }
 
-    /**
-     * Returns the appropriate default based on whether a custom S3-compatible endpoint is configured.
-     * When an endpoint is present the SDK's newer checksum defaults may not be supported, so {@link #WHEN_REQUIRED}
-     * is used. When no custom endpoint is configured (native AWS S3) {@link #AUTO} defers to SDK defaults.
-     */
-    public static S3ChecksumBehavior defaultForEndpoint(String endpoint) {
-        return (endpoint == null || endpoint.isEmpty()) ? AUTO : WHEN_REQUIRED;
-    }
 }

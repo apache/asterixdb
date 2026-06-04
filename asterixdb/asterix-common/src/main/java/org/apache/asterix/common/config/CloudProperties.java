@@ -102,10 +102,7 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
         CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
         CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),
-        CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR(STRING, (Function<IApplicationConfig, String>) app -> {
-            String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
-            return S3ChecksumBehavior.defaultForEndpoint(endpoint).name().toLowerCase();
-        });
+        CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR(STRING, S3ChecksumBehavior.SDK_DEFAULT.stringValue());
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -250,9 +247,7 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                     return "The checksum behavior for S3 requests and responses. Accepted values: "
                             + "'when_required' (only checksums mandated by the operation), "
                             + "'when_supported' (checksums on all eligible operations, SDK >= 2.30 default), "
-                            + "'auto' (no explicit override, defer to SDK default). "
-                            + "Defaults to 'when_required' when a custom endpoint is configured "
-                            + "(S3-compatible stores), 'auto' for native AWS S3.";
+                            + "'sdk_default' (defer to SDK default. " + "Defaults to 'sdk_default'";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -272,9 +267,6 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             if (this == CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE) {
                 return "crt if no custom endpoint is set; async otherwise";
-            }
-            if (this == CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR) {
-                return "when_required if a custom endpoint is set; auto otherwise";
             }
             return IOption.super.usageDefaultOverride(accessor, optionPrinter);
         }

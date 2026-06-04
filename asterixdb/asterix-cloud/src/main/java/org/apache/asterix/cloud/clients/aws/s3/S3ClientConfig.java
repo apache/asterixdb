@@ -66,7 +66,7 @@ public final class S3ClientConfig {
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
                 false, false, 0, 0, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "",
-                S3ChecksumBehavior.defaultForEndpoint(endpoint));
+                S3ChecksumBehavior.SDK_DEFAULT);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,

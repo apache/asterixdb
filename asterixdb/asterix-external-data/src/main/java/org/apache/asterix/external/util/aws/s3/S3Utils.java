@@ -202,7 +202,7 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
-        applyChecksumBehavior(builder, resolveChecksumBehavior(configuration, serviceEndpoint));
+        applyChecksumBehavior(builder, resolveChecksumBehavior(configuration));
         awsClients.setConsumingClient(builder.build());
         return awsClients;
     }
@@ -218,7 +218,7 @@ public class S3Utils {
                 builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_SUPPORTED);
                 builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_SUPPORTED);
                 break;
-            case AUTO:
+            case SDK_DEFAULT:
                 // leave SDK defaults untouched
                 break;
         }
@@ -788,14 +788,14 @@ public class S3Utils {
      * Resolves the effective checksum behavior for external data (link) operations using a two-level priority chain:
      * <ol>
      *   <li>Per-link {@code checksumBehavior} parameter in the configuration map (explicit override)</li>
-     *   <li>Endpoint-based default: {@link S3ChecksumBehavior#AUTO} for native AWS S3,
+     *   <li>Endpoint-based default: {@link S3ChecksumBehavior#SDK_DEFAULT} for native AWS S3,
      *       {@link S3ChecksumBehavior#WHEN_REQUIRED} for S3-compatible storage</li>
      * </ol>
      * Cloud properties are intentionally not consulted here — this method is for external data (link) operations
      * only, not for blob storage.
      */
     @AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT)
-    public static S3ChecksumBehavior resolveChecksumBehavior(Map<String, String> configuration, String serviceEndpoint)
+    public static S3ChecksumBehavior resolveChecksumBehavior(Map<String, String> configuration)
             throws CompilationException {
         String perLink = configuration.get(CHECKSUM_BEHAVIOR_FIELD_NAME);
         if (perLink != null) {
@@ -806,7 +806,8 @@ public class S3Utils {
                         CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
             }
         }
-        return S3ChecksumBehavior.defaultForEndpoint(serviceEndpoint);
+        // TODO(mblow): I don't believe this code is reachable any longer (we will always have a checksum behavior configured)
+        return S3ChecksumBehavior.SDK_DEFAULT;
     }
 
     /**
