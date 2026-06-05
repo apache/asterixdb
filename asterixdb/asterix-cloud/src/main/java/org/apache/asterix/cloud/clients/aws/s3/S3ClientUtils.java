@@ -25,6 +25,9 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -51,7 +54,9 @@ public class S3ClientUtils {
                 listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
             }
 
-            files.addAll(listObjectsResponse.contents());
+            // ignore objects ending with "/" since we don't create such objects.
+            // S3 can return folders as objects with size 0 and key ending with "/"
+            listObjectsResponse.contents().stream().filter(Predicate.not(S3Utils::isDirectory)).forEach(files::add);
 
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
             if (Boolean.FALSE.equals(listObjectsResponse.isTruncated())) {

@@ -152,6 +152,8 @@ public class S3Utils {
     static final String CHECKSUM_BEHAVIOR_ALLOWED_VALUES = Arrays.stream(S3ChecksumBehavior.values())
             .map(v -> v.name().toLowerCase()).collect(Collectors.joining(", "));
 
+    static final String SLASH = "/";
+
     private static final class StaticTrustManagersProvider implements TlsTrustManagersProvider {
         private final TrustManager[] trustManagers;
 
@@ -734,7 +736,7 @@ public class S3Utils {
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
         listObjectsBuilder.bucket(container);
         listObjectsBuilder.prefix(prefix);
-        listObjectsBuilder.delimiter("/");
+        listObjectsBuilder.delimiter(SLASH);
         ListObjectsV2Request listObjectsV2Request = listObjectsBuilder.build();
 
         Map<String, List<String>> allObjects = new HashMap<>();
@@ -762,7 +764,7 @@ public class S3Utils {
                     String folderName = object.prefix();
                     folderName = folderName.substring(prefix.length());
                     folders.add(
-                            folderName.endsWith("/") ? folderName.substring(0, folderName.length() - 1) : folderName);
+                            folderName.endsWith(SLASH) ? folderName.substring(0, folderName.length() - 1) : folderName);
                 }
             }
         } finally {
@@ -880,5 +882,9 @@ public class S3Utils {
                             + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
         }
         configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, changeDetectionMode.toLowerCase());
+    }
+
+    public static boolean isDirectory(S3Object s3Object) {
+        return s3Object.key().endsWith(SLASH);
     }
 }

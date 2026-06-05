@@ -156,6 +156,7 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
             DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder();
             builder.bucket(bucket);
             builder.destination(fileReference.getFile().toPath());
+            // check behavior regarding directory objects
             builder.listObjectsV2RequestTransformer(
                     l -> l.prefix(config.getPrefix() + fileReference.getRelativePath()));
             DirectoryDownload directoryDownload = transferManager.downloadDirectory(builder.build());
