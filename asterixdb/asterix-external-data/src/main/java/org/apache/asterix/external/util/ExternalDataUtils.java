@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARSE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PROPERTY_INVALID_VALUE_TYPE;
@@ -52,6 +53,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -60,9 +62,9 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
@@ -144,7 +146,7 @@ import io.delta.kernel.exceptions.KernelException;
 
 public class ExternalDataUtils {
 
-    private static final Set<String> validTimeZones = Set.of(TimeZone.getAvailableIDs());
+    private static final Map<String, String> validTimeZonesMap = new HashMap<>();
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
     private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
     private static final int HEADER_FUDGE = 64;
@@ -158,6 +160,9 @@ public class ExternalDataUtils {
         valueParserFactoryMap.put(ATypeTag.BIGINT, LongParserFactory.INSTANCE);
         valueParserFactoryMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
         valueParserFactoryMap.put(ATypeTag.BOOLEAN, BooleanParserFactory.INSTANCE);
+        for (String id : TimeZone.getAvailableIDs()) {
+            validTimeZonesMap.put(id.toLowerCase(Locale.ROOT), id);
+        }
     }
 
     private ExternalDataUtils() {
@@ -539,10 +544,9 @@ public class ExternalDataUtils {
             throw new CompilationException(ErrorCode.INVALID_DELTA_TABLE_FORMAT,
                     configuration.get(ExternalDataConstants.KEY_FORMAT));
         }
-        if (configuration.containsKey(ExternalDataConstants.DeltaOptions.TIMEZONE)
-                && !validTimeZones.contains(configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE))) {
-            throw new CompilationException(ErrorCode.INVALID_TIMEZONE,
-                    configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE));
+        if (configuration.containsKey(ExternalDataConstants.DeltaOptions.TIMEZONE)) {
+            String resolved = resolveTimeZone(configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE));
+            configuration.put(ExternalDataConstants.DeltaOptions.TIMEZONE, resolved);
         }
     }
 
@@ -1011,21 +1015,26 @@ public class ExternalDataUtils {
         return isParquetFormat(properties) || isDeltaTable(properties) || isIcebergTable(properties);
     }
 
-    /**
-     * Validate Parquet dataset's declared type and configuration
-     *
-     * @param properties        external dataset configuration
-     * @param datasetRecordType dataset declared type
-     */
+    public static String resolveTimeZone(String timeZoneId) throws CompilationException {
+        String canonical = validTimeZonesMap.get(timeZoneId.toLowerCase(Locale.ROOT));
+        if (canonical != null) {
+            return canonical;
+        }
+        try {
+            return ZoneId.of(timeZoneId).getId();
+        } catch (Exception e) {
+            throw CompilationException.create(ErrorCode.INVALID_TIMEZONE, e, timeZoneId);
+        }
+    }
+
     public static void validateParquetTypeAndConfiguration(Map<String, String> properties,
             ARecordType datasetRecordType) throws CompilationException {
         if (isParquetFormat(properties)) {
             if (datasetRecordType.getFieldTypes().length != 0) {
                 throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
-            } else if (properties.containsKey(ParquetOptions.TIMEZONE)
-                    && !validTimeZones.contains(properties.get(ParquetOptions.TIMEZONE))) {
-                //Ensure the configured time zone id is correct
-                throw new CompilationException(ErrorCode.INVALID_TIMEZONE, properties.get(ParquetOptions.TIMEZONE));
+            } else if (properties.containsKey(ParquetOptions.TIMEZONE)) {
+                String resolved = resolveTimeZone(properties.get(ParquetOptions.TIMEZONE));
+                properties.put(ParquetOptions.TIMEZONE, resolved);
             }
         }
     }

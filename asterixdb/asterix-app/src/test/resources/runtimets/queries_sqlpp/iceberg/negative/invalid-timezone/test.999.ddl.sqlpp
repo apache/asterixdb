@@ -17,14 +17,4 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP COLLECTION allTypesTimesDefaultExpectingNotConverted;
-DROP COLLECTION allTypesTimesNotConvertedZoneId;
-DROP COLLECTION allTypesTimesNotConvertedZoneIdByName;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP TYPE allTypesTimesDefaultExpectingNotConverted;
-DROP TYPE allTypesTimesNotConvertedZoneId;
-DROP TYPE allTypesTimesNotConvertedZoneIdByName;
 DROP CATALOG myNessieCatalog;

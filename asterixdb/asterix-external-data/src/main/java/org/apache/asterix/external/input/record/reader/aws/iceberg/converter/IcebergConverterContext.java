@@ -25,14 +25,11 @@ import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOpti
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.TIME_AS_INT;
 
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hyracks.api.exceptions.Warning;
 
 public class IcebergConverterContext extends ParserContext {
 
@@ -41,10 +38,8 @@ public class IcebergConverterContext extends ParserContext {
     private final boolean timeAsInt;
     private final boolean timestampAsLong;
     private final ZoneId timeZoneId;
-    private final List<Warning> warnings;
 
-    public IcebergConverterContext(Map<String, String> configuration, List<Warning> warnings) {
-        this.warnings = warnings;
+    public IcebergConverterContext(Map<String, String> configuration) {
         decimalToDouble = Boolean.parseBoolean(configuration.getOrDefault(DECIMAL_TO_DOUBLE, FALSE));
         dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(DATE_AS_INT, FALSE));
         timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(TIME_AS_INT, FALSE));
@@ -54,7 +49,7 @@ public class IcebergConverterContext extends ParserContext {
         if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
             timeZoneId = TimeZone.getTimeZone(configuredTimeZoneId).toZoneId();
         } else {
-            timeZoneId = ZoneOffset.UTC;
+            timeZoneId = null;
         }
     }
 
@@ -76,9 +71,5 @@ public class IcebergConverterContext extends ParserContext {
 
     public boolean isDateAsInt() {
         return dateAsInt;
-    }
-
-    public List<Warning> getWarnings() {
-        return warnings;
     }
 }

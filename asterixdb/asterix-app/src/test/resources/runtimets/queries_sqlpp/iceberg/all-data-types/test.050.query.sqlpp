@@ -17,14 +17,33 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP COLLECTION allTypesTimesDefaultExpectingNotConverted;
-DROP COLLECTION allTypesTimesNotConvertedZoneId;
-DROP COLLECTION allTypesTimesNotConvertedZoneIdByName;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP TYPE allTypesTimesDefaultExpectingNotConverted;
-DROP TYPE allTypesTimesNotConvertedZoneId;
-DROP TYPE allTypesTimesNotConvertedZoneIdByName;
-DROP CATALOG myNessieCatalog;
+SELECT
+    bool_field,
+    byte_field,
+    short_field,
+    int_field,
+    long_field,
+    float_field,
+    double_field,
+    decimal_field,
+    string_field,
+    varchar_field,
+    char_field,
+    uuid_field,
+    print_binary(binary_field, "base64") as binary_field,
+    print_binary(fixed_field, "base64") as fixed_field,
+    date_field,
+    time_field,
+    timestamp_field,
+    timestamp_ntz_field,
+    timestamp_nano_field,
+    interval_ym_field,
+    interval_dt_field,
+    print_binary(geometry_field, "base64") as geometry_field,
+    print_binary(geography_field, "base64") as geography_field,
+    struct_field,
+    list_field,
+    map_field,
+    variant_field,
+    unknown_field
+FROM allTypesTimesNotConvertedZoneId;

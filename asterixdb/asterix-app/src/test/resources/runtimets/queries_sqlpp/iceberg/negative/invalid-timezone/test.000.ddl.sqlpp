@@ -17,14 +17,10 @@
  * under the License.
  */
 
-DROP COLLECTION allTypesTimesConverted;
-DROP COLLECTION allTypesTimesNotConverted;
-DROP COLLECTION allTypesTimesDefaultExpectingNotConverted;
-DROP COLLECTION allTypesTimesNotConvertedZoneId;
-DROP COLLECTION allTypesTimesNotConvertedZoneIdByName;
-DROP TYPE allTypesTimesConverted;
-DROP TYPE allTypesTimesNotConverted;
-DROP TYPE allTypesTimesDefaultExpectingNotConverted;
-DROP TYPE allTypesTimesNotConvertedZoneId;
-DROP TYPE allTypesTimesNotConvertedZoneIdByName;
-DROP CATALOG myNessieCatalog;
+CREATE CATALOG myNessieCatalog
+TYPE Iceberg
+SOURCE NESSIE
+WITH {
+    "uri": "%NESSIE_SERVER_URI%",
+    "warehouse": "s3://iceberg-container/nessie/warehouse"
+};

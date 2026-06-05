@@ -28,7 +28,6 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -36,7 +35,6 @@ import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.Catalog;
@@ -49,8 +47,6 @@ public class IcebergSnapshotUtils {
     public static Optional<Long> validateAndGetSnapshot(Map<String, String> properties) throws CompilationException {
         String snapshotId = properties.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
         String snapshotTimestamp = properties.get(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY);
-        String timeZoneId = properties.get(ExternalDataConstants.IcebergOptions.TIMEZONE);
-        ZoneId zoneId = timeZoneId != null ? ZoneId.of(timeZoneId) : ZoneOffset.UTC;
         if (snapshotId != null && snapshotTimestamp != null) {
             throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT,
                     ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY, ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
@@ -60,7 +56,7 @@ public class IcebergSnapshotUtils {
             if (snapshotId != null) {
                 return Optional.of(Long.parseLong(snapshotId));
             } else if (snapshotTimestamp != null) {
-                return Optional.of(parseTimestamp(snapshotTimestamp, zoneId));
+                return Optional.of(parseTimestamp(snapshotTimestamp));
             } else {
                 return Optional.empty();
             }
@@ -70,7 +66,7 @@ public class IcebergSnapshotUtils {
         }
     }
 
-    private static long parseTimestamp(String timestamp, ZoneId zoneId) throws CompilationException {
+    private static long parseTimestamp(String timestamp) throws CompilationException {
         try {
             // try parsing as a long first
             return Long.parseLong(timestamp);
@@ -79,14 +75,14 @@ public class IcebergSnapshotUtils {
 
         try {
             // try parsing as ISO 8601 date, e.g., "yyyy-MM-dd"
-            return LocalDate.parse(timestamp, ISO_LOCAL_DATE).atStartOfDay(zoneId).toInstant().toEpochMilli();
+            return LocalDate.parse(timestamp, ISO_LOCAL_DATE).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
         } catch (DateTimeParseException ignored) {
         }
 
         try {
             // try parsing as ISO 8601 timestamp, e.g., "yyyy-MM-dd'T'HH:mm:ss"
             LocalDateTime localDateTime = LocalDateTime.parse(timestamp, ISO_LOCAL_DATE_TIME);
-            return localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+            return localDateTime.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
         } catch (DateTimeParseException ignored) {
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR,
                     "unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or "

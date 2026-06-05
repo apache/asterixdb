@@ -73,3 +73,41 @@ USING S3
     ("format"="parquet"),
     ("decimal-to-double"="true")
 );
+
+CREATE TYPE allTypesTimesNotConvertedZoneId AS open {};
+CREATE EXTERNAL COLLECTION allTypesTimesNotConvertedZoneId(allTypesTimesNotConvertedZoneId)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="allTypes"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet"),
+    ("decimal-to-double"="true"),
+    ("date-to-int"="false"),
+    ("time-to-int"="false"),
+    ("timestamp-to-long"="false"),
+    ("timezone"="GMT+01:00")
+);
+
+CREATE TYPE allTypesTimesNotConvertedZoneIdByName AS open {};
+CREATE EXTERNAL COLLECTION allTypesTimesNotConvertedZoneIdByName(allTypesTimesNotConvertedZoneIdByName)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="allTypes"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet"),
+    ("decimal-to-double"="true"),
+    ("date-to-int"="false"),
+    ("time-to-int"="false"),
+    ("timestamp-to-long"="false"),
+    ("timezone"="Africa/Lagos")
+);

@@ -167,6 +167,13 @@ public class IcebergUtils {
                     IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY);
         }
 
+        // if timezone is provided, validate it
+        String timezone = properties.get(ExternalDataConstants.ParquetOptions.TIMEZONE);
+        if (timezone != null && !timezone.isEmpty()) {
+            ExternalDataUtils.resolveTimeZone(timezone);
+        }
+
+        // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
     }
 
