@@ -361,18 +361,8 @@ public class BlobUtils {
     }
 
     public static String getEndpointFromClient(Map<String, String> configuration) throws CompilationException {
-        String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
-        if (endpoint == null) {
-            throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
-        }
-
-        BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
-        try {
-            builder.endpoint(endpoint);
-        } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-        }
-        return AzureUtils.extractEndPoint(builder.buildClient().getAccountUrl());
+        BlobServiceClient client = buildClient(null, configuration);
+        return AzureUtils.extractEndPoint(client.getAccountUrl());
     }
 
     public static boolean isBlobAdapter(String type) {

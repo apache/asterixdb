@@ -1144,7 +1144,7 @@ public class ExternalDataUtils {
     public static boolean evaluate(String key, BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers,
             ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
             IWarningCollector warningCollector) throws HyracksDataException {
-        return !key.endsWith("/") && predicate.test(matchers, key)
+        return !key.isEmpty() && !key.endsWith("/") && predicate.test(matchers, key)
                 && externalDataPrefix.evaluate(key, evaluator, warningCollector);
     }
 
