@@ -232,28 +232,31 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     private void parseMap(Types.MapType mapSchema, Map<?, ?> map, DataOutput out) throws IOException {
-        IMutableValueStorage valueBuffer = parserContext.enterObject();
+        final IMutableValueStorage item = parserContext.enterCollection();
+        final IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        valueEmbedder.enterObject();
+        IAsterixListBuilder listBuilder =
+                parserContext.getCollectionBuilder(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
 
         Type keyType = mapSchema.keyType();
         Type valueType = mapSchema.valueType();
 
-        // TODO: we can't support non-string keys since we map MAP-TYPE to OBJECT-TYPE in AsterixDB
-        if (keyType != Types.StringType.get()) {
-            throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Iceberg Parser", "MAP with non-string keys");
-        }
-
         for (Map.Entry<?, ?> entry : map.entrySet()) {
-            String fieldName = (String) entry.getKey();
-            Object fieldValue = entry.getValue();
-            parseValueAndAddObjectField(valueBuffer, objectBuilder, valueType, fieldName, fieldValue);
+            objectBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+            valueBuffer.reset();
+            parseValue(keyType, entry.getKey(), valueBuffer.getDataOutput());
+            objectBuilder.addField(parserContext.getSerializedFieldName("key"), valueBuffer);
+            valueBuffer.reset();
+            parseValue(valueType, entry.getValue(), valueBuffer.getDataOutput());
+            objectBuilder.addField(parserContext.getSerializedFieldName("value"), valueBuffer);
+            item.reset();
+            objectBuilder.write(item.getDataOutput(), true);
+            listBuilder.addItem(item);
         }
 
-        embedMissingValues(objectBuilder, parserContext, valueEmbedder);
-        objectBuilder.write(out, true);
-        valueEmbedder.exitObject();
+        listBuilder.write(out, true);
         parserContext.exitObject(valueBuffer, null, objectBuilder);
+        parserContext.exitCollection(item, listBuilder);
     }
 
     private void parseValueAndAddObjectField(IMutableValueStorage valueBuffer, IARecordBuilder objectBuilder,
@@ -467,8 +470,8 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
                 ensureDecimalToDoubleEnabled(type, parserContext);
                 yield ATypeTag.DOUBLE;
             }
-            case STRUCT, MAP -> ATypeTag.OBJECT;
-            case LIST -> ATypeTag.ARRAY;
+            case STRUCT -> ATypeTag.OBJECT;
+            case LIST, MAP -> ATypeTag.ARRAY;
             case DATE -> {
                 if (parserContext.isDateAsInt()) {
                     yield ATypeTag.INTEGER;
