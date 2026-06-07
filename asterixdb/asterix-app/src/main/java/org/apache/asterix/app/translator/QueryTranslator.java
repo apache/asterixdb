@@ -116,6 +116,7 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
@@ -1118,7 +1119,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    beforeExternalCollectionValidation(properties);
+                    beforeExternalCollectionValidation(externalDetails, properties);
 
                     Map<String, String> propertiesCopy = new HashMap<>(properties);
                     validateIfIcebergTable(metadataProvider, requestParameters, propertiesCopy, mdTxnCtx, sourceLoc,
@@ -1241,9 +1242,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      *
      * @param properties external collection properties
      */
-    protected void beforeExternalCollectionValidation(Map<String, String> properties) {
+    protected void beforeExternalCollectionValidation(ExternalDetailsDecl externalDetailsDecl,
+            Map<String, String> properties) throws CompilationException {
         if (IcebergUtils.isIcebergTable(properties)) {
             IcebergUtils.setDefaults(properties);
+        }
+        if (ExternalDataUtils.isParquetFormat(properties) || ExternalDataUtils.isDeltaTable(properties)) {
+            S3Utils.validateAndNormalizeStreamInputType(properties);
+            S3Utils.validateAndNormalizeChangeDetectionMode(properties);
         }
     }
 
