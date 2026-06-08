@@ -34,26 +34,24 @@ public enum S3ChecksumBehavior {
     /** Calculate/validate checksums only when required by the operation. Safe for S3-compatible endpoints. */
     WHEN_REQUIRED,
     /** Calculate/validate checksums whenever supported — the SDK default since 2.30.0. */
-    WHEN_SUPPORTED,
-    /** Leave the SDK defaults untouched. Appropriate for native AWS S3. */
-    SDK_DEFAULT;
+    WHEN_SUPPORTED;
 
     public String stringValue() {
         return name().toLowerCase();
     }
 
-    /** Parses the config string (case-insensitive). Returns {@code SDK_DEFAULT} if the input is {@code null}. */
+    /** Parses the config string (case-insensitive). Returns {@code null} if the input is {@code null} or empty. */
     public static S3ChecksumBehavior fromString(String s) {
-        if (s == null) {
-            return SDK_DEFAULT;
+        if (s == null || s.isEmpty()) {
+            return null;
         }
         for (S3ChecksumBehavior b : values()) {
             if (b.name().equalsIgnoreCase(s)) {
                 return b;
             }
         }
-        throw new IllegalArgumentException("Unrecognized S3 checksum behavior: '" + s
-                + "'. Valid values: when_required, when_supported, sdk_default");
+        throw new IllegalArgumentException(
+                "Unrecognized S3 checksum behavior: '" + s + "'. Valid values: when_required, when_supported");
     }
 
 }

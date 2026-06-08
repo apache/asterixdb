@@ -65,8 +65,7 @@ public final class S3ClientConfig {
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
-                false, false, 0, 0, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "",
-                S3ChecksumBehavior.SDK_DEFAULT);
+                false, false, 0, 0, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "", null);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
@@ -99,7 +98,7 @@ public final class S3ClientConfig {
         this.roundRobinDnsResolver = roundRobinDnsResolver;
         this.accessKeyId = accessKeyId;
         this.secretAccessKey = secretAccessKey;
-        this.checksumBehavior = Objects.requireNonNull(checksumBehavior, "checksumBehavior");
+        this.checksumBehavior = checksumBehavior;
     }
 
     public static S3ClientConfig of(ICloudProperties cloudProperties) {

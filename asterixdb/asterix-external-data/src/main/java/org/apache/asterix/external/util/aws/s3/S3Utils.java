@@ -74,7 +74,6 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SIMPLE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORARY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.SDK_DEFAULT;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
 import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
@@ -91,7 +90,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
@@ -208,7 +206,10 @@ public class S3Utils {
     }
 
     public static void applyChecksumBehavior(S3ClientBuilder builder, S3ChecksumBehavior behavior) {
-        Objects.requireNonNull(behavior, "checksumBehavior");
+        if (behavior == null) {
+            // null means use SDK defaults — don't configure anything
+            return;
+        }
         switch (behavior) {
             case WHEN_REQUIRED:
                 builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
@@ -217,9 +218,6 @@ public class S3Utils {
             case WHEN_SUPPORTED:
                 builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_SUPPORTED);
                 builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_SUPPORTED);
-                break;
-            case SDK_DEFAULT:
-                // leave SDK defaults untouched
                 break;
         }
     }
@@ -326,14 +324,14 @@ public class S3Utils {
 
     private static void setInputStreamType(Map<String, String> configuration, JobConf jobConf) {
         String configuredInputStreamType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
-        if (!Objects.equals(configuredInputStreamType, SDK_DEFAULT)) {
+        if (configuredInputStreamType != null) {
             jobConf.set(S3Constants.HADOOP_INPUT_STREAM_TYPE, configuredInputStreamType);
         }
     }
 
     private static void setChangeDetectionMode(Map<String, String> configuration, JobConf jobConf) {
         String configuredChangeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
-        if (!Objects.equals(configuredChangeDetectionMode, SDK_DEFAULT)) {
+        if (configuredChangeDetectionMode != null) {
             jobConf.set(S3Constants.HADOOP_CHANGE_DETECTION_MODE, configuredChangeDetectionMode);
         }
     }
@@ -760,7 +758,7 @@ public class S3Utils {
      * Resolves the effective checksum behavior for external data (link) operations using a two-level priority chain:
      * <ol>
      *   <li>Per-link {@code checksumBehavior} parameter in the configuration map (explicit override)</li>
-     *   <li>Endpoint-based default: {@link S3ChecksumBehavior#SDK_DEFAULT} for native AWS S3,
+     *   <li>Endpoint-based default: {@code null} (use SDK defaults) for native AWS S3,
      *       {@link S3ChecksumBehavior#WHEN_REQUIRED} for S3-compatible storage</li>
      * </ol>
      * Cloud properties are intentionally not consulted here — this method is for external data (link) operations
@@ -778,8 +776,8 @@ public class S3Utils {
                         CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
             }
         }
-        // TODO(mblow): I don't believe this code is reachable any longer (we will always have a checksum behavior configured)
-        return S3ChecksumBehavior.SDK_DEFAULT;
+        // null means use SDK defaults
+        return null;
     }
 
     /**
@@ -821,15 +819,15 @@ public class S3Utils {
             throws CompilationException {
         String streamInputType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
         if (streamInputType == null || streamInputType.isBlank()) {
-            streamInputType = SDK_DEFAULT;
-            configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, streamInputType);
+            // null/empty means use SDK defaults — nothing to validate or set
+            configuration.remove(INPUT_STREAM_TYPE_FIELD_NAME);
+            return;
         }
 
-        if (!SDK_DEFAULT.equalsIgnoreCase(streamInputType)
-                && !HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS.equalsIgnoreCase(streamInputType)
+        if (!HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS.equalsIgnoreCase(streamInputType)
                 && !HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC.equalsIgnoreCase(streamInputType)) {
-            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INPUT_STREAM_TYPE_FIELD_NAME, SDK_DEFAULT
-                    + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INPUT_STREAM_TYPE_FIELD_NAME,
+                    HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
         }
         configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, streamInputType.toLowerCase());
     }
@@ -838,18 +836,17 @@ public class S3Utils {
             throws CompilationException {
         String changeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
         if (changeDetectionMode == null || changeDetectionMode.isBlank()) {
-            changeDetectionMode = SDK_DEFAULT;
-            configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, changeDetectionMode);
+            // null/empty means use SDK defaults — nothing to validate or set
+            configuration.remove(CHANGE_DETECTION_MODE_FIELD_NAME);
             return;
         }
 
-        if (!SDK_DEFAULT.equalsIgnoreCase(changeDetectionMode)
-                && !HADOOP_CHANGE_DETECTION_MODE_VAL_NONE.equalsIgnoreCase(changeDetectionMode)
+        if (!HADOOP_CHANGE_DETECTION_MODE_VAL_NONE.equalsIgnoreCase(changeDetectionMode)
                 && !HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT.equalsIgnoreCase(changeDetectionMode)
                 && !HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER.equalsIgnoreCase(changeDetectionMode)) {
             throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHANGE_DETECTION_MODE_FIELD_NAME,
-                    SDK_DEFAULT + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_NONE + ", "
-                            + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
+                    HADOOP_CHANGE_DETECTION_MODE_VAL_NONE + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", "
+                            + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
         }
         configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, changeDetectionMode.toLowerCase());
     }

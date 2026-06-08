@@ -102,7 +102,7 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
         CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
         CLOUD_STORAGE_AZURE_CLIENT_ID(STRING, (String) null),
-        CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR(STRING, S3ChecksumBehavior.SDK_DEFAULT.stringValue());
+        CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR(STRING, (String) null);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -246,8 +246,8 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_STORAGE_S3_CHECKSUM_BEHAVIOR:
                     return "The checksum behavior for S3 requests and responses. Accepted values: "
                             + "'when_required' (only checksums mandated by the operation), "
-                            + "'when_supported' (checksums on all eligible operations, SDK >= 2.30 default), "
-                            + "'sdk_default' (defer to SDK default. " + "Defaults to 'sdk_default'";
+                            + "'when_supported' (checksums on all eligible operations, SDK >= 2.30 default). "
+                            + "Defaults to SDK default (null/empty)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }

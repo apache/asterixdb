@@ -1297,7 +1297,7 @@
     <test-case FilePath="external-dataset/s3">
       <compilation-unit name="checksum-behavior/invalid-value">
         <output-dir compare="Text">checksum-behavior/invalid-value</output-dir>
-        <expected-error>ASX1173: Invalid value for parameter 'checksumBehavior', allowed value(s): when_required, when_supported, sdk_default</expected-error>
+        <expected-error>ASX1173: Invalid value for parameter 'checksumBehavior', allowed value(s): when_required, when_supported</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">

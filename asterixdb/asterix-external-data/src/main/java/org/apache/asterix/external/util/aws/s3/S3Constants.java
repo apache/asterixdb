@@ -49,9 +49,6 @@ public class S3Constants {
     public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
     public static final String HADOOP_REGION = "fs.s3a.endpoint.region";
 
-    // value to indicate we should use whatever the SDK defaults to
-    public static final String SDK_DEFAULT = "sdk_default";
-
     // input stream type
     public static final String INPUT_STREAM_TYPE_FIELD_NAME = "inputStreamType";
     public static final String HADOOP_INPUT_STREAM_TYPE = "fs.s3a.input.stream.type";
