@@ -76,7 +76,8 @@
     <jackson.version>2.21.4</jackson.version>
     <jackson-annotations.version>2.21</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <netty.version>4.1.133.Final</netty.version>
+    <netty.version>4.1.135.Final</netty.version>
+    <netty.tcnative.version>2.0.78.Final</netty.tcnative.version>
     <asm.version>9.3</asm.version>
     <awsjavasdk.version>2.44.14</awsjavasdk.version>
 
@@ -216,6 +217,46 @@
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-classes</artifactId>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <classifier>linux-x86_64</classifier>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <classifier>linux-aarch_64</classifier>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <classifier>osx-x86_64</classifier>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <classifier>osx-aarch_64</classifier>
+        <version>${netty.tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <classifier>windows-x86_64</classifier>
+        <version>${netty.tcnative.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
