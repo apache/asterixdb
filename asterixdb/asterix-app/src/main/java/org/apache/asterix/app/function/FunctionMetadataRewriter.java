@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionMetadataRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier FUNCTION_METADATA = FunctionConstants.newAsterix("function_metadata", 0);
+    public static final FunctionIdentifier FUNCTION_METADATA = FunctionConstants.newAsterix("function-metadata", 0);
     public static final FunctionMetadataRewriter INSTANCE = new FunctionMetadataRewriter(FUNCTION_METADATA);
 
     private FunctionMetadataRewriter(FunctionIdentifier functionId) {
