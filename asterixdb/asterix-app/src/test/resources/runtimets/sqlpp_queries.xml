@@ -7549,6 +7549,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="function_metadata">
+        <output-dir compare="Text">function_metadata</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="completed_requests">
         <output-dir compare="Text">completed_requests</output-dir>
       </compilation-unit>

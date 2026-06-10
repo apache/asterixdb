@@ -1,0 +1,2 @@
+{ "name": "rank", "arity": 0, "category": "window", "private": false }
+{ "name": "row_number", "arity": 0, "category": "window", "private": false }
