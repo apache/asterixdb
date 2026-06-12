@@ -86,6 +86,7 @@ public class CloudStorageUnstableTest {
     public static void tearDown() throws Exception {
         System.clearProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
         LangExecutionUtil.tearDown();
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     @Parameters(name = "CloudStorageUnstableTest {index}: {0}")

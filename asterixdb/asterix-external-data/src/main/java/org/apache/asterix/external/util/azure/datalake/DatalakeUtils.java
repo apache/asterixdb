@@ -54,7 +54,6 @@ import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.azure.AzureUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
@@ -278,10 +277,17 @@ public class DatalakeUtils {
             IWarningCollector warningCollector) throws HyracksDataException {
         for (PathItem item : items) {
             String uri = item.getName();
-            if (ExternalDataUtils.evaluate(uri, predicate, matchers, externalDataPrefix, evaluator, warningCollector)) {
+            if (evaluate(item, uri, predicate, matchers, externalDataPrefix, evaluator, warningCollector)) {
                 filesOnly.add(item);
             }
         }
+    }
+
+    private static boolean evaluate(PathItem item, String key, BiPredicate<List<Matcher>, String> predicate,
+            List<Matcher> matchers, ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
+            IWarningCollector warningCollector) throws HyracksDataException {
+        return !item.isDirectory() && predicate.test(matchers, key)
+                && externalDataPrefix.evaluate(key, evaluator, warningCollector);
     }
 
     /**
@@ -330,18 +336,8 @@ public class DatalakeUtils {
     }
 
     public static String getEndpointFromClient(Map<String, String> configuration) throws CompilationException {
-        String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
-        if (endpoint == null) {
-            throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
-        }
-
-        DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
-        try {
-            builder.endpoint(endpoint);
-        } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-        }
-        return AzureUtils.extractEndPoint(builder.buildClient().getAccountUrl());
+        DataLakeServiceClient client = buildClient(null, configuration);
+        return AzureUtils.extractEndPoint(client.getAccountUrl());
     }
 
     public static boolean isDatalakeAdapter(String adapter) {

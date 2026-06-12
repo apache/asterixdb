@@ -18,75 +18,38 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.iceberg.converter;
 
-import java.io.DataOutput;
+import static org.apache.asterix.external.util.ExternalDataConstants.FALSE;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DATE_AS_INT;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.TIME_AS_INT;
+
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ADate;
-import org.apache.asterix.om.base.ADateTime;
-import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.Warning;
 
 public class IcebergConverterContext extends ParserContext {
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ADate> dateSerDer =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
-    @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ADateTime> datetimeSerDer =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
+
     private final boolean decimalToDouble;
-    private final boolean timestampAsLong;
     private final boolean dateAsInt;
     private final boolean timeAsInt;
-
+    private final boolean timestampAsLong;
     private final ZoneId timeZoneId;
-    private final AMutableDate mutableDate = new AMutableDate(0);
-    private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
-    private final List<Warning> warnings;
 
-    public IcebergConverterContext(Map<String, String> configuration, List<Warning> warnings) {
-        this.warnings = warnings;
-        decimalToDouble = Boolean.parseBoolean(configuration
-                .getOrDefault(ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
-        timestampAsLong = Boolean.parseBoolean(configuration
-                .getOrDefault(ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG, ExternalDataConstants.TRUE));
-        timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.TIME_AS_INT,
-                ExternalDataConstants.TRUE));
-        dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.DATE_AS_INT,
-                ExternalDataConstants.TRUE));
+    public IcebergConverterContext(Map<String, String> configuration) {
+        decimalToDouble = Boolean.parseBoolean(configuration.getOrDefault(DECIMAL_TO_DOUBLE, FALSE));
+        dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(DATE_AS_INT, FALSE));
+        timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(TIME_AS_INT, FALSE));
+        timestampAsLong = Boolean.parseBoolean(configuration.getOrDefault(TIMESTAMP_AS_LONG, FALSE));
+
         String configuredTimeZoneId = configuration.get(ExternalDataConstants.IcebergOptions.TIMEZONE);
         if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
             timeZoneId = TimeZone.getTimeZone(configuredTimeZoneId).toZoneId();
         } else {
-            timeZoneId = ZoneOffset.UTC;
-        }
-    }
-
-    public void serializeDate(int value, DataOutput output) {
-        try {
-            mutableDate.setValue(value);
-            dateSerDer.serialize(mutableDate, output);
-        } catch (HyracksDataException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public void serializeDateTime(long timestamp, DataOutput output) {
-        try {
-            mutableDateTime.setValue(timestamp);
-            datetimeSerDer.serialize(mutableDateTime, output);
-        } catch (HyracksDataException e) {
-            throw new IllegalStateException(e);
+            timeZoneId = null;
         }
     }
 
@@ -108,9 +71,5 @@ public class IcebergConverterContext extends ParserContext {
 
     public boolean isDateAsInt() {
         return dateAsInt;
-    }
-
-    public List<Warning> getWarnings() {
-        return warnings;
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.UNSUPPORTED_ICEBERG_DATA_FORMAT;
 import static org.apache.asterix.external.util.aws.EnsureCloseClientsFactoryRegistry.FACTORY_INSTANCE_ID_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_AVRO_FORMAT;
@@ -28,6 +29,8 @@ import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +167,13 @@ public class IcebergUtils {
                     IcebergConstants.ICEBERG_NAMESPACE_PROPERTY_KEY);
         }
 
+        // if timezone is provided, validate it
+        String timezone = properties.get(ExternalDataConstants.ParquetOptions.TIMEZONE);
+        if (timezone != null && !timezone.isEmpty()) {
+            ExternalDataUtils.resolveTimeZone(timezone);
+        }
+
+        // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
     }
 
@@ -356,6 +366,10 @@ public class IcebergUtils {
         return projectedRecordType.getFieldNames();
     }
 
+    public static void setDefaults(Map<String, String> configuration) {
+        setDefaultFormat(configuration);
+    }
+
     /**
      * Sets the default format to Parquet if the format is not provided for Iceberg tables
      * @param configuration configuration
@@ -370,6 +384,30 @@ public class IcebergUtils {
             throws CompilationException {
         if (properties.get(property) == null) {
             throw CompilationException.create(errorCode, property);
+        }
+    }
+
+    public static void validateIcebergCatalogUri(Map<String, String> properties) throws CompilationException {
+        String value = properties.get(IcebergConstants.ICEBERG_URI_PROPERTY_KEY);
+        if (value == null) {
+            return;
+        }
+        if (value.isBlank()) {
+            throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "received blank URI value");
+        }
+
+        try {
+            URI uri = new URI(value);
+            if (!uri.isAbsolute()) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "missing URI scheme. received: " + value);
+            }
+
+            if (uri.getHost() == null || uri.getHost().isBlank()) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR,
+                        "URI host cannot be blank. received: " + value);
+            }
+        } catch (URISyntaxException ex) {
+            throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, ex.toString());
         }
     }
 
@@ -398,6 +436,8 @@ public class IcebergUtils {
         } else if (BlobUtils.isBlobAdapter(ioType) || DatalakeUtils.isDatalakeAdapter(ioType)) {
             // ADLSFileIO is used for both Blob storage and Datalake storage
             setIcebergAzureAdlsFileIoProperties(catalogProperties);
+        } else {
+            throw CompilationException.create(ErrorCode.UNSUPPORTED_FILE_IO_TYPE, ioType);
         }
     }
 

@@ -41,6 +41,14 @@ import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE_DEFAUL
 import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_VALUE;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_VALUE;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_VALUE;
 import static org.apache.hyracks.util.NetworkUtil.toHostPort;
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 
@@ -102,6 +110,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
@@ -112,6 +121,7 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.asterix.test.iceberg.IcebergTest;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -598,8 +608,8 @@ public class TestExecutor {
         StringWriter expected = new StringWriter();
         IOUtils.copy(actualFile, actual);
         IOUtils.copy(expectedFile, expected);
-        Pattern pattern = Pattern.compile(expected.toString(), Pattern.DOTALL | Pattern.MULTILINE);
-        if (!pattern.matcher(actual.toString()).matches()) {
+        Pattern pattern = Pattern.compile(expected.toString().trim(), Pattern.DOTALL | Pattern.MULTILINE);
+        if (!pattern.matcher(actual.toString().trim()).matches()) {
             // figure out where the problem first occurs...
             StringBuilder builder = new StringBuilder();
             String[] lines = expected.toString().split("\\n");
@@ -2475,9 +2485,14 @@ public class TestExecutor {
         str = str.replace(MANAGED_IDENTITY_PLACEHOLDER, MANAGED_IDENTITY_DEFAULT);
         str = str.replace(CLIENT_ID_PLACEHOLDER, CLIENT_ID_DEFAULT);
         str = str.replace(CLIENT_SECRET_PLACEHOLDER, CLIENT_SECRET_DEFAULT);
+
         str = str.replace(TENANT_ID_PLACEHOLDER, TENANT_ID_DEFAULT);
         str = replaceExternalEndpoint(str);
 
+        str = replaceIcebergPlaceholders(str);
+        if (LocalCloudUtilAdobeMock.DOCKER_ADOBE_S3_MOCK_URI != null) {
+            str = str.replace("%DOCKER_S3_CONTAINER%", LocalCloudUtilAdobeMock.DOCKER_ADOBE_S3_MOCK_URI);
+        }
         return str;
     }
 
@@ -2496,6 +2511,17 @@ public class TestExecutor {
 
     protected String replaceExternalEndpoint(String str) {
         return str.replace(BLOB_ENDPOINT_PLACEHOLDER, BLOB_ENDPOINT_DEFAULT);
+    }
+
+    protected String replaceIcebergPlaceholders(String str) {
+        str = str.replace(TestConstants.Iceberg.NESSIE_SERVER_URI_PLACEHOLDER, IcebergTest.NESSIE_URI);
+        str = str.replace(SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER, String.valueOf(SNAPSHOT_1_SNAPSHOT_ID_VALUE));
+        str = str.replace(SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER, String.valueOf(SNAPSHOT_1_TIMESTAMP_LONG_VALUE));
+        str = SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE != null
+                ? str.replace(SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER, SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE) : str;
+        str = SNAPSHOT_3_TIMESTAMP_DATE_VALUE != null
+                ? str.replace(SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER, SNAPSHOT_3_TIMESTAMP_DATE_VALUE) : str;
+        return str;
     }
 
     protected boolean noTemplateRequired(String str) {

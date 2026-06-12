@@ -45,6 +45,7 @@ public class ParseException extends HyracksDataException {
     /**
      * @deprecated use {@link IError} ctors when possible
      */
+    @Deprecated
     public ParseException(Throwable cause) {
         super(cause);
     }
@@ -52,6 +53,7 @@ public class ParseException extends HyracksDataException {
     /**
      * @deprecated use {@link IError} ctors when possible
      */
+    @Deprecated
     public ParseException(String message, Throwable cause) {
         super(message, cause);
     }
@@ -59,6 +61,7 @@ public class ParseException extends HyracksDataException {
     /**
      * @deprecated use {@link IError} ctors when possible
      */
+    @Deprecated
     public ParseException(Throwable cause, String filename, int line, int column) {
         super(cause);
         setLocation(filename, line, column);

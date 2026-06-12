@@ -61,17 +61,17 @@ public class RecordWithMetadataAndPK<T> extends RecordWithPK<T> {
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
     private final AMutableDouble mutableDouble = new AMutableDouble(0);
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<AString> stringSerde =
+    protected final ISerializerDeserializer<AString> stringSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
-    private final AMutableString mutableString = new AMutableString(null);
+    protected final AMutableString mutableString = new AMutableString(null);
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<AInt32> int32Serde =
+    protected final ISerializerDeserializer<AInt32> int32Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
-    private final AMutableInt32 mutableInt = new AMutableInt32(0);
+    protected final AMutableInt32 mutableInt = new AMutableInt32(0);
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AInt64> int64Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
-    private final AMutableInt64 mutableLong = new AMutableInt64(0);
+    protected final AMutableInt64 mutableLong = new AMutableInt64(0);
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<ABoolean> booleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);

@@ -32,7 +32,7 @@ public class NestClause extends AbstractBinaryCorrelateWithConditionClause {
 
     public NestClause(UnnestType nestType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
             Expression conditionExpr) {
-        super(rightExpr, rightVar, rightPosVar, conditionExpr);
+        super(rightExpr, rightVar, rightPosVar, conditionExpr, null);
         this.nestType = nestType;
     }
 

@@ -75,6 +75,7 @@ import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.BlobServiceVersion;
 import com.azure.storage.blob.models.PublicAccessType;
 import com.azure.storage.common.sas.AccountSasPermission;
 import com.azure.storage.common.sas.AccountSasResourceType;
@@ -213,6 +214,7 @@ public class AzureBlobStorageExternalDatasetTest {
         builder.connectionString(azuriteContainer.getConnectionString());
         builder.httpClient(new NettyAsyncHttpClientBuilder(
                 HttpClient.create().secure(sslSpec -> sslSpec.sslContext(insecureSslContext).build())).build());
+        builder.serviceVersion(BlobServiceVersion.V2025_07_05);
         blobServiceClient = builder.buildClient();
         LOGGER.info("Azurite Blob Service client created successfully");
 

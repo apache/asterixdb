@@ -21,7 +21,10 @@ package org.apache.asterix.runtime.evaluators.functions.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -126,7 +129,11 @@ public class RegExpMatcher {
                 // use whatever flags the previous pattern was using
                 flags = pattern.flags();
             }
-            pattern = Pattern.compile(patternString, flags);
+            try {
+                pattern = Pattern.compile(patternString, flags);
+            } catch (PatternSyntaxException ex) {
+                throw new RuntimeDataException(ErrorCode.INVALID_REGEX_PATTERN, ex, patternString);
+            }
             matcher = pattern.matcher(charSeq);
         } else {
             matcher.reset(charSeq);

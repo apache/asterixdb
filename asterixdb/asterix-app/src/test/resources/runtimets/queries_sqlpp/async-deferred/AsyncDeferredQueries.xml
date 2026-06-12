@@ -69,6 +69,13 @@
             <output-dir compare="Clean-JSON">async-json</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="async-deferred">
+        <compilation-unit name="async-not-supported">
+            <output-dir compare="Clean-JSON">async-not-supported</output-dir>
+            <expected-error>Async mode not supported for the statement CREATE COLLECTION</expected-error>
+            <source-location>false</source-location>
+        </compilation-unit>
+    </test-case>
     <test-case FilePath="async-deferred-improved">
         <compilation-unit name="async-failed">
             <output-dir compare="Clean-JSON">async-failed</output-dir>

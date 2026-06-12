@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.cbo;
 
+import static org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations.OP_COST_LOCAL;
+
 import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -115,7 +117,7 @@ public class EstimatedCostComputationVisitor
         double totalCost = cardSizeCost.getCost() + groupByDistinctCost;
         cardSizeCost.setCost(totalCost);
         annotateOp(op, cardSizeCost);
-
+        op.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, groupByDistinctCost);
         return cardSizeCost;
     }
 
@@ -162,6 +164,7 @@ public class EstimatedCostComputationVisitor
         op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, (double) Math.round(totalCost * 100) / 100);
         cardSizeCost.setCost(totalCost);
         annotateOp(op, cardSizeCost);
+        op.getAnnotations().put(OP_COST_LOCAL, orderCost);
 
         return cardSizeCost;
     }

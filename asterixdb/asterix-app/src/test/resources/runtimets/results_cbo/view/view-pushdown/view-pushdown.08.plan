@@ -1,13 +1,13 @@
-distribute result [$$88] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
+distribute result [$$98] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$88] <- [{"id": $$91, "review": $$95}] project: [$$88] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
+    assign [$$98] <- [{"id": $$101, "review": $$105}] project: [$$98] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
     -- ASSIGN  |UNPARTITIONED|
       exchange [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-        order (ASC, $$91) [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 35.51]
-        -- STABLE_SORT [$$91(ASC)]  |UNPARTITIONED|
+        order (ASC, $$101) [cardinality: 6.0, doc-size: 15.0, op-cost: 15.51, total-cost: 35.51]
+        -- STABLE_SORT [$$101(ASC)]  |UNPARTITIONED|
           exchange [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
             limit 3 [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
@@ -16,11 +16,11 @@ distribute result [$$88] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-
               -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                 limit 3 [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
                 -- STREAM_LIMIT  |PARTITIONED|
-                  assign [$$95] <- [$$d.getField(1)] project: [$$91, $$95] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
+                  assign [$$105] <- [$$d.getField(1)] project: [$$101, $$105] [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$91, $$d] <- test.DatasetWithKnownField condition (and(not(is-unknown(int64-default-null($$d.getField("year")))), not(is-unknown(int64-default-null($$d.getField("quarter")))), eq($$d.getField(1), "good"))) limit 3 [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
+                      data-scan []<-[$$101, $$d] <- test.DatasetWithKnownField condition (and(not(is-unknown(int64-default-null($$d.getField("year")))), not(is-unknown(int64-default-null($$d.getField("quarter")))), eq($$d.getField(1), "good"))) limit 3 [cardinality: 6.0, doc-size: 15.0, op-cost: 0.0, total-cost: 20.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

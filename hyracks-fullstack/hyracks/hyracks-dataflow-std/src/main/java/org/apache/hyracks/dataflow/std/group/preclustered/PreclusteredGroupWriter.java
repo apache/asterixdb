@@ -110,7 +110,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         inFrameAccessor = new FrameTupleAccessor(inRecordDesc);
         groupFieldsRef = new PermutingFrameTupleReference(groupFields);
         groupFieldsPrevCopy = PointableTupleReference.create(groupFields.length, ArrayBackedValueStorage::new);
-        VSizeFrame outFrame = new VSizeFrame(ctx);
+        VSizeFrame outFrame = ctx.allocateVSizeFrame();
         FrameTupleAppender appender = new FrameTupleAppender();
         appender.reset(outFrame, true);
         appenderWrapper = new FrameTupleAppenderWrapper(appender, writer);

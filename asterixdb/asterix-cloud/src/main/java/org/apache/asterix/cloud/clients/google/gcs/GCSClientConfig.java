@@ -43,11 +43,13 @@ public class GCSClientConfig {
     private final int readMaxRequestsPerSeconds;
     private final int writeMaxRequestsPerSeconds;
     private final int writeBufferSize;
+    private final int maxIdleSeconds;
+    private final int maxLifetimeSeconds;
     private final String prefix;
 
     private GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
             long tokenAcquireTimeout, int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds,
-            int writeBufferSize, String prefix) {
+            int writeBufferSize, int maxIdleSeconds, int maxLifetimeSeconds, String prefix) {
         this.region = region;
         this.endpoint = endpoint;
         this.anonymousAuth = anonymousAuth;
@@ -56,12 +58,14 @@ public class GCSClientConfig {
         this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.writeBufferSize = writeBufferSize;
+        this.maxIdleSeconds = maxIdleSeconds;
+        this.maxLifetimeSeconds = maxLifetimeSeconds;
         this.prefix = prefix;
     }
 
     public GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
             int writeBufferSize, String prefix) {
-        this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize, prefix);
+        this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize, 0, 0, prefix);
     }
 
     public static GCSClientConfig of(ICloudProperties cloudProperties) {
@@ -69,7 +73,8 @@ public class GCSClientConfig {
                 cloudProperties.isStorageAnonymousAuth(), cloudProperties.getProfilerLogInterval(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
-                cloudProperties.getStoragePrefix());
+                cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(), cloudProperties.getStoragePrefix());
     }
 
     public static GCSClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -121,6 +126,14 @@ public class GCSClientConfig {
 
     public int getWriteBufferSize() {
         return writeBufferSize;
+    }
+
+    public int getMaxIdleSeconds() {
+        return maxIdleSeconds;
+    }
+
+    public int getMaxLifetimeSeconds() {
+        return maxLifetimeSeconds;
     }
 
     public String getPrefix() {

@@ -259,6 +259,12 @@ public class LSMSecondaryIndexCreationTupleProcessorTest {
                 return ByteBuffer.allocate(FRAME_SIZE);
             }
         });
+        Mockito.when(ctx.allocateVSizeFrame()).thenAnswer(new Answer<VSizeFrame>() {
+            @Override
+            public VSizeFrame answer(InvocationOnMock invocation) throws Throwable {
+                return new VSizeFrame(ctx);
+            }
+        });
 
         Mockito.doAnswer(new Answer<Void>() {
             @Override

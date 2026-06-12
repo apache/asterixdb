@@ -25,7 +25,6 @@ import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
@@ -177,7 +176,7 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
                 tAccess[i] = new FrameTupleAccessor(inputRecDesc[i]);
             }
 
-            this.outputAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+            this.outputAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
         }
 
         @Override

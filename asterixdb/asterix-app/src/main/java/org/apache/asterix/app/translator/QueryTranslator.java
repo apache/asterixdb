@@ -117,7 +117,9 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
+import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
+import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -373,12 +375,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         validateStatements(requestParameters);
-        trackRequest(requestParameters);
+        boolean trackInAsyncDeferredRequests = shouldTrackAsSeparateRequest(requestParameters);
+        IClientRequest clientRequest = trackRequest(requestParameters, trackInAsyncDeferredRequests);
         Counter resultSetIdCounter = new Counter(0);
         FileSplit outputFile = null;
         String threadName = Thread.currentThread().getName();
-        Thread.currentThread().setName(
-                QueryTranslator.class.getSimpleName() + ":" + requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        Thread.currentThread().setName(QueryTranslator.class.getSimpleName() + ":" + reqId);
         Map<String, String> config = new HashMap<>();
         final IResultSet resultSet = requestParameters.getResultSet();
         final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
@@ -388,7 +391,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
-        boolean stmtWithAsyncSupportUsed = false;
+        boolean hasResultSet = false;
+        Exception exception = null;
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -417,7 +421,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
                                 Creator.DEFAULT_CREATOR);
                         break;
-                    case DATASET_DECL:
+                    case CREATE_DATASET:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters,
                                 Creator.DEFAULT_CREATOR);
                         break;
@@ -431,10 +435,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case CREATE_FULL_TEXT_CONFIG:
                         handleCreateFullTextConfigStatement(metadataProvider, stmt);
                         break;
-                    case TYPE_DECL:
+                    case CREATE_TYPE:
                         handleCreateTypeStatement(metadataProvider, stmt);
                         break;
-                    case NODEGROUP_DECL:
+                    case CREATE_NODEGROUP:
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
                     case DATABASE_DROP:
@@ -518,7 +522,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
                                 requestParameters, stmtParams, stats);
-                        stmtWithAsyncSupportUsed = true;
                         break;
                     case INSERT:
                     case UPDATE:
@@ -528,7 +531,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
                             metadataProvider.setMaxResultReads(maxResultReads);
-                            stmtWithAsyncSupportUsed = true;
                         }
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
@@ -567,14 +569,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
-                        metadataProvider
-                                .setMaxResultReads(!sessionConfig.isIncludeHost() ? UNLIMITED_READS : maxResultReads);
+                        metadataProvider.setMaxResultReads(getMaxResultReads(resultDelivery, maxResultReads));
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
                         handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
                                 requestParameters, stmtParams, stmtRewriter);
-                        stmtWithAsyncSupportUsed = true;
                         break;
                     case ANALYZE:
                         handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -608,17 +608,64 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
                                 "Unexpected statement: " + kind);
                 }
+                hasResultSet |= metadataProvider.getResultSetId() != null;
             }
         } catch (Exception ex) {
+            // need to handle job and request clean-ups in case of failures
             this.appCtx.getRequestTracker().incrementFailedRequests();
+            exception = ex;
             throw ex;
         } finally {
             // async queries are completed after their job completes
-            if (statements.isEmpty() || ResultDelivery.ASYNC != resultDelivery || !stmtWithAsyncSupportUsed) {
-                appCtx.getRequestTracker().complete(requestParameters.getRequestReference().getUuid());
+            if (ResultDelivery.ASYNC != resultDelivery) {
+                // this assumes 1-1 mapping between a request and a statement, needs to be adapted for multi-statement
+                appCtx.getRequestTracker().complete(reqId);
+                if (trackInAsyncDeferredRequests) {
+                    completeDeferred((ClientRequest) clientRequest, hasResultSet, exception);
+                }
+            } else {
+                if (statements.isEmpty()) {
+                    appCtx.getRequestTracker().complete(reqId);
+                }
+                if (trackInAsyncDeferredRequests) {
+                    JobId jobId = ((ClientRequest) clientRequest).getJobId();
+                    if (jobId == null) {
+                        appCtx.getRequestTracker().removeAsyncOrDeferredRequest(clientRequest.getId());
+                    }
+                }
             }
             Thread.currentThread().setName(threadName);
         }
+    }
+
+    private void completeDeferred(ClientRequest clientRequest, boolean hasResultSet, Exception exception) {
+        try {
+            JobId jobId = clientRequest.getJobId();
+            if (jobId == null) {
+                // jobId = null either means:
+                // 1. compile error, compile-only, ... resulting in no job created whether query, DML or DDL
+                // 2. statement currently not setting jobId in the client request, e.g. DDLs
+                // for 2. it needs to be handled so that the job record is removed also if not producing a result
+                appCtx.getRequestTracker().removeAsyncOrDeferredRequest(clientRequest.getId());
+            } else if (!hasResultSet) {
+                // don't sweep ones that completed successfully and produced a result
+                // sweeps statements not producing a result, e.g. DMLs without a return clause
+                // sweeps statements that threw an exception whether query, DML or DDL
+                ClusterControllerService ccSvs =
+                        (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+                ccSvs.getResultDirectoryService().removeIfDone(jobId);
+            }
+        } catch (Throwable th) {
+            if (exception != null) {
+                exception.addSuppressed(th);
+            }
+            LOGGER.log(Level.WARN, "Failed to clean up deferred request", th);
+        }
+    }
+
+    private long getMaxResultReads(ResultDelivery mode, long maxResultReads) {
+        // !sessionConfig.isIncludeHost() typically means the request is via the new request API
+        return mode == ResultDelivery.ASYNC && !sessionConfig.isIncludeHost() ? UNLIMITED_READS : maxResultReads;
     }
 
     protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,
@@ -1078,7 +1125,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    validateIfIcebergTable(metadataProvider, requestParameters, properties, mdTxnCtx, sourceLoc);
+                    beforeExternalCollectionValidation(externalDetails, properties);
+
+                    Map<String, String> propertiesCopy = new HashMap<>(properties);
+                    validateIfIcebergTable(metadataProvider, requestParameters, propertiesCopy, mdTxnCtx, sourceLoc,
+                            externalDetails.getAdapter());
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx, metadataProvider);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
@@ -1191,10 +1242,28 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return Optional.of(dataset);
     }
 
+    /**
+     * extensions can use this method to apply any changes on the original external collection properties
+     * before validation
+     *
+     * @param properties external collection properties
+     */
+    protected void beforeExternalCollectionValidation(ExternalDetailsDecl externalDetailsDecl,
+            Map<String, String> properties) throws CompilationException {
+        if (IcebergUtils.isIcebergTable(properties)) {
+            IcebergUtils.setDefaults(properties);
+        }
+        if (ExternalDataUtils.isParquetFormat(properties) || ExternalDataUtils.isDeltaTable(properties)) {
+            S3Utils.validateAndNormalizeStreamInputType(properties);
+            S3Utils.validateAndNormalizeChangeDetectionMode(properties);
+        }
+    }
+
     protected void validateIfIcebergTable(MetadataProvider metadataProvider, IRequestParameters requestParameters,
-            Map<String, String> properties, MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc)
+            Map<String, String> properties, MetadataTransactionContext mdTxnCtx, SourceLocation srcLoc, String adapter)
             throws AlgebricksException {
-        IcebergStatementValidationHelper.validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, properties, srcLoc);
+        IcebergStatementValidationHelper.validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, properties, srcLoc,
+                adapter);
     }
 
     protected boolean isDatasetWithoutTypeSpec(DatasetDecl datasetDecl, ARecordType aRecordType,
@@ -4274,7 +4343,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4301,8 +4370,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Stats stats) throws Exception {
         CopyToStatement copyTo = (CopyToStatement) stmt;
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        final ClientRequest clientRequest =
-                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws RuntimeDataException, InterruptedException {
@@ -4310,7 +4379,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     compilationLock.readLock().lockInterruptibly();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                     throw e;
                 }
             }
@@ -4479,7 +4548,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4551,7 +4620,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4575,6 +4644,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private static JobId runTrackJob(IHyracksClientConnection hcc, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags,
             String reqId, String clientCtxId, ClientRequest clientRequest, JobKind jobKind) throws Exception {
+        // Guard before submitting the job: if the request was cancelled and removed from the tracker,
+        // clientRequest will be null here; treat that as a cancellation rather than NPE on setJobId.
+        ensureNotCancelled(clientRequest, reqId);
         jobSpec.setRequestId(reqId);
         jobSpec.setProperty(JOB_KIND, jobKind);
         JobId jobId = JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, false);
@@ -5550,8 +5622,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
             throws Exception {
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
-        final ClientRequest clientRequest =
-                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        String reqId = requestParameters.getRequestReference().getUuid();
+        final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws RuntimeDataException, InterruptedException {
@@ -5559,7 +5631,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     compilationLock.readLock().lockInterruptibly();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    ensureNotCancelled(clientRequest);
+                    ensureNotCancelled(clientRequest, reqId);
                     throw e;
                 }
             }
@@ -5799,6 +5871,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String reqId = requestParameters.getRequestReference().getUuid();
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
         final ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqId);
+        // Guard before markCancellable: request may have been cancelled and deregistered already.
+        ensureNotCancelled(clientRequest, reqId);
         if (cancellable) {
             clientRequest.markCancellable();
         }
@@ -5814,7 +5888,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     SchedulableClientRequest.of(clientRequest, requestParameters, metadataProvider, jobSpec);
             appCtx.getReceptionist().ensureSchedulable(schedulableRequest);
             // ensure request not cancelled before running job
-            ensureNotCancelled(clientRequest);
+            ensureNotCancelled(clientRequest, reqId);
             if (atomicStatement != null) {
                 Dataset ds = metadataProvider.findDataset(((InsertStatement) atomicStatement).getDatabaseName(),
                         ((InsertStatement) atomicStatement).getDataverseName(),
@@ -5848,7 +5922,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 hcc.waitForCompletion(jobId);
             } else {
                 hcc.waitForCompletion(jobId);
-                ensureNotCancelled(clientRequest);
+                ensureNotCancelled(clientRequest, reqId);
                 printer.print(jobId);
             }
             if (atomic) {
@@ -5998,12 +6072,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void trackRequest(IRequestParameters requestParameters) throws HyracksDataException {
+    protected IClientRequest trackRequest(IRequestParameters requestParameters, boolean trackInAsyncDeferredRequests)
+            throws HyracksDataException {
         final IClientRequest clientRequest = appCtx.getReceptionist().requestReceived(requestParameters);
         this.appCtx.getRequestTracker().track(clientRequest);
-        if (shouldTrackAsSeparateRequest(requestParameters)) {
+        if (trackInAsyncDeferredRequests) {
             appCtx.getRequestTracker().trackAsyncOrDeferredRequest(clientRequest);
         }
+        return clientRequest;
     }
 
     /**
@@ -6026,6 +6102,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDecl requestDataverseDecl = getRequestDataverseDecl(requestParameters);
         if (requestDataverseDecl != null) {
             statements.add(0, requestDataverseDecl);
+        }
+        validateAsyncSupported(requestParameters);
+    }
+
+    private void validateAsyncSupported(IRequestParameters requestParameters) throws CompilationException {
+        if (requestParameters.getResultProperties().getDelivery() == ResultDelivery.ASYNC) {
+            Optional<Statement> stmsOpt = statements.stream().findAny().filter(s -> !s.getKind().isSupportAsync());
+            if (stmsOpt.isPresent()) {
+                Statement stmt = stmsOpt.get();
+                throw new CompilationException(ErrorCode.ASYNC_NOT_SUPPORTED_FOR_STATEMENT, stmt.getSourceLocation(),
+                        stmt.getKind().getDisplayName());
+            }
         }
     }
 
@@ -6102,9 +6190,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), dataset, sourceLoc);
     }
 
-    private static void ensureNotCancelled(ClientRequest clientRequest) throws RuntimeDataException {
-        if (clientRequest.isCancelled()) {
-            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
+    private static void ensureNotCancelled(ClientRequest clientRequest, String reqId) throws RuntimeDataException {
+        // clientRequest may be null if the request was cancelled and deregistered from the tracker
+        // between when it was looked up and when this check is reached; treat that as cancelled.
+        if (clientRequest == null || clientRequest.isCancelled()) {
+            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
         }
     }
 

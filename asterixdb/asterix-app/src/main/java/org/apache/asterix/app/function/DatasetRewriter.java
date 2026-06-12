@@ -22,6 +22,8 @@ import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.SINGULAR;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 
@@ -115,6 +118,16 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             Object externalSubpath = unnestAnnotations.get(SUBPATH);
             if (externalSubpath instanceof String) {
                 dataSourceProperties.put(SUBPATH, (String) externalSubpath);
+            }
+            Object timeTravelObj = unnest.getTimeTravel();
+            if (timeTravelObj instanceof TimeTravel timeTravel) {
+                if (timeTravel.getType().equals(TimeTravel.Type.SNAPSHOT_ID)) {
+                    dataSourceProperties.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, timeTravel.getSnapshotIdOrTimestamp());
+                } else if (timeTravel.getType().equals(TimeTravel.Type.SNAPSHOT_TIMESTAMP)) {
+                    dataSourceProperties.put(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY, timeTravel.getSnapshotIdOrTimestamp());
+                } else {
+                    throw new IllegalStateException("Unknown snapshot type");
+                }
             }
         }
         List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();

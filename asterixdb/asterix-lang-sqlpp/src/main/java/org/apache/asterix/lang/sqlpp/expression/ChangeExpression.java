@@ -244,6 +244,10 @@ public class ChangeExpression extends AbstractExpression {
         dataRemovalRecord = result.second;
     }
 
+    public boolean assignsWholeRecord() {
+        return exprTree.assignsWholeRecord();
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(pathExprs, valueExprs, dataTransformRecord, dataRemovalRecord, exprTree, priorExpr,

@@ -76,7 +76,7 @@
             <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
-                <version>1.4.2</version>
+                <version>1.13.0</version>
                 <executions>
                     <execution>
                         <id>install-fake-gcs</id>
@@ -218,7 +218,7 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob-batch</artifactId>
-            <version>12.23.1</version>
+            <version>12.30.0</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>

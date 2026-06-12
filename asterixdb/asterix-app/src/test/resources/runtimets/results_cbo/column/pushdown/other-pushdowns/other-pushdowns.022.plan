@@ -1,10 +1,10 @@
-distribute result [$$84] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+distribute result [$$95] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5 [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$84] <- [{"name": $$93, "phone": $$94, "num_reviews": sql-count($$91), "overall_avg": $#2, "overall_reviews": $$83}] project: [$$84] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+      assign [$$95] <- [{"name": $$104, "phone": $$105, "num_reviews": sql-count($$102), "overall_avg": $#2, "overall_reviews": $$94}] project: [$$95] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
         -- SORT_MERGE_EXCHANGE [$#2(DESC) ]  |PARTITIONED|
@@ -17,48 +17,48 @@ distribute result [$$84] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-c
                 exchange [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   subplan {
-                            aggregate [$$83] <- [listify($$82)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            aggregate [$$94] <- [listify($$93)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- AGGREGATE  |LOCAL|
-                              assign [$$82] <- [$$98.getField("Overall")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              assign [$$93] <- [$$109.getField("Overall")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ASSIGN  |LOCAL|
-                                assign [$$98] <- [$$reviews.getField("ratings")] project: [$$98] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                assign [$$109] <- [$$reviews.getField("ratings")] project: [$$109] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ASSIGN  |LOCAL|
-                                  unnest $$reviews <- scan-collection($$91) project: [$$reviews] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  unnest $$reviews <- scan-collection($$102) project: [$$reviews] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- UNNEST  |LOCAL|
-                                    project ([$$91]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    project ([$$102]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- STREAM_PROJECT  |LOCAL|
                                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                          } [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                   -- SUBPLAN  |PARTITIONED|
-                    assign [$#2] <- [get-item($$72, 0)] project: [$$93, $$94, $$91, $#2] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+                    assign [$#2] <- [get-item($$83, 0)] project: [$$104, $$105, $$102, $#2] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                     -- ASSIGN  |PARTITIONED|
                       subplan {
-                                aggregate [$$72] <- [listify($$86)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                aggregate [$$83] <- [listify($$97)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- AGGREGATE  |LOCAL|
-                                  aggregate [$$86] <- [agg-sql-min($$69)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  aggregate [$$97] <- [agg-sql-min($$80)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- AGGREGATE  |LOCAL|
-                                    assign [$$69] <- [$$97.getField("Overall")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    assign [$$80] <- [$$108.getField("Overall")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ASSIGN  |LOCAL|
-                                      assign [$$97] <- [$$89.getField("ratings")] project: [$$97] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      assign [$$108] <- [$$100.getField("ratings")] project: [$$108] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ASSIGN  |LOCAL|
-                                        unnest $$89 <- scan-collection($$91) project: [$$89] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        unnest $$100 <- scan-collection($$102) project: [$$100] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |LOCAL|
-                                          project ([$$91]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          project ([$$102]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- STREAM_PROJECT  |LOCAL|
                                             nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                       -- SUBPLAN  |PARTITIONED|
-                        select (eq($$ht.getField("city"), "Los Angeles")) project: [$$93, $$94, $$91] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+                        select (eq($$ht.getField("city"), "Los Angeles")) project: [$$104, $$105, $$102] [cardinality: 0.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                         -- STREAM_SELECT  |PARTITIONED|
-                          assign [$$94, $$91, $$93] <- [$$ht.getField("phone"), $$ht.getField("reviews"), $$ht.getField("name")] [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+                          assign [$$105, $$102, $$104] <- [$$ht.getField("phone"), $$ht.getField("reviews"), $$ht.getField("name")] [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                           -- ASSIGN  |PARTITIONED|
                             project ([$$ht]) [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                             -- STREAM_PROJECT  |PARTITIONED|
                               exchange [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$85, $$ht] <- test.ColumnDataset project ({reviews:[{ratings:{Overall:any}}],phone:any,city:any,name:any}) filter on: eq($$ht.getField("city"), "Los Angeles") range-filter on: eq($$ht.getField("city"), "Los Angeles") [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
+                                data-scan []<-[$$96, $$ht] <- test.ColumnDataset project ({reviews:[{ratings:{Overall:any}}],phone:any,city:any,name:any}) filter on: eq($$ht.getField("city"), "Los Angeles") range-filter on: eq($$ht.getField("city"), "Los Angeles") [cardinality: 2.0, doc-size: 3.0, op-cost: 0.0, total-cost: 2.0]
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

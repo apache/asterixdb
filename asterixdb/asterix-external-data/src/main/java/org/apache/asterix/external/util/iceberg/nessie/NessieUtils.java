@@ -30,6 +30,7 @@ import static org.apache.asterix.external.util.http.HttpConstants.PASSWORD_FIELD
 import static org.apache.asterix.external.util.http.HttpConstants.USERNAME_FIELD_NAME;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_URI_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.validateIcebergCatalogUri;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 import static org.apache.asterix.external.util.iceberg.nessie.NessieConstants.NESSIE_AUTHENTICATION_BEARER_TOKEN_FIELD_NAME;
 import static org.apache.asterix.external.util.iceberg.nessie.NessieConstants.NESSIE_AUTHENTICATION_OAUTH2_ALLOWED_SCOPES;
@@ -48,6 +49,7 @@ import static org.apache.asterix.external.util.iceberg.nessie.NessieConstants.NE
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.external.util.iceberg.rest.RestConstants;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.nessie.NessieCatalog;
 
@@ -72,12 +74,14 @@ public class NessieUtils {
 
     public static void validateRequiredProperties(Map<String, String> catalogProperties) throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
         validatePropertyExists(catalogProperties, ICEBERG_WAREHOUSE_PROPERTY_KEY, PARAMETERS_REQUIRED);
     }
 
     public static void validateNessieRestRequiredProperties(Map<String, String> catalogProperties)
             throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
     }
 
     public static void setAuthentication(Map<String, String> catalogProperties) throws CompilationException {
@@ -155,7 +159,10 @@ public class NessieUtils {
         if (notAllowed != null) {
             throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed, BEARER_TOKEN_FIELD_NAME);
         }
-
+        // strip "Bearer " prefix if present - the Nessie client adds it internally
+        if (bearerToken.startsWith(RestConstants.BEARER_TOKEN_PREFIX)) {
+            bearerToken = bearerToken.substring(RestConstants.BEARER_TOKEN_PREFIX.length());
+        }
         catalogProperties.put(NESSIE_AUTHENTICATION_TYPE_FIELD_NAME, NESSIE_AUTHENTICATION_TYPE_BEARER);
         catalogProperties.put(NESSIE_AUTHENTICATION_BEARER_TOKEN_FIELD_NAME, bearerToken);
     }

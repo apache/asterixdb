@@ -91,6 +91,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         fromTerm.getLeftExpression().accept(this, step);
         out.print(skip(step) + "AS ");
         fromTerm.getLeftVariable().accept(this, 0);
+        if (fromTerm.hasTimeTravel()) {
+            String type = fromTerm.getTimeTravel().getType().getKeyword().toUpperCase();
+            String value = fromTerm.getTimeTravel().getSnapshotIdOrTimestamp();
+            out.println(" AT " + type + " " + value);
+        }
         if (fromTerm.hasPositionalVariable()) {
             out.println(" AT");
             fromTerm.getPositionalVariable().accept(this, 0);

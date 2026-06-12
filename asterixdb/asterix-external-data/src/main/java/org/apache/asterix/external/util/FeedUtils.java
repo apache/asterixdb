@@ -114,7 +114,11 @@ public class FeedUtils {
         message.getBuffer().clear();
         message.getBuffer().put(input.array(), offset, len);
         message.getBuffer().flip();
-        IntSerDeUtils.putInt(input.array(), FrameHelper.getTupleCountOffset(input.capacity()), tc);
+        // Use limit() rather than capacity() to locate the tuple count slot, because the buffer
+        // has been flip()'d by the IFrameReader (e.g. RunFileReader:92) — making limit the actual
+        // data size — while capacity may be larger if the underlying frame retained a previous,
+        // bigger physical allocation.
+        IntSerDeUtils.putInt(input.array(), FrameHelper.getTupleCountOffset(input.limit()), tc);
     }
 
     public static String getFeedMetaTypeName(Map<String, String> configuration) {

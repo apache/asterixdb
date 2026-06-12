@@ -44,6 +44,7 @@ import static org.apache.asterix.external.util.aws.AwsUtils.getCrossRegion;
 import static org.apache.asterix.external.util.aws.AwsUtils.getPathStyleAddressing;
 import static org.apache.asterix.external.util.aws.AwsUtils.getRegion;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.CHANGE_DETECTION_MODE_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.CHECKSUM_BEHAVIOR_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FILES;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.FOLDERS;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
@@ -55,15 +56,12 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_REGION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_DURATION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_NAME;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_NONE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIAL_PROVIDER_KEY;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_AUTO;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INSTANCE_PROFILE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_PATH_STYLE_ACCESS;
@@ -77,6 +75,8 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -85,6 +85,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -92,6 +93,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -114,6 +116,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -142,6 +145,10 @@ import software.amazon.awssdk.utils.AttributeMap;
 
 public class S3Utils {
     private static final Logger LOGGER = LogManager.getLogger();
+    static final String CHECKSUM_BEHAVIOR_ALLOWED_VALUES = Arrays.stream(S3ChecksumBehavior.values())
+            .map(v -> v.name().toLowerCase()).collect(Collectors.joining(", "));
+
+    static final String SLASH = "/";
 
     private static final class StaticTrustManagersProvider implements TlsTrustManagersProvider {
         private final TrustManager[] trustManagers;
@@ -193,23 +200,25 @@ public class S3Utils {
         } else if (certificates != null && !certificates.isBlank()) {
             builder.httpClient(createHttpClient(certificates));
         }
-        if (serviceEndpoint != null) {
-            configureS3CompatibleSettings(serviceEndpoint, builder);
-        }
+        applyChecksumBehavior(builder, resolveChecksumBehavior(configuration));
         awsClients.setConsumingClient(builder.build());
         return awsClients;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT)
-    private static void configureS3CompatibleSettings(String serviceEndpoint, S3ClientBuilder builder) {
-        // AWS SDK 2.43+ sends CRC64NVME request checksums by default for all eligible operations.
-        // S3-compatible endpoints (non-AWS) and older mock servers do not understand this header and
-        // may reject or mishandle requests, returning empty or error responses. When a custom endpoint
-        // is configured (i.e. not talking to real AWS S3), disable automatic checksum calculation so
-        // only operations that explicitly require a checksum will include one.
-        if (serviceEndpoint != null) {
-            builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
-            builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+    public static void applyChecksumBehavior(S3ClientBuilder builder, S3ChecksumBehavior behavior) {
+        if (behavior == null) {
+            // null means use SDK defaults — don't configure anything
+            return;
+        }
+        switch (behavior) {
+            case WHEN_REQUIRED:
+                builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
+                builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+                break;
+            case WHEN_SUPPORTED:
+                builder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_SUPPORTED);
+                builder.responseChecksumValidation(ResponseChecksumValidation.WHEN_SUPPORTED);
+                break;
         }
     }
 
@@ -294,8 +303,8 @@ public class S3Utils {
             jobConf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
         }
 
-        setInputStreamType(configuration, jobConf, serviceEndpoint);
-        setChangeDetectionMode(configuration, jobConf, serviceEndpoint);
+        setInputStreamType(configuration, jobConf);
+        setChangeDetectionMode(configuration, jobConf);
 
         boolean pathStyleAddressing =
                 validateAndGetPathStyleAddressing(configuration.get(PATH_STYLE_ADDRESSING_FIELD_NAME), serviceEndpoint);
@@ -313,44 +322,16 @@ public class S3Utils {
         }
     }
 
-    private static void setInputStreamType(Map<String, String> configuration, JobConf jobConf, String serviceEndpoint) {
+    private static void setInputStreamType(Map<String, String> configuration, JobConf jobConf) {
         String configuredInputStreamType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
-        if (configuredInputStreamType == null) {
-            configuredInputStreamType = HADOOP_INPUT_STREAM_TYPE_VAL_AUTO;
-        }
-
-        if (HADOOP_INPUT_STREAM_TYPE_VAL_AUTO.equals(configuredInputStreamType)) {
-            // Auto mode: decide based on endpoint
-            if (serviceEndpoint != null) {
-                // The analytics-accelerator stream factory (default in Hadoop 3.4+) performs a HeadObject call during
-                // stream initialization to fetch the ETag. Non-AWS S3-compatible endpoints may not return an ETag on
-                // HeadObject, which causes a NullPointerException. Fall back to the classic stream
-                // implementation when a custom service endpoint is in use.
-                jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
-            } else {
-                jobConf.set(HADOOP_INPUT_STREAM_TYPE, HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS);
-            }
-        } else {
-            // Explicit override: use the user-specified stream type
-            jobConf.set(HADOOP_INPUT_STREAM_TYPE, configuredInputStreamType);
+        if (configuredInputStreamType != null) {
+            jobConf.set(S3Constants.HADOOP_INPUT_STREAM_TYPE, configuredInputStreamType);
         }
     }
 
-    private static void setChangeDetectionMode(Map<String, String> configuration, JobConf jobConf,
-            String serviceEndpoint) {
+    private static void setChangeDetectionMode(Map<String, String> configuration, JobConf jobConf) {
         String configuredChangeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
-        if (configuredChangeDetectionMode == null) {
-            configuredChangeDetectionMode = HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO;
-        }
-
-        String inputStreamType = jobConf.get(HADOOP_INPUT_STREAM_TYPE);
-        if (HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO.equals(configuredChangeDetectionMode)) {
-            // If using a custom endpoint with classic streams, default to no change detection as
-            // S3-compatible implementations may not support ETag/version metadata consistently.
-            if (serviceEndpoint != null && HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC.equals(inputStreamType)) {
-                jobConf.set(S3Constants.HADOOP_CHANGE_DETECTION_MODE, HADOOP_CHANGE_DETECTION_MODE_VAL_NONE);
-            }
-        } else {
+        if (configuredChangeDetectionMode != null) {
             jobConf.set(S3Constants.HADOOP_CHANGE_DETECTION_MODE, configuredChangeDetectionMode);
         }
     }
@@ -723,7 +704,7 @@ public class S3Utils {
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
         listObjectsBuilder.bucket(container);
         listObjectsBuilder.prefix(prefix);
-        listObjectsBuilder.delimiter("/");
+        listObjectsBuilder.delimiter(SLASH);
         ListObjectsV2Request listObjectsV2Request = listObjectsBuilder.build();
 
         Map<String, List<String>> allObjects = new HashMap<>();
@@ -751,7 +732,7 @@ public class S3Utils {
                     String folderName = object.prefix();
                     folderName = folderName.substring(prefix.length());
                     folders.add(
-                            folderName.endsWith("/") ? folderName.substring(0, folderName.length() - 1) : folderName);
+                            folderName.endsWith(SLASH) ? folderName.substring(0, folderName.length() - 1) : folderName);
                 }
             }
         } finally {
@@ -771,6 +752,48 @@ public class S3Utils {
 
     public static boolean isRetryableError(String errorCode) {
         return errorCode.equals(ERROR_INTERNAL_ERROR) || errorCode.equals(ERROR_SLOW_DOWN);
+    }
+
+    /**
+     * Resolves the effective checksum behavior for external data (link) operations using a two-level priority chain:
+     * <ol>
+     *   <li>Per-link {@code checksumBehavior} parameter in the configuration map (explicit override)</li>
+     *   <li>Endpoint-based default: {@code null} (use SDK defaults) for native AWS S3,
+     *       {@link S3ChecksumBehavior#WHEN_REQUIRED} for S3-compatible storage</li>
+     * </ol>
+     * Cloud properties are intentionally not consulted here — this method is for external data (link) operations
+     * only, not for blob storage.
+     */
+    @AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT)
+    public static S3ChecksumBehavior resolveChecksumBehavior(Map<String, String> configuration)
+            throws CompilationException {
+        String perLink = configuration.get(CHECKSUM_BEHAVIOR_FIELD_NAME);
+        if (perLink != null) {
+            try {
+                return S3ChecksumBehavior.fromString(perLink);
+            } catch (IllegalArgumentException e) {
+                throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHECKSUM_BEHAVIOR_FIELD_NAME,
+                        CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
+            }
+        }
+        // null means use SDK defaults
+        return null;
+    }
+
+    /**
+     * Validates a {@code checksumBehavior} string value.
+     * Throws {@link CompilationException} if the value is non-null and not a recognized enum value.
+     */
+    public static void validateChecksumBehavior(String value) throws CompilationException {
+        if (value == null) {
+            return;
+        }
+        try {
+            S3ChecksumBehavior.fromString(value);
+        } catch (IllegalArgumentException e) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHECKSUM_BEHAVIOR_FIELD_NAME,
+                    CHECKSUM_BEHAVIOR_ALLOWED_VALUES);
+        }
     }
 
     public static boolean validateAndGetPathStyleAddressing(String pathStyleAddressing, String endpoint)
@@ -796,16 +819,15 @@ public class S3Utils {
             throws CompilationException {
         String streamInputType = configuration.get(INPUT_STREAM_TYPE_FIELD_NAME);
         if (streamInputType == null || streamInputType.isBlank()) {
-            configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, HADOOP_INPUT_STREAM_TYPE_VAL_AUTO);
+            // null/empty means use SDK defaults — nothing to validate or set
+            configuration.remove(INPUT_STREAM_TYPE_FIELD_NAME);
             return;
         }
 
-        if (!HADOOP_INPUT_STREAM_TYPE_VAL_AUTO.equalsIgnoreCase(streamInputType)
-                && !HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS.equalsIgnoreCase(streamInputType)
+        if (!HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS.equalsIgnoreCase(streamInputType)
                 && !HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC.equalsIgnoreCase(streamInputType)) {
             throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INPUT_STREAM_TYPE_FIELD_NAME,
-                    HADOOP_INPUT_STREAM_TYPE_VAL_AUTO + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS + ", "
-                            + HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
+                    HADOOP_INPUT_STREAM_TYPE_VAL_ANALYTICS + ", " + HADOOP_INPUT_STREAM_TYPE_VAL_CLASSIC);
         }
         configuration.put(INPUT_STREAM_TYPE_FIELD_NAME, streamInputType.toLowerCase());
     }
@@ -814,18 +836,22 @@ public class S3Utils {
             throws CompilationException {
         String changeDetectionMode = configuration.get(CHANGE_DETECTION_MODE_FIELD_NAME);
         if (changeDetectionMode == null || changeDetectionMode.isBlank()) {
-            configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO);
+            // null/empty means use SDK defaults — nothing to validate or set
+            configuration.remove(CHANGE_DETECTION_MODE_FIELD_NAME);
             return;
         }
 
-        if (!HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO.equalsIgnoreCase(changeDetectionMode)
-                && !HADOOP_CHANGE_DETECTION_MODE_VAL_NONE.equalsIgnoreCase(changeDetectionMode)
+        if (!HADOOP_CHANGE_DETECTION_MODE_VAL_NONE.equalsIgnoreCase(changeDetectionMode)
                 && !HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT.equalsIgnoreCase(changeDetectionMode)
                 && !HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER.equalsIgnoreCase(changeDetectionMode)) {
             throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CHANGE_DETECTION_MODE_FIELD_NAME,
-                    HADOOP_CHANGE_DETECTION_MODE_VAL_AUTO + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_NONE + ", "
-                            + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
+                    HADOOP_CHANGE_DETECTION_MODE_VAL_NONE + ", " + HADOOP_CHANGE_DETECTION_MODE_VAL_CLIENT + ", "
+                            + HADOOP_CHANGE_DETECTION_MODE_VAL_SERVER);
         }
         configuration.put(CHANGE_DETECTION_MODE_FIELD_NAME, changeDetectionMode.toLowerCase());
+    }
+
+    public static boolean isDirectory(S3Object s3Object) {
+        return s3Object.key().endsWith(SLASH);
     }
 }

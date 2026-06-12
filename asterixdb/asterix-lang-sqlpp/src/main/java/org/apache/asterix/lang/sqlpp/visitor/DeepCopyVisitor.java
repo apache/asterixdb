@@ -75,6 +75,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangExpression, Void> {
 
@@ -96,13 +97,14 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr fromVar = (VariableExpr) fromTerm.getLeftVariable().accept(this, arg);
         VariableExpr positionVar = fromTerm.getPositionalVariable() == null ? null
                 : (VariableExpr) fromTerm.getPositionalVariable().accept(this, arg);
+        TimeTravel timeTravel = fromTerm.getTimeTravel();
 
         // Visits join/unnest/nest clauses.
         List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
             correlateClauses.add((AbstractBinaryCorrelateClause) correlateClause.accept(this, arg));
         }
-        FromTerm copy = new FromTerm(fromExpr, fromVar, positionVar, correlateClauses);
+        FromTerm copy = new FromTerm(fromExpr, fromVar, positionVar, correlateClauses, timeTravel);
         copy.setSourceLocation(fromTerm.getSourceLocation());
         return copy;
     }

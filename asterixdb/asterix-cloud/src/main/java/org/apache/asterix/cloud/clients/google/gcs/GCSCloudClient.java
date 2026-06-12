@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -45,6 +46,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -58,12 +60,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.http.apache.v2.ApacheHttpTransport;
 import com.google.api.gax.paging.Page;
 import com.google.cloud.BaseServiceException;
 import com.google.cloud.ReadChannel;
+import com.google.cloud.http.HttpTransportOptions;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.HttpStorageOptions;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.Storage.CopyRequest;
@@ -346,6 +351,19 @@ public class GCSCloudClient implements ICloudClient {
 
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.setHost(config.getEndpoint());
+        }
+        if (config.getMaxIdleSeconds() > 0 || config.getMaxLifetimeSeconds() > 0) {
+            HttpClientBuilder hcb = ApacheHttpTransport.newDefaultHttpClientBuilder();
+            if (config.getMaxIdleSeconds() > 0) {
+                hcb.evictIdleConnections(config.getMaxIdleSeconds(), TimeUnit.SECONDS);
+            }
+            if (config.getMaxLifetimeSeconds() > 0) {
+                hcb.setConnectionTimeToLive(config.getMaxLifetimeSeconds(), TimeUnit.SECONDS);
+            }
+            ApacheHttpTransport transport = new ApacheHttpTransport(hcb.build());
+            HttpTransportOptions transportOptions = HttpStorageOptions.defaults().getDefaultTransportOptions()
+                    .toBuilder().setHttpTransportFactory(() -> transport).build();
+            builder.setTransportOptions(transportOptions);
         }
         return builder.build().getService();
     }

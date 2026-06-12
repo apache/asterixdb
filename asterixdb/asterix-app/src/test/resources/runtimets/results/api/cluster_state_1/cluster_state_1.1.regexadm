@@ -40,6 +40,7 @@
     "cloud.storage.prefix" : "",
     "cloud.storage.region" : "",
     "cloud.storage.s3.access.key.id" : null,
+    "cloud.storage.s3.checksum.behavior" : null,
     "cloud.storage.s3.client.read.timeout" : -1,
     "cloud.storage.s3.parallel.downloader.client.type" : "crt",
     "cloud.storage.s3.secret.access.key" : null,

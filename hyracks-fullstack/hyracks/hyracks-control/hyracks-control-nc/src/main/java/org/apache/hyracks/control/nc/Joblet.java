@@ -29,7 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
+import org.apache.hyracks.api.comm.IVSizeFrameFactory;
 import org.apache.hyracks.api.comm.PartitionChannel;
+import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.state.IStateObject;
@@ -45,11 +47,16 @@ import org.apache.hyracks.api.job.IJobletEventListener;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.IOperatorEnvironment;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
+import org.apache.hyracks.api.result.IResultPartitionManager;
+import org.apache.hyracks.api.result.IResultStateRecord;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.PartitionState;
@@ -59,6 +66,7 @@ import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.hyracks.control.nc.result.ResultSetMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -95,6 +103,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final FrameManager frameManager;
 
+    private final JobKind jobKind;
+
     private final AtomicLong memoryAllocation;
 
     private JobStatus cleanupStatus;
@@ -108,16 +118,21 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final String jobStartTimeZoneId;
 
     private final long maxWarnings;
+
     private final AtomicLong uniqueIds;
+
+    private final IVSizeFrameFactory vSizeFrameFactory;
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
-            IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime, String jobStartTimeZoneId) {
+            IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime, String jobStartTimeZoneId,
+            JobKind jobKind) {
         this.nodeController = nodeController;
         this.serviceCtx = serviceCtx;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
-        this.frameManager = new FrameManager(acg.getFrameSize());
+        this.frameManager = new FrameManager(acg.getFrameSize(), serviceCtx.getFrameProfiler(), jobId, jobKind);
+        this.jobKind = jobKind;
         memoryAllocation = new AtomicLong();
         this.acg = acg;
         partitionRequestMap = new HashMap<>();
@@ -142,6 +157,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jobStartTimeZoneId = jobStartTimeZoneId;
         this.maxWarnings = acg.getMaxWarnings();
         this.uniqueIds = new AtomicLong();
+        this.vSizeFrameFactory = serviceCtx.getVSizeFrameFactoryForKind(jobKind);
     }
 
     @Override
@@ -175,6 +191,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public String getJobStartTimeZoneId() {
         return jobStartTimeZoneId;
+    }
+
+    @Override
+    public JobKind getJobKind() {
+        return jobKind;
     }
 
     public void addTask(Task task) {
@@ -252,7 +273,23 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             LOGGER.trace(() -> "Freeing leaked " + stillAllocated + " bytes");
             serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
-        nodeController.getExecutor().execute(() -> deallocatableRegistry.close());
+        nodeController.getExecutor().execute(() -> {
+            try {
+                InvokeUtil.tryWithCleanups(deallocatableRegistry::close, () -> {
+                    IResultPartitionManager resultPartitionManager = nodeController.getResultPartitionManager();
+                    if (cleanupStatus != JobStatus.TERMINATED) {
+                        resultPartitionManager.sweep(jobId);
+                    } else {
+                        IResultStateRecord state = resultPartitionManager.getState(jobId);
+                        if (state instanceof ResultSetMap) {
+                            ((ResultSetMap) state).recordCompleteTimestamp();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("Failure during joblet clean-up", e);
+            }
+        });
     }
 
     @Override
@@ -285,6 +322,16 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public final int getInitialFrameSize() {
         return frameManager.getInitialFrameSize();
+    }
+
+    @Override
+    public VSizeFrame allocateVSizeFrame() throws HyracksDataException {
+        return vSizeFrameFactory.allocate(this);
+    }
+
+    @Override
+    public IFrameProfiler getProfiler() {
+        return frameManager.getProfiler();
     }
 
     public final long getMaxWarnings() {

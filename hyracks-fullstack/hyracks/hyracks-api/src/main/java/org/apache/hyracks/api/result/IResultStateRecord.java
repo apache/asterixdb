@@ -19,10 +19,20 @@
 package org.apache.hyracks.api.result;
 
 public interface IResultStateRecord {
-    long getTimestamp();
+
+    /**
+     * Returns the timestamp in nanoseconds when the record is created.
+     */
+    long getTimestampNanos();
 
     /**
      * Returns the per-request result TTL in nanoseconds, or -1 if system default should be used.
      */
     long getResultTtlInNanos();
+
+    /**
+     * Returns the timestamp in nanoseconds when the record is completed, or 0 if not completed yet.
+     */
+    long getCompleteTimestampNanos();
+
 }

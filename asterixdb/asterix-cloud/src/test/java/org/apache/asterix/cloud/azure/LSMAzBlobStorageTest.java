@@ -35,6 +35,7 @@ import org.apache.asterix.cloud.AbstractLSMTest;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig;
 import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
+import org.apache.asterix.external.util.azure.AzureUtils;
 import org.apache.hyracks.util.StorageUtil;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -105,6 +106,7 @@ public class LSMAzBlobStorageTest extends AbstractLSMTest {
         SslContext insecureSslContext =
                 SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         blobServiceClient = new BlobServiceClientBuilder().connectionString(azBlob.getConnectionString())
+                .serviceVersion(AzureUtils.AZURITE_BLOB_SERVICE_VERSION)
                 .httpClient(new NettyAsyncHttpClientBuilder(
                         HttpClient.create().secure(sslSpec -> sslSpec.sslContext(insecureSslContext).build())).build())
                 .buildClient();

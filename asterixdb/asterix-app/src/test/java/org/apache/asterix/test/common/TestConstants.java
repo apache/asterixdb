@@ -107,4 +107,17 @@ public class TestConstants {
         public static final String HDFS_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS =
                 "\"hdfs\":\"" + HDFS_ENDPOINT_DEFAULT + "\"";
     }
+
+    public static class Iceberg {
+        public static final String NESSIE_SERVER_URI_PLACEHOLDER = "%NESSIE_SERVER_URI%";
+        public static final String SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER = "%SNAPSHOT_1_SNAPSHOT_ID%";
+        public static final String SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER = "%SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER%";
+        public static final String SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER =
+                "%SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER%";
+        public static final String SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER = "%SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER%";
+        public static long SNAPSHOT_1_SNAPSHOT_ID_VALUE;
+        public static long SNAPSHOT_1_TIMESTAMP_LONG_VALUE;
+        public static String SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE;
+        public static String SNAPSHOT_3_TIMESTAMP_DATE_VALUE;
+    }
 }

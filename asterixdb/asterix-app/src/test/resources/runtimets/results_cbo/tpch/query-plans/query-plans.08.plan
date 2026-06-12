@@ -6,7 +6,7 @@ distribute result [$$209] [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, tot
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
       -- SORT_MERGE_EXCHANGE [$$supp_nation(ASC), $$cust_nation(ASC), $$l_year(ASC) ]  |PARTITIONED|
-        order (ASC, $$supp_nation) (ASC, $$cust_nation) (ASC, $$l_year) [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986821.54]
+        order (ASC, $$supp_nation) (ASC, $$cust_nation) (ASC, $$l_year) [cardinality: 2.43, doc-size: 68.16, op-cost: 3.11, total-cost: 986821.54]
         -- STABLE_SORT [$$supp_nation(ASC), $$cust_nation(ASC), $$l_year(ASC)]  |PARTITIONED|
           exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -15,7 +15,7 @@ distribute result [$$209] [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, tot
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986818.43]
+                   } [cardinality: 2.43, doc-size: 68.16, op-cost: 569.85, total-cost: 986818.43]
             -- EXTERNAL_GROUP_BY[$$240, $$241, $$242]  |PARTITIONED|
               exchange [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
               -- HASH_PARTITION_EXCHANGE [$$240, $$241, $$242]  |PARTITIONED|
@@ -24,7 +24,7 @@ distribute result [$$209] [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, tot
                           -- AGGREGATE  |LOCAL|
                             nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                       } [cardinality: 2.43, doc-size: 68.16, op-cost: 0.0, total-cost: 986248.58]
+                       } [cardinality: 2.43, doc-size: 68.16, op-cost: 569.85, total-cost: 986248.58]
                 -- EXTERNAL_GROUP_BY[$$214, $$215, $$237]  |PARTITIONED|
                   exchange [cardinality: 569.85, doc-size: 68.16, op-cost: 0.0, total-cost: 985678.73]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

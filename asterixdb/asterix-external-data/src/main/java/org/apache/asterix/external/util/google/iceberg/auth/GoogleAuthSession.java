@@ -21,6 +21,7 @@ package org.apache.asterix.external.util.google.iceberg.auth;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
+import org.apache.asterix.external.util.iceberg.rest.RestConstants;
 import org.apache.iceberg.relocated.com.google.common.base.Preconditions;
 import org.apache.iceberg.rest.HTTPHeaders;
 import org.apache.iceberg.rest.HTTPRequest;
@@ -65,8 +66,8 @@ class GoogleAuthSession implements AuthSession {
             AccessToken token = credentials.getAccessToken();
 
             if (token != null && token.getTokenValue() != null) {
-                HTTPHeaders newHeaders = request.headers().putIfAbsent(
-                        HTTPHeaders.of(HTTPHeaders.HTTPHeader.of("Authorization", "Bearer " + token.getTokenValue())));
+                HTTPHeaders newHeaders = request.headers().putIfAbsent(HTTPHeaders.of(HTTPHeaders.HTTPHeader
+                        .of("Authorization", RestConstants.BEARER_TOKEN_PREFIX + token.getTokenValue())));
                 return newHeaders.equals(request.headers()) ? request
                         : ImmutableHTTPRequest.builder().from(request).headers(newHeaders).build();
             } else {

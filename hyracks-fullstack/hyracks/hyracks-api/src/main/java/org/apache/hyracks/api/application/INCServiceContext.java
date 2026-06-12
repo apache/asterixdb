@@ -18,9 +18,14 @@
  */
 package org.apache.hyracks.api.application;
 
+import java.util.function.Function;
+
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.IVSizeFrameFactory;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.util.trace.ITracer;
 
@@ -82,4 +87,12 @@ public interface INCServiceContext extends IServiceContext {
      * @return
      */
     IChannelInterfaceFactory getMessagingChannelInterfaceFactory();
+
+    IFrameProfiler getFrameProfiler();
+
+    void setFrameProfiler(IFrameProfiler frameProfiler);
+
+    void setVSizeFrameFactoryProvider(Function<JobKind, IVSizeFrameFactory> provider);
+
+    IVSizeFrameFactory getVSizeFrameFactoryForKind(JobKind jobKind);
 }

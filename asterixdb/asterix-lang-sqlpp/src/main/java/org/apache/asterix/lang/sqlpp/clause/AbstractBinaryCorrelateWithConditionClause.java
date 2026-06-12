@@ -21,14 +21,15 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public abstract class AbstractBinaryCorrelateWithConditionClause extends AbstractBinaryCorrelateClause {
 
     private Expression conditionExpr;
 
     public AbstractBinaryCorrelateWithConditionClause(Expression rightExpr, VariableExpr rightVar,
-            VariableExpr rightPosVar, Expression conditionExpr) {
-        super(rightExpr, rightVar, rightPosVar);
+            VariableExpr rightPosVar, Expression conditionExpr, TimeTravel timeTravel) {
+        super(rightExpr, rightVar, rightPosVar, timeTravel);
         this.conditionExpr = conditionExpr;
     }
 

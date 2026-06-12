@@ -181,7 +181,7 @@ public class ClusterControllerService implements IControllerService {
         ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
         resultDirectoryService =
-                new ResultDirectoryService(ccConfig.getResultTTL(), ccConfig.getResultSweepThreshold());
+                new ResultDirectoryService(ccConfig.getResultTTLMillis(), ccConfig.getResultSweepThreshold());
 
         deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();

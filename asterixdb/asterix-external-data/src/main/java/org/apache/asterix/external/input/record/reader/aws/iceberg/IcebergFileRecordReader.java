@@ -33,6 +33,8 @@ import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Snapshot;
@@ -76,7 +78,8 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         try {
             initializeTable();
         } catch (CompilationException e) {
-            throw HyracksDataException.create(e);
+            Throwable throwable = closeResources(e);
+            throw HyracksDataException.create(throwable);
         }
     }
 
@@ -158,17 +161,17 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     @Override
     public void close() throws IOException {
-        if (iterable != null) {
-            iterable.close();
-        }
-        if (tableFileIo != null) {
-            tableFileIo.close();
-        }
-
+        Throwable throwable = CleanupUtils.closeSilently(iterable, null);
+        throwable = CleanupUtils.closeSilently(tableFileIo, throwable);
         try {
-            IcebergUtils.closeAndCleanup(catalog, catalogProperties);
-        } catch (CompilationException e) {
-            throw HyracksDataException.create(e);
+            if (catalog != null) {
+                IcebergUtils.closeAndCleanup(catalog, catalogProperties);
+            }
+        } catch (Exception ex) {
+            throwable = ExceptionUtils.suppress(throwable, ex);
+        }
+        if (throwable != null) {
+            throw HyracksDataException.create(throwable);
         }
     }
 
@@ -218,5 +221,19 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             return Long.parseLong(snapshotStr);
         }
         throw new IllegalStateException("Snapshot must've been pinned during compilation phase");
+    }
+
+    private Throwable closeResources(Throwable throwable) {
+        if (tableFileIo != null) {
+            throwable = CleanupUtils.closeSilently(tableFileIo, throwable);
+        }
+        if (catalog != null) {
+            try {
+                IcebergUtils.closeAndCleanup(catalog, catalogProperties);
+            } catch (Exception ex) {
+                throwable = ExceptionUtils.suppress(throwable, ex);
+            }
+        }
+        return throwable;
     }
 }

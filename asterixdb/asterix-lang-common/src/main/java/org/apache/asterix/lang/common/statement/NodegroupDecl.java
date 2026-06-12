@@ -52,7 +52,7 @@ public class NodegroupDecl extends AbstractStatement {
 
     @Override
     public Kind getKind() {
-        return Statement.Kind.NODEGROUP_DECL;
+        return Statement.Kind.CREATE_NODEGROUP;
     }
 
     @Override

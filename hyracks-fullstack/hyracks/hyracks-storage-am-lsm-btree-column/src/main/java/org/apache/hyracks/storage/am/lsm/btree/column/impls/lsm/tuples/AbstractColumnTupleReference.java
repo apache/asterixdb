@@ -267,16 +267,16 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final void close() {
-        if (!LOGGER.isDebugEnabled()) {
+        if (!LOGGER.isTraceEnabled()) {
             return;
         }
 
         if (numOfSkippedMegaLeafNodes > 0) {
-            LOGGER.debug("Filtered {} disk mega-leaf nodes out of {} in total", numOfSkippedMegaLeafNodes,
+            LOGGER.trace("Filtered {} disk mega-leaf nodes out of {} in total", numOfSkippedMegaLeafNodes,
                     totalNumberOfMegaLeafNodes);
         }
 
-        LOGGER.debug("Max number of pinned pages is {}", maxNumberOfPinnedPages + 1);
+        LOGGER.trace("Max number of pinned pages is {}", maxNumberOfPinnedPages + 1);
     }
 
     /* *************************************************************

@@ -36,16 +36,24 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
      * Specify the type of the positional variable
      */
     protected Object positionalVariableType;
+    protected TimeTravel timeTravel;
 
     public AbstractUnnestNonMapOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression) {
         super(makeSingletonList(variable), expression);
     }
 
     public AbstractUnnestNonMapOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType) {
-        this(variable, expression);
+            TimeTravel timeTravel) {
+        super(makeSingletonList(variable), expression);
+        this.timeTravel = timeTravel;
+    }
+
+    public AbstractUnnestNonMapOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
+            LogicalVariable positionalVariable, Object positionalVariableType, TimeTravel timeTravel) {
+        this(variable, expression, timeTravel);
         this.setPositionalVariable(positionalVariable);
         this.setPositionalVariableType(positionalVariableType);
+        this.timeTravel = timeTravel;
     }
 
     public LogicalVariable getVariable() {
@@ -70,6 +78,14 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
 
     public Object getPositionalVariableType() {
         return positionalVariableType;
+    }
+
+    public boolean hasTimeTravel() {
+        return timeTravel != null;
+    }
+
+    public TimeTravel getTimeTravel() {
+        return timeTravel;
     }
 
     @Override

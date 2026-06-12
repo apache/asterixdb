@@ -163,7 +163,7 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
                     UnnestOperator oldUnnest = (UnnestOperator) workingOp;
                     LeftOuterUnnestOperator newUnnest = new LeftOuterUnnestOperator(oldUnnest.getVariable(),
                             new MutableObject<>(oldUnnest.getExpressionRef().getValue()),
-                            ConstantExpression.MISSING.getValue());
+                            ConstantExpression.MISSING.getValue(), oldUnnest.getTimeTravel());
                     newUnnest.setSourceLocation(oldUnnest.getSourceLocation());
                     newUnnest.getInputs().addAll(oldUnnest.getInputs());
                     newUnnest.setExecutionMode(oldUnnest.getExecutionMode());

@@ -11,7 +11,7 @@ distribute result [$$223] [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258952.06]
+               } [cardinality: 1.0, doc-size: 70.0, op-cost: 165.56, total-cost: 1258952.06]
         -- EXTERNAL_GROUP_BY[$$262]  |PARTITIONED|
           exchange [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
           -- HASH_PARTITION_EXCHANGE [$$262]  |PARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$223] [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 1.0, doc-size: 70.0, op-cost: 0.0, total-cost: 1258786.5]
+                   } [cardinality: 1.0, doc-size: 70.0, op-cost: 165.56, total-cost: 1258786.5]
             -- EXTERNAL_GROUP_BY[$$224]  |PARTITIONED|
               exchange [cardinality: 165.56, doc-size: 70.0, op-cost: 0.0, total-cost: 1258620.94]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

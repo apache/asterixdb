@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -69,7 +68,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     for (int i = 0; i < valueParserFactories.length; ++i) {
                         valueParsers[i] = valueParserFactories[i].createValueParser();
                     }
-                    IFrame frame = new VSizeFrame(ctx);
+                    IFrame frame = ctx.allocateVSizeFrame();
                     FrameTupleAppender appender = new FrameTupleAppender();
                     appender.reset(frame, true);
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(valueParsers.length);

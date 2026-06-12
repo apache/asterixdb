@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -124,7 +123,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         }
         this.inputTupleAccessor = new FrameTupleAccessor(recordDescriptor);
         this.outputAppender = new FrameTupleAppender();
-        this.outputFrame = new VSizeFrame(ctx);
+        this.outputFrame = ctx.allocateVSizeFrame();
         this.outputLimit = outputLimit;
         this.fta2 = new FrameTupleAccessor(recordDescriptor);
         this.tmpPointer = new int[ptrSize];
@@ -158,7 +157,11 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     }
 
     protected long getRequiredMemory(FrameTupleAccessor frameAccessor) {
-        return (long) frameAccessor.getBuffer().capacity() + ptrSize * frameAccessor.getTupleCount() * Integer.BYTES;
+        // Use limit() rather than capacity() for the logical data size, because the buffer has
+        // been flip()'d by the IFrameReader (e.g. RunFileReader:92, FrameUtils:46) — making limit
+        // the actual data size — while capacity may be larger if the underlying frame retained a
+        // previous, bigger physical allocation.
+        return (long) frameAccessor.getBuffer().limit() + ptrSize * frameAccessor.getTupleCount() * Integer.BYTES;
     }
 
     @Override

@@ -12,7 +12,7 @@ distribute result [$$50] [cardinality: 417.69, doc-size: 0.0, op-cost: 0.0, tota
           -- AGGREGATE  |PARTITIONED|
             exchange [cardinality: 417.69, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              distinct ([$$62]) [cardinality: 417.69, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+              distinct ([$$62]) [cardinality: 417.69, doc-size: 0.0, op-cost: 162608.96, total-cost: 162608.96]
               -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,0 +1,3 @@
+{ "u": { "userId": 1, "email": "john.doe@example.com", "username": "johndoe", "isActive": true, "occupation": "teacher", "age": 23 } }
+{ "u": { "userId": 4, "email": "emily.davis@example.com", "username": "emilyd", "isActive": true, "age": 23.1 } }
+{ "u": { "userId": 8, "email": "robert.lee@example.com", "username": "robertl", "isActive": true, "age": 31 } }

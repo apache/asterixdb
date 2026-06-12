@@ -39,10 +39,14 @@ public class StandardUTF8ToModifiedUTF8OutputStream extends OutputStream {
     private DataOutput out;
 
     public StandardUTF8ToModifiedUTF8OutputStream(AStringSerializerDeserializer stringSerDer) {
+        this(stringSerDer, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+    }
+
+    public StandardUTF8ToModifiedUTF8OutputStream(AStringSerializerDeserializer stringSerDer, int bufferSize) {
         this.stringSerDer = stringSerDer;
-        reader = new ResettableUTF8InputStreamReader(new ByteArrayAccessibleInputStream(EMPTY, 0, 0));
-        inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-        appendBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+        reader = new ResettableUTF8InputStreamReader(new ByteArrayAccessibleInputStream(EMPTY, 0, 0), bufferSize);
+        inputBuffer = new char[bufferSize];
+        appendBuffer = new char[bufferSize];
     }
 
     @Override
@@ -87,7 +91,11 @@ public class StandardUTF8ToModifiedUTF8OutputStream extends OutputStream {
         private final ByteArrayAccessibleInputStream inByte;
 
         public ResettableUTF8InputStreamReader(ByteArrayAccessibleInputStream inByte) {
-            super(new BasicInputStream(inByte), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+            this(inByte, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+        }
+
+        public ResettableUTF8InputStreamReader(ByteArrayAccessibleInputStream inByte, int bufferSize) {
+            super(new BasicInputStream(inByte), bufferSize);
             this.inByte = inByte;
         }
 

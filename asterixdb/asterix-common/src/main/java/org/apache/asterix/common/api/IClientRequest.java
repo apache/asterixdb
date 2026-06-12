@@ -101,6 +101,12 @@ public interface IClientRequest {
     boolean cancel(ICcApplicationContext appCtx) throws HyracksDataException;
 
     /**
+     * Called when the request is archived.
+     * The request is archived when it is completed or cancelled and removed from the list of running requests.
+     */
+    void archived();
+
+    /**
      * @return A json string representation of this request
      */
     String toJson();

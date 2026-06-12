@@ -19,6 +19,7 @@
 package org.apache.asterix.api.common;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
+import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER_HOSTNAME_FRAGMENT;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -60,6 +61,7 @@ public class LocalCloudUtilAdobeMock {
     public static final String PLAYGROUND_BUCKET = "playground";
     public static final String CLOUD_URL_KEY = "cloudUrl";
     private static S3MockContainer s3Mock;
+    public static String DOCKER_ADOBE_S3_MOCK_URI;
 
     private LocalCloudUtilAdobeMock() {
         throw new AssertionError("Do not instantiate");
@@ -84,6 +86,7 @@ public class LocalCloudUtilAdobeMock {
         if (System.getProperty("api.version") == null) {
             System.setProperty("api.version", "1.44");
         }
+        shutdownSilently();
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
         s3Mock = new S3MockContainer(S3MOCK_VERSION_TAG).withRetainFilesOnExit(!cleanStart);
@@ -99,6 +102,7 @@ public class LocalCloudUtilAdobeMock {
         }
         s3Mock.start();
         LOGGER.info("S3 mock server started successfully");
+        DOCKER_ADOBE_S3_MOCK_URI = MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort();
 
         S3ClientBuilder builder = S3Client.builder();
         URI endpoint = URI.create(s3Mock.getHttpEndpoint()); // endpoint pointing to S3 mock server

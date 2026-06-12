@@ -202,7 +202,7 @@ public class DatasetDecl extends AbstractStatement {
 
     @Override
     public Kind getKind() {
-        return Statement.Kind.DATASET_DECL;
+        return Statement.Kind.CREATE_DATASET;
     }
 
     public IDatasetDetailsDecl getDatasetDetailsDecl() {

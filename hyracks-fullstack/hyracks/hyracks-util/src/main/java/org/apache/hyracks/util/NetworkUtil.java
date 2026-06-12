@@ -40,6 +40,8 @@ import org.apache.http.conn.util.InetAddressUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.net.InetAddresses;
+
 public class NetworkUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -234,4 +236,18 @@ public class NetworkUtil {
     public static InetSocketAddress toInetSocketAddress(HttpHost httpHost) {
         return new InetSocketAddress(httpHost.getAddress(), httpHost.getPort());
     }
+
+    /**
+     * Returns {@code true} if the given hostname string is an IP address literal (IPv4 or IPv6),
+     * rather than a DNS name.
+     */
+    public static boolean isIpLiteral(String host) {
+        if (host == null || host.isEmpty()) {
+            return false;
+        }
+        // Strip IPv6 brackets if present
+        String bare = host.charAt(0) == '[' ? host.substring(1, host.length() - 1) : host;
+        return InetAddresses.isInetAddress(bare);
+    }
+
 }

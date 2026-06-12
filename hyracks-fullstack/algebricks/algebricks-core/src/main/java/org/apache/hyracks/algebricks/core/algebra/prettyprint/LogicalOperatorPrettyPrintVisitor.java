@@ -67,6 +67,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -361,11 +362,16 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("unnest " + op.getVariable());
-        if (op.getPositionalVariable() != null) {
-            buffer.append(" at " + op.getPositionalVariable());
+        addIndent(indent).append("unnest ").append(String.valueOf(op.getVariable()));
+        if (op.hasTimeTravel()) {
+            TimeTravel timeTravel = op.getTimeTravel();
+            buffer.append(" at ").append(timeTravel.getType().getKeyword()).append(" ")
+                    .append(timeTravel.getSnapshotIdOrTimestamp());
         }
-        buffer.append(" <- " + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        if (op.hasPositionalVariable()) {
+            buffer.append(" at ").append(String.valueOf(op.getPositionalVariable()));
+        }
+        buffer.append(" <- ").append(op.getExpressionRef().getValue().accept(exprVisitor, indent));
         if (op.isProjectPushed()) {
             buffer.append(" project: ").append(str(op.getProjectVariables()));
         }
@@ -375,6 +381,11 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("outer-unnest ").append(String.valueOf(op.getVariable()));
+        if (op.hasTimeTravel()) {
+            TimeTravel timeTravel = op.getTimeTravel();
+            buffer.append(" at ").append(timeTravel.getType().getKeyword()).append(" ")
+                    .append(timeTravel.getSnapshotIdOrTimestamp());
+        }
         if (op.getPositionalVariable() != null) {
             buffer.append(" at " + op.getPositionalVariable());
         }

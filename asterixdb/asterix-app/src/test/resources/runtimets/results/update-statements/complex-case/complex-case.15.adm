@@ -1,0 +1,3 @@
+{ "UserTypes2": { "userId": 3, "c_purchase_history": { "c_recent_orders": { "a": 33 } }, "roles": [ { "roleName": { "a": "manager" }, "roleId": "role1" }, { "roleId": "role2", "roleName": "moderator" } ], "email": "carol@example.com", "username": "carol", "isActive": true } }
+{ "UserTypes2": { "userId": 4, "username": null, "c_purchase_history": { "c_recent_orders": { "a": 33 } }, "roles": [ { "roleName": { "a": "manager" }, "roleId": "role1" } ], "email": "carol@example.com" } }
+{ "UserTypes2": { "userId": 5, "username": null, "c_purchase_history": { "c_recent_orders": { "a": null } }, "email": "carol@example.com", "roles": [ { "roleId": "role1", "roleName": "moderator" } ] } }

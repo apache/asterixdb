@@ -40,13 +40,18 @@ import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.FalseLiteral;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
+import org.apache.asterix.lang.common.struct.OperatorType;
+import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -74,18 +79,20 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  *    (INSERT INTO u.addresses AT 2([
  *    {"city": "Irvine, United States", "street" : "Second st","zipcode" : 98128}])) where u.userId= 11;
  * it gets rewritten to:
- *    SET u.addresses = array-concat(
- *    (SELECT element $addresses FROM check-list(u.addresses) AS $addresses WHERE posVar < 2),
+ *    SET u.addresses = CASE check-list(u.addresses) WHEN true THEN array-concat(
+ *    (SELECT element $addresses FROM u.addresses AS $addresses WHERE posVar < 2),
  *    ListConstructor( {"city": "Irvine, United States", "street" : "Second st","zipcode" : 98128})
- *    (SELECT element $addresses FROM check-list(u.addresses) AS $addresses WHERE posVar >= 2))
+ *    (SELECT element $addresses FROM u.addresses AS $addresses WHERE posVar >= 2)) ELSE u.addresses END
  * </pre>
+ * <p>Note: AT position is 0-based. Negative positions count from the end: AT -1 is last, AT -2 is second-to-last.
+ *       Out-of-bounds positions return the original array unchanged.
  * <p>2. UPDATE UserTypes AS u
  * <pre>
  *    (DELETE FROM u.addresses AT number WHERE number IN [0,1])
  *    WHERE u.userId =11;
  * it gets rewritten to:
- *    SET u.addresses =(SELECT element $addresses FROM check-list(u.addresses) AS $addresses WHERE $number
- *    NOT IN [0,1])
+ *    SET u.addresses = CASE check-list(u.addresses) WHEN true THEN (SELECT element $addresses FROM u.addresses AS $addresses WHERE $number
+ *    NOT IN [0,1]) ELSE u.addresses END
  * </pre>
  * <p>3. UPDATE UserTypes As u
  * <pre>
@@ -96,10 +103,11 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * it gets rewritten to:
  *    SET u.roles = (
  *    SELECT CASE WHEN r.roleId="role2" THEN r.roleName = "Sr. developer" ELSE $r END
- *    FROM check-list(u.roles) AS $r
+ *    FROM u.roles AS $r
  * )
  * </pre>
  */
+
 public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRewriteVisitor {
 
     private static int generatedVarCounter = 0;
@@ -198,7 +206,9 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
             dataTransformRecord = substituteVariableInExpression(dataTransformRecord, originalVarName,
                     currentContextVariable, changeExpr);
             changeExpr.setPriorExpr(projectExpr);
-            if (dataTransformRecord.getKind() == Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
+            if (changeExpr.assignsWholeRecord()) {
+                projectExpr = dataTransformRecord;
+            } else if (dataTransformRecord.getKind() == Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
                 projectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.RECORD_TRANSFORM),
                         new ArrayList<>(Arrays.asList(dataTransformRecord, projectExpr)));
                 ((CallExpr) projectExpr).setSourceLocation(rewrittenFirstExpr.getSourceLocation());
@@ -228,23 +238,17 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         String originalVarName = generatedToOriginalVarMap.get(currentContextVariable.getVar().getValue());
         Expression pathExpr = substituteVariableInExpression(changeExpr.getChangeTargetExpr(), originalVarName,
                 currentContextVariable, changeExpr);
-        CallExpr sourceCollectionCallExpr =
-                new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST), Collections.singletonList(pathExpr));
-        sourceCollectionCallExpr.setSourceLocation(pathExpr.getSourceLocation());
         VariableExpr aliasVar = changeExpr.getAliasVar();
-        FromTerm fromTerm = new FromTerm(sourceCollectionCallExpr, aliasVar, changeExpr.getPosVar(), null);
+        FromTerm fromTerm = new FromTerm(pathExpr, aliasVar, changeExpr.getPosVar(), null);
         fromTerm.setSourceLocation(aliasVar.getSourceLocation());
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
         fromClause.setSourceLocation(aliasVar.getSourceLocation());
         Expression cond =
                 changeExpr.getCondition() != null ? changeExpr.getCondition() : new LiteralExpr(TrueLiteral.INSTANCE);
+        rewriteNegativeAtIndexLiterals(cond, pathExpr, changeExpr.getPosVar());
         LiteralExpr trueLiteral = new LiteralExpr(TrueLiteral.INSTANCE);
         IndexAccessor inverseListifyExpr = new IndexAccessor(changeExpr.getChangeSeq(), IndexAccessor.IndexKind.ELEMENT,
                 new LiteralExpr(new IntegerLiteral(0)));
-        //CASE
-        //  WHEN true THEN updated_value-- from inverseListifyExpr
-        //  ELSE original_value-- from aliasVar
-        //END
         CaseExpression caseExpr = new CaseExpression(cond, Collections.singletonList(trueLiteral),
                 Collections.singletonList(inverseListifyExpr), aliasVar);
         SelectElement selectElement = new SelectElement(caseExpr);
@@ -258,8 +262,22 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
         selectExpression.setSourceLocation(aliasVar.getSourceLocation());
         changeExpr.setPathExprs(Collections.singletonList(changeExpr.getChangeTargetExpr()));
-        changeExpr.setValueExprs(Collections.singletonList(selectExpression));
+        changeExpr.setValueExprs(Collections.singletonList(guardListNestedRewrite(pathExpr, selectExpression)));
         return changeExpr;
+    }
+
+    /**
+     * When the nested change target is not a list, {@code check-list} warns and the field stays unchanged (ELSE branch).
+     */
+    private static CaseExpression guardListNestedRewrite(Expression pathExpr, Expression nestedRewrite) {
+        CallExpr listPred =
+                new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST), Collections.singletonList(pathExpr));
+        listPred.setSourceLocation(pathExpr.getSourceLocation());
+        CaseExpression guarded =
+                new CaseExpression(listPred, Collections.singletonList(new LiteralExpr(TrueLiteral.INSTANCE)),
+                        Collections.singletonList(nestedRewrite), pathExpr);
+        guarded.setSourceLocation(pathExpr.getSourceLocation());
+        return guarded;
     }
 
     public ChangeExpression delete(ChangeExpression changeExpr) throws CompilationException {
@@ -267,11 +285,8 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         String originalVarName = generatedToOriginalVarMap.get(currentContextVariable.getVar().getValue());
         Expression pathExpr = substituteVariableInExpression(changeExpr.getChangeTargetExpr(), originalVarName,
                 currentContextVariable, changeExpr);
-        CallExpr sourceCollectionCallExpr =
-                new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST), Collections.singletonList(pathExpr));
-        sourceCollectionCallExpr.setSourceLocation(pathExpr.getSourceLocation());
         VariableExpr aliasVar = changeExpr.getAliasVar();
-        FromTerm fromTerm = new FromTerm(sourceCollectionCallExpr, aliasVar, changeExpr.getPosVar(), null);
+        FromTerm fromTerm = new FromTerm(pathExpr, aliasVar, changeExpr.getPosVar(), null);
         fromTerm.setSourceLocation(aliasVar.getSourceLocation());
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
         fromClause.setSourceLocation(aliasVar.getSourceLocation());
@@ -284,6 +299,7 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         WhereClause whereClause;
         Expression condition =
                 changeExpr.getCondition() != null ? changeExpr.getCondition() : new LiteralExpr(TrueLiteral.INSTANCE);
+        rewriteNegativeAtIndexLiterals(condition, pathExpr, changeExpr.getPosVar());
         FunctionSignature funcSignature = new FunctionSignature(BuiltinFunctions.NOT);
         CallExpr callExpr = new CallExpr(funcSignature, Collections.singletonList(condition));
         callExpr.setSourceLocation(condition.getSourceLocation());
@@ -297,7 +313,7 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         selectSetOperation.setSourceLocation(aliasVar.getSourceLocation());
         SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
         selectExpression.setSourceLocation(aliasVar.getSourceLocation());
-        changeExpr.setValueExprs(Collections.singletonList(selectExpression));
+        changeExpr.setValueExprs(Collections.singletonList(guardListNestedRewrite(pathExpr, selectExpression)));
         changeExpr.setPathExprs(Collections.singletonList(changeExpr.getChangeTargetExpr()));
         return changeExpr;
     }
@@ -310,29 +326,57 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         SelectExpression leadingSliceExpression;
         Expression sourceListExpression;
         SelectExpression trailingSliceExpression;
+        // Resolve the insert position once: non-negative is kept as-is; negative becomes len(path) + pos + 1
+        // so AT -1 inserts after the last element. The resolved position is then wrapped in
+        // check-insert-position(pos, len) which is a runtime no-op on the value but emits a warning
+        // when pos is outside [0, len]; the source slice's bounds CASE empties it so the array stays
+        // unchanged on out-of-bounds positions.
+        Expression resolvedPosExpr = null;
+        CallExpr arrayLengthCallExpr = null;
+        if (changeExpr.getPosExpr() != null) {
+            CallExpr ensureBigIntCallExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_INTEGER),
+                    Collections.singletonList(changeExpr.getPosExpr()));
+            ensureBigIntCallExpr.setSourceLocation(changeExpr.getPosExpr().getSourceLocation());
+            arrayLengthCallExpr =
+                    new CallExpr(new FunctionSignature(BuiltinFunctions.LEN), Collections.singletonList(pathExpr));
+            arrayLengthCallExpr.setSourceLocation(pathExpr.getSourceLocation());
+            CallExpr nonNegativeCondExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.GE),
+                    Arrays.asList(ensureBigIntCallExpr, new LiteralExpr(new IntegerLiteral(0))));
+            nonNegativeCondExpr.setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+            CallExpr lenPlusPosExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NUMERIC_ADD),
+                    Arrays.asList(arrayLengthCallExpr, ensureBigIntCallExpr));
+            lenPlusPosExpr.setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+            CallExpr fromEndExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NUMERIC_ADD),
+                    Arrays.asList(lenPlusPosExpr, new LiteralExpr(new IntegerLiteral(1))));
+            fromEndExpr.setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+            CaseExpression rawResolvedPosExpr = new CaseExpression(nonNegativeCondExpr,
+                    Collections.singletonList(new LiteralExpr(TrueLiteral.INSTANCE)),
+                    Collections.singletonList(ensureBigIntCallExpr), fromEndExpr);
+            rawResolvedPosExpr.setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+            CallExpr checkPosExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_INSERT_POSITION),
+                    Arrays.asList(rawResolvedPosExpr, arrayLengthCallExpr));
+            checkPosExpr.setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+            resolvedPosExpr = checkPosExpr;
+        }
         // ******** Prepare the leading slice of array *******
         {
-            CallExpr sourceCollectionCallExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST),
-                    Collections.singletonList(pathExpr));
-            sourceCollectionCallExpr.setSourceLocation(pathExpr.getSourceLocation());
             // From clause.
             VariableExpr posVar = new VariableExpr(new VarIdentifier(UUID.randomUUID().toString()));
             VariableExpr aliasVar = changeExpr.getAliasVar();
-            FromTerm fromTerm = new FromTerm(sourceCollectionCallExpr, aliasVar, posVar, null);
+            FromTerm fromTerm = new FromTerm(pathExpr, aliasVar, posVar, null);
             fromTerm.setSourceLocation(aliasVar.getSourceLocation());
             FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
             fromClause.setSourceLocation(aliasVar.getSourceLocation());
             // Where clause
             Expression whereExpr = new LiteralExpr(TrueLiteral.INSTANCE);
             if (changeExpr.getPosExpr() != null) {
-                CallExpr ensureBigIntCallExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_INTEGER),
-                        Collections.singletonList(changeExpr.getPosExpr()));
-                sourceCollectionCallExpr.setSourceLocation(changeExpr.getPosExpr().getSourceLocation());
+                // Compare against resolvedPosExpr (which handles negative positions and emits the
+                // out-of-bounds warning via the wrapping check-insert-position call).
                 List<Expression> lessThanOperArgs = new ArrayList<>(2);
                 lessThanOperArgs.add(posVar);
-                lessThanOperArgs.add(ensureBigIntCallExpr);
+                lessThanOperArgs.add(resolvedPosExpr);
                 whereExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.LT), lessThanOperArgs);
-                ((CallExpr) whereExpr).setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+                ((CallExpr) whereExpr).setSourceLocation(resolvedPosExpr.getSourceLocation());
             }
             WhereClause whereClause = new WhereClause(whereExpr);
             whereClause.setSourceLocation(whereExpr.getSourceLocation());
@@ -353,32 +397,44 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         }
         // ********* Prepare the source slice of array ***********
         {
-            sourceListExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST),
-                    Collections.singletonList(changeExpr.getSourceExpr()));
+            sourceListExpression = changeExpr.getSourceExpr();
+            if (resolvedPosExpr != null) {
+                // When the resolved position falls outside [0, len], replace the source slice with [] so
+                // array_concat(leading, [], trailing) reproduces the original array unchanged.
+                CallExpr geZeroExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.GE),
+                        Arrays.asList(resolvedPosExpr, new LiteralExpr(new IntegerLiteral(0))));
+                geZeroExpr.setSourceLocation(resolvedPosExpr.getSourceLocation());
+                CallExpr leLenExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.LE),
+                        Arrays.asList(resolvedPosExpr, arrayLengthCallExpr));
+                leLenExpr.setSourceLocation(resolvedPosExpr.getSourceLocation());
+                CallExpr boundsCheckExpr =
+                        new CallExpr(new FunctionSignature(BuiltinFunctions.AND), Arrays.asList(geZeroExpr, leLenExpr));
+                boundsCheckExpr.setSourceLocation(resolvedPosExpr.getSourceLocation());
+                CallExpr emptyArrayExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR),
+                        Collections.emptyList());
+                emptyArrayExpr.setSourceLocation(resolvedPosExpr.getSourceLocation());
+                sourceListExpression = new CaseExpression(boundsCheckExpr,
+                        Collections.singletonList(new LiteralExpr(TrueLiteral.INSTANCE)),
+                        Collections.singletonList(sourceListExpression), emptyArrayExpr);
+            }
         }
         // ********* Prepare the trailing slice of array ***********
         {
-            CallExpr sourceCollectionCallExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_LIST),
-                    Collections.singletonList(pathExpr));
-            sourceCollectionCallExpr.setSourceLocation(pathExpr.getSourceLocation());
             // From clause.
             VariableExpr posVar = new VariableExpr(new VarIdentifier(UUID.randomUUID().toString()));
             VariableExpr aliasVar = changeExpr.getAliasVar();
-            FromTerm fromTerm = new FromTerm(sourceCollectionCallExpr, aliasVar, posVar, null);
+            FromTerm fromTerm = new FromTerm(pathExpr, aliasVar, posVar, null);
             fromTerm.setSourceLocation(aliasVar.getSourceLocation());
             FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
             fromClause.setSourceLocation(aliasVar.getSourceLocation());
             // Where clause
             Expression whereExpr = new LiteralExpr(FalseLiteral.INSTANCE);
             if (changeExpr.getPosExpr() != null) {
-                CallExpr ensureBigIntCallExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.CHECK_INTEGER),
-                        Collections.singletonList(changeExpr.getPosExpr()));
-                sourceCollectionCallExpr.setSourceLocation(changeExpr.getPosExpr().getSourceLocation());
                 List<Expression> GEOperArgs = new ArrayList<>(2);
                 GEOperArgs.add(posVar);
-                GEOperArgs.add(ensureBigIntCallExpr);
+                GEOperArgs.add(resolvedPosExpr);
                 whereExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.GE), GEOperArgs);
-                ((CallExpr) whereExpr).setSourceLocation(ensureBigIntCallExpr.getSourceLocation());
+                ((CallExpr) whereExpr).setSourceLocation(resolvedPosExpr.getSourceLocation());
             }
             WhereClause whereClause = new WhereClause(whereExpr);
             whereClause.setSourceLocation(whereExpr.getSourceLocation());
@@ -405,8 +461,74 @@ public final class SqlppChangeExprToSelectExprVisitor extends VariableCheckAndRe
         CallExpr arrayConcatExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.ARRAY_CONCAT), concatArgs);
         // **** Rewrite Path expression of the SetExpression ****
         changeExpr.setPathExprs(Collections.singletonList(pathExpr));
-        changeExpr.setValueExprs(Collections.singletonList(arrayConcatExpr));
+        changeExpr.setValueExprs(Collections.singletonList(guardListNestedRewrite(pathExpr, arrayConcatExpr)));
         return changeExpr;
+    }
+
+    /**
+     * Turns “index from end” literals into absolute indices: {@code pos = -N} and negative entries in
+     * {@code pos IN [...]} / {@code NOT IN} become {@code len(path)+(-N)}. Descends the {@code WHERE} tree
+     * ({@code AND}, {@code NOT}, etc.) because the parser does not always leave those comparisons at the root.
+     */
+    private static void rewriteNegativeAtIndexLiterals(Expression expr, Expression pathExpr, VariableExpr posVar) {
+        if (posVar == null || expr == null) {
+            return;
+        }
+        if (expr.getKind() == Expression.Kind.CALL_EXPRESSION) {
+            CallExpr call = (CallExpr) expr;
+            if ((call.getFunctionSignature()).createFunctionIdentifier() == BuiltinFunctions.NOT
+                    && call.getExprList().size() == 1) {
+                rewriteNegativeAtIndexLiterals(call.getExprList().get(0), pathExpr, posVar);
+            }
+            return;
+        }
+        if (expr.getKind() != Expression.Kind.OP_EXPRESSION) {
+            return;
+        }
+        OperatorExpr opExpr = (OperatorExpr) expr;
+        List<OperatorType> opList = opExpr.getOpList();
+        List<Expression> exprList = opExpr.getExprList();
+        if (opList.size() == 1) {
+            String posName = posVar.getVar().getValue();
+            OperatorType op = opList.get(0);
+            if (op == OperatorType.EQ && exprList.size() >= 2) {
+                for (int i = 0; i < 2; i++) {
+                    Expression negSide = exprList.get(i);
+                    Expression other = exprList.get(1 - i);
+                    if (variableHasName(other, posName) && negSide.getKind() == Expression.Kind.UNARY_EXPRESSION
+                            && ((UnaryExpr) negSide).getExprType() == UnaryExprType.NEGATIVE) {
+                        exprList.set(i, buildLengthPlusNegativeIndex(pathExpr, negSide));
+                        break;
+                    }
+                }
+            } else if ((op == OperatorType.IN || op == OperatorType.NOT_IN) && exprList.size() >= 2
+                    && variableHasName(exprList.get(0), posName)
+                    && exprList.get(1).getKind() == Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION) {
+                List<Expression> elems = ((ListConstructor) exprList.get(1)).getExprList();
+                for (int i = 0; i < elems.size(); i++) {
+                    Expression e = elems.get(i);
+                    if (e.getKind() == Expression.Kind.UNARY_EXPRESSION
+                            && ((UnaryExpr) e).getExprType() == UnaryExprType.NEGATIVE) {
+                        elems.set(i, buildLengthPlusNegativeIndex(pathExpr, e));
+                    }
+                }
+            }
+        }
+        for (Expression operand : exprList) {
+            rewriteNegativeAtIndexLiterals(operand, pathExpr, posVar);
+        }
+    }
+
+    private static boolean variableHasName(Expression e, String name) {
+        return e.getKind() == Expression.Kind.VARIABLE_EXPRESSION
+                && name.equals(((VariableExpr) e).getVar().getValue());
+    }
+
+    private static Expression buildLengthPlusNegativeIndex(Expression pathExpr, Expression unaryNeg) {
+        CallExpr len = new CallExpr(new FunctionSignature(BuiltinFunctions.LEN), Collections.singletonList(pathExpr));
+        CallExpr add = new CallExpr(new FunctionSignature(BuiltinFunctions.NUMERIC_ADD), Arrays.asList(len, unaryNeg));
+        add.setSourceLocation(unaryNeg.getSourceLocation());
+        return add;
     }
 
     private VariableExpr generateVarOverContext(SourceLocation sourceLoc) throws CompilationException {

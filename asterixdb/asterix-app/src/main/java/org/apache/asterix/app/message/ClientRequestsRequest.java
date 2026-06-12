@@ -33,7 +33,8 @@ public class ClientRequestsRequest implements ICcAddressedMessage {
 
     public enum RequestType {
         RUNNING,
-        COMPLETED
+        COMPLETED,
+        ASYNC
     }
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -57,6 +58,9 @@ public class ClientRequestsRequest implements ICcAddressedMessage {
                 break;
             case COMPLETED:
                 clientRequests = appCtx.getRequestTracker().getCompletedRequests();
+                break;
+            case ASYNC:
+                clientRequests = appCtx.getRequestTracker().getAsyncRequests();
                 break;
             default:
                 throw new IllegalStateException("unrecognized request type: " + requestType);

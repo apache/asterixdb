@@ -19,12 +19,12 @@
 package org.apache.asterix.app.translator.helpers;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
@@ -41,34 +41,33 @@ public class IcebergStatementValidationHelper {
     }
 
     public static void validateIfIcebergTable(ICcApplicationContext appCtx, MetadataProvider metadataProvider,
-            MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties, SourceLocation srcLoc)
-            throws AlgebricksException {
-        validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, collectionProperties, Collections.emptyMap(),
-                srcLoc);
+            MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties, SourceLocation srcLoc,
+            String adapter) throws AlgebricksException {
+        validateIfIcebergTable(appCtx, metadataProvider, mdTxnCtx, collectionProperties, Collections.emptyMap(), srcLoc,
+                adapter);
     }
 
     public static void validateIfIcebergTable(ICcApplicationContext appCtx, MetadataProvider metadataProvider,
-            MetadataTransactionContext mdTxnCtx, Map<String, String> collectionProperties,
-            Map<String, String> extraCollectionProperties, SourceLocation srcLoc) throws AlgebricksException {
-        if (!IcebergUtils.isIcebergTable(collectionProperties)) {
+            MetadataTransactionContext mdTxnCtx, Map<String, String> properties, Map<String, String> extraProperties,
+            SourceLocation srcLoc, String adapter) throws AlgebricksException {
+        if (!IcebergUtils.isIcebergTable(properties)) {
             return;
         }
-        IcebergUtils.setDefaultFormat(collectionProperties);
-        IcebergUtils.validateIcebergTableProperties(collectionProperties);
+        IcebergUtils.validateIcebergTableProperties(properties);
 
         // work on a copy of the properties from now onward to avoid modifying the original collection properties
-        Map<String, String> propertiesCopy = new HashMap<>(collectionProperties);
+        properties.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
 
         // ensure the specified catalog exists
-        String catalogName = propertiesCopy.get(IcebergConstants.ICEBERG_CATALOG_NAME);
+        String catalogName = properties.get(IcebergConstants.ICEBERG_CATALOG_NAME);
         Catalog catalog = MetadataManager.INSTANCE.getCatalog(mdTxnCtx, catalogName);
         if (catalog == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_CATALOG, srcLoc, catalogName);
         }
 
         // validate snapshot exists if provided
-        propertiesCopy.putAll(extraCollectionProperties);
-        metadataProvider.addIcebergCatalogPropertiesIfNeeded(appCtx, propertiesCopy);
-        IcebergSnapshotUtils.validateSnapshotExists(propertiesCopy);
+        properties.putAll(extraProperties);
+        metadataProvider.addIcebergCatalogPropertiesIfNeeded(appCtx, properties);
+        IcebergSnapshotUtils.validateSnapshotExists(properties);
     }
 }

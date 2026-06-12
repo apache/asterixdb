@@ -28,4 +28,5 @@ public class RestConstants {
     public static final String ICEBERG_CREDENTIAL_PROPERTY_NAME = "credential";
     public static final String ICEBERG_SCOPE_PROPERTY_NAME = "scope";
 
+    public static final String BEARER_TOKEN_PREFIX = "Bearer ";
 }

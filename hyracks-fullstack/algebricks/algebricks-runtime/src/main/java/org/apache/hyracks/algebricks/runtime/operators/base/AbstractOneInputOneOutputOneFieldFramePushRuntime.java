@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.base;
 import org.apache.hyracks.api.comm.IFrameFieldAppender;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameFixedFieldTupleAppender;
@@ -42,7 +41,7 @@ public abstract class AbstractOneInputOneOutputOneFieldFramePushRuntime
     }
 
     protected final void initAccessAppendFieldRef(IHyracksTaskContext ctx) throws HyracksDataException {
-        frame = new VSizeFrame(ctx);
+        frame = ctx.allocateVSizeFrame();
         appender = new FrameFixedFieldTupleAppender(outputRecordDesc.getFieldCount());
         appender.reset(frame, true);
         tAccess = new FrameTupleAccessor(inputRecordDesc);

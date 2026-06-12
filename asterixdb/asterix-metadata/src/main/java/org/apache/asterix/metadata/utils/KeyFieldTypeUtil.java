@@ -104,6 +104,7 @@ public class KeyFieldTypeUtil {
      *
      * @deprecated use {@link #getKeyProjectType(ARecordType, List, SourceLocation)}
      */
+    @Deprecated
     public static List<IAType> getKeyTypes(ARecordType recordType, ARecordType metaRecordType, List<List<String>> keys,
             List<Integer> keySourceIndicators) throws AlgebricksException {
         List<IAType> keyTypes = new ArrayList<>();

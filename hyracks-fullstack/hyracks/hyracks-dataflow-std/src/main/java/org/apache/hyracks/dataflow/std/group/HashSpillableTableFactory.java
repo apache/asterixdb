@@ -23,7 +23,6 @@ import java.util.BitSet;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
@@ -160,7 +159,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             private final PreferToSpillFullyOccupiedFramePolicy spillPolicy =
                     new PreferToSpillFullyOccupiedFramePolicy(bufferManager, spilledSet);
 
-            private final FrameTupleAppender outputAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+            private final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
 
             @Override
             public void close() throws HyracksDataException {

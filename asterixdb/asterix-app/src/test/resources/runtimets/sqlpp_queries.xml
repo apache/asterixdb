@@ -19,6 +19,11 @@
 <test-group name="sqlpp_queries">
   <test-group name="api">
     <test-case FilePath="api">
+      <compilation-unit name="result_ttl">
+        <output-dir compare="Text">result_ttl</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="compileonly">
         <output-dir compare="Text">compileonly</output-dir>
       </compilation-unit>
@@ -38,7 +43,7 @@
         <output-dir compare="Text">readonly-request</output-dir>
         <expected-error>ASX0044: CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: DATAVERSE_DROP statement is not supported in read-only mode</expected-error>
-        <expected-error>ASX0044: DATASET_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>ASX0044: CREATE_DATASET statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: DATASET_DROP statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: CREATE_INDEX statement is not supported in read-only mode</expected-error>
         <expected-error>ASX0044: INDEX_DROP statement is not supported in read-only mode</expected-error>
@@ -129,7 +134,7 @@
       <compilation-unit name="get-non-query">
         <output-dir compare="Text">get-non-query</output-dir>
         <expected-error>CREATE_DATAVERSE statement is not supported in read-only mode</expected-error>
-        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_TYPE statement is not supported in read-only mode</expected-error>
         <expected-error>CREATE_FUNCTION statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
@@ -141,7 +146,7 @@
     <test-case FilePath="api">
       <compilation-unit name="post-non-query">
         <output-dir compare="Text">post-non-query</output-dir>
-        <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
+        <expected-error>CREATE_TYPE statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
@@ -6770,6 +6775,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="duplicate-predicate-index">
+        <output-dir compare="Text">duplicate-predicate-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="heterogeneous-index-complex-types">
         <output-dir compare="Text">heterogeneous-index-complex-types</output-dir>
       </compilation-unit>
@@ -7536,6 +7546,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="active_requests">
         <output-dir compare="Text">active_requests</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="async_requests">
+        <output-dir compare="Text">async_requests</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -11197,6 +11212,16 @@
     <test-case FilePath="string">
       <compilation-unit name="regexp_contains/regexp_contains">
         <output-dir compare="Text">regexp_contains/regexp_contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_invalid_pattern_negative">
+        <output-dir compare="Text">regexp_invalid_pattern_negative</output-dir>
+        <expected-error>ASX1113: Invalid pattern [</expected-error>
+        <expected-error>ASX1113: Invalid pattern (abc</expected-error>
+        <expected-error>ASX1113: Invalid pattern *xyz</expected-error>
+        <expected-error>ASX1113: Invalid pattern [z-a]</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -15429,6 +15454,11 @@
       <output-dir compare="Text">update-null-missing</output-dir>
     </compilation-unit>
   </test-case>
+    <test-case FilePath="update-statements">
+      <compilation-unit name="all-cases">
+        <output-dir compare="Text">all-cases</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 <test-group name="json">
     <test-case FilePath="json">

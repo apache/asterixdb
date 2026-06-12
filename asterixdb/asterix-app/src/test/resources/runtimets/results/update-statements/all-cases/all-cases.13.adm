@@ -1,0 +1,2 @@
+{ "customers": { "custid": "C47", "is_blacklisted": true, "rating": 175, "address": { "city": "San Jose, United States", "street": "Santana Row", "zipcode": 95128 }, "name": "S. Logan" } }
+{ "customers": { "custid": "C48", "is_blacklisted": false, "rating": 275, "name": "S. Paul", "address": { "city": "San Jose, United States", "street": "North First Street", "zipcode": 95134 } } }

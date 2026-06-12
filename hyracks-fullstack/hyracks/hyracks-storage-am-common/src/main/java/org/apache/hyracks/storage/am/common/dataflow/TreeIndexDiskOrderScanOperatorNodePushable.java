@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -63,7 +62,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
         treeIndexHelper.open();
         try {
             writer.open();
-            FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            FrameTupleAppender appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
             scan(appender);
             appender.write(writer, true);
         } catch (Throwable th) { // NOSONAR: Must call writer.fail

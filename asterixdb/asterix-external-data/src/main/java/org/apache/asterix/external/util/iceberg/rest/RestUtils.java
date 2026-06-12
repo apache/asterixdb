@@ -29,6 +29,7 @@ import static org.apache.asterix.external.util.http.HttpConstants.OAUTH_TOKEN_UR
 import static org.apache.asterix.external.util.http.HttpConstants.PASSWORD_FIELD_NAME;
 import static org.apache.asterix.external.util.http.HttpConstants.USERNAME_FIELD_NAME;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_URI_PROPERTY_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.validateIcebergCatalogUri;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 
 import java.util.Map;
@@ -60,6 +61,7 @@ public class RestUtils {
 
     public static void validateRequiredProperties(Map<String, String> catalogProperties) throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
     }
 
     private static void setAuthentication(Map<String, String> catalogProperties) throws CompilationException {
@@ -132,7 +134,10 @@ public class RestUtils {
         if (notAllowed != null) {
             throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed, BEARER_TOKEN_FIELD_NAME);
         }
-
+        // Strip "Bearer " prefix if present - the Iceberg REST client adds it internally
+        if (bearerToken.startsWith(RestConstants.BEARER_TOKEN_PREFIX)) {
+            bearerToken = bearerToken.substring(RestConstants.BEARER_TOKEN_PREFIX.length());
+        }
         catalogProperties.put(AuthProperties.AUTH_TYPE, AuthProperties.AUTH_TYPE_OAUTH2);
         catalogProperties.put(RestConstants.ICEBERG_BEARER_TOKEN_PROPERTY_NAME, bearerToken);
     }

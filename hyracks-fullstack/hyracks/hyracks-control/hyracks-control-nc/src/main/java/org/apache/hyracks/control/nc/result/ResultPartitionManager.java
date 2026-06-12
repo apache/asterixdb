@@ -55,9 +55,9 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
 
     private final ResultMemoryManager resultMemoryManager;
 
-    public ResultPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory, long resultTTL,
-            long resultSweepThreshold) {
-        super(resultTTL);
+    public ResultPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory,
+            long resultTTLMillis, long resultSweepThreshold) {
+        super(resultTTLMillis);
         this.ncs = ncs;
         this.executor = executor;
         deallocatableRegistry = new DefaultDeallocatableRegistry();
@@ -157,8 +157,10 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException {
         ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
-        if (rsIdMap != null && rsIdMap.removePartition(jobId, resultSetId, partition)) {
-            partitionResultStateMap.remove(jobId);
+        if (rsIdMap != null) {
+            if (rsIdMap.removePartition(jobId, resultSetId, partition)) {
+                partitionResultStateMap.remove(jobId);
+            }
             reportPartitionConsumed(jobId, resultSetId, partition);
         }
     }

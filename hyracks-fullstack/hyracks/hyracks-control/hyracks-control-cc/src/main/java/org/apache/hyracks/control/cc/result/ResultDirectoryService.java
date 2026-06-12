@@ -66,8 +66,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     private final Map<JobId, JobResultInfo> jobResultLocations;
     private IJobResultCallback jobResultCallback;
 
-    public ResultDirectoryService(long resultTTL, long resultSweepThreshold) {
-        super(resultTTL);
+    public ResultDirectoryService(long resultTTLMillis, long resultSweepThreshold) {
+        super(resultTTLMillis);
         this.resultSweepThreshold = resultSweepThreshold;
         jobResultLocations = new LinkedHashMap<>();
     }
@@ -92,7 +92,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
         if (resultTtl == null) {
             resultTtl = -1L;
         }
-        jobResultLocations.put(jobId, new JobResultInfo(new ResultJobRecord(partitionsOrdered, resultTtl), null));
+        jobResultLocations.put(jobId,
+                new JobResultInfo(new ResultJobRecord(partitionsOrdered, resultTtl, spec.getRequestId()), null));
     }
 
     @Override
@@ -101,17 +102,21 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
+    //TODO: shouldn't this also be synchronized?
     public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
+        ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
         if (exceptions == null || exceptions.isEmpty()) {
-            final ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
             if (resultJobRecord == null) {
                 return;
             }
-            resultJobRecord.finish(jobStatus);
+            resultJobRecord.finishWithStatus(jobStatus);
             jobResultCallback.completed(jobId, resultJobRecord);
         } else {
-            reportJobFailure(jobId, exceptions);
+            if (resultJobRecord != null) {
+                resultJobRecord.finish();
+            }
+            reportJobFailure(jobId, exceptions, resultJobRecord);
         }
     }
 
@@ -182,6 +187,10 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         ResultJobRecord rjr = getResultJobRecord(jobId);
+        reportJobFailure(jobId, exceptions, rjr);
+    }
+
+    private synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions, ResultJobRecord rjr) {
         if (logFailure(rjr)) {
             LOGGER.debug("job {} failed and is being reported to {}", jobId, getClass().getSimpleName());
         }
@@ -220,6 +229,14 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
+    public synchronized void removeIfDone(JobId jobId) {
+        ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
+        if (resultJobRecord != null && resultJobRecord.isDone()) {
+            sweep(jobId);
+        }
+    }
+
+    @Override
     public synchronized Set<JobId> getJobIds() {
         return jobResultLocations.keySet();
     }
@@ -230,8 +247,30 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
-    public synchronized void sweep(JobId jobId) {
-        jobResultLocations.remove(jobId);
+    public synchronized ResultJobRecord getJobRecord(JobId jobId) {
+        return getResultJobRecord(jobId);
+    }
+
+    @Override
+    public void sweep(JobId jobId) {
+        JobResultInfo removedJob = sweepJob(jobId);
+        if (removedJob != null) {
+            notifyResultSweep(jobId, removedJob);
+        }
+    }
+
+    private synchronized JobResultInfo sweepJob(JobId jobId) {
+        return jobResultLocations.remove(jobId);
+    }
+
+    private void notifyResultSweep(JobId jobId, JobResultInfo removedJob) {
+        // ResultJobRecord should never be null
+        ResultJobRecord rec = removedJob.getRecord();
+        try {
+            jobResultCallback.notifyResultSweep(jobId, rec);
+        } catch (Throwable t) {
+            LOGGER.warn("failed to notify result sweep for job {}, req {}", jobId, rec.getRequestId(), t);
+        }
     }
 
     @Override

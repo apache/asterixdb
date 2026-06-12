@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.api.job.JobId;
 
 public interface IRequestTracker extends IJobLifecycleListener {
 
@@ -79,6 +80,13 @@ public interface IRequestTracker extends IJobLifecycleListener {
     Collection<IClientRequest> getCompletedRequests();
 
     /**
+     * Gets the async requests
+     *
+     * @return the async requests
+     */
+    Collection<IClientRequest> getAsyncRequests();
+
+    /**
      *
      * @return the total number of requests since cluster start/restart
      */
@@ -115,5 +123,13 @@ public interface IRequestTracker extends IJobLifecycleListener {
      * @return an Optional of the client request
      */
     Optional<IClientRequest> getAsyncOrDeferredRequest(String requestId);
+
+    /**
+     * Notifies this tracker that the result of job {@code jobId} has been consumed.
+     *
+     * @param jobId the job id whose result has been consumed
+     * @param requestId the request id associated with the job
+     */
+    void notifyResultSweep(JobId jobId, String requestId);
 
 }

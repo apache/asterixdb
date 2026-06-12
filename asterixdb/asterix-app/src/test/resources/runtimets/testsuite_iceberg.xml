@@ -18,51 +18,89 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
-  <test-group name="iceberg">
-    <test-case FilePath="iceberg/catalog/">
-      <compilation-unit name="all-supported-types">
-        <output-dir compare="Text">all-supported-types</output-dir>
+  <test-group name="data">
+    <test-case FilePath="iceberg">
+      <compilation-unit name="all-supported-catalog-types">
+        <output-dir compare="Text">all-supported-catalog-types</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/">
+    <test-case FilePath="iceberg">
       <compilation-unit name="check-catalog-record">
         <output-dir compare="Text">check-catalog-record</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg">
+      <compilation-unit name="all-data-types">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">all-data-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="snapshots">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">snapshots</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="negative">
+    <test-case FilePath="iceberg/negative">
+      <compilation-unit name="bad-catalog-endpoint">
+        <output-dir compare="Text">bad-catalog-endpoint</output-dir>
+        <expected-error>ASX0049: Parameter(s) uri must be specified</expected-error>
+        <expected-error>ASX1108: External source error. java.net.URISyntaxException: Expected authority at index 7: http://</expected-error>
+        <expected-error>ASX1108: External source error. missing URI scheme. received: hello</expected-error>
+        <expected-error>ASX1108: External source error. missing URI scheme. received: 127.0.0.1</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-catalog-type">
         <output-dir compare="Text">bad-catalog-type</output-dir>
         <expected-error>ASX1228: Unsupported catalog type: 'FakeIcebergCatalog'</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-source-type">
         <output-dir compare="Text">bad-source-type</output-dir>
         <expected-error>ASX1230: Unsupported Iceberg catalog source: 'FAKE_AWS_GLUE'</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="missing-source-type">
         <output-dir compare="Text">missing-source-type</output-dir>
         <expected-error>ASX0049: Parameter(s) catalogSource must be specified</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="catalog-already-exists">
         <output-dir compare="Text">catalog-already-exists</output-dir>
         <expected-error>ASX1226: A catalog with this name myGlueCatalog already exists</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="drop-does-not-exist">
         <output-dir compare="Text">drop-does-not-exist</output-dir>
         <expected-error>ASX1227: Cannot find catalog with name myDoesNotExistGlueCatalog</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="iceberg/catalog/negative">
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="drop-has-dependent-collections">
         <output-dir compare="Text">drop-has-dependent-collections</output-dir>
         <expected-error>ASX1148: Cannot drop catalog myGlueCatalog being used by collection Default.Default.test</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
+      <compilation-unit name="bad-snapshot-format">
+        <output-dir compare="Text">bad-snapshot-format</output-dir>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: Hello!</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: 2024-12-12 11:11:11</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: Hello!</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: 2024-12-12 11:11:11.123</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
+      <compilation-unit name="invalid-timezone">
+        <output-dir compare="Text">invalid-timezone</output-dir>
+        <expected-error>ASX1172: Provided timezone is invalid: 'GMT+Zft!'</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -125,7 +125,7 @@ public class FloatSumFieldAggregatorFactory implements IFieldAggregateDescriptor
 
             @Override
             public AggregateState createState() {
-                return new AggregateState(new Float(0.0));
+                return new AggregateState(0.0f);
             }
 
             @Override

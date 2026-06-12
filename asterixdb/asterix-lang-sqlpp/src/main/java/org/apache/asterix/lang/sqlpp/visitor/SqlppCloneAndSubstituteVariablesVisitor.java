@@ -120,7 +120,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 }
             }
         }
-        FromTerm newFromTerm = new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses);
+        FromTerm newFromTerm =
+                new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses, fromTerm.getTimeTravel());
         newFromTerm.setSourceLocation(fromTerm.getSourceLocation());
         return new Pair<>(newFromTerm, currentEnv);
     }

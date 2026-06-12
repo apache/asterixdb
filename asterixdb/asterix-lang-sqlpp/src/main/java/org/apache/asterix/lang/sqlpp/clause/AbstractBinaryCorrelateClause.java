@@ -24,17 +24,25 @@ import java.util.Objects;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
 
     private Expression rightExpr;
-    private VariableExpr rightVar;
-    private VariableExpr rightPosVar;
+    private final VariableExpr rightVar;
+    private final VariableExpr rightPosVar;
+    private final TimeTravel timeTravel;
 
     public AbstractBinaryCorrelateClause(Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
+        this(rightExpr, rightVar, rightPosVar, null);
+    }
+
+    public AbstractBinaryCorrelateClause(Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
+            TimeTravel timeTravel) {
         this.rightExpr = rightExpr;
         this.rightVar = rightVar;
         this.rightPosVar = rightPosVar;
+        this.timeTravel = timeTravel;
     }
 
     public Expression getRightExpression() {
@@ -57,9 +65,17 @@ public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
         return rightPosVar != null;
     }
 
+    public boolean hasTimeTravel() {
+        return timeTravel != null;
+    }
+
+    public TimeTravel getTimeTravel() {
+        return timeTravel;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(rightExpr, rightPosVar, rightVar);
+        return Objects.hash(rightExpr, rightPosVar, rightVar, timeTravel);
     }
 
     @Override
@@ -67,12 +83,11 @@ public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
         if (this == object) {
             return true;
         }
-        if (!(object instanceof AbstractBinaryCorrelateClause)) {
+        if (!(object instanceof AbstractBinaryCorrelateClause target)) {
             return false;
         }
-        AbstractBinaryCorrelateClause target = (AbstractBinaryCorrelateClause) object;
         return Objects.equals(rightExpr, target.rightExpr) && Objects.equals(rightPosVar, target.rightPosVar)
-                && Objects.equals(rightVar, target.rightVar);
+                && Objects.equals(rightVar, target.rightVar) && Objects.equals(timeTravel, target.timeTravel);
     }
 
 }

@@ -248,7 +248,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case DATASET_DECL:
+            case CREATE_DATASET:
                 DatasetDecl dsCreateStmt = (DatasetDecl) stmt;
                 namespace = getStatementNamespace(((DatasetDecl) stmt).getNamespace(), activeNamespace);
                 invalidOperation = isSystemNamespace(namespace);
@@ -302,7 +302,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case TYPE_DECL:
+            case CREATE_TYPE:
                 namespace = getStatementNamespace(((TypeDecl) stmt).getNamespace(), activeNamespace);
                 invalidOperation = isSystemNamespace(namespace);
                 if (invalidOperation) {

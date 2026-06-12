@@ -265,7 +265,7 @@ public class NodeControllerService implements IControllerService {
 
     private void init() {
         resultPartitionManager = new ResultPartitionManager(this, executor, ncConfig.getResultManagerMemory(),
-                ncConfig.getResultTTL(), ncConfig.getResultSweepThreshold());
+                ncConfig.getResultTTLMillis(), ncConfig.getResultSweepThreshold());
         resultNetworkManager = new ResultNetworkManager(ncConfig.getResultListenAddress(),
                 ncConfig.getResultListenPort(), resultPartitionManager, ncConfig.getNetThreadCount(),
                 ncConfig.getNetBufferCount(), ncConfig.getResultPublicAddress(), ncConfig.getResultPublicPort(),

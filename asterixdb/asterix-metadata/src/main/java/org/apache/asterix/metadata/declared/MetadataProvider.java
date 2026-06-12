@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INamespaceResolver;
@@ -1024,7 +1023,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
             setExternalCollectionCompilerProperties(this, configuration);
-            setExternalEntityId(configuration);
             setSourceType(configuration, adapterName);
 
             // for iceberg table, add catalog properties to the configuration
@@ -1051,10 +1049,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     protected void setSourceType(Map<String, String> configuration, String adapterName) {
         configuration.putIfAbsent(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapterName);
-    }
-
-    public void setExternalEntityId(Map<String, String> configuration) throws AlgebricksException {
-        configuration.put(ExternalDataConstants.KEY_ENTITY_ID, UUID.randomUUID().toString());
     }
 
     public TxnId getTxnId() {

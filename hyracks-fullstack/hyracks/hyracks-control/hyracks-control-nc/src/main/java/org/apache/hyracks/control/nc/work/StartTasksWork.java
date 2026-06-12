@@ -54,6 +54,7 @@ import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.comm.channels.NetworkInputChannel;
@@ -98,11 +99,13 @@ public class StartTasksWork extends AbstractWork {
 
     private final String jobStartTimeZoneId;
 
+    private final JobKind jobKind;
+
     public StartTasksWork(NodeControllerService ncs, DeploymentId deploymentId, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, Set<JobFlag> flags,
             Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime,
-            String jobStartTimeZoneId) {
+            String jobStartTimeZoneId, JobKind jobKind) {
         this.ncs = ncs;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
@@ -114,6 +117,7 @@ public class StartTasksWork extends AbstractWork {
         this.jobParameters = jobParameters;
         this.jobStartTime = jobStartTime;
         this.jobStartTimeZoneId = jobStartTimeZoneId;
+        this.jobKind = jobKind;
     }
 
     @Override
@@ -228,7 +232,8 @@ public class StartTasksWork extends AbstractWork {
                 }
                 listenerFactory.updateListenerJobParameters(ncs.createOrGetJobParameterByteStore(jobId));
             }
-            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg, listenerFactory, jobStartTime, jobStartTimeZoneId);
+            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg, listenerFactory, jobStartTime, jobStartTimeZoneId,
+                    jobKind);
             jobletMap.put(jobId, ji);
         }
         return ji;

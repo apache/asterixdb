@@ -83,15 +83,17 @@ public class ResultJobRecord implements IResultStateRecord {
     private static final Logger LOGGER = LogManager.getLogger();
     private final long timestamp;
     private final long resultTtlInNanos; // per-request TTL in nanoseconds, -1 for system default
+    private final String requestId;
     private long jobStartTime;
-    private long jobEndTime;
-    private Status status;
+    private volatile long jobEndTime;
+    private final Status status;
     private ResultSetId rsId;
     private ResultSetMetaData resultSetMetaData;
     private long resultCount;
-    private boolean resultSetOrdered;
+    private final boolean resultSetOrdered;
 
-    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos) {
+    public ResultJobRecord(boolean resultSetOrdered, long resultTtlInNanos, String requestId) {
+        this.requestId = requestId;
         this.timestamp = System.nanoTime();
         this.resultTtlInNanos = resultTtlInNanos;
         this.status = new Status();
@@ -111,8 +113,12 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.RUNNING);
     }
 
-    public void finish(JobStatus jobStatus) {
+    public void finish() {
         jobEndTime = System.nanoTime();
+    }
+
+    public void finishWithStatus(JobStatus jobStatus) {
+        finish();
         if (jobStatus != null && (status.state == State.RUNNING || status.state == State.IDLE)) {
             switch (jobStatus) {
                 case TERMINATED -> updateState(State.SUCCESS);
@@ -151,14 +157,27 @@ public class ResultJobRecord implements IResultStateRecord {
         updateState(State.TIMEOUT);
     }
 
+    public boolean isDone() {
+        return status.state != State.RUNNING && status.state != State.IDLE;
+    }
+
     @Override
-    public long getTimestamp() {
+    public long getTimestampNanos() {
         return timestamp;
+    }
+
+    @Override
+    public long getCompleteTimestampNanos() {
+        return jobEndTime;
     }
 
     @Override
     public long getResultTtlInNanos() {
         return resultTtlInNanos;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     public Status getStatus() {

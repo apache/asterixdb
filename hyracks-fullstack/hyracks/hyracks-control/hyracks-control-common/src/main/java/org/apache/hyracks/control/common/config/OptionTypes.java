@@ -20,11 +20,16 @@ package org.apache.hyracks.control.common.config;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -32,6 +37,9 @@ import org.apache.logging.log4j.Level;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 public class OptionTypes {
 
@@ -75,7 +83,7 @@ public class OptionTypes {
 
     public static final IOptionType<Double> DOUBLE = new DoubleOptionType();
 
-    public static final IOptionType<String> STRING = new IOptionType<String>() {
+    public static final IOptionType<String> STRING = new IOptionType<>() {
         @Override
         public String parse(String s) {
             return s;
@@ -201,7 +209,102 @@ public class OptionTypes {
         }
     };
 
-    public static final IOptionType<java.net.URL> URL = new IOptionType<java.net.URL>() {
+    public static final IOptionType<int[]> INT_ARRAY = new IOptionType<>() {
+        @Override
+        public int[] parse(String s) {
+            if (s == null) {
+                return null;
+            }
+            return Stream.of(StringUtils.splitByWholeSeparator(s, ","))
+                    .mapToInt(token -> NumberUtils.toInt(token.trim())).toArray();
+        }
+
+        @Override
+        public int[] parse(JsonNode node) {
+            if (node.isNull()) {
+                return null;
+            }
+            IntList strings = new IntArrayList();
+            if (node instanceof ArrayNode) {
+                node.elements().forEachRemaining(n -> strings.add(n.asInt()));
+                return strings.toIntArray();
+            } else {
+                return parse(node.asText());
+            }
+        }
+
+        @Override
+        public Class<int[]> targetType() {
+            return int[].class;
+        }
+
+        @Override
+        public String serializeToIni(Object value) {
+            return StringUtils.join((int[]) value, ',');
+        }
+
+        @Override
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
+            if (value == null) {
+                node.putNull(fieldName);
+            } else {
+                ArrayNode array = node.putArray(fieldName);
+                IntStream.of((int[]) value).forEachOrdered(array::add);
+            }
+        }
+    };
+
+    public static final IOptionType<long[]> LONG_BYTE_UNIT_ARRAY = new IOptionType<>() {
+        @Override
+        public long[] parse(String s) {
+            if (s == null) {
+                return null;
+            }
+            return Stream.of(StringUtils.splitByWholeSeparator(s, ","))
+                    .mapToLong(token -> StorageUtil.getByteValue(token.trim())).toArray();
+        }
+
+        @Override
+        public long[] parse(JsonNode node) {
+            if (node.isNull()) {
+                return null;
+            }
+            if (node instanceof ArrayNode) {
+                long[] result = new long[node.size()];
+                int i = 0;
+                for (JsonNode n : node) {
+                    result[i++] = n.isTextual() ? StorageUtil.getByteValue(n.asText()) : n.asLong();
+                }
+                return result;
+            } else {
+                return parse(node.asText());
+            }
+        }
+
+        @Override
+        public Class<long[]> targetType() {
+            return long[].class;
+        }
+
+        @Override
+        public String serializeToIni(Object value) {
+            return value == null ? null
+                    : StringUtils.join(
+                            Arrays.stream((long[]) value).mapToObj(StorageUtil::toHumanReadableSize).toArray(), ',');
+        }
+
+        @Override
+        public void serializeJSONFieldUnsafe(String fieldName, Object value, ObjectNode node) {
+            if (value == null) {
+                node.putNull(fieldName);
+            } else {
+                ArrayNode array = node.putArray(fieldName);
+                LongStream.of((long[]) value).forEachOrdered(array::add);
+            }
+        }
+    };
+
+    public static final IOptionType<java.net.URL> URL = new IOptionType<>() {
         @Override
         public java.net.URL parse(String s) {
             try {

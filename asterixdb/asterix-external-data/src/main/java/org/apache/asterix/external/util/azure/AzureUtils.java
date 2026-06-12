@@ -47,7 +47,26 @@ import java.util.Map;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.mapred.JobConf;
 
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.BlobServiceVersion;
+import com.azure.storage.common.implementation.Constants;
+
 public class AzureUtils {
+    public static final String AZURE_STORAGE_ACCOUNT = "AZURE_STORAGE_ACCOUNT";
+    public static final String AZURE_STORAGE_KEY = "AZURE_STORAGE_KEY";
+
+    // MB-71737: Azurite does not support the current service version
+    public static final BlobServiceVersion AZURITE_BLOB_SERVICE_VERSION = BlobServiceVersion.V2025_07_05;
+
+    public static final boolean IS_AZURITE_EMULATOR;
+
+    static {
+        String storageAccount = System.getenv(AZURE_STORAGE_ACCOUNT);
+        String storageKey = System.getenv(AZURE_STORAGE_KEY);
+        IS_AZURITE_EMULATOR = Constants.ConnectionStringConstants.EMULATOR_ACCOUNT_NAME.equals(storageAccount)
+                && Constants.ConnectionStringConstants.EMULATOR_ACCOUNT_KEY.equals(storageKey);
+    }
+
     private AzureUtils() {
         throw new AssertionError("do not instantiate");
     }
@@ -118,5 +137,9 @@ public class AzureUtils {
         //The URI is in the form http(s)://<accountName>.blob.core.windows.net
         //We need to Remove the protocol (i.e., http(s)://) from the URI
         return uri.substring(uri.indexOf("//") + "//".length());
+    }
+
+    public static void fixupForAzuriteEmulator(BlobServiceClientBuilder blobServiceClientBuilder) {
+        blobServiceClientBuilder.serviceVersion(AZURITE_BLOB_SERVICE_VERSION);
     }
 }

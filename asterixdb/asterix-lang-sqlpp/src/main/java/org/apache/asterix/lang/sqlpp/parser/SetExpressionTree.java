@@ -20,18 +20,24 @@
 package org.apache.asterix.lang.sqlpp.parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -74,7 +80,7 @@ public class SetExpressionTree {
     private final Node root;
 
     public SetExpressionTree() {
-        root = new Node("init", null);
+        root = new Node("init", null, true);
     }
 
     public void insertPath(Expression path, Expression valueExpr) throws CompilationException {
@@ -102,6 +108,11 @@ public class SetExpressionTree {
         return createRecordConstructorInner(root);
     }
 
+    /** Used by UPDATE rewrite: {@code SET u = expr} replaces the row with {@code expr}. */
+    public boolean assignsWholeRecord() {
+        return root.hasExpression() && !root.hasChildren();
+    }
+
     private Node accessOrCreatePath(FieldAccessor path, Node node) throws CompilationException {
         Expression leadingExpr = path.getExpr();
 
@@ -111,13 +122,21 @@ public class SetExpressionTree {
         if (node.hasExpression()) {
             throw new CompilationException(ErrorCode.UPDATE_ATTEMPT_ON_CONFLICTING_PATHS, path.getSourceLocation());
         }
-        return node.retrieveChild(path.getIdent().getValue());
+        Node child = node.retrieveChild(path.getIdent().getValue());
+        // Save the path on first visit; the runtime is-object guard for deep-path SETs needs it.
+        child.pathExpr = path;
+        return child;
     }
 
     private Pair<Expression, Expression> createRecordConstructorInner(Node node) {
         if (node.hasExpression()) {
             Expression expr = node.getExpression();
             if (expr.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
+                // SET p.f = {...}: also emit a deletion entry so the old value is removed
+                // before the new record is written (full replace, not merge).
+                if (replaceWholeFieldWithObject(node, expr)) {
+                    return new Pair<>(expr, new LiteralExpr(NullLiteral.INSTANCE));
+                }
                 return new Pair<>(expr, null);
             }
             LiteralExpr literalExpr = (LiteralExpr) expr;
@@ -143,17 +162,50 @@ public class SetExpressionTree {
         Expression setRecord = setRecordArgs.isEmpty() ? null : new RecordConstructor(setRecordArgs, true);
         Expression deletionRecord =
                 deletionRecordArgs.isEmpty() ? null : new RecordConstructor(deletionRecordArgs, true);
+        // Deep-path SET only (e.g. SET p.a.b = X): wrap the overlay in
+        //   CASE WHEN is-object(prefix) THEN overlay ELSE prefix
+        // so that when the prefix isn't a record at runtime, the merge sees the same value on
+        // both sides and leaves the field untouched.
+        if (setRecord != null && !node.isRoot && node.pathExpr != null) {
+            Expression prefix = node.pathExpr;
+            CallExpr isObject =
+                    new CallExpr(new FunctionSignature(BuiltinFunctions.IS_OBJECT), Collections.singletonList(prefix));
+            isObject.setSourceLocation(prefix.getSourceLocation());
+            CaseExpression guarded =
+                    new CaseExpression(isObject, Collections.singletonList(new LiteralExpr(TrueLiteral.INSTANCE)),
+                            Collections.singletonList(setRecord), prefix);
+            guarded.setSourceLocation(prefix.getSourceLocation());
+            setRecord = guarded;
+        }
         return new Pair<>(setRecord, deletionRecord);
+    }
+
+    /** True only for "whole-field" record assignments: SET alias.f = {...}. */
+    private static boolean replaceWholeFieldWithObject(Node node, Expression expr) {
+        if (node.isRoot || node.hasChildren()) {
+            return false;
+        }
+        if (expr.getKind() != Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
+            return false;
+        }
+        if (node.pathExpr == null || node.pathExpr.getKind() != Expression.Kind.FIELD_ACCESSOR_EXPRESSION) {
+            return false;
+        }
+        Expression lead = ((FieldAccessor) node.pathExpr).getExpr();
+        return lead.getKind() == Expression.Kind.VARIABLE_EXPRESSION;
     }
 
     private static class Node {
         private final String name;
         private Expression expr;
+        private Expression pathExpr;
         List<Node> children;
+        private final boolean isRoot;
 
-        private Node(String name, Expression expr) {
+        private Node(String name, Expression expr, boolean isRoot) {
             this.name = name;
             this.expr = expr;
+            this.isRoot = isRoot;
             children = new ArrayList<>();
         }
 
@@ -180,7 +232,7 @@ public class SetExpressionTree {
                 }
             }
             // If not found and createIfEmpty is true, create and add the child node
-            Node newChild = new Node(childName, null); // New child node with no expression
+            Node newChild = new Node(childName, null, false); // New child node with no expression
             children.add(newChild);
             return newChild;
         }

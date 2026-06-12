@@ -1,0 +1,40 @@
+distribute result [$$21] [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 11.57]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 11.57]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$21] <- [{"u": $$u}] project: [$$21] [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 11.57]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$u]) [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 11.57]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 11.57]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$24) [cardinality: 3.0, doc-size: 103.67, op-cost: 4.75, total-cost: 11.57]
+          -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+            exchange [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 6.82]
+            -- RANGE_PARTITION_EXCHANGE [$$24(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
+              select (and(gt($$23, 20), gt($$23, 12))) project: [$$u, $$24] [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 6.82]
+              -- STREAM_SELECT  |PARTITIONED|
+                assign [$$23] <- [$$u.getField("age")] [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 6.82]
+                -- ASSIGN  |PARTITIONED|
+                  exchange [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 6.82]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    unnest-map [$$24, $$u] <- index-search("UserTypes", 0, "Default", "test", "UserTypes", false, false, 1, $$28, 1, $$28, true, true, true) [cardinality: 3.0, doc-size: 103.67, op-cost: 0.0, total-cost: 6.82]
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$28) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            select (and(gt($$27, 20), gt($$27, 12))) project: [$$28] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- STREAM_SELECT  |PARTITIONED|
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                unnest-map [$$27, $$28] <- index-search("idx_user_age", 0, "Default", "test", "UserTypes", false, false, 1, $$26, 0, false, true, false) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$26] <- [20] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

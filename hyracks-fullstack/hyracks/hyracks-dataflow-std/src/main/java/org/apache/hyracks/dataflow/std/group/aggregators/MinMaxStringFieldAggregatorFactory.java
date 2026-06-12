@@ -121,7 +121,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                     Object[] storedState;
                     if (state.state == null) {
                         storedState = new Object[8];
-                        storedState[0] = new Integer(0);
+                        storedState[0] = 0;
                         state.state = storedState;
                     } else {
                         storedState = (Object[]) state.state;

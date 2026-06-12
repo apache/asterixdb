@@ -562,7 +562,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
         UnnestOperator opCopy = new UnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getTimeTravel());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -599,7 +599,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getMissingValue());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getMissingValue(),
+                op.getTimeTravel());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

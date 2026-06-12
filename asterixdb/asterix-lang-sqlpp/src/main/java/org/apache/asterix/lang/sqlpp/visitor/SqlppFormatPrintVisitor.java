@@ -84,6 +84,11 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         fromTerm.getLeftExpression().accept(this, step + 2);
         out.print(" as ");
         fromTerm.getLeftVariable().accept(this, step + 2);
+        if (fromTerm.hasTimeTravel()) {
+            String type = fromTerm.getTimeTravel().getType().getKeyword();
+            String value = fromTerm.getTimeTravel().getSnapshotIdOrTimestamp();
+            out.println(" at " + type + " " + value);
+        }
         if (fromTerm.hasPositionalVariable()) {
             out.print(" at ");
             fromTerm.getPositionalVariable().accept(this, step + 2);

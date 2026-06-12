@@ -59,6 +59,14 @@ public class JobResultCallback implements IJobResultCallback {
         }
     }
 
+    @Override
+    public void notifyResultSweep(JobId jobId, ResultJobRecord resultJobRecord) {
+        String requestId = resultJobRecord.getRequestId();
+        if (requestId != null) {
+            appCtx.getRequestTracker().notifyResultSweep(jobId, requestId);
+        }
+    }
+
     private void updateResultMetadata(JobId jobId, ResultJobRecord resultJobRecord) {
         final ResultSetMetaData resultSetMetaData = resultJobRecord.getResultSetMetaData();
         if (resultSetMetaData == null) {

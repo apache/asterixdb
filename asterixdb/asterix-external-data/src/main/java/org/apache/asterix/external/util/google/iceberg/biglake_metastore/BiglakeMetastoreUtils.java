@@ -23,6 +23,7 @@ import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_WAREHOUSE_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.Gcp.QUOTA_PROJECT_ID_HEADER_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.Gcp.QUOTA_PROJECT_ID_KEY;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.validateIcebergCatalogUri;
 import static org.apache.asterix.external.util.iceberg.IcebergUtils.validatePropertyExists;
 import static org.apache.iceberg.CatalogProperties.CATALOG_IMPL;
 import static org.apache.iceberg.CatalogProperties.URI;
@@ -49,6 +50,7 @@ public class BiglakeMetastoreUtils {
 
     public static void validateRequiredProperties(Map<String, String> catalogProperties) throws CompilationException {
         validatePropertyExists(catalogProperties, ICEBERG_URI_PROPERTY_KEY, PARAMETERS_REQUIRED);
+        validateIcebergCatalogUri(catalogProperties);
         validatePropertyExists(catalogProperties, ICEBERG_WAREHOUSE_PROPERTY_KEY, PARAMETERS_REQUIRED);
         validatePropertyExists(catalogProperties, QUOTA_PROJECT_ID_KEY, PARAMETERS_REQUIRED);
     }

@@ -94,5 +94,10 @@ public interface ICloudProperties {
 
     String getS3SecretAccessKey();
 
+    /**
+     * Valid values for {@link #getS3ChecksumBehavior()}.
+     */
+    S3ChecksumBehavior getS3ChecksumBehavior();
+
     String getAzureClientId();
 }

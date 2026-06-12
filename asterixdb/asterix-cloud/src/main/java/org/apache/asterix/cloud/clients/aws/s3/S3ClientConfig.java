@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.hyracks.cloud.io.ICloudProperties;
+import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -49,6 +50,8 @@ public final class S3ClientConfig {
     private final int requestsMaxHttpConnections;
     private final int requestsMaxPendingHttpConnections;
     private final int requestsHttpConnectionAcquireTimeout;
+    private final int maxIdleSeconds;
+    private final int maxLifetimeSeconds;
     private final boolean forcePathStyle;
     private final boolean disableSslVerify;
     private final int s3ReadTimeoutInSeconds;
@@ -56,21 +59,23 @@ public final class S3ClientConfig {
     private final boolean roundRobinDnsResolver;
     private final String accessKeyId;
     private final String secretAccessKey;
+    private final S3ChecksumBehavior checksumBehavior;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize,
             S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver) {
         this(region, endpoint, prefix, anonymousAuth, certificates, profilerLogInterval, writeBufferSize, 1, 0, 0, 0,
-                false, false, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "");
+                false, false, 0, 0, 0, 0, -1, parallelDownloaderClientType, roundRobinDnsResolver, "", "", null);
     }
 
     private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             Collection<String> certificates, long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout,
             int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds, int requestsMaxHttpConnections,
             boolean forcePathStyle, boolean disableSslVerify, int requestsMaxPendingHttpConnections,
-            int requestsHttpConnectionAcquireTimeout, int s3ReadTimeoutInSeconds,
-            S3ParallelDownloaderClientType parallelDownloaderClientType, boolean roundRobinDnsResolver,
-            String accessKeyId, String secretAccessKey) {
+            int requestsHttpConnectionAcquireTimeout, int maxIdleSeconds, int maxLifetimeSeconds,
+            int s3ReadTimeoutInSeconds, S3ParallelDownloaderClientType parallelDownloaderClientType,
+            boolean roundRobinDnsResolver, String accessKeyId, String secretAccessKey,
+            S3ChecksumBehavior checksumBehavior) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
@@ -84,6 +89,8 @@ public final class S3ClientConfig {
         this.requestsMaxHttpConnections = requestsMaxHttpConnections;
         this.requestsMaxPendingHttpConnections = requestsMaxPendingHttpConnections;
         this.requestsHttpConnectionAcquireTimeout = requestsHttpConnectionAcquireTimeout;
+        this.maxIdleSeconds = maxIdleSeconds;
+        this.maxLifetimeSeconds = maxLifetimeSeconds;
         this.forcePathStyle = forcePathStyle;
         this.disableSslVerify = disableSslVerify;
         this.s3ReadTimeoutInSeconds = s3ReadTimeoutInSeconds;
@@ -91,6 +98,7 @@ public final class S3ClientConfig {
         this.roundRobinDnsResolver = roundRobinDnsResolver;
         this.accessKeyId = accessKeyId;
         this.secretAccessKey = secretAccessKey;
+        this.checksumBehavior = checksumBehavior;
     }
 
     public static S3ClientConfig of(ICloudProperties cloudProperties) {
@@ -101,10 +109,13 @@ public final class S3ClientConfig {
                 cloudProperties.getWriteMaxRequestsPerSecond(), cloudProperties.getReadMaxRequestsPerSecond(),
                 cloudProperties.getRequestsMaxHttpConnections(), cloudProperties.isStorageForcePathStyle(),
                 cloudProperties.isStorageDisableSSLVerify(), cloudProperties.getRequestsMaxPendingHttpConnections(),
-                cloudProperties.getRequestsHttpConnectionAcquireTimeout(), cloudProperties.getS3ReadTimeoutInSeconds(),
+                cloudProperties.getRequestsHttpConnectionAcquireTimeout(),
+                cloudProperties.getRequestsHttpConnectionMaxIdleSeconds(),
+                cloudProperties.getRequestsHttpConnectionMaxLifetimeSeconds(),
+                cloudProperties.getS3ReadTimeoutInSeconds(),
                 S3ParallelDownloaderClientType.valueOf(cloudProperties.getS3ParallelDownloaderClientType()),
                 cloudProperties.useRoundRobinDnsResolver(), cloudProperties.getS3AccessKeyId(),
-                cloudProperties.getS3SecretAccessKey());
+                cloudProperties.getS3SecretAccessKey(), cloudProperties.getS3ChecksumBehavior());
     }
 
     public enum S3ParallelDownloaderClientType {
@@ -126,12 +137,11 @@ public final class S3ClientConfig {
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
-        // Used to determine local vs. actual S3
         String endPoint = configuration.getOrDefault(AwsConstants.SERVICE_END_POINT_FIELD_NAME, "");
         // Disabled
         long profilerLogInterval = 0;
 
-        // Dummy values;
+        // Dummy values
         String region = "";
         String prefix = "";
         Collection<String> certificates = Collections.emptyList();
@@ -200,6 +210,14 @@ public final class S3ClientConfig {
         return requestsHttpConnectionAcquireTimeout;
     }
 
+    public int getMaxIdleSeconds() {
+        return maxIdleSeconds;
+    }
+
+    public int getMaxLifetimeSeconds() {
+        return maxLifetimeSeconds;
+    }
+
     public boolean isDisableSslVerify() {
         return disableSslVerify;
     }
@@ -226,5 +244,22 @@ public final class S3ClientConfig {
 
     public boolean useRoundRobinDnsResolver() {
         return roundRobinDnsResolver;
+    }
+
+    public S3ChecksumBehavior getChecksumBehavior() {
+        return checksumBehavior;
+    }
+
+    @Override
+    public String toString() {
+        return "S3ClientConfig{" + "region='" + region + '\'' + ", endpoint='" + endpoint + '\'' + ", prefix='" + prefix
+                + '\'' + ", anonymousAuth=" + anonymousAuth + ", forcePathStyle=" + forcePathStyle
+                + ", disableSslVerify=" + disableSslVerify + ", checksumBehavior=" + checksumBehavior
+                + ", accessKeyId='" + accessKeyId + '\'' + ", secretAccessKey="
+                + (secretAccessKey != null && !secretAccessKey.isEmpty() ? "<redacted>" : "<none>") + ", certificates="
+                + certificates + ", writeBufferSize=" + writeBufferSize + ", requestsMaxHttpConnections="
+                + requestsMaxHttpConnections + ", parallelDownloaderClientType=" + parallelDownloaderClientType
+                + ", roundRobinDnsResolver=" + roundRobinDnsResolver + ", s3ReadTimeoutInSeconds="
+                + s3ReadTimeoutInSeconds + '}';
     }
 }

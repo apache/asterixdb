@@ -170,6 +170,12 @@ public class Span {
         return unit.convert(spanNanos, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * Create and start a new Span
+     * @param span the duration of the Span
+     * @param unit the unit of the specified duration
+     * @return the started Span
+     */
     public static Span start(long span, TimeUnit unit) {
         Span s = new Span(span, unit);
         s.reset();

@@ -1199,6 +1199,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             if (!variables.isEmpty()) {
                 writeArrayFieldOfVariables(VARIABLES_FIELD, variables);
             }
+            if (op.hasTimeTravel()) {
+                jsonGenerator.writeStringField("time-travel", op.getTimeTravel().toString());
+            }
             LogicalVariable positionalVariable = op.getPositionalVariable();
             if (positionalVariable != null) {
                 jsonGenerator.writeStringField("position", String.valueOf(positionalVariable));

@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
 
@@ -37,7 +38,12 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
 
     public JoinClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
             Expression conditionExpr, Literal.Type outerJoinMissingValueType) {
-        super(rightExpr, rightVar, rightPosVar, conditionExpr);
+        this(joinType, rightExpr, rightVar, rightPosVar, conditionExpr, outerJoinMissingValueType, null);
+    }
+
+    public JoinClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
+            Expression conditionExpr, Literal.Type outerJoinMissingValueType, TimeTravel timeTravel) {
+        super(rightExpr, rightVar, rightPosVar, conditionExpr, timeTravel);
         this.joinType = joinType;
         setOuterJoinMissingValueType(outerJoinMissingValueType);
     }

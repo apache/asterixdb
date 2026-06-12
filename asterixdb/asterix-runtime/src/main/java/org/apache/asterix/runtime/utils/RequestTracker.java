@@ -101,6 +101,11 @@ public class RequestTracker implements IRequestTracker {
     }
 
     @Override
+    public void notifyResultSweep(JobId jobId, String requestId) {
+        removeAsyncOrDeferredRequest(requestId);
+    }
+
+    @Override
     public boolean cancel(String requestId) throws HyracksDataException {
         final IClientRequest request = runningRequests.get(requestId);
         if (request == null) {
@@ -128,6 +133,11 @@ public class RequestTracker implements IRequestTracker {
         return Collections.unmodifiableCollection(new ArrayList<>(completedRequests.values()));
     }
 
+    @Override
+    public synchronized Collection<IClientRequest> getAsyncRequests() {
+        return Collections.unmodifiableCollection(asyncRequests.values());
+    }
+
     private boolean cancel(IClientRequest request) throws HyracksDataException {
         boolean cancelled = request.cancel(ccAppCtx);
         if (cancelled) {
@@ -144,6 +154,7 @@ public class RequestTracker implements IRequestTracker {
                 clientIdRequests.remove(completedRequest.getClientContextId());
             }
             archive(completedRequest);
+            completedRequest.archived();
         }
     }
 
