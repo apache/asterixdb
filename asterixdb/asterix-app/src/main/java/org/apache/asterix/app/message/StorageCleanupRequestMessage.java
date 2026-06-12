@@ -70,9 +70,7 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
                 deleteInvalidIndex(appContext, localResourceRepository, resource);
             }
         }
-        for (Integer partition : nodePartitions) {
-            localResourceRepository.cleanup(partition);
-        }
+        localResourceRepository.cleanup(nodePartitions);
         try {
             broker.sendMessageToPrimaryCC(new VoidResponse(reqId, null));
         } catch (Exception e) {

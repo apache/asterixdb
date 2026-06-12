@@ -560,11 +560,19 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    public void cleanup(Partitions partitions) throws HyracksDataException {
+        LOGGER.info("Cleaning up indexes in partitions {}", partitions);
+        for (int partition : partitions) {
+            cleanup(partition);
+        }
+        LOGGER.info("Finished cleaning up indexes in partitions {} successfully", partitions);
+    }
+
     public void cleanup(int partition) throws HyracksDataException {
-        LOGGER.info("Cleaning up indexes in partition {}", partition);
+        LOGGER.debug("Cleaning up indexes in partition {}", partition);
         CleanupBlockingIOOperation cleanupOp = new CleanupBlockingIOOperation(partition, this, ioManager);
         datasetLifecycleManager.waitForIOAndPerform(AllDatasetsReplicationStrategy.INSTANCE, partition, cleanupOp);
-        LOGGER.info("Finished cleaning up indexes in partition {} successfully", partition);
+        LOGGER.debug("Finished cleaning up indexes in partition {} successfully", partition);
     }
 
     /**
