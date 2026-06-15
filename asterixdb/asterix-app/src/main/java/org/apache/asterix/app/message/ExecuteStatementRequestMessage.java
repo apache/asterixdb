@@ -90,6 +90,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private final boolean forceDropDataset;
     private final boolean skipAdmissionPolicy;
     private boolean sqlCompatMode;
+    private boolean skipQueryPlanCache;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
@@ -133,6 +134,10 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
 
     public void setSQLCompatMode(boolean sqlCompatMode) {
         this.sqlCompatMode = sqlCompatMode;
+    }
+
+    public void setSkipQueryPlanCache(boolean skipQueryPlanCache) {
+        this.skipQueryPlanCache = skipQueryPlanCache;
     }
 
     @Override
@@ -206,6 +211,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
                 optionalParameters, stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset,
                 skipAdmissionPolicy);
         requestParameters.setSQLCompatMode(sqlCompatMode);
+        requestParameters.setSkipQueryPlanCache(skipQueryPlanCache);
         return requestParameters;
     }
 

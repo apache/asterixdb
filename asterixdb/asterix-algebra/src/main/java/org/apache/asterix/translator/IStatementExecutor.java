@@ -131,7 +131,7 @@ public interface IStatementExecutor {
     }
 
     class Stats implements Serializable {
-        private static final long serialVersionUID = 5885273238208454612L;
+        private static final long serialVersionUID = 6834062614264666810L;
 
         public enum ProfileType {
             COUNTS("counts"),
@@ -168,6 +168,7 @@ public interface IStatementExecutor {
         private long cloudReadRequestsCount;
         private long cloudPagesReadCount;
         private long cloudPagesPersistedCount;
+        private boolean cachedPlan;
 
         public long getCount() {
             return count;
@@ -273,6 +274,14 @@ public interface IStatementExecutor {
 
         public long getCloudPagesPersistedCount() {
             return cloudPagesPersistedCount;
+        }
+
+        public boolean isCachedPlan() {
+            return cachedPlan;
+        }
+
+        public void setCachedPlan(boolean cachedPlan) {
+            this.cachedPlan = cachedPlan;
         }
     }
 

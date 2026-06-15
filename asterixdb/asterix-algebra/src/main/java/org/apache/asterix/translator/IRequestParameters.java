@@ -76,6 +76,8 @@ public interface IRequestParameters extends ICommonRequestParameters {
 
     boolean isSkipAdmissionPolicy();
 
+    boolean isSkipQueryPlanCache();
+
     boolean isPrintSignature();
 
     boolean isSQLCompatMode();

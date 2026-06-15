@@ -163,6 +163,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 handleUrl, optionalParameters, statementParameters, param.isMultiStatement(), param.getProfileType(),
                 stmtCategoryRestrictionMask, requestReference, forceDropDataset);
         requestMessage.setSQLCompatMode(param.isSQLCompatMode());
+        requestMessage.setSkipQueryPlanCache(param.isSkipQueryPlanCache());
         return requestMessage;
     }
 
@@ -222,6 +223,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         stats.setCloudReadRequestsCount(responseStats.getCloudReadRequestsCount());
         stats.setCloudPagesReadCount(responseStats.getCloudPagesReadCount());
         stats.setCloudPagesPersistedCount(responseStats.getCloudPagesPersistedCount());
+        stats.setCachedPlan(responseStats.isCachedPlan());
     }
 
     private static void updatePropertiesFromCC(IStatementExecutor.StatementProperties statementProperties,

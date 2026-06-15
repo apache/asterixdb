@@ -75,6 +75,7 @@
     "compiler.ordered.fields" : false,
     "compiler\.parallelism" : 3,
     "compiler\.parquet\.filesplits" : false,
+    "compiler\.query\.plan\.cache" : true,
     "compiler.queryplanshape" : "zigzag",
     "compiler.runtime.memory.overhead" : 5,
     "compiler\.sort\.parallel" : true,

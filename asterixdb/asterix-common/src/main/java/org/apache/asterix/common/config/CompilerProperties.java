@@ -180,7 +180,11 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_HDFS_SPLIT_PARALLELISM(
                 INTEGER,
                 Runtime.getRuntime().availableProcessors(),
-                "Number of threads to use for generating file splits for HDFS files");
+                "Number of threads to use for generating file splits for HDFS files"),
+        COMPILER_QUERY_PLAN_CACHE(
+                BOOLEAN,
+                AlgebricksConfig.QUERY_PLAN_CACHE_DEFAULT,
+                "Enable/disable using the query plan cache.");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -278,6 +282,8 @@ public class CompilerProperties extends AbstractProperties {
             Option.COMPILER_EXTRACT_COMMON_EXPRESSION_LIMIT.ini();
 
     public static final String COMPILER_ORDERED_FIELDS_KEY = Option.COMPILER_ORDERED_FIELDS.ini();
+
+    public static final String COMPILER_QUERY_PLAN_CACHE_KEY = Option.COMPILER_QUERY_PLAN_CACHE.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
     public static final String COMPILER_DELTALAKE_FILESPLITS_KEY = Option.COMPILER_DELTALAKE_FILESPLITS.ini();
@@ -450,4 +456,7 @@ public class CompilerProperties extends AbstractProperties {
         return accessor.getInt(Option.COMPILER_HDFS_SPLIT_PARALLELISM);
     }
 
+    public boolean isQueryPlanCacheEnabled() {
+        return accessor.getBoolean(Option.COMPILER_QUERY_PLAN_CACHE);
+    }
 }

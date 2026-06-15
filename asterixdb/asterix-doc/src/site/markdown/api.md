@@ -24,6 +24,7 @@
 * [Query Service API](#queryservice)
 * [Query Status API](#querystatus)
 * [Query Result API](#queryresult)
+* [Plan Cache API](#plancache)
 
 ## <a id="queryservice">POST /query/service</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
@@ -202,7 +203,7 @@ __Description__ Returns result set for an `async` or `deferred` query request.
 
 __Command__
 
-  This example shows a request/reponse for the (opaque) result handle that was returned by the <a
+  This example shows a request/response for the (opaque) result handle that was returned by the <a
   href="#deferred">deferred result delivery</a> example.
 
     $ curl -v http://localhost:19002/query/service/result/7-0
@@ -222,3 +223,24 @@ __Sample response__
     [ { "$1": 1 }
      ]
 
+## <a id="plancache">DELETE /admin/plancache</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+
+__Description__ Clears all entries in the query plan cache.
+The response is a JSON object that describes the number of entries that were cleared from the query plan cache.
+
+__Command__
+
+    $ curl -X DELETE -v http://localhost:19002/admin/plancache
+
+__Sample response__
+
+    > DELETE /admin/plancache HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/8.4.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < connection: keep-alive
+    < content-length: 58
+    <
+    {"status":"2 query plan cache entries have been cleared."}

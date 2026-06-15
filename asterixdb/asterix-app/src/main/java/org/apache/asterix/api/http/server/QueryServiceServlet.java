@@ -317,7 +317,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
                 stats.getTotalWarningsCount(), stats.getCompileTimeNanos(), stats.getQueueWaitTimeNanos(),
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
-                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
+                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount(), stats.isCachedPlan());
         if (ResultDelivery.ASYNC != delivery) {
             responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
@@ -447,6 +447,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
         requestParameters.setPrintSignature(param.isSignature());
         requestParameters.setSQLCompatMode(param.isSQLCompatMode());
+        requestParameters.setSkipQueryPlanCache(param.isSkipQueryPlanCache());
         return requestParameters;
     }
 

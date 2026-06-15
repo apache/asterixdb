@@ -53,4 +53,5 @@ public class AlgebricksConfig {
     public static final int MAX_EXPRESSION_TREE_SIZE_DEFAULT = 100;
     public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 100;
     public static final int HDFS_SPLIT_PARALLEL_DEFAULT = Runtime.getRuntime().availableProcessors();
+    public static final boolean QUERY_PLAN_CACHE_DEFAULT = true;
 }

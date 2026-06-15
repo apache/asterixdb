@@ -50,6 +50,7 @@ import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.PlanCacheApiServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
@@ -357,6 +358,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CONNECTOR);
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
         addServlet(jsonAPIServer, Servlets.VERSION);
+        addServlet(jsonAPIServer, Servlets.PLAN_CACHE);
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
         addServlet(jsonAPIServer, Servlets.REBALANCE);
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
@@ -403,6 +405,8 @@ public class CCApplication extends BaseCCApplication {
                 return new ShutdownApiServlet(appCtx, ctx, paths);
             case Servlets.VERSION:
                 return new VersionApiServlet(ctx, paths);
+            case Servlets.PLAN_CACHE:
+                return new PlanCacheApiServlet(ctx, paths);
             case Servlets.CLUSTER_STATE:
                 return new ClusterApiServlet(appCtx, ctx, paths);
             case Servlets.CLUSTER_STATE_NODE_DETAIL:

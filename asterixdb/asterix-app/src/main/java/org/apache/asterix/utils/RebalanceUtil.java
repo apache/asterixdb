@@ -153,31 +153,42 @@ public class RebalanceUtil {
             throw e;
         }
 
-        if (targetNcNames.isEmpty()) {
-            // Nothing else to do since the dataset was dropped.
-            return true;
-        } else if (!success) {
+        if (!success) {
             LOGGER.info("Dataset {} rebalance was skipped, see above log for reason", datasetName);
             return false;
         }
-        // Up to this point, since the bulk part of a rebalance operation is done,
-        // the following two operations will retry after interrupt and finally rethrow InterruptedException,
-        // which means that they will always succeed and could possibly throw InterruptedException as the last step.
-        // TODO(yingyi): ASTERIXDB-1948, in case a crash happens, currently the system will either:
-        // 1. (crash before metadata switch) think the rebalance is not done, and the target data files are leaked until
-        // the next rebalance request.
-        // 2. (crash after metadata switch) think the rebalance is done, and the source data files are leaked;
-        runWithRetryAfterInterrupt(() -> {
-            // Executes the 2nd Metadata transaction for switching the metadata entity.
-            // It detaches the source dataset and attaches the target dataset to metadata's point of view.
-            runMetadataTransaction(metadataProvider,
-                    () -> rebalanceSwitch(sourceDataset, targetDataset, metadataProvider));
-            // Executes the 3rd Metadata transaction to drop the source dataset files and the node group for
-            // the source dataset.
-            runMetadataTransaction(metadataProvider, () -> dropSourceDataset(sourceDataset, metadataProvider, hcc));
-        });
-        LOGGER.info("Dataset {} rebalance completed successfully", datasetName);
-        return true;
+
+        try {
+            if (targetNcNames.isEmpty()) {
+                // Nothing else to do since the dataset was dropped.
+                return true;
+            }
+            // Up to this point, since the bulk part of a rebalance operation is done,
+            // the following two operations will retry after interrupt and finally rethrow InterruptedException,
+            // which means that they will always succeed and could possibly throw InterruptedException as the last step.
+            // TODO(yingyi): ASTERIXDB-1948, in case a crash happens, currently the system will either:
+            // 1. (crash before metadata switch) think the rebalance is not done, and the target data files are leaked
+            // until the next rebalance request.
+            // 2. (crash after metadata switch) think the rebalance is done, and the source data files are leaked;
+            runWithRetryAfterInterrupt(() -> {
+                // Executes the 2nd Metadata transaction for switching the metadata entity.
+                // It detaches the source dataset and attaches the target dataset to metadata's point of view.
+                runMetadataTransaction(metadataProvider,
+                        () -> rebalanceSwitch(sourceDataset, targetDataset, metadataProvider));
+                // Executes the 3rd Metadata transaction to drop the source dataset files and the node group for
+                // the source dataset.
+                runMetadataTransaction(metadataProvider, () -> dropSourceDataset(sourceDataset, metadataProvider, hcc));
+            });
+            LOGGER.info("Dataset {} rebalance completed successfully", datasetName);
+            return true;
+        } finally {
+            invalidatePlanCache(metadataProvider);
+        }
+    }
+
+    private static void invalidatePlanCache(MetadataProvider metadataProvider) {
+        ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
+        appCtx.getQueryPlanCache().clear();
     }
 
     @FunctionalInterface
@@ -280,6 +291,7 @@ public class RebalanceUtil {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             LOGGER.info("dataset {} node group updated to {}", target.getDatasetName(), target.getNodeGroupName());
         } finally {
+            invalidatePlanCache(metadataProvider);
             lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(), target.getDatabaseName(),
                     target.getDataverseName(), target.getDatasetName());
         }

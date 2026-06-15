@@ -110,11 +110,18 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
         @Override
         public ICompiler createCompiler(ILogicalPlan plan, IOptimizationContext newOptContext,
                 IRuleSetKind ruleSetKind) {
+            return createCompiler(plan, newOptContext, ruleSetKind,
+                    SerializedDataWriterFactory.WITHOUT_RECORD_DESCRIPTOR);
+        }
+
+        @Override
+        public ICompiler createCompiler(ILogicalPlan plan, IOptimizationContext newOptContext, IRuleSetKind ruleSetKind,
+                IAWriterFactory writerFactory) {
             if (newOptContext.getCompilerFactory() != this) {
                 throw new IllegalStateException();
             }
             return new CompilerImpl(this, plan, newOptContext, logicalRewritesByKind.apply(ruleSetKind),
-                    physicalRewrites.get(), SerializedDataWriterFactory.WITHOUT_RECORD_DESCRIPTOR);
+                    physicalRewrites.get(), writerFactory);
         }
 
         private PlanCompiler createPlanCompiler(IOptimizationContext oc, Object appContext,
@@ -186,6 +193,11 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
         @Override
         public boolean skipJobCapacityAssignment() {
             return oc.skipJobCapacityAssignment();
+        }
+
+        @Override
+        public IOptimizationContext getOptimizationContext() {
+            return oc;
         }
     }
 }

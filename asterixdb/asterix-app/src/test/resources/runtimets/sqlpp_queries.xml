@@ -2998,7 +2998,7 @@
         <output-dir compare="Text">avg_mixed</output-dir>
         <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 26, at column 12)</expected-warn>
         <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 28, at column 19)</expected-warn>
-        <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 29, at column 19)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 30, at column 19)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql-sugar">

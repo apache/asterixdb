@@ -66,6 +66,7 @@ public class QueryServiceRequestParameters {
         CLIENT_TYPE("client-type"),
         DATAVERSE("dataverse"),
         PRETTY("pretty"),
+        SKIP_PLAN_CACHE("skip-plan-cache"),
         MODE("mode"),
         TIMEOUT("timeout"),
         PLAN_FORMAT("plan-format"),
@@ -143,6 +144,7 @@ public class QueryServiceRequestParameters {
     private Map<String, String> optionalParams = null;
     private Map<String, JsonNode> statementParams = null;
     private boolean pretty = false;
+    private boolean skipQueryPlanCache = false;
     private boolean expressionTree = false;
     private boolean parseOnly = false; // don't execute; simply check for syntax correctness and named parameters.
     private boolean compileOnly = false; // don't execute; compile only.
@@ -228,6 +230,14 @@ public class QueryServiceRequestParameters {
 
     public void setPretty(boolean pretty) {
         this.pretty = pretty;
+    }
+
+    public boolean isSkipQueryPlanCache() {
+        return skipQueryPlanCache;
+    }
+
+    public void setSkipQueryPlanCache(boolean skipQueryPlanCache) {
+        this.skipQueryPlanCache = skipQueryPlanCache;
     }
 
     public String getClientContextID() {
@@ -437,6 +447,7 @@ public class QueryServiceRequestParameters {
         object.put("statement", statement != null
                 ? LogRedactionUtil.statement(JSONUtil.escape(new StringBuilder(), statement).toString()) : null);
         object.put("pretty", pretty);
+        object.put("skipPlanCache", skipQueryPlanCache);
         object.put("mode", mode.getName());
         object.put("clientContextID", clientContextID);
         object.put("clientType", clientType.toString());
@@ -539,6 +550,7 @@ public class QueryServiceRequestParameters {
         setResultTtlInMillis(parseTime(req, Parameter.RESULT_TTL.str(), valGetter, getResultTtlInMillis()));
 
         setPretty(parseBoolean(req, Parameter.PRETTY.str(), valGetter, isPretty()));
+        setSkipQueryPlanCache(parseBoolean(req, Parameter.SKIP_PLAN_CACHE.str(), valGetter, isSkipQueryPlanCache()));
         setExpressionTree(parseBoolean(req, Parameter.EXPRESSION_TREE.str(), valGetter, isExpressionTree()));
         setRewrittenExpressionTree(
                 parseBoolean(req, Parameter.REWRITTEN_EXPRESSION_TREE.str(), valGetter, isRewrittenExpressionTree()));

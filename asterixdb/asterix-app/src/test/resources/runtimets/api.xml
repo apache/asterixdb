@@ -129,5 +129,10 @@
         <output-dir compare="Text">net-diagnostics</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="plan_cache_clear">
+        <output-dir compare="Text">plan_cache_clear</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

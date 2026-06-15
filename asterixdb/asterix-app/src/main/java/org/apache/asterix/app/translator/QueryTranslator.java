@@ -36,6 +36,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +80,15 @@ import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
+import org.apache.asterix.common.cache.CompiledPlan;
+import org.apache.asterix.common.cache.IQueryPlanCache;
+import org.apache.asterix.common.cache.IQueryPlanCacheKey;
+import org.apache.asterix.common.cache.IQueryPlanCacheValue;
+import org.apache.asterix.common.cache.QueryPlanCacheKey;
+import org.apache.asterix.common.cache.QueryPlanCacheValue;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalTxManager;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -336,6 +344,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final IResponsePrinter responsePrinter;
     protected final WarningCollector warningCollector;
     protected final ReentrantReadWriteLock compilationLock;
+    protected final IQueryPlanCache queryPlanCache;
     protected final IGlobalTxManager globalTxManager;
     protected final INamespaceResolver namespaceResolver;
 
@@ -357,6 +366,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.responsePrinter = responsePrinter;
         this.warningCollector = new WarningCollector();
         this.compilationLock = appCtx.getCompilationLock();
+        this.queryPlanCache = appCtx.getQueryPlanCache();
         if (appCtx.getServiceContext().getAppConfig().getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)) {
             this.jobFlags.add(JobFlag.ENFORCE_CONTRACT);
         }
@@ -609,6 +619,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 "Unexpected statement: " + kind);
                 }
                 hasResultSet |= metadataProvider.getResultSetId() != null;
+                if (shouldInvalidateQueryPlanCache(stmt)) {
+                    queryPlanCache.clear();
+                }
             }
         } catch (Exception ex) {
             // need to handle job and request clean-ups in case of failures
@@ -3538,7 +3551,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     sessionOutput.config().setGenerateJobSpec(false);
                     apiFramework.compileQuery(hcc, metadataProvider, (Query) rewrittenQuery.first,
                             rewrittenQuery.second, null, sessionOutput, null, null, responsePrinter, warningCollector,
-                            requestParameters, jobFlags);
+                            requestParameters, jobFlags, null);
                     sessionOutput.config().setGenerateJobSpec(generateJobSpec);
                 }
                 appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
@@ -4248,7 +4261,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     loadStmt.getDatasetName(), loadStmt.getAdapter(), properties, loadStmt.dataIsAlreadySorted());
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
-                    null, responsePrinter, warningCollector, requestParameters, jobFlags);
+                    null, responsePrinter, warningCollector, requestParameters, jobFlags, null);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -4327,7 +4340,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     copyStmt.getDatasetName(), itemType, externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
-                    null, responsePrinter, warningCollector, requestParameters, jobFlags);
+                    null, responsePrinter, warningCollector, requestParameters, jobFlags, null);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -4458,7 +4471,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // Query Compilation (happens under the same ongoing metadata transaction)
                 final JobSpecification jobSpec = apiFramework.compileQuery(hcc, metadataProvider, copyTo.getQuery(),
                         rewrittenResult.second, null, sessionOutput, compiledCopyToStatement, externalVars,
-                        responsePrinter, warningCollector, requestParameters, jobFlags);
+                        responsePrinter, warningCollector, requestParameters, jobFlags, null);
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
@@ -4666,10 +4679,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return jobId;
     }
 
+    @Override
+    public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
+            MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt,
+            Map<String, IAObject> stmtParams, IRequestParameters requestParameters)
+            throws AlgebricksException, ACIDException {
+        return rewriteCompileQuery(clusterInfoCollector, metadataProvider, query, stmt, stmtParams, requestParameters,
+                null, null);
+    }
+
     public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
             MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt,
             Map<String, IAObject> stmtParams, IRequestParameters requestParameters,
-            org.apache.asterix.translator.ResultMetadata resultMetadata) throws AlgebricksException, ACIDException {
+            org.apache.asterix.translator.ResultMetadata resultMetadata, IQueryPlanCacheValue cachedPlan)
+            throws AlgebricksException, ACIDException {
 
         Map<VarIdentifier, IAObject> externalVars = createExternalVariables(query, stmtParams);
 
@@ -4682,15 +4705,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
                 rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt, externalVars,
-                responsePrinter, warningCollector, requestParameters, jobFlags, resultMetadata);
-    }
-
-    @Override
-    public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt,
-            Map<String, IAObject> stmtParams, IRequestParameters requestParameters) throws AlgebricksException {
-        return rewriteCompileQuery(clusterInfoCollector, metadataProvider, query, stmt, stmtParams, requestParameters,
-                null);
+                responsePrinter, warningCollector, requestParameters, jobFlags, resultMetadata, cachedPlan);
     }
 
     protected JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
@@ -4738,7 +4753,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
                 rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars, responsePrinter,
-                warningCollector, reqParams, jobFlags);
+                warningCollector, reqParams, jobFlags, null);
     }
 
     protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
@@ -5662,8 +5677,26 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 org.apache.asterix.translator.ResultMetadata resultMetadata =
                         new org.apache.asterix.translator.ResultMetadata(sessionConfig.fmt());
                 resultMetadata.setCreateTimeMillis(clientRequest.getRequestTimeMillis());
-                final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
-                        requestParameters, resultMetadata);
+                final IQueryPlanCacheKey cacheKey =
+                        resolveQueryPlanCacheKey(metadataProvider, requestParameters, clientRequest);
+                final IQueryPlanCacheValue cacheValue = cacheKey == null ? null : queryPlanCache.get(cacheKey);
+
+                final JobSpecification jobSpec;
+                if (cacheValue != null) {
+                    jobSpec = cacheHitJobSpecGen(metadataProvider, query, hcc, stmtParams, requestParameters,
+                            resultMetadata, cacheValue);
+                    stats.setCachedPlan(true);
+                } else {
+                    final CacheMissResult cacheMissResult = compileCacheMissResult(hcc, metadataProvider, query,
+                            stmtParams, requestParameters, resultMetadata, cacheKey);
+                    jobSpec = cacheMissResult.jobSpec();
+                    // cache right after job generation; a runtime failure doesn't make the compiled plan invalid
+                    final CachedPlan plan = cacheMissResult.cachedPlan();
+                    if (plan != null) {
+                        queryPlanCache.put(plan.key(), plan.value());
+                    }
+                }
+
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
@@ -5683,6 +5716,104 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         };
         deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
                 requestParameters, true, null, clientRequest, JobKind.USER_QUERY);
+    }
+
+    private CacheMissResult compileCacheMissResult(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
+            Query query, Map<String, IAObject> stmtParams, IRequestParameters requestParameters,
+            org.apache.asterix.translator.ResultMetadata resultMetadata, IQueryPlanCacheKey cacheKey)
+            throws AlgebricksException, ACIDException {
+        final Set<Warning> preJobGenWarnings;
+        if (cacheKey != null) {
+            preJobGenWarnings = Collections.newSetFromMap(new IdentityHashMap<>());
+            warningCollector.getWarnings(preJobGenWarnings, Long.MAX_VALUE);
+        } else {
+            preJobGenWarnings = null;
+        }
+        final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
+                requestParameters, resultMetadata, null);
+        final CompiledPlan compiledPlan = apiFramework.getLastCompiledPlan();
+        if (cacheKey == null || compiledPlan == null) {
+            return new CacheMissResult(jobSpec, null);
+        }
+        final Set<Warning> warnings = new LinkedHashSet<>();
+        warningCollector.getWarnings(warnings, Long.MAX_VALUE);
+        // in a multi-statement request the warning collector may still hold a previous statement's
+        // warnings, so drop the pre-existing ones and cache only this statement's own
+        warnings.removeIf(preJobGenWarnings::contains);
+        final IQueryPlanCacheValue cacheableValue = buildQueryPlanCacheValue(
+                new QueryPlanCacheValue(compiledPlan.plan(), warnings, compiledPlan.optContext()));
+        return new CacheMissResult(jobSpec, new CachedPlan(cacheKey, cacheableValue));
+    }
+
+    private JobSpecification cacheHitJobSpecGen(MetadataProvider metadataProvider, Query query,
+            IHyracksClientConnection hcc, Map<String, IAObject> stmtParams, IRequestParameters requestParameters,
+            org.apache.asterix.translator.ResultMetadata resultMetadata, IQueryPlanCacheValue cacheValue)
+            throws AlgebricksException, ACIDException {
+        final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
+                requestParameters, resultMetadata, cacheValue);
+        for (Warning warning : cacheValue.warnings()) { //replaying its cached compile-time warnings.
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(warning);
+            }
+        }
+        return jobSpec;
+    }
+
+    private boolean isIgnoreCache(MetadataProvider metadataProvider, IRequestParameters requestParameters) {
+        boolean isPlanCacheEnabled =
+                metadataProvider.getBooleanProperty(CompilerProperties.COMPILER_QUERY_PLAN_CACHE_KEY,
+                        appCtx.getCompilerProperties().isQueryPlanCacheEnabled());
+        return !isPlanCacheEnabled || requestParameters.isSkipQueryPlanCache()
+                || requestParameters.getStatementParameters() != null;
+    }
+
+    private IQueryPlanCacheKey resolveQueryPlanCacheKey(MetadataProvider metadataProvider,
+            IRequestParameters requestParameters, ClientRequest clientRequest) {
+        if (isIgnoreCache(metadataProvider, requestParameters)) {
+            return null;
+        }
+        final QueryPlanCacheKey baseKey = new QueryPlanCacheKey(requestParameters.getStatement(),
+                sessionConfig.isOptimize(), metadataProvider.getConfig(), sessionConfig.getMaxWarnings(),
+                metadataProvider.getResultSetId().getId(), metadataProvider.getDefaultNamespace());
+        return buildQueryPlanCacheKey(baseKey, clientRequest);
+    }
+
+    protected IQueryPlanCacheKey buildQueryPlanCacheKey(QueryPlanCacheKey baseKey, ClientRequest clientRequest) {
+        return baseKey;
+    }
+
+    protected IQueryPlanCacheValue buildQueryPlanCacheValue(QueryPlanCacheValue baseValue) {
+        return baseValue;
+    }
+
+    private final record CachedPlan(IQueryPlanCacheKey key, IQueryPlanCacheValue value) {
+    }
+
+    private final record CacheMissResult(JobSpecification jobSpec, CachedPlan cachedPlan) {
+    }
+
+    protected boolean shouldInvalidateQueryPlanCache(Statement stmt) {
+        switch (stmt.getKind()) {
+            case CREATE_INDEX:
+            case DATABASE_DROP:
+            case DATAVERSE_DROP:
+            case DATASET_DROP:
+            case INDEX_DROP:
+            case FULL_TEXT_FILTER_DROP:
+            case FULL_TEXT_CONFIG_DROP:
+            case NODEGROUP_DROP:
+            case FUNCTION_DROP:
+            case LIBRARY_DROP:
+            case SYNONYM_DROP:
+            case VIEW_DROP:
+            case DROP_FEED:
+            case DISCONNECT_FEED:
+            case ANALYZE:
+            case ANALYZE_DROP:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private void deliverResult(IHyracksClientConnection hcc, IResultSet resultSet, IStatementCompiler compiler,

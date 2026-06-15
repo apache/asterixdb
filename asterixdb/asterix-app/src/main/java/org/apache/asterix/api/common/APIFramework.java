@@ -43,6 +43,8 @@ import org.apache.asterix.app.result.fields.IndexAdviseResultsPrinter;
 import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
+import org.apache.asterix.common.cache.CompiledPlan;
+import org.apache.asterix.common.cache.IQueryPlanCacheValue;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -149,6 +151,7 @@ public class APIFramework {
     private final ExecutionPlans executionPlans;
     private final ICompilationContextFactory compilationContextFactory;
     private PlanInfo lastPlan;
+    private CompiledPlan lastCompiledPlan;
 
     public APIFramework(ILangCompilationProvider compilationProvider) {
         this.rewriterFactory = compilationProvider.getRewriterFactory();
@@ -159,6 +162,7 @@ public class APIFramework {
         this.compilationContextFactory = compilationProvider.getCompilationContextFactory();
         executionPlans = new ExecutionPlans();
         lastPlan = null;
+        lastCompiledPlan = null;
     }
 
     private class PlanInfo {
@@ -227,19 +231,20 @@ public class APIFramework {
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output, ICompiledStatement statement,
             Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer, IWarningCollector warningCollector,
-            IRequestParameters requestParameters, EnumSet<JobFlag> runtimeFlags)
+            IRequestParameters requestParameters, EnumSet<JobFlag> runtimeFlags, IQueryPlanCacheValue cachedPlan)
             throws AlgebricksException, ACIDException {
         return compileQuery(clusterInfoCollector, metadataProvider, query, varCounter, outputDatasetName, output,
-                statement, externalVars, printer, warningCollector, requestParameters, runtimeFlags, null);
+                statement, externalVars, printer, warningCollector, requestParameters, runtimeFlags, null, cachedPlan);
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output, ICompiledStatement statement,
             Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer, IWarningCollector warningCollector,
-            IRequestParameters requestParameters, EnumSet<JobFlag> runtimeFlags, ResultMetadata resultMetadata)
-            throws AlgebricksException, ACIDException {
+            IRequestParameters requestParameters, EnumSet<JobFlag> runtimeFlags, ResultMetadata resultMetadata,
+            IQueryPlanCacheValue cachedPlan) throws AlgebricksException, ACIDException {
 
         try {
+            lastCompiledPlan = null;
             // establish facts
             final boolean isQuery = query != null;
             final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
@@ -336,10 +341,20 @@ public class APIFramework {
             }
 
             IRuleSetKind ruleSetKind = isAdviceOnly ? LOGICAL_ADVISOR : QUERY;
-            ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter(), ruleSetKind,
-                    indexAdvisor);
+            ICompiler compiler;
+            if (cachedPlan == null) {
+                compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter(), ruleSetKind,
+                        indexAdvisor);
+            } else {
+                plan = cachedPlan.plan();
+                compiler = createCachedPlanCompiler(compilerFactory, cachedPlan, plan, metadataProvider, ruleSetKind);
+            }
+
             if (conf.isOptimize()) {
-                compiler.optimize();
+                if (cachedPlan == null) {
+                    compiler.optimize();
+                }
+
                 if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
                     if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                         // For Optimizer tests. Print physical operators in verbose mode.
@@ -432,12 +447,25 @@ public class APIFramework {
             if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
                 generateJob(spec, output.config().getHyracksJobFormat());
             }
+            if (isQuery) {
+                lastCompiledPlan = new CompiledPlan(plan, compiler.getOptimizationContext());
+            }
             return spec;
 
         } catch (StackOverflowError error) {
             LOGGER.info("Stack Overflow", error);
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");
         }
+    }
+
+    private ICompiler createCachedPlanCompiler(ICompilerFactory compilerFactory, IQueryPlanCacheValue cachedPlan,
+            ILogicalPlan plan, MetadataProvider metadataProvider, IRuleSetKind ruleSetKind) {
+        // reuse the cached optimization context so job generation skips rewrite/optimize
+        IOptimizationContext optContext =
+                OptimizationContextFactory.INSTANCE.cloneOptimizationContext(cachedPlan.optContext());
+        optContext.setMetadataDeclarations(metadataProvider);
+        optContext.setCompilerFactory(compilerFactory);
+        return compilerFactory.createCompiler(plan, optContext, ruleSetKind, PrinterBasedWriterFactory.INSTANCE);
     }
 
     private void printAdviseAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
@@ -530,6 +558,10 @@ public class APIFramework {
 
     public ExecutionPlans getExecutionPlans() {
         return executionPlans;
+    }
+
+    public CompiledPlan getLastCompiledPlan() {
+        return lastCompiledPlan;
     }
 
     // Chooses the location constraints, i.e., whether to use storage parallelism or use a user-sepcified number

@@ -65,6 +65,7 @@ public class RequestParameters implements IRequestParameters {
     private final boolean skipAdmissionPolicy;
     private boolean printSignature;
     private boolean sqlCompatMode;
+    private boolean skipQueryPlanCache;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
@@ -207,6 +208,15 @@ public class RequestParameters implements IRequestParameters {
 
     public void setSQLCompatMode(boolean sqlCompatMode) {
         this.sqlCompatMode = sqlCompatMode;
+    }
+
+    @Override
+    public boolean isSkipQueryPlanCache() {
+        return skipQueryPlanCache;
+    }
+
+    public void setSkipQueryPlanCache(boolean skipQueryPlanCache) {
+        this.skipQueryPlanCache = skipQueryPlanCache;
     }
 
     public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams,

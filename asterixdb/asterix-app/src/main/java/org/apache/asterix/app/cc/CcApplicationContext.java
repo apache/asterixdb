@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
+import org.apache.asterix.app.cache.QueryPlanCache;
 import org.apache.asterix.app.external.ExternalStatsTracker;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IConfigValidator;
@@ -36,6 +37,7 @@ import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.api.IRequestTracker;
+import org.apache.asterix.common.cache.IQueryPlanCache;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.cluster.IGlobalTxManager;
@@ -79,6 +81,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.client.result.ResultSet;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.common.IStorageManager;
@@ -123,6 +126,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IRequestTracker requestTracker;
     private final IConfigValidator configValidator;
     private final IAdapterFactoryService adapterFactoryService;
+    private final IQueryPlanCache cache;
     private final ReentrantReadWriteLock compilationLock = new ReentrantReadWriteLock(true);
     private final IDataPartitioningProvider dataPartitioningProvider;
     private final IGlobalTxManager globalTxManager;
@@ -175,6 +179,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
+        this.cache = new QueryPlanCache(ccServiceCtx.getAppConfig().getInt(CCConfig.Option.QUERY_PLAN_CACHE_CAPACITY));
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
         this.globalTxManager = globalTxManager;
@@ -423,5 +428,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IExternalStatsTracker getExternalStatsTracker() {
         return externalStatsTracker;
+    }
+
+    @Override
+    public IQueryPlanCache getQueryPlanCache() {
+        return cache;
     }
 }

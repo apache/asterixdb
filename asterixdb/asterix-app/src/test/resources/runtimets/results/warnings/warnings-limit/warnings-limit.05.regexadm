@@ -14,6 +14,7 @@
 \s*\Q"queueWaitTime": "\E[^"]+\Q",\E
 \s*\Q"resultCount": \E[0-9]+\Q,\E
 \s*\Q"resultSize": \E[0-9]+\Q,\E
+\s*\Q"cachedPlan": "\E(true|false)\Q",\E
 \s*\Q"processedObjects": \E[0-9]+\Q,\E
 \s*\Q"warningCount": 11\E
 \s*\Q}\E

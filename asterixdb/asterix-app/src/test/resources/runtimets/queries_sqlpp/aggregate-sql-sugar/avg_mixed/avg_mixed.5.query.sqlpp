@@ -22,6 +22,7 @@
 */
 
 -- param max-warnings:json=100
+-- param skip-plan-cache:string=true
 
 use test;
 

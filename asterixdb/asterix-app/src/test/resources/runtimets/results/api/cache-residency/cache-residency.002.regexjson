@@ -14,6 +14,7 @@
 		"queueWaitTime": "R{.*}",
 		"resultCount": 1,
 		"resultSize": "R{.*}",
+		"cachedPlan": "R{true|false}",
 		"processedObjects": "R{.*}",
 		"bufferCacheHitRatio": "100.00%",
 		"bufferCachePageReadCount": "R{.*}"

@@ -183,7 +183,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         return ResponseMetrics.of(resultDeliveryElapsed, metadata.getJobDuration(), stats.getCount(), stats.getSize(),
                 metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(), metadata.getCompileTimeNanos(),
                 stats.getQueueWaitTimeNanos(), stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(),
-                stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
+                stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount(),
+                stats.isCachedPlan());
     }
 
     /**

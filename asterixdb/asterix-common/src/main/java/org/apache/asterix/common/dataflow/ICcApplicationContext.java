@@ -25,6 +25,7 @@ import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IRequestTracker;
+import org.apache.asterix.common.cache.IQueryPlanCache;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.cluster.IGlobalTxManager;
@@ -171,4 +172,6 @@ public interface ICcApplicationContext extends IApplicationContext {
     IGlobalTxManager getGlobalTxManager();
 
     IOManager getIoManager();
+
+    IQueryPlanCache getQueryPlanCache();
 }
