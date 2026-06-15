@@ -106,10 +106,10 @@
 
     <azureblobjavasdk.version>12.34.0</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.33.0</azurecommonjavasdk.version>
-    <azureidentity.version>1.18.3</azureidentity.version>
+    <azureidentity.version>1.18.4</azureidentity.version>
     <azuredatalakejavasdk.version>12.27.0</azuredatalakejavasdk.version>
-    <azurecore.version>1.58.0</azurecore.version>
-    <azurecorehttpnetty.version>1.16.4</azurecorehttpnetty.version>
+    <azurecore.version>1.58.1</azurecore.version>
+    <azurecorehttpnetty.version>1.16.5</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <google-cloud-storage.version>2.68.0</google-cloud-storage.version>
@@ -1902,14 +1902,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.81.0</version>
+        <version>1.82.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.81.0</version>
+        <version>1.82.0</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>

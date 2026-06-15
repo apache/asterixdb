@@ -62,7 +62,8 @@ import java.lang.annotation.Target;
 @AiProvenance(agent = GPT_5_3, tool = CHATGPT_UI, contributionKind = GENERATED, notes = "Initial implementation generated via GPT-5.3 (browser)")
 @AiProvenance(agent = GPT_5_MINI, tool = GITHUB_COPILOT, contributionKind = GENERATED, notes = "Refinements / Javadocs generated via GPT-5 Mini (GitHub Copilot)")
 @Retention(RetentionPolicy.SOURCE)
-@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.FIELD })
+@Target({ ElementType.LOCAL_VARIABLE, ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR,
+        ElementType.FIELD })
 @Repeatable(AiProvenances.class)
 public @interface AiProvenance {
     Agent agent();
@@ -326,7 +327,7 @@ public @interface AiProvenance {
 
         // Web / Chat UIs
         CHATGPT_UI(OPENAI, "chatgpt-ui", "ChatGPT"),
-        CLAUDE_UI(ANTHROPIC, "claude-ui", "Claude UI"),
+        CLAUDE_UI(ANTHROPIC, "claude-ui", "Claude (Code) UI"),
         GEMINI_UI(GOOGLE, "gemini-ui", "Gemini UI"),
         PERPLEXITY(Provider.PERPLEXITY, "perplexity", "Perplexity"),
 
