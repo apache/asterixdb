@@ -20,6 +20,7 @@ package org.apache.hyracks.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.net.URI;
@@ -37,6 +38,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.util.InetAddressUtils;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -233,8 +235,13 @@ public class NetworkUtil {
         return refreshed;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public static InetSocketAddress toInetSocketAddress(HttpHost httpHost) {
-        return new InetSocketAddress(httpHost.getAddress(), httpHost.getPort());
+        // HttpHost.create(String) leaves the resolved InetAddress null; new InetSocketAddress((InetAddress) null, ...)
+        // would yield the wildcard 0.0.0.0, so fall back to resolving the host name in that case.
+        InetAddress address = httpHost.getAddress();
+        return address != null ? new InetSocketAddress(address, httpHost.getPort())
+                : toInetSocketAddress(httpHost.getHostName(), httpHost.getPort());
     }
 
     /**
