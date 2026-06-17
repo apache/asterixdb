@@ -17,9 +17,4 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
-
-select value f.name
-from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+drop function fn_meta_udf@1;

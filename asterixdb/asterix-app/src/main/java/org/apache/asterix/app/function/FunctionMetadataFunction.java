@@ -19,9 +19,13 @@
 package org.apache.asterix.app.function;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordReader;
+import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.metadata.declared.AbstractDatasourceFunction;
 import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -32,30 +36,66 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FunctionMetadataFunction extends AbstractDatasourceFunction {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    public FunctionMetadataFunction(AlgebricksAbsolutePartitionConstraint locations) {
+    static final String KIND_BUILTIN = "builtin";
+    static final String KIND_UDF = "udf";
+
+    // UDF rows are resolved on the CC (they live in the metadata catalog) and shipped here.
+    private final List<String> udfRecords;
+
+    public FunctionMetadataFunction(AlgebricksAbsolutePartitionConstraint locations, List<String> udfRecords) {
         super(locations);
+        this.udfRecords = udfRecords;
     }
 
     @Override
     public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         List<String> records = new ArrayList<>();
+        Map<String, List<String>> aliasIndex = buildAliasIndex();
         for (FunctionIdentifier fi : BuiltinFunctions.getBuiltinFunctionIdentifiers()) {
-            records.add(toRecord(fi));
+            records.add(toBuiltinRecord(fi, aliasIndex));
         }
+        records.addAll(udfRecords);
         return new FunctionMetadataReader(records.toArray(new String[0]));
     }
 
-    private static String toRecord(FunctionIdentifier fi) {
+    private static String toBuiltinRecord(FunctionIdentifier fi, Map<String, List<String>> aliasIndex) {
         BuiltinFunctionInfo info = BuiltinFunctions.getBuiltinFunctionInfo(fi);
         boolean isPrivate = info != null && info.isPrivate();
-        return "{\"name\":\"" + escape(fi.getName()) + "\",\"arity\":" + fi.getArity() + ",\"category\":\""
-                + category(fi) + "\",\"private\":" + isPrivate + "}";
+        List<String> aliases = aliasIndex.getOrDefault(fi.getName(), Collections.emptyList());
+        return buildRecord(underscore(fi.getName()), fi.getArity(), category(fi), isPrivate, KIND_BUILTIN, null,
+                aliases);
     }
 
-    private static String category(FunctionIdentifier fi) {
+    /**
+     * Builds a single JSON row. Shared by builtin rows (here) and UDF rows (resolved on the CC in
+     * {@link FunctionMetadataDatasource}) so both sides emit an identical schema.
+     */
+    static String buildRecord(String name, int arity, String category, boolean isPrivate, String kind, String dataverse,
+            List<String> aliases) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"name\":\"").append(escape(name)).append("\",\"arity\":").append(arity).append(",\"category\":\"")
+                .append(escape(category)).append("\",\"private\":").append(isPrivate).append(",\"kind\":\"")
+                .append(escape(kind)).append("\",\"dataverse\":");
+        if (dataverse == null) {
+            sb.append("null");
+        } else {
+            sb.append('"').append(escape(dataverse)).append('"');
+        }
+        sb.append(",\"aliases\":[");
+        for (int i = 0; i < aliases.size(); i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append('"').append(escape(aliases.get(i))).append('"');
+        }
+        sb.append("]}");
+        return sb.toString();
+    }
+
+    static String category(FunctionIdentifier fi) {
         if (BuiltinFunctions.isWindowFunction(fi) || BuiltinFunctions.getWindowFunction(fi) != null) {
             // isWindowFunction matches the internal *-impl ids; getWindowFunction matches the
             // user-facing names (row_number, rank, ...) that map to those impls.
@@ -67,13 +107,36 @@ public class FunctionMetadataFunction extends AbstractDatasourceFunction {
         if (BuiltinFunctions.isBuiltinScalarAggregateFunction(fi)) {
             return "aggregate-scalar";
         }
-        if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
-            return "unnest";
-        }
+        // Datasource (table-valued) functions are registered as BOTH unnest and datasource, so the
+        // datasource check MUST come before the unnest check; otherwise every datasource function
+        // (function_metadata, active_requests, jobs, ...) would be mislabeled "unnest".
         if (BuiltinFunctions.getDatasourceTransformer(fi) != null) {
             return "datasource";
         }
+        if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {
+            return "unnest";
+        }
         return "scalar";
+    }
+
+    /**
+     * Builds an index from an internal (hyphenated) function name to its callable aliases, derived
+     * from {@link CommonFunctionMapUtil}. Alias spellings are normalized to the underscore form so
+     * they line up with the {@code name} column.
+     */
+    static Map<String, List<String>> buildAliasIndex() {
+        Map<String, List<String>> index = new HashMap<>();
+        for (Map.Entry<String, String> e : CommonFunctionMapUtil.getFunctionMappings().entrySet()) {
+            index.computeIfAbsent(e.getValue(), k -> new ArrayList<>()).add(underscore(e.getKey()));
+        }
+        for (List<String> aliases : index.values()) {
+            Collections.sort(aliases);
+        }
+        return index;
+    }
+
+    static String underscore(String name) {
+        return name.replace('-', '_');
     }
 
     private static String escape(String s) {

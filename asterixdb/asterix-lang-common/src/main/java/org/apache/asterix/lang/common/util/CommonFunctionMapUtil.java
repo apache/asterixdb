@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.common.util;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -247,6 +248,14 @@ public class CommonFunctionMapUtil {
 
     public static String getFunctionMapping(String alias) {
         return FUNCTION_NAME_MAP.get(alias);
+    }
+
+    /**
+     * Returns a read-only view of the alias-to-internal-name mappings. The keys are the
+     * user-facing alias spellings; the values are the internal (hyphenated) function names.
+     */
+    public static Map<String, String> getFunctionMappings() {
+        return Collections.unmodifiableMap(FUNCTION_NAME_MAP);
     }
 
     public static void addFunctionMapping(String alias, String functionName) {

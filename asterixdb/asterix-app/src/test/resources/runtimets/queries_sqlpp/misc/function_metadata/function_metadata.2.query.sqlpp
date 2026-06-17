@@ -17,9 +17,9 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
+// Datasource (table-valued) functions report "datasource", not "unnest". function_metadata()
+// itself is registered as both unnest and datasource; the datasource check must win.
 
-select value f.name
+select value f.category
 from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+where f.name = "function_metadata";

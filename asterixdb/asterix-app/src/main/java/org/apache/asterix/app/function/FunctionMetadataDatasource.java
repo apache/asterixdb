@@ -18,12 +18,20 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -39,11 +47,32 @@ public class FunctionMetadataDatasource extends FunctionDataSource {
 
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
-            AlgebricksAbsolutePartitionConstraint locations) {
+            AlgebricksAbsolutePartitionConstraint locations) throws AlgebricksException {
+        // UDFs live in the metadata catalog (only reachable from the CC), so resolve them here and
+        // ship the pre-built rows to the node. Builtins are read from the static registry on the node.
+        List<String> udfRecords = collectUdfRecords(metadataProvider);
         // The builtin function registry is identical on every node, so run on a single
         // location to avoid emitting duplicate rows.
         return new FunctionMetadataFunction(
-                AlgebricksAbsolutePartitionConstraint.randomLocation(locations.getLocations()));
+                AlgebricksAbsolutePartitionConstraint.randomLocation(locations.getLocations()), udfRecords);
+    }
+
+    private static List<String> collectUdfRecords(MetadataProvider metadataProvider) throws AlgebricksException {
+        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
+        List<String> records = new ArrayList<>();
+        if (mdTxnCtx == null) {
+            return records;
+        }
+        for (Dataverse dv : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
+            List<Function> functions = MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dv.getDatabaseName(),
+                    dv.getDataverseName());
+            for (Function fn : functions) {
+                String category = fn.getKind() == null ? "scalar" : fn.getKind().toLowerCase(Locale.ROOT);
+                records.add(FunctionMetadataFunction.buildRecord(fn.getName(), fn.getArity(), category, false,
+                        FunctionMetadataFunction.KIND_UDF, fn.getDataverseName().toString(), Collections.emptyList()));
+            }
+        }
+        return records;
     }
 
     @Override

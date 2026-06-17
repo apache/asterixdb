@@ -17,9 +17,8 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
+// The private flag is populated for both public and private functions.
 
-select value f.name
-from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+select distinct value p
+from (select value f.private from function_metadata() f) p
+order by p;

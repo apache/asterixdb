@@ -17,9 +17,8 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
+// User-defined functions are listed with kind "udf" and their arity.
 
-select value f.name
+select f.kind, f.arity
 from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+where f.name = "fn_meta_udf";

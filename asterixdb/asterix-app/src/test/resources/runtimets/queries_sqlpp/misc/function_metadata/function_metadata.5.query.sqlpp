@@ -17,9 +17,8 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
+// Aliases are listed in the underscore (callable) form. "length" is an alias of string-length.
 
-select value f.name
+select value f.aliases
 from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+where f.name = "string_length";

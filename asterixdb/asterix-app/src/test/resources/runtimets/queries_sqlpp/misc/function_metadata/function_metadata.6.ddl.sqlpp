@@ -17,9 +17,8 @@
  * under the License.
  */
 
-// Window-function rows are present and the name is emitted in the underscore (callable) form.
+// Define a user-defined function so the next query can assert UDFs are listed.
 
-select value f.name
-from function_metadata() f
-where f.name in ["rank", "row_number"]
-order by f.name;
+create function fn_meta_udf(a) {
+  a + 1
+};
