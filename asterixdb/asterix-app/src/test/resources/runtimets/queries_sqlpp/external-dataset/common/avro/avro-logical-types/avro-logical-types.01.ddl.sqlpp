@@ -54,3 +54,18 @@ CREATE EXTERNAL DATASET AvroDataset2(AvroType) USING %adapter%
   ("timestamp-to-long"="false"),
   ("format" = "avro")
 );
+
+CREATE EXTERNAL DATASET AvroDataset3(AvroType) USING %adapter%
+(
+  %template%,
+  ("container"="playground"),
+  ("definition"="avro-data/reviews"),
+  ("include"="*avro_logical_type.avro"),
+  ("decimal-to-double"="true"),
+  ("uuid-to-string"="false"),
+  ("date-to-int"="false"),
+  ("time-to-long"="false"),
+  ("timestamp-to-long"="false"),
+  ("timezone"="PST"),
+  ("format" = "avro")
+);

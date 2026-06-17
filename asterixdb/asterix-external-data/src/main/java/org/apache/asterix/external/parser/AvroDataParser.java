@@ -55,6 +55,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class AvroDataParser extends AbstractDataParser implements IRecordDataParser<GenericRecord> {
     private final AvroConverterContext parserContext;
@@ -77,6 +78,7 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Add the field even when its value is NULL (previously only non-null/non-missing values were added, silently dropping null fields)")
     private void parseObject(GenericRecord record, DataOutput out) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -88,17 +90,16 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             Object fieldValue = record.get(fieldName);
             ATypeTag typeTag = getTypeTag(fieldSchema, fieldValue);
 
-            IValueReference value = null;
+            IValueReference value;
             if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
                 value = valueEmbedder.getEmbeddedValue();
-            } else if (fieldValue != null) {
+            } else {
                 valueBuffer.reset();
                 parseValue(fieldSchema, fieldValue, valueBuffer.getDataOutput());
                 value = valueBuffer;
             }
 
-            if (value != null) {
-                // Ignore missing values
+            if (value != null || typeTag == ATypeTag.NULL) {
                 objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), value);
             }
         }
@@ -148,26 +149,30 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         parserContext.exitCollection(item, listBuilder);
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Throw a well-formed unsupported-type error instead of a 1-arg message that crashes formatting")
     private void parseUnion(Schema unionSchema, Object value, DataOutput out) throws IOException {
         Schema actualSchema = getActualSchema(unionSchema, value);
         if (actualSchema != null) {
             parseValue(actualSchema, value, out);
         } else {
-            throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, unionSchema.getType());
+            throw createUnsupportedException(unionSchema);
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Return the null branch of a nullable union for null values instead of returning null (no match)")
     private Schema getActualSchema(Schema unionSchema, Object value) {
         List<Schema> possibleTypes = unionSchema.getTypes();
+        Schema nullSchema = null;
         for (Schema possibleType : possibleTypes) {
             Schema.Type schemaType = possibleType.getType();
-            if (schemaType != NULL) {
-                if (matchesType(value, schemaType)) {
-                    return possibleType;
-                }
+            if (schemaType == NULL) {
+                nullSchema = possibleType;
+            } else if (matchesType(value, schemaType)) {
+                return possibleType;
             }
         }
-        return null;
+        // value is null — return the null branch of the union if present
+        return value == null ? nullSchema : null;
     }
 
     private boolean matchesType(Object value, Schema.Type schemaType) {
@@ -197,6 +202,7 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Map null values to NULL instead of MISSING; make union fall-through explicit")
     private ATypeTag getTypeTag(Schema schema, Object value) throws HyracksDataException {
         Schema.Type schemaType = schema.getType();
         LogicalType logicalType = schema.getLogicalType();
@@ -235,8 +241,9 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
 
         if (value == null) {
-            // The 'value' is missing
-            return ATypeTag.MISSING;
+            // A null value (e.g. the null branch of a nullable union) maps to NULL, not MISSING.
+            // Avro records always carry every declared field, so there is no true "missing" here.
+            return ATypeTag.NULL;
         }
 
         switch (schemaType) {
@@ -264,12 +271,15 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
                 if (actualSchema != null) {
                     return getTypeTag(actualSchema, value);
                 }
+                throw createUnsupportedException(schema);
             default:
                 throw createUnsupportedException(schema);
-
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Only apply the timezone offset to UTC-instant timestamps (timestamp-millis/micros); "
+            + "stop double-applying it to time-micros, and stop applying it at all to time-millis/micros "
+            + "and local-timestamp-millis/micros, none of which carry an associated timezone")
     private void parseLogicalValue(LogicalType logicalType, Object value, DataOutput out) throws IOException {
         if (logicalType instanceof LogicalTypes.Uuid) {
             if (parserContext.isUuidAsString()) {
@@ -288,25 +298,24 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
                 parserContext.serializeDate(value, out);
             }
         } else if (logicalType instanceof LogicalTypes.TimeMicros) {
+            // time-micros is a time of day with no reference to any timezone; it must not be shifted
+            // by the configured offset (unlike timestamp-millis/micros, which are UTC instants).
             int timeInMillis = (int) TimeUnit.MICROSECONDS.toMillis(((Number) value).longValue());
-            int offset = parserContext.getTimeZoneOffset();
-            timeInMillis = timeInMillis + offset;
-            if (parserContext.isTimeAsLong()) {
-                serializeLong(timeInMillis, out);
-            } else {
-                parserContext.serializeTime(timeInMillis + offset, out);
-            }
-        } else if (logicalType instanceof LogicalTypes.TimeMillis) {
-            int timeInMillis = ((Number) value).intValue();
-            int offset = parserContext.getTimeZoneOffset();
-            timeInMillis = timeInMillis + offset;
             if (parserContext.isTimeAsLong()) {
                 serializeLong(timeInMillis, out);
             } else {
                 parserContext.serializeTime(timeInMillis, out);
             }
-        } else if (logicalType instanceof LogicalTypes.TimestampMicros
-                || logicalType instanceof LogicalTypes.LocalTimestampMicros) {
+        } else if (logicalType instanceof LogicalTypes.TimeMillis) {
+            // time-millis is a time of day with no reference to any timezone; it must not be shifted
+            // by the configured offset (unlike timestamp-millis/micros, which are UTC instants).
+            int timeInMillis = ((Number) value).intValue();
+            if (parserContext.isTimeAsLong()) {
+                serializeLong(timeInMillis, out);
+            } else {
+                parserContext.serializeTime(timeInMillis, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.TimestampMicros) {
             long timeStampInMicros = ((Number) value).longValue();
             int offset = parserContext.getTimeZoneOffset();
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
@@ -316,11 +325,29 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             } else {
                 parserContext.serializeDateTime(timeStampInMillis, out);
             }
-        } else if (logicalType instanceof LogicalTypes.TimestampMillis
-                || logicalType instanceof LogicalTypes.LocalTimestampMillis) {
+        } else if (logicalType instanceof LogicalTypes.TimestampMillis) {
             long timeStampInMillis = ((Number) value).longValue();
             int offset = parserContext.getTimeZoneOffset();
             timeStampInMillis = timeStampInMillis + offset;
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.LocalTimestampMicros) {
+            // local-timestamp-micros is already wall-clock time with no associated timezone;
+            // unlike timestamp-micros (a UTC instant), it must not be shifted by the configured offset.
+            long timeStampInMicros = ((Number) value).longValue();
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.LocalTimestampMillis) {
+            // local-timestamp-millis is already wall-clock time with no associated timezone;
+            // unlike timestamp-millis (a UTC instant), it must not be shifted by the configured offset.
+            long timeStampInMillis = ((Number) value).longValue();
             if (parserContext.isTimestampAsLong()) {
                 serializeLong(timeStampInMillis, out);
             } else {
