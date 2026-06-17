@@ -115,9 +115,9 @@ public class TestConstants {
         public static final String SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER =
                 "%SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER%";
         public static final String SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER = "%SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER%";
-        public static long SNAPSHOT_1_SNAPSHOT_ID_VALUE;
-        public static long SNAPSHOT_1_TIMESTAMP_LONG_VALUE;
-        public static String SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE;
-        public static String SNAPSHOT_3_TIMESTAMP_DATE_VALUE;
+        public static long snapshot1SnapshotIdValue;
+        public static long snapshot1TimestampLongValue;
+        public static String snapshot2TimestampDatetimeValue;
+        public static String snapshot3TimestampDateValue;
     }
 }

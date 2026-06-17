@@ -130,8 +130,8 @@ public class IcebergTest {
     private static GenericContainer<?> nessie;
     private static final DockerImageName NESSIE_IMAGE = DockerImageName.parse("ghcr.io/projectnessie/nessie:0.107.5");
     private static final int NESSIE_PORT = 19120;
-    public static final String NESSIE_URI = "http://localhost:" + NESSIE_PORT + "/api/v2";
-    public static final String NESSIE_WAREHOUSE = "s3://" + ICEBERG_CONTAINER + "/nessie/warehouse";
+    private static final String NESSIE_URI = "http://localhost:" + NESSIE_PORT + "/api/v2";
+    private static final String NESSIE_WAREHOUSE = "s3://" + ICEBERG_CONTAINER + "/nessie/warehouse";
     private static final Namespace NAMESPACE = Namespace.of("my_namespace");
     private static final TableIdentifier TABLE_ID = TableIdentifier.of(NAMESPACE, "users");
     private static final TableIdentifier ALL_TYPES_TABLE_ID = TableIdentifier.of(NAMESPACE, "allTypes");
@@ -150,6 +150,7 @@ public class IcebergTest {
         nessie = new GenericContainer<>(NESSIE_IMAGE).withExposedPorts(NESSIE_PORT);
         nessie.setPortBindings(List.of(NESSIE_PORT + ":" + NESSIE_PORT));
         nessie.start();
+        testExecutor.setNessieEndpointDefault(NESSIE_URI);
 
         prepareIcebergContainer();
         prepareIcebergData();
@@ -208,8 +209,8 @@ public class IcebergTest {
 
         long snap1 = writeSnapshot(table, templateV1, 1, 800);
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
-        TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_VALUE = snap1;
-        TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_VALUE = System.currentTimeMillis();
+        TestConstants.Iceberg.snapshot1SnapshotIdValue = snap1;
+        TestConstants.Iceberg.snapshot1TimestampLongValue = System.currentTimeMillis();
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
 
         evolveSchemaAddColumn(table);
@@ -217,7 +218,7 @@ public class IcebergTest {
         GenericRecord templateV2 = GenericRecord.create(table.schema());
         long snap2 = writeSnapshot(table, templateV2, 801, 1000);
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
-        TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE =
+        TestConstants.Iceberg.snapshot2TimestampDatetimeValue =
                 LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).toString();
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
 
@@ -233,7 +234,7 @@ public class IcebergTest {
         delta.commit();
 
         long snap3 = table.currentSnapshot().snapshotId();
-        TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_VALUE = LocalDate.now(ZoneOffset.UTC).plusDays(1).toString();
+        TestConstants.Iceberg.snapshot3TimestampDateValue = LocalDate.now(ZoneOffset.UTC).plusDays(1).toString();
         LOGGER.info("[DELETE] Committed RowDelta snapshotId={} snapshotTimestamp={}", snap3,
                 table.currentSnapshot().timestampMillis());
         printSnapshotSummary(table);

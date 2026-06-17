@@ -31,6 +31,12 @@ public class IcebergConstants {
         throw new AssertionError("do not instantiate");
     }
 
+    public static final String ICEBERG_CATALOG_FIELD_NAME = "catalog";
+    public static final String ICEBERG_NAMESPACE_FIELD_NAME = "namespace";
+    public static final String ICEBERG_TABLE_FIELD_NAME = "table";
+    public static final String ICEBERG_SNAPSHOT_ID_FIELD_NAME = "id";
+    public static final String ICEBERG_SNAPSHOT_TIMESTAMP_FIELD_NAME = "timestamp_ms";
+
     public static final String ICEBERG_URI_PROPERTY_KEY = "uri";
     public static final String ICEBERG_TABLE_FORMAT = "iceberg";
     public static final String ICEBERG_CATALOG_NAME = "catalogName";

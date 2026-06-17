@@ -41,14 +41,15 @@ import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE_DEFAUL
 import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.NESSIE_SERVER_URI_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_VALUE;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_VALUE;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_VALUE;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot1SnapshotIdValue;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot1TimestampLongValue;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot2TimestampDatetimeValue;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot3TimestampDateValue;
 import static org.apache.hyracks.util.NetworkUtil.toHostPort;
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 
@@ -121,7 +122,6 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
-import org.apache.asterix.test.iceberg.IcebergTest;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -300,6 +300,9 @@ public class TestExecutor {
     public String stripSubstring = null;
     public String executorId = null;
     private String s3mockTemplate = null;
+
+    // iceberg parameters
+    private String nessieUri = null;
 
     public TestExecutor() {
         this(Collections.singletonList(
@@ -2528,13 +2531,14 @@ public class TestExecutor {
     }
 
     protected String replaceIcebergPlaceholders(String str) {
-        str = str.replace(TestConstants.Iceberg.NESSIE_SERVER_URI_PLACEHOLDER, IcebergTest.NESSIE_URI);
-        str = str.replace(SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER, String.valueOf(SNAPSHOT_1_SNAPSHOT_ID_VALUE));
-        str = str.replace(SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER, String.valueOf(SNAPSHOT_1_TIMESTAMP_LONG_VALUE));
-        str = SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE != null
-                ? str.replace(SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER, SNAPSHOT_2_TIMESTAMP_DATETIME_VALUE) : str;
-        str = SNAPSHOT_3_TIMESTAMP_DATE_VALUE != null
-                ? str.replace(SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER, SNAPSHOT_3_TIMESTAMP_DATE_VALUE) : str;
+        str = getNessieEndpointDefault() != null
+                ? str.replace(NESSIE_SERVER_URI_PLACEHOLDER, getNessieEndpointDefault()) : str;
+        str = str.replace(SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER, String.valueOf(snapshot1SnapshotIdValue));
+        str = str.replace(SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER, String.valueOf(snapshot1TimestampLongValue));
+        str = snapshot2TimestampDatetimeValue != null
+                ? str.replace(SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER, snapshot2TimestampDatetimeValue) : str;
+        str = snapshot3TimestampDateValue != null
+                ? str.replace(SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER, snapshot3TimestampDateValue) : str;
         return str;
     }
 
@@ -2580,7 +2584,6 @@ public class TestExecutor {
         str = str.replace(TestConstants.S3_API_CERTIFICATES_PLACEHOLDER, getS3ApiCertificatesDefault());
         str = str.replace(TestConstants.S3_DDL_CERTIFICATES_PLACEHOLDER, getS3DdlCertificatesDefault());
         str = str.replace(TestConstants.S3_HTTP_CERTIFICATES_PLACEHOLDER, getS3HttpCertificatesDefault());
-
         return str;
     }
 
@@ -2596,7 +2599,7 @@ public class TestExecutor {
         return null;
     }
 
-    protected String getS3ServiceEndpointDefault() {
+    public String getS3ServiceEndpointDefault() {
         return TestConstants.S3_SERVICE_ENDPOINT_DEFAULT;
     }
 
@@ -2620,6 +2623,14 @@ public class TestExecutor {
         String certificates = getS3CertificatesDefault();
         return certificates == null || certificates.isBlank() ? ""
                 : ", \\\"certificates\\\":" + escapeForHttpBodyString(writeAsJsonString(List.of(certificates)));
+    }
+
+    public String getNessieEndpointDefault() {
+        return nessieUri;
+    }
+
+    public void setNessieEndpointDefault(String nessieUri) {
+        this.nessieUri = nessieUri;
     }
 
     private static String escapeForHttpBodyString(String value) {
