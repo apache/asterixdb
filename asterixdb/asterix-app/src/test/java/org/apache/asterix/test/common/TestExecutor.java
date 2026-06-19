@@ -179,6 +179,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -322,6 +323,19 @@ public class TestExecutor {
     public void setNcEndPoints(Map<String, InetSocketAddress> ncEndPoints) {
         this.ncEndPoints = ncEndPoints;
         ncEndPointsList.addAll(ncEndPoints.values());
+    }
+
+    /**
+     * Replaces the NC query-endpoint pool used to round-robin {@code QUERY_SERVICE}/UDF requests (see
+     * {@link #createEndpointURI}) with the supplied set. {@link #setNcEndPoints} eagerly seeds this list with the full
+     * configured topology; callers that know which nodes are actually live (e.g. the cluster test framework after a
+     * topology change) must narrow it down to those, otherwise a request can be dispatched to a defined-but-never-started
+     * node.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_UI)
+    public static void setActiveNcQueryEndPoints(Collection<InetSocketAddress> activeEndPoints) {
+        ncEndPointsList.clear();
+        ncEndPointsList.addAll(activeEndPoints);
     }
 
     public void setNcReplicationAddress(Map<String, InetSocketAddress> replicationAddress) {
