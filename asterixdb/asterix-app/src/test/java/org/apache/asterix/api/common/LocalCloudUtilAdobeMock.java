@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,6 +79,7 @@ public class LocalCloudUtilAdobeMock {
         return startS3CloudEnvironment(cleanStart, false);
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "stream the S3 mock container's logs into the test log for diagnosing mock-side failures")
     public static S3MockContainer startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer)
             throws IOException {
         // Testcontainers 1.21.x defaults to Docker API version 1.32, but Docker Desktop 4.65.0+ requires
@@ -100,6 +102,15 @@ public class LocalCloudUtilAdobeMock {
             //if RetainFilesOnExist is false
             s3Mock.withVolumeAsRoot(s3MockDataDir.toAbsolutePath());
         }
+        // stream the mock container's own logs into the test log so S3 mock failures (e.g. the server becoming
+        // unresponsive under concurrent load) are diagnosable; otherwise the container is removed at teardown
+        // with no trace of what it logged.
+        s3Mock.withLogConsumer(frame -> {
+            String line = frame.getUtf8StringWithoutLineEnding();
+            if (line != null && !line.isEmpty()) {
+                LOGGER.info("[s3mock] {}", line);
+            }
+        });
         s3Mock.start();
         LOGGER.info("S3 mock server started successfully");
         DOCKER_ADOBE_S3_MOCK_URI = MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort();
