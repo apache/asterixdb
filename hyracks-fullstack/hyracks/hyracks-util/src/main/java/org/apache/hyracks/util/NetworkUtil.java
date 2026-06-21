@@ -235,7 +235,7 @@ public class NetworkUtil {
         return refreshed;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public static InetSocketAddress toInetSocketAddress(HttpHost httpHost) {
         // HttpHost.create(String) leaves the resolved InetAddress null; new InetSocketAddress((InetAddress) null, ...)
         // would yield the wildcard 0.0.0.0, so fall back to resolving the host name in that case.

@@ -335,7 +335,7 @@ public class TestExecutor {
      * topology change) must narrow it down to those, otherwise a request can be dispatched to a defined-but-never-started
      * node.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_UI)
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI)
     public static void setActiveNcQueryEndPoints(Collection<InetSocketAddress> activeEndPoints) {
         ncEndPointsList.clear();
         ncEndPointsList.addAll(activeEndPoints);

@@ -327,7 +327,7 @@ public @interface AiProvenance {
 
         // Web / Chat UIs
         CHATGPT_UI(OPENAI, "chatgpt-ui", "ChatGPT"),
-        CLAUDE_UI(ANTHROPIC, "claude-ui", "Claude (Code) UI"),
+        CLAUDE_CODE_UI(ANTHROPIC, "claude-code-ui", "Claude Code (Code tab in Claude UI)"),
         GEMINI_UI(GOOGLE, "gemini-ui", "Gemini UI"),
         PERPLEXITY(Provider.PERPLEXITY, "perplexity", "Perplexity"),
 
@@ -353,7 +353,7 @@ public @interface AiProvenance {
 
         // CLI tools
         OPENAI_CLI(OPENAI, "cli", "OpenAI CLI"),
-        ANTHROPIC_CLI(ANTHROPIC, "cli", "Anthropic CLI"),
+        CLAUDE_CODE_CLI(ANTHROPIC, "claude-code-cli", "Claude Code CLI"),
         FACTORY_CLI(Provider.FACTORY, "factory-cli", "Factory.ai CLI"),
 
         // Fallback
