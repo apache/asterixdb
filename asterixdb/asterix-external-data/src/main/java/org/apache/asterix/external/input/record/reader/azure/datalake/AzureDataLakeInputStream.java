@@ -93,4 +93,14 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
             throw HyracksDataException.create(ex);
         }
     }
+
+    @Override
+    public boolean stop() {
+        try {
+            close();
+        } catch (IOException e) {
+            // Ignore
+        }
+        return false;
+    }
 }

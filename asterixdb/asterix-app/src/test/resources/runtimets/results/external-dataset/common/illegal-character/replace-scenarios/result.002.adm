@@ -1,0 +1,5 @@
+{ "id": 2, "value": "���" }
+{ "id": 3, "a": "�", "b": "�", "c": "�" }
+{ "id": 4, "value": "hello�world" }
+{ "id": 5, "value": "hello�world" }
+{ "id": 6, "value": "hello﻿world" }

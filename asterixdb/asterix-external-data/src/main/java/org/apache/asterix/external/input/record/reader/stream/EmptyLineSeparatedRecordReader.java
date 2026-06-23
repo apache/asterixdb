@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class EmptyLineSeparatedRecordReader extends StreamRecordReader {
 
@@ -136,8 +137,9 @@ public class EmptyLineSeparatedRecordReader extends StreamRecordReader {
     }
 
     @Override
-    public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config) {
-        super.configure(inputStream, config);
+    public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
+            throws HyracksDataException {
+        super.configure(ctx, inputStream, config);
         this.config = config;
     }
 }

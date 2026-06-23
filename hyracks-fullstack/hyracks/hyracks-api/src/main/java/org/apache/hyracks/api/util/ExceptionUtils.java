@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.util;
 
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -86,7 +87,7 @@ public class ExceptionUtils {
     private static boolean possibleRootCause(Throwable exception) {
         Throwable cause = exception;
         while ((cause = cause.getCause()) != null) {
-            if (cause instanceof java.lang.InterruptedException
+            if (cause instanceof java.lang.InterruptedException || cause instanceof InterruptedIOException
                     || cause instanceof java.nio.channels.ClosedChannelException) {
                 return false;
             }
@@ -105,7 +106,7 @@ public class ExceptionUtils {
      * @return the root exception, or null if both parameters are null
      */
     public static <T extends Throwable> T suppress(T first, T second) {
-        if (second instanceof InterruptedException) {
+        if (second instanceof InterruptedException || second instanceof InterruptedIOException) {
             Thread.currentThread().interrupt();
         }
         if (first == null) {
@@ -149,10 +150,11 @@ public class ExceptionUtils {
     }
 
     public static boolean causedByInterrupt(Throwable th, boolean skipInterruptedCheck) {
-        if (th instanceof InterruptedException) {
+        if (th instanceof InterruptedException || th instanceof InterruptedIOException) {
             return true;
         }
-        boolean isCausedByInterrupt = getRootCause(th) instanceof InterruptedException;
+        boolean isCausedByInterrupt =
+                getRootCause(th) instanceof InterruptedException || getRootCause(th) instanceof InterruptedIOException;
         if (!skipInterruptedCheck && isCausedByInterrupt && !Thread.currentThread().isInterrupted()) {
             LOGGER.warn("InterruptedException suppressed and !Thread.currentThread().isInterrupted()", th);
         }

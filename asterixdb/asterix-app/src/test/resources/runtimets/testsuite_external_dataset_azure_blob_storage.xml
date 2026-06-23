@@ -549,6 +549,45 @@
         <expected-error>Parsing error at malformed-data/malformed-jsonl-2.json line 11 field 'array_f': Unexpected character (']' (code 93)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/illegal-character/replace">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/illegal-character/replace</output-dir>
+        <expected-warn>field 0: illegal character encountered; substituted with the Unicode replacement character (U+FFFD)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/illegal-character/replace-scenarios">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/illegal-character/replace-scenarios</output-dir>
+        <!-- Warning is a Set keyed by message text (Warning.equals()/hashCode() use only the message), and every
+             illegal-character warning from the same file has an identical message (no per-occurrence position
+             info), so all 8 occurrences across this file's records collapse into exactly one distinct warning,
+             not eight. -->
+        <expected-warn>field 0: illegal character encountered; substituted with the Unicode replacement character (U+FFFD)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/illegal-character/fail">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/illegal-character/fail</output-dir>
+        <expected-error>External source error</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/illegal-character/truncated-fail">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/illegal-character/truncated-fail</output-dir>
+        <expected-error>External source error</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/illegal-character/invalid-value">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/illegal-character/invalid-value</output-dir>
+        <expected-error>Invalid value for parameter 'illegalCharacterHandling'</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/definition-does-not-exist">
         <placeholder name="adapter" value="AZUREBLOB" />

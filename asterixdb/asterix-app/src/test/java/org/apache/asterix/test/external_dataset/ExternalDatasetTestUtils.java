@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,6 +47,7 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -75,6 +78,9 @@ public class ExternalDatasetTestUtils {
     public static final String PARQUET_DEFINITION = "parquet-data/reviews/";
     public static final String PARQUET_NULL_TEST_DIRECTORY = "parquet-data/null-test/";
     public static final String AVRO_DEFINITION = "avro-data/reviews/";
+    public static final String ILLEGAL_CHARACTER_DEFINITION = "illegal-character-data/";
+    public static final String ILLEGAL_CHARACTER_SCENARIOS_DEFINITION = "illegal-character-scenarios-data/";
+    public static final String ILLEGAL_CHARACTER_TRUNCATED_DEFINITION = "illegal-character-truncated-data/";
 
     // This is used for a test to generate over 1000 number of files
     public static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
@@ -210,7 +216,109 @@ public class ExternalDatasetTestUtils {
         loadDeltaTableFiles();
         LOGGER.info("Delta files added successfully");
 
+        LOGGER.info("Adding illegal-character file to the bucket");
+        loadIllegalCharacterFile();
+        LOGGER.info("Illegal-character file added successfully");
+
+        LOGGER.info("Adding illegal-character-scenarios file to the bucket");
+        loadIllegalCharacterScenariosFile();
+        LOGGER.info("Illegal-character-scenarios file added successfully");
+
+        LOGGER.info("Adding illegal-character-truncated file to the bucket");
+        loadIllegalCharacterTruncatedFile();
+        LOGGER.info("Illegal-character-truncated file added successfully");
+
         LOGGER.info("Files added successfully");
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates (rather than checking in a fixture with a raw invalid byte) a file with a single "
+            + "illegal (invalid UTF-8) byte, used to test the illegalCharacterHandling property (replace vs fail)")
+    private static void loadIllegalCharacterFile() {
+        String fileName = "illegal-character.json";
+        Path filePath = Paths.get("target", "rttest", "tmp", fileName);
+        try {
+            Files.createDirectories(filePath.getParent());
+            try (OutputStream out = Files.newOutputStream(filePath)) {
+                out.write("{\"id\": 1, \"value\": \"hello".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xE9); // a single illegal (invalid UTF-8) byte
+                out.write("world\"}\n".getBytes(StandardCharsets.US_ASCII));
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        playgroundDataLoader.upload(ILLEGAL_CHARACTER_DEFINITION + fileName, filePath.toString(), true, false);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates a small multi-record file covering several illegal-character decode scenarios beyond the "
+            + "single-bad-byte case: consecutive independent bad bytes, bad bytes separated by well-formed data, a "
+            + "single malformed sequence spanning multiple bytes (one replacement, not one per byte), a UTF-8-encoded "
+            + "surrogate, and a mid-stream byte-order-mark (well-formed, must NOT be treated as illegal) -- so these "
+            + "scenarios (already unit-tested against AsterixInputStreamReader directly) also get exercised through "
+            + "the full DDL/adapter/record-reader pipeline")
+    private static void loadIllegalCharacterScenariosFile() {
+        String fileName = "illegal-character-scenarios.json";
+        Path filePath = Paths.get("target", "rttest", "tmp", fileName);
+        try {
+            Files.createDirectories(filePath.getParent());
+            try (OutputStream out = Files.newOutputStream(filePath)) {
+                // id 2: three consecutive independent illegal bytes -- each gets its own replacement
+                out.write("{\"id\": 2, \"value\": \"".getBytes(StandardCharsets.US_ASCII));
+                out.write(0x80);
+                out.write(0x80);
+                out.write(0x80);
+                out.write("\"}\n".getBytes(StandardCharsets.US_ASCII));
+                // id 3: three distinct illegal bytes separated by well-formed text
+                out.write("{\"id\": 3, \"a\": \"".getBytes(StandardCharsets.US_ASCII));
+                out.write(0x80);
+                out.write("\", \"b\": \"".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xFF);
+                out.write("\", \"c\": \"".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xC1);
+                out.write("\"}\n".getBytes(StandardCharsets.US_ASCII));
+                // id 4: a single malformed sequence spanning 2 bytes (a 4-byte lead + 1 valid continuation, then a
+                // non-continuation byte) -- one replacement, not two
+                out.write("{\"id\": 4, \"value\": \"hello".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xF0);
+                out.write(0x90);
+                out.write("world\"}\n".getBytes(StandardCharsets.US_ASCII));
+                // id 5: a UTF-8-encoded surrogate (U+D800) -- structurally valid-looking bytes, rejected because
+                // surrogates cannot be legally encoded in UTF-8 (RFC 3629)
+                out.write("{\"id\": 5, \"value\": \"hello".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xED);
+                out.write(0xA0);
+                out.write(0x80);
+                out.write("world\"}\n".getBytes(StandardCharsets.US_ASCII));
+                // id 6: a mid-stream byte-order-mark -- well-formed UTF-8 (U+FEFF), must decode through untouched
+                out.write("{\"id\": 6, \"value\": \"hello".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xEF);
+                out.write(0xBB);
+                out.write(0xBF);
+                out.write("world\"}\n".getBytes(StandardCharsets.US_ASCII));
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        playgroundDataLoader.upload(ILLEGAL_CHARACTER_SCENARIOS_DEFINITION + fileName, filePath.toString(), true,
+                false);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates a file that ends mid-character (a lone 2-byte UTF-8 lead byte with no continuation byte "
+            + "ever arriving), used to test that a truncated trailing sequence at true EOF is reported (fail-fast "
+            + "mode) rather than silently dropped")
+    private static void loadIllegalCharacterTruncatedFile() {
+        String fileName = "illegal-character-truncated.json";
+        Path filePath = Paths.get("target", "rttest", "tmp", fileName);
+        try {
+            Files.createDirectories(filePath.getParent());
+            try (OutputStream out = Files.newOutputStream(filePath)) {
+                out.write("{\"id\": 7, \"value\": \"hello".getBytes(StandardCharsets.US_ASCII));
+                out.write(0xC3); // a truncated 2-byte lead byte -- the file ends right here
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        playgroundDataLoader.upload(ILLEGAL_CHARACTER_TRUNCATED_DEFINITION + fileName, filePath.toString(), true,
+                false);
     }
 
     public static void prepareBrowseContainer() {

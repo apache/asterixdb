@@ -29,7 +29,9 @@ import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public abstract class StreamRecordReader extends AbstractStreamRecordReader<char[]>
         implements IStreamNotificationHandler {
@@ -41,9 +43,14 @@ public abstract class StreamRecordReader extends AbstractStreamRecordReader<char
     protected boolean done = false;
     protected IFeedLogManager feedLogManager;
 
-    protected void configure(AsterixInputStream inputStream, Map<String, String> config) {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Accept ctx so the task's warning collector can be threaded down into AsterixInputStreamReader, "
+            + "which needs it to warn when it substitutes an illegal character")
+    public void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
+            throws HyracksDataException {
         int bufferSize = ExternalDataUtils.getOrDefaultBufferSize(config);
-        this.reader = new AsterixInputStreamReader(inputStream, bufferSize);
+        boolean failOnIllegalCharacter = ExternalDataUtils.shouldFailOnIllegalCharacter(config);
+        this.reader = new AsterixInputStreamReader(inputStream, bufferSize, failOnIllegalCharacter,
+                ctx.getWarningCollector());
         record = new CharArrayRecord();
         inputBuffer = new char[bufferSize];
         setSuppliers(config, reader::getStreamName, reader::getPreviousStreamName);

@@ -76,7 +76,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     @Override
     public void configure(IHyracksTaskContext ctx, AsterixInputStream stream, Map<String, String> config)
             throws HyracksDataException {
-        super.configure(stream, config);
+        super.configure(ctx, stream, config);
         stream.setNotificationHandler(this);
         warnings = ctx.getWarningCollector();
         // set record opening char

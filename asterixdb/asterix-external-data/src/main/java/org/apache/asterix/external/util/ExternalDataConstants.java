@@ -48,6 +48,12 @@ public class ExternalDataConstants {
     public static final String KEY_DATASET_DATAVERSE = "dataset-dataverse";
     // used to specify the socket addresses when reading data from sockets
     public static final String KEY_SOCKETS = "sockets";
+    // specify how an illegal (invalid UTF-8) character in the source should be handled
+    public static final String KEY_ILLEGAL_CHARACTER_HANDLING = "illegalCharacterHandling";
+    // substitute illegal characters with the Unicode replacement character (U+FFFD) and keep reading (the default)
+    public static final String ILLEGAL_CHARACTER_HANDLING_REPLACE = "replace";
+    // fail the read as soon as an illegal character is encountered
+    public static final String ILLEGAL_CHARACTER_HANDLING_FAIL = "fail";
     // specify whether the socket address points to an NC or an IP
     public static final String KEY_MODE = "address-type";
     // specify the HDFS name node address when reading HDFS data

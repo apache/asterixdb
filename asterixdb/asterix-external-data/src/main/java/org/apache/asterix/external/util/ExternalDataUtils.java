@@ -31,10 +31,13 @@ import static org.apache.asterix.common.utils.CSVConstants.KEY_HEADER;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.DISABLE_SSL_VERIFY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.ILLEGAL_CHARACTER_HANDLING_FAIL;
+import static org.apache.asterix.external.util.ExternalDataConstants.ILLEGAL_CHARACTER_HANDLING_REPLACE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ILLEGAL_CHARACTER_HANDLING;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
@@ -131,6 +134,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Table;
@@ -171,6 +175,16 @@ public class ExternalDataUtils {
     public static int getOrDefaultBufferSize(Map<String, String> configuration) {
         String bufferSize = configuration.get(KEY_EXTERNAL_SCAN_BUFFER_SIZE);
         return bufferSize != null ? Integer.parseInt(bufferSize) : ExternalDataConstants.DEFAULT_BUFFER_SIZE;
+    }
+
+    // Defaults to replace-and-continue; only "fail" opts into failing fast on an illegal character. The value is
+    // validated against the allowed set (replace/fail) at DDL time in validate(...), so anything reaching here is
+    // already known to be one of those two.
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the illegalCharacterHandling WITH-clause property to decide replace-and-continue "
+            + "(default) vs. fail-fast")
+    public static boolean shouldFailOnIllegalCharacter(Map<String, String> configuration) {
+        String mode = configuration.get(KEY_ILLEGAL_CHARACTER_HANDLING);
+        return ILLEGAL_CHARACTER_HANDLING_FAIL.equalsIgnoreCase(mode);
     }
 
     // Get a delimiter from the given configuration
@@ -669,6 +683,9 @@ public class ExternalDataUtils {
      * @param configuration external data configuration
      * @throws HyracksDataException HyracksDataException
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Added a value check for illegalCharacterHandling (allowed: replace/fail), matching the "
+            + "existing pattern for header/force-quote/empty-string-as-null/redact-warnings in this method -- "
+            + "previously any value other than exactly \"fail\" (e.g. a typo) silently behaved as replace")
     public static void validate(Map<String, String> configuration) throws HyracksDataException {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         String header = configuration.get(KEY_HEADER);
@@ -693,6 +710,13 @@ public class ExternalDataUtils {
         if (value != null && !isBoolean(value)) {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_REDACT_WARNINGS,
                     value);
+        }
+        String illegalCharacterHandling = configuration.get(KEY_ILLEGAL_CHARACTER_HANDLING);
+        if (illegalCharacterHandling != null
+                && !ILLEGAL_CHARACTER_HANDLING_REPLACE.equalsIgnoreCase(illegalCharacterHandling)
+                && !ILLEGAL_CHARACTER_HANDLING_FAIL.equalsIgnoreCase(illegalCharacterHandling)) {
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, KEY_ILLEGAL_CHARACTER_HANDLING,
+                    illegalCharacterHandling);
         }
     }
 
