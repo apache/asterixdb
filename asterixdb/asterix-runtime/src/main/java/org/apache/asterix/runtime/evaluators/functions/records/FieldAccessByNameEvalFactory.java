@@ -32,6 +32,7 @@ import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -41,6 +42,8 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
 
@@ -59,8 +62,23 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
         this.funID = funID;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Fast path for constant field name: pre-compute UTF-8 lengths and hash at evaluator init time")
     @Override
     public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
+        if (fldNameEvalFactory instanceof ConstantEvalFactory) {
+            byte[] constFldName = ((ConstantEvalFactory) fldNameEvalFactory).getValue();
+            if (constFldName[0] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                // Pre-compute UTF-8 metadata and hash once; reuse them on every tuple evaluation.
+                IBinaryComparator comparator =
+                        BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+                int constFldUtflength = UTF8StringUtil.getUTFLength(constFldName, 1);
+                int constFldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(constFldUtflength);
+                int constFldHash = BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+                        .createBinaryHashFunction().hash(constFldName, 1, constFldUtflength + constFldUtfMetaLen);
+                return new ConstantFieldNameEvaluator(ctx, recordEvalFactory, constFldName, constFldUtflength,
+                        constFldUtfMetaLen, constFldHash, comparator, sourceLoc, funID);
+            }
+        }
         return new IScalarEvaluator() {
 
             private final IBinaryHashFunction fieldNameHashFunction =
@@ -141,5 +159,74 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
 
     public FunctionIdentifier getFunID() {
         return funID;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Evaluator for the constant field-name fast path; pre-computed hash/lengths passed via constructor")
+    private static final class ConstantFieldNameEvaluator implements IScalarEvaluator {
+
+        private final IEvaluatorContext ctx;
+        private final IScalarEvaluator eval0;
+        private final byte[] constFldName;
+        private final int constFldUtflength;
+        private final int constFldUtfMetaLen;
+        private final int constFldHash;
+        private final IBinaryComparator fieldNameComparator;
+        private final SourceLocation sourceLoc;
+        private final FunctionIdentifier funID;
+        private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+        private final DataOutput out = resultStorage.getDataOutput();
+        private final IPointable inputArg0 = new VoidPointable();
+
+        private ConstantFieldNameEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory recordEvalFactory,
+                byte[] constFldName, int constFldUtflength, int constFldUtfMetaLen, int constFldHash,
+                IBinaryComparator fieldNameComparator, SourceLocation sourceLoc, FunctionIdentifier funID)
+                throws HyracksDataException {
+            this.ctx = ctx;
+            this.eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            this.constFldName = constFldName;
+            this.constFldUtflength = constFldUtflength;
+            this.constFldUtfMetaLen = constFldUtfMetaLen;
+            this.constFldHash = constFldHash;
+            this.fieldNameComparator = fieldNameComparator;
+            this.sourceLoc = sourceLoc;
+            this.funID = funID;
+        }
+
+        @Override
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+            try {
+                resultStorage.reset();
+                eval0.evaluate(tuple, inputArg0);
+                if (PointableHelper.checkAndSetMissingOrNull(result, inputArg0)) {
+                    return;
+                }
+                byte[] serRecord = inputArg0.getByteArray();
+                int serRecordOffset = inputArg0.getStartOffset();
+                int serRecordLen = inputArg0.getLength();
+                if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, serRecord[serRecordOffset], 0,
+                            ATypeTag.OBJECT);
+                    out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                    result.set(resultStorage);
+                    return;
+                }
+                int fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
+                        serRecordLen, constFldName, 0, constFldUtflength, constFldUtfMetaLen, constFldHash,
+                        fieldNameComparator);
+                if (fieldValueOffset < 0) {
+                    out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                    result.set(resultStorage);
+                    return;
+                }
+                ATypeTag fieldValueTypeTag =
+                        EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[fieldValueOffset]);
+                int fieldValueLength =
+                        NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset, fieldValueTypeTag, true)
+                                + 1;
+                result.set(serRecord, fieldValueOffset, fieldValueLength);
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+        }
     }
 }
