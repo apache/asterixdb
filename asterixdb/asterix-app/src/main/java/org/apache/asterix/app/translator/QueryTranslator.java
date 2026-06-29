@@ -3210,10 +3210,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx, view);
             } else {
+                boolean existingItemTypeIsInline =
+                        TypeUtil.isDatasetInlineTypeName(existingDataset, existingDataset.getItemTypeDatabaseName(),
+                                existingDataset.getItemTypeDataverseName(), existingDataset.getItemTypeName());
                 if (itemTypeIsInline) {
-                    MetadataManager.INSTANCE.updateDatatype(mdTxnCtx, itemTypeEntity);
+                    if (existingItemTypeIsInline) {
+                        MetadataManager.INSTANCE.updateDatatype(mdTxnCtx, itemTypeEntity);
+                    } else {
+                        MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
+                    }
                 }
                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, view);
+                if (!itemTypeIsInline && existingItemTypeIsInline) {
+                    MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, existingDataset.getItemTypeDatabaseName(),
+                            existingDataset.getItemTypeDataverseName(), existingDataset.getItemTypeName());
+                }
             }
             beforeTxnCommit(metadataProvider, creator, EntityDetails.newView(databaseName, dataverseName, viewName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
