@@ -58,6 +58,7 @@ import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
@@ -85,6 +86,10 @@ import org.apache.iceberg.io.OutputFile;
 import org.apache.iceberg.nessie.NessieCatalog;
 import org.apache.iceberg.parquet.Parquet;
 import org.apache.iceberg.types.Types;
+import org.apache.iceberg.variants.ShreddedObject;
+import org.apache.iceberg.variants.Variant;
+import org.apache.iceberg.variants.VariantMetadata;
+import org.apache.iceberg.variants.Variants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -135,6 +140,9 @@ public class IcebergTest {
     private static final Namespace NAMESPACE = Namespace.of("my_namespace");
     private static final TableIdentifier TABLE_ID = TableIdentifier.of(NAMESPACE, "users");
     private static final TableIdentifier ALL_TYPES_TABLE_ID = TableIdentifier.of(NAMESPACE, "allTypes");
+    private static final TableIdentifier ALL_TYPES_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "allTypesVariant");
+    private static final TableIdentifier DEPTH_TEST_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "depthTestVariant");
 
     protected TestCaseContext tcCtx;
 
@@ -193,6 +201,8 @@ public class IcebergTest {
             ensureNamespace(catalog, NAMESPACE);
             writeUserTable(catalog);
             writeAllTypesTable(catalog);
+            writeAllTypesVariantTable(catalog);
+            writeDepthTestVariantTable(catalog);
         }
     }
 
@@ -250,6 +260,205 @@ public class IcebergTest {
         LOGGER.info("[TABLE] spec={}", allTypesTable.spec());
         LOGGER.info("[TABLE] schema(all_types)={}", allTypesTable.schema());
         writeAllTypesData(allTypesTable);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Creates a dedicated table covering every Iceberg Variant PhysicalType")
+    private static void writeAllTypesVariantTable(org.apache.iceberg.nessie.NessieCatalog catalog) throws Exception {
+        Table variantTable = createTable(catalog, ALL_TYPES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={}", variantTable.name());
+        LOGGER.info("[TABLE] location={}", variantTable.location());
+        LOGGER.info("[TABLE] schema(all_types_variant)={}", variantTable.schema());
+        writeAllTypesVariantData(variantTable);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Schema for the dedicated Variant-coverage table: an id plus a single VARIANT column")
+    private static Schema buildAllTypesVariantSchema() {
+        return new Schema(required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "variant_field", Types.VariantType.get()));
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Writes rows isolating: (1) an object covering every supported Variant PhysicalType, (2) a fully null Variant column, (3) a top-level Variant array, (4) a top-level Variant string, (5) a top-level Variant NULL value distinct from a null column, (6-24) every remaining PhysicalType as a bare top-level (non-object-nested) Variant value, (25) a string over the 63-byte short-string encoding threshold")
+    private static void writeAllTypesVariantData(Table table) throws Exception {
+        GenericRecord template = GenericRecord.create(table.schema());
+        List<Record> records = new ArrayList<>();
+
+        Record allTypesRow = template.copy();
+        allTypesRow.setField("id", 1);
+        allTypesRow.setField("variant_field", buildVariantAllPhysicalTypes());
+        records.add(allTypesRow);
+
+        Record nullColumnRow = template.copy();
+        nullColumnRow.setField("id", 2);
+        nullColumnRow.setField("variant_field", null);
+        records.add(nullColumnRow);
+
+        Record topLevelArrayRow = template.copy();
+        topLevelArrayRow.setField("id", 3);
+        org.apache.iceberg.variants.ValueArray topLevelArray = Variants.array();
+        topLevelArray.add(Variants.of(10));
+        topLevelArray.add(Variants.of("twenty"));
+        topLevelArray.add(Variants.of(true));
+        topLevelArrayRow.setField("variant_field", Variant.of(Variants.emptyMetadata(), topLevelArray));
+        records.add(topLevelArrayRow);
+
+        Record topLevelStringRow = template.copy();
+        topLevelStringRow.setField("id", 4);
+        topLevelStringRow.setField("variant_field",
+                Variant.of(Variants.emptyMetadata(), Variants.of("top level scalar string")));
+        records.add(topLevelStringRow);
+
+        Record topLevelNullValueRow = template.copy();
+        topLevelNullValueRow.setField("id", 5);
+        topLevelNullValueRow.setField("variant_field", Variant.of(Variants.emptyMetadata(), Variants.ofNull()));
+        records.add(topLevelNullValueRow);
+
+        int nextId = 6;
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(true));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(false));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of((byte) 5));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of((short) 1000));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(42));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(9223372036854775807L));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(3.14f));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(2.718281828459045d));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(new BigDecimal("3.14")));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.of(new BigDecimal("123456789.123")));
+        nextId = addTopLevelScalarRow(template, records, nextId,
+                Variants.of(new BigDecimal("123456789012345678901.123456789")));
+        nextId = addTopLevelScalarRow(template, records, nextId,
+                Variants.of(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4, 5 })));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.ofDate(19723));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.ofTime(37230000000L));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.ofTimestamptz(1707000000000000L));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.ofIsoTimestampntz("2024-02-04T12:00:00"));
+        nextId = addTopLevelScalarRow(template, records, nextId, Variants.ofTimestamptzNanos(1707000000000000000L));
+        nextId = addTopLevelScalarRow(template, records, nextId,
+                Variants.ofIsoTimestampntzNanos("2024-02-04T12:00:00"));
+        nextId = addTopLevelScalarRow(template, records, nextId,
+                Variants.ofUUID(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+        // Longer than the 63-byte short-string encoding threshold, forcing SerializedPrimitive's STRING
+        // case at read time instead of SerializedShortString.
+        addTopLevelScalarRow(template, records, nextId, Variants.of("x".repeat(70)));
+
+        String path = table.location() + "/data/all_types_variant.parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer =
+                Parquet.write(out).schema(table.schema()).createWriterFunc(GenericParquetWriter::create).build()) {
+            for (Record r : records) {
+                writer.add(r);
+            }
+        }
+        long bytes = out.toInputFile().getLength();
+        LOGGER.info("[APPEND] file={} sizeBytes={} rows={}", path, bytes, records.size());
+        DataFile df = DataFiles.builder(table.spec()).withPath(path).withRecordCount(records.size())
+                .withFileSizeInBytes(bytes).withFormat(FileFormat.PARQUET).build();
+        table.newAppend().appendFile(df).commit();
+        LOGGER.info("[WRITE] all_types_variant table committed with {} record(s)", records.size());
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Appends a row whose variant_field is a bare top-level Variant value (not nested in an object); returns the next unused id")
+    private static int addTopLevelScalarRow(GenericRecord template, List<Record> records, int id,
+            org.apache.iceberg.variants.VariantValue value) {
+        Record row = template.copy();
+        row.setField("id", id);
+        row.setField("variant_field", Variant.of(Variants.emptyMetadata(), value));
+        records.add(row);
+        return id + 1;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "objectValue/arrayValue nest 3 levels deep (object->array->object and array->object) to exercise multi-level recursion")
+    private static Variant buildVariantAllPhysicalTypes() {
+        VariantMetadata metadata = Variants.metadata("nullValue", "boolTrueValue", "boolFalseValue", "int8Value",
+                "int16Value", "int32Value", "int64Value", "floatValue", "doubleValue", "decimal4Value", "decimal8Value",
+                "decimal16Value", "stringValue", "binaryValue", "dateValue", "timeValue", "timestamptzValue",
+                "timestampntzValue", "timestamptzNanosValue", "timestampntzNanosValue", "uuidValue", "objectValue",
+                "arrayValue", "nestedString", "nestedInt", "nestedArray", "deepInt", "deepBool");
+
+        ShreddedObject root = Variants.object(metadata);
+        root.put("nullValue", Variants.ofNull());
+        root.put("boolTrueValue", Variants.of(true));
+        root.put("boolFalseValue", Variants.of(false));
+        root.put("int8Value", Variants.of((byte) 5));
+        root.put("int16Value", Variants.of((short) 1000));
+        root.put("int32Value", Variants.of(42));
+        root.put("int64Value", Variants.of(9223372036854775807L));
+        root.put("floatValue", Variants.of(3.14f));
+        root.put("doubleValue", Variants.of(2.718281828459045d));
+        root.put("decimal4Value", Variants.of(new BigDecimal("3.14")));
+        root.put("decimal8Value", Variants.of(new BigDecimal("123456789.123")));
+        root.put("decimal16Value", Variants.of(new BigDecimal("123456789012345678901.123456789")));
+        root.put("stringValue", Variants.of("hello variant"));
+        root.put("binaryValue", Variants.of(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4, 5 })));
+        root.put("dateValue", Variants.ofDate(19723));
+        root.put("timeValue", Variants.ofTime(37230000000L));
+        root.put("timestamptzValue", Variants.ofTimestamptz(1707000000000000L));
+        root.put("timestampntzValue", Variants.ofIsoTimestampntz("2024-02-04T12:00:00"));
+        root.put("timestamptzNanosValue", Variants.ofTimestamptzNanos(1707000000000000000L));
+        root.put("timestampntzNanosValue", Variants.ofIsoTimestampntzNanos("2024-02-04T12:00:00"));
+        root.put("uuidValue", Variants.ofUUID(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+
+        ShreddedObject nested = Variants.object(metadata);
+        nested.put("nestedString", Variants.of("inner"));
+        nested.put("nestedInt", Variants.of(7));
+        ShreddedObject deepObjectInArray = Variants.object(metadata);
+        deepObjectInArray.put("deepInt", Variants.of(99));
+        org.apache.iceberg.variants.ValueArray nestedObjectArray = Variants.array();
+        nestedObjectArray.add(deepObjectInArray);
+        nested.put("nestedArray", nestedObjectArray);
+        root.put("objectValue", nested);
+
+        ShreddedObject deepObjectInTopArray = Variants.object(metadata);
+        deepObjectInTopArray.put("deepBool", Variants.of(true));
+        org.apache.iceberg.variants.ValueArray nestedArray = Variants.array();
+        nestedArray.add(Variants.of(1));
+        nestedArray.add(Variants.of("two"));
+        nestedArray.add(Variants.of(3.0d));
+        nestedArray.add(deepObjectInTopArray);
+        root.put("arrayValue", nestedArray);
+
+        return Variant.of(metadata, root);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Dedicated minimal table for testing the variantDepth WITH-clause guard: a single row whose Variant is nested exactly 3 levels deep")
+    private static void writeDepthTestVariantTable(org.apache.iceberg.nessie.NessieCatalog catalog) throws Exception {
+        Table depthTestTable = createTable(catalog, DEPTH_TEST_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={}", depthTestTable.name());
+        LOGGER.info("[TABLE] location={}", depthTestTable.location());
+        LOGGER.info("[TABLE] schema(depth_test_variant)={}", depthTestTable.schema());
+        writeDepthTestVariantData(depthTestTable);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Writes a single row whose Variant nests exactly 3 levels deep (object -> object -> scalar leaf), used to verify the variantDepth WITH-clause option rejects data nested deeper than the configured limit")
+    private static void writeDepthTestVariantData(Table table) throws Exception {
+        GenericRecord template = GenericRecord.create(table.schema());
+        Record row = template.copy();
+        row.setField("id", 1);
+        row.setField("variant_field", buildDepthThreeVariant());
+
+        String path = table.location() + "/data/depth_test_variant.parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer =
+                Parquet.write(out).schema(table.schema()).createWriterFunc(GenericParquetWriter::create).build()) {
+            writer.add(row);
+        }
+        long bytes = out.toInputFile().getLength();
+        LOGGER.info("[APPEND] file={} sizeBytes={} rows=1", path, bytes);
+        DataFile df = DataFiles.builder(table.spec()).withPath(path).withRecordCount(1).withFileSizeInBytes(bytes)
+                .withFormat(FileFormat.PARQUET).build();
+        table.newAppend().appendFile(df).commit();
+        LOGGER.info("[WRITE] depth_test_variant table committed with 1 record");
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Builds a Variant nested exactly 3 levels deep: depth 1 is the outer object, depth 2 is the nested object under field \"a\", depth 3 is the scalar leaf under field \"b\"")
+    private static Variant buildDepthThreeVariant() {
+        VariantMetadata metadata = Variants.metadata("a", "b");
+        ShreddedObject depthTwo = Variants.object(metadata);
+        depthTwo.put("b", Variants.of(42));
+        ShreddedObject depthOne = Variants.object(metadata);
+        depthOne.put("a", depthTwo);
+        return Variant.of(metadata, depthOne);
     }
 
     private static org.apache.iceberg.nessie.NessieCatalog createNessieCatalog() throws Exception {

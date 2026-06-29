@@ -41,6 +41,12 @@
         <output-dir compare="Text">snapshots</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-all-types">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-all-types</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="negative">
     <test-case FilePath="iceberg/negative">
@@ -101,6 +107,16 @@
       <compilation-unit name="invalid-timezone">
         <output-dir compare="Text">invalid-timezone</output-dir>
         <expected-error>ASX1172: Provided timezone is invalid: 'GMT+Zft!'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
+      <compilation-unit name="variant-negative">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-negative</output-dir>
+        <expected-error>ASX0054: Parquet type 'DECIMAL16' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+        <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 2</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 0</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 1001</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

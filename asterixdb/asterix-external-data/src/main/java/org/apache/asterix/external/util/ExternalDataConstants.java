@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import org.apache.asterix.external.input.record.reader.hdfs.avro.AvroFileInputFormat;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class ExternalDataConstants {
 
@@ -439,6 +440,21 @@ public class ExternalDataConstants {
         public static final String TIME_AS_INT = "time-to-int";
         public static final String DATE_AS_INT = "date-to-int";
         public static final String TIMEZONE = "timezone";
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause option controlling IcebergParquetDataParser's Variant nesting depth guard")
+        public static final String VARIANT_DEPTH = "variantDepth";
+        // Bounds and default kept alongside VARIANT_DEPTH itself (rather than split across IcebergUtils'
+        // DDL-time validation and IcebergConverterContext's runtime read) so the two can't drift apart.
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "variantDepth's default/max, centralized here so IcebergUtils' DDL-time validation and IcebergConverterContext's runtime read can't drift apart")
+        public static final int DEFAULT_VARIANT_DEPTH = 500;
+        public static final int MAX_VARIANT_DEPTH = 1000;
+
+        static {
+            if (DEFAULT_VARIANT_DEPTH < 1 || DEFAULT_VARIANT_DEPTH > MAX_VARIANT_DEPTH) {
+                throw new IllegalStateException(
+                        "DEFAULT_VARIANT_DEPTH must be in [1, MAX_VARIANT_DEPTH], found DEFAULT_VARIANT_DEPTH="
+                                + DEFAULT_VARIANT_DEPTH + ", MAX_VARIANT_DEPTH=" + MAX_VARIANT_DEPTH);
+            }
+        }
     }
 
     public static class ParquetOptions {

@@ -55,6 +55,7 @@ import org.apache.asterix.external.util.google.iceberg.fileio.GCSFileIO;
 import org.apache.asterix.external.util.iceberg.nessie.NessieUtils;
 import org.apache.asterix.external.util.iceberg.rest.RestUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.aws.AwsProperties;
@@ -173,8 +174,29 @@ public class IcebergUtils {
             ExternalDataUtils.resolveTimeZone(timezone);
         }
 
+        // if variantDepth is provided, it must be an integer in [1, MAX_VARIANT_DEPTH]
+        String variantDepth = properties.get(ExternalDataConstants.IcebergOptions.VARIANT_DEPTH);
+        if (variantDepth != null && !variantDepth.isEmpty()) {
+            validateIntegerInRange(ExternalDataConstants.IcebergOptions.VARIANT_DEPTH, variantDepth, 1,
+                    ExternalDataConstants.IcebergOptions.MAX_VARIANT_DEPTH);
+        }
+
         // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Validates the variantDepth WITH-clause option at DDL time, matching the existing timezone validation pattern in this method. The catch block is reserved purely for genuine Integer.parseInt failures; the out-of-range case throws CompilationException directly")
+    private static void validateIntegerInRange(String propertyName, String value, int min, int max)
+            throws CompilationException {
+        int parsed;
+        try {
+            parsed = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, propertyName, value);
+        }
+        if (parsed < min || parsed > max) {
+            throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, propertyName, value);
+        }
     }
 
     /**

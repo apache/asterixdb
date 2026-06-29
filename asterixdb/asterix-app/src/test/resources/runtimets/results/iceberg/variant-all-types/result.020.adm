@@ -1,0 +1,25 @@
+{ "id": 1, "variant_field": { "arrayValue": [ 1, "two", 3.0, { "deepBool": true } ], "binaryValue": hex("0102030405"), "boolFalseValue": false, "boolTrueValue": true, "dateValue": date("2024-01-01"), "decimal16Value": 1.2345678901234568E20, "decimal4Value": 3.14, "decimal8Value": 1.23456789123E8, "doubleValue": 2.718281828459045, "floatValue": 3.14, "int16Value": 1000, "int32Value": 42, "int64Value": 9223372036854775807, "int8Value": 5, "nullValue": null, "objectValue": { "nestedArray": [ { "deepInt": 99 } ], "nestedInt": 7, "nestedString": "inner" }, "stringValue": "hello variant", "timeValue": time("10:20:30.000"), "timestampntzNanosValue": datetime("2024-02-04T12:00:00.000"), "timestampntzValue": datetime("2024-02-04T12:00:00.000"), "timestamptzNanosValue": datetime("2024-02-03T22:40:00.000"), "timestamptzValue": datetime("2024-02-03T22:40:00.000"), "uuidValue": uuid("550e8400-e29b-41d4-a716-446655440000") } }
+{ "id": 2, "variant_field": null }
+{ "id": 3, "variant_field": [ 10, "twenty", true ] }
+{ "id": 4, "variant_field": "top level scalar string" }
+{ "id": 5, "variant_field": null }
+{ "id": 6, "variant_field": true }
+{ "id": 7, "variant_field": false }
+{ "id": 8, "variant_field": 5 }
+{ "id": 9, "variant_field": 1000 }
+{ "id": 10, "variant_field": 42 }
+{ "id": 11, "variant_field": 9223372036854775807 }
+{ "id": 12, "variant_field": 3.14 }
+{ "id": 13, "variant_field": 2.718281828459045 }
+{ "id": 14, "variant_field": 3.14 }
+{ "id": 15, "variant_field": 1.23456789123E8 }
+{ "id": 16, "variant_field": 1.2345678901234568E20 }
+{ "id": 17, "variant_field": hex("0102030405") }
+{ "id": 18, "variant_field": date("2024-01-01") }
+{ "id": 19, "variant_field": time("10:20:30.000") }
+{ "id": 20, "variant_field": datetime("2024-02-03T22:40:00.000") }
+{ "id": 21, "variant_field": datetime("2024-02-04T12:00:00.000") }
+{ "id": 22, "variant_field": datetime("2024-02-03T22:40:00.000") }
+{ "id": 23, "variant_field": datetime("2024-02-04T12:00:00.000") }
+{ "id": 24, "variant_field": uuid("550e8400-e29b-41d4-a716-446655440000") }
+{ "id": 25, "variant_field": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }

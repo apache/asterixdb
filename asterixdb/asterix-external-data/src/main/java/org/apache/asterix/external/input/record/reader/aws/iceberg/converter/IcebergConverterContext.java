@@ -21,8 +21,10 @@ package org.apache.asterix.external.input.record.reader.aws.iceberg.converter;
 import static org.apache.asterix.external.util.ExternalDataConstants.FALSE;
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DATE_AS_INT;
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DEFAULT_VARIANT_DEPTH;
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG;
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.TIME_AS_INT;
+import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.VARIANT_DEPTH;
 
 import java.time.ZoneId;
 import java.util.Map;
@@ -30,6 +32,7 @@ import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class IcebergConverterContext extends ParserContext {
 
@@ -38,12 +41,18 @@ public class IcebergConverterContext extends ParserContext {
     private final boolean timeAsInt;
     private final boolean timestampAsLong;
     private final ZoneId timeZoneId;
+    private final int maxVariantDepth;
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Reads the variantDepth WITH-clause option (default 500), used by IcebergParquetDataParser's Variant nesting depth guard. Mirrors the timezone handling below: an empty value is treated as absent and falls back to the default, since Map.getOrDefault only falls back on an absent key, not an empty value")
     public IcebergConverterContext(Map<String, String> configuration) {
         decimalToDouble = Boolean.parseBoolean(configuration.getOrDefault(DECIMAL_TO_DOUBLE, FALSE));
         dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(DATE_AS_INT, FALSE));
         timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(TIME_AS_INT, FALSE));
         timestampAsLong = Boolean.parseBoolean(configuration.getOrDefault(TIMESTAMP_AS_LONG, FALSE));
+
+        String configuredVariantDepth = configuration.get(VARIANT_DEPTH);
+        maxVariantDepth = (configuredVariantDepth != null && !configuredVariantDepth.isEmpty())
+                ? Integer.parseInt(configuredVariantDepth) : DEFAULT_VARIANT_DEPTH;
 
         String configuredTimeZoneId = configuration.get(ExternalDataConstants.IcebergOptions.TIMEZONE);
         if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
@@ -71,5 +80,9 @@ public class IcebergConverterContext extends ParserContext {
 
     public boolean isDateAsInt() {
         return dateAsInt;
+    }
+
+    public int getMaxVariantDepth() {
+        return maxVariantDepth;
     }
 }
