@@ -79,9 +79,19 @@ public class FunctionMetadataFunctionTest {
     }
 
     @Test
-    public void aliasIndexIsSortedAndUnderscoreNormalized() {
+    public void aliasIndexIsSortedAndReportsCallableSpellings() {
         Map<String, List<String>> index = FunctionMetadataFunction.buildAliasIndex();
         assertEquals(Collections.singletonList("length"), index.get("string-length"));
         assertEquals(Arrays.asList("pos", "pos0", "position0"), index.get("position"));
+        // Hyphenated alias keys must be reported verbatim: e.g. record-merge is callable only as the
+        // delimited identifier `record-merge`; the underscore form record_merge does not resolve to
+        // the mapping (the resolver checks getFunctionMapping before the underscore-to-hyphen rewrite).
+        assertEquals(Collections.singletonList("record-merge"), index.get("object-merge"));
+        assertEquals(Collections.singletonList("record-concat"), index.get("object-concat"));
+        assertEquals(Collections.singletonList("record-get-fields"), index.get("object-get-fields"));
+        assertEquals(Collections.singletonList("record-get-field-value"), index.get("object-get-field-value"));
+        assertEquals(Collections.singletonList("record-add-fields"), index.get("object-add-fields"));
+        assertEquals(Collections.singletonList("record-remove-fields"), index.get("object-remove-fields"));
+        assertEquals(Collections.singletonList("array_agg-distinct"), index.get("arrayagg-distinct"));
     }
 }

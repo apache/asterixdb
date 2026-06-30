@@ -17,8 +17,10 @@
  * under the License.
  */
 
-// Aliases are listed in their callable spelling. "length" is an alias of string-length.
+// A hyphenated alias is reported verbatim, not underscore-normalized: record-merge is callable only
+// as the delimited identifier `record-merge` (the resolver matches the alias before rewriting
+// underscores to hyphens), so the underscore form record_merge would not resolve to object-merge.
 
 select value f.aliases
 from function_metadata() f
-where f.name = "string_length";
+where f.name = "object_merge";

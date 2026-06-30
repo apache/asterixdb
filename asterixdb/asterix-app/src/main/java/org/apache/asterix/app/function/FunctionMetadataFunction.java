@@ -121,13 +121,17 @@ public class FunctionMetadataFunction extends AbstractDatasourceFunction {
 
     /**
      * Builds an index from an internal (hyphenated) function name to its callable aliases, derived
-     * from {@link CommonFunctionMapUtil}. Alias spellings are normalized to the underscore form so
-     * they line up with the {@code name} column.
+     * from {@link CommonFunctionMapUtil}. Alias keys are reported verbatim because that is the only
+     * spelling the resolver accepts: {@code FunctionUtil} looks up
+     * {@link CommonFunctionMapUtil#getFunctionMapping} on the raw (lower-cased) name BEFORE applying
+     * the underscore-to-hyphen rewrite. So a hyphenated alias such as {@code record-merge} is callable
+     * only as the delimited identifier {@code `record-merge`}; underscoring it to {@code record_merge}
+     * would report a spelling that does not resolve to the mapping.
      */
     static Map<String, List<String>> buildAliasIndex() {
         Map<String, List<String>> index = new HashMap<>();
         for (Map.Entry<String, String> e : CommonFunctionMapUtil.getFunctionMappings().entrySet()) {
-            index.computeIfAbsent(e.getValue(), k -> new ArrayList<>()).add(underscore(e.getKey()));
+            index.computeIfAbsent(e.getValue(), k -> new ArrayList<>()).add(e.getKey());
         }
         for (List<String> aliases : index.values()) {
             Collections.sort(aliases);
