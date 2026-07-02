@@ -16761,6 +16761,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/nested-array-mixed-type-empty">
+        <output-dir compare="Text">filter/nested-array-mixed-type-empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="filter/double">
         <output-dir compare="Text">filter/double</output-dir>
       </compilation-unit>

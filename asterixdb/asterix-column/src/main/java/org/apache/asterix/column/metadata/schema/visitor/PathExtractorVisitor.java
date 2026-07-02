@@ -138,7 +138,14 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
     }
 
     private int[] getReversedDelimiters() {
-        Collections.reverse(delimiters);
-        return delimiters.toIntArray();
+        // toIntArray() returns a fresh copy; reverse the copy so the shared delimiters list is left intact for the
+        // next reader built from the same path (e.g., each branch of a union-typed leaf).
+        int[] reversed = delimiters.toIntArray();
+        for (int i = 0, j = reversed.length - 1; i < j; i++, j--) {
+            int tmp = reversed[i];
+            reversed[i] = reversed[j];
+            reversed[j] = tmp;
+        }
+        return reversed;
     }
 }
