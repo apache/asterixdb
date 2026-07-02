@@ -73,8 +73,8 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.4</log4j.version>
     <snappy.version>1.1.10.8</snappy.version>
-    <jackson.version>2.21.3</jackson.version>
-    <jackson-annotations.version>2.21</jackson-annotations.version>
+    <jackson.version>2.22.0</jackson.version>
+    <jackson-annotations.version>2.22</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.1.135.Final</netty.version>
 
