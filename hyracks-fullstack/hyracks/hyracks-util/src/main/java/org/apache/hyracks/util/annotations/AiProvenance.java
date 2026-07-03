@@ -203,6 +203,7 @@ public @interface AiProvenance {
         // =========================
         // Anthropic — Claude Sonnet
         // =========================
+        CLAUDE_SONNET_5(ANTHROPIC, "claude-sonnet-5", "Claude Sonnet 5"),
         CLAUDE_SONNET_4(ANTHROPIC, "claude-4-sonnet", "Claude Sonnet 4"),
         CLAUDE_SONNET_4_5(ANTHROPIC, "claude-4-sonnet-4.5", "Claude Sonnet 4.5"),
         CLAUDE_SONNET_4_6(ANTHROPIC, "claude-4-sonnet-4.6", "Claude Sonnet 4.6"),
