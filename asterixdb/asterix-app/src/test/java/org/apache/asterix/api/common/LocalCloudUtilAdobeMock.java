@@ -58,7 +58,7 @@ public class LocalCloudUtilAdobeMock {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
-    public static final String S3MOCK_VERSION_TAG = "4.7.0";
+    public static final String S3MOCK_VERSION_TAG = "4.12.4";
     public static final String PLAYGROUND_BUCKET = "playground";
     public static final String CLOUD_URL_KEY = "cloudUrl";
     private static S3MockContainer s3Mock;
