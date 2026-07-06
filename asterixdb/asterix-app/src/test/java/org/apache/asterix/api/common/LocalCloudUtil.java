@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +34,8 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -102,6 +105,8 @@ public class LocalCloudUtil {
         return s3MockServer;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "MB-68099: tolerate bucket-already-exists so a lost-response SDK retry of createBucket "
+            + "(seen during MinIO nginx cert rotation) no longer fails teardown")
     public static void recreateBucket(String bucketName, S3Client client) {
         String verb = "Created";
         try {
@@ -113,6 +118,10 @@ public class LocalCloudUtil {
         try {
             client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
             LOGGER.info("{} bucket {}", verb, bucketName);
+        } catch (BucketAlreadyOwnedByYouException | BucketAlreadyExistsException e) {
+            // the bucket already exists (e.g. a lost-response SDK retry after the first create succeeded server-side)
+            // — the post-condition (bucket exists) is satisfied, so treat this as success
+            LOGGER.info("{} bucket {} (already existed)", verb, bucketName);
         } finally {
             client.close();
         }
