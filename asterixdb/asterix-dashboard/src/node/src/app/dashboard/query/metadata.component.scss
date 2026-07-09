@@ -24,7 +24,7 @@ mat-checkbox .mat-icon {
         color: #3E3E30;
         cursor: pointer;
         &:hover {
-            color: blue;
+            color: #25428d;
         }
         overflow: hidden !important;
         text-overflow: ellipsis !important;
@@ -38,13 +38,23 @@ mat-checkbox .mat-icon {
     font-size: 0.80rem;
     font-weight: 500;
     text-align: left;
-    padding-left: 5px;
-    padding-right: 10px;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    background-color: gainsboro;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-top: 0;
+    background-color: transparent;
+    margin-top: 5px;
     margin-bottom: 50px;
-    mat-expansion-panel {
+
+    // Outer card: match the 12px rounded, hairline look of the other panels.
+    > mat-expansion-panel {
+        border: 1px solid #e6e8eb !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    // Inner panels stay flat/borderless.
+    mat-expansion-panel mat-expansion-panel {
         border: none !important;
     }
 }
@@ -58,7 +68,7 @@ mat-checkbox .mat-icon {
     align-items: center;
     max-height: 42px;
     min-height: 42px;
-    color: blue;
+    color: #25428d;
 }
 
 .header-dataverse {
@@ -66,7 +76,7 @@ mat-checkbox .mat-icon {
     font-weight: 500;
     max-height: 42px;
     min-height: 42px;
-    color: blue;
+    color: #25428d;
 }
 
 .metadata-inspector-header {
@@ -74,12 +84,12 @@ mat-checkbox .mat-icon {
   font-weight: 500;
   max-height: 42px;
   min-height: 42px;
+  margin-bottom: 0;
   border-bottom: 1px solid gray;
-  margin-bottom: 5px;
 }
 
 .title {
-    color:blue;
+    color:#25428d;
 }
 
 .list-icon {

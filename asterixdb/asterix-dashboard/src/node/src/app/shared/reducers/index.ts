@@ -20,6 +20,7 @@ import * as fromQuery from './query.reducer';
 import * as fromQueryMetadata from './query-metadata.reducer';
 import * as fromAppState from './app.reducer';
 import * as fromCancel from './cancel.reducer';
+import * as fromMCP from './mcp.reducer';
 
 /*
 ** Global Interfaces store/state
@@ -33,6 +34,7 @@ export interface ModelState {
     sqlQuery: fromQuery.State,
     sqlMetadataQuery: fromQueryMetadata.State,
     appState: fromAppState.State,
+    mcp: fromMCP.State,
 }
 
 /*
@@ -47,5 +49,6 @@ export const reducers = {
     sqlQuery: fromQuery.sqlReducer,
     cancelQuery: fromCancel.cancelReducer,
     sqlMetadataQuery: fromQueryMetadata.sqlMetadataReducer,
-    app: fromAppState.appReducer
+    app: fromAppState.appReducer,
+    mcp: fromMCP.mcpReducer
 };
