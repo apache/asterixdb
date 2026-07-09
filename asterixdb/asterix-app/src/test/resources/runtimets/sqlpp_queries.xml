@@ -14065,6 +14065,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
+      <compilation-unit name="create-view-9-replace-untyped">
+        <output-dir compare="Text">create-view-9-replace-untyped</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
       <compilation-unit name="drop-dataverse-1">
         <output-dir compare="Text">drop-dataverse-1</output-dir>
       </compilation-unit>
