@@ -33,12 +33,16 @@ import org.apache.asterix.common.metadata.Namespace;
  * @param maxWarnings
  * @param resultSetId
  * @param defaultNamespace
+ * @param statementParameters
  */
 public record QueryPlanCacheKey(String queryString, boolean optimize, Map<String, Object> config, long maxWarnings,
-        long resultSetId, Namespace defaultNamespace) implements IQueryPlanCacheKey {
+        long resultSetId, Namespace defaultNamespace, Map<String, String> statementParameters)
+        implements IQueryPlanCacheKey {
 
     public QueryPlanCacheKey {
-        // defensive copy so the key stays stable if the source map is later mutated
+        // defensive copies so the key stays stable if the source maps are later mutated
         config = Collections.unmodifiableMap(new HashMap<>(config));
+        statementParameters = statementParameters == null ? Map.of()
+                : Collections.unmodifiableMap(new HashMap<>(statementParameters));
     }
 }

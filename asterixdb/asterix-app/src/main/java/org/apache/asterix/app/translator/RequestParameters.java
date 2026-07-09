@@ -21,6 +21,7 @@ package org.apache.asterix.app.translator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IRequestReference;
@@ -257,6 +258,33 @@ public class RequestParameters implements IRequestParameters {
             buffer.setContent(value, 0, value.length);
             IAObject iaValue = (IAObject) serDe.deserialize(bufferDataInput);
             m.put(name, iaValue);
+        }
+        return m;
+    }
+
+    /**
+     * Canonicalizes parameter values into a form that compares by {@link String#equals}. Each value is type-tagged
+     * because {@link IAObject} has no value equality and two distinct types can share a payload, then hex-encoded so
+     * the result is a stable string.
+     *
+     * @param inParams parameter name to boxed typed value, or {@code null}
+     * @return parameter name to canonicalized value, or {@code null} when there are none
+     */
+    public static Map<String, String> canonicalizeParameterValues(Map<String, IAObject> inParams)
+            throws HyracksDataException {
+        if (inParams == null || inParams.isEmpty()) {
+            return null;
+        }
+        ISerializerDeserializer serDe =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANY);
+        ByteArrayAccessibleOutputStream buffer = new ByteArrayAccessibleOutputStream();
+        DataOutputStream bufferDataOutput = new DataOutputStream(buffer);
+        HexFormat hex = HexFormat.of();
+        Map<String, String> m = new HashMap<>();
+        for (Map.Entry<String, IAObject> me : inParams.entrySet()) {
+            buffer.reset();
+            serDe.serialize(me.getValue(), bufferDataOutput);
+            m.put(me.getKey(), hex.formatHex(buffer.toByteArray()));
         }
         return m;
     }

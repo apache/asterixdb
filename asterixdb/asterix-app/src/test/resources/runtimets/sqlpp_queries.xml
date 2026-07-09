@@ -16074,6 +16074,11 @@
         <output-dir compare="Text">full-scan</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="metrics">
+      <compilation-unit name="plan-cache-parameterized">
+        <output-dir compare="Text">plan-cache-parameterized</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="warnings">
     <test-case FilePath="warnings" check-warnings="true">

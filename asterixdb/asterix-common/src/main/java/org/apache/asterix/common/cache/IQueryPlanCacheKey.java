@@ -57,4 +57,9 @@ public interface IQueryPlanCacheKey {
      * @return the namespace that unqualified names resolve against
      */
     Namespace defaultNamespace();
+
+    /**
+     * @return statement parameter values, each type-tagged serialized, so a plan is reused only for identical values
+     */
+    Map<String, String> statementParameters();
 }

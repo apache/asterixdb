@@ -5790,18 +5790,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean isPlanCacheEnabled =
                 metadataProvider.getBooleanProperty(CompilerProperties.COMPILER_QUERY_PLAN_CACHE_KEY,
                         appCtx.getCompilerProperties().isQueryPlanCacheEnabled());
-        return !isPlanCacheEnabled || requestParameters.isSkipQueryPlanCache()
-                || requestParameters.getStatementParameters() != null;
+        return !isPlanCacheEnabled || requestParameters.isSkipQueryPlanCache();
     }
 
     private IQueryPlanCacheKey resolveQueryPlanCacheKey(MetadataProvider metadataProvider,
-            IRequestParameters requestParameters, ClientRequest clientRequest) {
+            IRequestParameters requestParameters, ClientRequest clientRequest) throws HyracksDataException {
         if (isIgnoreCache(metadataProvider, requestParameters)) {
             return null;
         }
         final QueryPlanCacheKey baseKey = new QueryPlanCacheKey(requestParameters.getStatement(),
                 sessionConfig.isOptimize(), metadataProvider.getConfig(), sessionConfig.getMaxWarnings(),
-                metadataProvider.getResultSetId().getId(), metadataProvider.getDefaultNamespace());
+                metadataProvider.getResultSetId().getId(), metadataProvider.getDefaultNamespace(),
+                RequestParameters.canonicalizeParameterValues(requestParameters.getStatementParameters()));
         return buildQueryPlanCacheKey(baseKey, clientRequest);
     }
 
