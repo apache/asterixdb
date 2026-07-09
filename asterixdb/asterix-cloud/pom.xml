@@ -237,5 +237,10 @@
             <artifactId>azure</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.adobe.testing</groupId>
+            <artifactId>s3mock-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
