@@ -87,10 +87,11 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     private final Random randomNumGen;
     private ICachedPage page = null;
     private int pageId = -1;
-    // Pre-enumerated leaf page IDs for perfectly uniform random access.
-    // Enumeration touches only interior pages (level >= 1), skipping all
-    // leaf-level I/O.
-    private int[] leafPageIds = null;
+    // Pre-enumerated leaf page IDs for perfectly uniform random access, held as a succinct
+    // bitmap+select (ASTERIXDB-3702) instead of an int[] (~15x less memory for dense row components).
+    // Enumeration touches only interior pages (level >= 1), skipping all leaf-level I/O; get(i)
+    // returns the i-th leaf id in ascending order (identical to the old leafPageIds[i]).
+    private BitmapLeafIds leafPageIds = null;
     // Batched random draws stored in flat parallel primitive arrays (SoA) to
     // keep the hot per-draw read cache-friendly and free of object headers /
     // pointer chasing. Sorting is done on a packed long[] key
@@ -184,7 +185,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         // children's page IDs directly), so the cost is proportional to the
         // number of interior pages (~0.4 % of total pages for typical fan-out).
         // The resulting array gives perfectly uniform random access to any leaf.
-        leafPageIds = bTree.enumerateLeafPageIds(rootPageId, bTreeOpCtx, bufferCacheOpCtx);
+        leafPageIds = bTree.enumerateLeafPageIdsCompact(rootPageId, bTreeOpCtx, bufferCacheOpCtx);
         // Scale the give-up threshold to a multiple of the component's tuple-population
         // ceiling (leaf pages x max tuples/leaf). The per-component sample target never
         // exceeds the population (the caller caps it at the component's live-tuple
@@ -200,11 +201,11 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         // the product overflows int, but there the target is far below the population so
         // the loop exits on reaching it; clamping to Integer.MAX_VALUE just avoids a
         // negative (overflowed) threshold that would itself cause truncation.
-        long populationCeiling = (long) leafPageIds.length * leafTupleCapacity;
+        long populationCeiling = (long) leafPageIds.size() * leafTupleCapacity;
         effectiveMaxLeafFindingAttempts = (int) Math.min(Integer.MAX_VALUE,
                 Math.max(maxLeafFindingAttempts, POPULATION_ATTEMPT_MULTIPLIER * populationCeiling));
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("DiskBTreeSampleCursor: {} leaf pages enumerated, target {} samples", leafPageIds.length,
+            LOGGER.debug("DiskBTreeSampleCursor: {} leaf pages enumerated, target {} samples", leafPageIds.size(),
                     componentSampleCardinality);
         }
     }
@@ -253,7 +254,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     private LeafDraw nextLeafDraw() {
         if (pendingLeafDrawIndex >= leafDrawBatchSize) {
             refillLeafDrawBatch();
-            if (leafPageIds == null || leafPageIds.length == 0) {
+            if (leafPageIds == null || leafPageIds.size() == 0) {
                 return null;
             }
         }
@@ -268,12 +269,12 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
 
     private void refillLeafDrawBatch() {
         pendingLeafDrawIndex = 0;
-        if (leafPageIds == null || leafPageIds.length == 0 || leafDrawBatchSize <= 0) {
+        if (leafPageIds == null || leafPageIds.size() == 0 || leafDrawBatchSize <= 0) {
             return;
         }
         for (int i = 0; i < leafDrawBatchSize; i++) {
-            int randomLeafIndex = randomNumGen.nextInt(leafPageIds.length);
-            int targetPageId = leafPageIds[randomLeafIndex];
+            int randomLeafIndex = randomNumGen.nextInt(leafPageIds.size());
+            int targetPageId = leafPageIds.get(randomLeafIndex);
             drawPageIds[i] = targetPageId;
             drawAcceptanceSamples[i] = randomNumGen.nextDouble();
             drawTupleStartSeeds[i] = randomNumGen.nextInt();
@@ -319,16 +320,14 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      * per-tuple selection probability.
      */
     private boolean pinAndAcceptLeafPage(LeafDraw leafDraw) throws HyracksDataException {
-        // Skip the nanoTime() pair entirely unless debug logging will consume it.
+        // Skip the nanoTime() pair entirely unless trace logging will consume it.
         long nanos = traceTimingEnabled ? System.nanoTime() : 0L;
         try {
             totalAccessCount++;
             if (pageId != leafDraw.pageId || page == null) {
                 releasePage();
                 int targetPageId = leafDraw.pageId;
-                ICachedPage randomLeafPage =
-                        bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, targetPageId), bufferCacheOpCtx);
-                page = randomLeafPage;
+                page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, targetPageId), bufferCacheOpCtx);
                 leafFrame.setPage(page);
                 pageId = targetPageId;
                 totalLeafPins++;
