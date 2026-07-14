@@ -26,7 +26,7 @@ $query-spacing-unit: 5px;
 .spinner {
     margin-left: 15px;
     &::ng-deep circle {
-        stroke: blue;
+        stroke: #25428d;
     }
 }
 
@@ -132,7 +132,7 @@ $query-spacing-unit: 5px;
 }
 
 .explain {
-  color: blue;
+  color: #25428d;
 }
 
 .stop {
