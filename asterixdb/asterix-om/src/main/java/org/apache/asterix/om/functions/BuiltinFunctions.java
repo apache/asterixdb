@@ -3101,6 +3101,10 @@ public class BuiltinFunctions {
         return registeredFunctions.get(fi);
     }
 
+    public static Set<FunctionIdentifier> getBuiltinFunctionIdentifiers() {
+        return Collections.unmodifiableSet(registeredFunctions.keySet());
+    }
+
     public static BuiltinFunctionInfo resolveBuiltinFunction(String name, int arity) {
         //TODO:optimize
         BuiltinFunctionInfo finfo;

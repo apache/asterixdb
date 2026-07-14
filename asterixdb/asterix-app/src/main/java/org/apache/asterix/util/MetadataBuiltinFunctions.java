@@ -24,6 +24,7 @@ import org.apache.asterix.app.function.DatasetResourcesRewriter;
 import org.apache.asterix.app.function.DatasetRewriter;
 import org.apache.asterix.app.function.DumpIndexRewriter;
 import org.apache.asterix.app.function.FeedRewriter;
+import org.apache.asterix.app.function.FunctionMetadataRewriter;
 import org.apache.asterix.app.function.JobSummariesRewriter;
 import org.apache.asterix.app.function.OpenRequestsRewriter;
 import org.apache.asterix.app.function.PingRewriter;
@@ -126,6 +127,12 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addUnnestFun(CollectionEstimateColumnCountRewriter.ESTIMATED_COLLECTION_COLUMN_COUNT, true);
         BuiltinFunctions.addDatasourceFunction(CollectionEstimateColumnCountRewriter.ESTIMATED_COLLECTION_COLUMN_COUNT,
                 CollectionEstimateColumnCountRewriter.INSTANCE);
+        // Function metadata function
+        BuiltinFunctions.addFunction(FunctionMetadataRewriter.FUNCTION_METADATA,
+                (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(FunctionMetadataRewriter.FUNCTION_METADATA, true);
+        BuiltinFunctions.addDatasourceFunction(FunctionMetadataRewriter.FUNCTION_METADATA,
+                FunctionMetadataRewriter.INSTANCE, BuiltinFunctions.DataSourceFunctionProperty.MIN_MEMORY_BUDGET);
     }
 
     private MetadataBuiltinFunctions() {
