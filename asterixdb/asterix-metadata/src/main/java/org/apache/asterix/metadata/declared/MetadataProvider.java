@@ -118,10 +118,10 @@ import org.apache.asterix.runtime.operators.LSMSecondaryInsertDeleteWithNestedPl
 import org.apache.asterix.runtime.operators.LSMSecondaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMSecondaryUpsertWithNestedPlanOperatorDescriptor;
 import org.apache.asterix.runtime.utils.VectorDistanceFunctionFactory;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
@@ -498,11 +498,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Index findSampleIndex(String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException {
         Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
-        Index sampleIndex = getIndex(database, dataverseName, datasetName, sampleIndexNames.first);
+        Index sampleIndex = getIndex(database, dataverseName, datasetName, sampleIndexNames.getLeft());
         if (sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
             return sampleIndex;
         }
-        sampleIndex = getIndex(database, dataverseName, datasetName, sampleIndexNames.second);
+        sampleIndex = getIndex(database, dataverseName, datasetName, sampleIndexNames.getRight());
         return sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP ? sampleIndex : null;
     }
 
@@ -577,7 +577,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         ExternalScanOperatorDescriptor dataScanner = new ExternalScanOperatorDescriptor(jobSpec, rDesc, adapterFactory);
         try {
-            return new Pair<>(dataScanner, adapterFactory.getPartitionConstraint());
+            return Pair.of(dataScanner, adapterFactory.getPartitionConstraint());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -743,7 +743,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         } else {
             btreeSearchOp = null;
         }
-        return new Pair<>(btreeSearchOp, datasetPartitioningProp.getConstraints());
+        return Pair.of(btreeSearchOp, datasetPartitioningProp.getConstraints());
     }
 
     private static ITupleFilterFactory andTupleFilter(ITupleFilterFactory tupleFilterFactory,
@@ -789,7 +789,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryIndex,
                     secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
-            IAType keyType = keyTypePair.first;
+            IAType keyType = keyTypePair.getLeft();
             int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
             int numNestedSecondaryKeyFields = numDimensions * 2;
             primaryKeyFieldsInSecondaryIndex = new int[numPrimaryKeys];
@@ -819,7 +819,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             rtreeSearchOp = null;
         }
 
-        return new Pair<>(rtreeSearchOp, partitioningProperties.getConstraints());
+        return Pair.of(rtreeSearchOp, partitioningProperties.getConstraints());
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getVectorSearchRuntime(JobSpecification jobSpec,
@@ -870,7 +870,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 distanceFunctionFactory, partitionsMap, projectedFields, tupleFilterFactory, includeFilterFields,
                 indexEpsilon, indexOnly);
 
-        return new Pair<>(vectorSearchOp, partitioningProperties.getConstraints());
+        return Pair.of(vectorSearchOp, partitioningProperties.getConstraints());
     }
 
     @Override
@@ -882,7 +882,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IPushRuntimeFactory runtime = ExternalWriterProvider.getWriteFileRuntime(appCtx, sink, sourceType,
                 staticPathExpr, pathSourceLocation, dynamicPathEvalFactory, inputDesc, sourceColumn, partitionColumns,
                 partitionComparatorFactories);
-        return new Pair<>(runtime, null);
+        return Pair.of(runtime, null);
     }
 
     @Override
@@ -909,7 +909,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
-        return new Pair<>(resultWriter, null);
+        return Pair.of(resultWriter, null);
     }
 
     @Override
@@ -1196,7 +1196,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException(e);
         }
 
-        return new Pair<>(dataScanner, constraint);
+        return Pair.of(dataScanner, constraint);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertOrDeleteRuntime(IndexOperation indexOp,
@@ -1289,7 +1289,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         partitioningProperties.getComputeStorageMap(), IndexOperation.DELETE);
             }
         }
-        return new Pair<>(op, partitioningProperties.getConstraints());
+        return Pair.of(op, partitioningProperties.getConstraints());
     }
 
     protected LSMPrimaryInsertOperatorDescriptor createLSMPrimaryInsertOperatorDescriptor(JobSpecification spec,
@@ -1475,7 +1475,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         filterFactory, false, modificationCallbackFactory, partitionerFactory,
                         partitioningProperties.getComputeStorageMap());
             }
-            return new Pair<>(op, partitioningProperties.getConstraints());
+            return Pair.of(op, partitioningProperties.getConstraints());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -1539,7 +1539,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         fieldPermutation, indexOp, idfh, modificationCallbackFactory, secondaryKeysPipelines.get(0),
                         tuplePartitionerFactory, partitioningProperties.getComputeStorageMap());
             }
-            return new Pair<>(op, partitioningProperties.getConstraints());
+            return Pair.of(op, partitioningProperties.getConstraints());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -1566,7 +1566,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryIndex, secondaryKeyTypes.get(0),
                 secondaryKeyExprs.get(0), recType);
-        IAType spatialType = keyPairType.first;
+        IAType spatialType = keyPairType.getLeft();
         int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = dimension * 2;
         int numPrimaryKeys = primaryKeys.size();
@@ -1651,7 +1651,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     indexDataflowHelperFactory, filterFactory, false, modificationCallbackFactory, partitionerFactory,
                     partitioningProperties.getComputeStorageMap());
         }
-        return new Pair<>(op, partitioningProperties.getConstraints());
+        return Pair.of(op, partitioningProperties.getConstraints());
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getVectorIndexModificationRuntime(String database,
@@ -1740,7 +1740,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         partitioningProperties.getComputeStorageMap());
             }
 
-            return new Pair<>(op, partitioningProperties.getConstraints());
+            return Pair.of(op, partitioningProperties.getConstraints());
         } catch (Exception e) {
             throw CompilationException.create(ErrorCode.COMPILATION_ERROR, e,
                     "failed to generate the vector index modification runtime: " + e.getMessage());
@@ -1863,7 +1863,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         indexDataFlowFactory, filterFactory, false, modificationCallbackFactory, partitionerFactory,
                         partitioningProperties.getComputeStorageMap());
             }
-            return new Pair<>(op, partitioningProperties.getConstraints());
+            return Pair.of(op, partitioningProperties.getConstraints());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -1983,7 +1983,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IAType secondaryKeyType;
             Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryIndex,
                     secondaryKeyTypeEntries.get(0), secondaryKeyExprs.get(0), recType);
-            secondaryKeyType = keyPairType.first;
+            secondaryKeyType = keyPairType.getLeft();
             List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
             i = 0;
             for (List<String> partitioningKey : partitioningKeys) {
@@ -2049,7 +2049,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory,
                     fullTextConfigEvaluatorFactory, docField, keyFields, isPartitioned, true, false,
                     MissingWriterFactory.INSTANCE);
-            return new Pair<>(tokenizerOp, partitioningProperties.getConstraints());
+            return Pair.of(tokenizerOp, partitioningProperties.getConstraints());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }

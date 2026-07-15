@@ -20,7 +20,7 @@ package org.apache.asterix.common.api;
 
 import java.util.List;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.IServiceContext;
 
 /**

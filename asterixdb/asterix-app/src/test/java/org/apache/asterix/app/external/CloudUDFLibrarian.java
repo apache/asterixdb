@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,7 +50,7 @@ public class CloudUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     private static String createAuthHeader(Pair<String, String> credentials) {
-        String auth = credentials.first + ":" + credentials.second;
+        String auth = credentials.getLeft() + ":" + credentials.getRight();
         byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
         return "Basic " + new String(encodedAuth);
     }

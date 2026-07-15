@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
@@ -758,10 +758,11 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             } else {
                 stringBuilder.append("; ");
             }
-            if (variableExpressionPair.first != null) {
-                stringBuilder.append(variableExpressionPair.first).append(" := ").append(variableExpressionPair.second);
+            if (variableExpressionPair.getLeft() != null) {
+                stringBuilder.append(variableExpressionPair.getLeft()).append(" := ")
+                        .append(variableExpressionPair.getRight());
             } else {
-                stringBuilder.append(variableExpressionPair.second.getValue().toString());
+                stringBuilder.append(variableExpressionPair.getRight().getValue().toString());
             }
         }
         stringBuilder.append("]");
@@ -770,8 +771,8 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     private void printOrderExprList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprList) {
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprList) {
             stringBuilder.append("(");
-            appendOrder(p.first);
-            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
+            appendOrder(p.getLeft());
+            stringBuilder.append(", ").append(p.getRight().getValue().toString()).append(") ");
         }
     }
 

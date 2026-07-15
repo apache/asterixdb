@@ -69,8 +69,8 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.vector.VectorIndexParameters;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -186,7 +186,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     while (nestedFieldNameCursor.next()) {
                         nestedFieldName.add(((AString) nestedFieldNameCursor.get()).getStringValue());
                     }
-                    searchElements.add(new Pair<>(null, Collections.singletonList(nestedFieldName)));
+                    searchElements.add(Pair.of(null, Collections.singletonList(nestedFieldName)));
                 }
                 break;
             case ARRAY:
@@ -210,7 +210,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                             while (innerListCursorForArray.next()) {
                                 project.add(((AString) innerListCursorForArray.get()).getStringValue());
                             }
-                            searchElement = new Pair<>(null, Collections.singletonList(project));
+                            searchElement = Pair.of(null, Collections.singletonList(project));
                             break;
                         case OBJECT:
                             ARecord complexSearchKeyRecord = (ARecord) complexSearchKeyItem;
@@ -253,7 +253,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                             } else {
                                 projectList.add(null);
                             }
-                            searchElement = new Pair<>(unnestList, projectList);
+                            searchElement = Pair.of(unnestList, projectList);
                             break;
                         default:
                             throw new AsterixException(ErrorCode.METADATA_ERROR, complexSearchKeyItem.toJSON());
@@ -345,8 +345,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             searchKeyType = new ArrayList<>(searchElementCount);
             for (int i = 0; i < searchElementCount; i++) {
                 Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);
-                List<List<String>> unnestPathList = searchElement.first;
-                List<List<String>> projectPathList = searchElement.second;
+                List<List<String>> unnestPathList = searchElement.getLeft();
+                List<List<String>> projectPathList = searchElement.getRight();
 
                 ARecordType sourceRecordType = keyFieldSourceIndicator.get(i) == 1 ? metaDt : recordDt;
                 IAType inputTypePrime;
@@ -420,7 +420,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         switch (Index.IndexCategory.of(indexType)) {
             case VALUE:
                 List<List<String>> keyFieldNames =
-                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                        searchElements.stream().map(Pair::getRight).map(l -> l.get(0)).collect(Collectors.toList());
                 List<IAType> keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
 
                 OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
@@ -465,7 +465,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 break;
             case VTREE:
                 keyFieldNames =
-                        searchElements.stream().map(Pair::getSecond).map(List::getFirst).collect(Collectors.toList());
+                        searchElements.stream().map(Pair::getRight).map(List::getFirst).collect(Collectors.toList());
                 keyFieldTypes = searchKeyType.stream().map(List::getFirst).collect(Collectors.toList());
 
                 excludeUnknownKey = OptionalBoolean.empty();
@@ -504,7 +504,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 break;
             case TEXT:
                 keyFieldNames =
-                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                        searchElements.stream().map(Pair::getRight).map(l -> l.get(0)).collect(Collectors.toList());
                 keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
                 // Check if there is a gram length as well.
                 int gramLength = -1;
@@ -521,14 +521,14 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);
                     List<IAType> typeList = searchKeyType.get(i);
                     int sourceIndicator = keyFieldSourceIndicator.get(i);
-                    elementList.add(new Index.ArrayIndexElement(searchElement.first, searchElement.second, typeList,
-                            sourceIndicator));
+                    elementList.add(new Index.ArrayIndexElement(searchElement.getLeft(), searchElement.getRight(),
+                            typeList, sourceIndicator));
                 }
                 indexDetails = new Index.ArrayIndexDetails(elementList, isOverridingKeyTypes);
                 break;
             case SAMPLE:
                 keyFieldNames =
-                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                        searchElements.stream().map(Pair::getRight).map(l -> l.get(0)).collect(Collectors.toList());
                 keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
 
                 int sampleSeedPos = indexRecord.getType().getFieldIndex(SAMPLE_SEED);

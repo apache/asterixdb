@@ -28,8 +28,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -106,18 +106,18 @@ public abstract class PushMapOperatorThroughUnionRule implements IAlgebraicRewri
         if (leftBranchPair == null) {
             return false;
         }
-        ILogicalOperator leftBranchRootOp = leftBranchPair.first;
+        ILogicalOperator leftBranchRootOp = leftBranchPair.getLeft();
         //  < original produced var, new produced variable in left branch >
-        Map<LogicalVariable, LogicalVariable> leftBranchProducedVarMap = leftBranchPair.second;
+        Map<LogicalVariable, LogicalVariable> leftBranchProducedVarMap = leftBranchPair.getRight();
 
         Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> rightBranchPair =
                 insertIntoBranch(op, opUsedVars, unionAllOp, 1, context);
         if (rightBranchPair == null) {
             return false;
         }
-        ILogicalOperator rightBranchRootOp = rightBranchPair.first;
+        ILogicalOperator rightBranchRootOp = rightBranchPair.getLeft();
         // < original produced var, new produced variable in right branch >
-        Map<LogicalVariable, LogicalVariable> rightBranchProducedVarMap = rightBranchPair.second;
+        Map<LogicalVariable, LogicalVariable> rightBranchProducedVarMap = rightBranchPair.getRight();
 
         UnionAllOperator newUnionAllOp = (UnionAllOperator) OperatorManipulationUtil.deepCopy(unionAllOp);
         newUnionAllOp.getInputs().add(new MutableObject<>(leftBranchRootOp));
@@ -155,7 +155,7 @@ public abstract class PushMapOperatorThroughUnionRule implements IAlgebraicRewri
             return null;
         }
 
-        ILogicalOperator newBranchRootOp = newBranchRootOpPair.first;
+        ILogicalOperator newBranchRootOp = newBranchRootOpPair.getLeft();
         newBranchRootOp.getInputs().get(0).setValue(branchRootOp);
         context.computeAndSetTypeEnvironmentForOperator(newBranchRootOp);
 
@@ -180,6 +180,6 @@ public abstract class PushMapOperatorThroughUnionRule implements IAlgebraicRewri
                 new LogicalOperatorDeepCopyWithNewVariablesVisitor(context, null, usedVarsMapping, true);
         ILogicalOperator newOp = deepCopyVisitor.deepCopy(op);
 
-        return new Pair<>(newOp, deepCopyVisitor.getInputToOutputVariableMapping());
+        return Pair.of(newOp, deepCopyVisitor.getInputToOutputVariableMapping());
     }
 }

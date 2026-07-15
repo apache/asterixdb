@@ -102,7 +102,7 @@ import org.apache.asterix.utils.RedactionUtil;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
@@ -304,10 +304,10 @@ public class NCApplication extends BaseNCApplication {
             apiServer.addServlet((new BasicAuthServlet(apiServer.ctx(),
                     new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
                             apiServer.getScheme(), externalProperties.getNcApiPort()),
-                    auth.getFirst(), auth.getSecond())));
+                    auth.getLeft(), auth.getRight())));
             apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
                     new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY }, getApplicationContext()),
-                    auth.getFirst(), auth.getSecond()));
+                    auth.getLeft(), auth.getRight()));
         } else {
             //UDF deployment server
             IApplicationConfig appCfg = getApplicationContext().getServiceContext().getAppConfig();
@@ -322,7 +322,7 @@ public class NCApplication extends BaseNCApplication {
                     BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
             udfServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
                     new NCUdfDSApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext()),
-                    auth.getFirst(), auth.getSecond()));
+                    auth.getLeft(), auth.getRight()));
             webManager.add(udfServer);
 
         }

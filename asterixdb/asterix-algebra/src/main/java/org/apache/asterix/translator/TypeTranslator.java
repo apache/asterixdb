@@ -53,8 +53,8 @@ import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
 
@@ -288,7 +288,7 @@ public class TypeTranslator {
 
     private static void addIncompleteFieldTypeReference(ARecordType recType, int fldPosition,
             TypeReferenceExpression tre, Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes) {
-        String typeName = tre.getIdent().second.getValue();
+        String typeName = tre.getIdent().getRight().getValue();
         Map<ARecordType, List<Integer>> refMap = incompleteFieldTypes.computeIfAbsent(typeName, k -> new HashMap<>());
         List<Integer> typeList = refMap.computeIfAbsent(recType, k -> new ArrayList<>());
         typeList.add(fldPosition);
@@ -385,13 +385,13 @@ public class TypeTranslator {
         Pair<Namespace, Identifier> treTypeName = tre.getIdent();
         DataverseName activeDataverse;
         String activeDatabase;
-        if (treTypeName.first == null) {
+        if (treTypeName.getLeft() == null) {
             activeDataverse = defaultDataverse;
             activeDatabase = defaultDatabase;
         } else {
-            activeDataverse = treTypeName.first.getDataverseName();
-            activeDatabase = treTypeName.first.getDatabaseName();
+            activeDataverse = treTypeName.getLeft().getDataverseName();
+            activeDatabase = treTypeName.getLeft().getDatabaseName();
         }
-        return new TypeSignature(activeDatabase, activeDataverse, treTypeName.second.getValue());
+        return new TypeSignature(activeDatabase, activeDataverse, treTypeName.getRight().getValue());
     }
 }

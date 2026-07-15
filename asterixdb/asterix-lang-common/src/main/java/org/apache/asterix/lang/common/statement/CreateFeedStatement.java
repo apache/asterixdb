@@ -30,8 +30,8 @@ import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * The new create feed statement only concerns the feed adaptor configuration.
@@ -51,15 +51,15 @@ public class CreateFeedStatement extends AbstractStatement {
     }
 
     public Namespace getNamespace() {
-        return qName.first;
+        return qName.getLeft();
     }
 
     public DataverseName getDataverseName() {
-        return qName.first == null ? null : qName.first.getDataverseName();
+        return qName.getLeft() == null ? null : qName.getLeft().getDataverseName();
     }
 
     public Identifier getFeedName() {
-        return qName.second;
+        return qName.getRight();
     }
 
     public boolean getIfNotExists() {

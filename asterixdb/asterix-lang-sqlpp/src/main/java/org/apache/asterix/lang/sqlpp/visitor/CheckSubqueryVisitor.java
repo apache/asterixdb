@@ -69,7 +69,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This visitor recursively checks if there is a subquery in the argument language construct.
@@ -362,7 +362,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     private <T extends ILangExpression> boolean visitFieldList(Collection<Pair<T, Identifier>> fieldList,
             ILangExpression arg) throws CompilationException {
         for (Pair<T, Identifier> p : fieldList) {
-            if (visit(p.first, arg)) {
+            if (visit(p.getLeft(), arg)) {
                 return true;
             }
         }

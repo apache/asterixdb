@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Collection of hints supported by create dataset statement.
@@ -51,7 +51,7 @@ public class DatasetHints {
                 return h.validateValue(appCtx, value);
             }
         }
-        return new Pair<>(false, "Unknown hint :" + hintName);
+        return Pair.of(false, "Unknown hint :" + hintName);
     }
 
     private static Set<IHint> hints = initHints();
@@ -83,13 +83,13 @@ public class DatasetHints {
             try {
                 longValue = Long.parseLong(value);
                 if (longValue < 0) {
-                    return new Pair<>(false, "Value must be >= 0");
+                    return Pair.of(false, "Value must be >= 0");
                 }
             } catch (NumberFormatException nfe) {
                 valid = false;
-                return new Pair<>(valid, "Inappropriate value");
+                return Pair.of(valid, "Inappropriate value");
             }
-            return new Pair<>(true, null);
+            return Pair.of(true, null);
         }
 
     }
@@ -113,18 +113,18 @@ public class DatasetHints {
             try {
                 intValue = Integer.parseInt(value);
                 if (intValue < 0) {
-                    return new Pair<>(false, "Value must be >= 0");
+                    return Pair.of(false, "Value must be >= 0");
                 }
                 int numNodesInCluster = appCtx.getClusterStateManager().getParticipantNodes(true).size();
                 if (numNodesInCluster < intValue) {
-                    return new Pair<>(false,
+                    return Pair.of(false,
                             "Value must be less than or equal to the available number of nodes in cluster ("
                                     + numNodesInCluster + ")");
                 }
             } catch (NumberFormatException nfe) {
-                return new Pair<>(false, "Inappropriate value");
+                return Pair.of(false, "Inappropriate value");
             }
-            return new Pair<>(true, null);
+            return Pair.of(true, null);
         }
 
     }

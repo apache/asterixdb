@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 
@@ -47,7 +47,7 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
         while (retryCt < 10) {
             try {
                 curlResult = asterix.execInContainer("curl", "--no-progress-meter", "-X", "POST", "-u",
-                        credentials.first + ":" + credentials.second, "-F",
+                        credentials.getLeft() + ":" + credentials.getRight(), "-F",
                         "data=@" + "/var/tmp/asterix-app/" + libPath, "-F", "type=" + type,
                         "http://localhost:19004" + path);
                 handleResponse(curlResult);
@@ -64,7 +64,7 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
     public void uninstall(String path, Pair<String, String> credentials) throws IOException, AsterixException {
         try {
             Container.ExecResult curlResult = asterix.execInContainer("curl", "-X", "DELETE", "-u",
-                    credentials.first + ":" + credentials.second, "http://localhost:19004" + path);
+                    credentials.getLeft() + ":" + credentials.getRight(), "http://localhost:19004" + path);
             handleResponse(curlResult);
         } catch (InterruptedException e) {
             throw new IOException(e);

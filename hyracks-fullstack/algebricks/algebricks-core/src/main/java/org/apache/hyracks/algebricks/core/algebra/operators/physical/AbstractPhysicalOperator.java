@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -128,7 +128,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
         int[] inputDependencyLabels = new int[op.getInputs().size()]; // filled with 0's
         int[] outputDependencyLabels = new int[] { 0 };
-        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 
     protected void contributeOpDesc(IHyracksJobBuilder builder, AbstractLogicalOperator op,

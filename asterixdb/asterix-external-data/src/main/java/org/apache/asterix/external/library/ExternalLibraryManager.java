@@ -78,6 +78,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
@@ -86,7 +87,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
@@ -247,7 +247,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                 try {
                     library.close();
                 } catch (HyracksDataException e) {
-                    LOGGER.warn("Error closing library " + p.getKey().first + "." + p.getKey().second, e);
+                    LOGGER.warn("Error closing library " + p.getKey().getLeft() + "." + p.getKey().getRight(), e);
                 }
             }
         }
@@ -306,7 +306,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                         if (tokens.length < 3) {
                             return FileVisitResult.TERMINATE;
                         }
-                        libs.add(new Pair<>(new Namespace(candidateDb, DataverseName.create(List.of(tokens[1]))),
+                        libs.add(Pair.of(new Namespace(candidateDb, DataverseName.create(List.of(tokens[1]))),
                                 tokens[3]));
                         return FileVisitResult.SKIP_SUBTREE;
 
@@ -329,7 +329,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                     Namespace candidateNs = new Namespace(candidateDb, candidateDv);
                     FileReference candidateLibPath = findLibraryRevDir(candidateNs, candidateLib);
                     if (candidateLibPath != null) {
-                        libs.add(new Pair<>(candidateNs, candidateLib));
+                        libs.add(Pair.of(candidateNs, candidateLib));
                     }
                 } catch (AsterixException e) {
                     // shouldn't happen
@@ -444,7 +444,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     private static Pair<Namespace, String> getKey(Namespace namespace, String libraryName) {
-        return new Pair<>(namespace, libraryName);
+        return Pair.of(namespace, libraryName);
     }
 
     @Override

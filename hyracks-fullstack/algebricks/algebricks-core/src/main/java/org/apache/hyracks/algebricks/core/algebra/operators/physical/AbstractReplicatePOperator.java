@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -58,7 +58,7 @@ public abstract class AbstractReplicatePOperator extends AbstractPhysicalOperato
                 outputDependencyLabels[i] = 1;
             }
         }
-        return new Pair<>(inputDependencyLabels, outputDependencyLabels);
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 
     @Override

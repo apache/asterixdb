@@ -74,7 +74,7 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Void, Collection<VariableExpr>> {
 
@@ -343,7 +343,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         }
         if (gc.hasGroupFieldList()) {
             for (Pair<Expression, Identifier> groupField : gc.getGroupFieldList()) {
-                groupField.first.accept(this, freeVars);
+                groupField.getLeft().accept(this, freeVars);
             }
         }
         if (gc.hasWithMap()) {
@@ -360,7 +360,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         cc.getClusteringExpression().accept(this, freeVars);
         if (cc.hasClusterFieldList()) {
             for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
-                field.first.accept(this, freeVars);
+                field.getLeft().accept(this, freeVars);
             }
         }
         if (cc.hasWithOptions()) {
@@ -554,7 +554,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         }
         if (winExpr.hasWindowFieldList()) {
             for (Pair<Expression, Identifier> field : winExpr.getWindowFieldList()) {
-                field.first.accept(this, freeVars);
+                field.getLeft().accept(this, freeVars);
             }
         }
         visit(winExpr.getExprList(), freeVars);

@@ -41,8 +41,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -79,15 +79,12 @@ public class RTreeAccessMethod implements IAccessMethod {
     // false positive results or not.
     // In R-Tree case with geometry, the functions to be considered to check for false positive results are:
     // ST_INTERSECTS, ST_CONTAINS, ST_CROSSES, ST_OVERLAPS, ST_TOUCHES, ST_WITHIN, ST_DISJOINT.
-    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections.unmodifiableList(
-            Arrays.asList(new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.SPATIAL_INTERSECT, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_INTERSECTS, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_CONTAINS, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_CROSSES, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_OVERLAPS, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_TOUCHES, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_WITHIN, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.ST_DISJOINT, true)));
+    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS =
+            Collections.unmodifiableList(Arrays.asList(Pair.of(BuiltinFunctions.SPATIAL_INTERSECT, true),
+                    Pair.of(BuiltinFunctions.ST_INTERSECTS, true), Pair.of(BuiltinFunctions.ST_CONTAINS, true),
+                    Pair.of(BuiltinFunctions.ST_CROSSES, true), Pair.of(BuiltinFunctions.ST_OVERLAPS, true),
+                    Pair.of(BuiltinFunctions.ST_TOUCHES, true), Pair.of(BuiltinFunctions.ST_WITHIN, true),
+                    Pair.of(BuiltinFunctions.ST_DISJOINT, true)));
 
     public static final RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
 
@@ -150,7 +147,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         Pair<Boolean, Boolean> functionFalsePositiveCheck =
                 AccessMethodUtils.canFunctionGenerateFalsePositiveResultsUsingIndex(funcExpr, FUNC_IDENTIFIERS);
 
-        if (!functionFalsePositiveCheck.first) {
+        if (!functionFalsePositiveCheck.getLeft()) {
             return false;
         }
 
@@ -161,8 +158,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         // If the given index is not built on a POINT or a RECTANGLE field,
         // the query result can include false positives. And the result from secondary index search is an MBR,
         // thus we can't construct original secondary field value to remove any false positive results.
-        if (keyPairType.first.getTypeTag() == BuiltinType.APOINT.getTypeTag()
-                || keyPairType.first.getTypeTag() == BuiltinType.ARECTANGLE.getTypeTag()) {
+        if (keyPairType.getLeft().getTypeTag() == BuiltinType.APOINT.getTypeTag()
+                || keyPairType.getLeft().getTypeTag() == BuiltinType.ARECTANGLE.getTypeTag()) {
             isIndexOnlyPlan = true;
             // The following variable can be changed if a query shape is not a POINT or rectangle.
             requireVerificationAfterSIdxSearch = false;
@@ -247,7 +244,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
 
         // Get the number of dimensions corresponding to the field indexed by chosenIndex.
-        IAType spatialType = keyPairType.first;
+        IAType spatialType = keyPairType.getLeft();
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
 

@@ -50,8 +50,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -114,10 +114,9 @@ public class VectorIndexAccessMethod implements IAccessMethod {
     // analyzeFuncExprArgsAndUpdateAnalysisCtx); a plain vector_distance produces the same builtins WITHOUT
     // the hint and stays an exact full-scan KNN.
     private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS =
-            Collections.unmodifiableList(Arrays.asList(new Pair<>(BuiltinFunctions.EUCLIDEAN_DISTANCE, true),
-                    new Pair<>(BuiltinFunctions.EUCLIDEAN_SQUARED_DISTANCE, true),
-                    new Pair<>(BuiltinFunctions.COSINE_DISTANCE, true),
-                    new Pair<>(BuiltinFunctions.DOT_DISTANCE, true)));
+            Collections.unmodifiableList(Arrays.asList(Pair.of(BuiltinFunctions.EUCLIDEAN_DISTANCE, true),
+                    Pair.of(BuiltinFunctions.EUCLIDEAN_SQUARED_DISTANCE, true),
+                    Pair.of(BuiltinFunctions.COSINE_DISTANCE, true), Pair.of(BuiltinFunctions.DOT_DISTANCE, true)));
 
     @Override
     public List<Pair<FunctionIdentifier, Boolean>> getOptimizableFunctions() {
@@ -379,7 +378,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 OrderOperator orderOp = (OrderOperator) orderRef.getValue();
                 VariableReferenceExpression distVarRef = new VariableReferenceExpression(distVar);
                 distVarRef.setSourceLocation(orderOp.getSourceLocation());
-                orderOp.getOrderExpressions().get(0).second.setValue(distVarRef);
+                orderOp.getOrderExpressions().get(0).getRight().setValue(distVarRef);
 
                 // Rebind the WHERE onto the index's INCLUDE columns. There is no primary lookup here to
                 // evaluate it against, and the record variable is about to be neutralized, so a predicate

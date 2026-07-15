@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -55,7 +55,7 @@ public class PushSortDownRule implements IAlgebraicRewriteRule {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderKeys = orderOperator.getOrderExpressions();
         Set<LogicalVariable> orderUsedVars = new HashSet<LogicalVariable>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> orderKey : orderKeys) {
-            orderKey.second.getValue().getUsedVariables(orderUsedVars);
+            orderKey.getRight().getValue().getUsedVariables(orderUsedVars);
         }
         Mutable<ILogicalOperator> inputOpRef = orderOperator.getInputs().get(0);
         ILogicalOperator inputOperator = inputOpRef.getValue();

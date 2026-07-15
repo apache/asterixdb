@@ -36,8 +36,8 @@ import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -61,8 +61,8 @@ public class OperatorUtils {
             Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctVarsFuncPair,
             IOptimizationContext context, HashMap<DataSourceScanOperator, ILogicalOperator> scanAndDistinctOps) {
 
-        List<LogicalVariable> distinctVars = distinctVarsFuncPair.getFirst();
-        List<AbstractFunctionCallExpression> distinctFunctions = distinctVarsFuncPair.getSecond();
+        List<LogicalVariable> distinctVars = distinctVarsFuncPair.getLeft();
+        List<AbstractFunctionCallExpression> distinctFunctions = distinctVarsFuncPair.getRight();
         if (op == null || distinctVars.size() == 0) {
             return;
         }
@@ -116,10 +116,10 @@ public class OperatorUtils {
                             ((GroupByOperator) currentOp).getGroupByList();
                     // look for any DistinctOp/GroupByOp variables are replaceable with a nested GroupByOp Variable-expression
                     for (int i = 0; i < nestedGrpVarsList.size(); i++) {
-                        LogicalVariable prevVar = nestedGrpVarsList.get(i).first;
+                        LogicalVariable prevVar = nestedGrpVarsList.get(i).getLeft();
                         int idx = distinctVars.indexOf(prevVar);
                         if (idx != -1 && distinctVars.size() > 0) {
-                            ILogicalExpression expr = nestedGrpVarsList.get(i).second.getValue();
+                            ILogicalExpression expr = nestedGrpVarsList.get(i).getRight().getValue();
                             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                                 LogicalVariable newVar = ((VariableReferenceExpression) expr).getVariableReference();
                                 distinctVars.remove(idx);
@@ -188,9 +188,9 @@ public class OperatorUtils {
     public static Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> getGroupByDistinctVarFuncPair(
             ILogicalOperator grpByDistinctOp) {
         Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctVarsFunctions =
-                new Pair<>(new ArrayList<>(), new ArrayList<>());
-        List<LogicalVariable> distinctVars = distinctVarsFunctions.getFirst();
-        List<AbstractFunctionCallExpression> distinctFunctions = distinctVarsFunctions.getSecond();
+                Pair.of(new ArrayList<>(), new ArrayList<>());
+        List<LogicalVariable> distinctVars = distinctVarsFunctions.getLeft();
+        List<AbstractFunctionCallExpression> distinctFunctions = distinctVarsFunctions.getRight();
 
         if (grpByDistinctOp == null) {
             return distinctVarsFunctions;

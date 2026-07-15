@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -97,8 +97,7 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
             LogicalVariable newVar = context.newVar();
             VariableReferenceExpression varExpr = new VariableReferenceExpression(newVar);
             varExpr.setSourceLocation(sourceLoc);
-            outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
-                    new MutableObject<ILogicalExpression>(varExpr)));
+            outVeList.add(Pair.of(ov, new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,

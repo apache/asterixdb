@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -165,7 +165,7 @@ public class SortGroupByPOperator extends AbstractGroupByPOperator {
 
         List<LogicalVariable> keyAndDecVariables = new ArrayList<LogicalVariable>();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList()) {
-            keyAndDecVariables.add(p.first);
+            keyAndDecVariables.add(p.getLeft());
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
             keyAndDecVariables.add(GroupByOperator.getDecorVariable(p));
@@ -252,6 +252,6 @@ public class SortGroupByPOperator extends AbstractGroupByPOperator {
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
         int[] inputDependencyLabels = new int[] { 0 };
         int[] outputDependencyLabels = new int[] { 1 };
-        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 }

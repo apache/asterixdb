@@ -36,9 +36,9 @@ import org.apache.asterix.external.operators.LibraryDeployPrepareOperatorDescrip
 import org.apache.asterix.external.operators.LibraryUndeployOperatorDescriptor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
@@ -82,7 +82,7 @@ public class ExternalLibraryJobUtils {
         IOperatorDescriptor opDesc = new LibraryDeployPrepareOperatorDescriptor(jobSpec, namespace, libraryName,
                 language, downloadURI, authToken);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
-                splitsAndConstraint.second);
+                splitsAndConstraint.getRight());
         jobSpec.addRoot(opDesc);
         return jobSpec;
     }
@@ -92,7 +92,7 @@ public class ExternalLibraryJobUtils {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
         IOperatorDescriptor opDesc = new LibraryDeployCommitOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
-                splitsAndConstraint.second);
+                splitsAndConstraint.getRight());
         return jobSpec;
     }
 
@@ -101,7 +101,7 @@ public class ExternalLibraryJobUtils {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
         IOperatorDescriptor opDesc = new LibraryDeployAbortOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
-                splitsAndConstraint.second);
+                splitsAndConstraint.getRight());
         return jobSpec;
     }
 
@@ -114,7 +114,7 @@ public class ExternalLibraryJobUtils {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
         IOperatorDescriptor opDesc = new LibraryUndeployOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
-                splitsAndConstraint.second);
+                splitsAndConstraint.getRight());
         jobSpec.addRoot(opDesc);
         jobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         return jobSpec;

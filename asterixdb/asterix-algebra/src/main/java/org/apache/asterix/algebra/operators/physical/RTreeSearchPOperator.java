@@ -26,9 +26,9 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.RTreeJobGenParams;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -111,11 +111,11 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
                         jobGenParams.getRetainInput(), retainMissing, nonMatchWriterFactory, dataset,
                         jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, nonFilterWriterFactory,
                         minFilterFieldIndexes, maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());
-        IOperatorDescriptor opDesc = rtreeSearch.first;
+        IOperatorDescriptor opDesc = rtreeSearch.getLeft();
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
         builder.contributeHyracksOperator(unnestMap, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, rtreeSearch.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, rtreeSearch.getRight());
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }

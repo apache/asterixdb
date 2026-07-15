@@ -26,8 +26,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -133,7 +133,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
             context.addToDontApplySet(this, child);
             OrderOperator sourceOrderOp = (OrderOperator) child;
             for (Pair<IOrder, Mutable<ILogicalExpression>> expr : sourceOrderOp.getOrderExpressions()) {
-                if (!expr.second.getValue().isFunctional()) {
+                if (!expr.getRight().getValue().isFunctional()) {
                     return false;
                 }
             }
@@ -165,8 +165,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs =
                 new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs)
-            newOrdersAndExprs
-                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first, deepCopyExpressionRef(pair.second)));
+            newOrdersAndExprs.add(Pair.of(pair.getLeft(), deepCopyExpressionRef(pair.getRight())));
         return newOrdersAndExprs;
     }
 }

@@ -24,7 +24,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TypeReferenceExpression extends AbstractTypeExpression {
 

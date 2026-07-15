@@ -55,8 +55,8 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.optimizer.rules.util.FullTextUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -117,23 +117,22 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     // In this case, an index-search alone cannot replace the given SELECT condition and
     // that SELECT condition needs to be applied after the index-search to get the correct results.
     // Currently, only full-text index search does not generate false positive results.
-    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections.unmodifiableList(
-            Arrays.asList(new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.STRING_CONTAINS, true),
+    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS =
+            Collections.unmodifiableList(Arrays.asList(Pair.of(BuiltinFunctions.STRING_CONTAINS, true),
                     // For matching similarity-check functions. For example, similarity-jaccard-check returns
                     // a list of two items, and the select condition will get the first list-item and
                     // check whether it evaluates to true.
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.GET_ITEM, true),
+                    Pair.of(BuiltinFunctions.GET_ITEM, true),
                     // Full-text search function
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.FULLTEXT_CONTAINS, false),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION, false)));
+                    Pair.of(BuiltinFunctions.FULLTEXT_CONTAINS, false),
+                    Pair.of(BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION, false)));
 
     // These function identifiers are matched in this AM's analyzeFuncExprArgs(),
     // and are not visible to the outside driver.
     private static final List<Pair<FunctionIdentifier, Boolean>> SECOND_LEVEL_FUNC_IDENTIFIERS =
-            Collections.unmodifiableList(Arrays.asList(
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.SIMILARITY_JACCARD_CHECK, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.EDIT_DISTANCE_CHECK, true),
-                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.EDIT_DISTANCE_CONTAINS, true)));
+            Collections.unmodifiableList(Arrays.asList(Pair.of(BuiltinFunctions.SIMILARITY_JACCARD_CHECK, true),
+                    Pair.of(BuiltinFunctions.EDIT_DISTANCE_CHECK, true),
+                    Pair.of(BuiltinFunctions.EDIT_DISTANCE_CONTAINS, true)));
 
     public static InvertedIndexAccessMethod INSTANCE = new InvertedIndexAccessMethod();
 
@@ -234,7 +233,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         boolean found = false;
         for (Iterator<Pair<FunctionIdentifier, Boolean>> iterator = SECOND_LEVEL_FUNC_IDENTIFIERS.iterator(); iterator
                 .hasNext();) {
-            FunctionIdentifier fID = iterator.next().first;
+            FunctionIdentifier fID = iterator.next().getLeft();
 
             if (fID != null && matchedFuncExpr != null && fID.equals(matchedFuncExpr.getFunctionIdentifier())) {
                 found = true;

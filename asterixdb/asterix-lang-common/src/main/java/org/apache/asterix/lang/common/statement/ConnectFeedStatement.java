@@ -29,7 +29,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ConnectFeedStatement extends AbstractStatement {
 
@@ -43,13 +43,13 @@ public class ConnectFeedStatement extends AbstractStatement {
 
     public ConnectFeedStatement(Pair<Namespace, Identifier> feedNameCmp, Pair<Namespace, Identifier> datasetNameCmp,
             List<FunctionSignature> appliedFunctions, String policy, String whereClauseBody, int varCounter) {
-        if (feedNameCmp.first != null && datasetNameCmp.first != null
-                && !feedNameCmp.first.equals(datasetNameCmp.first)) {
+        if (feedNameCmp.getLeft() != null && datasetNameCmp.getLeft() != null
+                && !feedNameCmp.getLeft().equals(datasetNameCmp.getLeft())) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
         }
-        this.namespace = feedNameCmp.first != null ? feedNameCmp.first : datasetNameCmp.first;
-        this.datasetName = datasetNameCmp.second;
-        this.feedName = feedNameCmp.second.getValue();
+        this.namespace = feedNameCmp.getLeft() != null ? feedNameCmp.getLeft() : datasetNameCmp.getLeft();
+        this.datasetName = datasetNameCmp.getRight();
+        this.feedName = feedNameCmp.getRight().getValue();
         this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
         this.whereClauseBody = whereClauseBody;
         this.varCounter = varCounter;

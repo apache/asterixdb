@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -135,10 +135,10 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
                         secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, true, null, null);
-        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        IOperatorDescriptor opDesc = runtimeAndConstraints.getLeft();
         opDesc.setSourceLocation(indexInsertDeleteOp.getSourceLocation());
         builder.contributeHyracksOperator(indexInsertDeleteOp, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.getRight());
         ILogicalOperator src = indexInsertDeleteOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, indexInsertDeleteOp, 0);
     }

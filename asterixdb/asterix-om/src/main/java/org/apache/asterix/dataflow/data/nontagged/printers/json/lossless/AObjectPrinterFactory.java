@@ -27,7 +27,7 @@ import org.apache.asterix.om.pointables.printer.IPrintVisitor;
 import org.apache.asterix.om.pointables.printer.json.lossless.APrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -127,15 +127,15 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 new AListVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
         final AListVisitablePointable ulPointable =
                 new AListVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
-        final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
+        final MutablePair<PrintStream, ATypeTag> streamTag = new MutablePair<>(null, null);
 
         final IPrintVisitor visitor = new APrintVisitor();
 
         return (byte[] b, int s, int l, PrintStream ps) -> {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
             if (!printFlatValue(typeTag, b, s, l, ps)) {
-                streamTag.first = ps;
-                streamTag.second = typeTag;
+                streamTag.setLeft(ps);
+                streamTag.setRight(typeTag);
                 switch (typeTag) {
                     case OBJECT:
                         rPointable.set(b, s, l);

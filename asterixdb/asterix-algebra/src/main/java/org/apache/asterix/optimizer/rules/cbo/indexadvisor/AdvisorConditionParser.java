@@ -35,8 +35,8 @@ import org.apache.asterix.optimizer.rules.am.BTreeAccessMethod;
 import org.apache.asterix.optimizer.rules.am.VectorIndexAccessMethod;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -234,7 +234,7 @@ public class AdvisorConditionParser {
             return null;
         }
         FunctionIdentifier fi = expr.getFunctionIdentifier();
-        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(new Pair<>(fi, false))) {
+        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(Pair.of(fi, false))) {
             return null;
         }
         ConstantExpression constantExpression = null;
@@ -249,7 +249,7 @@ public class AdvisorConditionParser {
         if (accessPath == null) {
             return null;
         }
-        return new ScanFilterCondition(fi, accessPath.getFirst(), accessPath.getSecond(), constantExpression);
+        return new ScanFilterCondition(fi, accessPath.getLeft(), accessPath.getRight(), constantExpression);
     }
 
     /**
@@ -290,7 +290,7 @@ public class AdvisorConditionParser {
     private static void accumulateVectorExprRefsFromOp(ILogicalOperator op, List<ExprRef> vectorExprRefs) {
         if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
             for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : ((OrderOperator) op).getOrderExpressions()) {
-                vectorExprRefs.add(new ExprRef(orderExpr.second, op));
+                vectorExprRefs.add(new ExprRef(orderExpr.getRight(), op));
             }
         } else if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             for (Mutable<ILogicalExpression> expr : ((AssignOperator) op).getExpressions()) {
@@ -326,8 +326,7 @@ public class AdvisorConditionParser {
         if (similarity == null || dimension.isEmpty()) {
             return null;
         }
-        return new VectorFilterCondition(accessPath.getFirst(), accessPath.getSecond(), similarity,
-                dimension.getAsInt());
+        return new VectorFilterCondition(accessPath.getLeft(), accessPath.getRight(), similarity, dimension.getAsInt());
     }
 
     private static AbstractFunctionCallExpression findVectorDistanceCall(ILogicalExpression expr) {
@@ -373,7 +372,7 @@ public class AdvisorConditionParser {
             return null;
         }
         FunctionIdentifier fi = expr.getFunctionIdentifier();
-        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(new Pair<>(fi, false))) {
+        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(Pair.of(fi, false))) {
             return null;
         }
         ConstantExpression constantExpression = null;
@@ -459,7 +458,7 @@ public class AdvisorConditionParser {
         }
         VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
         LogicalVariable var = varRef.getVariableReference();
-        return new Pair<>(var, fieldNames);
+        return Pair.of(var, fieldNames);
     }
 
     public static JoinFilter parseJoinNode(AbstractBinaryJoinOperator joinOp, IOptimizationContext context)
@@ -523,7 +522,7 @@ public class AdvisorConditionParser {
             return null;
         }
         FunctionIdentifier fi = expr.getFunctionIdentifier();
-        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(new Pair<>(fi, false))) {
+        if (!BTreeAccessMethod.INSTANCE.getOptimizableFunctions().contains(Pair.of(fi, false))) {
             return null;
         }
         if (expr.getArguments().size() != 2) {
@@ -539,7 +538,7 @@ public class AdvisorConditionParser {
         if (rhsAccessPath == null) {
             return null;
         }
-        return new JoinFilterCondition(fi, lhsAccessPath.getFirst(), lhsAccessPath.getSecond(),
-                rhsAccessPath.getFirst(), rhsAccessPath.getSecond());
+        return new JoinFilterCondition(fi, lhsAccessPath.getLeft(), lhsAccessPath.getRight(),
+                rhsAccessPath.getLeft(), rhsAccessPath.getRight());
     }
 }

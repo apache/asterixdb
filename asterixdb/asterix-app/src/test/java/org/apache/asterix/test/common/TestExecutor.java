@@ -140,6 +140,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Consts;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -176,7 +177,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.EntityUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -813,7 +813,8 @@ public class TestExecutor {
         // https://issues.apache.org/jira/browse/ASTERIXDB-2315
         ExecutorService executor = Executors.newSingleThreadExecutor();
         CredentialsProvider cp = new BasicCredentialsProvider();
-        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
+        cp.setCredentials(AuthScope.ANY,
+                new UsernamePasswordCredentials(credentials.getLeft(), credentials.getRight()));
         HttpClientContext hcCtx = HttpClientContext.create();
         AuthCache ac = new BasicAuthCache();
         ac.put(URIUtils.extractHost(method.getURI()), new BasicScheme());
@@ -1521,7 +1522,7 @@ public class TestExecutor {
                             String username = command[4];
                             String pw = command[5];
                             String libPath = command[6];
-                            librarian.install(path, type, libPath, new Pair<>(username, pw));
+                            librarian.install(path, type, libPath, Pair.of(username, pw));
                             break;
                         case "uninstall":
                             if (command.length != 5) {
@@ -1529,7 +1530,7 @@ public class TestExecutor {
                             }
                             username = command[3];
                             pw = command[4];
-                            librarian.uninstall(path, new Pair<>(username, pw));
+                            librarian.uninstall(path, Pair.of(username, pw));
                             break;
                         default:
                             throw new Exception("invalid library format");
@@ -2156,7 +2157,7 @@ public class TestExecutor {
         if (m.find()) {
             String username = m.group("username");
             String password = m.group("password");
-            return new Pair<>(username, password);
+            return Pair.of(username, password);
         }
         return null;
     }
@@ -2880,8 +2881,8 @@ public class TestExecutor {
                 badtestcases.add(testCase);
                 LOGGER.info("Last test leaked scopes. Dropping scopes: {}",
                         toBeDropped.stream()
-                                .map(pair -> (pair.getFirst() == null ? "" : (pair.getFirst() + SqlppStatementUtil.DOT))
-                                        + pair.getSecond().getCanonicalForm())
+                                .map(pair -> (pair.getLeft() == null ? "" : (pair.getLeft() + SqlppStatementUtil.DOT))
+                                        + pair.getRight().getCanonicalForm())
                                 .collect(Collectors.joining(", ", "[", "]")));
                 // TODO(mblow): consider that dataverses can have references from views in other dataverses
                 for (Pair<String, DataverseName> dv : toBeDropped) {
@@ -2919,7 +2920,7 @@ public class TestExecutor {
                     if (databaseName != null && !databaseName.isNull() && !databaseName.isMissingNode()) {
                         dbName = databaseName.asText();
                     }
-                    outDataverses.add(new Pair<>(dbName, dvName));
+                    outDataverses.add(Pair.of(dbName, dvName));
                 }
             }
         }
@@ -2947,11 +2948,11 @@ public class TestExecutor {
     protected void dropDataverse(Pair<String, DataverseName> dv) throws Exception {
         StringBuilder dropStatement = new StringBuilder();
         dropStatement.append("drop dataverse ");
-        if (dv.first == null) {
-            SqlppStatementUtil.encloseDataverseName(dropStatement, dv.second);
+        if (dv.getLeft() == null) {
+            SqlppStatementUtil.encloseDataverseName(dropStatement, dv.getRight());
         } else {
-            SqlppStatementUtil.enclose(dropStatement, dv.first).append(SqlppStatementUtil.DOT);
-            SqlppStatementUtil.encloseDataverseName(dropStatement, dv.second);
+            SqlppStatementUtil.enclose(dropStatement, dv.getLeft()).append(SqlppStatementUtil.DOT);
+            SqlppStatementUtil.encloseDataverseName(dropStatement, dv.getRight());
         }
         dropStatement.append(";\n");
         InputStream resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
@@ -2986,7 +2987,7 @@ public class TestExecutor {
             } catch (IllegalArgumentException e) {
                 throw new Exception("Unexpected dataset type: " + datasetTypeText);
             }
-            outDatasets.add(new Pair<>(datasetName, datasetType));
+            outDatasets.add(Pair.of(datasetName, datasetType));
         }
     }
 

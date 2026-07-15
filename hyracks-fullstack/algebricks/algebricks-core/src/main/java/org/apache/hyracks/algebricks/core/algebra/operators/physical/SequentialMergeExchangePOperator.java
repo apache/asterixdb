@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -87,7 +87,7 @@ public class SequentialMergeExchangePOperator extends AbstractExchangePOperator 
     public Pair<IConnectorDescriptor, IHyracksJobBuilder.TargetConstraint> createConnectorDescriptor(
             IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) {
         IConnectorDescriptor connector = new MToOneSequentialMergingConnectorDescriptor(spec);
-        return new Pair<>(connector, IHyracksJobBuilder.TargetConstraint.ONE);
+        return Pair.of(connector, IHyracksJobBuilder.TargetConstraint.ONE);
     }
 
     /**

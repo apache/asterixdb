@@ -42,7 +42,7 @@ import org.apache.asterix.om.pointables.printer.csv.APrintVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -209,14 +209,14 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     public IPrinter createPrinter(IEvaluatorContext context) {
         final ARecordVisitablePointable recordVisitablePointable =
                 new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
+        final MutablePair<PrintStream, ATypeTag> streamTag = new MutablePair<>(null, null);
         final IPrintVisitor visitor = new APrintVisitor(context, itemType, formatConfigs, configuration);
 
         return (byte[] b, int s, int l, PrintStream ps) -> {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
             if (!printFlatValue(typeTag, b, s, l, ps)) {
-                streamTag.first = ps;
-                streamTag.second = typeTag;
+                streamTag.setLeft(ps);
+                streamTag.setRight(typeTag);
                 if (typeTag == ATypeTag.OBJECT) {
                     recordVisitablePointable.set(b, s, l);
                     visitor.visit(recordVisitablePointable, streamTag);

@@ -65,7 +65,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This visitor checks if a non-subquery language construct contains SQL-92 aggregates.
@@ -352,7 +352,7 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     private boolean visitFieldList(List<Pair<Expression, Identifier>> fieldList, ILangExpression parentSelectBlock)
             throws CompilationException {
         for (Pair<Expression, Identifier> p : fieldList) {
-            if (p.first.accept(this, parentSelectBlock)) {
+            if (p.getLeft().accept(this, parentSelectBlock)) {
                 return true;
             }
         }

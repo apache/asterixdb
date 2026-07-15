@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -193,14 +193,15 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
         }
 
         // We have successfully generated a SELECT branch. Create the new JOIN operator.
-        ScalarFunctionCallExpression newCond = coalesceConditions(traversalOutput.first, joinContext.originalJoinRoot);
+        ScalarFunctionCallExpression newCond =
+                coalesceConditions(traversalOutput.getLeft(), joinContext.originalJoinRoot);
         joinContext.newJoinRoot = new InnerJoinOperator(new MutableObject<>(newCond));
         joinContext.newJoinRoot.getInputs().add(0, new MutableObject<>(originalOpInputs.get(0).getValue()));
 
         // Connect the join branches together.
-        traversalOutput.second.getInputs().clear();
-        traversalOutput.second.getInputs().add(new MutableObject<>(originalOpInputs.get(1).getValue()));
-        joinContext.newJoinRoot.getInputs().add(1, traversalOutput.first.getInputs().get(0));
+        traversalOutput.getRight().getInputs().clear();
+        traversalOutput.getRight().getInputs().add(new MutableObject<>(originalOpInputs.get(1).getValue()));
+        joinContext.newJoinRoot.getInputs().add(1, traversalOutput.getLeft().getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(joinContext.newJoinRoot);
 
         // To support type casting that is performed on the index subtree and still make this expression recognizable,

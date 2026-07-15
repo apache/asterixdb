@@ -27,7 +27,7 @@ import java.util.TreeMap;
 
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.Namespace;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.util.bytes.HexPrinter;
 
 public class ExternalLibraryUtils {
@@ -47,8 +47,8 @@ public class ExternalLibraryUtils {
         List<Pair<Namespace, String>> libs = libraryManager.getLibraryListing();
         Map<Namespace, Map<String, String>> dvToLibHashes = new TreeMap<>();
         for (Pair<Namespace, String> lib : libs) {
-            dvToLibHashes.computeIfAbsent(lib.first, h -> new TreeMap<>()).put(lib.getSecond(),
-                    libraryManager.getLibraryHash(lib.first, lib.second));
+            dvToLibHashes.computeIfAbsent(lib.getLeft(), h -> new TreeMap<>()).put(lib.getRight(),
+                    libraryManager.getLibraryHash(lib.getLeft(), lib.getRight()));
         }
         return dvToLibHashes;
     }

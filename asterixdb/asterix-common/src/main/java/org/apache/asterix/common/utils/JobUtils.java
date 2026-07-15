@@ -22,7 +22,7 @@ package org.apache.asterix.common.utils;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -91,6 +91,6 @@ public class JobUtils {
                 Thread.currentThread().setName(nameBefore);
             }
         }
-        return new Pair<>(jobId, opStats);
+        return Pair.of(jobId, opStats);
     }
 }

@@ -55,8 +55,9 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScoping
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -120,10 +121,10 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             }
         } else {
             List<String> dataverseNameParts = new ArrayList<>(4);
-            Pair<VariableExpr, FieldAccessor> topExprs = new Pair<>(null, null);
+            MutablePair<VariableExpr, FieldAccessor> topExprs = new MutablePair<>(null, null);
             if (extractDataverseName(fa.getExpr(), dataverseNameParts, topExprs)) {
                 // resolving a.b.c(.x)*
-                VariableExpr topVarExpr = topExprs.getFirst(); // = a
+                VariableExpr topVarExpr = topExprs.getLeft(); // = a
                 if (resolveAsVariableReference(topVarExpr)) {
                     return fa;
                 } else {
@@ -143,7 +144,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                     if (datasetExpr != null) {
                         return datasetExpr;
                     }
-                    FieldAccessor topFaExpr = topExprs.getSecond(); // = a.b
+                    FieldAccessor topFaExpr = topExprs.getRight(); // = a.b
                     topFaExpr.setExpr(resolveAsFieldAccessOverContextVar(topVarExpr));
                     return fa;
                 }
@@ -206,11 +207,11 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             if (p == null) {
                 throw createUnresolvableError(databaseName, dataverseName, datasetName, sourceLoc);
             }
-            Dataset resolvedDataset = p.first;
+            Dataset resolvedDataset = p.getLeft();
             resolvedDatabaseName = resolvedDataset.getDatabaseName();
             resolvedDataverseName = resolvedDataset.getDataverseName();
             resolvedDatasetName = resolvedDataset.getDatasetName();
-            viaSynonym = p.second;
+            viaSynonym = p.getRight();
             isView = resolvedDataset.getDatasetType() == DatasetConfig.DatasetType.VIEW;
         }
         CallExpr callExpr;
@@ -245,20 +246,20 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     private static boolean extractDataverseName(Expression expr, List<String> outDataverseName,
-            Pair<VariableExpr, FieldAccessor> outTopExprs) {
+            MutablePair<VariableExpr, FieldAccessor> outTopExprs) {
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION:
                 VariableExpr varExpr = (VariableExpr) expr;
                 String varName = SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue();
                 outDataverseName.add(varName);
-                outTopExprs.setFirst(varExpr);
+                outTopExprs.setLeft(varExpr);
                 return true;
             case FIELD_ACCESSOR_EXPRESSION:
                 FieldAccessor faExpr = (FieldAccessor) expr;
                 if (extractDataverseName(faExpr.getExpr(), outDataverseName, outTopExprs)) {
                     outDataverseName.add(faExpr.getIdent().getValue());
-                    if (outTopExprs.getSecond() == null) {
-                        outTopExprs.setSecond(faExpr);
+                    if (outTopExprs.getRight() == null) {
+                        outTopExprs.setRight(faExpr);
                     }
                     return true;
                 } else {
@@ -301,7 +302,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 viaSynonym = dsName.getThird();
             }
             Dataset dataset = metadataProvider.findDataset(databaseName, dataverseName, datasetName, includingViews);
-            return dataset == null ? null : new Pair<>(dataset, viaSynonym);
+            return dataset == null ? null : Pair.of(dataset, viaSynonym);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }

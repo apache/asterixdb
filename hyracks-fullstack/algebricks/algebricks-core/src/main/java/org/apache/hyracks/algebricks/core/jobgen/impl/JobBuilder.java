@@ -28,13 +28,13 @@ import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -111,7 +111,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     @Override
     public void contributeMicroOperator(ILogicalOperator op, IPushRuntimeFactory runtime, RecordDescriptor recDesc,
             AlgebricksPartitionConstraint pc) {
-        microOps.put(op, new Pair<>(runtime, recDesc));
+        microOps.put(op, Pair.of(runtime, recDesc));
         revMicroOpMap.put(runtime, op);
         if (pc != null) {
             pcForMicroOps.put(op, pc);
@@ -125,13 +125,13 @@ public class JobBuilder implements IHyracksJobBuilder {
 
     @Override
     public void contributeConnector(ILogicalOperator exchgOp, IConnectorDescriptor conn) {
-        connectors.put(exchgOp, new Pair<IConnectorDescriptor, TargetConstraint>(conn, null));
+        connectors.put(exchgOp, Pair.of(conn, null));
     }
 
     @Override
     public void contributeConnectorWithTargetConstraint(ILogicalOperator exchgOp, IConnectorDescriptor conn,
             TargetConstraint numberOfTargetPartitions) {
-        connectors.put(exchgOp, new Pair<IConnectorDescriptor, TargetConstraint>(conn, numberOfTargetPartitions));
+        connectors.put(exchgOp, Pair.of(conn, numberOfTargetPartitions));
     }
 
     @Override
@@ -217,7 +217,7 @@ public class JobBuilder implements IHyracksJobBuilder {
         algebraicOpBelongingToMetaAsterixOp.forEach((k, v) -> mergedOperatorMap.put(k, getExtendedOdidForMetaOp(k, v)));
         microOps.keySet().stream().filter(op -> op instanceof AbstractOperatorWithNestedPlans)
                 .forEach(op -> getExtendedOdidForNestedOp((AbstractOperatorWithNestedPlans) op, mergedOperatorMap));
-        connectors.forEach((k, v) -> mergedOperatorMap.put(k, v.getFirst().getConnectorId().toString()));
+        connectors.forEach((k, v) -> mergedOperatorMap.put(k, v.getLeft().getConnectorId().toString()));
         return Collections.unmodifiableMap(mergedOperatorMap);
     }
 
@@ -374,12 +374,12 @@ public class JobBuilder implements IHyracksJobBuilder {
             IOperatorDescriptor inOpDesc = findOpDescForAlgebraicOp(inOp);
             IOperatorDescriptor outOpDesc = findOpDescForAlgebraicOp(outOp);
             Pair<IConnectorDescriptor, TargetConstraint> connPair = connectors.get(exchg);
-            IConnectorDescriptor conn = connPair.first;
+            IConnectorDescriptor conn = connPair.getLeft();
             int producerPort = outEdges.get(inOp).indexOf(exchg);
             int consumerPort = inEdges.get(outOp).indexOf(exchg);
             jobSpec.connect(conn, inOpDesc, producerPort, outOpDesc, consumerPort);
-            if (connPair.second != null) {
-                tgtConstraints.put(conn, connPair.second);
+            if (connPair.getRight() != null) {
+                tgtConstraints.put(conn, connPair.getRight());
             }
         }
         return tgtConstraints;
@@ -415,8 +415,8 @@ public class JobBuilder implements IHyracksJobBuilder {
         RecordDescriptor[] internalRecordDescriptors = new RecordDescriptor[n];
         for (int i = 0, ln = opContents.size(); i < ln; i++) {
             Pair<IPushRuntimeFactory, RecordDescriptor> p = opContents.get(i);
-            runtimeFactories[i] = p.first;
-            internalRecordDescriptors[i] = p.second;
+            runtimeFactories[i] = p.getLeft();
+            internalRecordDescriptors[i] = p.getRight();
         }
         ILogicalOperator lastLogicalOp = revMicroOpMap.get(runtimeFactories[n - 1]);
         ArrayList<ILogicalOperator> outOps = outEdges.get(lastLogicalOp);
@@ -428,7 +428,7 @@ public class JobBuilder implements IHyracksJobBuilder {
                 ILogicalOperator outOp = outOps.get(i);
                 outPositions[i] = OperatorManipulationUtil.indexOf(outOp.getInputs(), lastLogicalOp);
                 Pair<IPushRuntimeFactory, RecordDescriptor> microOpPair = microOps.get(outOp);
-                outRuntimeFactories[i] = microOpPair != null ? microOpPair.first : null;
+                outRuntimeFactories[i] = microOpPair != null ? microOpPair.getLeft() : null;
             }
         }
 

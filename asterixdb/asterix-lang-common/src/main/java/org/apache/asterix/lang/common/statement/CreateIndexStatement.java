@@ -36,7 +36,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.VectorIndexDeclUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.om.vector.VectorIndexParameters;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.OptionalBoolean;
@@ -209,7 +209,7 @@ public class CreateIndexStatement extends AbstractStatement {
         }
 
         public Triple<Integer, List<List<String>>, List<List<String>>> toIdentifier() {
-            List<List<String>> newProjectList = projectList.stream().map(Pair::getFirst).collect(Collectors.toList());
+            List<List<String>> newProjectList = projectList.stream().map(Pair::getLeft).collect(Collectors.toList());
             return new Triple<>(sourceIndicator, unnestList, newProjectList);
         }
 
@@ -222,7 +222,7 @@ public class CreateIndexStatement extends AbstractStatement {
         }
 
         public String getProjectListDisplayForm() {
-            return projectList.stream().map(Pair::getFirst).map(String::valueOf).collect(Collectors.joining(", "));
+            return projectList.stream().map(Pair::getLeft).map(String::valueOf).collect(Collectors.joining(", "));
         }
     }
 }

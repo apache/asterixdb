@@ -164,7 +164,7 @@ public class ValidateUtil {
             if (fieldType == null) {
                 if (partitioningExprTypes != null && partitioningExprTypes.size() > 0) {
                     String typeName =
-                            ((TypeReferenceExpression) partitioningExprTypes.get(0)).getIdent().second.getValue();
+                            ((TypeReferenceExpression) partitioningExprTypes.get(0)).getIdent().getRight().getValue();
                     fieldType = BuiltinTypeMap.getBuiltinType(typeName);
                     if (fieldType == null) {
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_KEY_TYPE, sourceLoc, typeName,
@@ -192,7 +192,7 @@ public class ValidateUtil {
                 IAType fieldType;
                 if (partitioningExprTypes != null) {
                     String typeName =
-                            ((TypeReferenceExpression) partitioningExprTypes.get(i)).getIdent().second.getValue();
+                            ((TypeReferenceExpression) partitioningExprTypes.get(i)).getIdent().getRight().getValue();
                     fieldType = BuiltinTypeMap.getBuiltinType(typeName);
                     if (fieldType == null) {
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_KEY_TYPE, sourceLoc, typeName,

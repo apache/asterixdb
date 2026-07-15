@@ -40,8 +40,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -187,7 +187,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         }
         Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
-        IAType secondaryKeyType = keyTypePair.first;
+        IAType secondaryKeyType = keyTypePair.getLeft();
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
         tokenTypeTraits[0] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
@@ -224,7 +224,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         }
         Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
-        IAType secondaryKeyType = keyTypePair.first;
+        IAType secondaryKeyType = keyTypePair.getLeft();
         // Comparators and type traits for tokens.
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
@@ -260,7 +260,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         }
         Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
-        IAType secondaryKeyType = keyTypePair.first;
+        IAType secondaryKeyType = keyTypePair.getLeft();
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.

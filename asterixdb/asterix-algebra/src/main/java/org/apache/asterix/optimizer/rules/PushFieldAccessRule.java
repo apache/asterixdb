@@ -45,8 +45,8 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -221,13 +221,13 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             GroupByOperator g = (GroupByOperator) inputOp;
             List<Pair<LogicalVariable, LogicalVariable>> varMappings = new ArrayList<>();
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : g.getDecorList()) {
-                ILogicalExpression e = p.second.getValue();
+                ILogicalExpression e = p.getRight().getValue();
                 if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     LogicalVariable decorVar = GroupByOperator.getDecorVariable(p);
                     if (inter.contains(decorVar)) {
                         inter.remove(decorVar);
                         LogicalVariable v1 = ((VariableReferenceExpression) e).getVariableReference();
-                        varMappings.add(new Pair<>(decorVar, v1));
+                        varMappings.add(Pair.of(decorVar, v1));
                     }
                 }
             }
@@ -238,10 +238,10 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     LogicalVariable oldVar = assignOp.getVariables().get(0);
                     VariableReferenceExpression v2Ref = new VariableReferenceExpression(v2);
                     v2Ref.setSourceLocation(g.getSourceLocation());
-                    g.getDecorList().add(new Pair<>(oldVar, new MutableObject<>(v2Ref)));
+                    g.getDecorList().add(Pair.of(oldVar, new MutableObject<>(v2Ref)));
                     changed = true;
                     assignOp.getVariables().set(0, v2);
-                    VariableUtilities.substituteVariables(assignOp, m.first, m.second, context);
+                    VariableUtilities.substituteVariables(assignOp, m.getLeft(), m.getRight(), context);
                 }
                 if (changed) {
                     context.computeAndSetTypeEnvironmentForOperator(g);
@@ -334,8 +334,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             }
             ARecordType dataRecType = (ARecordType) dataType;
             Pair<ILogicalExpression, List<String>> fieldPathAndVar = getFieldExpression(assignOp, dataRecType);
-            ILogicalExpression targetRecVar = fieldPathAndVar.first;
-            List<String> targetFieldPath = fieldPathAndVar.second;
+            ILogicalExpression targetRecVar = fieldPathAndVar.getLeft();
+            List<String> targetFieldPath = fieldPathAndVar.getRight();
             boolean rewrite = false;
             boolean fieldFromMeta = false;
             if (sameRecords(targetRecVar, dataRecVarInScan)) {
@@ -345,8 +345,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 IAType metaType = mp.findMetaType(dataset); // could be null
                 if (metaType != null && metaType.getTypeTag() == ATypeTag.OBJECT) {
                     fieldPathAndVar = getFieldExpression(assignOp, (ARecordType) metaType);
-                    targetRecVar = fieldPathAndVar.first;
-                    targetFieldPath = fieldPathAndVar.second;
+                    targetRecVar = fieldPathAndVar.getLeft();
+                    targetFieldPath = fieldPathAndVar.getRight();
                     if (sameRecords(targetRecVar, metaRecVarInScan)) {
                         rewrite = true;
                         fieldFromMeta = true;
@@ -435,7 +435,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         while (AnalysisUtil.isAccessToFieldRecord(e0)) {
             ILogicalExpression e1 = ((AbstractFunctionCallExpression) e0).getArguments().get(1).getValue();
             if (e1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return new Pair<>(null, null);
+                return Pair.of(null, null);
             }
             ConstantExpression ce = (ConstantExpression) e1;
             IAObject obj = ((AsterixConstantValue) ce.getValue()).getObject();
@@ -445,7 +445,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             } else {
                 int pos = ((AInt32) obj).getIntegerValue();
                 if (pos >= rt.getFieldNames().length) {
-                    return new Pair<>(null, null);
+                    return Pair.of(null, null);
                 }
                 fldName = rt.getFieldNames()[pos];
             }
@@ -453,7 +453,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             e0 = ((AbstractFunctionCallExpression) e0).getArguments().get(0).getValue();
 
         }
-        return new Pair<>(e0, fieldPath);
+        return Pair.of(e0, fieldPath);
     }
 
     private void setAsFinal(ILogicalOperator access, IOptimizationContext context, String finalAnnot) {

@@ -30,8 +30,8 @@ import java.util.Set;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -175,8 +175,8 @@ public class SelectFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite
 
         } else if (traversalOutputs.size() == 1) {
             Pair<SelectOperator, UnnestOperator> traversalOutput = traversalOutputs.get(0);
-            ILogicalOperator bottommostOperator = traversalOutput.second;
-            SelectOperator selectRewriteOperator = traversalOutput.first;
+            ILogicalOperator bottommostOperator = traversalOutput.getRight();
+            SelectOperator selectRewriteOperator = traversalOutput.getLeft();
             bottommostOperator.getInputs().addAll(bottommostSubplanOperator.getInputs());
             return finalizeSelectOperator(selectRewriteOperator, miscExpressions, context);
 
@@ -186,7 +186,7 @@ public class SelectFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite
             SelectOperator mergedSelectOperator = new SelectOperator(new MutableObject<>(workingSelectCondition));
             ILogicalOperator workingLeafOperator = mergedSelectOperator;
             for (Pair<SelectOperator, UnnestOperator> traversalOutput : traversalOutputs) {
-                SelectOperator selectRewriteOperator = traversalOutput.first;
+                SelectOperator selectRewriteOperator = traversalOutput.getLeft();
                 ILogicalExpression selectRewriteExpr = selectRewriteOperator.getCondition().getValue();
 
                 // First, we coalesce our SELECT conditions.
@@ -200,8 +200,8 @@ public class SelectFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite
                 }
 
                 // Next, we connect the bottommost operator back to the current leaf.
-                workingLeafOperator.getInputs().add(new MutableObject<>(traversalOutput.second));
-                workingLeafOperator = traversalOutput.second;
+                workingLeafOperator.getInputs().add(new MutableObject<>(traversalOutput.getRight()));
+                workingLeafOperator = traversalOutput.getRight();
             }
 
             // Finally, we connect the leaf to the bottommost subplan input.

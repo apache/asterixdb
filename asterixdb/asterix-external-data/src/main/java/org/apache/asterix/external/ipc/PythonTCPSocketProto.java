@@ -23,7 +23,8 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IExternalLangIPCProto;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class PythonTCPSocketProto extends AbstractPythonIPCProto
@@ -40,9 +41,9 @@ public class PythonTCPSocketProto extends AbstractPythonIPCProto
 
     @Override
     public void start() {
-        Pair<Long, Pair<ByteBuffer, Exception>> keyAndBufferBox = router.insertRoute(recvBuffer);
-        this.routeId = keyAndBufferBox.getFirst();
-        this.bufferBox = keyAndBufferBox.getSecond();
+        Pair<Long, MutablePair<ByteBuffer, Exception>> keyAndBufferBox = router.insertRoute(recvBuffer);
+        this.routeId = keyAndBufferBox.getLeft();
+        this.bufferBox = keyAndBufferBox.getRight();
     }
 
     @Override
@@ -56,7 +57,7 @@ public class PythonTCPSocketProto extends AbstractPythonIPCProto
         Exception except;
         try {
             synchronized (bufferBox) {
-                while ((bufferBox.getFirst().limit() == 0 || bufferBox.getSecond() != null) && proc.isAlive()) {
+                while ((bufferBox.getLeft().limit() == 0 || bufferBox.getRight() != null) && proc.isAlive()) {
                     bufferBox.wait(100);
                 }
             }
@@ -71,8 +72,8 @@ public class PythonTCPSocketProto extends AbstractPythonIPCProto
         if (except != null) {
             throw new AsterixException(except);
         }
-        if (bufferBox.getFirst() != recvBuffer) {
-            recvBuffer = bufferBox.getFirst();
+        if (bufferBox.getLeft() != recvBuffer) {
+            recvBuffer = bufferBox.getLeft();
         }
         messageBuilder.readHead(recvBuffer);
         if (messageBuilder.type == MessageType.ERROR) {

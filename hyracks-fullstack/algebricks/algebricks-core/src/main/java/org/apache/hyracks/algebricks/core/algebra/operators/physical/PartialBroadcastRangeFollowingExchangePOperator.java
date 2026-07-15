@@ -22,8 +22,8 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -79,9 +79,9 @@ public final class PartialBroadcastRangeFollowingExchangePOperator extends Abstr
             IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context)
             throws AlgebricksException {
         Pair<int[], IBinaryComparatorFactory[]> pOrderColumns = createOrderColumnsAndComparators(op, opSchema, context);
-        ITupleMultiPartitionComputerFactory tpcf = new FieldRangeFollowingPartitionComputerFactory(pOrderColumns.first,
-                pOrderColumns.second, crateRangeMapSupplier(), op.getSourceLocation());
+        ITupleMultiPartitionComputerFactory tpcf = new FieldRangeFollowingPartitionComputerFactory(
+                pOrderColumns.getLeft(), pOrderColumns.getRight(), crateRangeMapSupplier(), op.getSourceLocation());
         IConnectorDescriptor conn = new MToNPartialBroadcastConnectorDescriptor(spec, tpcf);
-        return new Pair<>(conn, null);
+        return Pair.of(conn, null);
     }
 }

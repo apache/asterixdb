@@ -24,10 +24,10 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
@@ -41,8 +41,9 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
     public PartitioningProperties getPartitioningProperties(String databaseName) {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
                 .getDatabaseSplitProviderAndConstraints(appCtx.getClusterStateManager(), databaseName);
-        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
-        return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.getRight()));
+        return PartitioningProperties.of(splitsAndConstraints.getLeft(), splitsAndConstraints.getRight(),
+                partitionsMap);
     }
 
     @Override
@@ -50,8 +51,9 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
         String namespacePath = namespacePathResolver.resolve(databaseName, dataverseName);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
                 .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), namespacePath);
-        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
-        return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.getRight()));
+        return PartitioningProperties.of(splitsAndConstraints.getLeft(), splitsAndConstraints.getRight(),
+                partitionsMap);
     }
 
     @Override
@@ -62,8 +64,9 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
                 appCtx.getClusterStateManager(), namespacePath);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints =
                 StoragePathUtil.splitProviderAndPartitionConstraints(splits);
-        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
-        return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.getRight()));
+        return PartitioningProperties.of(splitsAndConstraints.getLeft(), splitsAndConstraints.getRight(),
+                partitionsMap);
     }
 
     @Override

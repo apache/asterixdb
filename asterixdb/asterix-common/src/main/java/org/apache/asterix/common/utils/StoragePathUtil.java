@@ -33,9 +33,9 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.storage.ResourceReference;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.DefaultIoDeviceFileSplit;
 import org.apache.hyracks.api.io.FileReference;
@@ -69,7 +69,7 @@ public class StoragePathUtil {
             loc[p] = splits[p].getNodeName();
         }
         AlgebricksPartitionConstraint pc = new AlgebricksAbsolutePartitionConstraint(loc);
-        return new Pair<>(splitProvider, pc);
+        return Pair.of(splitProvider, pc);
     }
 
     public static FileSplit getFileSplitForClusterPartition(ClusterPartition partition, String relativePath) {

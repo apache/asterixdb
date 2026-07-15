@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -87,11 +87,11 @@ public class RemoveRedundantGroupByDecorVarsRule implements IAlgebraicRewriteRul
             Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupByOp.getDecorList().iterator();
             while (iter.hasNext()) {
                 Pair<LogicalVariable, Mutable<ILogicalExpression>> decor = iter.next();
-                if (decor.first != null
-                        || decor.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                if (decor.getLeft() != null
+                        || decor.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                     continue;
                 }
-                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) decor.second.getValue();
+                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) decor.getRight().getValue();
                 LogicalVariable var = varRefExpr.getVariableReference();
                 if (decorVars.contains(var)) {
                     iter.remove();

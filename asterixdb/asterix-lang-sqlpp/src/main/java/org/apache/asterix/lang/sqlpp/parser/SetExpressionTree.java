@@ -38,7 +38,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Organizes field assignments from SET clauses into a tree structure.
@@ -135,16 +135,16 @@ public class SetExpressionTree {
                 // SET p.f = {...}: also emit a deletion entry so the old value is removed
                 // before the new record is written (full replace, not merge).
                 if (replaceWholeFieldWithObject(node, expr)) {
-                    return new Pair<>(expr, new LiteralExpr(NullLiteral.INSTANCE));
+                    return Pair.of(expr, new LiteralExpr(NullLiteral.INSTANCE));
                 }
-                return new Pair<>(expr, null);
+                return Pair.of(expr, null);
             }
             LiteralExpr literalExpr = (LiteralExpr) expr;
             Literal.Type type = literalExpr.getValue().getLiteralType();
             if (type != Literal.Type.MISSING) {
-                return new Pair<>(expr, null);
+                return Pair.of(expr, null);
             } else {
-                return new Pair<>(null, new LiteralExpr(NullLiteral.INSTANCE));
+                return Pair.of(null, new LiteralExpr(NullLiteral.INSTANCE));
             }
         }
         List<FieldBinding> setRecordArgs = new ArrayList<>();
@@ -152,11 +152,11 @@ public class SetExpressionTree {
         for (Node child : node.children) {
             Pair<Expression, Expression> recordExprs = createRecordConstructorInner(child);
             StringLiteral fieldName = new StringLiteral(child.name);
-            if (recordExprs.getFirst() != null) {
-                setRecordArgs.add(new FieldBinding(new LiteralExpr(fieldName), recordExprs.getFirst()));
+            if (recordExprs.getLeft() != null) {
+                setRecordArgs.add(new FieldBinding(new LiteralExpr(fieldName), recordExprs.getLeft()));
             }
-            if (recordExprs.getSecond() != null) {
-                deletionRecordArgs.add(new FieldBinding(new LiteralExpr(fieldName), recordExprs.getSecond()));
+            if (recordExprs.getRight() != null) {
+                deletionRecordArgs.add(new FieldBinding(new LiteralExpr(fieldName), recordExprs.getRight()));
             }
         }
         Expression setRecord = setRecordArgs.isEmpty() ? null : new RecordConstructor(setRecordArgs, true);
@@ -177,7 +177,7 @@ public class SetExpressionTree {
             guarded.setSourceLocation(prefix.getSourceLocation());
             setRecord = guarded;
         }
-        return new Pair<>(setRecord, deletionRecord);
+        return Pair.of(setRecord, deletionRecord);
     }
 
     /** True only for "whole-field" record assignments: SET alias.f = {...}. */

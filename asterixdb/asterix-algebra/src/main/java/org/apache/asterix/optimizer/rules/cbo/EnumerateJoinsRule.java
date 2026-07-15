@@ -44,8 +44,9 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -540,7 +541,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 }
             }
             Pair<ILogicalOperator, Integer> parent = parentsOfLeafInputs.get(j);
-            parent.first.getInputs().get(parent.second).setValue(foj);
+            parent.getLeft().getInputs().get(parent.getRight()).setValue(foj);
             if (LOGGER.isTraceEnabled()) {
                 String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
             }
@@ -610,12 +611,12 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             }
 
             Pair<Boolean, List<ILogicalOperator>> info = findAllAssociatedAssingOps(p, unnestOp);
-            if (!info.first) {// something 'bad' happened, so this unnestOp cannot be unnested
+            if (!info.getLeft()) {// something 'bad' happened, so this unnestOp cannot be unnested
                 //not possible to unnest this unnest op. If these variables participate in join predicates, then unnestOps cannot be moved above joins
                 continue;
             }
             count++; // found something unnestable
-            bigList.add(info.second);
+            bigList.add(info.getRight());
         }
         if (count == 0) {
             unnestOpsInfo.add(new ArrayList<>());
@@ -632,7 +633,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     Pair<Boolean, List<ILogicalOperator>> findAllAssociatedAssingOps(ILogicalOperator leafInput,
             UnnestOperator unnestOp) throws AlgebricksException {
-        Pair<Boolean, List<ILogicalOperator>> info = new Pair<>(true, new ArrayList<>());
+        MutablePair<Boolean, List<ILogicalOperator>> info = new MutablePair<>(true, new ArrayList<>());
         ILogicalOperator p = leafInput;
         //boolean unnestOpSeen = false;
 
@@ -645,7 +646,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (p.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                 AssignOperator aOp = (AssignOperator) p;
                 if (anyVarIsAJoinVar(aOp.getVariables())) {
-                    info.first = false;
+                    info.setLeft(false);
                     return info;
                 }
                 ILogicalExpression a = aOp.getExpressions().get(0).getValue();
@@ -661,7 +662,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                             if (unnestVar == var) {
                                 if ((anyVarIsAJoinVar(aOp.getVariables())
                                         || assignVarPresentInLeafInput(aOp, leafInput))) { // cant handle references inside arrays yet
-                                    info.first = false;
+                                    info.setLeft(false);
                                     return info;
                                 } else {
                                     ops.add(aOp);
@@ -675,13 +676,13 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 // Does this select belong to this UnnestOp
                 // select expressions can be problematic because computing selectivity correctly becomes an issue.
                 // so exclude them for now.
-                info.first = false; // Hence for now, dont allow select Ops.
+                info.setLeft(false); // Hence for now, dont allow select Ops.
                 return info;
             }
             p = p.getInputs().get(0).getValue();
         }
         ops.add(unnestOp); // the unnestOp will be the last (and may be the only op)
-        info.second = ops;
+        info.setRight(ops);
 
         // one for each LeafInput. If empty, means that there are no array references in this leafInout
         // also need to add some dummy entries for the fake leafInputs. Add as many as unnestOps.
@@ -915,7 +916,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             currentOp = currentOp.getInputs().get(0).getValue();
         }
         if (currentOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            return new Pair<>((EmptyTupleSourceOperator) currentOp, dataSourceOp);
+            return Pair.of((EmptyTupleSourceOperator) currentOp, dataSourceOp);
         }
         return null;
     }
@@ -1238,8 +1239,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             }
             Pair<EmptyTupleSourceOperator, DataSourceScanOperator> etsDataSource = containsLeafInputOnly(op);
             if (etsDataSource != null) { // a leaf input
-                EmptyTupleSourceOperator etsOp = etsDataSource.first;
-                DataSourceScanOperator dataSourceOp = etsDataSource.second;
+                EmptyTupleSourceOperator etsOp = etsDataSource.getLeft();
+                DataSourceScanOperator dataSourceOp = etsDataSource.getRight();
                 if (op.getOperatorTag().equals(LogicalOperatorTag.DISTRIBUTE_RESULT)) {// single table query
                     ILogicalOperator selectOp = findSelectOrUnnestOrDataScan(op);
                     if (selectOp == null) {
@@ -1268,7 +1269,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     }
                     datasetRegistry.addDataset(leafInputs.get(leafInputNumber - 1));
                     currLeafInput = leafInputs.get(leafInputNumber - 1);
-                    parentsOfLeafInputs.add(new Pair<>(parent, leftRight));
+                    parentsOfLeafInputs.add(Pair.of(parent, leftRight));
                     if (!addLeafInputNumbersToVars(op)) {
                         return false;
                     }
@@ -1468,7 +1469,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (plan.joinHint != null) {
                 setAnnotation(afcExpr, plan.joinHint);
             } else {
-                setAnnotation(plan.exprAndHint.first, plan.exprAndHint.second);
+                setAnnotation(plan.exprAndHint.getLeft(), plan.exprAndHint.getRight());
             }
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Added IndexedNLJoinExpressionAnnotation to " + afcExpr.toString());
@@ -1560,12 +1561,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // remove any selectops that may have been added in phase1
     private void removeTrueFromAllLeafInputs() {
         for (Pair<ILogicalOperator, Integer> parent : parentsOfLeafInputs) {
-            ILogicalOperator nextOp = parent.getFirst().getInputs().get(parent.getSecond()).getValue();
+            ILogicalOperator nextOp = parent.getLeft().getInputs().get(parent.getRight()).getValue();
             if (nextOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOp = (SelectOperator) nextOp;
                 if (selOp.getCondition().getValue() == ConstantExpression.TRUE) {
-                    parent.getFirst().getInputs().get(parent.getSecond())
-                            .setValue(nextOp.getInputs().get(0).getValue());
+                    parent.getLeft().getInputs().get(parent.getRight()).setValue(nextOp.getInputs().get(0).getValue());
                 }
             }
         }

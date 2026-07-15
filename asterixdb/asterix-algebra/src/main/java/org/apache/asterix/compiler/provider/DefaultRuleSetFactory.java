@@ -26,7 +26,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.optimizer.base.RuleCollections;
 import org.apache.asterix.optimizer.cost.CostMethods;
 import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFirstRuleCheckFixpointRuleController;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
@@ -82,28 +82,26 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         SequentialFirstRuleCheckFixpointRuleController seqFirstRuleGateKeeperDfs =
                 new SequentialFirstRuleCheckFixpointRuleController(true);
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(appCtx)));
         defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(appCtx)));
+                .add(Pair.of(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
+                .add(Pair.of(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx, false)));
+        defaultLogicalRewrites.add(Pair.of(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(appCtx)));
         defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx, false)));
+                .add(Pair.of(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(appCtx)));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx, true)));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildSTTransformRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildCBORuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
+                .add(Pair.of(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx, true)));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildSTTransformRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.buildCBORuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
+        defaultLogicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
 
         //put TXnRuleCollection!
         return defaultLogicalRewrites;
@@ -112,8 +110,8 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
     public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogicalSampling() {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites = new ArrayList<>();
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
-        logicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
-        logicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
+        logicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
+        logicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
         return logicalRewrites;
     }
 
@@ -123,10 +121,10 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         SequentialOnceRuleController seqOnceTopLevel = new SequentialOnceRuleController(false);
         defaultPhysicalRewrites
-                .add(new Pair<>(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection(cmf)));
+                .add(Pair.of(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection(cmf)));
         defaultPhysicalRewrites.add(
-                new Pair<>(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection(appCtx, cmf)));
-        defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection(cmf)));
+                Pair.of(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection(appCtx, cmf)));
+        defaultPhysicalRewrites.add(Pair.of(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection(cmf)));
         return defaultPhysicalRewrites;
     }
 }

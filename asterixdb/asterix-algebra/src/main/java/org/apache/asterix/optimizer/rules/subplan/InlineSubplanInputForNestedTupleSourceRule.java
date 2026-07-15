@@ -33,8 +33,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -285,7 +285,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         }
         Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> result = rewriteSubplanOperator(opRef, context);
         hasRun = true;
-        return result.first;
+        return result.getLeft();
     }
 
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> rewriteSubplanOperator(
@@ -309,7 +309,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
          */
         Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> result =
                 applySpecialFlattening(opRef, context, leftOuterMissingValue);
-        if (!result.first) {
+        if (!result.getLeft()) {
             /*
              * If the special join-based rewriting does not apply, apply the general
              * rewriting which blindly inlines all NTSs.
@@ -318,10 +318,10 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         }
         LinkedHashMap<LogicalVariable, LogicalVariable> returnedMap = new LinkedHashMap<>();
         // Adds variable mappings from input operators.
-        returnedMap.putAll(changedAndVarMap.second);
+        returnedMap.putAll(changedAndVarMap.getRight());
         // Adds variable mappings resulting from the rewriting of the current operator.
-        returnedMap.putAll(result.second);
-        return new Pair<>(result.first || changedAndVarMap.first, returnedMap);
+        returnedMap.putAll(result.getRight());
+        return Pair.of(result.getLeft() || changedAndVarMap.getLeft(), returnedMap);
     }
 
     /***
@@ -343,24 +343,24 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         for (Mutable<ILogicalOperator> childrenRef : op.getInputs()) {
             Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> resultFromChild =
                     rewriteSubplanOperator(childrenRef, context);
-            changed = changed || resultFromChild.first;
-            resultFromChild.second.forEach((oldVar, newVar) -> {
+            changed = changed || resultFromChild.getLeft();
+            resultFromChild.getRight().forEach((oldVar, newVar) -> {
                 if (liveVars.contains(oldVar)) {
                     // Maps live variables for its ancestors.
                     replacedVarMapForAncestor.put(oldVar, newVar);
                     // Recursively maps live variables for its ancestors.
                     oldVar = newVar;
-                    while ((newVar = resultFromChild.second.get(newVar)) != null) {
+                    while ((newVar = resultFromChild.getRight().get(newVar)) != null) {
                         replacedVarMapForAncestor.put(oldVar, newVar);
                         oldVar = newVar;
                     }
                 }
             });
-            replacedVarMap.putAll(resultFromChild.second);
+            replacedVarMap.putAll(resultFromChild.getRight());
         }
         VariableUtilities.substituteVariables(op, replacedVarMap, context);
         context.computeAndSetTypeEnvironmentForOperator(op);
-        return new Pair<>(changed, replacedVarMapForAncestor);
+        return Pair.of(changed, replacedVarMapForAncestor);
     }
 
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> applyGeneralFlattening(
@@ -369,11 +369,11 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         SubplanOperator subplanOp = (SubplanOperator) opRef.getValue();
         if (!SubplanFlatteningUtil.containsOperators(subplanOp, EnumSet.of(LogicalOperatorTag.DATASOURCESCAN,
                 LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN))) {
-            return new Pair<>(false, new LinkedHashMap<>());
+            return Pair.of(false, new LinkedHashMap<>());
         }
         // CLUSTER BY has no correlation key to gain from flattening, so its subplan stays a subplan.
         if (SubplanFlatteningUtil.containsOperators(subplanOp, EnumSet.of(LogicalOperatorTag.CLUSTER_BY))) {
-            return new Pair<>(false, new LinkedHashMap<>());
+            return Pair.of(false, new LinkedHashMap<>());
         }
         SourceLocation sourceLoc = subplanOp.getSourceLocation();
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
@@ -398,10 +398,10 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         Pair<Map<LogicalVariable, LogicalVariable>, List<Pair<IOrder, Mutable<ILogicalExpression>>>> varMapAndOrderExprs =
                 SubplanFlatteningUtil.inlineAllNestedTupleSource(subplanOp, context, newPrimaryKeyFd);
-        Map<LogicalVariable, LogicalVariable> varMap = varMapAndOrderExprs.first;
+        Map<LogicalVariable, LogicalVariable> varMap = varMapAndOrderExprs.getLeft();
         if (varMap == null) {
             inputOpRef.setValue(inputOpBackup);
-            return new Pair<>(false, new LinkedHashMap<>());
+            return Pair.of(false, new LinkedHashMap<>());
         }
         Mutable<ILogicalOperator> lowestAggregateRefInSubplan =
                 SubplanFlatteningUtil.findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0));
@@ -465,7 +465,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             LogicalVariable newVar = context.newVar();
             VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
             liveVarRef.setSourceLocation(inputOpBackup.getSourceLocation());
-            groupByList.add(new Pair<>(newVar, new MutableObject<>(liveVarRef)));
+            groupByList.add(Pair.of(newVar, new MutableObject<>(liveVarRef)));
             // Adds variables for replacements in ancestors.
             replacedVarMap.put(liveVar, newVar);
         }
@@ -475,7 +475,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             }
             VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
             liveVarRef.setSourceLocation(sourceLoc);
-            groupByDecorList.add(new Pair<>(null, new MutableObject<>(liveVarRef)));
+            groupByDecorList.add(Pair.of(null, new MutableObject<>(liveVarRef)));
         }
 
         // Sets up the nested plan for the groupby operator.
@@ -483,7 +483,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         lowestAggregateRefInSubplan.getValue().getInputs().clear(); // Clears the input of the lowest aggregate.
         Mutable<ILogicalOperator> currentOpRef = lowestAggregateRefInSubplan;
         // Adds an optional order operator.
-        List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = varMapAndOrderExprs.second;
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = varMapAndOrderExprs.getRight();
         if (!orderExprs.isEmpty()) {
             OrderOperator orderOp = new OrderOperator(orderExprs);
             orderOp.setSourceLocation(sourceLoc);
@@ -527,11 +527,11 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         // for the case where there are nested subplan operators within {@code subplanOp}.
         Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> result =
                 rewriteSubplanOperator(rightInputOpRef, context);
-        VariableUtilities.substituteVariables(leftOuterJoinOp, result.second, context);
-        VariableUtilities.substituteVariables(groupbyOp, result.second, context);
+        VariableUtilities.substituteVariables(leftOuterJoinOp, result.getRight(), context);
+        VariableUtilities.substituteVariables(groupbyOp, result.getRight(), context);
 
         // No var mapping from the right input operator should be populated up.
-        return new Pair<>(true, replacedVarMap);
+        return Pair.of(true, replacedVarMap);
     }
 
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> applySpecialFlattening(
@@ -568,12 +568,12 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> notNullVarsAndTopJoinRef = SubplanFlatteningUtil
                 .inlineLeftNtsInSubplanJoin(subplanOp, context, newPrimaryKeyFd, leftOuterMissingValue);
-        if (notNullVarsAndTopJoinRef.first == null) {
+        if (notNullVarsAndTopJoinRef.getLeft() == null) {
             inputOpRef.setValue(inputOpBackup);
-            return new Pair<>(false, replacedVarMap);
+            return Pair.of(false, replacedVarMap);
         }
-        Set<LogicalVariable> notNullVars = notNullVarsAndTopJoinRef.first;
-        Mutable<ILogicalOperator> topJoinRef = notNullVarsAndTopJoinRef.second;
+        Set<LogicalVariable> notNullVars = notNullVarsAndTopJoinRef.getLeft();
+        Mutable<ILogicalOperator> topJoinRef = notNullVarsAndTopJoinRef.getRight();
 
         // Creates a group-by operator.
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<>();
@@ -585,7 +585,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             LogicalVariable newVar = context.newVar();
             VariableReferenceExpression coverVarRef = new VariableReferenceExpression(coverVar);
             coverVarRef.setSourceLocation(sourceLoc);
-            groupByList.add(new Pair<>(newVar, new MutableObject<>(coverVarRef)));
+            groupByList.add(Pair.of(newVar, new MutableObject<>(coverVarRef)));
             // Adds variables for replacements in ancestors.
             replacedVarMap.put(coverVar, newVar);
         }
@@ -595,7 +595,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             }
             VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
             liveVarRef.setSourceLocation(sourceLoc);
-            groupByDecorList.add(new Pair<>(null, new MutableObject<>(liveVarRef)));
+            groupByDecorList.add(Pair.of(null, new MutableObject<>(liveVarRef)));
         }
         groupbyOp.getInputs().add(new MutableObject<>(topJoinRef.getValue()));
 
@@ -642,10 +642,10 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             topJoinRef.setValue(ntsOp);
         }
         opRef.setValue(groupbyOp);
-        VariableUtilities.substituteVariables(groupbyOp, result.second, context);
+        VariableUtilities.substituteVariables(groupbyOp, result.getRight(), context);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(groupbyOp, context);
 
-        replacedVarMap.putAll(result.second);
-        return new Pair<>(true, replacedVarMap);
+        replacedVarMap.putAll(result.getRight());
+        return Pair.of(true, replacedVarMap);
     }
 }

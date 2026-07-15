@@ -34,10 +34,10 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -196,7 +196,7 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
             FeedCollectOperatorDescriptor feedCollector = new FeedCollectOperatorDescriptor(jobSpec, feedConnectionId,
                     feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
 
-            return new Pair<>(feedCollector, new AlgebricksAbsolutePartitionConstraint(getLocations()));
+            return Pair.of(feedCollector, new AlgebricksAbsolutePartitionConstraint(getLocations()));
 
         } catch (Exception e) {
             throw new AlgebricksException(e);

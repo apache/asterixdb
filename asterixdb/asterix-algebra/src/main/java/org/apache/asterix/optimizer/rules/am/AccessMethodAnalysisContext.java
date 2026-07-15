@@ -28,7 +28,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.am.array.ArrayIndexStructureMatcher;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -98,7 +98,7 @@ public class AccessMethodAnalysisContext {
             exprs = new ArrayList<Pair<Integer, Integer>>();
             putIndexExprToIndexExprsAndVars(index, exprs);
         }
-        exprs.add(new Pair<Integer, Integer>(exprIndex, varIndex));
+        exprs.add(Pair.of(exprIndex, varIndex));
         putDatasetIntoIndexDatasetMap(index, dataset);
     }
 

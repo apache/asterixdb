@@ -35,7 +35,7 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -74,7 +74,7 @@ public class ResultFormatter {
     private void format(File dataPath, File resultPath) throws IOException {
         prepareParser(dataPath);
         try (PrintStream ps = new PrintStream(new FileOutputStream(resultPath))) {
-            Pair<PrintStream, ATypeTag> pair = new Pair<>(ps, ATypeTag.OBJECT);
+            MutablePair<PrintStream, ATypeTag> pair = new MutablePair<>(ps, ATypeTag.OBJECT);
             while (parser.parse(storage.getDataOutput())) {
                 recordPointable.set(storage);
                 recordPointable.accept(printVisitor, pair);

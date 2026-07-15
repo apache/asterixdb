@@ -33,8 +33,8 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.visitor.ConstantFoldingVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -152,7 +152,7 @@ public class NormalizeWritingPathRule implements IAlgebraicRewriteRule {
     private ATypeTag evaluateAndAppendString(ILogicalExpression argExpr, StringBuilder builder,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         Pair<Boolean, ILogicalExpression> pair = argExpr.accept(cfv, null);
-        ILogicalExpression foldedExpr = pair.getSecond();
+        ILogicalExpression foldedExpr = pair.getRight();
 
         if (foldedExpr == null || foldedExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return ATypeTag.ANY;

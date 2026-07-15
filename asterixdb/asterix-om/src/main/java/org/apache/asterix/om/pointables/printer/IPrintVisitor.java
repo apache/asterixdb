@@ -22,7 +22,7 @@ import java.io.PrintStream;
 
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
-public interface IPrintVisitor extends IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
+public interface IPrintVisitor extends IVisitablePointableVisitor<Void, MutablePair<PrintStream, ATypeTag>> {
 }

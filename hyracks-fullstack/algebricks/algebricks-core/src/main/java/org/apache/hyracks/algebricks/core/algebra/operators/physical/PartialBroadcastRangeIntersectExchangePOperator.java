@@ -23,8 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -109,7 +109,7 @@ public class PartialBroadcastRangeIntersectExchangePOperator extends AbstractExc
                 new FieldRangeIntersectPartitionComputerFactory(pIntervalColumns.first, pIntervalColumns.second,
                         pIntervalColumns.third, new StaticRangeMapSupplier(rangeMap), op.getSourceLocation());
         IConnectorDescriptor conn = new MToNPartialBroadcastConnectorDescriptor(spec, tpcf);
-        return new Pair<>(conn, null);
+        return Pair.of(conn, null);
     }
 
     private Triple<int[], int[], IBinaryComparatorFactory[]> createIntervalColumnsAndComparators(ILogicalOperator op,

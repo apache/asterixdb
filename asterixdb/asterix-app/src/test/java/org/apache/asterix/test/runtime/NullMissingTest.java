@@ -41,7 +41,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionCollection;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -146,11 +146,11 @@ public class NullMissingTest {
 
             // Set the IAType if it's needed
             if (functionsRequiringTypes.contains(funcDesc.getIdentifier())) {
-                funcDesc.setImmutableStates((Object[]) argumentsAndTypesPair.second);
+                funcDesc.setImmutableStates((Object[]) argumentsAndTypesPair.getRight());
             }
 
             // Evaluate
-            IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(argumentsAndTypesPair.first);
+            IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(argumentsAndTypesPair.getLeft());
             IEvaluatorContext ctx = mock(IEvaluatorContext.class);
             IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
             IPointable resultPointable = new VoidPointable();
@@ -194,7 +194,7 @@ public class NullMissingTest {
                     }
                 }
                 ++index;
-                return new Pair<>(scalarEvaluatorFactories, argumentTypes);
+                return Pair.of(scalarEvaluatorFactories, argumentTypes);
             }
         };
     }

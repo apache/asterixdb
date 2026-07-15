@@ -34,10 +34,10 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.stream.SocketClientInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -75,7 +75,7 @@ public class SocketClientInputStreamFactory implements IInputStreamFactory {
                 int port = Integer.parseInt(socketTokens[1].trim());
                 InetAddress[] resolved;
                 resolved = SystemDefaultDnsResolver.INSTANCE.resolve(host);
-                Pair<String, Integer> p = new Pair<>(resolved[0].getHostAddress(), port);
+                Pair<String, Integer> p = Pair.of(resolved[0].getHostAddress(), port);
                 sockets.add(p);
             }
         } catch (UnknownHostException e) {

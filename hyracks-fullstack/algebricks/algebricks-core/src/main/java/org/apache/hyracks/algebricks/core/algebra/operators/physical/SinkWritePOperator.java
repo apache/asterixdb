@@ -24,9 +24,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -184,10 +184,10 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
                     inputDesc, typeEnv.getVarType(sourceVariable), context.getWarningCollector());
         }
 
-        IPushRuntimeFactory runtime = runtimeAndConstraints.first;
+        IPushRuntimeFactory runtime = runtimeAndConstraints.getLeft();
         runtime.setSourceLocation(write.getSourceLocation());
 
-        builder.contributeMicroOperator(write, runtime, recDesc, runtimeAndConstraints.second);
+        builder.contributeMicroOperator(write, runtime, recDesc, runtimeAndConstraints.getRight());
         ILogicalOperator src = write.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, write, 0);
     }

@@ -33,8 +33,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -209,10 +209,10 @@ public final class RangeMapUtil {
         OrderOperator rootOrd = (OrderOperator) orderAbs;
         List<OrderColumn> partitioningColumns = new ArrayList<>();
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : rootOrd.getOrderExpressions()) {
-            ILogicalExpression e = p.second.getValue();
+            ILogicalExpression e = p.getRight().getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable v = ((VariableReferenceExpression) e).getVariableReference();
-                partitioningColumns.add(new OrderColumn(v, p.first.getKind()));
+                partitioningColumns.add(new OrderColumn(v, p.getLeft().getKind()));
             }
         }
         RangeMap rm = RangeMapUtil.rangeSplitHelperFunction(optCtx, rootOrd.getInputs().get(0).getValue(),

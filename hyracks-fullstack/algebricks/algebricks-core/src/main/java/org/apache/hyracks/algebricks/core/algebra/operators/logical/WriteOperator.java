@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -101,8 +101,8 @@ public class WriteOperator extends AbstractLogicalOperator {
     public List<OrderColumn> getOrderColumns() {
         List<OrderColumn> orderColumns = new ArrayList<>();
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpressionPair : orderExpressions) {
-            LogicalVariable variable = VariableUtilities.getVariable(orderExpressionPair.getSecond().getValue());
-            OrderOperator.IOrder.OrderKind kind = orderExpressionPair.first.getKind();
+            LogicalVariable variable = VariableUtilities.getVariable(orderExpressionPair.getRight().getValue());
+            OrderOperator.IOrder.OrderKind kind = orderExpressionPair.getLeft().getKind();
             orderColumns.add(new OrderColumn(variable, kind));
         }
         return orderColumns;
@@ -140,7 +140,7 @@ public class WriteOperator extends AbstractLogicalOperator {
         }
 
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpressionPair : orderExpressions) {
-            changed |= visitor.transform(orderExpressionPair.second);
+            changed |= visitor.transform(orderExpressionPair.getRight());
         }
 
         for (Mutable<ILogicalExpression> expression : keyExpressions) {

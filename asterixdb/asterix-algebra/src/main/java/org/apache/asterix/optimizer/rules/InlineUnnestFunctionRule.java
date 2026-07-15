@@ -25,8 +25,8 @@ import java.util.List;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -103,8 +103,8 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         if (usedVarOrginExpr != null) {
             for (Pair<AbstractFunctionCallExpression, Integer> parentAndIndex : parentAndIndexList) {
                 // we only rewrite the top scan-collection function
-                if (parentAndIndex.first.getFunctionIdentifier() == BuiltinFunctions.SCAN_COLLECTION
-                        && parentAndIndex.first == expr) {
+                if (parentAndIndex.getLeft().getFunctionIdentifier() == BuiltinFunctions.SCAN_COLLECTION
+                        && parentAndIndex.getLeft() == expr) {
                     unnestOp.getExpressionRef().setValue(usedVarOrginExpr);
                 }
             }
@@ -121,7 +121,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
             if (argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varExpr = (VariableReferenceExpression) argExpr;
                 if (varExpr.getVariableReference().equals(usedVar)) {
-                    parentAndIndexList.add(new Pair<>(funcExpr, i));
+                    parentAndIndexList.add(Pair.of(funcExpr, i));
                 }
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {

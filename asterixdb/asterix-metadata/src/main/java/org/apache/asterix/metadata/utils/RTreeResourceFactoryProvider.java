@@ -39,8 +39,8 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -78,7 +78,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     indexDetails.getKeyFieldNames().size(), index.getIndexType(), 1);
         }
         IAType spatialType = Index.getNonNullableOpenFieldType(index, indexDetails.getKeyFieldTypes().get(0),
-                indexDetails.getKeyFieldNames().get(0), recordType).first;
+                indexDetails.getKeyFieldNames().get(0), recordType).getLeft();
         if (spatialType == null) {
             throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND,
                     LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(indexDetails.getKeyFieldNames().get(0))));
@@ -205,7 +205,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
         }
         Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), sourceType);
-        IAType spatialType = spatialTypePair.first;
+        IAType spatialType = spatialTypePair.getLeft();
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
         }
@@ -242,7 +242,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
         }
         Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), sourceType);
-        IAType spatialType = spatialTypePair.first;
+        IAType spatialType = spatialTypePair.getLeft();
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
         }

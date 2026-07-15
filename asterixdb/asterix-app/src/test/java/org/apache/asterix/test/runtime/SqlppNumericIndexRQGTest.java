@@ -49,9 +49,9 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
 import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -270,7 +270,7 @@ public class SqlppNumericIndexRQGTest {
             }
             ArrayNode resultsArray = (ArrayNode) results;
             String plan = fetchPlan ? r.get("plans").get("optimizedLogicalPlan").asText() : null;
-            return new Pair<>(resultsArray, plan);
+            return Pair.of(resultsArray, plan);
         }
     }
 
@@ -446,7 +446,7 @@ public class SqlppNumericIndexRQGTest {
             ArrayNode[] resNoIndex = new ArrayNode[queryCount];
             for (int i = queryOffset; i < queryCount; i++) {
                 String query = queries.get(i);
-                ArrayNode result = executeQuery(query, false).first;
+                ArrayNode result = executeQuery(query, false).getLeft();
                 resNoIndex[i] = result;
             }
 
@@ -458,7 +458,7 @@ public class SqlppNumericIndexRQGTest {
                 String query = queries.get(i);
                 ArrayNode rNoIndex = resNoIndex[i];
                 Pair<ArrayNode, String> pWithIndex = executeQuery(query, true);
-                ArrayNode planWithIndex = readLinesIntoArrayNode(pWithIndex.second);
+                ArrayNode planWithIndex = readLinesIntoArrayNode(pWithIndex.getRight());
                 String comment = String.format("%s;%s", this, query);
                 if (!hasIndexSearch(planWithIndex, indexName)) {
                     File fPlan = SqlppRQGTestBase.writeResult(OUTPUT_DIR, planWithIndex, id, "plan", comment,
@@ -467,7 +467,7 @@ public class SqlppNumericIndexRQGTest {
                             String.format("Index was not used. Expected to find search of index [%s] in query plan: %s",
                                     indexName, fPlan.getAbsolutePath()));
                 }
-                ArrayNode rWithIndex = pWithIndex.first;
+                ArrayNode rWithIndex = pWithIndex.getLeft();
                 if (!rNoIndex.equals(rWithIndex)) {
                     File fNoIndex = SqlppRQGTestBase.writeResult(OUTPUT_DIR, rNoIndex, id, "no_index", comment);
                     File fWithIndex = SqlppRQGTestBase.writeResult(OUTPUT_DIR, rWithIndex, id, "with_index", comment);

@@ -63,8 +63,8 @@ import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.replication.messaging.ReplicaFailedMessage;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IOption;
@@ -310,7 +310,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             throws HyracksDataException {
         List<Pair<URI, String>> referenceNodeLocAndAuth = new ArrayList<>();
         for (String node : referenceNodes) {
-            referenceNodeLocAndAuth.add(new Pair<>(constructNCRecoveryUri(node), getNCAuthToken(node)));
+            referenceNodeLocAndAuth.add(Pair.of(constructNCRecoveryUri(node), getNCAuthToken(node)));
         }
         return getRetrieveLibrariesTask(referenceNodeLocAndAuth);
     }

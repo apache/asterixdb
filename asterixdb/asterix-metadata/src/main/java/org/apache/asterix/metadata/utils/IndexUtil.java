@@ -70,8 +70,8 @@ import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationIn
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.asterix.runtime.projection.ParquetExternalDatasetProjectionFiltrationInfo;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -263,7 +263,7 @@ public class IndexUtil {
         if (typeConstructorFun == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, srcLoc, "index", type.getTypeName());
         }
-        return new Pair<>(typeConstructorFun, withFormat ? new AString(format) : null);
+        return Pair.of(typeConstructorFun, withFormat ? new AString(format) : null);
     }
 
     private static Triple<String, String, String> getTemporalFormats(Index index) {
@@ -305,7 +305,7 @@ public class IndexUtil {
     }
 
     public static Pair<String, String> getSampleIndexNames(String datasetName) {
-        return new Pair<>(MetadataConstants.SAMPLE_INDEX_1_PREFIX + datasetName,
+        return Pair.of(MetadataConstants.SAMPLE_INDEX_1_PREFIX + datasetName,
                 MetadataConstants.SAMPLE_INDEX_2_PREFIX + datasetName);
     }
 

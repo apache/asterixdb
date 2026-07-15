@@ -257,7 +257,7 @@ public final class RewriteDistinctAggregateRule implements IAlgebraicRewriteRule
 
             AggregateOperator newAggOp;
             if (i.hasNext()) {
-                newAggOp = (AggregateOperator) OperatorManipulationUtil.deepCopyWithNewVars(aggOp, context).first;
+                newAggOp = (AggregateOperator) OperatorManipulationUtil.deepCopyWithNewVars(aggOp, context).getLeft();
                 newAggOp.getVariables().clear();
                 newAggOp.getVariables().addAll(aggOp.getVariables());
             } else {

@@ -32,9 +32,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -357,7 +357,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     private Pair<ExtendedActivityId, String> splitAcId(String name) {
         String[] parts = name.split(" - ");
-        return new Pair<>(new ExtendedActivityId(parts[0]), parts[1]);
+        return Pair.of(new ExtendedActivityId(parts[0]), parts[1]);
     }
 
     Map<String, OperatorProfile> processProfile(ObjectNode profile) {
@@ -380,12 +380,12 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                     JsonNode avgTuplesPerFrameNode = counters.get("avg-tuples-per-frame");
                     if (card != null && minTupleSz != null && maxTupleSz != null && avgTupleSz != null
                             && framesProcessedNode != null && avgTuplesPerFrameNode != null && tupleBytes != null) {
-                        info.updateOperator(identities.first.getActivityAndLocalId(), identities.second,
+                        info.updateOperator(identities.getLeft().getActivityAndLocalId(), identities.getRight(),
                                 counters.get("run-time").asDouble(), card.asLong(), minTupleSz.asLong(),
                                 maxTupleSz.asLong(), avgTupleSz.asDouble(), framesProcessedNode.asLong(),
                                 avgTuplesPerFrameNode.asDouble(), tupleBytes.asLong());
                     } else {
-                        info.updateOperator(identities.first.getActivityAndLocalId(), identities.second,
+                        info.updateOperator(identities.getLeft().getActivityAndLocalId(), identities.getRight(),
                                 counters.get("run-time").asDouble());
                     }
                 }
@@ -1426,10 +1426,10 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeArrayFieldStart(fieldName);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : varExprPairs) {
             jsonGenerator.writeStartObject();
-            if (ve.first != null) {
-                jsonGenerator.writeStringField("variable", ve.first.toString());
+            if (ve.getLeft() != null) {
+                jsonGenerator.writeStringField("variable", ve.getLeft().toString());
             }
-            writeStringFieldExpression(EXPRESSION_FIELD, ve.second, indent);
+            writeStringFieldExpression(EXPRESSION_FIELD, ve.getRight(), indent);
             jsonGenerator.writeEndObject();
         }
         jsonGenerator.writeEndArray();
@@ -1444,8 +1444,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeArrayFieldStart(fieldName);
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderList) {
             jsonGenerator.writeStartObject();
-            jsonGenerator.writeStringField("order", getOrderString(p.first, indent));
-            writeStringFieldExpression(EXPRESSION_FIELD, p.second, indent);
+            jsonGenerator.writeStringField("order", getOrderString(p.getLeft(), indent));
+            writeStringFieldExpression(EXPRESSION_FIELD, p.getRight(), indent);
             jsonGenerator.writeEndObject();
         }
         jsonGenerator.writeEndArray();

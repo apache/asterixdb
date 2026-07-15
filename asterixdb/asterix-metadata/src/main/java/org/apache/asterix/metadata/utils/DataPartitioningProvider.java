@@ -38,11 +38,11 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
@@ -91,8 +91,8 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
         FileSplit[] feedLogFileSplits = FeedUtils.splitsForAdapter(namespacePath, feed.getFeedName(), locations);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
                 StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
-        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(spC.second));
-        return PartitioningProperties.of(spC.first, spC.second, partitionsMap);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(spC.getRight()));
+        return PartitioningProperties.of(spC.getLeft(), spC.getRight(), partitionsMap);
     }
 
     protected int getNumberOfPartitions(Dataset ds) {

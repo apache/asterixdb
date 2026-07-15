@@ -84,8 +84,8 @@ public class ACSVRecordPrinter extends ARecordPrinter {
         // check the schema for the record
         // try producing the record into the record of expected schema
         if (isValidSchema(recordAccessor)) {
-            nameVisitorArg.first = ps;
-            itemVisitorArg.first = ps;
+            nameVisitorArg.setLeft(ps);
+            itemVisitorArg.setLeft(ps);
 
             if (!firstRecord) {
                 ps.print(recordDelimiter);

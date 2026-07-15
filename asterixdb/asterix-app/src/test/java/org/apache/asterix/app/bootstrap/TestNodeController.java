@@ -202,11 +202,12 @@ public class TestNodeController {
             throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
         try {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+            Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                     DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                    mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+            PrimaryIndexInfo primaryIndexInfo =
+                    new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType, mergePolicy.getLeft(),
+                            mergePolicy.getRight(), filterFields, primaryKeyIndexes, primaryKeyIndicators);
             SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
             IIndexDataflowHelperFactory secondaryIndexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), secondaryIndexInfo.fileSplitProvider);
@@ -243,11 +244,12 @@ public class TestNodeController {
         MetadataProvider mdProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         try {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+            Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                     DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                    mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+            PrimaryIndexInfo primaryIndexInfo =
+                    new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType, mergePolicy.getLeft(),
+                            mergePolicy.getRight(), filterFields, primaryKeyIndexes, primaryKeyIndicators);
             IModificationOperationCallbackFactory modOpCallbackFactory =
                     dataset.getModificationCallbackFactory(storageComponentProvider, primaryIndexInfo.index,
                             IndexOperation.INSERT, primaryIndexInfo.primaryKeyIndexes);
@@ -362,11 +364,12 @@ public class TestNodeController {
         MetadataProvider mdProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         try {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+            Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                     DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                    mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+            PrimaryIndexInfo primaryIndexInfo =
+                    new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType, mergePolicy.getLeft(),
+                            mergePolicy.getRight(), filterFields, primaryKeyIndexes, primaryKeyIndicators);
             IModificationOperationCallbackFactory modOpCallbackFactory =
                     dataset.getModificationCallbackFactory(storageComponentProvider, primaryIndexInfo.index,
                             IndexOperation.DELETE, primaryIndexInfo.primaryKeyIndexes);
@@ -495,11 +498,11 @@ public class TestNodeController {
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators, int partition)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+        Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                 DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+                mergePolicy.getLeft(), mergePolicy.getRight(), filterFields, primaryKeyIndexes, primaryKeyIndicators);
         Dataverse dataverse = new Dataverse(dataset.getDatabaseName(), dataset.getDataverseName(),
                 NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
         Namespace namespace = new Namespace(dataverse.getDatabaseName(), dataverse.getDataverseName());
@@ -507,7 +510,7 @@ public class TestNodeController {
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), namespace);
         try {
             IResourceFactory resourceFactory = dataset.getResourceFactory(mdProvider, primaryIndexInfo.index,
-                    recordType, metaType, mergePolicy.first, mergePolicy.second);
+                    recordType, metaType, mergePolicy.getLeft(), mergePolicy.getRight());
             IndexBuilderFactory indexBuilderFactory =
                     new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                             primaryIndexInfo.getFileSplitProvider(), resourceFactory, true);
@@ -524,7 +527,7 @@ public class TestNodeController {
             IStorageComponentProvider storageComponentProvider, int partition)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+        Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                 DatasetUtil.getMergePolicyFactory(primaryIndexInfo.dataset, mdTxnCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         Dataverse dataverse =
@@ -535,8 +538,9 @@ public class TestNodeController {
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), namespace);
         SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
         try {
-            IResourceFactory resourceFactory = primaryIndexInfo.dataset.getResourceFactory(mdProvider, secondaryIndex,
-                    primaryIndexInfo.recordType, primaryIndexInfo.metaType, mergePolicy.first, mergePolicy.second);
+            IResourceFactory resourceFactory =
+                    primaryIndexInfo.dataset.getResourceFactory(mdProvider, secondaryIndex, primaryIndexInfo.recordType,
+                            primaryIndexInfo.metaType, mergePolicy.getLeft(), mergePolicy.getRight());
             IndexBuilderFactory indexBuilderFactory =
                     new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                             secondaryIndexInfo.fileSplitProvider, resourceFactory, true);
@@ -820,11 +824,11 @@ public class TestNodeController {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         MetadataProvider mdProvider = MetadataProvider.createWithDefaultNamespace(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext());
-        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+        Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                 DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, keyTypes, recordType, metaType,
-                mergePolicy.first, mergePolicy.second, filterFields, keyIndexes, keyIndicators);
+                mergePolicy.getLeft(), mergePolicy.getRight(), filterFields, keyIndexes, keyIndicators);
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                 storageComponentProvider, primaryIndexInfo.index, IndexOperation.UPSERT, keyIndexes);
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(

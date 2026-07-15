@@ -41,7 +41,8 @@ import java.util.Map.Entry;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -91,7 +92,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private static final String OPTIONS = "options";
     private CharArrayRecord record = new CharArrayRecord();
     private Position position = new Position();
-    private Map<String, Pair<String, String>> extensibles = new HashMap<>();
+    private Map<String, MutablePair<String, String>> extensibles = new HashMap<>();
     private Map<String, String[]> mergeElements = new HashMap<>();
     private List<Pair<String, String>> baseFinals = new ArrayList<>();
     private List<Pair<String, String>> extensionFinals = new ArrayList<>();
@@ -203,9 +204,9 @@ public class GrammarExtensionMojo extends AbstractMojo {
                 if (index != -1) {
                     String classDefExtension = "";
                     for (Pair<String, String> element : extensionMethodsAtTheClassDef) {
-                        classDefExtension += toOutput(element.first);
+                        classDefExtension += toOutput(element.getLeft());
                         classDefExtension += "\n";
-                        classDefExtension += element.second;
+                        classDefExtension += element.getRight();
                         classDefExtension += "\n";
                     }
                     classDef =
@@ -225,7 +226,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             writer.newLine();
 
             // Extensibles
-            for (Entry<String, Pair<String, String>> entry : extensibles.entrySet()) {
+            for (Entry<String, MutablePair<String, String>> entry : extensibles.entrySet()) {
                 writer.newLine();
                 String signature = entry.getKey();
                 if (mergeElements.containsKey(signature)) {
@@ -237,33 +238,33 @@ public class GrammarExtensionMojo extends AbstractMojo {
                 if (mergeElements.containsKey(signature)) {
                     merge(writer, entry.getValue(), mergeElements.get(signature));
                 } else {
-                    writer.write(entry.getValue().first);
+                    writer.write(entry.getValue().getLeft());
                     writer.newLine();
-                    if (entry.getValue().second != null) {
-                        writer.write(entry.getValue().second);
+                    if (entry.getValue().getRight() != null) {
+                        writer.write(entry.getValue().getRight());
                         writer.newLine();
                     }
                 }
             }
 
             for (Pair<String, String> element : extensionFinals) {
-                writer.write(toOutput(element.first));
+                writer.write(toOutput(element.getLeft()));
                 writer.newLine();
-                writer.write(element.second);
+                writer.write(element.getRight());
                 writer.newLine();
             }
 
             for (Pair<String, String> element : baseFinals) {
-                writer.write(toOutput(element.first));
+                writer.write(toOutput(element.getLeft()));
                 writer.newLine();
-                writer.write(element.second);
+                writer.write(element.getRight());
                 writer.newLine();
             }
 
             for (Pair<String, String> element : extensionFinalsAtTheEnd) {
-                writer.write(toOutput(element.first));
+                writer.write(toOutput(element.getLeft()));
                 writer.newLine();
-                writer.write(element.second);
+                writer.write(element.getRight());
                 writer.newLine();
             }
 
@@ -304,14 +305,14 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private void merge(BufferedWriter writer, Pair<String, String> baseBlocks, String[] extensions)
             throws IOException, MojoExecutionException {
         String errorMessage = "Merged base node doesn't conform to expected mergable node structure";
-        int block1Open = baseBlocks.first.indexOf(OPEN_BRACE);
-        int block1Close = baseBlocks.first.lastIndexOf(CLOSE_BRACE);
+        int block1Open = baseBlocks.getLeft().indexOf(OPEN_BRACE);
+        int block1Close = baseBlocks.getLeft().lastIndexOf(CLOSE_BRACE);
         // first block
         writer.write(OPEN_BRACE);
         if (extensions[0] != null) {
             writer.write(extensions[0]);
         }
-        writer.write(baseBlocks.first.substring(block1Open + 1, block1Close));
+        writer.write(baseBlocks.getLeft().substring(block1Open + 1, block1Close));
         if (extensions[1] != null) {
             writer.write(extensions[1]);
         }
@@ -324,8 +325,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
             writer.write(extensions[2]);
         }
         String innerBlock2String = null;
-        if (baseBlocks.second != null) {
-            LineNumberReader blockReader = stringToReader(baseBlocks.second);
+        if (baseBlocks.getRight() != null) {
+            LineNumberReader blockReader = stringToReader(baseBlocks.getRight());
             Position blockPosition = new Position();
             blockPosition.index = 0;
             blockPosition.line = blockReader.readLine();
@@ -339,7 +340,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             }
             if (blockPosition.line == null) {
                 throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
-                        + StringUtils.abbreviate(baseBlocks.second, 100));
+                        + StringUtils.abbreviate(baseBlocks.getRight(), 100));
             }
             int block2Open = blockPosition.line.indexOf(OPEN_BRACE);
             blockPosition.line = blockPosition.line.substring(block2Open + 1);
@@ -353,7 +354,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             }
             if (blockPosition.line == null) {
                 throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
-                        + StringUtils.abbreviate(baseBlocks.second, 100));
+                        + StringUtils.abbreviate(baseBlocks.getRight(), 100));
             }
             int innerBlock1Open = blockPosition.line.indexOf(OPEN_PAREN);
             writer.write("  ");
@@ -376,7 +377,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             int innerBlock2Open = blockPosition.line.indexOf(OPEN_BRACE);
             if (innerBlock2Open < 0) {
                 throw new MojoExecutionException(errorMessage + " at line " + blockReader.getLineNumber() + " of "
-                        + StringUtils.abbreviate(baseBlocks.second, 100));
+                        + StringUtils.abbreviate(baseBlocks.getRight(), 100));
             }
             blockPosition.index = innerBlock2Open;
             readBlock(blockReader, OPEN_BRACE, CLOSE_BRACE, blockPosition);
@@ -553,7 +554,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
 
     private void addFinalProduction(StringBuilder identifier, List<Pair<String, String>> finals) {
         String sig = toSignature(identifier.toString());
-        finals.add(new Pair<String, String>(sig, record.toString()));
+        finals.add(Pair.of(sig, record.toString()));
         record.reset();
         identifier.setLength(0);
         lastIdentifier = null;
@@ -692,12 +693,12 @@ public class GrammarExtensionMojo extends AbstractMojo {
             optionsBlock = record.toString();
         } else {
             String sig = toSignature(identifier.toString());
-            Pair<String, String> pair = extensibles.get(sig);
+            MutablePair<String, String> pair = extensibles.get(sig);
             if (pair == null) {
-                pair = new Pair<>(record.toString(), null);
+                pair = new MutablePair<>(record.toString(), null);
                 extensibles.put(sig, pair);
             } else {
-                pair.second = record.toString();
+                pair.setRight(record.toString());
             }
             lastIdentifier = identifier.toString();
         }
@@ -859,7 +860,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private void handleOverride(StringBuilder identifier, BufferedReader reader)
             throws MojoExecutionException, IOException {
         readBlock(reader, OPEN_BRACE, CLOSE_BRACE);
-        Pair<String, String> pair = new Pair<>(record.toString(), null);
+        MutablePair<String, String> pair = new MutablePair<>(record.toString(), null);
         String sig = toSignature(identifier.toString());
         extensibles.put(sig, pair);
         record.reset();
@@ -877,7 +878,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             read = false;
             position.index = openBraceIndex;
             readBlock(reader, OPEN_BRACE, CLOSE_BRACE);
-            pair.second = record.toString();
+            pair.setRight(record.toString());
             record.reset();
         }
     }
@@ -896,10 +897,10 @@ public class GrammarExtensionMojo extends AbstractMojo {
         if (!extensibles.containsKey(sig)) {
             throw new MojoExecutionException(identifier.toString() + " doesn't exist in base grammar");
         } else if (shouldReplace) {
-            Pair<String, String> baseMethods = extensibles.get(sig);
+            MutablePair<String, String> baseMethods = extensibles.get(sig);
             // Literally replaces the old phrase with the new phrase.
-            baseMethods.first = stringReplaceAll(baseMethods.first, oldPhrase, newPhrase);
-            baseMethods.second = stringReplaceAll(baseMethods.second, oldPhrase, newPhrase);
+            baseMethods.setLeft(stringReplaceAll(baseMethods.getLeft(), oldPhrase, newPhrase));
+            baseMethods.setRight(stringReplaceAll(baseMethods.getRight(), oldPhrase, newPhrase));
             shouldReplace = false;
         }
         String[] amendments = new String[6];

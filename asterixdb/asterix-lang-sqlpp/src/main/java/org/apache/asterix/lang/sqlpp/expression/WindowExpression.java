@@ -33,7 +33,7 @@ import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class WindowExpression extends AbstractCallExpression {
 
@@ -286,7 +286,7 @@ public class WindowExpression extends AbstractCallExpression {
                         sb.append(',');
                     }
                     Pair<Expression, Identifier> p = windowFieldList.get(i);
-                    sb.append(p.first).append(':').append(p.second);
+                    sb.append(p.getLeft()).append(':').append(p.getRight());
                 }
                 sb.append('}');
             }

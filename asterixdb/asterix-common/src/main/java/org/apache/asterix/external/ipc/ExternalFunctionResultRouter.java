@@ -22,7 +22,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.ipc.api.IIPCHandle;
@@ -34,7 +35,7 @@ import org.apache.hyracks.ipc.impl.Message;
 public class ExternalFunctionResultRouter implements IIPCI {
 
     private final AtomicLong maxId = new AtomicLong(0);
-    private final ConcurrentHashMap<Long, Pair<ByteBuffer, Exception>> activeClients = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, MutablePair<ByteBuffer, Exception>> activeClients = new ConcurrentHashMap<>();
     private static int MAX_BUF_SIZE = 32 * 1024 * 1024; //32MB
 
     @Override
@@ -43,8 +44,8 @@ public class ExternalFunctionResultRouter implements IIPCI {
         ByteBuffer buf = (ByteBuffer) payload;
         int end = buf.position();
         buf.position(end - rewind);
-        Pair<ByteBuffer, Exception> route = activeClients.get(rmid);
-        ByteBuffer copyTo = route.getFirst();
+        MutablePair<ByteBuffer, Exception> route = activeClients.get(rmid);
+        ByteBuffer copyTo = route.getLeft();
         if (copyTo.capacity() < handle.getAttachmentLen()) {
             int nextSize = closestPow2(handle.getAttachmentLen());
             if (nextSize > MAX_BUF_SIZE) {
@@ -52,7 +53,7 @@ public class ExternalFunctionResultRouter implements IIPCI {
                 return;
             }
             copyTo = ByteBuffer.allocate(nextSize);
-            route.setFirst(copyTo);
+            route.setLeft(copyTo);
         }
         copyTo.position(0);
         System.arraycopy(buf.array(), buf.position() + buf.arrayOffset(), copyTo.array(), copyTo.arrayOffset(),
@@ -66,24 +67,24 @@ public class ExternalFunctionResultRouter implements IIPCI {
 
     @Override
     public void onError(IIPCHandle handle, long mid, long rmid, Exception exception) {
-        Pair<ByteBuffer, Exception> route = activeClients.get(rmid);
+        MutablePair<ByteBuffer, Exception> route = activeClients.get(rmid);
         synchronized (route) {
-            route.setSecond(exception);
+            route.setRight(exception);
             route.notifyAll();
         }
     }
 
-    public Pair<Long, Pair<ByteBuffer, Exception>> insertRoute(ByteBuffer buf) {
+    public Pair<Long, MutablePair<ByteBuffer, Exception>> insertRoute(ByteBuffer buf) {
         Long id = maxId.getAndIncrement();
-        Pair<ByteBuffer, Exception> bufferHolder = new Pair<>(buf, null);
+        MutablePair<ByteBuffer, Exception> bufferHolder = new MutablePair<>(buf, null);
         activeClients.put(id, bufferHolder);
-        return new Pair<>(id, bufferHolder);
+        return Pair.of(id, bufferHolder);
     }
 
     public Exception getAndRemoveException(Long id) {
-        Pair<ByteBuffer, Exception> route = activeClients.get(id);
-        Exception e = route.getSecond();
-        route.setSecond(null);
+        MutablePair<ByteBuffer, Exception> route = activeClients.get(id);
+        Exception e = route.getRight();
+        route.setRight(null);
         return e;
     }
 

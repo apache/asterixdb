@@ -53,7 +53,7 @@ import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -281,7 +281,7 @@ public abstract class AbstractBytesTest extends TestBase {
     }
 
     private void writeForPageZero(PrintStream ps, ColumnAssembler assembler) throws HyracksDataException {
-        Pair<PrintStream, ATypeTag> pair = new Pair<>(ps, ATypeTag.OBJECT);
+        MutablePair<PrintStream, ATypeTag> pair = new MutablePair<>(ps, ATypeTag.OBJECT);
         while (assembler.hasNext()) {
             IValueReference record = assembler.nextValue();
             recordPointable.set(record);

@@ -20,11 +20,12 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -63,8 +64,10 @@ public class ExtractGroupByDecorVariablesRule implements IAlgebraicRewriteRule {
         boolean changed = false;
         List<LogicalVariable> vars = new ArrayList<>();
         List<Mutable<ILogicalExpression>> exprs = new ArrayList<>();
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorVarExpr : decorList) {
-            Mutable<ILogicalExpression> exprRef = decorVarExpr.second;
+        for (ListIterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> it = decorList.listIterator(); it
+                .hasNext();) {
+            Pair<LogicalVariable, Mutable<ILogicalExpression>> decorVarExpr = it.next();
+            Mutable<ILogicalExpression> exprRef = decorVarExpr.getRight();
             ILogicalExpression expr = exprRef.getValue();
             if (expr == null || expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 continue;
@@ -78,7 +81,7 @@ public class ExtractGroupByDecorVariablesRule implements IAlgebraicRewriteRule {
             // Normalizes the decor entry -- expression be a variable reference
             VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
             newVarRef.setSourceLocation(expr.getSourceLocation());
-            decorVarExpr.second = new MutableObject<>(newVarRef);
+            it.set(Pair.of(decorVarExpr.getLeft(), new MutableObject<>(newVarRef)));
         }
         if (!changed) {
             return false;

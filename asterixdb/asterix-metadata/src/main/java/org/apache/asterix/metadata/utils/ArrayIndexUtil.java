@@ -36,8 +36,9 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class ArrayIndexUtil {
     /**
@@ -136,7 +137,7 @@ public class ArrayIndexUtil {
      */
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<List<String>> unnestList,
             List<String> projectList, ARecordType recType) throws AlgebricksException {
-        Pair<IAType, Boolean> keyPairType = null;
+        MutablePair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
         boolean nullable = false;
 
@@ -174,12 +175,12 @@ public class ArrayIndexUtil {
 
         if (subType != null) {
             IAType keyType = ArrayIndexUtil.getSubFieldType(recType, unnestList, projectList);
-            Pair<IAType, Boolean> pair = Index.getNonNullableType(keyType);
-            pair.second = pair.second || ArrayIndexUtil.isSubFieldNullable(recType, unnestList, projectList);
+            MutablePair<IAType, Boolean> pair = Index.getNonNullableType(keyType);
+            pair.setRight(pair.getRight() || ArrayIndexUtil.isSubFieldNullable(recType, unnestList, projectList));
             keyPairType = pair;
         }
 
-        keyPairType.second = keyPairType.second || nullable;
+        keyPairType.setRight(keyPairType.getRight() || nullable);
         return keyPairType;
     }
 
@@ -271,7 +272,7 @@ public class ArrayIndexUtil {
                     if (isTrackingType) {
                         workingType =
                                 Index.getNonNullableOpenFieldType(index, intermediateRecordType.getFieldType(fieldPart),
-                                        Collections.singletonList(fieldPart), intermediateRecordType).first;
+                                        Collections.singletonList(fieldPart), intermediateRecordType).getLeft();
                         if (workingType instanceof ARecordType) {
                             // We have an intermediate step, set our record step for the next loop iteration.
                             intermediateRecordType = (ARecordType) workingType;

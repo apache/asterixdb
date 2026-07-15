@@ -21,9 +21,9 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -125,10 +125,10 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
                 throw new AlgebricksException("Unsupported Operation " + operation);
         }
 
-        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        IOperatorDescriptor opDesc = runtimeAndConstraints.getLeft();
         opDesc.setSourceLocation(insertDeleteOp.getSourceLocation());
         builder.contributeHyracksOperator(insertDeleteOp, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.getRight());
         ILogicalOperator src = insertDeleteOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, insertDeleteOp, 0);
     }

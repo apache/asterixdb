@@ -26,7 +26,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.context.RootScopeFactory;
 import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
 public class ScopeChecker {
@@ -127,7 +127,7 @@ public class ScopeChecker {
         if (name != null) {
             Pair<Identifier, Set<? extends Scope.SymbolAnnotation>> symbol = getCurrentScope().findSymbol(name);
             if (symbol != null) {
-                return symbol.first;
+                return symbol.getLeft();
             }
         }
         return null;

@@ -26,7 +26,7 @@ import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -55,7 +55,7 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
         resourcePendingOps.put(resourceId, pendingOps);
         if (primaryIndex) {
             Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
-                    new Pair<>((PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
+                    Pair.of((PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
             primaryIndexTrackers.put(partition, pair);
         }
     }
@@ -70,7 +70,7 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
         try {
             Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
                     primaryIndexTrackers.get(partition);
-            pair.first.completeOperation(null, LSMOperationType.MODIFICATION, null, pair.second);
+            pair.getLeft().completeOperation(null, LSMOperationType.MODIFICATION, null, pair.getRight());
         } catch (HyracksDataException e) {
             throw new ACIDException(e);
         }
@@ -88,7 +88,8 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
                 int pendingOps = partitionPendingOps.get(partitionId).intValue();
                 for (int i = 0; i < pendingOps; i++) {
                     try {
-                        opTracker.first.completeOperation(null, LSMOperationType.MODIFICATION, null, opTracker.second);
+                        opTracker.getLeft().completeOperation(null, LSMOperationType.MODIFICATION, null,
+                                opTracker.getRight());
                     } catch (HyracksDataException ex) {
                         throw new ACIDException(ex);
                     }

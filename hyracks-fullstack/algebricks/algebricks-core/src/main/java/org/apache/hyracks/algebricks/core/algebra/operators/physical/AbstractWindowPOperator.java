@@ -26,9 +26,9 @@ import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -149,7 +149,7 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> frameValueExprList =
                 winOp.getFrameValueExpressions();
         Pair<IScalarEvaluatorFactory[], IBinaryComparatorFactory[]> frameValueExprEvalsAndComparators =
-                createEvaluatorAndComparatorFactories(frameValueExprList, Pair::getSecond, Pair::getFirst, inputSchemas,
+                createEvaluatorAndComparatorFactories(frameValueExprList, Pair::getRight, Pair::getLeft, inputSchemas,
                         inputTypeEnv, exprRuntimeProvider, binaryComparatorFactoryProvider, context);
 
         List<Mutable<ILogicalExpression>> frameExcludeExprList = winOp.getFrameExcludeExpressions();
@@ -196,10 +196,10 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
         }
 
         AbstractWindowRuntimeFactory runtime = createRuntimeFactory(winOp, partitionColumnsList,
-                partitionComparatorFactories, orderComparatorFactories, frameValueExprEvalsAndComparators.first,
-                frameValueExprEvalsAndComparators.second, frameStartExprEvals, frameStartValidationExprEvals,
-                frameEndExprEvals, frameEndValidationExprEvals, frameExcludeExprEvalsAndComparators.first,
-                frameExcludeExprEvalsAndComparators.second, frameExcludeUnaryEval, frameOffsetExprEval,
+                partitionComparatorFactories, orderComparatorFactories, frameValueExprEvalsAndComparators.getLeft(),
+                frameValueExprEvalsAndComparators.getRight(), frameStartExprEvals, frameStartValidationExprEvals,
+                frameEndExprEvals, frameEndValidationExprEvals, frameExcludeExprEvalsAndComparators.getLeft(),
+                frameExcludeExprEvalsAndComparators.getRight(), frameExcludeUnaryEval, frameOffsetExprEval,
                 projectionColumnsExcludingSubplans, runningAggOutColumns, runningAggFactories, nestedAggOutSchemaSize,
                 nestedAggFactory, context);
         runtime.setSourceLocation(winOp.getSourceLocation());
@@ -256,7 +256,7 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
             IBinaryComparatorFactoryProvider binaryComparatorFactoryProvider, JobGenContext context)
             throws AlgebricksException {
         if (exprList.isEmpty()) {
-            return new Pair<>(null, null);
+            return Pair.of(null, null);
         }
         int ln = exprList.size();
         IScalarEvaluatorFactory[] evals = new IScalarEvaluatorFactory[ln];
@@ -269,7 +269,7 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
             comparators[i] = binaryComparatorFactoryProvider.getBinaryComparatorFactory(inputTypeEnv.getType(expr),
                     order.getKind() == OrderOperator.IOrder.OrderKind.ASC);
         }
-        return new Pair<>(evals, comparators);
+        return Pair.of(evals, comparators);
     }
 
     private static boolean containsAny(List<OrderColumn> ocList, int startIdx, Set<LogicalVariable> varSet) {

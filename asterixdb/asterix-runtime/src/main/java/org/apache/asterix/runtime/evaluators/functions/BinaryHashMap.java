@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -197,8 +197,7 @@ public class BinaryHashMap {
     }
 
     public class BinaryHashMapIterator implements Iterator<Pair<BinaryEntry, BinaryEntry>> {
-        private final Pair<BinaryEntry, BinaryEntry> val =
-                new Pair<BinaryEntry, BinaryEntry>(new BinaryEntry(), new BinaryEntry());
+        private final Pair<BinaryEntry, BinaryEntry> val = Pair.of(new BinaryEntry(), new BinaryEntry());
         private int listHeadIndex;
         private ByteBuffer frame;
         private int frameIndex;
@@ -252,8 +251,8 @@ public class BinaryHashMap {
             int entryKeyLen = frame.getShort(frameOff);
             int entryValOff = frameOff + ENTRY_HEADER_SIZE + entryKeyLen;
             int entryValLen = frame.getShort(frameOff + SLOT_SIZE);
-            val.first.set(frame.array(), entryKeyOff, entryKeyLen);
-            val.second.set(frame.array(), entryValOff, entryValLen);
+            val.getLeft().set(frame.array(), entryKeyOff, entryKeyLen);
+            val.getRight().set(frame.array(), entryValOff, entryValLen);
         }
 
         @Override

@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.net.Socket;
 
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class SocketClientInputStream extends AsterixInputStream {
 
@@ -31,7 +31,7 @@ public class SocketClientInputStream extends AsterixInputStream {
     private InputStream in;
 
     public SocketClientInputStream(Pair<String, Integer> address) throws IOException {
-        this.socket = new Socket(address.first, address.second);
+        this.socket = new Socket(address.getLeft(), address.getRight());
         this.in = socket.getInputStream();
     }
 

@@ -54,7 +54,7 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlppVisitor<Void, Integer> {
 
@@ -322,8 +322,8 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 String sep = "";
                 for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
                     out.print(sep);
-                    field.first.accept(this, step + 2);
-                    out.print(" as " + field.second.getValue());
+                    field.getLeft().accept(this, step + 2);
+                    out.print(" as " + field.getRight().getValue());
                     sep = COMMA;
                 }
                 out.print(")");

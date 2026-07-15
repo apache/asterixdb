@@ -21,7 +21,7 @@ package org.apache.asterix.app.external;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface IExternalUDFLibrarian {
     public enum SocketType {

@@ -48,8 +48,8 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -420,7 +420,7 @@ public class TypeUtil {
         }
 
         validateRecord(enforcedRecordType);
-        return new Pair<>(enforcedRecordType, metaType);
+        return Pair.of(enforcedRecordType, metaType);
     }
 
     private static ARecordType appendValueIndexType(ARecordType enforcedRecordType,

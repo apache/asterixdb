@@ -31,7 +31,7 @@ import org.apache.asterix.external.api.IExternalLangIPCProto;
 import org.apache.asterix.external.library.msgpack.MsgPackPointableVisitor;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -53,7 +53,7 @@ public abstract class AbstractPythonIPCProto {
     private final ByteBuffer headerBuffer = ByteBuffer.allocate(HEADER_SIZE_LEN_INCLUSIVE);
     protected ByteBuffer recvBuffer = ByteBuffer.allocate(DEFAULT_BUF_SIZE);
     protected long routeId;
-    protected Pair<ByteBuffer, Exception> bufferBox;
+    protected MutablePair<ByteBuffer, Exception> bufferBox;
     protected long maxFunctionId;
 
     public AbstractPythonIPCProto(OutputStream sockOut) {

@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -122,9 +122,9 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
         gby.getDecorList().addAll(decorToPush);
         Set<ILogicalOperator> visited = new HashSet<>();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorNotToPush) {
-            LogicalVariable v1 = p.first;
+            LogicalVariable v1 = p.getLeft();
             if (v1 != null) {
-                VariableReferenceExpression varRef = (VariableReferenceExpression) p.second.getValue();
+                VariableReferenceExpression varRef = (VariableReferenceExpression) p.getRight().getValue();
                 LogicalVariable v2 = varRef.getVariableReference();
                 OperatorManipulationUtil.substituteVarRec(join, v2, v1, true, context, visited);
                 visited.clear();
@@ -144,7 +144,7 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
         VariableUtilities.getLiveVariables(branch, fromBranch);
         Collection<LogicalVariable> usedInGbyExprList = new ArrayList<LogicalVariable>();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList()) {
-            p.second.getValue().getUsedVariables(usedInGbyExprList);
+            p.getRight().getValue().getUsedVariables(usedInGbyExprList);
         }
 
         if (!fromBranch.containsAll(usedInGbyExprList)) {
@@ -163,7 +163,7 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
         Set<LogicalVariable> decorVarRhs = new HashSet<LogicalVariable>();
         decorVarRhs.clear();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
-            ILogicalExpression expr = p.second.getValue();
+            ILogicalExpression expr = p.getRight().getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 return PushTestResult.FALSE;
             }

@@ -54,7 +54,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -127,7 +127,7 @@ public class SelectExcludeRewriteSugarVisitor extends AbstractSqlppExpressionSco
                                 scopeChecker.getCurrentScope().liveSymbols(null);
                         while (liveSymbolIterator.hasNext()) {
                             Pair<Identifier, Set<? extends Scope.SymbolAnnotation>> symbol = liveSymbolIterator.next();
-                            String symbolName = SqlppVariableUtil.toUserDefinedName(symbol.first.getValue());
+                            String symbolName = SqlppVariableUtil.toUserDefinedName(symbol.getLeft().getValue());
                             if (symbolName.equals(e.get(0))) {
                                 return false;
                             }

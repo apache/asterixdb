@@ -63,7 +63,7 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -97,15 +97,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(Query q, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(q.getBody());
-        q.setBody(p.second);
-        return p.first;
+        q.setBody(p.getRight());
+        return p.getLeft();
     }
 
     @Override
     public Boolean visit(ListConstructor lc, Void arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(lc.getExprList());
-        lc.setExprList(p.second);
-        return p.first;
+        lc.setExprList(p.getRight());
+        return p.getLeft();
     }
 
     @Override
@@ -113,11 +113,11 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         for (FieldBinding b : rc.getFbList()) {
             Pair<Boolean, Expression> leftExprInlined = inlineUdfsAndViewsInExpr(b.getLeftExpr());
-            b.setLeftExpr(leftExprInlined.second);
-            changed = changed || leftExprInlined.first;
+            b.setLeftExpr(leftExprInlined.getRight());
+            changed = changed || leftExprInlined.getLeft();
             Pair<Boolean, Expression> rightExprInlined = inlineUdfsAndViewsInExpr(b.getRightExpr());
-            b.setRightExpr(rightExprInlined.second);
-            changed = changed || rightExprInlined.first;
+            b.setRightExpr(rightExprInlined.getRight());
+            changed = changed || rightExprInlined.getLeft();
         }
         return changed;
     }
@@ -125,12 +125,12 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(CallExpr callExpr, Void arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(callExpr.getExprList());
-        callExpr.setExprList(p.second);
-        boolean changed = p.first;
+        callExpr.setExprList(p.getRight());
+        boolean changed = p.getLeft();
         if (callExpr.hasAggregateFilterExpr()) {
             Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(callExpr.getAggregateFilterExpr());
-            callExpr.setAggregateFilterExpr(be.second);
-            changed |= be.first;
+            callExpr.setAggregateFilterExpr(be.getRight());
+            changed |= be.getLeft();
         }
         return changed;
     }
@@ -138,27 +138,27 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(OperatorExpr ifbo, Void arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(ifbo.getExprList());
-        ifbo.setExprList(p.second);
-        return p.first;
+        ifbo.setExprList(p.getRight());
+        return p.getLeft();
     }
 
     @Override
     public Boolean visit(FieldAccessor fa, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fa.getExpr());
-        fa.setExpr(p.second);
-        return p.first;
+        fa.setExpr(p.getRight());
+        return p.getLeft();
     }
 
     @Override
     public Boolean visit(IndexAccessor fa, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fa.getExpr());
-        fa.setExpr(p.second);
-        boolean inlined = p.first;
+        fa.setExpr(p.getRight());
+        boolean inlined = p.getLeft();
         Expression indexExpr = fa.getIndexExpr();
         if (indexExpr != null) {
             Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(indexExpr);
-            fa.setIndexExpr(p2.second);
-            inlined |= p2.first;
+            fa.setIndexExpr(p2.getRight());
+            inlined |= p2.getLeft();
         }
         return inlined;
     }
@@ -166,12 +166,12 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(IfExpr ifexpr, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(ifexpr.getCondExpr());
-        ifexpr.setCondExpr(p1.second);
+        ifexpr.setCondExpr(p1.getRight());
         Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(ifexpr.getThenExpr());
-        ifexpr.setThenExpr(p2.second);
+        ifexpr.setThenExpr(p2.getRight());
         Pair<Boolean, Expression> p3 = inlineUdfsAndViewsInExpr(ifexpr.getElseExpr());
-        ifexpr.setElseExpr(p3.second);
-        return p1.first || p2.first || p3.first;
+        ifexpr.setElseExpr(p3.getRight());
+        return p1.getLeft() || p2.getLeft() || p3.getLeft();
     }
 
     @Override
@@ -179,35 +179,35 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         for (QuantifiedPair t : qe.getQuantifiedList()) {
             Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(t.getExpr());
-            t.setExpr(p.second);
-            if (p.first) {
+            t.setExpr(p.getRight());
+            if (p.getLeft()) {
                 changed = true;
             }
         }
         Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(qe.getSatisfiesExpr());
-        qe.setSatisfiesExpr(p2.second);
-        return changed || p2.first;
+        qe.setSatisfiesExpr(p2.getRight());
+        return changed || p2.getLeft();
     }
 
     @Override
     public Boolean visit(LetClause lc, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(lc.getBindingExpr());
-        lc.setBindingExpr(p.second);
-        return p.first;
+        lc.setBindingExpr(p.getRight());
+        return p.getLeft();
     }
 
     @Override
     public Boolean visit(WhereClause wc, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(wc.getWhereExpr());
-        wc.setWhereExpr(p.second);
-        return p.first;
+        wc.setWhereExpr(p.getRight());
+        return p.getLeft();
     }
 
     @Override
     public Boolean visit(OrderbyClause oc, Void arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(oc.getOrderbyList());
-        oc.setOrderbyList(p.second);
-        return p.first;
+        oc.setOrderbyList(p.getRight());
+        return p.getLeft();
     }
 
     @Override
@@ -217,24 +217,24 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         List<List<GbyVariableExpressionPair>> newGbyList = new ArrayList<>(gbyList.size());
         for (List<GbyVariableExpressionPair> gbyPairList : gbyList) {
             Pair<Boolean, List<GbyVariableExpressionPair>> p1 = inlineUdfsInGbyPairList(gbyPairList);
-            newGbyList.add(p1.second);
-            changed |= p1.first;
+            newGbyList.add(p1.getRight());
+            changed |= p1.getLeft();
         }
         gc.setGbyPairList(newGbyList);
         if (gc.hasDecorList()) {
             Pair<Boolean, List<GbyVariableExpressionPair>> p2 = inlineUdfsInGbyPairList(gc.getDecorPairList());
-            gc.setDecorPairList(p2.second);
-            changed |= p2.first;
+            gc.setDecorPairList(p2.getRight());
+            changed |= p2.getLeft();
         }
         if (gc.hasGroupFieldList()) {
             Pair<Boolean, List<Pair<Expression, Identifier>>> p3 = inlineUdfsInFieldList(gc.getGroupFieldList());
-            gc.setGroupFieldList(p3.second);
-            changed |= p3.first;
+            gc.setGroupFieldList(p3.getRight());
+            changed |= p3.getLeft();
         }
         if (gc.hasWithMap()) {
             Pair<Boolean, Map<Expression, VariableExpr>> p4 = inlineUdfsInVarMap(gc.getWithVarMap());
-            gc.setWithVarMap(p4.second);
-            changed |= p4.first;
+            gc.setWithVarMap(p4.getRight());
+            changed |= p4.getLeft();
         }
         return changed;
     }
@@ -244,13 +244,13 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         if (lc.hasLimitExpr()) {
             Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(lc.getLimitExpr());
-            lc.setLimitExpr(p1.second);
-            changed = p1.first;
+            lc.setLimitExpr(p1.getRight());
+            changed = p1.getLeft();
         }
         if (lc.hasOffset()) {
             Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(lc.getOffset());
-            lc.setOffset(p2.second);
-            changed |= p2.first;
+            lc.setOffset(p2.getRight());
+            changed |= p2.getLeft();
         }
         return changed;
     }
@@ -258,8 +258,8 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(UnaryExpr u, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(u.getExpr());
-        u.setExpr(p.second);
-        return p.first;
+        u.setExpr(p.getRight());
+        return p.getLeft();
     }
 
     @Override
@@ -283,12 +283,12 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         Expression returnExpression = insert.getReturnExpression();
         if (returnExpression != null) {
             Pair<Boolean, Expression> rewrittenReturnExpr = inlineUdfsAndViewsInExpr(returnExpression);
-            insert.setReturnExpression(rewrittenReturnExpr.second);
-            changed = rewrittenReturnExpr.first;
+            insert.setReturnExpression(rewrittenReturnExpr.getRight());
+            changed = rewrittenReturnExpr.getLeft();
         }
         Pair<Boolean, Expression> rewrittenBodyExpression = inlineUdfsAndViewsInExpr(insert.getBody());
-        insert.setBody(rewrittenBodyExpression.second);
-        return changed || rewrittenBodyExpression.first;
+        insert.setBody(rewrittenBodyExpression.getRight());
+        return changed || rewrittenBodyExpression.getLeft();
     }
 
     @Override
@@ -296,24 +296,24 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed;
 
         Pair<Boolean, Expression> queryBody = inlineUdfsAndViewsInExpr(stmtCopy.getBody());
-        changed = queryBody.first;
-        stmtCopy.setBody(queryBody.second);
+        changed = queryBody.getLeft();
+        stmtCopy.setBody(queryBody.getRight());
 
         Pair<Boolean, List<Expression>> path = inlineUdfsInExprList(stmtCopy.getPathExpressions());
-        changed |= path.first;
-        stmtCopy.setPathExpressions(path.second);
+        changed |= path.getLeft();
+        stmtCopy.setPathExpressions(path.getRight());
 
         Pair<Boolean, List<Expression>> part = inlineUdfsInExprList(stmtCopy.getPartitionExpressions());
-        changed |= part.first;
-        stmtCopy.setPartitionExpressions(part.second);
+        changed |= part.getLeft();
+        stmtCopy.setPartitionExpressions(part.getRight());
 
         Pair<Boolean, List<Expression>> order = inlineUdfsInExprList(stmtCopy.getOrderByList());
-        changed |= order.first;
-        stmtCopy.setOrderByList(order.second);
+        changed |= order.getLeft();
+        stmtCopy.setOrderByList(order.getRight());
 
         Pair<Boolean, List<Expression>> key = inlineUdfsInExprList(stmtCopy.getKeyExpressions());
-        changed |= key.first;
-        stmtCopy.setKeyExpressions(key.second);
+        changed |= key.getLeft();
+        stmtCopy.setKeyExpressions(key.getRight());
 
         return changed;
     }
@@ -321,7 +321,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     protected Pair<Boolean, Expression> inlineUdfsAndViewsInExpr(Expression expr) throws CompilationException {
         if (expr.getKind() != Kind.CALL_EXPRESSION) {
             boolean r = expr.accept(this, null);
-            return new Pair<>(r, expr);
+            return Pair.of(r, expr);
         }
         CallExpr f = (CallExpr) expr;
         boolean r = expr.accept(this, null);
@@ -333,13 +333,13 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         FunctionSignature fs = f.getFunctionSignature();
         if (FunctionUtil.isBuiltinFunctionSignature(fs)) {
             if (!FunctionUtil.isBuiltinDatasetFunction(fs)) {
-                return new Pair<>(r, expr);
+                return Pair.of(r, expr);
             }
             Triple<DatasetFullyQualifiedName, Boolean, DatasetFullyQualifiedName> dsArgs =
                     FunctionUtil.parseDatasetFunctionArguments(f);
             if (!Boolean.TRUE.equals(dsArgs.second)) {
                 // not a view
-                return new Pair<>(r, expr);
+                return Pair.of(r, expr);
             }
             DatasetFullyQualifiedName viewName = dsArgs.first;
             ViewDecl implem = usedViews.get(viewName);
@@ -358,15 +358,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             FunctionDecl implem = usedUDFs.get(fs);
             if (implem == null) {
                 //it's an external UDF
-                return new Pair<>(r, expr);
+                return Pair.of(r, expr);
             }
             // it's one of the functions we want to inline
             boolean isVarargs = implem.getSignature().getArity() == FunctionIdentifier.VARARGS;
             Pair<List<LetClause>, VariableSubstitutionEnvironment> clausesAndSubst =
                     createFunctionParametersSubstitution(implem.getParamList(), isVarargs, f.getExprList(),
                             f.getSourceLocation());
-            letClauses = clausesAndSubst.first;
-            bodyVarSubst = clausesAndSubst.second;
+            letClauses = clausesAndSubst.getLeft();
+            bodyVarSubst = clausesAndSubst.getRight();
             normBodyExpr = implem.getNormalizedFuncBody();
             if (normBodyExpr == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, f.getSourceLocation(),
@@ -379,9 +379,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         }
 
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = normBodyExpr.accept(cloneVisitor, bodyVarSubst);
-        Expression resExpr = letClauses.isEmpty() ? (Expression) p2.first
-                : generateQueryExpression(letClauses, (Expression) p2.first);
-        return new Pair<>(true, resExpr);
+        Expression resExpr = letClauses.isEmpty() ? (Expression) p2.getLeft()
+                : generateQueryExpression(letClauses, (Expression) p2.getLeft());
+        return Pair.of(true, resExpr);
     }
 
     private Pair<List<LetClause>, VariableSubstitutionEnvironment> createFunctionParametersSubstitution(
@@ -403,7 +403,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
                         e.accept(cloneVisitor, new VariableSubstitutionEnvironment());
                 VariableExpr newVRef1 = new VariableExpr(argVar);
                 newVRef1.setSourceLocation(argSourceLoc);
-                LetClause c = new LetClause(newVRef1, (Expression) p1.first);
+                LetClause c = new LetClause(newVRef1, (Expression) p1.getLeft());
                 c.setSourceLocation(argSourceLoc);
                 clauses.add(c);
             }
@@ -441,7 +441,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
                 subst.addSubstituion(new VariableExpr(paramList.get(i)), argVars.get(i));
             }
         }
-        return new Pair<>(clauses, subst);
+        return Pair.of(clauses, subst);
     }
 
     protected Pair<Boolean, List<Expression>> inlineUdfsInExprList(List<Expression> exprList)
@@ -450,10 +450,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         for (Expression e : exprList) {
             Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(e);
-            newList.add(be.second);
-            changed |= be.first;
+            newList.add(be.getRight());
+            changed |= be.getLeft();
         }
-        return new Pair<>(changed, newList);
+        return Pair.of(changed, newList);
     }
 
     private Pair<Boolean, List<GbyVariableExpressionPair>> inlineUdfsInGbyPairList(
@@ -462,10 +462,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         for (GbyVariableExpressionPair p : gbyPairList) {
             Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(p.getExpr());
-            newList.add(new GbyVariableExpressionPair(p.getVar(), be.second));
-            changed |= be.first;
+            newList.add(new GbyVariableExpressionPair(p.getVar(), be.getRight()));
+            changed |= be.getLeft();
         }
-        return new Pair<>(changed, newList);
+        return Pair.of(changed, newList);
     }
 
     protected Pair<Boolean, List<Pair<Expression, Identifier>>> inlineUdfsInFieldList(
@@ -473,11 +473,11 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         List<Pair<Expression, Identifier>> newList = new ArrayList<>(fieldList.size());
         boolean changed = false;
         for (Pair<Expression, Identifier> p : fieldList) {
-            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(p.first);
-            newList.add(new Pair<>(be.second, p.second));
-            changed |= be.first;
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(p.getLeft());
+            newList.add(Pair.of(be.getRight(), p.getRight()));
+            changed |= be.getLeft();
         }
-        return new Pair<>(changed, newList);
+        return Pair.of(changed, newList);
     }
 
     private Pair<Boolean, Map<Expression, VariableExpr>> inlineUdfsInVarMap(Map<Expression, VariableExpr> varMap)
@@ -486,9 +486,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         for (Map.Entry<Expression, VariableExpr> me : varMap.entrySet()) {
             Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(me.getKey());
-            newMap.put(be.second, me.getValue());
-            changed |= be.first;
+            newMap.put(be.getRight(), me.getValue());
+            changed |= be.getLeft();
         }
-        return new Pair<>(changed, newMap);
+        return Pair.of(changed, newMap);
     }
 }

@@ -28,9 +28,10 @@ import java.util.Map;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -155,51 +156,53 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         if (group.size() != 2) {
             return false;
         }
-        List<Pair<Mutable<ILogicalOperator>, Integer>> operators = new ArrayList<>();
+        List<MutablePair<Mutable<ILogicalOperator>, Integer>> operators = new ArrayList<>();
         if (childrenToParents.containsKey(group.get(0))) {
             for (Mutable<ILogicalOperator> op : childrenToParents.get(group.get(0))) {
-                operators.add(new Pair<>(op, 0));
+                operators.add(new MutablePair<>(op, 0));
             }
         } else {
             return false;
         }
-        List<Pair<Mutable<ILogicalOperator>, Integer>> unionAllOps = new ArrayList<>();
+        List<MutablePair<Mutable<ILogicalOperator>, Integer>> unionAllOps = new ArrayList<>();
         while (operators.size() > 0) {
-            Pair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
-            if (entry.first.getValue() instanceof UnionAllOperator) {
+            MutablePair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
+            if (entry.getLeft().getValue() instanceof UnionAllOperator) {
                 unionAllOps.add(entry);
-            } else if (entry.first.getValue() instanceof ExchangeOperator && ((ExchangeOperator) entry.first.getValue())
-                    .getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
-                entry.second += 1;
+            } else if (entry.getLeft().getValue() instanceof ExchangeOperator
+                    && ((ExchangeOperator) entry.getLeft().getValue()).getPhysicalOperator()
+                            .getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+                entry.setRight(entry.getRight() + 1);
             }
-            if (childrenToParents.containsKey(entry.first)) {
-                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.first)) {
-                    operators.add(new Pair<>(op, entry.second));
+            if (childrenToParents.containsKey(entry.getLeft())) {
+                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.getLeft())) {
+                    operators.add(new MutablePair<>(op, entry.getRight()));
                 }
             }
         }
         if (childrenToParents.containsKey(group.get(1))) {
             for (Mutable<ILogicalOperator> op : childrenToParents.get(group.get(1))) {
-                operators.add(new Pair<>(op, 0));
+                operators.add(new MutablePair<>(op, 0));
             }
         } else {
             return false;
         }
         while (operators.size() > 0) {
-            Pair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
-            if (entry.first.getValue() instanceof UnionAllOperator) {
-                for (Pair<Mutable<ILogicalOperator>, Integer> unionAllOp : unionAllOps) {
-                    if (unionAllOp.first.equals(entry.first) && unionAllOp.second + entry.second == 1) {
+            MutablePair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
+            if (entry.getLeft().getValue() instanceof UnionAllOperator) {
+                for (MutablePair<Mutable<ILogicalOperator>, Integer> unionAllOp : unionAllOps) {
+                    if (unionAllOp.getLeft().equals(entry.getLeft()) && unionAllOp.getRight() + entry.getRight() == 1) {
                         return true;
                     }
                 }
-            } else if (entry.first.getValue() instanceof ExchangeOperator && ((ExchangeOperator) entry.first.getValue())
-                    .getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
-                entry.second += 1;
+            } else if (entry.getLeft().getValue() instanceof ExchangeOperator
+                    && ((ExchangeOperator) entry.getLeft().getValue()).getPhysicalOperator()
+                            .getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+                entry.setRight(entry.getRight() + 1);
             }
-            if (childrenToParents.containsKey(entry.first)) {
-                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.first)) {
-                    operators.add(new Pair<>(op, entry.second));
+            if (childrenToParents.containsKey(entry.getLeft())) {
+                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.getLeft())) {
+                    operators.add(new MutablePair<>(op, entry.getRight()));
                 }
             }
         }
@@ -377,7 +380,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             newOutputs.clear();
             // get the indexes that are set in the BitSet
             allOutputs.stream().forEach(outIndex -> {
-                newOutputs.add(new Pair<>(((AbstractReplicateOperator) repRef.getValue()).getOutputs().get(outIndex),
+                newOutputs.add(Pair.of(((AbstractReplicateOperator) repRef.getValue()).getOutputs().get(outIndex),
                         ((AbstractReplicateOperator) repRef.getValue()).getOutputMaterializationFlags()[outIndex]));
             });
             ((AbstractReplicateOperator) repRef.getValue()).setOutputs(newOutputs);
@@ -638,8 +641,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalOperator>> inputs = opRef.getValue().getInputs();
         for (int i = 0; i < inputs.size(); i++) {
             Mutable<ILogicalOperator> inputRef = inputs.get(i);
-            if (labels.second[outputIndex] == 1 && labels.first[i] == 0) { // 1 -> 0
-                if (labels.second.length == 1) {
+            if (labels.getRight()[outputIndex] == 1 && labels.getLeft()[i] == 0) { // 1 -> 0
+                if (labels.getRight().length == 1) {
                     clusterMap.put(opRef, currentClusterId);
                     // start a new cluster
                     MutableInt newClusterId = new MutableInt(++lastUsedClusterId);

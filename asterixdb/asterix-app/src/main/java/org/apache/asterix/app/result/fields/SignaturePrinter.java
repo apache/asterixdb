@@ -34,7 +34,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.ResultMetadata;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.util.JSONUtil;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -87,8 +87,8 @@ public class SignaturePrinter implements IResponseFieldPrinter {
         IAType[] fieldTypes;
         Pair<String[], IAType[]> p = generateFlatSignatureFromOpenType(outputRecordType);
         if (p != null) {
-            fieldNames = p.first;
-            fieldTypes = p.second;
+            fieldNames = p.getLeft();
+            fieldTypes = p.getRight();
         } else {
             fieldNames = outputRecordType.getFieldNames();
             fieldTypes = outputRecordType.getFieldTypes();
@@ -134,7 +134,7 @@ public class SignaturePrinter implements IResponseFieldPrinter {
             fieldTypes[i] = fieldType;
             i++;
         }
-        return new Pair<>(fieldNames, fieldTypes);
+        return Pair.of(fieldNames, fieldTypes);
     }
 
     private static String printFieldType(IAType type) {

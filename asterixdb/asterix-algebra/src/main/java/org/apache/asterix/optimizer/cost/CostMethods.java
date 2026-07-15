@@ -27,7 +27,8 @@ import org.apache.asterix.optimizer.rules.cbo.AbstractPlanNode;
 import org.apache.asterix.optimizer.rules.cbo.JoinNode;
 import org.apache.asterix.optimizer.rules.cbo.JoinPlanNode;
 import org.apache.asterix.optimizer.rules.cbo.ScanPlanNode;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
@@ -436,8 +437,8 @@ public class CostMethods implements ICostMethods {
         double outputSize = 1.0; // for now
 
         Pair<Double, Double> cards = getOpCards(groupByOperator);
-        inputCard = cards.getFirst();
-        outputCard = cards.getSecond();
+        inputCard = cards.getLeft();
+        outputCard = cards.getRight();
 
         if (groupByOperator.isGlobal()) {
             inputCardPerPartition = outputCard * DOP;
@@ -462,8 +463,8 @@ public class CostMethods implements ICostMethods {
         double outputSize = 1.0; // for now
 
         Pair<Double, Double> cards = getOpCards(groupByOperator);
-        inputCard = cards.getFirst();
-        outputCard = cards.getSecond();
+        inputCard = cards.getLeft();
+        outputCard = cards.getRight();
 
         if (groupByOperator.isGlobal()) {
             inputCardPerPartition = outputCard * DOP;
@@ -488,8 +489,8 @@ public class CostMethods implements ICostMethods {
         double outputSize = 1.0; // for now
 
         Pair<Double, Double> cards = getOpCards(distinctOp);
-        inputCard = cards.getFirst();
-        outputCard = cards.getSecond();
+        inputCard = cards.getLeft();
+        outputCard = cards.getRight();
 
         inputCardPerPartition = inputCard / DOP;
         outputCardPerPartition = outputCard / DOP;
@@ -510,8 +511,8 @@ public class CostMethods implements ICostMethods {
         double outputSize = 1.0; // for now
 
         Pair<Double, Double> cards = getOpCards(orderOp);
-        inputCard = cards.getFirst();
-        outputCard = cards.getSecond();
+        inputCard = cards.getLeft();
+        outputCard = cards.getRight();
 
         inputCardPerPartition = inputCard / DOP;
         outputCardPerPartition = outputCard / DOP;
@@ -591,13 +592,13 @@ public class CostMethods implements ICostMethods {
     }
 
     protected Pair<Double, Double> getOpCards(ILogicalOperator op) {
-        Pair<Double, Double> cardCost = new Pair<>(0.0, 0.0);
+        MutablePair<Double, Double> cardCost = new MutablePair<>(0.0, 0.0);
 
         for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
             if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_INPUT_CARDINALITY)) {
-                cardCost.setFirst((Double) anno.getValue());
+                cardCost.setLeft((Double) anno.getValue());
             } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
-                cardCost.setSecond((Double) anno.getValue());
+                cardCost.setRight((Double) anno.getValue());
             }
         }
         return cardCost;

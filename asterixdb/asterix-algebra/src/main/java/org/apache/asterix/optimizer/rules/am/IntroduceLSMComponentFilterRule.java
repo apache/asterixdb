@@ -44,8 +44,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -513,7 +513,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (fieldNamePairs == null) {
                         return false;
                     }
-                    List<String> fieldName = fieldNamePairs.second;
+                    List<String> fieldName = fieldNamePairs.getRight();
                     // Since we validated the filter source in getFieldNameFromSubAssignTree, we can safely set the
                     // fieldSource to be filterSourceIndicator
                     optFuncExpr.setFieldName(funcVarIndex, fieldName, filterSourceIndicator);
@@ -691,8 +691,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                             filterSourceType, filterSourceIndicator, numOfPKeys);
                     if (lowerInfo != null) {
                         // propagate filterSourceType in case the filter value comes from a nested attribute.
-                        filterSourceType = lowerInfo.first;
-                        returnList = lowerInfo.second;
+                        filterSourceType = lowerInfo.getLeft();
+                        returnList = lowerInfo.getRight();
                     }
                 }
             }
@@ -703,7 +703,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     return null;
                 }
                 returnList.add(fieldName);
-                return new Pair<>(filterSourceType, returnList);
+                return Pair.of(filterSourceType, returnList);
             } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
                 Integer fieldIndex = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
                 if (fieldIndex == null) {
@@ -714,7 +714,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 if (subType.getTypeTag() == ATypeTag.OBJECT) {
                     filterSourceType = (ARecordType) subType;
                 }
-                return new Pair<>(filterSourceType, returnList);
+                return Pair.of(filterSourceType, returnList);
             }
 
         }

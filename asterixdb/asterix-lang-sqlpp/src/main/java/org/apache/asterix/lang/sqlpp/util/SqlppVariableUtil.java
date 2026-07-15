@@ -35,7 +35,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.visitor.BindingVariableVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -154,7 +154,7 @@ public class SqlppVariableUtil {
         VarIdentifier var = varExpr.getVar();
         VariableExpr newVarExpr = new VariableExpr(var);
         newVarExpr.setSourceLocation(varExpr.getSourceLocation());
-        outFieldList.add(new Pair<>(newVarExpr, toUserDefinedVariableName(var)));
+        outFieldList.add(Pair.of(newVarExpr, toUserDefinedVariableName(var)));
     }
 
     public static LogicalVariable getVariable(ILogicalExpression expr) {

@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.rules.cbo;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.optimizer.cost.ICost;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -91,15 +91,15 @@ public class JoinPlanNode extends AbstractPlanNode {
 
     public Pair<String, String> joinMethod() {
         if (this.joinOp == JoinPlanNode.JoinMethod.HYBRID_HASH_JOIN) {
-            return new Pair<>("HASH JOIN", "HJ");
+            return Pair.of("HASH JOIN", "HJ");
         } else if (this.joinOp == JoinPlanNode.JoinMethod.BROADCAST_HASH_JOIN) {
-            return new Pair<>("BROADCAST HASH JOIN", "BHJ");
+            return Pair.of("BROADCAST HASH JOIN", "BHJ");
         } else if (this.joinOp == JoinPlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN) {
-            return new Pair<>("INDEX NESTED LOOPS JOIN", "INLJ");
+            return Pair.of("INDEX NESTED LOOPS JOIN", "INLJ");
         } else if (this.joinOp == JoinPlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN) {
-            return new Pair<>("CARTESIAN PRODUCT JOIN", "CPJ");
+            return Pair.of("CARTESIAN PRODUCT JOIN", "CPJ");
         }
-        return new Pair<>("", "");
+        return Pair.of("", "");
     }
 
     public void setJoinCosts(ICost opCost, ICost totalCost, ICost leftExchangeCost, ICost rightExchangeCost) {

@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -140,14 +140,14 @@ public class OrderOperator extends AbstractLogicalOperator {
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
         for (Pair<IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            if (p.first.getKind() == OrderKind.FUNCTIONCALL) {
-                FunOrder fo = (FunOrder) p.first;
+            if (p.getLeft().getKind() == OrderKind.FUNCTIONCALL) {
+                FunOrder fo = (FunOrder) p.getLeft();
                 Mutable<ILogicalExpression> r1 = fo.getExpressionRef();
                 if (visitor.transform(r1)) {
                     b = true;
                 }
             }
-            if (visitor.transform(p.second)) {
+            if (visitor.transform(p.getRight())) {
                 b = true;
             }
         }

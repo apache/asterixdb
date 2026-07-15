@@ -33,8 +33,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -96,7 +96,7 @@ public class AsterixPushMapOperatorThroughUnionRule extends PushMapOperatorThrou
 
         if (fieldAccessByIndexCollector.hasFieldAccessMappings()) {
             fieldAccessByIndexTransformer.reset(unionAllOp, branchIdx, context);
-            newOpPair.first.acceptExpressionTransform(fieldAccessByIndexTransformer);
+            newOpPair.getLeft().acceptExpressionTransform(fieldAccessByIndexTransformer);
             fieldAccessByIndexTransformer.clear();
         }
 
@@ -182,7 +182,7 @@ public class AsterixPushMapOperatorThroughUnionRule extends PushMapOperatorThrou
                     if (fieldIndexPreUnion >= 0) {
                         // we save 'recordVar' pre-union because super.deepCopyForBranch() will replace
                         // post-union variables with pre-union variables in the operator's expressions
-                        fieldIndexMap.put(new Pair<>(recordVarPreUnion, fieldIndexPostUnion), fieldIndexPreUnion);
+                        fieldIndexMap.put(Pair.of(recordVarPreUnion, fieldIndexPostUnion), fieldIndexPreUnion);
                         return true;
                     } else {
                         return false;
@@ -230,7 +230,7 @@ public class AsterixPushMapOperatorThroughUnionRule extends PushMapOperatorThrou
             // post-union variables with pre-union variables in the operator's expressions
             LogicalVariable recordVarPreUnion = ((VariableReferenceExpression) recordExpr).getVariableReference();
             Integer fieldIndexPreUnion =
-                    fieldAccessByIndexCollector.fieldIndexMap.get(new Pair<>(recordVarPreUnion, fieldIndexPostUnion));
+                    fieldAccessByIndexCollector.fieldIndexMap.get(Pair.of(recordVarPreUnion, fieldIndexPostUnion));
             if (fieldIndexPreUnion == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, callExpr.getSourceLocation(),
                         recordVarPreUnion.toString());

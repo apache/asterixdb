@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -65,12 +65,12 @@ class SubplanFlatteningUtil {
             throws AlgebricksException {
         // For nested subplan, we do not continue for the general inlining.
         if (OperatorManipulationUtil.ancestorOfOperators(subplanOp, OP_SET_NESTEDTUPLESOURCE)) {
-            return new Pair<>(null, null);
+            return Pair.of(null, null);
         }
 
         Mutable<ILogicalOperator> topOpRef = findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0));
         if (topOpRef == null) {
-            return new Pair<>(null, null);
+            return Pair.of(null, null);
         }
 
         if (extraPrimaryKeyFd != null) {
@@ -89,7 +89,7 @@ class SubplanFlatteningUtil {
 
         // Gets ordering variables.
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderVars = visitor.getOrderingExpressions();
-        return new Pair<>(visitor.getInputVariableToOutputVariableMap(), orderVars);
+        return Pair.of(visitor.getInputVariableToOutputVariableMap(), orderVars);
     }
 
     /**
@@ -112,15 +112,15 @@ class SubplanFlatteningUtil {
             IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         Pair<Boolean, ILogicalOperator> applicableAndNtsToRewrite =
                 SubplanFlatteningUtil.isQualifiedForSpecialFlattening(subplanOp);
-        if (!applicableAndNtsToRewrite.first) {
-            return new Pair<>(null, null);
+        if (!applicableAndNtsToRewrite.getLeft()) {
+            return Pair.of(null, null);
         }
 
         if (extraPrimaryKeyFd != null) {
             context.addPrimaryKey(extraPrimaryKeyFd);
         }
 
-        ILogicalOperator qualifiedNts = applicableAndNtsToRewrite.second;
+        ILogicalOperator qualifiedNts = applicableAndNtsToRewrite.getRight();
         ILogicalOperator subplanInputOp = subplanOp.getInputs().get(0).getValue();
         InlineLeftNtsInSubplanJoinFlatteningVisitor specialVisitor = new InlineLeftNtsInSubplanJoinFlatteningVisitor(
                 context, subplanInputOp, qualifiedNts, leftOuterMissingValue);
@@ -144,7 +144,7 @@ class SubplanFlatteningUtil {
             VariableUtilities.substituteVariables(currentOp, subplanLocalVarMap, context);
             currentOp = currentOp.getInputs().get(0).getValue();
         }
-        return new Pair<>(specialVisitor.getNullCheckVariables(), topJoinRef);
+        return Pair.of(specialVisitor.getNullCheckVariables(), topJoinRef);
     }
 
     /**
@@ -230,16 +230,16 @@ class SubplanFlatteningUtil {
                 subplanOp.getNestedPlans().get(0).getRoots().get(0).getValue(),
                 // we don't need to check recursively for this special rewriting.
                 OP_SET_INNER_OUTER_JOIN)) {
-            return new Pair<>(false, null);
+            return Pair.of(false, null);
         }
         SubplanSpecialFlatteningCheckVisitor visitor = new SubplanSpecialFlatteningCheckVisitor();
         for (ILogicalPlan plan : subplanOp.getNestedPlans()) {
             for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
                 if (!opRef.getValue().accept(visitor, null)) {
-                    return new Pair<>(false, null);
+                    return Pair.of(false, null);
                 }
             }
         }
-        return new Pair<>(true, visitor.getQualifiedNts());
+        return Pair.of(true, visitor.getQualifiedNts());
     }
 }

@@ -22,8 +22,8 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -55,7 +55,7 @@ public abstract class AbstractGroupByPOperator extends AbstractPhysicalOperator 
         int fdColumns[] = new int[numFds];
         int j = 0;
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
-            ILogicalExpression expr = p.second.getValue();
+            ILogicalExpression expr = p.getRight().getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw AlgebricksException.create(ErrorCode.EXPR_NOT_NORMALIZED, expr.getSourceLocation());
             }

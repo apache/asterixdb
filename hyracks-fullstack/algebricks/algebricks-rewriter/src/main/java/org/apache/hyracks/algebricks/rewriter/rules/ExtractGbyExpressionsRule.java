@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -67,7 +67,7 @@ public class ExtractGbyExpressionsRule extends AbstractExtractExprRule {
     private static boolean extractComplexExpressions(ILogicalOperator op,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> exprList, IOptimizationContext context)
             throws AlgebricksException {
-        return extractComplexExpressions(op, exprList, Pair::getSecond, context);
+        return extractComplexExpressions(op, exprList, Pair::getRight, context);
     }
 
     public static <T> boolean extractComplexExpressions(ILogicalOperator op, List<T> exprList,

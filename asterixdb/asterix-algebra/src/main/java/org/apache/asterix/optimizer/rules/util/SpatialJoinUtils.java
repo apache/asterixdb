@@ -37,9 +37,9 @@ import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtil
 import org.apache.asterix.runtime.operators.joins.spatial.utils.IntersectSpatialJoinUtilFactory;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -327,8 +327,8 @@ public class SpatialJoinUtils {
         Pair<LogicalVariable, Mutable<ILogicalOperator>> createLeftAssignProjectOperatorResult =
                 createAssignProjectOperator(op, intersectionMBR, intersectionMBRReplicateOperator,
                         exchMBRToJoinOpLeftRef, context);
-        LogicalVariable leftIntersectionMBRVar = createLeftAssignProjectOperatorResult.getFirst();
-        Mutable<ILogicalOperator> leftIntersectionMBRRef = createLeftAssignProjectOperatorResult.getSecond();
+        LogicalVariable leftIntersectionMBRVar = createLeftAssignProjectOperatorResult.getLeft();
+        Mutable<ILogicalOperator> leftIntersectionMBRRef = createLeftAssignProjectOperatorResult.getRight();
 
         // Replicate union MBR to the right branch
         ExchangeOperator exchMBRToJoinOpRight =
@@ -337,8 +337,8 @@ public class SpatialJoinUtils {
         Pair<LogicalVariable, Mutable<ILogicalOperator>> createRightAssignProjectOperatorResult =
                 createAssignProjectOperator(op, intersectionMBR, intersectionMBRReplicateOperator,
                         exchMBRToJoinOpRightRef, context);
-        LogicalVariable rightIntersectionMBRVar = createRightAssignProjectOperatorResult.getFirst();
-        Mutable<ILogicalOperator> rightIntersectionMBRRef = createRightAssignProjectOperatorResult.getSecond();
+        LogicalVariable rightIntersectionMBRVar = createRightAssignProjectOperatorResult.getLeft();
+        Mutable<ILogicalOperator> rightIntersectionMBRRef = createRightAssignProjectOperatorResult.getRight();
 
         // Replicate union MBR to the right branch of a later Nested Loop Join reference point test
         ExchangeOperator exchMBRToReferencePointTestJoinOp =
@@ -492,7 +492,7 @@ public class SpatialJoinUtils {
         projectOperator.recomputeSchema();
         Mutable<ILogicalOperator> projectOperatorRef = new MutableObject<>(projectOperator);
 
-        return new Pair<>(newFinalMbrVar, projectOperatorRef);
+        return Pair.of(newFinalMbrVar, projectOperatorRef);
     }
 
     private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
@@ -593,7 +593,7 @@ public class SpatialJoinUtils {
         globalAggOperator.recomputeSchema();
         context.computeAndSetTypeEnvironmentForOperator(globalAggOperator);
         MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOperator);
-        return new Pair<>(globalAgg, globalAggResultVars);
+        return Pair.of(globalAgg, globalAggResultVars);
     }
 
     private static Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createDynamicMBRCalculator(
@@ -615,7 +615,7 @@ public class SpatialJoinUtils {
 
         Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult =
                 createLocalAndGlobalAggregateOperators(op, context, inputVar, exchToLocalAggRef);
-        return new Triple<>(createLocalAndGlobalAggResult.first, createLocalAndGlobalAggResult.second,
+        return new Triple<>(createLocalAndGlobalAggResult.getLeft(), createLocalAndGlobalAggResult.getRight(),
                 exchToForwardRef);
     }
 

@@ -24,7 +24,7 @@ import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class StopFeedStatement extends AbstractStatement {
 
@@ -32,8 +32,8 @@ public class StopFeedStatement extends AbstractStatement {
     private final Identifier feedName;
 
     public StopFeedStatement(Pair<Namespace, Identifier> feedNameComp) {
-        this.namespace = feedNameComp.first;
-        this.feedName = feedNameComp.second;
+        this.namespace = feedNameComp.getLeft();
+        this.feedName = feedNameComp.getRight();
     }
 
     @Override

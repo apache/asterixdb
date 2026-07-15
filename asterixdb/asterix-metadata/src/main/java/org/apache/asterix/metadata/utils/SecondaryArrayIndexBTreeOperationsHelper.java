@@ -48,9 +48,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -162,8 +162,8 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                 addSKEvalFactories(itemType, flattenedListPos, false, e);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         e.getUnnestList(), e.getProjectList().get(i), itemType);
-                IAType keyType = keyTypePair.first;
-                anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
+                IAType keyType = keyTypePair.getLeft();
+                anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.getRight();
                 ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
                 secondaryRecFields[flattenedListPos] = keySerde;
                 secondaryComparatorFactories[flattenedListPos] =
@@ -207,7 +207,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             addSKEvalFactories(itemType, numSecondaryKeys, true, null);
             Pair<IAType, Boolean> keyTypePair;
             keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
-            IAType type = keyTypePair.first;
+            IAType type = keyTypePair.getLeft();
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
             enforcedRecFields[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)] = serde;
@@ -527,7 +527,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
     private void addAtomicFieldToBuilder(ARecordType recordType, int indexPos) throws AlgebricksException {
         IAType workingType = Index.getNonNullableOpenFieldType(index, flattenedKeyTypes.get(indexPos),
-                flattenedFieldNames.get(indexPos), recordType).first;
+                flattenedFieldNames.get(indexPos), recordType).getLeft();
         IScalarEvaluatorFactory sef =
                 metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(),
                         recordType, flattenedFieldNames.get(indexPos), numPrimaryKeys, sourceLoc);
@@ -538,7 +538,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         IScalarEvaluatorFactory sef = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                 metadataProvider.getFunctionManager(), recordType, filterFieldName, numPrimaryKeys, sourceLoc);
         evalFactoryAndRecDescStackBuilder.addFilter(sef,
-                Index.getNonNullableKeyFieldType(filterFieldName, recordType).first);
+                Index.getNonNullableKeyFieldType(filterFieldName, recordType).getLeft());
     }
 
     class EvalFactoryAndRecDescInvoker implements ArrayIndexUtil.TypeTrackerCommandExecutor {

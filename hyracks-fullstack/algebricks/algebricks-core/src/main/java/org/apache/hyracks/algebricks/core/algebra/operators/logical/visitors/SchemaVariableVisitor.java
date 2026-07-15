@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -135,15 +135,15 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getGroupByList()) {
-            if (p.first != null) {
-                schemaVariables.add(p.first);
+            if (p.getLeft() != null) {
+                schemaVariables.add(p.getLeft());
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-            if (p.first != null) {
-                schemaVariables.add(p.first);
+            if (p.getLeft() != null) {
+                schemaVariables.add(p.getLeft());
             } else {
-                ILogicalExpression e = p.second.getValue();
+                ILogicalExpression e = p.getRight().getValue();
                 if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     schemaVariables.add(((VariableReferenceExpression) e).getVariableReference());
                 }

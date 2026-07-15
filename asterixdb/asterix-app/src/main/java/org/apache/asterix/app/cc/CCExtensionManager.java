@@ -46,7 +46,7 @@ import org.apache.asterix.runtime.functions.FunctionCollection;
 import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.utils.ExtensionUtil;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -116,9 +116,9 @@ public class CCExtensionManager implements ICCExtensionManager {
         }
         this.statementExecutorExtension = see;
         this.sqlppCompilationProvider =
-                sqlppcp == null ? new SqlppCompilationProvider(namespaceResolver) : sqlppcp.second;
+                sqlppcp == null ? new SqlppCompilationProvider(namespaceResolver) : sqlppcp.getRight();
         this.functionManager =
-                fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.second;
+                fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.getRight();
         this.globalRecoveryExtension = gre;
         this.metadataProviderFactory = mpfe != null ? mpfe.getMetadataProviderFactory() : null;
     }

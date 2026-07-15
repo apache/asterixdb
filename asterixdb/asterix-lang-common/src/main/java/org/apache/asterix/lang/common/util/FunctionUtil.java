@@ -106,12 +106,12 @@ public class FunctionUtil {
                         defaultDataverse);
             case TYPEREFERENCE:
                 TypeReferenceExpression typeRef = ((TypeReferenceExpression) typeExpr);
-                String typeName = typeRef.getIdent().getSecond().toString();
+                String typeName = typeRef.getIdent().getRight().toString();
                 BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(typeName);
                 if (builtinType != null) {
                     return null;
                 }
-                Namespace typeRefNamespace = typeRef.getIdent().getFirst();
+                Namespace typeRefNamespace = typeRef.getIdent().getLeft();
                 DataverseName typeDataverseName;
                 String typeDatabaseName;
                 if (typeRefNamespace == null) {

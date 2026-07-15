@@ -24,6 +24,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -61,7 +62,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleExpressionVisitor {
@@ -251,8 +252,9 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             }
         }
         if (gc.hasGroupFieldList()) {
-            for (Pair<Expression, Identifier> gbyField : gc.getGroupFieldList()) {
-                gbyField.first = visit(gbyField.first, arg);
+            for (ListIterator<Pair<Expression, Identifier>> it = gc.getGroupFieldList().listIterator(); it.hasNext();) {
+                Pair<Expression, Identifier> gbyField = it.next();
+                it.set(Pair.of(visit(gbyField.getLeft(), arg), gbyField.getRight()));
             }
         }
         if (gc.hasDecorList()) {
@@ -289,8 +291,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Resolve the clustering expression and any member-field expressions in the current (pre-cluster) scope.
         cc.setClusteringExpression(visit(cc.getClusteringExpression(), cc));
         if (cc.hasClusterFieldList()) {
-            for (Pair<Expression, Identifier> memberField : cc.getClusterFieldList()) {
-                memberField.first = visit(memberField.first, cc);
+            for (ListIterator<Pair<Expression, Identifier>> it = cc.getClusterFieldList().listIterator(); it
+                    .hasNext();) {
+                Pair<Expression, Identifier> memberField = it.next();
+                it.set(Pair.of(visit(memberField.getLeft(), cc), memberField.getRight()));
             }
         }
         // The decorations read the pre-cluster scope too.

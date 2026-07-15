@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -133,13 +133,13 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getGroupByList()) {
-            if (p.first != null) {
-                producedVariables.add(p.first);
+            if (p.getLeft() != null) {
+                producedVariables.add(p.getLeft());
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-            if (p.first != null) {
-                producedVariables.add(p.first);
+            if (p.getLeft() != null) {
+                producedVariables.add(p.getLeft());
             }
         }
         return null;

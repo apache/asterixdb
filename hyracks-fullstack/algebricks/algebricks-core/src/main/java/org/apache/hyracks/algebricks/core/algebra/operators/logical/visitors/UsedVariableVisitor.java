@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -200,10 +200,10 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         visitNestedPlans(op);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : op.getGroupByList()) {
-            g.second.getValue().getUsedVariables(usedVariables);
+            g.getRight().getValue().getUsedVariables(usedVariables);
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : op.getDecorList()) {
-            g.second.getValue().getUsedVariables(usedVariables);
+            g.getRight().getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -240,7 +240,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     @Override
     public Void visitOrderOperator(OrderOperator op, Void arg) {
         for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
-            oe.second.getValue().getUsedVariables(usedVariables);
+            oe.getRight().getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -344,7 +344,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
             usedVariables.add(op.getMemberRecordVariable());
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-            p.second.getValue().getUsedVariables(usedVariables);
+            p.getRight().getValue().getUsedVariables(usedVariables);
         }
         return null;
     }
@@ -391,7 +391,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         }
 
         for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : op.getOrderExpressions()) {
-            orderExpr.second.getValue().getUsedVariables(usedVariables);
+            orderExpr.getRight().getValue().getUsedVariables(usedVariables);
         }
 
         for (Mutable<ILogicalExpression> expr : op.getKeyExpressions()) {
@@ -530,10 +530,10 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
             exprRef.getValue().getUsedVariables(usedVariables);
         }
         for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            p.second.getValue().getUsedVariables(usedVariables);
+            p.getRight().getValue().getUsedVariables(usedVariables);
         }
         for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
-            p.second.getValue().getUsedVariables(usedVariables);
+            p.getRight().getValue().getUsedVariables(usedVariables);
         }
         for (Mutable<ILogicalExpression> exprRef : op.getFrameStartExpressions()) {
             exprRef.getValue().getUsedVariables(usedVariables);

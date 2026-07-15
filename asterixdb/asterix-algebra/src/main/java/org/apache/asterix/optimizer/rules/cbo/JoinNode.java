@@ -55,8 +55,8 @@ import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceTopKAccessMethodRule;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -637,7 +637,7 @@ public class JoinNode {
             List<Pair<Integer, Integer>> pairs) {
         int i;
         if (pairs.size() == 1) {
-            i = pairs.get(0).getFirst();
+            i = pairs.get(0).getLeft();
             return exprs.get(i).getFuncExpr();
         }
 
@@ -647,7 +647,7 @@ public class JoinNode {
         Map<LogicalVariable, List<ILogicalExpression>> variableListMap =
                 new TreeMap<>(Comparator.comparingInt(LogicalVariable::getId));
         for (i = 0; i < pairs.size(); i++) {
-            IOptimizableFuncExpr funcExpr = exprs.get(pairs.get(i).getFirst());
+            IOptimizableFuncExpr funcExpr = exprs.get(pairs.get(i).getLeft());
             ILogicalExpression expr = funcExpr.getFuncExpr();
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) expr;
@@ -1337,7 +1337,7 @@ public class JoinNode {
             return DummyPlanNode.INSTANCE;
         }
 
-        Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint = new Pair<>(null, null);
+        Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint = Pair.of(null, null);
         Index chosenIndex = null;
         nljCost = joinEnum.getCostHandle().maxCost();
         ICost curNljCost;
@@ -1356,11 +1356,11 @@ public class JoinNode {
                     nljCost = curNljCost;
                     chosenIndex = index;
                     indexNames.add(index.getIndexName());
-                    exprAndHint = new Pair<>(afce, IndexedNLJoinExpressionAnnotation.newInstance(indexNames));
+                    exprAndHint = Pair.of(afce, IndexedNLJoinExpressionAnnotation.newInstance(indexNames));
                 }
             }
         }
-        if (exprAndHint.first == null) {
+        if (exprAndHint.getLeft() == null) {
             return DummyPlanNode.INSTANCE;
         }
         leftExchangeCost = joinEnum.getCostMethodsHandle().computeNLJOuterExchangeCost(this);
@@ -1804,7 +1804,7 @@ public class JoinNode {
                     }
                 } else {
                     JoinPlanNode joinPlanNode = (JoinPlanNode) pn;
-                    sb.append(joinPlanNode.joinMethod().getFirst()).append('\n');
+                    sb.append(joinPlanNode.joinMethod().getLeft()).append('\n');
                     sb.append("Join expr ");
                     if (joinPlanNode.getJoinExpr() != null) {
                         sb.append(joinPlanNode.getJoinExpr()).append('\n');

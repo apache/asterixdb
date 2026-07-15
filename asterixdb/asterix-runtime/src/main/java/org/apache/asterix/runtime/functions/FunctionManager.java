@@ -29,8 +29,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -49,7 +49,7 @@ public final class FunctionManager implements IFunctionManager {
 
         for (IFunctionDescriptorFactory descriptorFactory : functionCollection.getFunctionDescriptorFactories()) {
             FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-            functionsMap.put(new Pair<>(fid, fid.getArity()), descriptorFactory);
+            functionsMap.put(Pair.of(fid, fid.getArity()), descriptorFactory);
             IFunctionTypeInferer typeInferer = descriptorFactory.createFunctionTypeInferer();
             if (typeInferer != null) {
                 typeInferersMap.put(fid, typeInferer);
@@ -62,7 +62,7 @@ public final class FunctionManager implements IFunctionManager {
 
     @Override
     public IFunctionDescriptor lookupFunction(FunctionIdentifier fid, SourceLocation src) throws AlgebricksException {
-        Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
+        Pair<FunctionIdentifier, Integer> key = Pair.of(fid, fid.getArity());
         IFunctionDescriptorFactory factory = functions.get(key);
         if (factory == null) {
             String msg;

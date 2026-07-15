@@ -25,7 +25,7 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.BinaryEntry;
@@ -38,8 +38,7 @@ class ListDeepEqualityChecker {
     private BinaryEntry valEntry = new BinaryEntry();
 
     private final DeepEqualityVisitorHelper deepEqualityVisitorHelper = new DeepEqualityVisitorHelper();
-    private final Pair<IVisitablePointable, Boolean> itemVisitorArg =
-            new Pair<IVisitablePointable, Boolean>(null, false);
+    private final MutablePair<IVisitablePointable, Boolean> itemVisitorArg = new MutablePair<>(null, false);
 
     public ListDeepEqualityChecker() {
         hashMap = deepEqualityVisitorHelper.initializeHashMap(valEntry);
@@ -78,9 +77,9 @@ class ListDeepEqualityChecker {
             if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemRight)) {
                 return false;
             }
-            itemVisitorArg.first = itemRight;
+            itemVisitorArg.setLeft(itemRight);
             itemLeft.accept(visitor, itemVisitorArg);
-            if (itemVisitorArg.second == false)
+            if (itemVisitorArg.getRight() == false)
                 return false;
         }
 
@@ -128,9 +127,9 @@ class ListDeepEqualityChecker {
                 return false;
             }
 
-            itemVisitorArg.first = itemRight;
+            itemVisitorArg.setLeft(itemRight);
             itemLeft.accept(visitor, itemVisitorArg);
-            if (itemVisitorArg.second == false)
+            if (itemVisitorArg.getRight() == false)
                 return false;
         }
         return true;

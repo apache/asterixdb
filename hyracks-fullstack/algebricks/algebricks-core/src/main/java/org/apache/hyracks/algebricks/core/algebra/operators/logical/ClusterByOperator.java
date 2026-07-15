@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -127,7 +127,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            schema.add(p.first);
+            schema.add(p.getLeft());
         }
     }
 
@@ -151,7 +151,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
                     }
                 }
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-                    target.addVariable(p.first);
+                    target.addVariable(p.getLeft());
                 }
             }
         };
@@ -164,7 +164,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
         boolean changed = vectorRef != null && visitor.transform(vectorRef);
         changed |= nestedPlans.isEmpty() && memberRecordRef != null && visitor.transform(memberRecordRef);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            changed |= visitor.transform(p.second);
+            changed |= visitor.transform(p.getRight());
         }
         return changed;
     }
@@ -187,7 +187,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
         if (!decorList.isEmpty() && !inputs.isEmpty()) {
             IVariableTypeEnvironment inputEnv = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-                env.setVarType(p.first, inputEnv.getType(p.second.getValue()));
+                env.setVarType(p.getLeft(), inputEnv.getType(p.getRight().getValue()));
             }
         }
         return env;
@@ -287,14 +287,14 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
     }
 
     public void addDecorExpression(LogicalVariable variable, ILogicalExpression expression) {
-        decorList.add(new Pair<>(variable, new MutableObject<>(expression)));
+        decorList.add(Pair.of(variable, new MutableObject<>(expression)));
     }
 
     /** The decoration variables, in list order. */
     public List<LogicalVariable> getDecorVariables() {
         List<LogicalVariable> vars = new ArrayList<>(decorList.size());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            vars.add(p.first);
+            vars.add(p.getLeft());
         }
         return vars;
     }
@@ -312,7 +312,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
             vars.add(assignedCentroidVar);
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            p.second.getValue().getUsedVariables(vars);
+            p.getRight().getValue().getUsedVariables(vars);
         }
     }
 
@@ -324,7 +324,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
             vars.add(membersVar);
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            vars.add(p.first);
+            vars.add(p.getLeft());
         }
     }
 

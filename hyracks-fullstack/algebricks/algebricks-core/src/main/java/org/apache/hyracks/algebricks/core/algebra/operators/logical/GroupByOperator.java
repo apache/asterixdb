@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -73,11 +73,11 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     }
 
     public void addGbyExpression(LogicalVariable variable, ILogicalExpression expression) {
-        this.gByList.add(new Pair<>(variable, new MutableObject<>(expression)));
+        this.gByList.add(Pair.of(variable, new MutableObject<>(expression)));
     }
 
     public void addDecorExpression(LogicalVariable variable, ILogicalExpression expression) {
-        this.decorList.add(new Pair<>(variable, new MutableObject<>(expression)));
+        this.decorList.add(Pair.of(variable, new MutableObject<>(expression)));
     }
 
     @Override
@@ -95,7 +95,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     public List<LogicalVariable> getGroupByVarList() {
         List<LogicalVariable> varList = new ArrayList<>(gByList.size());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gByList) {
-            ILogicalExpression expr = ve.second.getValue();
+            ILogicalExpression expr = ve.getRight().getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) expr;
                 varList.add(v.getVariableReference());
@@ -114,10 +114,10 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
             } else {
                 sb.append("; ");
             }
-            if (ve.first != null) {
-                sb.append(ve.first + " := " + ve.second);
+            if (ve.getLeft() != null) {
+                sb.append(ve.getLeft() + " := " + ve.getRight());
             } else {
-                sb.append(ve.second.getValue());
+                sb.append(ve.getRight().getValue());
             }
         }
         sb.append("]");
@@ -128,7 +128,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     public void recomputeSchema() {
         super.recomputeSchema();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
-            schema.add(p.first);
+            schema.add(p.getLeft());
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
             schema.add(getDecorVariable(p));
@@ -142,21 +142,21 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
      */
     public List<LogicalVariable> getVariables() {
         List<LogicalVariable> variables = new ArrayList<>(gByList.size() + decorList.size());
-        gByList.stream().map(Pair::getFirst).forEach(variables::add);
-        decorList.stream().map(Pair::getFirst).forEach(variables::add);
+        gByList.stream().map(Pair::getLeft).forEach(variables::add);
+        decorList.stream().map(Pair::getLeft).forEach(variables::add);
         return variables;
     }
 
     @Override
     public void getProducedVariablesExceptNestedPlans(Collection<LogicalVariable> vars) {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
-            if (p.first != null) {
-                vars.add(p.first);
+            if (p.getLeft() != null) {
+                vars.add(p.getLeft());
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            if (p.first != null) {
-                vars.add(p.first);
+            if (p.getLeft() != null) {
+                vars.add(p.getLeft());
             }
         }
     }
@@ -164,10 +164,10 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     @Override
     public void getUsedVariablesExceptNestedPlans(Collection<LogicalVariable> vars) {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : gByList) {
-            g.second.getValue().getUsedVariables(vars);
+            g.getRight().getValue().getUsedVariables(vars);
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : decorList) {
-            g.second.getValue().getUsedVariables(vars);
+            g.getRight().getValue().getUsedVariables(vars);
         }
     }
 
@@ -179,9 +179,9 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
-                    ILogicalExpression expr = p.second.getValue();
-                    if (p.first != null) {
-                        target.addVariable(p.first);
+                    ILogicalExpression expr = p.getRight().getValue();
+                    if (p.getLeft() != null) {
+                        target.addVariable(p.getLeft());
                     } else {
                         if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                             throw new AlgebricksException("group-by expects variable references.");
@@ -191,14 +191,14 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
                     }
                 }
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-                    ILogicalExpression expr = p.second.getValue();
+                    ILogicalExpression expr = p.getRight().getValue();
                     if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                         throw new AlgebricksException("group-by expects variable references.");
                     }
                     VariableReferenceExpression v = (VariableReferenceExpression) expr;
                     LogicalVariable decor = v.getVariableReference();
-                    if (p.first != null) {
-                        target.addVariable(p.first);
+                    if (p.getLeft() != null) {
+                        target.addVariable(p.getLeft());
                     } else {
                         target.addVariable(decor);
                     }
@@ -212,12 +212,12 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
-            if (visitor.transform(p.second)) {
+            if (visitor.transform(p.getRight())) {
                 b = true;
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
-            if (visitor.transform(p.second)) {
+            if (visitor.transform(p.getRight())) {
                 b = true;
             }
         }
@@ -230,10 +230,10 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     }
 
     public static LogicalVariable getDecorVariable(Pair<LogicalVariable, Mutable<ILogicalExpression>> p) {
-        if (p.first != null) {
-            return p.first;
+        if (p.getLeft() != null) {
+            return p.getLeft();
         } else {
-            VariableReferenceExpression e = (VariableReferenceExpression) p.second.getValue();
+            VariableReferenceExpression e = (VariableReferenceExpression) p.getRight().getValue();
             return e.getVariableReference();
         }
     }
@@ -248,27 +248,27 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         ILogicalOperator child = inputs.get(0).getValue();
         IVariableTypeEnvironment env2 = ctx.getOutputTypeEnvironment(child);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : getGroupByList()) {
-            ILogicalExpression expr = p.second.getValue();
-            if (p.first != null) {
-                env.setVarType(p.first, env2.getType(expr));
+            ILogicalExpression expr = p.getRight().getValue();
+            if (p.getLeft() != null) {
+                env.setVarType(p.getLeft(), env2.getType(expr));
                 if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     LogicalVariable v1 = ((VariableReferenceExpression) expr).getVariableReference();
                     env.setVarType(v1, env2.getVarType(v1));
                 }
             } else {
                 // TODO (dmitry): this needs to be revisited
-                VariableReferenceExpression vre = (VariableReferenceExpression) p.second.getValue();
+                VariableReferenceExpression vre = (VariableReferenceExpression) p.getRight().getValue();
                 LogicalVariable v2 = vre.getVariableReference();
                 env.setVarType(v2, env2.getVarType(v2));
             }
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : getDecorList()) {
-            ILogicalExpression expr = p.second.getValue();
-            if (p.first != null) {
-                env.setVarType(p.first, env2.getType(expr));
+            ILogicalExpression expr = p.getRight().getValue();
+            if (p.getLeft() != null) {
+                env.setVarType(p.getLeft(), env2.getType(expr));
             } else {
                 // TODO (dmitry): this needs to be revisited
-                VariableReferenceExpression vre = (VariableReferenceExpression) p.second.getValue();
+                VariableReferenceExpression vre = (VariableReferenceExpression) p.getRight().getValue();
                 LogicalVariable v2 = vre.getVariableReference();
                 env.setVarType(v2, env2.getVarType(v2));
             }

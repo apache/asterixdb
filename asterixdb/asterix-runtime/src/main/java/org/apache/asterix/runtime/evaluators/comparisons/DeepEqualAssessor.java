@@ -24,7 +24,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy.Domain;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.evaluators.visitors.DeepEqualityVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -68,10 +68,10 @@ public class DeepEqualAssessor {
             }
         }
 
-        Pair<IVisitablePointable, Boolean> arg = new Pair<IVisitablePointable, Boolean>(rightPointable, Boolean.FALSE);
+        MutablePair<IVisitablePointable, Boolean> arg = new MutablePair<>(rightPointable, Boolean.FALSE);
         // Assess the nested equality
         leftPointable.accept(equalityVisitor, arg);
 
-        return arg.second;
+        return arg.getRight();
     }
 }

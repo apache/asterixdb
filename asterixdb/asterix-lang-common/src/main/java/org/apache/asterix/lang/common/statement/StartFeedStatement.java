@@ -25,7 +25,7 @@ import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class StartFeedStatement extends AbstractStatement {
 
@@ -34,8 +34,8 @@ public class StartFeedStatement extends AbstractStatement {
     private final Identifier feedName;
 
     public StartFeedStatement(Pair<Namespace, Identifier> feedNameComp) {
-        namespace = feedNameComp.first;
-        feedName = feedNameComp.second;
+        namespace = feedNameComp.getLeft();
+        feedName = feedNameComp.getRight();
     }
 
     @Override

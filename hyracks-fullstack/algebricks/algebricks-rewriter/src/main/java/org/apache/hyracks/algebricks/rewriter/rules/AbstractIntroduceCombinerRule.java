@@ -26,8 +26,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -78,7 +78,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
         for (int i = 0; i < numExprs; i++) {
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) initExprs.get(i).getValue();
             if (!aggFun.isTwoStep()) {
-                return new Pair<>(false, null);
+                return Pair.of(false, null);
             }
         }
 
@@ -125,13 +125,13 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
                 // Cut and paste nested input pipelines of initAgg to pushedAgg's input
                 Mutable<ILogicalOperator> inputRef = initAgg.getInputs().get(0);
                 if (!isPushableInputInGroupBySubplan(inputRef.getValue())) {
-                    return new Pair<>(false, null);
+                    return Pair.of(false, null);
                 }
                 Mutable<ILogicalOperator> bottomRef = inputRef;
                 while (!bottomRef.getValue().getInputs().isEmpty()) {
                     bottomRef = bottomRef.getValue().getInputs().get(0);
                     if (!isPushableInputInGroupBySubplan(bottomRef.getValue())) {
-                        return new Pair<>(false, null);
+                        return Pair.of(false, null);
                     }
                 }
                 ILogicalOperator oldNts = bottomRef.getValue();
@@ -153,9 +153,9 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
                 pushedAgg.setGlobal(false);
                 context.computeAndSetTypeEnvironmentForOperator(pushedAgg);
             }
-            return new Pair<>(true, new MutableObject<ILogicalOperator>(pushedAgg));
+            return Pair.of(true, new MutableObject<ILogicalOperator>(pushedAgg));
         } else {
-            return new Pair<>(haveAggToReplace, null);
+            return Pair.of(haveAggToReplace, null);
         }
     }
 

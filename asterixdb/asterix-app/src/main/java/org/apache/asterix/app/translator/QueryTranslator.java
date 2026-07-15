@@ -287,8 +287,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -1181,9 +1181,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Pair<Datatype, Boolean> itemTypePair = fetchDatasetItemType(mdTxnCtx, dsType, datasetFormatInfo.getFormat(),
                     partitioningExprTypes, itemTypeDatabaseName, itemTypeDataverseName, itemTypeName, itemTypeExpr,
                     false, metadataProvider, sourceLoc);
-            itemTypeEntity = itemTypePair.first;
+            itemTypeEntity = itemTypePair.getLeft();
             IAType itemType = itemTypeEntity.getDatatype();
-            boolean itemTypeIsInline = itemTypePair.second;
+            boolean itemTypeIsInline = itemTypePair.getRight();
 
             String ngName = ngNameId != null ? ngNameId
                     : configureNodegroupForDataset(appCtx, dd.getHints(), databaseName, dataverseName, datasetName,
@@ -1205,9 +1205,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 fetchDatasetItemType(mdTxnCtx, dsType, datasetFormatInfo.getFormat(),
                                         partitioningExprTypes, metaItemTypeDatabaseName, metaItemTypeDataverseName,
                                         metaItemTypeName, metaItemTypeExpr, true, metadataProvider, sourceLoc);
-                        metaItemTypeEntity = metaItemTypePair.first;
+                        metaItemTypeEntity = metaItemTypePair.getLeft();
                         metaItemType = metaItemTypeEntity.getDatatype();
-                        metaItemTypeIsInline = metaItemTypePair.second;
+                        metaItemTypeIsInline = metaItemTypePair.getRight();
                     }
                     ARecordType metaRecType = (ARecordType) metaItemType;
 
@@ -1417,8 +1417,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             case TYPEREFERENCE:
                 TypeReferenceExpression itemTypeRefExpr = (TypeReferenceExpression) itemTypeExpr;
                 Pair<Namespace, Identifier> itemTypeIdent = itemTypeRefExpr.getIdent();
-                Namespace typeNamespace = itemTypeIdent.first != null ? itemTypeIdent.first : datasetNamespace;
-                String typeName = itemTypeRefExpr.getIdent().second.getValue();
+                Namespace typeNamespace = itemTypeIdent.getLeft() != null ? itemTypeIdent.getLeft() : datasetNamespace;
+                String typeName = itemTypeRefExpr.getIdent().getRight().getValue();
                 return new Triple<>(typeNamespace, typeName, false);
             case RECORD:
                 String inlineTypeName = TypeUtil.createDatasetInlineTypeName(datasetName, isMetaItemType);
@@ -1446,7 +1446,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 IAType itemType = itemTypeEntity.getDatatype();
                 validateDatasetItemType(datasetType, format, partitioningExprTypes, itemType, isMetaItemType,
                         sourceLoc);
-                return new Pair<>(itemTypeEntity, false);
+                return Pair.of(itemTypeEntity, false);
             case RECORD:
                 itemType = translateType(itemTypeDatabaseName, itemTypeDataverseName, itemTypeName, itemTypeExpr,
                         mdTxnCtx);
@@ -1454,7 +1454,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         sourceLoc);
                 itemTypeEntity =
                         new Datatype(itemTypeDatabaseName, itemTypeDataverseName, itemTypeName, itemType, true);
-                return new Pair<>(itemTypeEntity, true);
+                return Pair.of(itemTypeEntity, true);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                         String.valueOf(itemTypeExpr.getTypeKind()));
@@ -1479,7 +1479,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ColumnSupportedTypesValidator.validate(format, itemType, sourceLoc);
             if (partitioningExprTypes != null) {
                 for (TypeExpression typeExpr : partitioningExprTypes) {
-                    String typeName = ((TypeReferenceExpression) typeExpr).getIdent().second.getValue();
+                    String typeName = ((TypeReferenceExpression) typeExpr).getIdent().getRight().getValue();
                     IAType type = BuiltinTypeMap.getBuiltinType(typeName);
                     if (type != null) {
                         // type will be validated next
@@ -1526,10 +1526,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             int nodegroupCardinality;
             final Pair<Boolean, String> validation = DatasetHints.validate(appCtx, DatasetNodegroupCardinalityHint.NAME,
                     hints.get(DatasetNodegroupCardinalityHint.NAME));
-            boolean valid = validation.first;
+            boolean valid = validation.getLeft();
             if (!valid) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Incorrect use of hint '" + DatasetNodegroupCardinalityHint.NAME + "': " + validation.second);
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Incorrect use of hint '"
+                        + DatasetNodegroupCardinalityHint.NAME + "': " + validation.getRight());
             } else {
                 nodegroupCardinality = Integer.parseInt(hints.get(DatasetNodegroupCardinalityHint.NAME));
             }
@@ -1687,8 +1687,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<IAType> fieldTypes = new ArrayList<>(projectCount);
                 for (int i = 0; i < projectCount; i++) {
                     Pair<List<String>, IndexedTypeExpression> projectPair = projectList.get(i);
-                    List<String> projectPath = projectPair.first;
-                    IndexedTypeExpression projectTypeExpr = projectPair.second;
+                    List<String> projectPath = projectPair.getLeft();
+                    IndexedTypeExpression projectTypeExpr = projectPair.getRight();
                     IAType projectTypePrime;
                     boolean projectTypeNullable, projectTypeMissable;
                     if (projectPath == null) {
@@ -1867,7 +1867,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 for (int i = 0; i < includeElementsCount; i++) {
                     CreateIndexStatement.IndexedElement includeElement = includeElements.get(i);
-                    List<String> fieldName = includeElement.getProjectList().get(0).first;
+                    List<String> fieldName = includeElement.getProjectList().get(0).getLeft();
                     IAType fieldType = indexFieldTypes.get(i).get(0);
                     int sourceIndicator = includeElement.getSourceIndicator();
 
@@ -1877,7 +1877,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
 
                 CreateIndexStatement.IndexedElement indexedElement = stmtCreateIndex.getIndexedElements().get(0);
-                List<String> keyFieldNames = indexedElement.getProjectList().get(0).first;
+                List<String> keyFieldNames = indexedElement.getProjectList().get(0).getLeft();
 
                 // The vector field is not part of `indexedElements` for a VTREE (that local was swapped to the
                 // INCLUDE list above), so the shared "cannot create index on meta fields" check did not see
@@ -1969,7 +1969,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 for (int i = 0; i < indexedElementsCount; i++) {
                     CreateIndexStatement.IndexedElement indexedElement = indexedElements.get(i);
                     List<List<String>> projectList =
-                            indexedElement.getProjectList().stream().map(Pair::getFirst).collect(Collectors.toList());
+                            indexedElement.getProjectList().stream().map(Pair::getLeft).collect(Collectors.toList());
                     indexElementList.add(new Index.ArrayIndexElement(indexedElement.getUnnestList(), projectList,
                             indexFieldTypes.get(i), indexedElement.getSourceIndicator()));
                 }
@@ -1982,7 +1982,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (!isSecondaryPrimary) {
                     for (int i = 0; i < indexedElementsCount; i++) {
                         CreateIndexStatement.IndexedElement indexedElement = indexedElements.get(i);
-                        keyFieldNames.add(indexedElement.getProjectList().get(0).first);
+                        keyFieldNames.add(indexedElement.getProjectList().get(0).getLeft());
                         keyFieldTypes.add(indexFieldTypes.get(i).get(0));
                         keyFieldSourceIndicators.add(indexedElement.getSourceIndicator());
                     }
@@ -3360,8 +3360,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 Pair<Datatype, Boolean> itemTypePair = fetchDatasetItemType(mdTxnCtx, DatasetType.VIEW,
                         DatasetConfig.DatasetFormat.ROW, null, itemTypeDatabaseName, itemTypeDataverseName,
                         itemTypeName, cvs.getItemType(), false, metadataProvider, sourceLoc);
-                itemTypeEntity = itemTypePair.first;
-                itemTypeIsInline = itemTypePair.second;
+                itemTypeEntity = itemTypePair.getLeft();
+                itemTypeIsInline = itemTypePair.getRight();
                 ARecordType itemType = (ARecordType) itemTypeEntity.getDatatype();
                 if (primaryKeyDecl != null) {
                     primaryKeyFields = ValidateUtil.validateViewKeyFields(primaryKeyDecl, itemType, false, sourceLoc);
@@ -3696,7 +3696,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     TypeSignature paramTypeSignature;
                     TypeSignature paramDepTypeSignature;
                     Datatype paramInlineTypeEntity;
-                    TypeExpression paramTypeExpr = paramPair.getSecond();
+                    TypeExpression paramTypeExpr = paramPair.getRight();
                     if (paramTypeExpr != null) {
                         Triple<TypeSignature, TypeSignature, Datatype> paramTypeInfo = translateFunctionParameterType(
                                 functionSignature, i, paramTypeExpr, sourceLoc, metadataProvider, mdTxnCtx);
@@ -3715,7 +3715,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (paramInlineTypeEntity != null) {
                         newInlineTypes.put(paramTypeSignature, paramInlineTypeEntity);
                     }
-                    VarIdentifier paramName = paramPair.getFirst();
+                    VarIdentifier paramName = paramPair.getLeft();
                     paramNames.add(queryRewriter.toFunctionParameterName(paramName));
                 }
 
@@ -3776,10 +3776,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<VarIdentifier> paramVars = new ArrayList<>(paramCount);
                 List<String> paramNames = new ArrayList<>(paramCount);
                 for (Pair<VarIdentifier, TypeExpression> paramPair : paramList) {
-                    VarIdentifier paramName = paramPair.getFirst();
+                    VarIdentifier paramName = paramPair.getLeft();
                     paramVars.add(paramName);
                     paramNames.add(queryRewriter.toFunctionParameterName(paramName));
-                    if (paramPair.getSecond() != null) {
+                    if (paramPair.getRight() != null) {
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                                 paramName.toString());
                     }
@@ -3821,9 +3821,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     validateTransformFunction(metadataProvider, rewrittenQuery, sourceLoc);
                     boolean generateJobSpec = sessionOutput.config().isGenerateJobSpec();
                     sessionOutput.config().setGenerateJobSpec(false);
-                    apiFramework.compileQuery(hcc, metadataProvider, (Query) rewrittenQuery.first,
-                            rewrittenQuery.second, null, sessionOutput, null, null, responsePrinter, warningCollector,
-                            requestParameters, jobFlags, null);
+                    apiFramework.compileQuery(hcc, metadataProvider, (Query) rewrittenQuery.getLeft(),
+                            rewrittenQuery.getRight(), null, sessionOutput, null, null, responsePrinter,
+                            warningCollector, requestParameters, jobFlags, null);
                     sessionOutput.config().setGenerateJobSpec(generateJobSpec);
                 }
                 appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
@@ -3875,10 +3875,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ILangExpressionToPlanTranslatorFactory translatorFactory =
                 compilationProvider.getExpressionToPlanTranslatorFactory();
         ILangExpressionToPlanTranslator t =
-                translatorFactory.createExpressionToPlanTranslator(metadataProvider, rewrittenResult.second, null);
+                translatorFactory.createExpressionToPlanTranslator(metadataProvider, rewrittenResult.getRight(), null);
         org.apache.asterix.translator.ResultMetadata resultMetadata =
                 new org.apache.asterix.translator.ResultMetadata(sessionOutput.config().fmt());
-        ILogicalPlan plan = t.translate((Query) rewrittenResult.first, null, null, resultMetadata);
+        ILogicalPlan plan = t.translate((Query) rewrittenResult.getLeft(), null, null, resultMetadata);
         if (plan.getRoots().size() != 1) {
             throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
                     "Transform function cannot have more than one root");
@@ -3903,7 +3903,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         switch (paramTypeExpr.getTypeKind()) {
             case TYPEREFERENCE:
                 TypeReferenceExpression paramTypeRefExpr = (TypeReferenceExpression) paramTypeExpr;
-                String paramTypeName = paramTypeRefExpr.getIdent().second.getValue();
+                String paramTypeName = paramTypeRefExpr.getIdent().getRight().getValue();
                 BuiltinType builtinType = BuiltinTypeMap.getBuiltinType(paramTypeName);
                 if (builtinType != null) {
                     // built-in type
@@ -3911,7 +3911,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     depTypeSignature = null;
                 } else {
                     // user-defined type
-                    Namespace paramTypeRefNamespace = paramTypeRefExpr.getIdent().first;
+                    Namespace paramTypeRefNamespace = paramTypeRefExpr.getIdent().getLeft();
                     DataverseName paramTypeDataverseName;
                     String paramTypeDatabaseName;
                     if (paramTypeRefNamespace == null) {
@@ -4752,7 +4752,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 // Query Compilation (happens under the same ongoing metadata transaction)
                 final JobSpecification jobSpec = apiFramework.compileQuery(hcc, metadataProvider, copyTo.getQuery(),
-                        rewrittenResult.second, null, sessionOutput, compiledCopyToStatement, externalVars,
+                        rewrittenResult.getRight(), null, sessionOutput, compiledCopyToStatement, externalVars,
                         responsePrinter, warningCollector, requestParameters, jobFlags, null);
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
@@ -5019,9 +5019,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 sessionOutput, true, true, externalVars.keySet());
 
         // Query Compilation (happens under the same ongoing metadata transaction)
-        return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
-                rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt, externalVars,
-                responsePrinter, warningCollector, requestParameters, jobFlags, resultMetadata, cachedPlan);
+        return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.getLeft(),
+                rewrittenResult.getRight(), stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt,
+                externalVars, responsePrinter, warningCollector, requestParameters, jobFlags, resultMetadata,
+                cachedPlan);
     }
 
     protected JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
@@ -5037,7 +5038,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext,
                 insertUpsert, sessionOutput, true, true, externalVars.keySet());
 
-        InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
+        InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.getLeft();
         Namespace stmtActiveNamespace = getActiveNamespace(rewrittenInsertUpsert.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -5068,7 +5069,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // Insert/upsert statement compilation (happens under the same ongoing metadata
         // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
-                rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars, responsePrinter,
+                rewrittenResult.getRight(), datasetName, sessionOutput, clfrqs, externalVars, responsePrinter,
                 warningCollector, reqParams, jobFlags, null);
     }
 
@@ -5539,13 +5540,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
             String newIndexName;
             existingIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), databaseName,
-                    dataverseName, datasetName, sampleIndexNames.first);
+                    dataverseName, datasetName, sampleIndexNames.getLeft());
             if (existingIndex != null) {
-                newIndexName = sampleIndexNames.second;
+                newIndexName = sampleIndexNames.getRight();
             } else {
                 existingIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
-                        databaseName, dataverseName, datasetName, sampleIndexNames.second);
-                newIndexName = sampleIndexNames.first;
+                        databaseName, dataverseName, datasetName, sampleIndexNames.getRight());
+                newIndexName = sampleIndexNames.getLeft();
             }
 
             InternalDatasetDetails dsDetails = (InternalDatasetDetails) ds.getDatasetDetails();
@@ -5803,8 +5804,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParams) throws Exception {
         SourceLocation sourceLoc = stmtIndexDrop.getSourceLocation();
         Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
-        String indexName1 = sampleIndexNames.first;
-        String indexName2 = sampleIndexNames.second;
+        String indexName1 = sampleIndexNames.getLeft();
+        String indexName2 = sampleIndexNames.getRight();
         ProgressState progress = ProgressState.NO_PROGRESS;
         List<JobSpecification> jobsToExecute = new ArrayList<>();
 
@@ -6402,7 +6403,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private static List<IOperatorStats> runJob(IHyracksClientConnection hcc, JobSpecification jobSpec,
             EnumSet<JobFlag> jobFlags, List<String> statOperatorNames) throws Exception {
         Pair<JobId, List<IOperatorStats>> p = JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, true, statOperatorNames);
-        return p.second;
+        return p.getRight();
     }
 
     private void createAndRunJob(IHyracksClientConnection hcc, EnumSet<JobFlag> jobFlags, Mutable<JobId> jId,

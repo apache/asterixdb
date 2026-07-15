@@ -55,7 +55,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -105,8 +105,8 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                 FromTerm fromTerm = fromTerms.get(0);
                 if (canRewriteFromTerm(fromTerm)) {
                     Pair<FromTerm, List<LetClause>> newFromLetPair = rewriteFromTerm(fromTerm);
-                    fromTerms.set(0, newFromLetPair.first);
-                    selectBlock.getLetWhereList().addAll(0, newFromLetPair.second);
+                    fromTerms.set(0, newFromLetPair.getLeft());
+                    selectBlock.getLetWhereList().addAll(0, newFromLetPair.getRight());
                 }
             }
         }
@@ -347,7 +347,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
             newLetClauses.add(newLetClause);
         }
 
-        return new Pair<>(newFromTerm, newLetClauses);
+        return Pair.of(newFromTerm, newLetClauses);
     }
 
     private Expression createRightSelectExpression(Expression fromExpr, VarIdentifier fromVar, VarIdentifier fromPosVar,

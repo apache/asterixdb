@@ -49,7 +49,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVisitor
         implements ISqlppVisitor<Void, Void> {
@@ -99,7 +99,7 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
         cc.getClusteringExpression().accept(this, arg);
         if (cc.hasClusterFieldList()) {
             for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
-                field.first.accept(this, arg);
+                field.getLeft().accept(this, arg);
             }
         }
         if (cc.hasWithOptions()) {
@@ -264,7 +264,7 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
         }
         if (winExpr.hasWindowFieldList()) {
             for (Pair<Expression, Identifier> p : winExpr.getWindowFieldList()) {
-                p.first.accept(this, arg);
+                p.getLeft().accept(this, arg);
             }
         }
         if (winExpr.hasAggregateFilterExpr()) {

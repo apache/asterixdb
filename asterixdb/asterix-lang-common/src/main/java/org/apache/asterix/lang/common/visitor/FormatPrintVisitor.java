@@ -124,7 +124,7 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
 public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
@@ -412,12 +412,12 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
-        if (t.getIdent().first != null && t.getIdent().first != null) {
+        if (t.getIdent().getLeft() != null && t.getIdent().getLeft() != null) {
             //TODO(DB): include database
-            out.print(generateDataverseName(t.getIdent().first.getDataverseName()));
+            out.print(generateDataverseName(t.getIdent().getLeft().getDataverseName()));
             out.print('.');
         }
-        out.print(normalize(t.getIdent().second.getValue()));
+        out.print(normalize(t.getIdent().getRight().getValue()));
         return null;
     }
 
@@ -713,15 +713,15 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                     }
                 }
 
-                if (projectList.get(0).first != null) {
+                if (projectList.get(0).getLeft() != null) {
                     innerIndex = 0;
                     out.print(" select ");
                     for (Pair<List<String>, IndexedTypeExpression> project : projectList) {
-                        printNestField(project.first);
-                        if (project.second != null) {
+                        printNestField(project.getLeft());
+                        if (project.getRight() != null) {
                             out.print(":");
-                            project.second.getType().accept(this, step);
-                            if (project.second.isUnknownable()) {
+                            project.getRight().getType().accept(this, step);
+                            if (project.getRight().isUnknownable()) {
                                 out.print('?');
                             }
                         }
@@ -732,8 +732,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                 }
                 out.print(")");
             } else {
-                printNestField(projectList.get(0).first);
-                IndexedTypeExpression typeExpr = projectList.get(0).second;
+                printNestField(projectList.get(0).getLeft());
+                IndexedTypeExpression typeExpr = projectList.get(0).getRight();
                 if (typeExpr != null) {
                     out.print(":");
                     typeExpr.getType().accept(this, step);
@@ -943,7 +943,7 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                 cfs.getFunctionSignature().getName()));
         out.print("(");
         printDelimitedStrings(
-                cfs.getParameters().stream().map(v -> v.getFirst().getValue()).collect(Collectors.toList()), COMMA);
+                cfs.getParameters().stream().map(v -> v.getLeft().getValue()).collect(Collectors.toList()), COMMA);
         out.println(") {");
         out.println(cfs.getFunctionBody());
         out.println("}" + SEMICOLON);

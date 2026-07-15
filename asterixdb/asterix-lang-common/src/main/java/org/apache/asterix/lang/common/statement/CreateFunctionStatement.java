@@ -40,7 +40,7 @@ import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class CreateFunctionStatement extends AbstractStatement {
 
@@ -218,8 +218,8 @@ public class CreateFunctionStatement extends AbstractStatement {
     private static List<Pair<VarIdentifier, TypeExpression>> requireNullTypes(
             List<Pair<VarIdentifier, TypeExpression>> paramList) {
         for (Pair<VarIdentifier, TypeExpression> p : paramList) {
-            if (p.second != null) {
-                throw new IllegalArgumentException(String.valueOf(p.second));
+            if (p.getRight() != null) {
+                throw new IllegalArgumentException(String.valueOf(p.getRight()));
             }
         }
         return paramList;

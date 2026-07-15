@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder.TargetConstraint;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -152,7 +152,7 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
         }
         ITuplePartitionComputerFactory tpcf = FieldHashPartitionComputerFactory.of(sortFields, hashFuns);
         IConnectorDescriptor conn = new MToNPartitioningMergingConnectorDescriptor(spec, tpcf, sortFields, comps, nkcf);
-        return new Pair<>(conn, TargetConstraint.ONE);
+        return Pair.of(conn, TargetConstraint.ONE);
     }
 
 }

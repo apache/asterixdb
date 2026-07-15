@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -304,10 +304,10 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         boolean modified = false;
         while (iter.hasNext()) {
             Pair<LogicalVariable, Mutable<ILogicalExpression>> varMapping = iter.next();
-            LogicalVariable decorVar = varMapping.first;
+            LogicalVariable decorVar = varMapping.getLeft();
             // A decor var mapping can have a variable reference expression without a new variable definition,
             // which is for rebinding the referred variable.
-            VariableReferenceExpression varExpr = (VariableReferenceExpression) varMapping.second.getValue();
+            VariableReferenceExpression varExpr = (VariableReferenceExpression) varMapping.getRight().getValue();
             LogicalVariable decorReferredVar = varExpr.getVariableReference();
             boolean removeReBoundDecorVar = toRemove.contains(decorReferredVar);
             if ((decorVar != null && toRemove.contains(decorVar)) || removeReBoundDecorVar) {
@@ -394,7 +394,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             case GROUP:
                 GroupByOperator groupByOp = (GroupByOperator) op;
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorMapping : groupByOp.getDecorList()) {
-                    LogicalVariable decorVar = decorMapping.first;
+                    LogicalVariable decorVar = decorMapping.getLeft();
                     if (decorVar != null) {
                         assignVarsSetInThisOp.add(decorVar);
                         targetOpFound = true;
@@ -402,7 +402,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                         // A decor var mapping can have a variable reference expression without a new variable
                         // definition, which is for rebinding the referred variable.
                         VariableReferenceExpression varExpr =
-                                (VariableReferenceExpression) decorMapping.second.getValue();
+                                (VariableReferenceExpression) decorMapping.getRight().getValue();
                         assignVarsSetInThisOp.add(varExpr.getVariableReference());
                     }
                 }

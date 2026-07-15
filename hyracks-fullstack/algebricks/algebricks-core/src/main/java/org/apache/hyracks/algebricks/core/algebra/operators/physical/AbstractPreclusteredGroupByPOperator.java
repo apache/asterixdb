@@ -26,9 +26,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -109,7 +109,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
 
         Map<LogicalVariable, LogicalVariable> substMap = null;
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : groupByList) {
-            ILogicalExpression expr = ve.second.getValue();
+            ILogicalExpression expr = ve.getRight().getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 return null;
             }
@@ -121,7 +121,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
             if (substMap == null) {
                 substMap = new HashMap<>();
             }
-            substMap.put(var, ve.first);
+            substMap.put(var, ve.getLeft());
         }
 
         return childPartitioningColumns.isEmpty() ? substMap : null;
@@ -204,7 +204,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
                                 break;
                             }
                         }
-                        ILogicalExpression e = p.second.getValue();
+                        ILogicalExpression e = p.getRight().getValue();
                         if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                             throw new IllegalStateException(
                                     "Right hand side of group-by assignment should have been normalized to a variable reference.");
@@ -218,7 +218,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : gby.getDecorList()) {
                     List<LogicalVariable> hd = gby.getGroupByVarList();
                     List<LogicalVariable> tl = new ArrayList<>();
-                    tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
+                    tl.add(((VariableReferenceExpression) decorPair.getRight().getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
                 if (allOk && PropertiesUtil.matchLocalProperties(localProps, props, new HashMap<>(), fdList)) {
@@ -241,7 +241,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
     private static Pair<LogicalVariable, Mutable<ILogicalExpression>> getGbyPairByRhsVar(GroupByOperator gby,
             LogicalVariable var) {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getGroupByList()) {
-            if (ve.first == var) {
+            if (ve.getLeft() == var) {
                 return ve;
             }
         }
@@ -251,7 +251,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
     private static Pair<LogicalVariable, Mutable<ILogicalExpression>> getDecorPairByRhsVar(GroupByOperator gby,
             LogicalVariable var) {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getDecorList()) {
-            if (ve.first == var) {
+            if (ve.getLeft() == var) {
                 return ve;
             }
         }
@@ -260,14 +260,14 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractGroup
 
     private static LogicalVariable getLhsGbyVar(GroupByOperator gby, LogicalVariable var) {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gby.getGroupByList()) {
-            ILogicalExpression e = ve.second.getValue();
+            ILogicalExpression e = ve.getRight().getValue();
             if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 throw new IllegalStateException(
                         "Right hand side of group by assignment should have been normalized to a variable reference.");
             }
             LogicalVariable v = ((VariableReferenceExpression) e).getVariableReference();
             if (v.equals(var)) {
-                return ve.first;
+                return ve.getLeft();
             }
         }
         return null;

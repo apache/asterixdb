@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -72,7 +72,7 @@ public class BasicAuthServlet implements IServlet {
         Map<String, String> ephemeralCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
         String sysAuthHeader = createAuthHeader(sysUser, sysPassword);
         ctx.put(SYS_AUTH_HEADER, sysAuthHeader);
-        return new Pair<>(storedCredentials, ephemeralCredentials);
+        return Pair.of(storedCredentials, ephemeralCredentials);
     }
 
     @Override

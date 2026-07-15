@@ -40,8 +40,8 @@ import org.apache.asterix.optimizer.rules.am.array.MergedSelectRewrite;
 import org.apache.asterix.optimizer.rules.am.array.SelectFromSubplanRewrite;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -128,7 +128,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         for (Pair<FunctionIdentifier, Boolean> f : ArrayBTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
-            SelectFromSubplanRewrite.addOptimizableFunction(f.first);
+            SelectFromSubplanRewrite.addOptimizableFunction(f.getLeft());
         }
     }
 
@@ -328,13 +328,13 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 List<LogicalVariable> orderedColumn = new ArrayList<>(order.getOrderExpressions().size());
                 for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpression : order
                         .getOrderExpressions()) {
-                    if (orderExpression.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                    if (orderExpression.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                orderExpression.second.getValue().getSourceLocation(),
+                                orderExpression.getRight().getValue().getSourceLocation(),
                                 "The order by expression should be variables, but they aren't variables.");
                     }
                     VariableReferenceExpression orderedVar =
-                            (VariableReferenceExpression) orderExpression.second.getValue();
+                            (VariableReferenceExpression) orderExpression.getRight().getValue();
                     orderedColumn.add(orderedVar.getVariableReference());
                 }
                 inputVars.add(orderedColumn);

@@ -29,9 +29,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -285,8 +285,8 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         Map<LogicalVariable, LogicalVariable> mappedVars = buildVarExprList(pkVars, context, g, g.getGroupByList());
         context.updatePrimaryKeys(mappedVars);
         for (LogicalVariable uv : underVars) {
-            g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(null,
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(uv))));
+            g.getDecorList()
+                    .add(Pair.of(null, new MutableObject<ILogicalExpression>(new VariableReferenceExpression(uv))));
         }
         OperatorPropertiesUtil.typeOpRec(subplanRoot, context);
         OperatorPropertiesUtil.typeOpRec(gPlan.getRoots().get(0), context);
@@ -336,8 +336,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             LogicalVariable newVar = context.newVar();
             ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
             ((VariableReferenceExpression) varExpr).setSourceLocation(sourceLoc);
-            outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
-                    new MutableObject<ILogicalExpression>(varExpr)));
+            outVeList.add(Pair.of(ov, new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,

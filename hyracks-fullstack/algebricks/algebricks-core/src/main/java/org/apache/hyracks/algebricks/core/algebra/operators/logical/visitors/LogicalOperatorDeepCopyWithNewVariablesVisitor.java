@@ -28,9 +28,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -207,8 +207,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>> listCopy =
                 new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>(list.size());
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : list) {
-            listCopy.add(new Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>(deepCopyOrder(pair.first),
-                    exprDeepCopyVisitor.deepCopyExpressionReference(pair.second)));
+            listCopy.add(Pair.of(deepCopyOrder(pair.getLeft()),
+                    exprDeepCopyVisitor.deepCopyExpressionReference(pair.getRight())));
         }
         return listCopy;
     }
@@ -252,8 +252,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> listCopy =
                 new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>(list.size());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : list) {
-            listCopy.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(deepCopyVariable(pair.first),
-                    exprDeepCopyVisitor.deepCopyExpressionReference(pair.second)));
+            listCopy.add(Pair.of(deepCopyVariable(pair.getLeft()),
+                    exprDeepCopyVisitor.deepCopyExpressionReference(pair.getRight())));
         }
         return listCopy;
     }
@@ -567,8 +567,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         }
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-            opCopy.addDecorExpression(deepCopyVariable(p.first),
-                    exprDeepCopyVisitor.deepCopyExpressionReference(p.second).getValue());
+            opCopy.addDecorExpression(deepCopyVariable(p.getLeft()),
+                    exprDeepCopyVisitor.deepCopyExpressionReference(p.getRight()).getValue());
         }
         deepCopyPlanList(op.getNestedPlans(), opCopy.getNestedPlans(), opCopy);
         return opCopy;

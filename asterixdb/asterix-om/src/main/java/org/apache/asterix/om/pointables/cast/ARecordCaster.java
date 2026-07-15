@@ -44,7 +44,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.PointableHelper;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
@@ -238,7 +238,7 @@ class ARecordCaster {
                 ByteArrayOutputStream fieldBos = new ByteArrayOutputStream();
                 PrintStream ps = new PrintStream(fieldBos);
                 APrintVisitor printVisitor = new APrintVisitor();
-                Pair<PrintStream, ATypeTag> visitorArg = new Pair<>(ps, ATypeTag.STRING);
+                MutablePair<PrintStream, ATypeTag> visitorArg = new MutablePair<>(ps, ATypeTag.STRING);
                 fieldName.accept(printVisitor, visitorArg);
 
                 //print the colon

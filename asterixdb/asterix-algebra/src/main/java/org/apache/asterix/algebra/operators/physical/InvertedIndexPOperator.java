@@ -35,9 +35,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -150,12 +150,12 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         jobGenParams.getSearchKeyType(), keyIndexes, jobGenParams.getSearchModifierType(),
                         jobGenParams.getSimilarityThreshold(), propagateIndexFilter, nonFilterWriterFactory,
                         minFilterFieldIndexes, maxFilterFieldIndexes, jobGenParams.getIsFullTextSearch(), frameLimit);
-        IOperatorDescriptor opDesc = invIndexSearch.first;
+        IOperatorDescriptor opDesc = invIndexSearch.getLeft();
         opDesc.setSourceLocation(unnestMapOp.getSourceLocation());
 
         // Contribute operator in hyracks job.
         builder.contributeHyracksOperator(unnestMapOp, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, invIndexSearch.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, invIndexSearch.getRight());
         ILogicalOperator srcExchange = unnestMapOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMapOp, 0);
     }
@@ -202,6 +202,6 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
                         propagateIndexFilter, nonFilterWriterFactory, frameLimit,
                         partitioningProperties.getComputeStorageMap());
-        return new Pair<>(invIndexSearchOp, partitioningProperties.getConstraints());
+        return Pair.of(invIndexSearchOp, partitioningProperties.getConstraints());
     }
 }

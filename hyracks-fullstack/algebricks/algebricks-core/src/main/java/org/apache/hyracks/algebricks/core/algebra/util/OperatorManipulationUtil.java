@@ -31,8 +31,8 @@ import java.util.function.BiPredicate;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -252,7 +252,7 @@ public class OperatorManipulationUtil {
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
                 new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, computeTypeEnvironment ? ctx : null, true);
         ILogicalOperator newRoot = deepCopyVisitor.deepCopy(root);
-        return new Pair<>(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
+        return Pair.of(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
     }
 
     private static void setDataSource(ILogicalPlan plan, ILogicalOperator dataSource) {
@@ -455,8 +455,8 @@ public class OperatorManipulationUtil {
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> clonedExprList =
                 new ArrayList<>(orderExprList.size());
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpr : orderExprList) {
-            clonedExprList.add(
-                    new Pair<>(orderExpr.first, new MutableObject<>(orderExpr.second.getValue().cloneExpression())));
+            clonedExprList.add(Pair.of(orderExpr.getLeft(),
+                    new MutableObject<>(orderExpr.getRight().getValue().cloneExpression())));
         }
         return clonedExprList;
     }

@@ -42,8 +42,8 @@ import org.apache.asterix.translator.ResultMetadata;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
@@ -199,7 +199,7 @@ public class AnalysisUtil {
         if (frameValueExprList.size() != 1) {
             return false;
         }
-        ILogicalExpression frameValueExpr = frameValueExprList.get(0).second.getValue();
+        ILogicalExpression frameValueExpr = frameValueExprList.get(0).getRight().getValue();
         if (frameValueExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         }

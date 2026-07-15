@@ -335,12 +335,12 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
-        if (t.getIdent().first != null && t.getIdent().first != null) {
+        if (t.getIdent().getLeft() != null && t.getIdent().getLeft() != null) {
             //TODO(DB): include database
-            out.print(t.getIdent().first.getDataverseName());
+            out.print(t.getIdent().getLeft().getDataverseName());
             out.print('.');
         }
-        out.print(t.getIdent().second.getValue());
+        out.print(t.getIdent().getRight().getValue());
         return null;
     }
 

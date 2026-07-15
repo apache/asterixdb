@@ -54,7 +54,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
 
@@ -96,7 +96,7 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
         }
         if (gc.hasGroupFieldList()) {
             for (Pair<Expression, Identifier> p : gc.getGroupFieldList()) {
-                p.first.accept(this, arg);
+                p.getLeft().accept(this, arg);
             }
         }
         if (gc.hasWithMap()) {

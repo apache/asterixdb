@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -41,7 +42,6 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -81,7 +81,8 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         HttpClientContext hcCtx = HttpClientContext.create();
         HttpHost h = URIUtils.extractHost(path);
         CredentialsProvider cp = new BasicCredentialsProvider();
-        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
+        cp.setCredentials(AuthScope.ANY,
+                new UsernamePasswordCredentials(credentials.getLeft(), credentials.getRight()));
         hcCtx.setCredentialsProvider(cp);
         AuthCache ac = new BasicAuthCache();
         ac.put(h, new BasicScheme());

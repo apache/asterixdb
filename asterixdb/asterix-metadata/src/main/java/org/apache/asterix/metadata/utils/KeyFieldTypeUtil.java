@@ -39,8 +39,8 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
@@ -171,7 +171,7 @@ public class KeyFieldTypeUtil {
                         (e.getSourceIndicator() == Index.RECORD_INDICATOR) ? recordType : metaRecordType;
                 Pair<IAType, Boolean> keyPairType = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         e.getUnnestList(), e.getProjectList().get(i), sourceType);
-                indexKeyTypes.add(keyPairType.first);
+                indexKeyTypes.add(keyPairType.getLeft());
             }
         }
         return indexKeyTypes;
@@ -216,7 +216,7 @@ public class KeyFieldTypeUtil {
         ARecordType targetRecType = chooseSource(keySourceIndicators, 0, recordType, metaRecordType);
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), targetRecType);
-        IAType keyType = keyPairType.first;
+        IAType keyType = keyPairType.getLeft();
         IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
         int numKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, targetRecType, metaRecordType);
         for (int i = 0; i < numKeys; i++) {
@@ -232,7 +232,7 @@ public class KeyFieldTypeUtil {
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index, FULL_OPEN_ORDEREDLIST_TYPE,
                 indexDetails.getKeyFieldNames().get(0), recordType);
         List<IAType> indexKeyTypes = new ArrayList<>();
-        indexKeyTypes.add(keyPairType.first);
+        indexKeyTypes.add(keyPairType.getLeft());
         return indexKeyTypes;
     }
 
@@ -267,7 +267,7 @@ public class KeyFieldTypeUtil {
                 Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index,
                         indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0),
                         chooseSource(keySourceIndicators, 0, recordType, metaRecordType));
-                IAType keyType = keyPairType.first;
+                IAType keyType = keyPairType.getLeft();
                 return NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag()) * 2;
             case VTREE:
                 return ((Index.VectorIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();

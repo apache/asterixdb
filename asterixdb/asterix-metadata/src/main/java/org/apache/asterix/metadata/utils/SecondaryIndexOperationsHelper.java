@@ -59,10 +59,10 @@ import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -143,8 +143,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         this.itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, dataset);
 
         Pair<ARecordType, ARecordType> enforcedTypes = getEnforcedType(index, itemType, metaType);
-        this.enforcedItemType = enforcedTypes.first;
-        this.enforcedMetaType = enforcedTypes.second;
+        this.enforcedItemType = enforcedTypes.getLeft();
+        this.enforcedMetaType = enforcedTypes.getRight();
         this.sourceLoc = sourceLoc;
         this.sortNumFrames = getSortNumFrames(metadataProvider, sourceLoc);
     }
@@ -153,7 +153,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             ARecordType metaRecordType) throws AlgebricksException {
         return index.getIndexDetails().isOverridingKeyFieldTypes()
                 ? TypeUtil.createEnforcedType(aRecordType, metaRecordType, Collections.singletonList(index))
-                : new Pair<>(null, null);
+                : Pair.of(null, null);
     }
 
     private static int getSortNumFrames(MetadataProvider metadataProvider, SourceLocation sourceLoc)
@@ -270,8 +270,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
-        mergePolicyFactory = compactionInfo.first;
-        mergePolicyProperties = compactionInfo.second;
+        mergePolicyFactory = compactionInfo.getLeft();
+        mergePolicyProperties = compactionInfo.getRight();
         if (numFilterFields > 0) {
             setFilterTypeTraitsAndComparators();
         }
@@ -378,13 +378,13 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         IAType targetType = TypeComputeUtils.getActualType(fieldType);
         Pair<FunctionIdentifier, IAObject> constructorWithFmt =
                 IndexUtil.getTypeConstructorDefaultNull(index, targetType, sourceLoc);
-        FunctionIdentifier typeConstructorFun = constructorWithFmt.first;
+        FunctionIdentifier typeConstructorFun = constructorWithFmt.getLeft();
         IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
         IScalarEvaluatorFactory[] args;
         // add the format argument if specified
-        if (constructorWithFmt.second != null) {
+        if (constructorWithFmt.getRight() != null) {
             IScalarEvaluatorFactory fmtEvalFactory =
-                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(constructorWithFmt.second));
+                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(constructorWithFmt.getRight()));
             args = new IScalarEvaluatorFactory[] { fieldEvalFactory, fmtEvalFactory };
         } else {
             args = new IScalarEvaluatorFactory[] { fieldEvalFactory };
@@ -599,7 +599,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             FileSplit[] fileSplits = partitioningProperties.getSplitsProvider().getFileSplits();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> sp =
                     StoragePathUtil.splitProviderAndPartitionConstraints(fileSplits);
-            return PartitioningProperties.of(sp.getFirst(), sp.getSecond(),
+            return PartitioningProperties.of(sp.getLeft(), sp.getRight(),
                     DataPartitioningProvider.getOneToOnePartitionsMap(fileSplits.length));
         }
         return partitioningProperties;

@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder.TargetConstraint;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -79,9 +79,9 @@ public final class RangePartitionExchangePOperator extends AbstractRangeExchange
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
         Pair<int[], IBinaryComparatorFactory[]> pOrderColumns = createOrderColumnsAndComparators(op, opSchema, context);
         FieldRangePartitionComputerFactory partitionerFactory =
-                new FieldRangePartitionComputerFactory(pOrderColumns.first, pOrderColumns.second,
+                new FieldRangePartitionComputerFactory(pOrderColumns.getLeft(), pOrderColumns.getRight(),
                         crateRangeMapSupplier(), op.getSourceLocation(), rangeMapIsComputedAtRunTime);
         IConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, partitionerFactory);
-        return new Pair<>(conn, null);
+        return Pair.of(conn, null);
     }
 }

@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -195,26 +195,28 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
     private boolean handleGroupByVarRemapping(GroupByOperator groupOp) {
         boolean modified = false;
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gp : groupOp.getGroupByList()) {
-            if (gp.first == null || gp.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            if (gp.getLeft() == null || gp.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 continue;
             }
-            LogicalVariable groupByVar = ((VariableReferenceExpression) gp.second.getValue()).getVariableReference();
+            LogicalVariable groupByVar =
+                    ((VariableReferenceExpression) gp.getRight().getValue()).getVariableReference();
             Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupOp.getDecorList().iterator();
             while (iter.hasNext()) {
                 Pair<LogicalVariable, Mutable<ILogicalExpression>> dp = iter.next();
-                if (dp.first != null || dp.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                if (dp.getLeft() != null
+                        || dp.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                     continue;
                 }
-                LogicalVariable dv = ((VariableReferenceExpression) dp.second.getValue()).getVariableReference();
+                LogicalVariable dv = ((VariableReferenceExpression) dp.getRight().getValue()).getVariableReference();
                 if (dv == groupByVar) {
                     // The decor variable is redundant, since it is propagated as a grouping variable.
                     List<LogicalVariable> equivalentVars = equivalentVarsMap.get(groupByVar);
                     if (equivalentVars != null) {
                         // Change representative of this equivalence class.
-                        equivalentVars.set(0, gp.first);
-                        equivalentVarsMap.put(gp.first, equivalentVars);
+                        equivalentVars.set(0, gp.getLeft());
+                        equivalentVarsMap.put(gp.getLeft(), equivalentVars);
                     } else {
-                        updateEquivalenceClassMap(gp.first, groupByVar);
+                        updateEquivalenceClassMap(gp.getLeft(), groupByVar);
                     }
                     iter.remove();
                     modified = true;
@@ -227,16 +229,16 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupOp.getDecorList().iterator();
         while (iter.hasNext()) {
             Pair<LogicalVariable, Mutable<ILogicalExpression>> dp = iter.next();
-            if (dp.first == null || dp.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            if (dp.getLeft() == null || dp.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 continue;
             }
-            LogicalVariable dv = ((VariableReferenceExpression) dp.second.getValue()).getVariableReference();
+            LogicalVariable dv = ((VariableReferenceExpression) dp.getRight().getValue()).getVariableReference();
             LogicalVariable firstDecor = variableToFirstDecorMap.get(dv);
             if (firstDecor == null) {
-                variableToFirstDecorMap.put(dv, dp.first);
+                variableToFirstDecorMap.put(dv, dp.getLeft());
             } else {
-                // The decor variable dp.first is redundant since firstDecor is exactly the same.
-                updateEquivalenceClassMap(dp.first, firstDecor);
+                // The decor variable dp.getLeft() is redundant since firstDecor is exactly the same.
+                updateEquivalenceClassMap(dp.getLeft(), firstDecor);
                 iter.remove();
                 modified = true;
             }

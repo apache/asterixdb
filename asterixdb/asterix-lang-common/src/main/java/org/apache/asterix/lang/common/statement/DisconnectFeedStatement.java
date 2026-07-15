@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class DisconnectFeedStatement extends AbstractStatement {
 
@@ -35,13 +35,14 @@ public class DisconnectFeedStatement extends AbstractStatement {
 
     public DisconnectFeedStatement(Pair<Namespace, Identifier> feedNameComponent,
             Pair<Namespace, Identifier> datasetNameComponent) {
-        if (feedNameComponent.first != null && datasetNameComponent.first != null
-                && !feedNameComponent.first.equals(datasetNameComponent.first)) {
+        if (feedNameComponent.getLeft() != null && datasetNameComponent.getLeft() != null
+                && !feedNameComponent.getLeft().equals(datasetNameComponent.getLeft())) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
         }
-        this.namespace = feedNameComponent.first != null ? feedNameComponent.first : datasetNameComponent.first;
-        this.datasetName = datasetNameComponent.second;
-        this.feedName = feedNameComponent.second;
+        this.namespace =
+                feedNameComponent.getLeft() != null ? feedNameComponent.getLeft() : datasetNameComponent.getLeft();
+        this.datasetName = datasetNameComponent.getRight();
+        this.feedName = feedNameComponent.getRight();
     }
 
     public Namespace getNamespace() {

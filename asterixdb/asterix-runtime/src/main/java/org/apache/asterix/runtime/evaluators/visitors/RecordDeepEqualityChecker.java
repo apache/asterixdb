@@ -26,14 +26,13 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 
 class RecordDeepEqualityChecker {
-    private final Pair<IVisitablePointable, Boolean> nestedVisitorArg =
-            new Pair<IVisitablePointable, Boolean>(null, false);
+    private final MutablePair<IVisitablePointable, Boolean> nestedVisitorArg = new MutablePair<>(null, false);
     private final DeepEqualityVisitorHelper deepEqualityVisitorHelper = new DeepEqualityVisitorHelper();
     private DeepEqualityVisitor visitor;
     private BinaryEntry keyEntry = new BinaryEntry();
@@ -101,9 +100,9 @@ class RecordDeepEqualityChecker {
             if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(fieldValRight)) {
                 return false;
             }
-            nestedVisitorArg.first = fieldValRight;
+            nestedVisitorArg.setLeft(fieldValRight);
             fieldValLeft.accept(visitor, nestedVisitorArg);
-            if (nestedVisitorArg.second == false) {
+            if (nestedVisitorArg.getRight() == false) {
                 return false;
             }
         }

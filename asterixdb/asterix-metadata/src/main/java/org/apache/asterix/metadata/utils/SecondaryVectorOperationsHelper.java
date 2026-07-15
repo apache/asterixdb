@@ -62,11 +62,11 @@ import org.apache.asterix.runtime.operators.VTreeStaticStructureCreatorOperatorD
 import org.apache.asterix.runtime.operators.VectorComponentExtractorOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -782,14 +782,14 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
 
             Pair<IAType, Boolean> keyTypePair =
                     Index.getNonNullableOpenFieldType(index, vectorFieldType, vectorFieldName, sourceType);
-            IAType keyType = keyTypePair.first;
+            IAType keyType = keyTypePair.getLeft();
 
             IScalarEvaluatorFactory vectorFieldAccessor =
                     createFieldAccessor(sourceType, sourceColumn, vectorFieldName);
 
             secondaryFieldAccessEvalFactories[0] =
                     createFieldCast(vectorFieldAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, keyType);
-            anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
+            anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.getRight();
             secondaryRecFields[0] = serdeProvider.getSerializerDeserializer(keyType);
             secondaryComparatorFactories[0] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
             secondaryTypeTraits[0] = typeTraitProvider.getTypeTrait(keyType);
@@ -830,15 +830,15 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
                 int fieldIndex = 1 + i;
                 Pair<IAType, Boolean> keyTypePair =
                         Index.getNonNullableOpenFieldType(index, secFieldType, secFieldName, sourceType);
-                IAType keyType = keyTypePair.first;
+                IAType keyType = keyTypePair.getLeft();
                 IScalarEvaluatorFactory secFieldAccessor = createFieldAccessor(sourceType, sourceColumn, secFieldName);
                 secondaryFieldAccessEvalFactories[fieldIndex] =
                         createFieldCast(secFieldAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, keyType);
-                anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
+                anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.getRight();
                 // For nullable/missable include fields, use a NULL-safe serializer.
                 // Unlike B-tree which filters out NULL records, vector INCLUDE fields preserve NULLs.
                 IAType serdeType =
-                        keyTypePair.second ? KeyFieldTypeUtil.makeUnknownableType(keyType, true, true) : keyType;
+                        keyTypePair.getRight() ? KeyFieldTypeUtil.makeUnknownableType(keyType, true, true) : keyType;
                 secondaryRecFields[fieldIndex] = serdeProvider.getSerializerDeserializer(serdeType);
                 secondaryComparatorFactories[fieldIndex] =
                         comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
@@ -887,7 +887,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
                 sourceColumn = recordColumn + 1;
                 enforcedType = enforcedMetaType;
             }
-            IAType filterType = Index.getNonNullableKeyFieldType(filterFieldName, sourceType).first;
+            IAType filterType = Index.getNonNullableKeyFieldType(filterFieldName, sourceType).getLeft();
             IScalarEvaluatorFactory filterAccessor = createFieldAccessor(sourceType, sourceColumn, filterFieldName);
             secondaryFieldAccessEvalFactories[numSecondaryKeys] =
                     createFieldCast(filterAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, filterType);

@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -438,12 +438,12 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
             return;
         }
         for (int i = 0; i < leftPairs.size(); i++) {
-            ILogicalExpression exprLeft = leftPairs.get(i).second.getValue();
-            LogicalVariable leftVar = leftPairs.get(i).first;
+            ILogicalExpression exprLeft = leftPairs.get(i).getRight().getValue();
+            LogicalVariable leftVar = leftPairs.get(i).getLeft();
             for (int j = 0; j < leftPairs.size(); j++) {
-                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(rightPairs.get(j).second).getValue();
+                ILogicalExpression exprRight = copyExpressionAndSubtituteVars(rightPairs.get(j).getRight()).getValue();
                 if (exprLeft.equals(exprRight)) {
-                    LogicalVariable rightVar = rightPairs.get(j).first;
+                    LogicalVariable rightVar = rightPairs.get(j).getLeft();
                     if (rightVar != null && leftVar != null) {
                         variableMapping.put(rightVar, leftVar);
                     }

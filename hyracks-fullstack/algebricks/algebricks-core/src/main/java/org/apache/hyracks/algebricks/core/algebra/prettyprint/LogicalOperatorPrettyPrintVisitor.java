@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -716,7 +716,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         } else {
             for (ILogicalPlan p : op.getNestedPlans()) {
                 // PrettyPrintUtil.indent(buffer, level + 10).append("var " +
-                // p.first + ":\n");
+                // p.getLeft() + ":\n");
                 buffer.append("\n");
                 if (first) {
                     first = false;
@@ -768,10 +768,10 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             } else {
                 buffer.append("; ");
             }
-            if (ve.first != null) {
-                buffer.append(ve.first + " := " + ve.second);
+            if (ve.getLeft() != null) {
+                buffer.append(ve.getLeft() + " := " + ve.getRight());
             } else {
-                buffer.append(ve.second.getValue().accept(exprVisitor, indent));
+                buffer.append(ve.getRight().getValue().accept(exprVisitor, indent));
             }
         }
         buffer.append("]");
@@ -781,8 +781,8 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             Integer indent) throws AlgebricksException {
         for (Iterator<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> i = orderList.iterator(); i.hasNext();) {
             Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p = i.next();
-            String fst = getOrderString(p.first);
-            buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ")");
+            String fst = getOrderString(p.getLeft());
+            buffer.append("(" + fst + ", " + p.getRight().getValue().accept(exprVisitor, indent) + ")");
             if (i.hasNext()) {
                 buffer.append(' ');
             }

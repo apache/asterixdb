@@ -42,8 +42,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.asterix.om.vector.VectorIndexParameters;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.util.OptionalBoolean;
 
@@ -168,7 +169,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         return indexType == IndexType.BTREE && ((ValueIndexDetails) indexDetails).keyFieldNames.isEmpty();
     }
 
-    public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) {
+    public static MutablePair<IAType, Boolean> getNonNullableType(IAType keyType) {
         boolean nullable = false;
         IAType actualKeyType = keyType;
         // check open field whose type is ANY?
@@ -176,18 +177,18 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             actualKeyType = ((AUnionType) keyType).getActualType();
             nullable = true;
         }
-        return new Pair<>(actualKeyType, nullable);
+        return new MutablePair<>(actualKeyType, nullable);
     }
 
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(Index index, IAType fieldType,
             List<String> fieldName, ARecordType recType) throws AlgebricksException {
         // check open field whose type is ANY?
         if (IndexUtil.castDefaultNull(index)) {
-            Pair<IAType, Boolean> nonNullableType = getNonNullableType(fieldType);
-            nonNullableType.second = true;
+            MutablePair<IAType, Boolean> nonNullableType = getNonNullableType(fieldType);
+            nonNullableType.setRight(true);
             return nonNullableType;
         }
-        Pair<IAType, Boolean> keyPairType = null;
+        MutablePair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
         boolean nullable = false;
         for (int i = 0; i < fieldName.size(); i++) {
@@ -209,16 +210,16 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (subType != null) {
             keyPairType = Index.getNonNullableKeyFieldType(fieldName, recType);
         }
-        keyPairType.second = keyPairType.second || nullable;
+        keyPairType.setRight(keyPairType.getRight() || nullable);
         return keyPairType;
     }
 
-    public static Pair<IAType, Boolean> getNonNullableKeyFieldType(List<String> expr, ARecordType recType)
+    public static MutablePair<IAType, Boolean> getNonNullableKeyFieldType(List<String> expr, ARecordType recType)
             throws AlgebricksException {
         IAType keyType = Index.keyFieldType(expr, recType);
         // check open field whose type is ANY?
-        Pair<IAType, Boolean> pair = getNonNullableType(keyType);
-        pair.second = pair.second || recType.isSubFieldNullable(expr);
+        MutablePair<IAType, Boolean> pair = getNonNullableType(keyType);
+        pair.setRight(pair.getRight() || recType.isSubFieldNullable(expr));
         return pair;
     }
 

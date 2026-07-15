@@ -27,9 +27,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -80,14 +80,14 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         VariableUtilities.getLiveVariables(newGbyOp, newGbyLiveVars);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyOp.getDecorList()) {
             List<LogicalVariable> usedDecorVars = new ArrayList<LogicalVariable>();
-            // p.second.getValue() should always return a VariableReferenceExpression, hence
+            // p.getRight().getValue() should always return a VariableReferenceExpression, hence
             // usedDecorVars should always contain only one variable.
-            p.second.getValue().getUsedVariables(usedDecorVars);
+            p.getRight().getValue().getUsedVariables(usedDecorVars);
             LogicalVariable usedVar = usedDecorVars.get(0);
             if (!newGbyLiveVars.contains(usedVar)) {
                 // Let the left-hand side of gbyOp's decoration expressions populated through the combiner group-by without
                 // any intermediate assignment.
-                newGbyOp.addDecorExpression(null, p.second.getValue().cloneExpression());
+                newGbyOp.addDecorExpression(null, p.getRight().getValue().cloneExpression());
                 newGbyLiveVars.add(usedVar);
             }
         }
@@ -156,14 +156,14 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
 
             // NOTE: tryToPushSubplan(...) can mutate the nested subplan p.
             Pair<Boolean, ILogicalPlan> bip = tryToPushSubplan(p, gbyOp, newGbyOp, bi, gbyVars, context);
-            if (!bip.first) {
+            if (!bip.getLeft()) {
                 // For now, if we cannot push everything, give up.
                 // Resets the group-by operator with original nested plans.
                 gbyNestedPlans.clear();
                 gbyNestedPlans.addAll(backupNestedPlans);
                 return null;
             }
-            ILogicalPlan pushedSubplan = bip.second;
+            ILogicalPlan pushedSubplan = bip.getRight();
             if (pushedSubplan != null) {
                 newGbyOp.getNestedPlans().add(pushedSubplan);
             }
@@ -232,18 +232,18 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         for (Mutable<ILogicalOperator> r : nestedPlan.getRoots()) {
             if (!tryToPushRoot(r, oldGbyOp, newGbyOp, bi, gbyVars, context, pushedRoots, toReplaceSet)) {
                 // For now, if we cannot push everything, give up.
-                return new Pair<Boolean, ILogicalPlan>(false, null);
+                return Pair.of(false, null);
             }
         }
         if (pushedRoots.isEmpty()) {
-            return new Pair<Boolean, ILogicalPlan>(true, null);
+            return Pair.of(true, null);
         } else {
             // Replaces the aggregation expressions in the original group-by op with new ones.
             ILogicalPlan newPlan = new ALogicalPlanImpl(pushedRoots);
             ILogicalPlan plan = fingIdenticalPlan(newGbyOp, newPlan);
             replaceOriginalAggFuncs(toReplaceSet);
             if (plan == null) {
-                return new Pair<Boolean, ILogicalPlan>(true, newPlan);
+                return Pair.of(true, newPlan);
             } else {
                 // Does not add a nested subplan to newGbyOp if there already exists an isomorphic plan.
                 Set<LogicalVariable> originalVars = new ListSet<LogicalVariable>();
@@ -269,7 +269,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
                         }
                     }
                 }
-                return new Pair<Boolean, ILogicalPlan>(true, null);
+                return Pair.of(true, null);
             }
         }
     }
@@ -301,10 +301,10 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         if (op3.getOperatorTag() != LogicalOperatorTag.GROUP) {
             AggregateOperator initAgg = (AggregateOperator) op1;
             Pair<Boolean, Mutable<ILogicalOperator>> pOpRef = tryToPushAgg(initAgg, newGbyOp, toReplaceSet, context);
-            if (!pOpRef.first) {
+            if (!pOpRef.getLeft()) {
                 return false;
             }
-            Mutable<ILogicalOperator> opRef = pOpRef.second;
+            Mutable<ILogicalOperator> opRef = pOpRef.getRight();
             if (opRef != null) {
                 toPushAccumulate.add(opRef);
             }

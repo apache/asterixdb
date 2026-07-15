@@ -45,8 +45,8 @@ import org.apache.asterix.translator.ConstantHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -405,13 +405,13 @@ public class Stats {
         Pair<ILogicalOperator, Double> leftOutput = replaceDataSourceWithSample(left.getOp(), index1, joinExpr);
         ILogicalOperator originalLeft = abjoin.getInputs().get(0).getValue();
         ILogicalOperator originalRight = abjoin.getInputs().get(1).getValue();
-        abjoin.getInputs().get(0).setValue(leftOutput.getFirst());
+        abjoin.getInputs().get(0).setValue(leftOutput.getLeft());
         Pair<ILogicalOperator, Double> rightOutput = replaceDataSourceWithSample(right.getOp(), index2, joinExpr);
-        abjoin.getInputs().get(1).setValue(rightOutput.getFirst());
+        abjoin.getInputs().get(1).setValue(rightOutput.getLeft());
         abjoin.getCondition().setValue(joinExpr);
         List<List<IAObject>> result = runSamplingQuery(optCtx, abjoin);
         double estCardSample = findPredicateCardinality(result, false);
-        double sel = estCardSample / leftOutput.getSecond() / rightOutput.getSecond();
+        double sel = estCardSample / leftOutput.getRight() / rightOutput.getRight();
 
         abjoin.getInputs().get(0).setValue(originalLeft);
         abjoin.getInputs().get(1).setValue(originalRight);
@@ -441,7 +441,7 @@ public class Stats {
         SampleDataSource sampledatasource = OperatorUtils.getSampleDataSource(scanOp, optCtx);
         scanOp.setDataSource(sampledatasource);
         parent.getInputs().get(0).setValue(scanOp);
-        Pair<ILogicalOperator, Double> retVal = new Pair<>(selOp, sampleCard);
+        Pair<ILogicalOperator, Double> retVal = Pair.of(selOp, sampleCard);
 
         return retVal;
     }
@@ -1264,7 +1264,7 @@ public class Stats {
                     List<Mutable<ILogicalExpression>> aggExprMutableList = new ArrayList<>(1);
 
                     for (int i = 0; i < numFields; i++) {
-                        ILogicalExpression var = groupByList.get(i).second.getValue();
+                        ILogicalExpression var = groupByList.get(i).getRight().getValue();
                         Mutable<ILogicalExpression> mvar = new MutableObject<>(var);
                         List<Mutable<ILogicalExpression>> fields = new ArrayList<>();
                         fields.add(mvar);

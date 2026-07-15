@@ -36,8 +36,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
@@ -88,8 +88,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
         }
         Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
-        IAType spatialType = spatialTypePair.first;
-        anySecondaryKeyIsNullable = spatialTypePair.second;
+        IAType spatialType = spatialTypePair.getLeft();
+        anySecondaryKeyIsNullable = spatialTypePair.getRight();
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
         }
@@ -148,7 +148,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             }
 
             Pair<IAType, Boolean> typePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
-            IAType type = typePair.first;
+            IAType type = typePair.getLeft();
             ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numNestedSecondaryKeyFields] = serde;
         }

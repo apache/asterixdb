@@ -49,8 +49,8 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 // TODO(ali): all the functionality here is the same as the ones in ExpressionUtils
@@ -90,7 +90,7 @@ public class LangRecordParseUtil {
         }
         // defaults
         for (Pair<String, String> kv : defaults) {
-            record.set(kv.first, new AdmStringNode(kv.second));
+            record.set(kv.getLeft(), new AdmStringNode(kv.getRight()));
         }
         return record;
     }

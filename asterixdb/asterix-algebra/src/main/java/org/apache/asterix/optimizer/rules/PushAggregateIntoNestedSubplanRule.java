@@ -28,8 +28,8 @@ import java.util.Set;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -93,7 +93,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                     List<LogicalVariable> producedVarsAtAgg = new ArrayList<>();
                     VariableUtilities.getProducedVariablesInDescendantsAndSelf(aggOp, producedVarsAtAgg);
                     if (producedVarsAtAgg.isEmpty()) {
-                        removeList.add(new Pair<>(nspOp, nspAggVarToPlanIndex.get(aggVar)));
+                        removeList.add(Pair.of(nspOp, nspAggVarToPlanIndex.get(aggVar)));
                     }
                 }
             }
@@ -102,8 +102,8 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
         // Collects subplans that is to be removed.
         Map<AbstractOperatorWithNestedPlans, List<ILogicalPlan>> nspToSubplanListMap = new HashMap<>();
         for (Pair<AbstractOperatorWithNestedPlans, Integer> remove : removeList) {
-            AbstractOperatorWithNestedPlans groupByOperator = remove.first;
-            ILogicalPlan subplan = remove.first.getNestedPlans().get(remove.second);
+            AbstractOperatorWithNestedPlans groupByOperator = remove.getLeft();
+            ILogicalPlan subplan = remove.getLeft().getNestedPlans().get(remove.getRight());
             if (nspToSubplanListMap.containsKey(groupByOperator)) {
                 List<ILogicalPlan> subplans = nspToSubplanListMap.get(groupByOperator);
                 subplans.add(subplan);
@@ -155,8 +155,8 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 ILogicalExpressionReferenceTransform exprTransform = exprRef -> {
                     Pair<Boolean, ILogicalExpression> p =
                             extractAggFunctionsFromExpression(exprRef, nspWithAgg, aggregateExprToVarExpr, context);
-                    if (p.first) {
-                        exprRef.setValue(p.second);
+                    if (p.getLeft()) {
+                        exprRef.setValue(p.getRight());
                         return true;
                     } else {
                         return false;
@@ -280,9 +280,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                                 VariableReferenceExpression newVarExpr = new VariableReferenceExpression(newVar);
                                 newVarExpr.setSourceLocation(expr.getSourceLocation());
                                 aggregateExprToVarExpr.put(expr, newVarExpr);
-                                return new Pair<>(Boolean.TRUE, newVarExpr);
+                                return Pair.of(Boolean.TRUE, newVarExpr);
                             } else {
-                                return new Pair<>(Boolean.TRUE, varExpr.cloneExpression());
+                                return Pair.of(Boolean.TRUE, varExpr.cloneExpression());
                             }
                         }
                     }
@@ -292,15 +292,15 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 for (Mutable<ILogicalExpression> a : fce.getArguments()) {
                     Pair<Boolean, ILogicalExpression> aggArg =
                             extractAggFunctionsFromExpression(a, nspWithAgg, aggregateExprToVarExpr, context);
-                    if (aggArg.first) {
-                        a.setValue(aggArg.second);
+                    if (aggArg.getLeft()) {
+                        a.setValue(aggArg.getRight());
                         change = true;
                     }
                 }
-                return new Pair<>(change, fce);
+                return Pair.of(change, fce);
             case VARIABLE:
             case CONSTANT:
-                return new Pair<>(Boolean.FALSE, expr);
+                return Pair.of(Boolean.FALSE, expr);
             default:
                 throw new IllegalArgumentException();
         }

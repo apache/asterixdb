@@ -43,8 +43,8 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.cost.VectorIndexGeometry;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -231,8 +231,8 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             // Find ORDER operator by skipping intermediate operators (ASSIGN, EXCHANGE, nested LIMIT)
             Pair<Mutable<ILogicalOperator>, OrderOperator> orderPair = findOrderOperator(limitOp);
             if (orderPair != null) {
-                orderRef = orderPair.first;
-                orderOp = orderPair.second;
+                orderRef = orderPair.getLeft();
+                orderOp = orderPair.getRight();
                 // Skip the index transform when the LIMIT carries an OFFSET: the vector search is sized
                 // from k alone, so LIMIT k OFFSET o would skip into an undersized candidate pool and return
                 // truncated/empty results. Fall through to the exact ORDER BY ... LIMIT plan, which honors
@@ -292,7 +292,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         while (true) {
             // Check if we found the ORDER operator
             if (currentOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
-                return new Pair<>(currentRef, (OrderOperator) currentOp);
+                return Pair.of(currentRef, (OrderOperator) currentOp);
             }
 
             // Skip through known intermediate operators
@@ -344,7 +344,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             return false;
         }
 
-        Index vectorIndex = chosenIndexes.get(0).second;
+        Index vectorIndex = chosenIndexes.get(0).getRight();
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(VectorIndexAccessMethod.INSTANCE);
 
         boolean transformed = applyTopKPlanTransformation(vectorIndex, analysisCtx, context);
@@ -460,7 +460,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
         // Get ORDER BY expression
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = orderOp.getOrderExpressions();
-        ILogicalExpression orderExpr = orderExprs.get(0).second.getValue();
+        ILogicalExpression orderExpr = orderExprs.get(0).getRight().getValue();
 
         // Resolve to actual ANN_DISTANCE function (handle both direct and variable reference cases)
         annDistanceExpr = resolveAnnDistanceExpr(orderExpr, subTree.getAssignsAndUnnests());
@@ -473,7 +473,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // The top-K cursor returns the nearest K candidates (ascending distance). A DESC order-by asks
         // for the farthest K, which this plan cannot produce, so only match ASC and let DESC fall back
         // to the non-index (full-scan + sort) plan.
-        if (orderExprs.get(0).first.getKind() != IOrder.OrderKind.ASC) {
+        if (orderExprs.get(0).getLeft().getKind() != IOrder.OrderKind.ASC) {
             return false;
         }
 
@@ -649,10 +649,10 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                     VectorSimilarityMetric indexMetric = VectorIndexAccessMethod.getIndexMetric(index);
                     if (queryDistanceMetric == indexMetric) {
                         // Exact match: field name AND distance metric match.
-                        exactMatches.add(new Pair<>(VectorIndexAccessMethod.INSTANCE, index));
+                        exactMatches.add(Pair.of(VectorIndexAccessMethod.INSTANCE, index));
                     } else if (fieldMatch == null) {
                         // Field matches but metric doesn't - store as fallback only if no exact match.
-                        fieldMatch = new Pair<>(VectorIndexAccessMethod.INSTANCE, index);
+                        fieldMatch = Pair.of(VectorIndexAccessMethod.INSTANCE, index);
                     }
                 } else {
                     // No query metric available. Do NOT pick an arbitrary index here: without a metric to
@@ -671,7 +671,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         if (!exactMatches.isEmpty()) {
             result.addAll(exactMatches);
         } else if (fieldMatch != null) {
-            Index idx = fieldMatch.second;
+            Index idx = fieldMatch.getRight();
             VectorSimilarityMetric indexMetric = VectorIndexAccessMethod.getIndexMetric(idx);
             LOGGER.warn("Distance metric mismatch: query uses '{}' but index '{}' uses '{}'. "
                     + "Falling back to full scan (KNN).", queryDistanceMetric, idx.getIndexName(), indexMetric);
@@ -737,12 +737,12 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             // Whether the primary lookup is skipped is per-index: two indexes can differ in whether their
             // INCLUDE list covers this query's WHERE, and that is the difference between fetching every
             // candidate and fetching none.
-            double fetchedCard = isProjectionCoveredByIndex(candidate.second, context) ? 0 : candidateCard;
-            Index.VectorIndexDetails details = (Index.VectorIndexDetails) candidate.second.getIndexDetails();
+            double fetchedCard = isProjectionCoveredByIndex(candidate.getRight(), context) ? 0 : candidateCard;
+            Index.VectorIndexDetails details = (Index.VectorIndexDetails) candidate.getRight().getIndexDetails();
             VectorIndexGeometry geometry = new VectorIndexGeometry(details.getVectorParameters(),
                     details.getIncludeFieldTypes(), primaryKeyTypes, datasetCardinality, numPartitions, pageSize,
                     queryMinProbeFraction, candidateCard);
-            candidates.add(new VectorIndexCandidate(candidate.second, geometry, fetchedCard, annDistanceExpr));
+            candidates.add(new VectorIndexCandidate(candidate.getRight(), geometry, fetchedCard, annDistanceExpr));
         }
         return true;
     }

@@ -32,9 +32,9 @@ import java.util.List;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URIUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -65,12 +65,12 @@ public class RetrieveLibrariesTask implements INCLifecycleTask {
         for (Pair<URI, String> referenceNode : nodes) {
             try {
                 LOGGER.info("Retrieving UDFs from "
-                        + NetworkUtil.toHostPort(URIUtils.extractHost(referenceNode.getFirst())));
-                retrieveLibrary(referenceNode.getFirst(), referenceNode.getSecond(), appContext);
+                        + NetworkUtil.toHostPort(URIUtils.extractHost(referenceNode.getLeft())));
+                retrieveLibrary(referenceNode.getLeft(), referenceNode.getRight(), appContext);
                 success = true;
                 break;
             } catch (HyracksDataException e) {
-                LOGGER.error("Unable to retrieve UDFs from: " + referenceNode.getFirst() + ", trying another node.", e);
+                LOGGER.error("Unable to retrieve UDFs from: " + referenceNode.getLeft() + ", trying another node.", e);
             }
         }
         if (!success) {

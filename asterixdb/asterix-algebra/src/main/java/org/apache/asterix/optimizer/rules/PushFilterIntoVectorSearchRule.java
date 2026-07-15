@@ -34,8 +34,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -212,7 +212,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
                 if (params.getIndexType() == IndexType.VTREE) {
                     return buildSearchInfo(unnest, params, context, recordSources);
                 }
-                recordSources.add(new Pair<>(unnest, params));
+                recordSources.add(Pair.of(unnest, params));
                 break;
             }
             case ASSIGN:
@@ -279,10 +279,10 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         // name and filter on the wrong value.
         Set<LogicalVariable> recordVars = new HashSet<>();
         for (Pair<UnnestMapOperator, AccessMethodJobGenParams> lookup : recordSources) {
-            if (!isPrimaryLookupOf(lookup.second, dataset)) {
+            if (!isPrimaryLookupOf(lookup.getRight(), dataset)) {
                 continue;
             }
-            List<LogicalVariable> vars = lookup.first.getVariables();
+            List<LogicalVariable> vars = lookup.getLeft().getVariables();
             recordVars.addAll(vars.subList(0, dataset.hasMetaPart() ? vars.size() - 1 : vars.size()));
         }
 

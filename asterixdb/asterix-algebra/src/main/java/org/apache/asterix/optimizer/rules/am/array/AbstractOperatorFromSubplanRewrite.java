@@ -37,8 +37,8 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -215,7 +215,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                     Pair<SelectOperator, UnnestOperator> traversalOutput =
                             traverseSubplanBranch((SubplanOperator) workingOriginalOperator, optimizableSelect, false);
                     if (traversalOutput != null) {
-                        updatedSelectCond = coalesceConditions(rewriteRootSelect, traversalOutput.first);
+                        updatedSelectCond = coalesceConditions(rewriteRootSelect, traversalOutput.getLeft());
                         updatedSelectOperator = new SelectOperator(new MutableObject<>(updatedSelectCond),
                                 rewriteRootSelect.getRetainMissingAsValue(),
                                 rewriteRootSelect.getMissingPlaceholderVariable());
@@ -227,12 +227,13 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                         }
 
                         // Add the inputs from our subplan.
-                        Mutable<ILogicalOperator> traversalOperator = traversalOutput.first.getInputs().get(0);
+                        Mutable<ILogicalOperator> traversalOperator = traversalOutput.getLeft().getInputs().get(0);
                         while (traversalOperator != null) {
                             ILogicalOperator traversalOperatorDeepCopy =
                                     OperatorManipulationUtil.deepCopy(traversalOperator.getValue());
-                            if (traversalOperator.getValue().equals(traversalOutput.second)) {
-                                traversalOutput.second = (UnnestOperator) traversalOperatorDeepCopy;
+                            if (traversalOperator.getValue().equals(traversalOutput.getRight())) {
+                                traversalOutput =
+                                        Pair.of(traversalOutput.getLeft(), (UnnestOperator) traversalOperatorDeepCopy);
                             }
                             workingNewOperator.getInputs().add(new MutableObject<>(traversalOperatorDeepCopy));
                             workingNewOperator = workingNewOperator.getInputs().get(0).getValue();
@@ -240,7 +241,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                                     : traversalOperator.getValue().getInputs().get(0);
                         }
                         workingNewOperator.getInputs().clear();
-                        bottommostNewUnnest = traversalOutput.second;
+                        bottommostNewUnnest = traversalOutput.getRight();
                         break;
                     }
 
@@ -271,7 +272,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rewriteRootSelect, context);
         }
 
-        return new Pair<>(rewriteRootSelect, bottommostNewUnnest);
+        return Pair.of(rewriteRootSelect, bottommostNewUnnest);
     }
 
     protected ScalarFunctionCallExpression coalesceConditions(SelectOperator selectOp, ILogicalOperator auxOp) {

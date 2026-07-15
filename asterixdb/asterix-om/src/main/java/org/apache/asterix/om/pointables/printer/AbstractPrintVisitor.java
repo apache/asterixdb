@@ -28,7 +28,7 @@ import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractPrintVisitor implements IPrintVisitor {
@@ -36,34 +36,37 @@ public abstract class AbstractPrintVisitor implements IPrintVisitor {
     private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<>();
 
     @Override
-    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+    public Void visit(AListVisitablePointable accessor, MutablePair<PrintStream, ATypeTag> arg)
+            throws HyracksDataException {
         AListPrinter printer = laccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = createListPrinter(accessor);
             laccessorToPrinter.put(accessor, printer);
         }
-        printer.printList(accessor, arg.first, this);
+        printer.printList(accessor, arg.getLeft(), this);
         return null;
     }
 
     @Override
-    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+    public Void visit(ARecordVisitablePointable accessor, MutablePair<PrintStream, ATypeTag> arg)
+            throws HyracksDataException {
         ARecordPrinter printer = raccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = createRecordPrinter(accessor);
             raccessorToPrinter.put(accessor, printer);
         }
-        printer.printRecord(accessor, arg.first, this);
+        printer.printRecord(accessor, arg.getLeft(), this);
         return null;
     }
 
     @Override
-    public Void visit(AFlatValuePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+    public Void visit(AFlatValuePointable accessor, MutablePair<PrintStream, ATypeTag> arg)
+            throws HyracksDataException {
         byte[] b = accessor.getByteArray();
         int s = accessor.getStartOffset();
         int l = accessor.getLength();
-        PrintStream ps = arg.first;
-        ATypeTag typeTag = arg.second;
+        PrintStream ps = arg.getLeft();
+        ATypeTag typeTag = arg.getRight();
         if (!printFlatValue(typeTag, b, s, l, ps)) {
             throw new HyracksDataException("No printer for type " + typeTag);
         }

@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
@@ -54,7 +54,7 @@ public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
         int[] inputDependencyLabels = new int[] { 1, 0 };
         int[] outputDependencyLabels = new int[] { 1 };
-        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 
     @Override

@@ -25,8 +25,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -71,17 +71,18 @@ public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRu
         boolean changed = false;
         while (iter.hasNext()) {
             Pair<LogicalVariable, Mutable<ILogicalExpression>> p = iter.next();
-            if (p.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            if (p.getRight().getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 continue;
             }
             LogicalVariable v = GroupByOperator.getDecorVariable(p);
             LogicalVariable lhs = varRhsToLhs.get(v);
             if (lhs != null) {
-                if (p.first != null) {
+                if (p.getLeft() != null) {
                     VariableReferenceExpression lhsRef = new VariableReferenceExpression(lhs);
-                    SourceLocation sourceLoc = p.second.getValue().getSourceLocation();
+                    SourceLocation sourceLoc = p.getRight().getValue().getSourceLocation();
                     lhsRef.setSourceLocation(sourceLoc);
-                    AssignOperator assign = new AssignOperator(p.first, new MutableObject<ILogicalExpression>(lhsRef));
+                    AssignOperator assign =
+                            new AssignOperator(p.getLeft(), new MutableObject<ILogicalExpression>(lhsRef));
                     assign.setSourceLocation(sourceLoc);
                     ILogicalOperator op = opRef.getValue();
                     assign.getInputs().add(new MutableObject<ILogicalOperator>(op));
@@ -91,7 +92,7 @@ public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRu
                 iter.remove();
                 changed = true;
             } else {
-                varRhsToLhs.put(v, p.first);
+                varRhsToLhs.put(v, p.getLeft());
             }
         }
         return changed;

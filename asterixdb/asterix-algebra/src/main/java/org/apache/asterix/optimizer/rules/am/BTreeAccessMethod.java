@@ -67,8 +67,8 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -123,12 +123,10 @@ public class BTreeAccessMethod implements IAccessMethod {
     // that SELECT condition needs to be applied after the index-search to get the correct results.
     // For B+Tree indexes, there are no false positive results unless the given index is a composite index or an array
     // index.
-    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections
-            .unmodifiableList(Arrays.asList(new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.EQ, false),
-                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.LE, false),
-                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.GE, false),
-                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.LT, false),
-                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.GT, false)));
+    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS =
+            Collections.unmodifiableList(Arrays.asList(Pair.of(AlgebricksBuiltinFunctions.EQ, false),
+                    Pair.of(AlgebricksBuiltinFunctions.LE, false), Pair.of(AlgebricksBuiltinFunctions.GE, false),
+                    Pair.of(AlgebricksBuiltinFunctions.LT, false), Pair.of(AlgebricksBuiltinFunctions.GT, false)));
 
     public static final BTreeAccessMethod INSTANCE = new BTreeAccessMethod();
 
@@ -192,9 +190,9 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         Pair<Boolean, Boolean> functionFalsePositiveCheck =
                 AccessMethodUtils.canFunctionGenerateFalsePositiveResultsUsingIndex(funcExpr, FUNC_IDENTIFIERS);
-        if (functionFalsePositiveCheck.first) {
+        if (functionFalsePositiveCheck.getLeft()) {
             // An index-utilizable function found? then, get the info about false positive results generation.
-            requireVerificationAfterSIdxSearch = functionFalsePositiveCheck.second;
+            requireVerificationAfterSIdxSearch = functionFalsePositiveCheck.getRight();
         } else {
             return false;
         }
@@ -317,12 +315,12 @@ public class BTreeAccessMethod implements IAccessMethod {
                 }
 
                 for (Pair<LogicalVariable, List<ILogicalExpression>> optimizableDisjunctionCondition : optimizableDisjunctionConditions) {
-                    if (optimizableDisjunctionCondition.getSecond().containsAll(orExprs)
-                            && optimizableDisjunctionCondition.getSecond().size() == orExprs.size()) {
+                    if (optimizableDisjunctionCondition.getRight().containsAll(orExprs)
+                            && optimizableDisjunctionCondition.getRight().size() == orExprs.size()) {
                         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
                         args.add(new MutableObject<>(new VariableReferenceExpression(variable)));
                         args.add(new MutableObject<>(
-                                new VariableReferenceExpression(optimizableDisjunctionCondition.getFirst())));
+                                new VariableReferenceExpression(optimizableDisjunctionCondition.getLeft())));
                         cond.setValue(
                                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(EQ), args));
                         break;
@@ -525,7 +523,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         boolean anyRealTypeConvertedToIntegerType = false;
 
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
-            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
+            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.getLeft());
             int keyPos = indexOf(optFuncExpr.getFieldName(0), optFuncExpr.getFieldSource(0), chosenIndexKeyFieldNames,
                     chosenIndexKeyFieldSourceIndicators);
             if (keyPos < 0 && optFuncExpr.getNumLogicalVars() > 1) {
@@ -738,7 +736,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
             if (!couldntFigureOut) {
                 // Remember to remove this funcExpr later.
-                replacedFuncExprs.add(analysisCtx.getMatchedFuncExpr(exprIndex.first).getFuncExpr());
+                replacedFuncExprs.add(analysisCtx.getMatchedFuncExpr(exprIndex.getLeft()).getFuncExpr());
             } else {
                 break;
             }
@@ -851,7 +849,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     currOp = new UnnestOperator(assignKeyVarList.get(i), new MutableObject<>(scanCollectionExpr));
                     jobGenParams.requiresBroadcast = true;
                     optimizableDisjunctionConditions
-                            .add(new Pair<>(assignKeyVarList.get(i), disjunctiveEqualityConditionExprSet.get(i)));
+                            .add(Pair.of(assignKeyVarList.get(i), disjunctiveEqualityConditionExprSet.get(i)));
 
                 }
 
@@ -1077,7 +1075,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         // since we have a round issue when dealing with LT(<) OR GT(>) operator.
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
-            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
+            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.getLeft());
             int keyPos = indexOf(optFuncExpr.getFieldName(0), optFuncExpr.getFieldSource(0), chosenIndexKeyFieldNames,
                     chosenIndexKeyFieldSourceIndicators);
             if (keyPos < 0 && optFuncExpr.getNumLogicalVars() > 1) {
@@ -1214,7 +1212,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
             if (!couldntFigureOut) {
                 // Remember to remove this funcExpr later.
-                replacedFuncExprs.add(analysisCtx.getMatchedFuncExpr(exprIndex.first).getFuncExpr());
+                replacedFuncExprs.add(analysisCtx.getMatchedFuncExpr(exprIndex.getLeft()).getFuncExpr());
             }
             if (doneWithExprs) {
                 break;
@@ -1796,11 +1794,11 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (!CAST_NULL_TYPE_CONSTRUCTORS.contains(funId)) {
                 return false;
             }
-            IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
+            IAType nonNullableType = Index.getNonNullableType(indexedFieldType).getLeft();
             Pair<FunctionIdentifier, IAObject> constructorWithFmt =
                     IndexUtil.getTypeConstructorDefaultNull(index, nonNullableType, functionExpr.getSourceLocation());
-            FunctionIdentifier indexedFieldConstructorFun = constructorWithFmt.first;
-            IAObject formatInIndex = constructorWithFmt.second;
+            FunctionIdentifier indexedFieldConstructorFun = constructorWithFmt.getLeft();
+            IAObject formatInIndex = constructorWithFmt.getRight();
             IAObject formatInFunction = TypeUtil.getTemporalFormatArg(functionExpr);
             // index has CAST (DEFAULT NULL); the applied function should be the same as the indexed field function
             return funId.equals(indexedFieldConstructorFun) && Objects.equals(formatInIndex, formatInFunction);

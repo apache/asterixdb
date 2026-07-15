@@ -246,9 +246,9 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             ArrayList<LogicalVariable> gbyKeyAssgnVars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> gbyKeyAssgnExprs = new ArrayList<Mutable<ILogicalExpression>>();
             for (int i = 0; i < gby.getGroupByList().size(); i++) {
-                if (gby.getGroupByList().get(i).first != null) {
-                    gbyKeyAssgnVars.add(gby.getGroupByList().get(i).first);
-                    gbyKeyAssgnExprs.add(gby.getGroupByList().get(i).second);
+                if (gby.getGroupByList().get(i).getLeft() != null) {
+                    gbyKeyAssgnVars.add(gby.getGroupByList().get(i).getLeft());
+                    gbyKeyAssgnExprs.add(gby.getGroupByList().get(i).getRight());
                 }
             }
 

@@ -36,8 +36,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -137,15 +137,15 @@ public final class PlanStructureVerifier {
         if (!workQueue.isEmpty()) {
             throw new IllegalStateException();
         }
-        workQueue.add(new Pair<>(opRef, null));
+        workQueue.add(Pair.of(opRef, null));
         for (;;) {
             Pair<Mutable<ILogicalOperator>, ILogicalOperator> p = workQueue.pollFirst();
             if (p == null) {
                 break;
             }
-            Mutable<ILogicalOperator> currentOpRef = p.first;
+            Mutable<ILogicalOperator> currentOpRef = p.getLeft();
             ILogicalOperator currentOp = currentOpRef.getValue();
-            ILogicalOperator parentOp = p.second;
+            ILogicalOperator parentOp = p.getRight();
 
             List<Mutable<ILogicalOperator>> childOps = visitOp(currentOpRef, parentOp);
 
@@ -155,7 +155,7 @@ public final class PlanStructureVerifier {
                     throw new AlgebricksException(
                             "cycle: " + PlanStabilityVerifier.printOperator(childOp, prettyPrinter));
                 }
-                workQueue.add(new Pair<>(childOpRef, currentOp));
+                workQueue.add(Pair.of(childOpRef, currentOp));
             }
         }
     }

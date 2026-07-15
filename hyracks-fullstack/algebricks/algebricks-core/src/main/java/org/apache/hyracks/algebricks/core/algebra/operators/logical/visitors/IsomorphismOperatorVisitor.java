@@ -27,9 +27,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -159,10 +159,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                 new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
 
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyLists) {
-            listLeft.add(new Pair<LogicalVariable, ILogicalExpression>(pair.first, pair.second.getValue()));
+            listLeft.add(Pair.of(pair.getLeft(), pair.getRight().getValue()));
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyListsArg) {
-            listRight.add(new Pair<LogicalVariable, ILogicalExpression>(pair.first, pair.second.getValue()));
+            listRight.add(Pair.of(pair.getLeft(), pair.getRight().getValue()));
         }
 
         boolean isomorphic = VariableUtilities.varListEqualUnordered(listLeft, listRight);
@@ -773,11 +773,11 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return false;
         }
         for (int i = 0; i < opOrderExprs.size(); i++) {
-            boolean isomorphic = opOrderExprs.get(i).first.equals(argOrderExprs.get(i).first);
+            boolean isomorphic = opOrderExprs.get(i).getLeft().equals(argOrderExprs.get(i).getLeft());
             if (!isomorphic) {
                 return false;
             }
-            isomorphic = opOrderExprs.get(i).second.getValue().equals(argOrderExprs.get(i).second.getValue());
+            isomorphic = opOrderExprs.get(i).getRight().getValue().equals(argOrderExprs.get(i).getRight().getValue());
             if (!isomorphic) {
                 return false;
             }
@@ -835,7 +835,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             throw new AlgebricksException("variable list size does not equal to expression list size ");
         }
         for (int i = 0; i < vars.size(); i++) {
-            list.add(new Pair<LogicalVariable, ILogicalExpression>(vars.get(i), exprs.get(i).getValue()));
+            list.add(Pair.of(vars.get(i), exprs.get(i).getValue()));
         }
         return list;
     }

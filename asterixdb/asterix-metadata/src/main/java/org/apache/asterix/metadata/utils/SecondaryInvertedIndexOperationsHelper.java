@@ -31,9 +31,9 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
@@ -123,8 +123,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
                     indexDetails.getKeyFieldNames().get(0), numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                     indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), itemType);
-            secondaryKeyType = keyTypePair.first;
-            anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
+            secondaryKeyType = keyTypePair.getLeft();
+            anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.getRight();
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
             secondaryRecFields[0] = keySerde;
             secondaryTypeTraits[0] = typeTraitProvider.getTypeTrait(secondaryKeyType);
@@ -137,7 +137,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
                     .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), filterItemType,
                             filterFieldName, numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
-            IAType type = keyTypePair.first;
+            IAType type = keyTypePair.getLeft();
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
         }

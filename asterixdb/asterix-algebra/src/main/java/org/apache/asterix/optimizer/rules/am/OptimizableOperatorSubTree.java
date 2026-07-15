@@ -36,8 +36,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -84,7 +85,7 @@ public class OptimizableOperatorSubTree {
     private Mutable<ILogicalOperator> rootRef = null;
     private final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<>();
     private final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<>();
-    private final Pair<Integer, Integer> lastMatchedDataSourceVars = new Pair<>(-1, -1);
+    private final MutablePair<Integer, Integer> lastMatchedDataSourceVars = new MutablePair<>(-1, -1);
     private Mutable<ILogicalOperator> dataSourceRef = null;
     private DataSourceType dataSourceType = DataSourceType.NO_DATASOURCE;
 
@@ -405,8 +406,8 @@ public class OptimizableOperatorSubTree {
         setRecordType(null);
         setMetaRecordType(null);
         setIxJoinOuterAdditionalRecordTypes(null);
-        lastMatchedDataSourceVars.first = -1;
-        lastMatchedDataSourceVars.second = -1;
+        lastMatchedDataSourceVars.setLeft(-1);
+        lastMatchedDataSourceVars.setRight(-1);
         varsToRecordType.clear();
     }
 
@@ -619,7 +620,7 @@ public class OptimizableOperatorSubTree {
     }
 
     public void setLastMatchedDataSourceVars(int varIndex, int optVarIndex) {
-        this.lastMatchedDataSourceVars.first = varIndex;
-        this.lastMatchedDataSourceVars.second = optVarIndex;
+        this.lastMatchedDataSourceVars.setLeft(varIndex);
+        this.lastMatchedDataSourceVars.setRight(optVarIndex);
     }
 }

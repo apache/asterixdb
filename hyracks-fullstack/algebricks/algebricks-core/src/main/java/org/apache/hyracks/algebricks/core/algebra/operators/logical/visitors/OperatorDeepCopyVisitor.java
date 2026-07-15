@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -112,10 +112,10 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decoList = new ArrayList<>();
         ArrayList<ILogicalPlan> newSubplans = new ArrayList<>();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getGroupByList()) {
-            groupByList.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));
+            groupByList.add(Pair.of(pair.getLeft(), deepCopyExpressionRef(pair.getRight())));
         }
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getDecorList()) {
-            decoList.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));
+            decoList.add(Pair.of(pair.getLeft(), deepCopyExpressionRef(pair.getRight())));
         }
         GroupByOperator gbyOp = new GroupByOperator(groupByList, decoList, newSubplans, op.isGroupAll());
         for (ILogicalPlan plan : op.getNestedPlans()) {
@@ -266,7 +266,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         opCopy.setMembersTypeComputer(op.getMembersTypeComputer());
         opCopy.setAssignedCentroidVariable(op.getAssignedCentroidVariable());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : op.getDecorList()) {
-            opCopy.addDecorExpression(p.first, deepCopyExpressionRef(p.second).getValue());
+            opCopy.addDecorExpression(p.getLeft(), deepCopyExpressionRef(p.getRight()).getValue());
         }
         for (ILogicalPlan plan : op.getNestedPlans()) {
             opCopy.getNestedPlans().add(OperatorManipulationUtil.deepCopy(plan, opCopy));
@@ -449,7 +449,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs) {
-            newOrdersAndExprs.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));
+            newOrdersAndExprs.add(Pair.of(pair.getLeft(), deepCopyExpressionRef(pair.getRight())));
         }
         return newOrdersAndExprs;
     }

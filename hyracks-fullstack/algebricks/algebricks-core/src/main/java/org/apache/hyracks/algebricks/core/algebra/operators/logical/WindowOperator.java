@@ -25,8 +25,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -283,10 +283,10 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
                 mod |= visitor.transform(expr);
             }
             for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-                mod |= visitor.transform(p.second);
+                mod |= visitor.transform(p.getRight());
             }
             for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : frameValueExpressions) {
-                mod |= visitor.transform(p.second);
+                mod |= visitor.transform(p.getRight());
             }
         }
         for (Mutable<ILogicalExpression> expr : frameStartExpressions) {
@@ -355,10 +355,10 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
             expr.getValue().getUsedVariables(vars);
         }
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            p.second.getValue().getUsedVariables(vars);
+            p.getRight().getValue().getUsedVariables(vars);
         }
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : frameValueExpressions) {
-            p.second.getValue().getUsedVariables(vars);
+            p.getRight().getValue().getUsedVariables(vars);
         }
         for (Mutable<ILogicalExpression> expr : frameStartExpressions) {
             expr.getValue().getUsedVariables(vars);
@@ -412,10 +412,10 @@ public class WindowOperator extends AbstractOperatorWithNestedPlans {
     public List<OrderColumn> getOrderColumnList() {
         List<OrderColumn> orderColumns = new ArrayList<>(orderExpressions.size());
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
-            ILogicalExpression orderExpr = p.second.getValue();
+            ILogicalExpression orderExpr = p.getRight().getValue();
             if (orderExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable var = ((VariableReferenceExpression) orderExpr).getVariableReference();
-                orderColumns.add(new OrderColumn(var, p.first.getKind()));
+                orderColumns.add(new OrderColumn(var, p.getLeft().getKind()));
             }
         }
         return orderColumns;

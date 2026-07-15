@@ -63,7 +63,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -566,8 +566,8 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     private void printFieldList(int step, List<Pair<Expression, Identifier>> fieldList) throws CompilationException {
         out.println(skip(step) + "(");
         for (Pair<Expression, Identifier> field : fieldList) {
-            out.print(skip(step + 1) + field.second + ":=");
-            field.first.accept(this, 0);
+            out.print(skip(step + 1) + field.getRight() + ":=");
+            field.getLeft().accept(this, 0);
         }
         out.println(skip(step) + ")");
     }

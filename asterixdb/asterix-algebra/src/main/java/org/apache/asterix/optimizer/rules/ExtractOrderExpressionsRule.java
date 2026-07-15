@@ -22,8 +22,8 @@ import java.util.List;
 
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -61,6 +61,6 @@ public class ExtractOrderExpressionsRule extends AbstractExtractExprRule {
     static boolean extractComplexExpressions(ILogicalOperator op,
             List<Pair<IOrder, Mutable<ILogicalExpression>>> exprList, IOptimizationContext context)
             throws AlgebricksException {
-        return extractComplexExpressions(op, exprList, Pair::getSecond, AnalysisUtil::isAccessToFieldRecord, context);
+        return extractComplexExpressions(op, exprList, Pair::getRight, AnalysisUtil::isAccessToFieldRecord, context);
     }
 }

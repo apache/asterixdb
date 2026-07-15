@@ -49,7 +49,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -281,8 +281,8 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
     static Map<VariableExpr, Identifier> createGroupVarFieldMap(List<Pair<Expression, Identifier>> fieldList) {
         Map<VariableExpr, Identifier> fieldVars = new HashMap<>();
         for (Pair<Expression, Identifier> p : fieldList) {
-            if (p.first.getKind() == Expression.Kind.VARIABLE_EXPRESSION) {
-                fieldVars.put((VariableExpr) p.first, p.second);
+            if (p.getLeft().getKind() == Expression.Kind.VARIABLE_EXPRESSION) {
+                fieldVars.put((VariableExpr) p.getLeft(), p.getRight());
             }
         }
         return fieldVars;

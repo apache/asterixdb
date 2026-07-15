@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -99,8 +99,8 @@ public abstract class AbstractReplicateOperator extends AbstractLogicalOperator 
         }
         outputs.clear();
         for (int i = 0; i < newOutputs.size(); i++) {
-            outputs.add(newOutputs.get(i).first);
-            outputMaterializationFlags[i] = newOutputs.get(i).second;
+            outputs.add(newOutputs.get(i).getLeft());
+            outputMaterializationFlags[i] = newOutputs.get(i).getRight();
         }
         outputArity = newOutputs.size();
     }

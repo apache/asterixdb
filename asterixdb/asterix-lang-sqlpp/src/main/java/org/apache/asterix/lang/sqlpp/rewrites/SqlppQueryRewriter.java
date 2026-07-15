@@ -94,8 +94,8 @@ import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
@@ -410,8 +410,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void loadAndInlineUdfsAndViews() throws CompilationException {
         Pair<Map<FunctionSignature, FunctionDecl>, Map<DatasetFullyQualifiedName, ViewDecl>> udfAndViewDecls =
                 loadUdfsAndViews(topStatement);
-        Map<FunctionSignature, FunctionDecl> udfs = udfAndViewDecls.first;
-        Map<DatasetFullyQualifiedName, ViewDecl> views = udfAndViewDecls.second;
+        Map<FunctionSignature, FunctionDecl> udfs = udfAndViewDecls.getLeft();
+        Map<DatasetFullyQualifiedName, ViewDecl> views = udfAndViewDecls.getRight();
         if (udfs.isEmpty() && views.isEmpty()) {
             // nothing to do
             return;
@@ -526,7 +526,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                             fnCall.getFunctionSignature().toString(false));
             }
         }
-        return new Pair<>(udfs, views);
+        return Pair.of(udfs, views);
     }
 
     private FunctionDecl fetchFunctionDecl(FunctionSignature fs, SourceLocation sourceLoc) throws CompilationException {

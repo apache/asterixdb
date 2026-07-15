@@ -31,7 +31,7 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.CloneAndSubstituteVariablesVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class VariableCloneAndSubstitutionUtil {
 
@@ -51,7 +51,7 @@ public class VariableCloneAndSubstitutionUtil {
                 subs = eliminateSubstFromList(newGbyVar, subs);
             }
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = vep.getExpr().accept(visitor, subs);
-            GbyVariableExpressionPair ve2 = new GbyVariableExpressionPair(newGbyVar, (Expression) p1.first);
+            GbyVariableExpressionPair ve2 = new GbyVariableExpressionPair(newGbyVar, (Expression) p1.getLeft());
             veList.add(ve2);
         }
         return veList;
@@ -62,8 +62,8 @@ public class VariableCloneAndSubstitutionUtil {
             throws CompilationException {
         List<Pair<Expression, Identifier>> newFieldList = new ArrayList<>(fieldList.size());
         for (Pair<Expression, Identifier> p : fieldList) {
-            Expression newExpr = (Expression) p.first.accept(visitor, newSubs).first;
-            newFieldList.add(new Pair<>(newExpr, p.second));
+            Expression newExpr = (Expression) p.getLeft().accept(visitor, newSubs).getLeft();
+            newFieldList.add(Pair.of(newExpr, p.getRight()));
         }
         return newFieldList;
     }
@@ -81,7 +81,7 @@ public class VariableCloneAndSubstitutionUtil {
         List<Expression> exprs = new ArrayList<>(oldExprList.size());
         for (Expression e : oldExprList) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(visitor, arg);
-            exprs.add((Expression) p1.first);
+            exprs.add((Expression) p1.getLeft());
         }
         return exprs;
     }

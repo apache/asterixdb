@@ -75,7 +75,7 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangExpression, Void> {
@@ -619,7 +619,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             throws CompilationException {
         List<Pair<Expression, Identifier>> newFieldList = new ArrayList<>(fieldList.size());
         for (Pair<Expression, Identifier> field : fieldList) {
-            newFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
+            newFieldList.add(Pair.of((Expression) field.getLeft().accept(this, arg), field.getRight()));
         }
         return newFieldList;
     }

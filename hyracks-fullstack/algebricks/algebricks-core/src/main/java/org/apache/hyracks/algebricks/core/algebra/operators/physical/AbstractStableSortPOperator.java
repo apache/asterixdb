@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -120,11 +120,11 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     public void computeLocalProperties(OrderOperator ord) {
         List<OrderColumn> orderColumns = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> p : ord.getOrderExpressions()) {
-            ILogicalExpression expr = p.second.getValue();
+            ILogicalExpression expr = p.getRight().getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
                 LogicalVariable var = varRef.getVariableReference();
-                orderColumns.add(new OrderColumn(var, p.first.getKind()));
+                orderColumns.add(new OrderColumn(var, p.getLeft().getKind()));
             } else {
                 throw new IllegalStateException();
             }
@@ -200,7 +200,7 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
         int[] inputDependencyLabels = new int[] { 0 };
         int[] outputDependencyLabels = new int[] { 1 };
-        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 
     @Override

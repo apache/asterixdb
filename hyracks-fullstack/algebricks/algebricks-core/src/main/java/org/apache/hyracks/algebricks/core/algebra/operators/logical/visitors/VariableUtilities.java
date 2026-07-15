@@ -28,8 +28,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -157,7 +157,7 @@ public class VariableUtilities {
             List<Pair<LogicalVariable, LogicalVariable>> oldVarNewVarMapHistory, ITypingContext ctx)
             throws AlgebricksException {
         for (Pair<LogicalVariable, LogicalVariable> entry : oldVarNewVarMapHistory) {
-            VariableUtilities.substituteVariables(op, entry.first, entry.second, ctx);
+            VariableUtilities.substituteVariables(op, entry.getLeft(), entry.getRight(), ctx);
         }
     }
 
@@ -183,7 +183,7 @@ public class VariableUtilities {
             boolean goThroughNts, ITypingContext ctx) throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> visitor =
                 new SubstituteVariableVisitor(goThroughNts, ctx);
-        op.accept(visitor, new Pair<>(Objects.requireNonNull(v1), Objects.requireNonNull(v2)));
+        op.accept(visitor, Pair.of(Objects.requireNonNull(v1), Objects.requireNonNull(v2)));
     }
 
     public static <T> boolean varListEqualUnordered(List<T> var, List<T> varArg) {

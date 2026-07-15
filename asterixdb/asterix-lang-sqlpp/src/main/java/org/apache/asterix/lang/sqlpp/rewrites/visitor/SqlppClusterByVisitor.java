@@ -72,7 +72,7 @@ import org.apache.asterix.object.base.AdmArrayNode;
 import org.apache.asterix.object.base.AdmBigIntNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**

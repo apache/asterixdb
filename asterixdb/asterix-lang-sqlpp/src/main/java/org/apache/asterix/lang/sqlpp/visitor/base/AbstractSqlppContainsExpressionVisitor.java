@@ -66,7 +66,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Base class for visitors that search for expressions having certain properties and return a boolean value
@@ -341,7 +341,7 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
     private <E extends ILangExpression> boolean visitFieldList(Collection<Pair<E, Identifier>> fieldList, T arg)
             throws CompilationException {
         for (Pair<E, Identifier> p : fieldList) {
-            if (visit(p.first, arg)) {
+            if (visit(p.getLeft(), arg)) {
                 return true;
             }
         }

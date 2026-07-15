@@ -63,8 +63,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
@@ -222,8 +222,8 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         String localPath = localPath(request);
         try {
             Pair<Namespace, String> namespaceAndName = decodeDvAndLibFromLocalPath(localPath);
-            String libName = namespaceAndName.second;
-            Namespace libNamespace = namespaceAndName.first;
+            String libName = namespaceAndName.getRight();
+            Namespace libNamespace = namespaceAndName.getLeft();
             DataverseName libDv = libNamespace.getDataverseName();
             IRequestReference requestReference = receptionist.welcome(request);
             if (op == LibraryOperation.UPSERT) {
@@ -317,7 +317,7 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         String namespaceStr = ServletUtil.decodeUriSegment(pathSegments[0]);
         Namespace namespace = plainAppCtx.getNamespaceResolver().resolve(namespaceStr);
         String libName = ServletUtil.decodeUriSegment(pathSegments[1]);
-        return new Pair<>(namespace, libName);
+        return Pair.of(namespace, libName);
     }
 
     protected LibraryUploadData decodeMultiPartLibraryOptions(HttpPostRequestDecoder requestDecoder)

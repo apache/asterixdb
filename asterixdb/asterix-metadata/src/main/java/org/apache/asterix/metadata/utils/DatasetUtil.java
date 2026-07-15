@@ -81,11 +81,11 @@ import org.apache.asterix.runtime.operators.DatasetSampleCardinalityProbeOperato
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -287,7 +287,7 @@ public class DatasetUtil {
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AlgebricksException(e);
         }
-        return new Pair<>(mergePolicyFactory, properties);
+        return Pair.of(mergePolicyFactory, properties);
     }
 
     public static void writePropertyTypeRecord(String name, String value, DataOutput out, ARecordType recordType)
@@ -373,9 +373,9 @@ public class DatasetUtil {
         // prepare a LocalResourceMetadata which will be stored in NC's local resource
         // repository
         int[][] computeStorageMap = partitioningProperties.getComputeStorageMap();
-        IndexBuilderFactory[][] indexBuilderFactories =
-                getIndexBuilderFactories(dataset, metadataProvider, index, itemType, metaItemType, splitsProvider,
-                        compactionInfo.first, compactionInfo.second, computeStorageMap, IndexCompletionMode.ON_CREATE);
+        IndexBuilderFactory[][] indexBuilderFactories = getIndexBuilderFactories(dataset, metadataProvider, index,
+                itemType, metaItemType, splitsProvider, compactionInfo.getLeft(), compactionInfo.getRight(),
+                computeStorageMap, IndexCompletionMode.ON_CREATE);
         IndexCreateOperatorDescriptor indexCreateOp =
                 new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, computeStorageMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
@@ -597,7 +597,7 @@ public class DatasetUtil {
                 dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, filterSourceIndicator, filterItemType,
                 fieldIdx, hasSecondaries, projectorFactory, tuplePartitionerFactory,
                 partitioningProperties.getComputeStorageMap(), tupleFilterCallbackFactory);
-        return new Pair<>(op, partitioningProperties.getConstraints());
+        return Pair.of(op, partitioningProperties.getConstraints());
     }
 
     /**

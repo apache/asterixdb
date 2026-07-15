@@ -39,8 +39,8 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
@@ -169,7 +169,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             }
             Pair<IAType, Boolean> keyTypePair =
                     Index.getNonNullableOpenFieldType(index, keyFieldTypes.get(i), keyFieldNames.get(i), sourceType);
-            IAType keyType = keyTypePair.first;
+            IAType keyType = keyTypePair.getLeft();
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
         }
         // Add serializers and comparators for primary index fields.
@@ -212,7 +212,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             }
             Pair<IAType, Boolean> keyTypePair =
                     Index.getNonNullableOpenFieldType(index, keyFieldTypes.get(i), keyFieldNames.get(i), sourceType);
-            IAType keyType = keyTypePair.first;
+            IAType keyType = keyTypePair.getLeft();
             secondaryCmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
         // Add serializers and comparators for primary index fields.

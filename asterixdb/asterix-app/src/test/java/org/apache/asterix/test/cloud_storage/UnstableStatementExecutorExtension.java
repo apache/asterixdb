@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import org.apache.asterix.app.cc.IStatementExecutorExtension;
 import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.translator.IStatementExecutorFactory;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.IServiceContext;
 
 public class UnstableStatementExecutorExtension implements IStatementExecutorExtension {

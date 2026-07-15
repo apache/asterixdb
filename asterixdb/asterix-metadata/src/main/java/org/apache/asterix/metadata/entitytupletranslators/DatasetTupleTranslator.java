@@ -79,8 +79,8 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -409,9 +409,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         Creator creator = Creator.createOrDefault(datasetRecord);
 
         return new Dataset(databaseName, dataverseName, datasetName, itemTypeDatabaseName, typeDataverseName, typeName,
-                metaItemTypeDatabaseName, metaTypeDataverseName, metaTypeName, nodeGroupName, compactionPolicy.first,
-                compactionPolicy.second, datasetDetails, hints, datasetType, datasetId, pendingOp, rebalanceCount,
-                compressionScheme, datasetFormatInfo, creator);
+                metaItemTypeDatabaseName, metaTypeDataverseName, metaTypeName, nodeGroupName,
+                compactionPolicy.getLeft(), compactionPolicy.getRight(), datasetDetails, hints, datasetType, datasetId,
+                pendingOp, rebalanceCount, compressionScheme, datasetFormatInfo, creator);
     }
 
     protected Pair<String, Map<String, String>> readCompactionPolicy(DatasetType datasetType, ARecord datasetRecord) {
@@ -435,7 +435,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         } else {
             compactionPolicyProperties = Collections.emptyMap();
         }
-        return new Pair<>(compactionPolicy, compactionPolicyProperties);
+        return Pair.of(compactionPolicy, compactionPolicyProperties);
     }
 
     private long getRebalanceCount(ARecord datasetRecord) {

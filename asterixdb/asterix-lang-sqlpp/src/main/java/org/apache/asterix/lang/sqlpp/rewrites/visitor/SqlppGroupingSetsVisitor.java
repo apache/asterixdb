@@ -61,8 +61,8 @@ import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Rewrites GROUP BY clauses with multiple grouping sets into UNION ALL.
@@ -130,8 +130,8 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
         // 2. Compute substitution map for ORDERBY/LIMIT to replace free vars with field accessors
         Pair<Map<VariableExpr, VariableExpr>, Map<VariableExpr, String>> p =
                 computePostSetOpSubstMap(selectBlockLeft, freeVarsPostSetOp);
-        Map<VariableExpr, VariableExpr> freeVarsPostSetOpSubstMap = p.first;
-        Map<VariableExpr, String> extraProjections = p.second;
+        Map<VariableExpr, VariableExpr> freeVarsPostSetOpSubstMap = p.getLeft();
+        Map<VariableExpr, String> extraProjections = p.getRight();
 
         // 3. Rewrite ORDERBY/LIMIT using this substitution
         SqlppSubstituteExpressionVisitor substVisitor =
@@ -236,7 +236,7 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
             }
         }
 
-        return new Pair<>(freeVarsPostSetOpSubstMap, extraProjections);
+        return Pair.of(freeVarsPostSetOpSubstMap, extraProjections);
     }
 
     private Pair<Map<VariableExpr, VariableExpr>, Map<VariableExpr, String>> computePostSetOpSubstMapForSelectElement(
@@ -256,7 +256,7 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
             extraProjections.put(freeVarPostSelect, projectionName);
         }
 
-        return new Pair<>(freeVarsPostSetOpSubstMap, extraProjections);
+        return Pair.of(freeVarsPostSetOpSubstMap, extraProjections);
     }
 
     private Set<VariableExpr> getFreeVarsPostSetOp(SelectExpression selectExpression) throws CompilationException {

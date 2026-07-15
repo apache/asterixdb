@@ -43,7 +43,8 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputPushRuntime;
@@ -95,7 +96,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
             private VoidPointable ref;
             private MessageUnpacker unpacker;
             private ArrayBufferInput unpackerInput;
-            private List<Pair<ByteBuffer, Counter>> batchResults;
+            private List<MutablePair<ByteBuffer, Counter>> batchResults;
             private MessageUnpackerToADM unpackerToADM;
             private PointableAllocator pointableAllocator;
             private MsgPackPointableVisitor pointableVisitor;
@@ -114,7 +115,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                     for (IExternalFunctionDescriptor fnDesc : fnDescs) {
                         ILibraryEvaluator eval = evalFactory.getEvaluator(fnDesc.getFunctionInfo(), sourceLoc);
                         long id = eval.initialize(fnDesc.getFunctionInfo());
-                        libraryEvaluators.add(new Pair<>(id, eval));
+                        libraryEvaluators.add(Pair.of(id, eval));
                     }
                 } catch (IOException | AsterixException e) {
                     throw RuntimeDataException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION, e, sourceLoc, e.getMessage());
@@ -128,7 +129,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 numCalls = new int[fnArgColumns.length];
                 batchResults = new ArrayList<>(argHolders.size());
                 for (int i = 0; i < argHolders.size(); i++) {
-                    batchResults.add(new Pair<>(ByteBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE),
+                    batchResults.add(new MutablePair<>(ByteBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE),
                             new Counter(-1)));
                 }
                 unpackerInput = new ArrayBufferInput(new byte[0]);
@@ -147,10 +148,10 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                     }
                     numCalls[func] = numTuples;
                     Arrays.fill(nullCalls[func], ATypeTag.TYPE);
-                    for (Pair<ByteBuffer, Counter> batch : batchResults) {
-                        batch.getFirst().clear();
-                        batch.getFirst().position(0);
-                        batch.getSecond().set(-1);
+                    for (MutablePair<ByteBuffer, Counter> batch : batchResults) {
+                        batch.getLeft().clear();
+                        batch.getLeft().position(0);
+                        batch.getRight().set(-1);
                     }
                 }
             }
@@ -170,10 +171,11 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 return argumentPresence;
             }
 
-            private void collectFunctionWarnings(List<Pair<ByteBuffer, Counter>> batchResults) throws IOException {
-                for (Pair<ByteBuffer, Counter> result : batchResults) {
-                    if (result.getSecond().get() > -1) {
-                        ByteBuffer resBuf = result.getFirst();
+            private void collectFunctionWarnings(List<MutablePair<ByteBuffer, Counter>> batchResults)
+                    throws IOException {
+                for (MutablePair<ByteBuffer, Counter> result : batchResults) {
+                    if (result.getRight().get() > -1) {
+                        ByteBuffer resBuf = result.getLeft();
                         unpackerInput.reset(resBuf.array(), resBuf.position() + resBuf.arrayOffset(),
                                 resBuf.remaining());
                         unpacker.reset(unpackerInput);
@@ -253,20 +255,20 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                     //TODO: maybe this could be done in parallel for each unique library evaluator?
                     for (int argHolderIdx = 0; argHolderIdx < argHolders.size(); argHolderIdx++) {
                         Pair<Long, ILibraryEvaluator> fnEval = libraryEvaluators.get(argHolderIdx);
-                        ByteBuffer columnResult = fnEval.getSecond().callMulti(fnEval.getFirst(),
+                        ByteBuffer columnResult = fnEval.getRight().callMulti(fnEval.getLeft(),
                                 argHolders.get(argHolderIdx), numCalls[argHolderIdx]);
                         if (columnResult != null) {
-                            Pair<ByteBuffer, Counter> resultholder = batchResults.get(argHolderIdx);
-                            if (resultholder.getFirst().capacity() < columnResult.remaining()) {
+                            MutablePair<ByteBuffer, Counter> resultholder = batchResults.get(argHolderIdx);
+                            if (resultholder.getLeft().capacity() < columnResult.remaining()) {
                                 ByteBuffer realloc =
-                                        ctx.reallocateFrame(resultholder.getFirst(),
+                                        ctx.reallocateFrame(resultholder.getLeft(),
                                                 ctx.getInitialFrameSize()
                                                         * ((columnResult.remaining() / ctx.getInitialFrameSize()) + 1),
                                                 false);
                                 realloc.limit(columnResult.limit());
-                                resultholder.setFirst(realloc);
+                                resultholder.setLeft(realloc);
                             }
-                            ByteBuffer resultBuf = resultholder.getFirst();
+                            ByteBuffer resultBuf = resultholder.getLeft();
                             //offset 1 to skip message type
                             System.arraycopy(columnResult.array(), 1, resultBuf.array(), 0,
                                     columnResult.remaining() - 1);
@@ -276,7 +278,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                             if (fnDescs[argHolderIdx].getFunctionInfo().isBatched()) {
                                 numResults = (int) consumeAndGetBatchLength(resultBuf);
                             }
-                            resultholder.getSecond().set(numResults);
+                            resultholder.getRight().set(numResults);
                         } else {
                             if (ctx.getWarningCollector().shouldWarn()) {
                                 ctx.getWarningCollector()
@@ -296,12 +298,12 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                             int k = projectionToOutColumns[f];
                             if (k >= 0) {
                                 outputWrapper.reset();
-                                Pair<ByteBuffer, Counter> result = batchResults.get(k);
+                                MutablePair<ByteBuffer, Counter> result = batchResults.get(k);
                                 ATypeTag functionCalled = nullCalls[k][i];
                                 if (functionCalled == ATypeTag.TYPE) {
-                                    if (result.getSecond().get() > 0) {
-                                        unpackerToADM.unpack(result.getFirst(), outputWrapper.getDataOutput(), true);
-                                        result.getSecond().set(result.getSecond().get() - 1);
+                                    if (result.getRight().get() > 0) {
+                                        unpackerToADM.unpack(result.getLeft(), outputWrapper.getDataOutput(), true);
+                                        result.getRight().set(result.getRight().get() - 1);
                                     } else {
                                         //emit NULL for functions which failed with a warning
                                         outputWrapper.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);

@@ -20,9 +20,9 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -121,10 +121,10 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
                 mp.getScannerRuntime(dataSource, vars, projectVars, scan.isProjectPushed(), scan.getMinFilterVars(),
                         scan.getMaxFilterVars(), tupleFilterFactory, scan.getOutputLimit(), opSchema, typeEnv, context,
                         builder.getJobSpec(), implConfig, scan.getProjectionFiltrationInfo());
-        IOperatorDescriptor opDesc = p.first;
+        IOperatorDescriptor opDesc = p.getLeft();
         opDesc.setSourceLocation(scan.getSourceLocation());
         builder.contributeHyracksOperator(scan, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, p.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, p.getRight());
 
         ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, scan, 0);

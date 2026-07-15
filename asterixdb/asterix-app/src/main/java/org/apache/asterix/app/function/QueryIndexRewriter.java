@@ -47,9 +47,9 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -174,8 +174,8 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         int keyIdx = 0;
         boolean overridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
         for (int i = 0; i < numSecKeys; i++, keyIdx++) {
-            IAType secKeyType = secKeyTypes.get(i).first;
-            Boolean makeOptional = secKeyTypes.get(i).second;
+            IAType secKeyType = secKeyTypes.get(i).getLeft();
+            Boolean makeOptional = secKeyTypes.get(i).getRight();
             fieldTypes[keyIdx] =
                     overridingKeyFieldTypes || makeOptional ? AUnionType.createUnknownableType(secKeyType) : secKeyType;
             fieldNames[keyIdx] = "SK" + i;

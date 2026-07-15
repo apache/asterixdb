@@ -19,7 +19,7 @@
 package org.apache.asterix.metadata.dataset.hints;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Represents a hint provided as part of an AQL statement.

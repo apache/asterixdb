@@ -27,9 +27,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -222,9 +222,9 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             // Coordinates requirements by looking at the firstDeliveredPartitioning.
             Pair<Boolean, IPartitioningProperty> pbpp = prc.coordinateRequirements(
                     requiredProperty.getPartitioningProperty(), firstDeliveredPartitioning, op, context);
-            boolean mayExpandPartitioningProperties = pbpp.first;
+            boolean mayExpandPartitioningProperties = pbpp.getLeft();
             IPhysicalPropertiesVector rqd =
-                    new StructuralPropertiesVector(pbpp.second, requiredProperty.getLocalProperties());
+                    new StructuralPropertiesVector(pbpp.getRight(), requiredProperty.getLocalProperties());
 
             if (loggerTraceEnabled) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER
@@ -538,7 +538,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 VariableReferenceExpression ocColumnRef = new VariableReferenceExpression(oc.getColumn());
                 ocColumnRef.setSourceLocation(sourceLoc);
                 Pair<IOrder, Mutable<ILogicalExpression>> pair =
-                        new Pair<>(ordType, new MutableObject<ILogicalExpression>(ocColumnRef));
+                        Pair.of(ordType, new MutableObject<ILogicalExpression>(ocColumnRef));
                 oe.add(pair);
             }
         }

@@ -60,8 +60,8 @@ import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSour
 import org.apache.asterix.optimizer.rules.util.FullTextUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -103,10 +103,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             Map<FunctionIdentifier, List<IAccessMethod>> accessMethods) {
         List<Pair<FunctionIdentifier, Boolean>> funcs = accessMethod.getOptimizableFunctions();
         for (Pair<FunctionIdentifier, Boolean> funcIdent : funcs) {
-            List<IAccessMethod> l = accessMethods.get(funcIdent.first);
+            List<IAccessMethod> l = accessMethods.get(funcIdent.getLeft());
             if (l == null) {
                 l = new ArrayList<IAccessMethod>();
-                accessMethods.put(funcIdent.first, l);
+                accessMethods.put(funcIdent.getLeft(), l);
             }
             l.add(accessMethod);
         }
@@ -445,7 +445,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
                 while (exprsAndVarIter.hasNext()) {
                     final Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
-                    final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.first);
+                    final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.getLeft());
                     // If expr is not optimizable by concrete index then remove
                     // expr and continue.
                     if (!accessMethod.exprIsOptimizable(index, optFuncExpr, checkApplicableOnly)) {
@@ -457,7 +457,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     List<IAType> matchedTypes = new ArrayList<>();
                     //retrieve types of expressions joined/selected with an indexed field
                     for (int j = 0; j < optFuncExpr.getNumLogicalVars(); j++) {
-                        if (j != exprAndVarIdx.second) {
+                        if (j != exprAndVarIdx.getRight()) {
                             matchedTypes.add(optFuncExpr.getFieldType(j));
                         }
 
@@ -471,11 +471,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                     //infer type of logicalExpr based on index keyType
                     matchedTypes.add((IAType) ExpressionTypeComputer.INSTANCE.getType(
-                            optFuncExpr.getLogicalExpr(exprAndVarIdx.second), null, new IVariableTypeEnvironment() {
+                            optFuncExpr.getLogicalExpr(exprAndVarIdx.getRight()), null, new IVariableTypeEnvironment() {
 
                                 @Override
                                 public Object getVarType(LogicalVariable var) throws AlgebricksException {
-                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second))) {
+                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.getRight()))) {
                                         return keyType;
                                     }
                                     throw new IllegalArgumentException();
@@ -488,7 +488,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                                         List<LogicalVariable> nonNullableVariables,
                                         List<List<LogicalVariable>> correlatedNullableVariableLists)
                                         throws AlgebricksException {
-                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second))) {
+                                    if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.getRight()))) {
                                         return keyType;
                                     }
                                     throw new IllegalArgumentException();
@@ -539,9 +539,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                     // Check if any field name in the optFuncExpr matches.
                     if (typeMatch && optFuncExpr.findFieldName(keyField) != -1
-                            && optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).hasDataSourceScan()) {
+                            && optFuncExpr.getOperatorSubTree(exprAndVarIdx.getRight()).hasDataSourceScan()) {
                         foundKeyField = true;
-                        matchedExpressions.add(exprAndVarIdx.first);
+                        matchedExpressions.add(exprAndVarIdx.getLeft());
                         hasIndexPreferences =
                                 hasIndexPreferences || accessMethod.getSecondaryIndexAnnotation(optFuncExpr) != null;
                     }
@@ -557,7 +557,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     if (lastFieldMatched >= 0) {
                         exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
                         while (exprsAndVarIter.hasNext()) {
-                            if (!matchedExpressions.contains(exprsAndVarIter.next().first)) {
+                            if (!matchedExpressions.contains(exprsAndVarIter.next().getLeft())) {
                                 exprsAndVarIter.remove();
                             }
                         }
@@ -653,7 +653,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
             while (exprsAndVarIter.hasNext()) {
                 final Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
-                final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.first);
+                final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.getLeft());
                 Set<Index> applicableIndexes = exprAndApplicableIndexes.get(optFuncExpr);
                 if (applicableIndexes == null) {
                     applicableIndexes = new HashSet<>();
@@ -670,12 +670,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (type1 == null || type2 == null) {
             return false;
         }
-        if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1).first.getTypeTag(),
-                Index.getNonNullableType(type2).first.getTypeTag(), useListDomain)) {
+        if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1).getLeft().getTypeTag(),
+                Index.getNonNullableType(type2).getLeft().getTypeTag(), useListDomain)) {
             return true;
         }
-        return ATypeHierarchy.canPromote(Index.getNonNullableType(type1).first.getTypeTag(),
-                Index.getNonNullableType(type2).first.getTypeTag());
+        return ATypeHierarchy.canPromote(Index.getNonNullableType(type1).getLeft().getTypeTag(),
+                Index.getNonNullableType(type2).getLeft().getTypeTag());
     }
 
     private boolean warnAndRemoveInapplicableSecondaryIndexHints(
@@ -1143,8 +1143,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             Pair<List<String>, Integer> fieldNameAndSource =
                     AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
                             funcVarIndex, optFuncExpr.getArgument(funcVarIndex).getValue(), context);
-            fieldName = fieldNameAndSource.first;
-            fieldSource = fieldNameAndSource.second;
+            fieldName = fieldNameAndSource.getLeft();
+            fieldSource = fieldNameAndSource.getRight();
             if (fieldName.isEmpty()) {
                 return;
             }
@@ -1196,8 +1196,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             Pair<List<String>, Integer> fieldNameAndSource =
                     AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex,
                             varIndex, optVarIndex, optFuncExpr.getArgument(optVarIndex).getValue(), context);
-            List<String> fieldName = fieldNameAndSource.first;
-            int fieldSource = fieldNameAndSource.second;
+            List<String> fieldName = fieldNameAndSource.getLeft();
+            int fieldSource = fieldNameAndSource.getRight();
 
             IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getVarType(var);
             // Set the fieldName in the corresponding matched
@@ -1310,7 +1310,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
-                            assignOrUnnestIndex, varIndex, -1, null, context).first;
+                            assignOrUnnestIndex, varIndex, -1, null, context).getLeft();
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1321,8 +1321,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 if (subTree.getDataSourceType() != DataSourceType.COLLECTION_SCAN) {
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
-                    List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
-                            assignOrUnnestIndex, 0, -1, null, context).first;
+                    List<String> fieldName = AccessMethodUtils
+                            .getFieldNameSetStepsFromSubTree(null, subTree, assignOrUnnestIndex, 0, -1, null, context)
+                            .getLeft();
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1348,7 +1349,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
-                            assignOrUnnestIndex, varIndex, -1, null, context).first;
+                            assignOrUnnestIndex, varIndex, -1, null, context).getLeft();
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }

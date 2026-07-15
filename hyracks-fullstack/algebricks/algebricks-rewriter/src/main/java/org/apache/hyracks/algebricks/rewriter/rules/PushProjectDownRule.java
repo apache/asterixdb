@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -71,8 +71,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         boolean recomputeSchema = op.getSchema() != null;
 
         Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context, recomputeSchema);
-        boolean smthWasPushed = p.first;
-        if (p.second) { // the original projection is redundant
+        boolean smthWasPushed = p.getLeft();
+        if (p.getRight()) { // the original projection is redundant
             opRef.setValue(op.getInputs().get(0).getValue());
             smthWasPushed = true;
         }
@@ -92,7 +92,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
                     || op2.getOperatorTag() == LogicalOperatorTag.REPLICATE
                     || op2.getOperatorTag() == LogicalOperatorTag.SPLIT
                     || op2.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
-                return new Pair<Boolean, Boolean>(false, false);
+                return Pair.of(false, false);
             }
             // ok to push PROJECT through LIMIT
             boolean isMapOrLimit = op2.isMap() || op2.getOperatorTag() == LogicalOperatorTag.LIMIT;
@@ -150,7 +150,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         toPush.removeAll(produced2);
 
         if (toPush.isEmpty()) {
-            return new Pair<Boolean, Boolean>(false, false);
+            return Pair.of(false, false);
         }
 
         boolean smthWasPushed = false;
@@ -169,7 +169,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
                 }
             }
         }
-        return new Pair<Boolean, Boolean>(smthWasPushed, canCommuteProjection);
+        return Pair.of(smthWasPushed, canCommuteProjection);
     }
 
     // It does not try to push above another Projection.
@@ -190,7 +190,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
             // projection would be redundant, since we would project everything
             // but we can try with the children
             boolean push = false;
-            if (pushThroughOp(toProject, opRef, initialOp, context, recomputeSchema).first) {
+            if (pushThroughOp(toProject, opRef, initialOp, context, recomputeSchema).getLeft()) {
                 push = true;
             }
             return push;

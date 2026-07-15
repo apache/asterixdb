@@ -25,9 +25,9 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -219,7 +219,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         public final IPhysicalOperator visitGroupByOperator(GroupByOperator gby, Boolean topLevelOp)
                 throws AlgebricksException {
 
-            ensureAllVariables(gby.getGroupByList(), Pair::getSecond);
+            ensureAllVariables(gby.getGroupByList(), Pair::getRight);
             if (groupByAlgorithm(gby, topLevelOp) == GroupByAlgorithm.HASH_GROUP_BY) {
                 ExternalGroupByPOperator extGby = createExternalGroupByPOperator(gby);
                 if (extGby != null) {
@@ -314,7 +314,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
 
         @Override
         public IPhysicalOperator visitOrderOperator(OrderOperator oo, Boolean topLevelOp) throws AlgebricksException {
-            ensureAllVariables(oo.getOrderExpressions(), Pair::getSecond);
+            ensureAllVariables(oo.getOrderExpressions(), Pair::getRight);
             if (topLevelOp) {
                 return new StableSortPOperator(oo.getTopK());
             } else {
@@ -423,7 +423,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 throw AlgebricksException.create(ErrorCode.EXPR_NOT_NORMALIZED, sourceExpr.getSourceLocation());
             }
             ensureAllVariables(op.getPartitionExpressions(), v -> v);
-            ensureAllVariables(op.getOrderExpressions(), Pair::getSecond);
+            ensureAllVariables(op.getOrderExpressions(), Pair::getRight);
             return new SinkWritePOperator(op.getSourceVariable(), op.getPartitionVariables(), op.getOrderColumns());
         }
 
@@ -524,7 +524,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         public final IPhysicalOperator visitWindowOperator(WindowOperator op, Boolean topLevelOp)
                 throws AlgebricksException {
             ensureAllVariables(op.getPartitionExpressions(), v -> v);
-            ensureAllVariables(op.getOrderExpressions(), Pair::getSecond);
+            ensureAllVariables(op.getOrderExpressions(), Pair::getRight);
             return createWindowPOperator(op);
         }
 

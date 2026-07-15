@@ -72,8 +72,8 @@ import org.apache.asterix.lang.common.statement.crs.CRSCreateStatement;
 import org.apache.asterix.lang.common.statement.crs.CRSDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
@@ -263,10 +263,10 @@ public abstract class AbstractLangTranslator {
                         for (Entry<String, String> hint : hints.entrySet()) {
                             Pair<Boolean, String> validationResult =
                                     DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
-                            if (!validationResult.first) {
+                            if (!validationResult.getLeft()) {
                                 errorMsgBuffer.append(StringUtils.capitalize(dataset())).append(": ")
                                         .append(dsCreateStmt.getName().getValue()).append(" error in processing hint: ")
-                                        .append(hint.getKey()).append(" ").append(validationResult.second);
+                                        .append(hint.getKey()).append(" ").append(validationResult.getRight());
                                 errorMsgBuffer.append(" \n");
                             }
                         }

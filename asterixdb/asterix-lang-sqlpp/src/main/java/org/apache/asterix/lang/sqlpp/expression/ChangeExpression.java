@@ -28,7 +28,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.parser.SetExpressionTree;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * An UPDATE statement consists of one or more ChangeExpressions.
@@ -237,11 +237,11 @@ public class ChangeExpression extends AbstractExpression {
             return;
         }
         Pair<Expression, Expression> result = exprTree.createRecordConstructor();
-        if (result.first == null && result.second == null) {
+        if (result.getLeft() == null && result.getRight() == null) {
             return;
         }
-        dataTransformRecord = result.first;
-        dataRemovalRecord = result.second;
+        dataTransformRecord = result.getLeft();
+        dataRemovalRecord = result.getRight();
     }
 
     public boolean assignsWholeRecord() {

@@ -33,8 +33,8 @@ import org.apache.asterix.optimizer.rules.am.array.IIntroduceAccessMethodRuleLoc
 import org.apache.asterix.optimizer.rules.am.array.JoinFromSubplanRewrite;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -111,7 +111,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
         for (Pair<FunctionIdentifier, Boolean> optFunc : BTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
-            JoinFromSubplanRewrite.addOptimizableFunction(optFunc.first);
+            JoinFromSubplanRewrite.addOptimizableFunction(optFunc.getLeft());
         }
     }
 
@@ -215,12 +215,12 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
                 while (exprsAndVarIter.hasNext()) {
                     Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
-                    IOptimizableFuncExpr optFuncExpr = amCtx.getMatchedFuncExpr(exprAndVarIdx.first);
+                    IOptimizableFuncExpr optFuncExpr = amCtx.getMatchedFuncExpr(exprAndVarIdx.getLeft());
 
                     // We check the dataset name and the subtree to make sure
                     // that this index come from the inner branch.
                     if (indexExprAndVarEntry.getKey().getDatasetName().equals(innerDataset)) {
-                        if (optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).equals(rightSubTree)) {
+                        if (optFuncExpr.getOperatorSubTree(exprAndVarIdx.getRight()).equals(rightSubTree)) {
                             indexFromInnerBranch = true;
                         }
                     }

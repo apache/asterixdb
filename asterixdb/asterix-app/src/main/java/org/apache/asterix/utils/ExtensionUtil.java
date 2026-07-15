@@ -30,7 +30,7 @@ import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 
 /**
@@ -59,10 +59,10 @@ public class ExtensionUtil {
             throws RuntimeDataException {
         ILangCompilationProvider lecp = le.getLangCompilationProvider(lang, namespaceResolver);
         if (cp != null && lecp != null) {
-            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.getLeft(),
                     lang.toString());
         }
-        return lecp != null ? new Pair<>(le.getId(), lecp) : cp;
+        return lecp != null ? Pair.of(le.getId(), lecp) : cp;
     }
 
     /**
@@ -80,10 +80,10 @@ public class ExtensionUtil {
             ILangExtension le) throws RuntimeDataException {
         IFunctionManager lefm = le.getFunctionManager();
         if (fm != null && lefm != null) {
-            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), fm.first,
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), fm.getLeft(),
                     IFunctionManager.class.getSimpleName());
         }
-        return lefm != null ? new Pair<>(le.getId(), lefm) : fm;
+        return lefm != null ? Pair.of(le.getId(), lefm) : fm;
     }
 
     /**

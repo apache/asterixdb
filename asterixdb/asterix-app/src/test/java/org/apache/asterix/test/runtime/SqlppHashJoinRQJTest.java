@@ -41,9 +41,9 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -296,7 +296,7 @@ public class SqlppHashJoinRQJTest {
             }
             ArrayNode resultsArray = (ArrayNode) results;
             String plan = fetchPlan ? r.get("plans").get("optimizedLogicalPlan").asText() : null;
-            return new Pair<>(resultsArray, plan);
+            return Pair.of(resultsArray, plan);
         }
     }
 
@@ -338,14 +338,14 @@ public class SqlppHashJoinRQJTest {
         void execute() throws Exception {
             String query = createQuery();
             Pair<ArrayNode, String> res = executeQuery(query, true);
-            String plan = res.second;
+            String plan = res.getRight();
             if (!plan.contains(PhysicalOperatorTag.HYBRID_HASH_JOIN.toString())) {
                 Assert.fail(PhysicalOperatorTag.HYBRID_HASH_JOIN + " operator was not used in query plan " + plan);
             }
             if (broadcastJoin && !plan.contains(PhysicalOperatorTag.BROADCAST_EXCHANGE.toString())) {
                 Assert.fail(PhysicalOperatorTag.BROADCAST_EXCHANGE + " operator was not used in query plan " + plan);
             }
-            ArrayNode resultArray = res.first;
+            ArrayNode resultArray = res.getLeft();
 
             long expectedRowCount;
             long expectedRowCountInnerJoin = Math.min(c0, c1);

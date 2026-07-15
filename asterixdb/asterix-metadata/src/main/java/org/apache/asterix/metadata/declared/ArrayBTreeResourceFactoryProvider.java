@@ -34,8 +34,8 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
@@ -136,7 +136,7 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
             for (int i = 0; i < e.getProjectList().size(); i++) {
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         e.getUnnestList(), e.getProjectList().get(i), sourceType);
-                IAType keyType = keyTypePair.first;
+                IAType keyType = keyTypePair.getLeft();
                 secondaryTypeTraits[secondaryTypeTraitPos++] = typeTraitProvider.getTypeTrait(keyType);
             }
         }
@@ -175,7 +175,7 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
             for (int i = 0; i < e.getProjectList().size(); i++) {
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         e.getUnnestList(), e.getProjectList().get(i), sourceType);
-                IAType keyType = keyTypePair.first;
+                IAType keyType = keyTypePair.getLeft();
                 secondaryCmpFactories[secondaryCmpFactoriesPos++] =
                         cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
             }

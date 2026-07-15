@@ -62,8 +62,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -435,7 +435,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     IAType secondaryKeyType;
                     Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index,
                             secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
-                    secondaryKeyType = keyPairType.first;
+                    secondaryKeyType = keyPairType.getLeft();
 
                     List<Object> varTypes = new ArrayList<>();
                     varTypes.add(NonTaggedFormatUtil.getTokenType(secondaryKeyType));
@@ -578,7 +578,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 // Get type, dimensions and number of keys
                 Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index, secondaryKeyTypes.get(0),
                         secondaryKeyFields.get(0), recType);
-                IAType spatialType = keyPairType.first;
+                IAType spatialType = keyPairType.getLeft();
                 boolean isPointMBR =
                         spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
@@ -623,7 +623,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
                 context.computeAndSetTypeEnvironmentForOperator(assignCoordinates);
                 replicateOutput = assignCoordinates;
-                boolean forceFilter = keyPairType.second;
+                boolean forceFilter = keyPairType.getRight();
                 Mutable<ILogicalExpression> filterExpression = createAnyUnknownFilterExpression(keyVarList,
                         context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
                 AssignOperator originalAssignCoordinates = null;
@@ -1002,14 +1002,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         if (fieldType == null) {
             // open field
             castExpr = getCastExpression(index, skType, srcLoc);
-            skFun = castExpr.first;
-            fmtArg = castExpr.second;
+            skFun = castExpr.getLeft();
+            fmtArg = castExpr.getRight();
         } else {
             // closed field
             if (IndexUtil.castDefaultNull(index)) {
                 castExpr = IndexUtil.getTypeConstructorDefaultNull(index, skType, srcLoc);
-                skFun = castExpr.first;
-                fmtArg = castExpr.second;
+                skFun = castExpr.getLeft();
+                fmtArg = castExpr.getRight();
             }
         }
         return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
@@ -1020,9 +1020,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         if (IndexUtil.castDefaultNull(index)) {
             return IndexUtil.getTypeConstructorDefaultNull(index, skType, srcLoc);
         } else if (index.isEnforced()) {
-            return new Pair<>(BuiltinFunctions.CAST_TYPE, null);
+            return Pair.of(BuiltinFunctions.CAST_TYPE, null);
         } else {
-            return new Pair<>(BuiltinFunctions.CAST_TYPE_LAX, null);
+            return Pair.of(BuiltinFunctions.CAST_TYPE_LAX, null);
         }
     }
 

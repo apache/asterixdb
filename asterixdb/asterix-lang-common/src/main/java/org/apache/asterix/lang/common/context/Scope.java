@@ -35,7 +35,7 @@ import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.commons.collections4.iterators.ReverseListIterator;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public final class Scope {
@@ -91,7 +91,7 @@ public final class Scope {
         if (annotations == null) {
             annotations = Collections.emptySet();
         }
-        symbols.put(ident.getValue(), new Pair<>(ident, annotations));
+        symbols.put(ident.getValue(), Pair.of(ident, annotations));
     }
 
     public void addNewVarSymbolToScope(VarIdentifier ident) {
@@ -174,7 +174,7 @@ public final class Scope {
                 } else if (!maskParentScope && parentIterator != null && parentIterator.hasNext()) {
                     do {
                         Pair<Identifier, Set<? extends SymbolAnnotation>> symbolFromParent = parentIterator.next();
-                        if (!symbols.containsKey(symbolFromParent.first.getValue())) {
+                        if (!symbols.containsKey(symbolFromParent.getLeft().getValue())) {
                             currentSymbol = symbolFromParent;
                             break;
                         }
@@ -211,10 +211,10 @@ public final class Scope {
         Iterator<Pair<Identifier, Set<? extends SymbolAnnotation>>> symbolIterator = liveSymbols(stopAtExclusive);
         while (symbolIterator.hasNext()) {
             Pair<Identifier, Set<? extends SymbolAnnotation>> p = symbolIterator.next();
-            Identifier identifier = p.first;
+            Identifier identifier = p.getLeft();
             if (identifier instanceof VarIdentifier) {
                 VarIdentifier varId = (VarIdentifier) identifier;
-                vars.put(new VariableExpr(varId), p.second);
+                vars.put(new VariableExpr(varId), p.getRight());
             }
         }
         return vars;

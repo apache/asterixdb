@@ -21,8 +21,8 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -103,8 +103,8 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
         for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
             ILogicalExpression expr = exprRef.getValue();
             Pair<Boolean, ILogicalExpression> p = expr.accept(ves, null);
-            ILogicalExpression originalExpr = p.second;
-            if (p.first & originalExpr.isFunctional()) {
+            ILogicalExpression originalExpr = p.getRight();
+            if (p.getLeft() & originalExpr.isFunctional()) {
                 exprRef.setValue(originalExpr);
                 inlined = true;
             }
@@ -125,7 +125,7 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitConstantExpression(ConstantExpression expr, Void arg) {
-            return new Pair<>(false, expr);
+            return Pair.of(false, expr);
         }
 
         @Override
@@ -135,13 +135,13 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
             for (Mutable<ILogicalExpression> eRef : expr.getArguments()) {
                 ILogicalExpression e = eRef.getValue();
                 Pair<Boolean, ILogicalExpression> p = e.accept(this, arg);
-                ILogicalExpression originalExpr = p.second;
-                if (p.first & originalExpr.isFunctional()) {
+                ILogicalExpression originalExpr = p.getRight();
+                if (p.getLeft() & originalExpr.isFunctional()) {
                     eRef.setValue(originalExpr.cloneExpression());
                     changed = true;
                 }
             }
-            return new Pair<>(changed, expr);
+            return Pair.of(changed, expr);
         }
 
         @Override
@@ -150,9 +150,9 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
             LogicalVariable v = expr.getVariableReference();
             int idx = variables.indexOf(v);
             if (idx < 0) {
-                return new Pair<>(false, expr);
+                return Pair.of(false, expr);
             } else {
-                return new Pair<>(true, expressions.get(idx).getValue());
+                return Pair.of(true, expressions.get(idx).getValue());
             }
 
         }

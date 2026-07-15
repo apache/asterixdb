@@ -54,10 +54,10 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -390,9 +390,9 @@ public class RebalanceUtil {
                 DatasetUtil.createPrimaryIndexUpsertOp(spec, metadataProvider, target,
                         source.getPrimaryRecordDescriptor(metadataProvider), fieldPermutation,
                         MissingWriterFactory.INSTANCE);
-        IOperatorDescriptor upsertOp = upsertOpAndConstraints.first;
+        IOperatorDescriptor upsertOp = upsertOpAndConstraints.getLeft();
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, upsertOp,
-                upsertOpAndConstraints.second);
+                upsertOpAndConstraints.getRight());
         return upsertOp;
     }
 

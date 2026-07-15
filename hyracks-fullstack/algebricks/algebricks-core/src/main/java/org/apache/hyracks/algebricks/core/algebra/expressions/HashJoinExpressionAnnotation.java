@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.Objects;
 
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class HashJoinExpressionAnnotation implements IExpressionAnnotation {
 
@@ -40,8 +40,8 @@ public class HashJoinExpressionAnnotation implements IExpressionAnnotation {
     private BuildSide side;
 
     public HashJoinExpressionAnnotation(Pair<BuildOrProbe, String> pair) {
-        this.buildOrProbe = Objects.requireNonNull(pair.getFirst());
-        this.name = validateName(pair.getSecond());
+        this.buildOrProbe = Objects.requireNonNull(pair.getLeft());
+        this.name = validateName(pair.getRight());
         this.side = null;
     }
 

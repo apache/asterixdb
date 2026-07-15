@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor.base;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
@@ -72,7 +73,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class AbstractSqlppSimpleExpressionVisitor
         extends AbstractSqlppQueryExpressionVisitor<Expression, ILangExpression> {
@@ -234,8 +235,10 @@ public class AbstractSqlppSimpleExpressionVisitor
     public Expression visit(ClusterbyClause cc, ILangExpression arg) throws CompilationException {
         cc.setClusteringExpression(visit(cc.getClusteringExpression(), cc));
         if (cc.hasClusterFieldList()) {
-            for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
-                field.first = visit(field.first, cc);
+            for (ListIterator<Pair<Expression, Identifier>> it = cc.getClusterFieldList().listIterator(); it
+                    .hasNext();) {
+                Pair<Expression, Identifier> field = it.next();
+                it.set(Pair.of(visit(field.getLeft(), cc), field.getRight()));
             }
         }
         if (cc.hasWithOptions()) {
@@ -401,8 +404,10 @@ public class AbstractSqlppSimpleExpressionVisitor
             winExpr.setFrameEndExpr(visit(winExpr.getFrameEndExpr(), arg));
         }
         if (winExpr.hasWindowFieldList()) {
-            for (Pair<Expression, Identifier> field : winExpr.getWindowFieldList()) {
-                field.first = visit(field.first, arg);
+            for (ListIterator<Pair<Expression, Identifier>> it = winExpr.getWindowFieldList().listIterator(); it
+                    .hasNext();) {
+                Pair<Expression, Identifier> field = it.next();
+                it.set(Pair.of(visit(field.getLeft(), arg), field.getRight()));
             }
         }
     }

@@ -87,10 +87,10 @@ import org.apache.asterix.translator.ResultMetadata;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.asterix.utils.ResourceUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
 import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
@@ -223,7 +223,7 @@ public class APIFramework {
             }
             IQueryRewriter rw = rewriterFactory.createQueryRewriter();
             rw.rewrite(langRewritingContext, q, allowNonStoredUdfCalls, inlineUdfsAndViews, externalVars);
-            return new Pair<>(q, q.getVarCounter());
+            return Pair.of(q, q.getVarCounter());
         } catch (StackOverflowError error) {
             LOGGER.info("Stack Overflow", error);
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");

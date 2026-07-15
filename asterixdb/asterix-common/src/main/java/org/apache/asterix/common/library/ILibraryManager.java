@@ -28,8 +28,8 @@ import java.util.function.Function;
 
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;

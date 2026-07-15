@@ -74,8 +74,8 @@ import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -163,7 +163,7 @@ public class AccessMethodUtils {
         INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.RECORD_CONCAT, ALL_INDEX_FUNCTION_ARGUMENTS);
     }
 
-    private final static Pair<List<String>, Integer> NO_FIELD_NAME = new Pair<>(Collections.emptyList(), 0);
+    private final static Pair<List<String>, Integer> NO_FIELD_NAME = Pair.of(Collections.emptyList(), 0);
 
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, IAType metaItemType,
             List<Object> target) throws AlgebricksException {
@@ -270,8 +270,8 @@ public class AccessMethodUtils {
                 if (varConstType == null) {
                     return false;
                 }
-                fieldVar = varConstType.first;
-                constantExpressionType = varConstType.second;
+                fieldVar = varConstType.getLeft();
+                constantExpressionType = varConstType.getRight();
                 constExpression = arg2;
                 varIndex = 0;
             } else if (acceptExpressionArg(arg2, context, typeEnvironment)) {
@@ -281,8 +281,8 @@ public class AccessMethodUtils {
                 if (varConstType == null) {
                     return false;
                 }
-                fieldVar = varConstType.first;
-                constantExpressionType = varConstType.second;
+                fieldVar = varConstType.getLeft();
+                constantExpressionType = varConstType.getRight();
                 constExpression = arg1;
                 varIndex = 1;
             } else {
@@ -331,7 +331,7 @@ public class AccessMethodUtils {
         AbstractFunctionCallExpression funExpr = (AbstractFunctionCallExpression) exprWithVar;
         LogicalVariable varFromExpr =
                 ((VariableReferenceExpression) funExpr.getArguments().get(0).getValue()).getVariableReference();
-        return new Pair<>(varFromExpr, constExprType);
+        return Pair.of(varFromExpr, constExprType);
     }
 
     private static void constructNewOptFuncExprAndAddToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
@@ -455,10 +455,10 @@ public class AccessMethodUtils {
                             KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType);
                     boolean overridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
                     for (int i = 0; i < bTreeIndexKeyTypes.size(); i++) {
-                        if (bTreeIndexKeyTypes.get(i).second || overridingKeyFieldTypes) {
-                            dest.add(AUnionType.createUnknownableType(bTreeIndexKeyTypes.get(i).first));
+                        if (bTreeIndexKeyTypes.get(i).getRight() || overridingKeyFieldTypes) {
+                            dest.add(AUnionType.createUnknownableType(bTreeIndexKeyTypes.get(i).getLeft()));
                         } else {
-                            dest.add(bTreeIndexKeyTypes.get(i).first);
+                            dest.add(bTreeIndexKeyTypes.get(i).getLeft());
                         }
                     }
                     break;
@@ -798,13 +798,13 @@ public class AccessMethodUtils {
     public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx) {
         List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
-        int firstExprIndex = indexExprs.get(0).first;
+        int firstExprIndex = indexExprs.get(0).getLeft();
         return analysisCtx.getMatchedFuncExpr(firstExprIndex);
     }
 
     public static int chooseFirstOptFuncVar(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
         List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
-        return indexExprs.get(0).second;
+        return indexExprs.get(0).getRight();
     }
 
     /**
@@ -830,8 +830,8 @@ public class AccessMethodUtils {
         Pair<Boolean, Boolean> functionFalsePositiveCheck =
                 AccessMethodUtils.canFunctionGenerateFalsePositiveResultsUsingIndex(funcExpr, funcIdentifiers);
 
-        if (functionFalsePositiveCheck.first) {
-            requireVerificationAfterSIdxSearch = functionFalsePositiveCheck.second;
+        if (functionFalsePositiveCheck.getLeft()) {
+            requireVerificationAfterSIdxSearch = functionFalsePositiveCheck.getRight();
         } else {
             // Function not found?
             return false;
@@ -999,7 +999,7 @@ public class AccessMethodUtils {
         winOrderByVarRef.setSourceLocation(sourceLoc);
         /* Sort in DESC order, so all MISSING (or NULL) values are at the end */
         Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> winOrderByPair =
-                new Pair<>(OrderOperator.DESC_ORDER, new MutableObject<>(winOrderByVarRef));
+                Pair.of(OrderOperator.DESC_ORDER, new MutableObject<>(winOrderByVarRef));
 
         LogicalVariable winVar = context.newVar();
         VariableReferenceExpression winOrderByVarRef2 = new VariableReferenceExpression(newNullPlaceHolderVar);
@@ -1150,7 +1150,7 @@ public class AccessMethodUtils {
                 VariableReferenceExpression pkVarRef = new VariableReferenceExpression(pkVar);
                 pkVarRef.setSourceLocation(sourceLoc);
                 Mutable<ILogicalExpression> vRef = new MutableObject<>(pkVarRef);
-                order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
+                order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, vRef));
             }
             // The secondary-index search feeds into the sort.
             order.getInputs().add(new MutableObject<>(op));
@@ -1233,7 +1233,7 @@ public class AccessMethodUtils {
                 return null;
             }
             // Gets the number of dimensions corresponding to the field indexed by chosenIndex.
-            IAType spatialType = keyPairType.first;
+            IAType spatialType = keyPairType.getLeft();
             ArrayList<Mutable<ILogicalExpression>> restoredSKFromRTreeExprs = new ArrayList<>();
             restoredSKVarFromRTree = new ArrayList<>();
             switch (spatialType.getTypeTag()) {
@@ -1511,7 +1511,7 @@ public class AccessMethodUtils {
             VariableReferenceExpression pkVarRef = new VariableReferenceExpression(pkVar);
             pkVarRef.setSourceLocation(sourceLoc);
             Mutable<ILogicalExpression> vRef = new MutableObject<>(pkVarRef);
-            winOrderByPair.add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
+            winOrderByPair.add(Pair.of(OrderOperator.ASC_ORDER, vRef));
         }
         List<Mutable<ILogicalExpression>> winOrderByPair2 = new ArrayList<>();
         for (LogicalVariable pkVar : skVarsFromSIdxUnnestMap) {
@@ -1557,7 +1557,7 @@ public class AccessMethodUtils {
             VariableReferenceExpression pkVarRef = new VariableReferenceExpression(pkVar);
             pkVarRef.setSourceLocation(sourceLoc);
             Mutable<ILogicalExpression> vRef = new MutableObject<>(pkVarRef);
-            order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
+            order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, vRef));
         }
         // The secondary-index search feeds into the sort.
         order.getInputs().add(new MutableObject<>(currentTopOp));
@@ -1877,7 +1877,7 @@ public class AccessMethodUtils {
             VariableReferenceExpression pkVarRef = new VariableReferenceExpression(pkVar);
             pkVarRef.setSourceLocation(sourceLoc);
             Mutable<ILogicalExpression> vRef = new MutableObject<>(pkVarRef);
-            order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
+            order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, vRef));
         }
         // The secondary-index search feeds into the sort.
         order.getInputs().add(new MutableObject<>(inputOp));
@@ -1961,10 +1961,10 @@ public class AccessMethodUtils {
         FunctionIdentifier argFuncIdent = funcExpr.getFunctionIdentifier();
         boolean functionFound = false;
         for (int i = 0; i < funcIdents.size(); i++) {
-            if (argFuncIdent.equals(funcIdents.get(i).first)) {
+            if (argFuncIdent.equals(funcIdents.get(i).getLeft())) {
                 functionFound = true;
-                requireVerificationAfterSIdxSearch = funcIdents.get(i).second;
-                return new Pair<>(functionFound, requireVerificationAfterSIdxSearch);
+                requireVerificationAfterSIdxSearch = funcIdents.get(i).getRight();
+                return Pair.of(functionFound, requireVerificationAfterSIdxSearch);
             }
         }
 
@@ -1979,15 +1979,15 @@ public class AccessMethodUtils {
             for (int i = 0; i < funcIdents.size(); i++) {
                 Pair<Boolean, Boolean> pair =
                         canFunctionGenerateFalsePositiveResultsUsingIndex(argFuncExpr, funcIdents);
-                if (pair.first) {
+                if (pair.getLeft()) {
                     functionFound = true;
-                    requireVerificationAfterSIdxSearch = pair.second;
-                    return new Pair<>(functionFound, requireVerificationAfterSIdxSearch);
+                    requireVerificationAfterSIdxSearch = pair.getRight();
+                    return Pair.of(functionFound, requireVerificationAfterSIdxSearch);
                 }
             }
         }
 
-        return new Pair<>(functionFound, requireVerificationAfterSIdxSearch);
+        return Pair.of(functionFound, requireVerificationAfterSIdxSearch);
     }
 
     /**
@@ -2444,8 +2444,8 @@ public class AccessMethodUtils {
                     if (tmpVal.getObject().getType().getTypeTag() == ATypeTag.POINT
                             || tmpVal.getObject().getType().getTypeTag() == ATypeTag.RECTANGLE) {
                         // Index type
-                        if (keyPairType.first.getTypeTag() == ATypeTag.POINT
-                                || keyPairType.first.getTypeTag() == ATypeTag.RECTANGLE) {
+                        if (keyPairType.getLeft().getTypeTag() == ATypeTag.POINT
+                                || keyPairType.getLeft().getTypeTag() == ATypeTag.RECTANGLE) {
                             requireVerificationAfterSIdxSearch = false;
                         } else {
                             requireVerificationAfterSIdxSearch = true;
@@ -2538,8 +2538,8 @@ public class AccessMethodUtils {
                         }
                     }
 
-                    if (keyPairType.first.getTypeTag() == ATypeTag.POINT
-                            || keyPairType.first.getTypeTag() == ATypeTag.RECTANGLE) {
+                    if (keyPairType.getLeft().getTypeTag() == ATypeTag.POINT
+                            || keyPairType.getLeft().getTypeTag() == ATypeTag.RECTANGLE) {
                         // If the given field from the other join branch is a POINT or a RECTANGLE,
                         // we don't need to verify it again using SELECT operator since there will be
                         // no false positive results.
@@ -2875,7 +2875,7 @@ public class AccessMethodUtils {
                                         assignAndExpressionIndexes[1], funcVarIndex, parentFuncExpr, context)
                                 : NO_FIELD_NAME;
 
-                if (parentFieldNames.first.isEmpty() && !isIndexOnFunction) {
+                if (parentFieldNames.getLeft().isEmpty() && !isIndexOnFunction) {
                     //Nested assign was not a field access.
                     //We will not use index
                     return NO_FIELD_NAME;
@@ -2901,17 +2901,17 @@ public class AccessMethodUtils {
                 if (!isIndexOnFunction) {
                     //add fieldName to the nested fieldName, return
                     if (nestedAccessFieldName != null) {
-                        parentFieldNames.first.addAll(nestedAccessFieldName);
+                        parentFieldNames.getLeft().addAll(nestedAccessFieldName);
                     } else {
-                        parentFieldNames.first.add(fieldName);
+                        parentFieldNames.getLeft().add(fieldName);
                     }
                     return (parentFieldNames);
 
                 } else {
                     if (nestedAccessFieldName != null) {
-                        return new Pair<>(nestedAccessFieldName, sourceIndicator.getValue());
+                        return Pair.of(nestedAccessFieldName, sourceIndicator.getValue());
                     } else {
-                        return new Pair<>(new ArrayList<>(List.of(fieldName)), sourceIndicator.getValue());
+                        return Pair.of(new ArrayList<>(List.of(fieldName)), sourceIndicator.getValue());
                     }
                 }
             }
@@ -2923,11 +2923,11 @@ public class AccessMethodUtils {
             OptimizableOperatorSubTree.RecordTypeSource recType = subTree.getRecordTypeFor(sourceVar);
             if (isByName) {
                 if (nestedAccessFieldName != null) {
-                    return new Pair<>(nestedAccessFieldName, recType.sourceIndicator);
+                    return Pair.of(nestedAccessFieldName, recType.sourceIndicator);
                 }
-                return new Pair<>(new ArrayList<>(List.of(fieldName)), recType.sourceIndicator);
+                return Pair.of(new ArrayList<>(List.of(fieldName)), recType.sourceIndicator);
             }
-            return new Pair<>(new ArrayList<>(List.of(recType.recordType.getFieldNames()[fieldIndex])),
+            return Pair.of(new ArrayList<>(List.of(recType.recordType.getFieldNames()[fieldIndex])),
                     recType.sourceIndicator);
         }
 
@@ -2987,7 +2987,7 @@ public class AccessMethodUtils {
             IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree, IOptimizationContext context,
             LogicalVariable assignVar, AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         // Set the logical expression we are working with.
-        final int lastMatchedDataSourceVar = subTree.getLastMatchedDataSourceVars().second;
+        final int lastMatchedDataSourceVar = subTree.getLastMatchedDataSourceVars().getRight();
         if (lastMatchedDataSourceVar < 0) {
             return null;
         }

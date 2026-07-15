@@ -35,9 +35,9 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.asterix.optimizer.rules.am.VectorJobGenParams;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -204,11 +204,11 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
                         jobGenParams.getRetainInput(), dataset, jobGenParams.getIndexName(), queryIndexes,
                         tupleFilterFactory, includeFields, jobGenParams.isIndexOnly());
 
-        IOperatorDescriptor opDesc = vectorSearch.first;
+        IOperatorDescriptor opDesc = vectorSearch.getLeft();
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
         builder.contributeHyracksOperator(unnestMap, opDesc);
-        builder.contributeAlgebricksPartitionConstraint(opDesc, vectorSearch.second);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, vectorSearch.getRight());
 
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);

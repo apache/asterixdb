@@ -31,7 +31,7 @@ import org.apache.asterix.om.pointables.printer.ARecordPrinter;
 import org.apache.asterix.om.pointables.printer.AbstractPrintVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -80,7 +80,8 @@ public class APrintVisitor extends AbstractPrintVisitor {
     }
 
     @Override
-    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+    public Void visit(ARecordVisitablePointable accessor, MutablePair<PrintStream, ATypeTag> arg)
+            throws HyracksDataException {
         ARecordPrinter printer = raccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = createRecordPrinter(accessor);
@@ -90,7 +91,7 @@ public class APrintVisitor extends AbstractPrintVisitor {
         if (firstRecord) {
             firstRecord = false;
         }
-        printer.printRecord(accessor, arg.getFirst(), this, first);
+        printer.printRecord(accessor, arg.getLeft(), this, first);
         return null;
     }
 

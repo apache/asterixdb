@@ -32,9 +32,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -114,8 +114,8 @@ public final class EliminateIsomorphicSubplanRule implements IAlgebraicRewriteRu
             if (p == null) {
                 break;
             }
-            applied |= p.first;
-            opRef = p.second;
+            applied |= p.getLeft();
+            opRef = p.getRight();
         }
 
         return applied;
@@ -158,7 +158,7 @@ public final class EliminateIsomorphicSubplanRule implements IAlgebraicRewriteRu
         }
 
         if (targetSubplan1Roots.isEmpty()) {
-            return new Pair<>(false, op2Ref);
+            return Pair.of(false, op2Ref);
         }
 
         for (int i = 0, n = targetSubplan1Roots.size(); i < n; i++) {
@@ -173,11 +173,11 @@ public final class EliminateIsomorphicSubplanRule implements IAlgebraicRewriteRu
         if (subplan1.getNestedPlans().isEmpty()) {
             // remove subplan1 from the tree
             op1Ref.setValue(subplan2);
-            return new Pair<>(true, op1Ref);
+            return Pair.of(true, op1Ref);
         } else {
             // some nested plans were removed from subplan1 -> recompute its type environment
             context.computeAndSetTypeEnvironmentForOperator(subplan1);
-            return new Pair<>(true, op2Ref);
+            return Pair.of(true, op2Ref);
         }
     }
 
