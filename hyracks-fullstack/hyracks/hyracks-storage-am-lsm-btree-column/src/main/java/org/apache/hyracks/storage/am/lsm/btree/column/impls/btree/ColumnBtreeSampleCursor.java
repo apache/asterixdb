@@ -108,7 +108,6 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
     // Phase 1 batched I/O draws stored as flat parallel primitive arrays (SoA).
     // Sorted via a packed long[] key ((pageId << 32) | drawIndex) so page0 pins
     // proceed in ascending pageId order without boxed-object comparator overhead.
-    private final int[] drawPageIds;
     private final double[] drawAcceptanceSamples;
     private final int[] drawTupleStartSeeds;
     private final long[] drawSortKeys;
@@ -182,7 +181,6 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
         this.traceTimingEnabled = LOGGER.isTraceEnabled();
 
         this.leafDrawBatchSize = (int) Math.max(leafDrawBatchSize, componentSampleCardinality);
-        this.drawPageIds = new int[this.leafDrawBatchSize];
         this.drawAcceptanceSamples = new double[this.leafDrawBatchSize];
         this.drawTupleStartSeeds = new int[this.leafDrawBatchSize];
         this.drawSortKeys = new long[this.leafDrawBatchSize];
@@ -286,8 +284,11 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
                 return null;
             }
         }
-        int drawIndex = (int) drawSortKeys[pendingLeafDrawIndex++];
-        leafDrawView.pageId = drawPageIds[drawIndex];
+        // Sort key packs (pageId << 32 | drawIndex): high 32 bits ARE the pageId (no separate array),
+        // low 32 bits index back into the unsorted SoA side arrays.
+        long sortKey = drawSortKeys[pendingLeafDrawIndex++];
+        int drawIndex = (int) sortKey;
+        leafDrawView.pageId = (int) (sortKey >>> 32);
         leafDrawView.acceptanceSample = drawAcceptanceSamples[drawIndex];
         leafDrawView.tupleStartSeed = drawTupleStartSeeds[drawIndex];
         return leafDrawView;
@@ -301,7 +302,6 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
         for (int i = 0; i < leafDrawBatchSize; i++) {
             int randomLeafIndex = randomNumGen.nextInt(leafPageIds.length);
             int targetPageId = leafPageIds[randomLeafIndex];
-            drawPageIds[i] = targetPageId;
             drawAcceptanceSamples[i] = randomNumGen.nextDouble();
             drawTupleStartSeeds[i] = randomNumGen.nextInt();
             drawSortKeys[i] = (((long) targetPageId) << 32) | (i & 0xffffffffL);

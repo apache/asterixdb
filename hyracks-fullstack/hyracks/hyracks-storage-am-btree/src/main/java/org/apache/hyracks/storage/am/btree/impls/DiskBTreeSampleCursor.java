@@ -99,7 +99,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     // object comparator dispatch of the previous List<LeafDraw> approach while
     // still grouping draws by pageId for pin reuse. A single reusable LeafDraw
     // view is repointed per draw to preserve the existing call shape.
-    private final int[] drawPageIds;
     private final double[] drawAcceptanceSamples;
     private final int[] drawTupleStartSeeds;
     // Packed sort key: (pageId << 32) | originalDrawIndex. Sorting by the full
@@ -165,7 +164,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         this.leafDrawBatchSize = (int) Math.max(leafDrawBatchSize, componentSampleCardinality);
 
         // Pre-allocate flat SoA draw buffers once to avoid churn during refills.
-        this.drawPageIds = new int[this.leafDrawBatchSize];
         this.drawAcceptanceSamples = new double[this.leafDrawBatchSize];
         this.drawTupleStartSeeds = new int[this.leafDrawBatchSize];
         this.drawSortKeys = new long[this.leafDrawBatchSize];
@@ -258,10 +256,12 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
                 return null;
             }
         }
-        // Resolve the next draw in sorted (pageId-ascending) order. The low 32
-        // bits of the sort key index back into the unsorted SoA side arrays.
-        int drawIndex = (int) drawSortKeys[pendingLeafDrawIndex++];
-        leafDrawView.pageId = drawPageIds[drawIndex];
+        // Resolve the next draw in sorted (pageId-ascending) order. The sort key packs
+        // (pageId << 32 | drawIndex): the high 32 bits ARE the pageId (no separate array), the low 32
+        // bits index back into the unsorted SoA side arrays.
+        long sortKey = drawSortKeys[pendingLeafDrawIndex++];
+        int drawIndex = (int) sortKey;
+        leafDrawView.pageId = (int) (sortKey >>> 32);
         leafDrawView.acceptanceSample = drawAcceptanceSamples[drawIndex];
         leafDrawView.tupleStartSeed = drawTupleStartSeeds[drawIndex];
         return leafDrawView;
@@ -275,7 +275,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         for (int i = 0; i < leafDrawBatchSize; i++) {
             int randomLeafIndex = randomNumGen.nextInt(leafPageIds.size());
             int targetPageId = leafPageIds.get(randomLeafIndex);
-            drawPageIds[i] = targetPageId;
             drawAcceptanceSamples[i] = randomNumGen.nextDouble();
             drawTupleStartSeeds[i] = randomNumGen.nextInt();
             // Pack (pageId, drawIndex): pageIds are non-negative leaf page IDs,
