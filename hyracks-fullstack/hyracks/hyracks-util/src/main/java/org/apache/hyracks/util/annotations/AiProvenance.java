@@ -191,6 +191,7 @@ public @interface AiProvenance {
         // Anthropic — Claude Opus
         // =========================
         CLAUDE_OPUS_4(ANTHROPIC, "claude-4-opus", "Claude Opus 4"),
+        CLAUDE_OPUS_4_8(ANTHROPIC, "claude-4-opus-4.8", "Claude Opus 4.8"),
         CLAUDE_OPUS_4_7(ANTHROPIC, "claude-4-opus-4.7", "Claude Opus 4.7"),
         CLAUDE_OPUS_4_6(ANTHROPIC, "claude-4-opus-4.6", "Claude Opus 4.6"),
         CLAUDE_OPUS_4_6_FAST(ANTHROPIC, "claude-4-opus-4.6-fast", "Claude Opus 4.6 Fast"),
@@ -326,6 +327,7 @@ public @interface AiProvenance {
         // Web / Chat UIs
         CHATGPT_UI(OPENAI, "chatgpt-ui", "ChatGPT"),
         CLAUDE_UI(ANTHROPIC, "claude-ui", "Claude UI"),
+        CLAUDE_CODE_UI(ANTHROPIC, "claude-code-ui", "Claude Code"),
         GEMINI_UI(GOOGLE, "gemini-ui", "Gemini UI"),
         PERPLEXITY(Provider.PERPLEXITY, "perplexity", "Perplexity"),
 
