@@ -27,7 +27,7 @@ A semistructured NoSQL style data model ([ADM](https://nightlies.apache.org/aste
 extending JSON with object database ideas
 
 - __Query languages__<br/>
-An expressive and declarative query language ([SQL++](http://asterixdb.apache.org/docs/0.9.9/sqlpp/manual.html) that supports a broad range of queries and analysis over semistructured data
+An expressive and declarative query language ([SQL++](http://asterixdb.apache.org/docs/0.9.9/sqlpp/manual.html)) that supports a broad range of queries and analysis over semistructured data
 
 - __Scalability__<br/>
 A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
@@ -100,7 +100,7 @@ are used in the documentation that are generated directly from the grammar.
 ## Community support
 
 - __Users__</br>
-maling list: [users@asterixdb.apache.org](mailto:users@asterixdb.apache.org)</br>
+mailing list: [users@asterixdb.apache.org](mailto:users@asterixdb.apache.org)</br>
 Join the list by sending an email to [users-subscribe@asterixdb.apache.org](mailto:users-subscribe@asterixdb.apache.org)</br>
 - __Developers and contributors__</br>
 mailing list:[dev@asterixdb.apache.org](mailto:dev@asterixdb.apache.org)</br>
