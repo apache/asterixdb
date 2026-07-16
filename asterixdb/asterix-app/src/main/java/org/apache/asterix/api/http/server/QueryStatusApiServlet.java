@@ -194,7 +194,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         ResponseMetrics metrics = ResponseMetrics.of(
                 metadata.getCompileTimeNanos() + metadata.getQueueWaitTimeNanos() + metadata.getJobDuration(),
                 metadata.getJobDuration(), 0, 0, metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(),
-                metadata.getCompileTimeNanos(), metadata.getQueueWaitTimeNanos(), 0, 0, 0, 0, 0, false);
+                metadata.getCompileTimeNanos(), metadata.getQueueWaitTimeNanos(), 0, 0, 0, 0, 0);
         printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
                 Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,
                         MetricsPrinter.Metrics.QUEUE_WAIT_TIME, MetricsPrinter.Metrics.COMPILE_TIME,
@@ -235,7 +235,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         long executionTimeNanos = status == ResultStatus.RUNNING ? elapsedTimeNanos : 0;
 
         ResponseMetrics metrics = ResponseMetrics.of(elapsedTimeNanos, executionTimeNanos, 0, 0, 0, 0, 0,
-                compileTimeNanos, TimeUnit.MILLISECONDS.toNanos(queueWaitTimeMillis), 0, 0, 0, 0, 0, false);
+                compileTimeNanos, TimeUnit.MILLISECONDS.toNanos(queueWaitTimeMillis), 0, 0, 0, 0, 0);
 
         printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request),
                 Set.of(MetricsPrinter.Metrics.ELAPSED_TIME, MetricsPrinter.Metrics.EXECUTION_TIME,

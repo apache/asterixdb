@@ -25,6 +25,7 @@ import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.CachedPlanPrinter;
 import org.apache.asterix.app.result.fields.CreatedAtPrinter;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.ProfilePrinter;
@@ -151,6 +152,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 printer.printResults();
                 long resultDeliveryElapsed = System.nanoTime() - resultDeliveryStart;
                 ResponseMetrics metrics = buildMetrics(stats, metadata, resultDeliveryElapsed);
+                printer.addFooterPrinter(new CachedPlanPrinter(metadata.isCachedPlan()));
                 printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
                 if (metadata.getJobProfile() != null) {
                     printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));
@@ -183,8 +185,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         return ResponseMetrics.of(resultDeliveryElapsed, metadata.getJobDuration(), stats.getCount(), stats.getSize(),
                 metadata.getProcessedObjects(), 0, metadata.getTotalWarningsCount(), metadata.getCompileTimeNanos(),
                 stats.getQueueWaitTimeNanos(), stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(),
-                stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount(),
-                stats.isCachedPlan());
+                stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
     }
 
     /**

@@ -21,10 +21,12 @@ package org.apache.asterix.lang.common.base;
 import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 @FunctionalInterface
 public interface ICompilationContextFactory {
 
-    ICompilationContext createCompilationContext(ICommonRequestParameters request) throws CompilationException;
+    ICompilationContext createCompilationContext(ICommonRequestParameters request, IResultMetadata resultMetadata)
+            throws CompilationException;
 
 }

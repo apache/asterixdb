@@ -6,6 +6,7 @@
 	  { "i": 4, "i2": 16 },
 	  { "i": 5, "i2": 25 }
   ],
+  "cachedPlan": "R{true|false}",
   "metrics": "R{.*}",
   "profile": "R{.*}",
   "createdAt": "R{.*}"

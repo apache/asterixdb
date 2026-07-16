@@ -73,7 +73,7 @@ public class CCConfig extends ControllerConfig {
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
         JOB_QUEUE_CAPACITY(POSITIVE_INTEGER, 4096),
-        QUERY_PLAN_CACHE_CAPACITY(NONNEGATIVE_INTEGER, 1024),
+        QUERY_PLAN_CACHE_CAPACITY(NONNEGATIVE_INTEGER, 1000),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
         ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
         CORES_MULTIPLIER(POSITIVE_INTEGER, 3),
@@ -197,7 +197,8 @@ public class CCConfig extends ControllerConfig {
                 case JOB_QUEUE_CAPACITY:
                     return "The maximum number of jobs to queue before rejecting new jobs";
                 case QUERY_PLAN_CACHE_CAPACITY:
-                    return "The maximum size of the query plan cache before replacing old entries";
+                    return "The maximum number of plans held by the query plan cache, evicting least recently used "
+                            + "entries when full; 0 disables the cache";
                 case JOB_MANAGER_CLASS:
                     return "Specify the implementation class name for the job manager";
                 case ENFORCE_FRAME_WRITER_PROTOCOL:

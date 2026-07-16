@@ -27,43 +27,73 @@ import org.apache.asterix.common.cache.IQueryPlanCacheValue;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
- * Bounded query plan cache backed by an LRU map wrapped for thread safety.
+ * Bounded query plan cache backed by an LRU map wrapped for thread safety. A capacity of zero disables the cache.
  */
 public class QueryPlanCache implements IQueryPlanCache {
 
-    private final Map<IQueryPlanCacheKey, IQueryPlanCacheValue> map;
+    // null when disabled; resize() swaps in a new map, hence volatile
+    private volatile Map<IQueryPlanCacheKey, IQueryPlanCacheValue> map;
 
     // TODO: Add data structures for fine-grained cache invalidation
 
-    public QueryPlanCache(int maxLength) {
-        map = Collections.synchronizedMap(new LRUMap<>(maxLength));
+    public QueryPlanCache(int capacity) {
+        map = newBoundedMap(capacity);
     }
 
     @Override
     public IQueryPlanCacheValue get(IQueryPlanCacheKey key) {
-        return map.get(key);
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> current = map;
+        return current != null ? current.get(key) : null;
     }
 
     @Override
     public void put(IQueryPlanCacheKey key, IQueryPlanCacheValue value) {
-        map.put(key, value);
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> current = map;
+        if (current != null) {
+            current.put(key, value);
+        }
     }
 
     @Override
     public int clear() {
-        synchronized (map) {
-            int cleared = map.size();
-            map.clear();
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> current = map;
+        if (current == null) {
+            return 0;
+        }
+        synchronized (current) {
+            int cleared = current.size();
+            current.clear();
             return cleared;
         }
     }
 
     @Override
+    public synchronized void resize(int capacity) {
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> current = map;
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> resized = newBoundedMap(capacity);
+        if (current != null && resized != null) {
+            synchronized (current) {
+                // LRUMap iterates least-to-most recently used, so shrinking retains the most recent entries
+                resized.putAll(current);
+            }
+        }
+        map = resized;
+    }
+
+    private static Map<IQueryPlanCacheKey, IQueryPlanCacheValue> newBoundedMap(int capacity) {
+        return capacity > 0 ? Collections.synchronizedMap(new LRUMap<>(capacity)) : null;
+    }
+
+    @Override
     public String toString() {
+        Map<IQueryPlanCacheKey, IQueryPlanCacheValue> current = map;
+        if (current == null) {
+            return "";
+        }
         StringBuilder buffer = new StringBuilder();
         int cnt = 1;
-        synchronized (map) {
-            for (Map.Entry<IQueryPlanCacheKey, IQueryPlanCacheValue> entry : map.entrySet()) {
+        synchronized (current) {
+            for (Map.Entry<IQueryPlanCacheKey, IQueryPlanCacheValue> entry : current.entrySet()) {
                 buffer.append("Entry ").append(cnt).append(" query:\n");
                 buffer.append(entry.getKey().queryString()).append("\n\n");
                 cnt++;

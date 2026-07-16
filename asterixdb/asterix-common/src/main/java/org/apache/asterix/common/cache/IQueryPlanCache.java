@@ -44,4 +44,12 @@ public interface IQueryPlanCache {
      * @return the number of entries that were cleared
      */
     int clear();
+
+    /**
+     * Resizes the cache to the given capacity, retaining the most recently used entries that fit; a capacity of
+     * zero disables the cache and drops all entries.
+     *
+     * @param capacity
+     */
+    void resize(int capacity);
 }

@@ -48,6 +48,7 @@ public class ResultMetadata implements IResultMetadata {
     private long createTime;
     private long endTime;
     private boolean resultSetOrdered;
+    private boolean cachedPlan;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -201,6 +202,14 @@ public class ResultMetadata implements IResultMetadata {
 
     public void setResultSetOrdered(boolean resultSetOrdered) {
         this.resultSetOrdered = resultSetOrdered;
+    }
+
+    public boolean isCachedPlan() {
+        return cachedPlan;
+    }
+
+    public void setCachedPlan(boolean cachedPlan) {
+        this.cachedPlan = cachedPlan;
     }
 
     @Override

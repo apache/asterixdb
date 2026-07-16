@@ -3,6 +3,7 @@
 	"signature": {"*": "*"},
 	"results": [["foo","bar"]],
 	"plans":{},
+	"cachedPlan": "R{true|false}",
 	"status": "success",
     "metrics": "R{.*}"
 }

@@ -329,7 +329,8 @@ public class APIFramework {
             builder.setSerializerDeserializerProvider(format.getSerdeProvider());
             builder.setTypeTraitProvider(format.getTypeTraitProvider());
             builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
-            builder.setCompilationContext(compilationContextFactory.createCompilationContext(requestParameters));
+            builder.setCompilationContext(
+                    compilationContextFactory.createCompilationContext(requestParameters, resultMetadata));
 
             IndexAdvisor indexAdvisor = new IndexAdvisor(isAdviceOnly);
 
@@ -347,6 +348,7 @@ public class APIFramework {
                         indexAdvisor);
             } else {
                 plan = cachedPlan.plan();
+                repopulateResultMetadata(resultMetadata, cachedPlan);
                 compiler = createCachedPlanCompiler(compilerFactory, cachedPlan, plan, metadataProvider, ruleSetKind);
             }
 
@@ -456,6 +458,12 @@ public class APIFramework {
             LOGGER.info("Stack Overflow", error);
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");
         }
+    }
+
+    private static void repopulateResultMetadata(ResultMetadata resultMetadata, IQueryPlanCacheValue cachedPlan) {
+        // output types are populated in the optimize() path, which is skipped on a cache hit
+        resultMetadata.setOutputTypes(cachedPlan.resultMetadata().getOutputTypes());
+        resultMetadata.setCachedPlan(true);
     }
 
     private ICompiler createCachedPlanCompiler(ICompilerFactory compilerFactory, IQueryPlanCacheValue cachedPlan,

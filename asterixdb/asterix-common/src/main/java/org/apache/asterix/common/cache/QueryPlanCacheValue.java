@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 /**
  * A query plan cache entry: the optimized logical plan, its optimization context, and the compile-time warnings to
@@ -31,7 +32,9 @@ import org.apache.hyracks.api.exceptions.Warning;
  * @param plan
  * @param warnings
  * @param optContext
+ * @param resultMetadata
  */
-public record QueryPlanCacheValue(ILogicalPlan plan, Set<Warning> warnings, IOptimizationContext optContext)
+public record QueryPlanCacheValue(ILogicalPlan plan, Set<Warning> warnings, IOptimizationContext optContext,
+                                  IResultMetadata resultMetadata)
         implements IQueryPlanCacheValue {
 }

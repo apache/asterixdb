@@ -2,6 +2,7 @@
 	"results": [
 	  "result"
   ],
+  "cachedPlan": "R{true|false}",
   "metrics": "R{.*}",
   "profile": "R{.*}",
   "createdAt": "R{.*}"

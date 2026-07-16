@@ -117,6 +117,7 @@ public class ResultExtractor {
         SIGNATURE("signature"),
         STATUS("status"),
         TYPE("type"),
+        CACHED_PLAN("cachedPlan"),
         ERRORS("errors"),
         PLANS("plans"),
         WARNINGS("warnings"),
@@ -163,6 +164,10 @@ public class ResultExtractor {
 
     public static InputStream extractMetrics(InputStream resultStream, Charset resultCharset) throws Exception {
         return extract(resultStream, EnumSet.of(ResultField.METRICS), resultCharset).getResult();
+    }
+
+    public static InputStream extractCachedPlan(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.CACHED_PLAN), resultCharset).getResult();
     }
 
     public static InputStream extractProfile(InputStream resultStream, Charset resultCharset) throws Exception {
@@ -282,6 +287,7 @@ public class ResultExtractor {
                 case SIGNATURE:
                 case STATUS:
                 case TYPE:
+                case CACHED_PLAN:
                 case PLANS:
                     if (plans == null) {
                         resultBuilder.append(WRITER.writeValueAsString(fieldValue));

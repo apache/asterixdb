@@ -268,6 +268,7 @@ public class TestExecutor {
     public static final String DELIVERY_IMMEDIATE = "immediate";
     public static final String DIAGNOSE = "diagnose";
     private static final String METRICS_QUERY_TYPE = "metrics";
+    private static final String CACHED_PLAN_QUERY_TYPE = "cachedplan";
     private static final String PROFILE_QUERY_TYPE = "profile";
     private static final String PLANS_QUERY_TYPE = "plans";
     private static final String SIGNATURE_QUERY_TYPE = "signature";
@@ -1349,6 +1350,7 @@ public class TestExecutor {
             case "parse":
             case "deferred":
             case "metrics":
+            case "cachedplan":
             case "profile":
             case "plans":
             case "signature":
@@ -1736,6 +1738,9 @@ public class TestExecutor {
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
+                    break;
+                case CACHED_PLAN_QUERY_TYPE:
+                    resultStream = ResultExtractor.extractCachedPlan(resultStream, responseCharset);
                     break;
                 case PROFILE_QUERY_TYPE:
                     resultStream = ResultExtractor.extractProfile(resultStream, responseCharset);

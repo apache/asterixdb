@@ -100,4 +100,8 @@ public class DistributeResultOperator extends AbstractLogicalOperator {
     public IResultMetadata getResultMetadata() {
         return resultMetadata;
     }
+
+    public void setResultMetadata(IResultMetadata resultMetadata) {
+        this.resultMetadata = resultMetadata;
+    }
 }

@@ -13,6 +13,7 @@
 \s*\Q,{\E\s*
 \s*\Q"code": 1,\E\s*\Q"msg": "ASX0002: Type mismatch: function isbitset expects its 2nd input parameter to be of type bigint or array, but the actual input type is string\E[^}]+\Q}\E\s*
 \s*\Q],\E
+\s*\Q"cachedPlan": \E(true|false)\Q,\E
 \s*\Q"status": "success",\E
 \s*\Q"metrics": {\E
 \s*\Q"elapsedTime": "\E[^"]+\Q",\E
@@ -21,7 +22,6 @@
 \s*\Q"queueWaitTime": "\E[^"]+\Q",\E
 \s*\Q"resultCount": \E[0-9]+\Q,\E
 \s*\Q"resultSize": \E[0-9]+\Q,\E
-\s*\Q"cachedPlan": "\E(true|false)\Q",\E
 \s*\Q"processedObjects": \E[0-9]+\Q,\E
 \s*\Q"warningCount": 12\E
 \s*\Q}\E

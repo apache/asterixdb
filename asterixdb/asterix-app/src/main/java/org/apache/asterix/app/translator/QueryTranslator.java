@@ -5768,7 +5768,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // warnings, so drop the pre-existing ones and cache only this statement's own
         warnings.removeIf(preJobGenWarnings::contains);
         final IQueryPlanCacheValue cacheableValue = buildQueryPlanCacheValue(
-                new QueryPlanCacheValue(compiledPlan.plan(), warnings, compiledPlan.optContext()));
+                new QueryPlanCacheValue(compiledPlan.plan(), warnings, compiledPlan.optContext(), resultMetadata));
         return new CacheMissResult(jobSpec, new CachedPlan(cacheKey, cacheableValue));
     }
 

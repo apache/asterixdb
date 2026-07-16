@@ -37,6 +37,7 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.result.ExecutionWarning;
 import org.apache.asterix.app.result.ResponseMetrics;
 import org.apache.asterix.app.result.ResponsePrinter;
+import org.apache.asterix.app.result.fields.CachedPlanPrinter;
 import org.apache.asterix.app.result.fields.ClientContextIdPrinter;
 import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.ParseOnlyResultPrinter;
@@ -317,7 +318,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount,
                 stats.getTotalWarningsCount(), stats.getCompileTimeNanos(), stats.getQueueWaitTimeNanos(),
                 stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(), stats.getCloudReadRequestsCount(),
-                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount(), stats.isCachedPlan());
+                stats.getCloudPagesReadCount(), stats.getCloudPagesPersistedCount());
+        responsePrinter.addFooterPrinter(new CachedPlanPrinter(stats.isCachedPlan()));
         if (ResultDelivery.ASYNC != delivery) {
             responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
             responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));

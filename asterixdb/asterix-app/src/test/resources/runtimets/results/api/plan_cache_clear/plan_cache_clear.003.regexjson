@@ -6,6 +6,7 @@
 	"type": "application/x-adm",
 	"results": [ "{ \"v\": 1 }", "{ \"v\": 2 }" ],
 	"plans": "R{.*}",
+	"cachedPlan": false,
 	"status": "success",
 	"metrics": {
 		"elapsedTime": "R{.*}",
@@ -14,7 +15,6 @@
 		"queueWaitTime": "R{.*}",
 		"resultCount": 2,
 		"resultSize": "R{.*}",
-		"cachedPlan": "false",
 		"processedObjects": 0
 	}
 }

@@ -6,6 +6,7 @@
 \s*\Q"results": [ {"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null} ]\E
 \s*\Q,\E
 \s*\Q"plans":{},\E
+\s*\Q"cachedPlan": \E(true|false)\Q,\E
 \s*\Q"status": "success",\E
 \s*\Q"metrics": {\E
 \s*\Q"elapsedTime": "\E[^"]+\Q",\E
@@ -14,7 +15,6 @@
 \s*\Q"queueWaitTime": "\E[^"]+\Q",\E
 \s*\Q"resultCount": \E[0-9]+\Q,\E
 \s*\Q"resultSize": \E[0-9]+\Q,\E
-\s*\Q"cachedPlan": "\E(true|false)\Q",\E
 \s*\Q"processedObjects": \E[0-9]+\Q,\E
 \s*\Q"warningCount": 11\E
 \s*\Q}\E

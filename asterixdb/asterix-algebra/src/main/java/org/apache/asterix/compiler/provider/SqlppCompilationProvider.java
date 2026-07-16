@@ -44,6 +44,7 @@ import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslatorFactory;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 public class SqlppCompilationProvider implements ILangCompilationProvider {
 
@@ -85,7 +86,12 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
 
     @Override
     public ICompilationContextFactory getCompilationContextFactory() {
-        return request -> ICompilationContext.INSTANCE;
+        return (request, resultMetadata) -> new ICompilationContext() {
+            @Override
+            public IResultMetadata resultMetadata() {
+                return resultMetadata;
+            }
+        };
     }
 
     @Override

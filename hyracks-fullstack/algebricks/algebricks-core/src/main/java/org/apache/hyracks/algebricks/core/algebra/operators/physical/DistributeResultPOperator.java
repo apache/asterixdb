@@ -40,12 +40,14 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequir
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.algebricks.core.jobgen.impl.ICompilationContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 public class DistributeResultPOperator extends AbstractPhysicalOperator {
 
@@ -102,9 +104,15 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
         IPrinterFactory[] pf =
                 JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op), context, columns);
 
+        ICompilationContext compilationContext = context.getCompilationContext();
+        IResultMetadata resultMetadata = compilationContext != null ? compilationContext.resultMetadata() : null;
+        if (resultMetadata == null) {
+            resultMetadata = resultOp.getResultMetadata();
+        }
+
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getResultHandleRuntime(resultOp.getDataSink(), columns, pf, context.getWriterFactory(),
-                        context.getResultSerializerFactoryProvider(), inputDesc, resultOp.getResultMetadata(), spec);
+                        context.getResultSerializerFactoryProvider(), inputDesc, resultMetadata, spec);
         IOperatorDescriptor opDesc = runtimeAndConstraints.first;
         opDesc.setSourceLocation(resultOp.getSourceLocation());
         builder.contributeHyracksOperator(resultOp, opDesc);

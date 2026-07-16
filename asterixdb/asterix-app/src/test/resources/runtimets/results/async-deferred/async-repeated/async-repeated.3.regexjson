@@ -11,6 +11,7 @@
 	  { "i": 9, "i2": 81 },
 	  { "i": 10, "i2": 100 }
   ],
+  "cachedPlan": "R{true|false}",
   "metrics": "R{.*}",
   "profile": "R{.*}"
 }

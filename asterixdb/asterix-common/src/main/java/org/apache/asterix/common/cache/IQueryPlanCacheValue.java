@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.result.IResultMetadata;
 
 /**
  * A cached compiled plan, stored as the {@link IQueryPlanCache} map value: the optimized logical plan, its
@@ -44,4 +45,9 @@ public interface IQueryPlanCacheValue {
      * @return the optimization context captured when the plan was compiled
      */
     IOptimizationContext optContext();
+
+    /**
+     * @return the result metadata captured when the plan was compiled, used to repopulate output types on a hit
+     */
+    IResultMetadata resultMetadata();
 }

@@ -35,7 +35,6 @@ public class ResponseMetrics {
     private long cloudReadRequestsCount;
     private long cloudPagesReadCount;
     private long cloudPagesPersistedCount;
-    private boolean cachedPlan;
 
     private ResponseMetrics() {
     }
@@ -43,7 +42,7 @@ public class ResponseMetrics {
     public static ResponseMetrics of(long elapsedTimeNanos, long executionTimeNanos, long resultCount, long resultSize,
             long processedObjects, long errorCount, long warnCount, long compileTimeNanos, long queueWaitTimeNanos,
             double bufferCacheHitRatio, long bufferCachePageReadCount, long cloudRequestsCount,
-            long cloudPagesReadCount, long cloudPagesPersistedCount, boolean cachedPlan) {
+            long cloudPagesReadCount, long cloudPagesPersistedCount) {
         ResponseMetrics metrics = new ResponseMetrics();
         metrics.elapsedTime = elapsedTimeNanos;
         metrics.executionTime = executionTimeNanos;
@@ -59,7 +58,6 @@ public class ResponseMetrics {
         metrics.cloudReadRequestsCount = cloudRequestsCount;
         metrics.cloudPagesReadCount = cloudPagesReadCount;
         metrics.cloudPagesPersistedCount = cloudPagesPersistedCount;
-        metrics.cachedPlan = cachedPlan;
         return metrics;
     }
 
@@ -117,9 +115,5 @@ public class ResponseMetrics {
 
     public long getCloudPagesPersistedCount() {
         return cloudPagesPersistedCount;
-    }
-
-    public boolean isCachedPlan() {
-        return cachedPlan;
     }
 }

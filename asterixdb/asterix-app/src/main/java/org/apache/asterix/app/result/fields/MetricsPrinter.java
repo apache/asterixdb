@@ -46,8 +46,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         BUFFERCACHE_PAGEREAD_COUNT("bufferCachePageReadCount"),
         REMOTE_STORAGE_REQUESTS_COUNT("remoteStorageRequestsCount"),
         REMOTE_STORAGE_PAGES_READ_COUNT("remoteStoragePagesReadCount"),
-        REMOTE_PAGES_PERSISTED_COUNT("remoteStoragePagesPersistedCount"),
-        CACHED_PLAN("cachedPlan");
+        REMOTE_PAGES_PERSISTED_COUNT("remoteStoragePagesPersistedCount");
 
         private final String str;
 
@@ -141,8 +140,6 @@ public class MetricsPrinter implements IResponseFieldPrinter {
             entries.add(new LongEntry(Metrics.RESULT_COUNT, metrics.getResultCount()));
         if (isSelected(Metrics.RESULT_SIZE))
             entries.add(new LongEntry(Metrics.RESULT_SIZE, metrics.getResultSize()));
-        if (isSelected(Metrics.CACHED_PLAN))
-            entries.add(new StringEntry(Metrics.CACHED_PLAN, Boolean.toString(metrics.isCachedPlan())));
         if (isSelected(Metrics.PROCESSED_OBJECTS_COUNT))
             entries.add(new LongEntry(Metrics.PROCESSED_OBJECTS_COUNT, metrics.getProcessedObjects()));
 

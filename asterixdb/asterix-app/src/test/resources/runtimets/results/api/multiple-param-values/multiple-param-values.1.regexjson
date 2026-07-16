@@ -7,6 +7,7 @@
 	"results": [ "{ \"$1\": 1 }" ]
 	,
 	"plans":{},
+	"cachedPlan": "R{true|false}",
 	"status": "success",
 	"metrics": "R{.*}"
 }

@@ -134,5 +134,10 @@
         <output-dir compare="Text">plan_cache_clear</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="plan_cache_async">
+        <output-dir compare="Clean-JSON">plan_cache_async</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
