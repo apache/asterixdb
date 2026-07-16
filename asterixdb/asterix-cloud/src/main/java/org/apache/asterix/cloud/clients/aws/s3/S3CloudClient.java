@@ -75,9 +75,9 @@ import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.SdkHttpConfigurationOption;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.LegacyMd5Plugin;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.ChecksumAlgorithm;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -282,15 +282,12 @@ public final class S3CloudClient implements ICloudClient {
             }
 
             Delete delete = Delete.builder().objects(objectIdentifiers).build();
-            DeleteObjectsRequest.Builder deleteReqBuilder =
-                    DeleteObjectsRequest.builder().bucket(bucket).delete(delete);
-            if (config.getChecksumBehavior() == S3ChecksumBehavior.WHEN_REQUIRED) {
-                // DeleteObjects needs a request-body integrity header; when_required suppresses the SDK's flexible
-                // checksum and it no longer adds Content-MD5, so request an explicit checksum for S3-compatible stores
-                // https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
-                deleteReqBuilder.checksumAlgorithm(ChecksumAlgorithm.CRC32_C);
-            }
-            DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteReqBuilder.build());
+            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build();
+            // DeleteObjects requires a request-body integrity header. In when_required mode LegacyMd5Plugin
+            // (installed in buildClient) supplies the legacy Content-MD5 header instead of the flexible
+            // x-amz-checksum-* header that some S3-compatible stores (e.g. Huawei OBS) reject.
+            // https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
+            DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteRequest);
             if (deleteObjectsResponse.hasErrors()) {
                 List<S3Error> deleteErrors = deleteObjectsResponse.errors();
                 for (S3Error s3Error : deleteErrors) {
@@ -393,6 +390,13 @@ public final class S3CloudClient implements ICloudClient {
         builder.region(Region.of(config.getRegion()));
         builder.forcePathStyle(config.isForcePathStyle());
         S3Utils.applyChecksumBehavior(builder, config.getChecksumBehavior());
+        if (config.getChecksumBehavior() == S3ChecksumBehavior.WHEN_REQUIRED) {
+            // Operations that REQUIRE a request-body integrity header (e.g. DeleteObjects) still get one in
+            // when_required mode; the SDK 2.30+ default emits a flexible x-amz-checksum-* header, which some
+            // S3-compatible stores (e.g. Huawei OBS) reject. LegacyMd5Plugin makes those required-checksum
+            // operations use the legacy Content-MD5 header instead, which AWS S3 and S3-compatible stores accept.
+            builder.addPlugin(LegacyMd5Plugin.create());
+        }
 
         AttributeMap.Builder customHttpConfigBuilder = AttributeMap.builder();
         if (config.getRequestsMaxHttpConnections() > 0) {
