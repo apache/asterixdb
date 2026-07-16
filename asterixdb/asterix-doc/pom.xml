@@ -45,6 +45,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.asterix</groupId>
+            <artifactId>asterix-lang-sqlpp</artifactId>
+            <version>0.9.6-SNAPSHOT</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <id>manual</id>
