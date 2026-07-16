@@ -41,6 +41,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.api.http.IApiServerRegistrant;
 import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.server.ActiveRequestsServlet;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
@@ -363,6 +364,9 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
+        // Load extension servlets registered via ServiceLoader (e.g., NL2SQL++ from asterix-spidersilk)
+        ServiceLoader.load(IApiServerRegistrant.class)
+                .forEach(registrant -> registrant.register(appCtx, jsonAPIServer));
         return jsonAPIServer;
     }
 
