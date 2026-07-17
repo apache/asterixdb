@@ -38,8 +38,9 @@ public class RecordRemoveTypeComputer extends AbstractRecordFunctionTypeComputer
     }
 
     @Override
-    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IVariableTypeEnvironment env,
-            ARecordType inputRecordType, boolean isOutputMissable, boolean isOutputNullable) {
+    public IAType computeTypeImpl(AbstractFunctionCallExpression functionCallExpression, IAType arg0InRecType,
+            IVariableTypeEnvironment env, ARecordType inputRecordType, boolean isOutputMissable,
+            boolean isOutputNullable) {
         // We expect a CONSTANT expression. Otherwise, defer the removal to runtime.
         ILogicalExpression arg1 = functionCallExpression.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
