@@ -117,7 +117,8 @@ public class NCConfig extends ControllerConfig {
                 appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
                 ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
         STORAGE_MAX_COLUMNS_IN_ZEROTH_SEGMENT(INTEGER_BYTE_UNIT, 5000),
-        STORAGE_PAGE_ZERO_WRITER(STRING, "default");
+        STORAGE_PAGE_ZERO_WRITER(STRING, "default"),
+        STORAGE_LSM_THETA_SKETCH_K(INTEGER, 1024);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -281,6 +282,9 @@ public class NCConfig extends ControllerConfig {
                 case STORAGE_PAGE_ZERO_WRITER:
                     return "The config to choose between writers for page zero. (Possible values: default, sparse, adaptive), "
                             + "(default value: default)";
+                case STORAGE_LSM_THETA_SKETCH_K:
+                    return "The K parameter (number of retained minimum hash values) for the LSM theta-sketch "
+                            + "sampler used in cardinality estimation (default: 1024).";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -307,7 +311,13 @@ public class NCConfig extends ControllerConfig {
 
         @Override
         public boolean hidden() {
-            return this == KEY_STORE_PASSWORD;
+            switch (this) {
+                case KEY_STORE_PASSWORD:
+                case STORAGE_LSM_THETA_SKETCH_K:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 
@@ -666,6 +676,10 @@ public class NCConfig extends ControllerConfig {
 
     public String getStoragePageZeroWriter() {
         return appConfig.getString(Option.STORAGE_PAGE_ZERO_WRITER);
+    }
+
+    public int getStorageLsmThetaSketchK() {
+        return appConfig.getInt(Option.STORAGE_LSM_THETA_SKETCH_K);
     }
 
     public long getLibraryMaxFileSize() {

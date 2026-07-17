@@ -103,6 +103,15 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     @Override
     public void newPage() throws HyracksDataException {
         tupleIndex = 0;
+        readPrimaryKeyPages();
+    }
+
+    /**
+     * (Re)initializes the primary-key readers from the start of the page. This rewinds the
+     * sequential definition-level decoders to position 0, so a subsequent
+     * {@link #setPrimaryKeysAt(int, int)} reads levels from an absolute origin.
+     */
+    private void readPrimaryKeyPages() throws HyracksDataException {
         ByteBuffer pageZero = frame.getBuffer();
         // should not be needed, as it just been reset in step above
         pageZero.clear();
@@ -168,6 +177,40 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         }
 
         totalNumberOfMegaLeafNodes++;
+    }
+
+    /**
+     * Begins a forward-only PK-only sampling pass over the current page WITHOUT loading column mega-pages.
+     * Rewinds the PK readers' (sequential) definition-level decoders to the start of the page and arms a
+     * sentinel so that the first {@link #seekForwardPKOnly(int)} reads from absolute index 0.
+     * <p>
+     * Sampling probes several tuple indices on the same page (one collected sample, but multiple probes due
+     * to antimatter / collision / newer-component rejections). Because the level decoder is sequential and
+     * cannot seek backwards, the caller must feed indices to {@link #seekForwardPKOnly(int)} in ascending
+     * order; this method establishes the monotonic starting point.
+     */
+    public void startSamplingPage() throws HyracksDataException {
+        unpinColumnsPages();
+        readPrimaryKeyPages();
+        // Sentinel: the first seekForwardPKOnly(idx) computes skipCount = idx - (-1) - 1 = idx, reading
+        // levels [0, idx] from the freshly-rewound decoder.
+        tupleIndex = -1;
+    }
+
+    /**
+     * Forward-only PK positioning for sampling. {@code startIndex} MUST be {@code >=} the previous probe's
+     * index on the same page (the caller sorts its draws ascending). Advances the sequential PK level
+     * decoders forward to {@code startIndex} without rewinding, so a whole page is scanned in a single pass.
+     * <p>
+     * After this call, {@code isAntimatter()}, {@code getFieldStart(i)}, {@code getFieldLength(i)} and
+     * {@code getFieldData(i)} are valid for primary-key fields. Non-key field access is undefined.
+     *
+     * @param startIndex the tuple index to position at (monotonically non-decreasing within a page)
+     */
+    public void seekForwardPKOnly(int startIndex) throws HyracksDataException {
+        int skipCount = startIndex - tupleIndex - 1;
+        tupleIndex = startIndex;
+        setPrimaryKeysAt(startIndex, skipCount);
     }
 
     protected abstract void skipMegaLeafNode();

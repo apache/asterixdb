@@ -1,24 +1,24 @@
-distribute result [$$39] [cardinality: 681.1, doc-size: 15.0, op-cost: 0.0, total-cost: 136471.34]
+distribute result [$$39] [cardinality: 145.44, doc-size: 15.0, op-cost: 0.0, total-cost: 59617.15]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 681.1, doc-size: 15.0, op-cost: 0.0, total-cost: 136471.34]
+  exchange [cardinality: 145.44, doc-size: 15.0, op-cost: 0.0, total-cost: 59617.15]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    distinct ([$$39]) [cardinality: 681.1, doc-size: 15.0, op-cost: 58474.7, total-cost: 136471.34]
+    distinct ([$$39]) [cardinality: 145.44, doc-size: 15.0, op-cost: 22334.73, total-cost: 59617.15]
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-      exchange [cardinality: 4783.64, doc-size: 15.0, op-cost: 0.0, total-cost: 77996.64]
+      exchange [cardinality: 2032.46, doc-size: 15.0, op-cost: 0.0, total-cost: 37282.42]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        order (ASC, $$39) [cardinality: 4783.64, doc-size: 15.0, op-cost: 58474.7, total-cost: 77996.64]
+        order (ASC, $$39) [cardinality: 2032.46, doc-size: 15.0, op-cost: 22334.73, total-cost: 37282.42]
         -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
-          exchange [cardinality: 4783.64, doc-size: 15.0, op-cost: 0.0, total-cost: 19521.94]
+          exchange [cardinality: 2032.46, doc-size: 15.0, op-cost: 0.0, total-cost: 14947.69]
           -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
-            assign [$$39] <- [{"l_linenumber": $$41, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project: [$$39] [cardinality: 4783.64, doc-size: 15.0, op-cost: 0.0, total-cost: 19521.94]
+            assign [$$39] <- [{"l_linenumber": $$41, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project: [$$39] [cardinality: 2032.46, doc-size: 15.0, op-cost: 0.0, total-cost: 14947.69]
             -- ASSIGN  |PARTITIONED|
-              select (gt($$l.getField(4), 10)) [cardinality: 4783.64, doc-size: 15.0, op-cost: 0.0, total-cost: 19521.94]
+              select (gt($$l.getField(4), 10)) [cardinality: 2032.46, doc-size: 15.0, op-cost: 0.0, total-cost: 14947.69]
               -- STREAM_SELECT  |PARTITIONED|
-                project ([$$o, $$41, $$l]) [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
+                project ([$$o, $$41, $$l]) [cardinality: 2717.61, doc-size: 15.0, op-cost: 0.0, total-cost: 5981.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
+                  exchange [cardinality: 2717.61, doc-size: 15.0, op-cost: 0.0, total-cost: 5981.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$40, $$41, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$42, 1, $$42, true, true, true) [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
+                    unnest-map [$$40, $$41, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$42, 1, $$42, true, true, true) [cardinality: 2717.61, doc-size: 15.0, op-cost: 0.0, total-cost: 5981.0]
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- BROADCAST_EXCHANGE  |PARTITIONED|

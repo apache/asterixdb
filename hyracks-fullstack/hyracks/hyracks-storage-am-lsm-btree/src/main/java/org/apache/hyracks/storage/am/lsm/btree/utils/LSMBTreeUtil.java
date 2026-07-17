@@ -142,8 +142,9 @@ public class LSMBTreeUtil {
 
         return new LSMBTree(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
-                filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
-                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory,
-                needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer, atomic);
+                filterHelper, filterFrameFactory, filterManager, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
+                typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
+                pageWriteCallbackFactory, needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable,
+                updateAware, tracer, atomic);
     }
 }

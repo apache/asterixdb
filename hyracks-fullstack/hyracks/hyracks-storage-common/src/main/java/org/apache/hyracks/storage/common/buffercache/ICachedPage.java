@@ -40,6 +40,8 @@ public interface ICachedPage {
 
     void setDiskPageId(long dpid);
 
+    long getDiskPageId();
+
     /**
      * Check if a page is a large page
      *

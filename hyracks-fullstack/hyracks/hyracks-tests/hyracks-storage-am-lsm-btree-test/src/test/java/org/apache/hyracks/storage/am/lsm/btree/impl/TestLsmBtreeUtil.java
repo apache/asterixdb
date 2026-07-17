@@ -118,9 +118,9 @@ public class TestLsmBtreeUtil {
 
         return new TestLsmBtree(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory,
-                bulkLoadComponentFactory, filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate,
-                typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
-                pageWriteCallbackFactory, needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable,
-                updateAware, tracer);
+                bulkLoadComponentFactory, filterHelper, filterFrameFactory, filterManager, bloomFilterKeyFields,
+                bloomFilterFalsePositiveRate, typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, hasBloomFilter, btreeFields,
+                filterFields, durable, updateAware, tracer);
     }
 }

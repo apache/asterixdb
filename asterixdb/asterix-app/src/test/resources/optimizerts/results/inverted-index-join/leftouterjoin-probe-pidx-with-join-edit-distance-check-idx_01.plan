@@ -1,37 +1,37 @@
-distribute result [$$59]
+distribute result [$$65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$59] <- [{"tweet": {"id": $$72, "topics": $$67}, "similar-tweets": $$58}] project: [$$59]
+    assign [$$65] <- [{"tweet": {"id": $$78, "topics": $$98}, "similar-tweets": $$64}] project: [$$65]
     -- ASSIGN  |PARTITIONED|
       exchange
-      -- SORT_MERGE_EXCHANGE [$$72(ASC) ]  |PARTITIONED|
-        group by ([$$72 := $$62]) decor ([$$67]) {
-                  aggregate [$$58] <- [listify({"id": $$63, "topics": $$65})]
+      -- SORT_MERGE_EXCHANGE [$$78(ASC) ]  |PARTITIONED|
+        group by ([$$78 := $$97]) decor ([$$98]) {
+                  aggregate [$$64] <- [listify({"id": $$93, "topics": $$96})] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
-                    select (not(is-missing($$63)))
+                    select (not(is-missing($$93))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_SELECT  |LOCAL|
-                      project ([$$63, $$65])
+                      project ([$$93, $$96]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |LOCAL|
-                        nested tuple source
+                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- PRE_CLUSTERED_GROUP_BY[$$62]  |PARTITIONED|
+        -- PRE_CLUSTERED_GROUP_BY[$$97]  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            order (ASC, $$62) (ASC, $$63)
-            -- STABLE_SORT [$$62(ASC), $$63(ASC)]  |PARTITIONED|
+            order (ASC, $$97) (ASC, $$93)
+            -- STABLE_SORT [$$97(ASC), $$93(ASC)]  |PARTITIONED|
               exchange
-              -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
-                project ([$$67, $$63, $$65, $$62])
+              -- HASH_PARTITION_EXCHANGE [$$97]  |PARTITIONED|
+                project ([$$98, $$93, $$96, $$97])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    join (eq($$78, $$62))
-                    -- HYBRID_HASH_JOIN [$$78][$$62]  |PARTITIONED|
+                    join (eq($$84, $$97))
+                    -- HYBRID_HASH_JOIN [$$84][$$97]  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [$$78, $$t1] <- [$$62, $$79] project: [$$78]
+                        assign [$$84, $$t1] <- [$$68, $$85] project: [$$84]
                         -- ASSIGN  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -39,41 +39,41 @@ distribute result [$$59]
                             -- REPLICATE  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                unnest-map [$$62, $$79] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$80, 0, false, true, false)
+                                unnest-map [$$68, $$85] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$86, 0, false, true, false)
                                 -- BTREE_SEARCH  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    assign [$$80] <- [240]
+                                    assign [$$86] <- [240]
                                     -- ASSIGN  |PARTITIONED|
                                       empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       exchange
-                      -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
-                        union ($$63, $$85, $$63) ($$65, $$83, $$65) ($$62, $$62, $$62) ($$67, $$67, $$67)
+                      -- HASH_PARTITION_EXCHANGE [$$97]  |PARTITIONED|
+                        union ($$69, $$91, $$93) ($$71, $$89, $$96) ($$68, $$68, $$97) ($$73, $$73, $$98)
                         -- UNION_ALL  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            select (and(neq($$63, $$62), get-item(edit-distance-check($$67, $$65, 7), 0))) retain-untrue ($$63 <- missing) project: [$$63, $$65, $$62, $$67]
+                            select (and(neq($$69, $$68), get-item(edit-distance-check($$73, $$71, 7), 0))) retain-untrue ($$69 <- missing) project: [$$69, $$71, $$68, $$73]
                             -- STREAM_SELECT  |PARTITIONED|
-                              assign [$$65] <- [$$t2.getField(5)] project: [$$62, $$67, $$63, $$65]
+                              assign [$$71] <- [$$t2.getField(5)] project: [$$68, $$73, $$69, $$71]
                               -- ASSIGN  |PARTITIONED|
-                                project ([$$62, $$67, $$63, $$t2])
+                                project ([$$68, $$73, $$69, $$t2])
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    left-outer-unnest-map [$$63, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$86, 1, $$86, true, true, true)
+                                    left-outer-unnest-map [$$69, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$92, 1, $$92, true, true, true)
                                     -- BTREE_SEARCH  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        order (ASC, $$86)
-                                        -- STABLE_SORT [$$86(ASC)]  |PARTITIONED|
+                                        order (ASC, $$92)
+                                        -- STABLE_SORT [$$92(ASC)]  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            left-outer-unnest-map [$$86] <- index-search("msgNgramIx", 5, "Default", "test", "TweetMessages", true, true, 2, 7, 12, false, 1, $$67)
+                                            left-outer-unnest-map [$$92] <- index-search("msgNgramIx", 5, "Default", "test", "TweetMessages", true, true, 2, 7, 12, false, 1, $$73)
                                             -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
                                               exchange
                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                select (edit-distance-string-is-filterable($$67, 7, 3, true))
+                                                select (edit-distance-string-is-filterable($$73, 7, 3, true))
                                                 -- STREAM_SELECT  |PARTITIONED|
                                                   exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -81,7 +81,7 @@ distribute result [$$59]
                                                     -- REPLICATE  |PARTITIONED|
                                                       exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        assign [$$67] <- [$$79.getField(5)] project: [$$62, $$67]
+                                                        assign [$$73] <- [$$85.getField(5)] project: [$$68, $$73]
                                                         -- ASSIGN  |PARTITIONED|
                                                           exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -89,25 +89,25 @@ distribute result [$$59]
                                                             -- REPLICATE  |PARTITIONED|
                                                               exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                unnest-map [$$62, $$79] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$80, 0, false, true, false)
+                                                                unnest-map [$$68, $$85] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$86, 0, false, true, false)
                                                                 -- BTREE_SEARCH  |PARTITIONED|
                                                                   exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    assign [$$80] <- [240]
+                                                                    assign [$$86] <- [240]
                                                                     -- ASSIGN  |PARTITIONED|
                                                                       empty-tuple-source
                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            left outer join (and(neq($$85, $$62), get-item(edit-distance-check($$67, $$83, 7), 0)))
+                            left outer join (and(neq($$91, $$68), get-item(edit-distance-check($$73, $$89, 7), 0)))
                             -- NESTED_LOOP  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                assign [$$83] <- [$$84.getField(5)] project: [$$85, $$83]
+                                assign [$$89] <- [$$90.getField(5)] project: [$$91, $$89]
                                 -- ASSIGN  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    data-scan []<-[$$85, $$84] <- test.TweetMessages
+                                    data-scan []<-[$$91, $$90] <- test.TweetMessages
                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -115,7 +115,7 @@ distribute result [$$59]
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                               exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                select (not(edit-distance-string-is-filterable($$67, 7, 3, true)))
+                                select (not(edit-distance-string-is-filterable($$73, 7, 3, true)))
                                 -- STREAM_SELECT  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -123,7 +123,7 @@ distribute result [$$59]
                                     -- REPLICATE  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        assign [$$67] <- [$$79.getField(5)] project: [$$62, $$67]
+                                        assign [$$73] <- [$$85.getField(5)] project: [$$68, $$73]
                                         -- ASSIGN  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -131,11 +131,11 @@ distribute result [$$59]
                                             -- REPLICATE  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                unnest-map [$$62, $$79] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$80, 0, false, true, false)
+                                                unnest-map [$$68, $$85] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 1, $$86, 0, false, true, false)
                                                 -- BTREE_SEARCH  |PARTITIONED|
                                                   exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    assign [$$80] <- [240]
+                                                    assign [$$86] <- [240]
                                                     -- ASSIGN  |PARTITIONED|
                                                       empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

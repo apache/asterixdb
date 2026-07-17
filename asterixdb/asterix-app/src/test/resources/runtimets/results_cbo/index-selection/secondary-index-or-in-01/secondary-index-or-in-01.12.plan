@@ -1,24 +1,24 @@
-distribute result [$$48] [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+distribute result [$$48] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+  exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$48] <- [{"$1": $$50}] project: [$$48] [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+    assign [$$48] <- [{"$1": $$50}] project: [$$48] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$50] <- [agg-sql-sum($$52)] [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+      aggregate [$$50] <- [agg-sql-sum($$52)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+        exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$52] <- [agg-sql-count(1)] [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+          aggregate [$$52] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
           -- AGGREGATE  |PARTITIONED|
-            select (and(gt($$o.getField("total"), 5000.0), or(eq($$37, "pending"), eq($$37, "shipped")))) [cardinality: 827.85, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+            select (and(gt($$o.getField("total"), 5000.0), or(eq($$37, "pending"), eq($$37, "shipped")))) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$37] <- [$$o.getField("status")] [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+              assign [$$37] <- [$$o.getField("status")] [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
               -- ASSIGN  |PARTITIONED|
-                project ([$$o]) [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                project ([$$o]) [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                  exchange [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$49, $$o] <- test.orders [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                    data-scan []<-[$$49, $$o] <- test.orders [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

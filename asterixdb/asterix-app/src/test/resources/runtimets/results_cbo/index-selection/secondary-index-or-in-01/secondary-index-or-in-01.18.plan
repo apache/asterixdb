@@ -1,26 +1,26 @@
-distribute result [$$58] [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+distribute result [$$58] [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+  exchange [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$58] <- [{"$1": $$60}] project: [$$58] [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+    assign [$$58] <- [{"$1": $$60}] project: [$$58] [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$60] <- [agg-sql-sum($$62)] [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+      aggregate [$$60] <- [agg-sql-sum($$62)] [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+        exchange [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$62] <- [agg-sql-count(1)] [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+          aggregate [$$62] <- [agg-sql-count(1)] [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
           -- AGGREGATE  |PARTITIONED|
-            select (or(eq($$t, "urgent"), eq($$t, "clearance"))) [cardinality: 3386.64, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+            select (or(eq($$t, "urgent"), eq($$t, "clearance"))) [cardinality: 825.78, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
             -- STREAM_SELECT  |PARTITIONED|
-              unnest $$t <- scan-collection($$61) project: [$$t] [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+              unnest $$t <- scan-collection($$61) project: [$$t] [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
               -- UNNEST  |PARTITIONED|
-                assign [$$61] <- [$$o.getField("tags")] project: [$$61] [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                assign [$$61] <- [$$o.getField("tags")] project: [$$61] [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$o]) [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                  project ([$$o]) [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                    exchange [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$59, $$o] <- test.orders [cardinality: 5000.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5000.0]
+                      data-scan []<-[$$59, $$o] <- test.orders [cardinality: 5016.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5016.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

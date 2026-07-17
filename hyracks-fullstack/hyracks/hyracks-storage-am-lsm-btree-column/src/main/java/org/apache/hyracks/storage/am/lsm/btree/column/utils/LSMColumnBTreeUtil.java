@@ -128,8 +128,9 @@ public class LSMColumnBTreeUtil {
 
         return new LSMColumnBTree(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory,
                 insertLeafFrameFactory, deleteLeafFrameFactory, diskBufferCache, columnBufferPool, fileNameManager,
-                flushComponentFactory, mergeComponentFactory, bulkLoadComponentFactory, bloomFilterFalsePositiveRate,
-                typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
-                pageWriteCallbackFactory, btreeFields, tracer, columnManager, atomic, diskCacheManager);
+                flushComponentFactory, mergeComponentFactory, bulkLoadComponentFactory, bloomFilterKeyFields,
+                bloomFilterFalsePositiveRate, typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, tracer, columnManager, atomic,
+                diskCacheManager);
     }
 }

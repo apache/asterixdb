@@ -1,28 +1,28 @@
-distribute result [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+distribute result [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+  exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$58] <- [{"$1": $$60}] project: [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+    assign [$$58] <- [{"$1": $$60}] project: [$$58] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$60] <- [agg-sql-sum($$64)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+      aggregate [$$60] <- [agg-sql-sum($$64)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+        exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$64] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+          aggregate [$$64] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
           -- AGGREGATE  |PARTITIONED|
-            select (eq($$ol.getField("ol_item"), "item_5")) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+            select (eq($$ol.getField("ol_item"), "item_5")) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
             -- STREAM_SELECT  |PARTITIONED|
-              unnest $$ol <- scan-collection($$62) project: [$$ol] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+              unnest $$ol <- scan-collection($$62) project: [$$ol] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
               -- UNNEST  |PARTITIONED|
-                select (eq($$o.getField("region"), "west")) project: [$$62] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                select (eq($$o.getField("region"), "west")) project: [$$62] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$62] <- [$$o.getField("o_orderline")] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                  assign [$$62] <- [$$o.getField("o_orderline")] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$o]) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                    project ([$$o]) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                      exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$59, $$o] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$68, 1, $$68, true, true, true) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 148.03]
+                        unnest-map [$$59, $$o] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$68, 1, $$68, true, true, true) [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 142.5]
                         -- BTREE_SEARCH  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

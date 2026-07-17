@@ -36,6 +36,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetResource;
@@ -75,6 +76,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
+import org.apache.asterix.runtime.operators.DatasetSamplingMetadataProbeOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -83,6 +85,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -102,6 +105,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
+import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
@@ -115,6 +119,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.btree.dataflow.BTreeSampleCollectorOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
@@ -457,6 +462,33 @@ public class DatasetUtil {
         return primarySearchOp;
     }
 
+    public static IOperatorDescriptor createSampleScanOp(JobSpecification spec, MetadataProvider metadataProvider,
+            Dataset dataset, int sampleCardinalityTargetPerPartition, long sampleSeed,
+            ITupleProjectorFactory projectorFactory) throws AlgebricksException {
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IFileSplitProvider primaryFileSplitProvider = partitioningProperties.getSplitsProvider();
+        AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
+        // -Infinity
+        int[] lowKeyFields = null;
+        // +Infinity
+        int[] highKeyFields = null;
+        ITransactionSubsystemProvider txnSubsystemProvider = TransactionSubsystemProvider.INSTANCE;
+        ISearchOperationCallbackFactory searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(
+                dataset.getDatasetId(), dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
+                IRecoveryManager.ResourceType.LSM_BTREE);
+        IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
+        StorageProperties storageProperties = metadataProvider.getStorageProperties();
+        BTreeSampleCollectorOperatorDescriptor sampleOp = new BTreeSampleCollectorOperatorDescriptor(spec,
+                dataset.getPrimaryRecordDescriptor(metadataProvider), lowKeyFields, highKeyFields, true, true,
+                indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false, null, null, -1, false,
+                null, null, projectorFactory, null, partitioningProperties.getComputeStorageMap(),
+                sampleCardinalityTargetPerPartition, sampleSeed, storageProperties.getMaxSampleLeafAttempts(),
+                storageProperties.getSampleLeafDrawBatchSize(), storageProperties.getColumnSamplesPerPage());
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sampleOp, primaryPartitionConstraint);
+        return sampleOp;
+    }
+
     /**
      * Creates a primary index upsert operator for a given dataset.
      *
@@ -657,6 +689,34 @@ public class DatasetUtil {
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         return keyProviderOp;
+    }
+
+    public static final String SAMPLING_METADATA_PROBE_OPERATOR_NAME = "Sampling-Metadata-Probe";
+
+    /**
+     * Builds a metadata-only job that opens the dataset's primary index and counts how many disk components are
+     * missing the random-sampling metadata keys. The count is reported via operator stats under
+     * {@link #SAMPLING_METADATA_PROBE_OPERATOR_NAME} (summed across partitions); a total of {@code 0} means every
+     * disk component carries the metadata required for an unbiased random sample.
+     */
+    public static JobSpecification buildSamplingMetadataProbeJobSpec(Dataset dataset, MetadataProvider metadataProvider)
+            throws AlgebricksException {
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IStorageManager storageMgr = metadataProvider.getStorageComponentProvider().getStorageManager();
+        IIndexDataflowHelperFactory primaryIndexHelperFactory =
+                new IndexDataflowHelperFactory(storageMgr, partitioningProperties.getSplitsProvider());
+
+        IOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec, dataset, metadataProvider);
+        DatasetSamplingMetadataProbeOperatorDescriptor probeOp =
+                new DatasetSamplingMetadataProbeOperatorDescriptor(spec, SAMPLING_METADATA_PROBE_OPERATOR_NAME,
+                        primaryIndexHelperFactory, partitioningProperties.getComputeStorageMap());
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, probeOp,
+                partitioningProperties.getConstraints());
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, probeOp, 0);
+        spec.addRoot(probeOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        return spec;
     }
 
     public static String getFullyQualifiedDisplayName(Dataset dataset) {

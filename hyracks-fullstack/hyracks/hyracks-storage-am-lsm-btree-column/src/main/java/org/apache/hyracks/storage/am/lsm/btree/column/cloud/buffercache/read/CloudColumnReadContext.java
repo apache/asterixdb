@@ -131,6 +131,19 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     }
 
     @Override
+    public ICachedPage pinNext(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, long nextPageDiskPageId)
+            throws HyracksDataException {
+        // Release the previous pages
+        release(bufferCache);
+        // Pin the new leafPage
+        ICachedPage nextPage = bufferCache.pin(nextPageDiskPageId, this);
+        // Unpin the previous page
+        bufferCache.unpin(leafFrame.getPage(), this);
+        leafFrame.setPage(nextPage);
+        return nextPage;
+    }
+
+    @Override
     public void preparePageZeroSegments(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
         if (leafFrame.getNumberOfPageZeroSegments() <= 1) { // don't need to include the zeroth segment

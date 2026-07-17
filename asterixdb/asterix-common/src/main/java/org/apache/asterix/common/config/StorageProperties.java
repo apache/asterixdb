@@ -69,6 +69,7 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_GLOBAL_CLEANUP(BOOLEAN, true),
         STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10)),
         STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
+        STORAGE_COLUMN_SAMPLES_PER_PAGE(NONNEGATIVE_INTEGER, 1),
         STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15d),
         STORAGE_COLUMN_MAX_LEAF_NODE_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(10, MEGABYTE)),
         STORAGE_FORMAT(STRING, "row"),
@@ -85,7 +86,9 @@ public class StorageProperties extends AbstractProperties {
                     return (long) (0.03 * MAX_HEAP_BYTES);
                 }),
         STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE(getRangedIntegerType(1, 50000), 8000),
-        STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT(LONG, TimeUnit.SECONDS.toMillis(120));
+        STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT(LONG, TimeUnit.SECONDS.toMillis(120)),
+        STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS(POSITIVE_INTEGER, 500),
+        STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE(POSITIVE_INTEGER, 32768);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -112,8 +115,11 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_PARTITIONS_COUNT:
                 case STORAGE_FORMAT:
                 case STORAGE_COLUMN_MAX_TUPLE_COUNT:
+                case STORAGE_COLUMN_SAMPLES_PER_PAGE:
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                 case STORAGE_COLUMN_MAX_LEAF_NODE_SIZE:
+                case STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS:
+                case STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -167,6 +173,9 @@ public class StorageProperties extends AbstractProperties {
                     return "The maximum time to wait for nodes to respond to global storage cleanup requests";
                 case STORAGE_COLUMN_MAX_TUPLE_COUNT:
                     return "The maximum number of tuples to be stored per a mega leaf page";
+                case STORAGE_COLUMN_SAMPLES_PER_PAGE:
+                    return "The number of sample tuples to collect from each accepted mega-page during columnar sampling. "
+                            + "Values > 1 reduce Phase 2 I/O by amortizing column-stream setup cost across multiple tuples.";
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                     return "The percentage of the maximum tolerable empty space for a physical mega leaf page (e.g.,"
                             + " 0.15 means a physical page with 15% or less empty space is tolerable)";
@@ -190,6 +199,12 @@ public class StorageProperties extends AbstractProperties {
                     return "The maximum number of buffers in the column buffer pool.";
                 case STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT:
                     return "The maximum time in milliseconds to wait for acquiring a buffer from the column buffer pool.";
+                case STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS:
+                    return "The maximum number of attempts to find a random leaf page during B-tree sampling. "
+                            + "If exceeded, the sampling operation will fail with an error.";
+                case STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE:
+                    return "The batch size of random draws to perform at once during B-tree sampling. "
+                            + "Higher values reduce random I/O but increase memory overhead during sampling.";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -212,7 +227,15 @@ public class StorageProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == STORAGE_GLOBAL_CLEANUP;
+            switch (this) {
+                case STORAGE_GLOBAL_CLEANUP:
+                case STORAGE_COLUMN_SAMPLES_PER_PAGE:
+                case STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS:
+                case STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 
@@ -259,6 +282,14 @@ public class StorageProperties extends AbstractProperties {
 
     public double getBloomFilterFalsePositiveRate() {
         return accessor.getDouble(Option.STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE);
+    }
+
+    public int getMaxSampleLeafAttempts() {
+        return accessor.getInt(Option.STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS);
+    }
+
+    public int getSampleLeafDrawBatchSize() {
+        return accessor.getInt(Option.STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE);
     }
 
     public int getColumnBufferSize() {
@@ -351,6 +382,10 @@ public class StorageProperties extends AbstractProperties {
 
     public int getColumnMaxTupleCount() {
         return accessor.getInt(Option.STORAGE_COLUMN_MAX_TUPLE_COUNT);
+    }
+
+    public int getColumnSamplesPerPage() {
+        return accessor.getInt(Option.STORAGE_COLUMN_SAMPLES_PER_PAGE);
     }
 
     public double getColumnFreeSpaceTolerance() {

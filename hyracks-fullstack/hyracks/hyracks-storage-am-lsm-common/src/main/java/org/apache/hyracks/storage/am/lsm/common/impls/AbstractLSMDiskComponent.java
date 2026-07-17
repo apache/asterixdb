@@ -28,8 +28,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
@@ -40,6 +42,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    protected final IComponentSampler sampler;
     private final DiskComponentMetadata metadata;
     private final ArrayBackedValueStorage buffer = new ArrayBackedValueStorage(Long.BYTES);
 
@@ -53,6 +56,9 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         super(lsmIndex, filter);
         state = ComponentState.READABLE_UNWRITABLE;
         metadata = new DiskComponentMetadata(mdPageManager);
+        sampler = lsmIndex.isPrimaryIndex()
+                ? ThetaSampler.createSampler(lsmIndex.getBloomFilterKeyFields(), lsmIndex.getThetaSketchK())
+                : org.apache.hyracks.storage.common.NoOpSampler.INSTANCE;
     }
 
     @Override
@@ -225,8 +231,8 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
 
     protected IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput,
             long numElementsHint, boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
-        return new LSMIndexBulkLoader(
-                getIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback));
+        return new LSMIndexBulkLoader(getIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint,
+                checkIfEmptyIndex, sampler, callback), getMetadata(), sampler);
     }
 
     /**
@@ -253,6 +259,10 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
 
         callback.initialize(chainedBulkLoader);
         return chainedBulkLoader;
+    }
+
+    public IComponentSampler getSampler() {
+        return sampler;
     }
 
     @Override

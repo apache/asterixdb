@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
@@ -49,16 +50,18 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
     protected final ISplitKey splitKey;
     protected final boolean verifyInput;
     private final int maxTupleSize;
+    protected int maxLeafTupleCount = 0;
 
-    public BTreeNSMBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index)
-            throws HyracksDataException {
-        this(fillFactor, verifyInput, callback, index, index.getLeafFrameFactory().createFrame(),
+    public BTreeNSMBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback,
+            IComponentSampler sampler, ITreeIndex index) throws HyracksDataException {
+        this(fillFactor, verifyInput, callback, index, index.getLeafFrameFactory().createFrame(), sampler,
                 DefaultBufferCacheWriteContext.INSTANCE);
     }
 
     protected BTreeNSMBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
-        super(fillFactor, callback, index, leafFrame, writeContext);
+            ITreeIndexFrame leafFrame, IComponentSampler sampler, IBufferCacheWriteContext writeContext)
+            throws HyracksDataException {
+        super(fillFactor, callback, index, leafFrame, writeContext, sampler);
         this.verifyInput = verifyInput;
         splitKey = new BTreeSplitKey(tupleWriter.createTupleReference());
         splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
@@ -68,6 +71,7 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
     @Override
     public void add(ITupleReference tuple) throws HyracksDataException {
         try {
+            sampler.addTuple(tuple);
             int tupleSize = Math.max(leafFrame.getBytesRequiredToWriteTuple(tuple),
                     interiorFrame.getBytesRequiredToWriteTuple(tuple));
             NodeFrontier leafFrontier = nodeFrontiers.get(0);
@@ -230,6 +234,7 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
 
     protected void writeFullLeafPage() throws HyracksDataException {
         final NodeFrontier leafFrontier = nodeFrontiers.get(0);
+        maxLeafTupleCount = Math.max(maxLeafTupleCount, leafFrame.getTupleCount());
         leafFrontier.lastTuple.resetByTupleIndex(leafFrame, leafFrame.getTupleCount() - 1);
         final int splitKeySize = tupleWriter.bytesRequired(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
@@ -250,6 +255,14 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
         }
         pagesToWrite.clear();
         splitKey.setRightPage(leafFrontier.pageId);
+    }
+
+    // Should be called before the last page, to capture the tuple count of the last leaf page
+    public int getMaxLeafTupleCountOfLastPage() {
+        if (!nodeFrontiers.isEmpty()) {
+            return Math.max(maxLeafTupleCount, leafFrame.getTupleCount());
+        }
+        return maxLeafTupleCount;
     }
 
     protected void writeLastLeaf(ICachedPage page) throws HyracksDataException {

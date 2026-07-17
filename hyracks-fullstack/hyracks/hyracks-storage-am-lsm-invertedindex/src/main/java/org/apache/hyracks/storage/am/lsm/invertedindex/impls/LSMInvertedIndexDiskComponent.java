@@ -127,10 +127,10 @@ public class LSMInvertedIndexDiskComponent extends AbstractLSMWithBuddyDiskCompo
     @Override
     protected IChainedComponentBulkLoader createMergeIndexBulkLoader(float fillFactor, boolean verifyInput,
             long numElementsHint, boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
-        IIndexBulkLoader indexBulkLoader =
-                invIndex.createMergeBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback);
-        IIndexBulkLoader buddyBulkLoader =
-                getBuddyIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, callback);
+        IIndexBulkLoader indexBulkLoader = invIndex.createMergeBulkLoader(fillFactor, verifyInput, numElementsHint,
+                checkIfEmptyIndex, sampler, callback);
+        IIndexBulkLoader buddyBulkLoader = getBuddyIndex().createBulkLoader(fillFactor, verifyInput, numElementsHint,
+                checkIfEmptyIndex, sampler, callback);
         return new IndexWithBuddyBulkLoader(indexBulkLoader, buddyBulkLoader);
     }
 }

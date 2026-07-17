@@ -154,7 +154,11 @@ public class DumpIndexReader extends FunctionReader {
             case STRING:
                 JSONUtil.quoteAndEscape(recordBuilder, ((AString) field).getStringValue());
                 break;
+            case NULL:
+                sb.append("null");
+                break;
             case MISSING:
+                // Should not reach here - MISSING fields filtered in printObject/buildJsonRecord
                 break;
             default:
                 sb.append(field);
@@ -165,14 +169,20 @@ public class DumpIndexReader extends FunctionReader {
         sb.append("{ ");
         int num = record.numberOfFields();
         ARecordType type = record.getType();
+        boolean firstField = true;
         for (int i = 0; i < num; i++) {
-            if (i > 0) {
+            IAObject value = record.getValueByPos(i);
+            // Skip MISSING fields to avoid malformed JSON like "field":,
+            if (value.getType().getTypeTag() == ATypeTag.MISSING) {
+                continue;
+            }
+            if (!firstField) {
                 sb.append(", ");
             }
-            IAObject value = record.getValueByPos(i);
             JSONUtil.quoteAndEscape(sb, type.getFieldNames()[i]);
             sb.append(": ");
             printField(sb, value);
+            firstField = false;
         }
         sb.append(" }");
     }

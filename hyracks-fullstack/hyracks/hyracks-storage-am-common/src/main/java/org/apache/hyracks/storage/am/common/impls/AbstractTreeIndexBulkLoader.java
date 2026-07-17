@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -55,6 +56,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
     protected final ITreeIndexMetadataFrame metaFrame;
     protected final ITreeIndexTupleWriter tupleWriter;
     protected ITreeIndexFrame leafFrame;
+    protected final IComponentSampler sampler;
     protected ITreeIndexFrame interiorFrame;
     // Immutable bulk loaders write their root page at page -2, as needed e.g. by append-only file systems such as
     // HDFS.  Since loading this tree relies on the root page actually being at that point, no further inserts into
@@ -64,19 +66,21 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
     protected List<ICachedPage> pagesToWrite;
     private final ICompressedPageWriter compressedPageWriter;
 
-    protected AbstractTreeIndexBulkLoader(float fillFactor, IPageWriteCallback callback, ITreeIndex index)
-            throws HyracksDataException {
+    protected AbstractTreeIndexBulkLoader(float fillFactor, IPageWriteCallback callback, ITreeIndex index,
+            IComponentSampler sampler) throws HyracksDataException {
         this(fillFactor, callback, index, index.getLeafFrameFactory().createFrame(),
-                DefaultBufferCacheWriteContext.INSTANCE);
+                DefaultBufferCacheWriteContext.INSTANCE, sampler);
     }
 
     protected AbstractTreeIndexBulkLoader(float fillFactor, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
+            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext, IComponentSampler sampler)
+            throws HyracksDataException {
         this.bufferCache = index.getBufferCache();
         this.freePageManager = index.getPageManager();
         this.fileId = index.getFileId();
         this.treeIndex = (AbstractTreeIndex) index;
         this.leafFrame = leafFrame;
+        this.sampler = sampler;
         interiorFrame = treeIndex.getInteriorFrameFactory().createFrame();
         metaFrame = freePageManager.createMetadataFrame();
 

@@ -144,6 +144,35 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         return false;
     }
 
+    /**
+     * Tests whether the current predicate key physically exists in any candidate component,
+     * <b>including as an antimatter (delete) entry</b>. Unlike {@link #doHasNext()}, this does not
+     * apply LSM delete-resolution: a key whose newest entry in the searched components is a delete
+     * still reports as present.
+     * <p>
+     * This is the shadow check the sample cursors need: a live tuple drawn from an older component
+     * must be rejected when a newer component carries <i>any</i> entry for its key — a newer insert
+     * (the live version is counted there) or a newer delete (the row is gone). Resolving the delete
+     * away here would let the sampler count a logically-deleted row.
+     */
+    protected boolean keyExistsIncludingAntimatter() throws HyracksDataException {
+        hashComputed = false;
+        for (int i = 0; i < numBTrees; i++) {
+            if (!isSearchCandidate(i)) {
+                continue;
+            }
+            btreeAccessors[i].search(btreeCursors[i], predicate);
+            try {
+                if (btreeCursors[i].hasNext()) {
+                    return true;
+                }
+            } finally {
+                btreeCursors[i].close();
+            }
+        }
+        return false;
+    }
+
     protected boolean isSearchCandidate(int componentIndex) throws HyracksDataException {
         if (bloomFilters[componentIndex] != null) {
             if (!hashComputed) {

@@ -23,6 +23,7 @@ import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 import static org.apache.asterix.test.cloud_storage.CloudStorageGCSTest.S3_ONLY;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -74,6 +75,9 @@ public class GCSCloudStorageUnstableTest {
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage-gcs.conf";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String EXCLUDED_TESTS = "MP";
+    // Tests excluded from unstable cloud runs because simulated I/O failures (UnstableCloudClient)
+    // cause non-deterministic LSM disk component layouts, making exact sample counts unpredictable.
+    private static final String[] UNSTABLE_DENY_LIST = { "ddl: analyze-dataset-1" };
     public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:24443";
     private static final String MOCK_SERVER_PROJECT_ID = "asterixdb-gcs-test-project-id";
 
@@ -111,7 +115,8 @@ public class GCSCloudStorageUnstableTest {
     public void test() throws Exception {
         List<TestCase.CompilationUnit> cu = tcCtx.getTestCase().getCompilationUnit();
         Assume.assumeTrue(cu.size() > 1 || (!EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription()))
-                && !S3_ONLY.equals(getText(cu.get(0).getDescription()))));
+                && !S3_ONLY.equals(getText(cu.get(0).getDescription()))
+                && !Arrays.stream(UNSTABLE_DENY_LIST).anyMatch(s -> tcCtx.toString().contains(s))));
         LangExecutionUtil.test(tcCtx);
         for (NodeControllerService nc : ExecutionTestUtil.integrationUtil.ncs) {
             IDatasetLifecycleManager lifecycleManager =

@@ -1,36 +1,36 @@
-distribute result [$$116] [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 34405.95]
+distribute result [$$116] [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 22460.68]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 34405.95]
+  exchange [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 22460.68]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$116] <- [{"$1": $$126}] project: [$$116] [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 34405.95]
+    assign [$$116] <- [{"$1": $$126}] project: [$$116] [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 22460.68]
     -- ASSIGN  |PARTITIONED|
-      project ([$$126]) [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 34405.95]
+      project ([$$126]) [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 22460.68]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 34405.95]
+        exchange [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 22460.68]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$l_linenumber := $$130; $$c_nationkey := $$131; $$o_orderstatus := $$132]) decor ([]) {
                     aggregate [$$126] <- [sql-sum-serial($$129)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1002.74, doc-size: 20.0, op-cost: 6016.3, total-cost: 34405.95]
+                 } [cardinality: 420.1, doc-size: 20.0, op-cost: 2520.58, total-cost: 22460.68]
           -- EXTERNAL_GROUP_BY[$$130, $$131, $$132]  |PARTITIONED|
-            exchange [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, total-cost: 28389.65]
+            exchange [cardinality: 420.1, doc-size: 20.0, op-cost: 0.0, total-cost: 19940.1]
             -- HASH_PARTITION_EXCHANGE [$$130, $$131, $$132]  |PARTITIONED|
               group by ([$$130 := $$121; $$131 := $$118; $$132 := $$119]) decor ([]) {
                         aggregate [$$129] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 1002.74, doc-size: 20.0, op-cost: 6016.3, total-cost: 28389.65]
+                     } [cardinality: 420.1, doc-size: 20.0, op-cost: 2520.58, total-cost: 19940.1]
               -- EXTERNAL_GROUP_BY[$$121, $$118, $$119]  |PARTITIONED|
-                exchange [cardinality: 6016.3, doc-size: 20.0, op-cost: 0.0, total-cost: 22373.35]
+                exchange [cardinality: 2520.58, doc-size: 20.0, op-cost: 0.0, total-cost: 17419.52]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$121, $$118, $$119]) [cardinality: 6016.3, doc-size: 20.0, op-cost: 0.0, total-cost: 22373.35]
+                  project ([$$121, $$118, $$119]) [cardinality: 2520.58, doc-size: 20.0, op-cost: 0.0, total-cost: 17419.52]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 6016.3, doc-size: 20.0, op-cost: 0.0, total-cost: 22373.35]
+                    exchange [cardinality: 2520.58, doc-size: 20.0, op-cost: 0.0, total-cost: 17419.52]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      unnest-map [$$120, $$121, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$122, 1, $$122, true, true, true) [cardinality: 6016.3, doc-size: 20.0, op-cost: 0.0, total-cost: 22373.35]
+                      unnest-map [$$120, $$121, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$122, 1, $$122, true, true, true) [cardinality: 2520.58, doc-size: 20.0, op-cost: 0.0, total-cost: 17419.52]
                       -- BTREE_SEARCH  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -38,7 +38,7 @@ distribute result [$$116] [cardinality: 1002.74, doc-size: 20.0, op-cost: 0.0, t
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              join (eq($$124, $$123)) [cardinality: 1501.41, doc-size: 15.0, op-cost: 2101.41, total-cost: 4351.41]
+                              join (eq($$124, $$123)) [cardinality: 1121.83, doc-size: 15.0, op-cost: 1721.83, total-cost: 3971.83]
                               -- HYBRID_HASH_JOIN [$$124][$$123]  |PARTITIONED|
                                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

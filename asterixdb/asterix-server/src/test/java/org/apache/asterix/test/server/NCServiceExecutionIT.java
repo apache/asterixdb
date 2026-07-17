@@ -135,7 +135,7 @@ public class NCServiceExecutionIT {
     private static HyracksNCServiceProcess nc2;
 
     private final TestCaseContext tcCtx;
-    private static final TestExecutor testExecutor = new TestExecutor();
+    private static final TestExecutor testExecutor = new TestExecutor("results_ncservice");
 
     private static final SequencedSet<String> badTestCases = new LinkedHashSet<>();
     private static HyracksVirtualCluster cluster;

@@ -54,6 +54,7 @@ import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -983,8 +984,9 @@ public class BTree extends AbstractTreeIndex {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException {
-        return new BTreeNSMBulkLoader(fillFactor, verifyInput, callback, this);
+            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            throws HyracksDataException {
+        return new BTreeNSMBulkLoader(fillFactor, verifyInput, callback, sampler, this);
     }
 
     @SuppressWarnings("rawtypes")

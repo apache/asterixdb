@@ -1,36 +1,36 @@
-distribute result [$$58] [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 13427.92]
+distribute result [$$58] [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10245.9]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 13427.92]
+  exchange [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10245.9]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$58] <- [{"$1": $$62}] project: [$$58] [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 13427.92]
+    assign [$$58] <- [{"$1": $$62}] project: [$$58] [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10245.9]
     -- ASSIGN  |PARTITIONED|
-      project ([$$62]) [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 13427.92]
+      project ([$$62]) [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10245.9]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 13427.92]
+        exchange [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10245.9]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$l_orderkey := $$66]) decor ([]) {
                     aggregate [$$62] <- [sql-sum-serial($$65)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 673.0, doc-size: 0.0, op-cost: 3711.46, total-cost: 13427.92]
+                 } [cardinality: 150.0, doc-size: 0.0, op-cost: 2132.45, total-cost: 10245.9]
           -- EXTERNAL_GROUP_BY[$$66]  |PARTITIONED|
-            exchange [cardinality: 673.0, doc-size: 0.0, op-cost: 0.0, total-cost: 9716.46]
+            exchange [cardinality: 150.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8113.45]
             -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
               group by ([$$66 := $$60]) decor ([]) {
                         aggregate [$$65] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 673.0, doc-size: 0.0, op-cost: 3711.46, total-cost: 9716.46]
+                     } [cardinality: 150.0, doc-size: 0.0, op-cost: 2132.45, total-cost: 8113.45]
               -- EXTERNAL_GROUP_BY[$$60]  |PARTITIONED|
-                exchange [cardinality: 3711.46, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                exchange [cardinality: 2132.45, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  select (and(le($$61, 4), gt($$l.getField(4), 10))) project: [$$60] [cardinality: 3711.46, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                  select (and(le($$61, 4), gt($$l.getField(4), 10))) project: [$$60] [cardinality: 2132.45, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                   -- STREAM_SELECT  |PARTITIONED|
-                    exchange [cardinality: 6005.0, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                    exchange [cardinality: 5981.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$60, $$61, $$l] <- tpch.LineItem [cardinality: 6005.0, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                      data-scan []<-[$$60, $$61, $$l] <- tpch.LineItem [cardinality: 5981.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

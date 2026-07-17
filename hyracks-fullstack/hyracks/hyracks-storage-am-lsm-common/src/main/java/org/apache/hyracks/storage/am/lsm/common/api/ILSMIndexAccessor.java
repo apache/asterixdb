@@ -247,6 +247,21 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     void scanDiskComponents(IIndexCursor cursor) throws HyracksDataException;
 
     /**
+     * Open the given cursor for random sampling from disk components of the primary index.
+     * Unlike {@link #scanDiskComponents(IIndexCursor)}, this method picks random leaf pages
+     * from the B-tree and samples tuples from them, rather than performing a full scan.
+     *
+     * If this method returns successfully, then the cursor has been opened. If an exception is thrown then
+     * the cursor was not opened.
+     *
+     * @param cursor
+     *            Cursor for sampling tuples from disk components.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     */
+    void scanDiskComponentsForSample(IIndexCursor cursor) throws HyracksDataException;
+
+    /**
      * Delete components that match the passed predicate
      * NOTE: This call can only be made when the caller knows that data modification has been stopped
      *

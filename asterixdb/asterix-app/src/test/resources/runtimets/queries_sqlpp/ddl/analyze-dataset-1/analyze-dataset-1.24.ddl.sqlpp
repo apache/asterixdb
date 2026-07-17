@@ -19,4 +19,4 @@
 
 use test;
 
-analyze dataset ds1;
+analyze dataset ds1 with { "sample-seed": 1000 };

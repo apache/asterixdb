@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMIndexSampleCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -72,17 +73,17 @@ public class LSMColumnBTree extends LSMBTree {
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache diskBufferCache,
             IColumnBufferPool columnBufferPool, ILSMIndexFileManager fileManager,
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory mergeComponentFactory,
-            ILSMDiskComponentFactory bulkloadComponentFactory, double bloomFilterFalsePositiveRate, int fieldCount,
-            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILSMPageWriteCallbackFactory pageWriteCallbackFactory, int[] btreeFields, ITracer tracer,
-            IColumnManager columnManager, boolean atomic, IColumnIndexDiskCacheManager diskCacheManager)
-            throws HyracksDataException {
+            ILSMDiskComponentFactory bulkloadComponentFactory, int[] bloomFilterKeyFields,
+            double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+            int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic,
+            IColumnIndexDiskCacheManager diskCacheManager) throws HyracksDataException {
         super(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null,
-                null, null, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
-                ioOpCallbackFactory, pageWriteCallbackFactory, true, true, btreeFields, null, true, false, tracer,
-                atomic);
+                null, null, bloomFilterKeyFields, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,
+                opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, true, true, btreeFields, null,
+                true, false, tracer, atomic);
         this.columnManager = columnManager;
         this.mergeComponentFactory = mergeComponentFactory;
         this.diskCacheManager = diskCacheManager;
@@ -111,10 +112,12 @@ public class LSMColumnBTree extends LSMBTree {
                 ((LSMColumnBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length;
         IColumnTupleProjector tupleProjector =
                 ColumnUtil.getTupleProjector(iap, columnManager.getMergeColumnProjector());
-        return new LSMColumnBTreeOpContext(this, memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
-                (IExtendedModificationOperationCallback) iap.getModificationCallback(),
+        LSMColumnBTreeOpContext opCtx = new LSMColumnBTreeOpContext(this, memoryComponents, insertLeafFrameFactory,
+                deleteLeafFrameFactory, (IExtendedModificationOperationCallback) iap.getModificationCallback(),
                 iap.getSearchOperationCallback(), numBloomFilterKeyFields, getTreeFields(), getFilterFields(),
                 getHarness(), getFilterCmpFactories(), tracer, tupleProjector);
+        opCtx.setParameters(iap.getParameters());
+        return opCtx;
     }
 
     protected IColumnManager getColumnManager() {
@@ -138,6 +141,11 @@ public class LSMColumnBTree extends LSMBTree {
     @Override
     public LSMBTreeBatchPointSearchCursor createBatchPointSearchCursor(ILSMIndexOperationContext opCtx) {
         return new LSMColumnBatchPointSearchCursor(opCtx);
+    }
+
+    @Override
+    public LSMIndexSampleCursor createSampleCollectorCursor(ILSMIndexOperationContext opContext) {
+        return new LSMIndexSampleCursor(opContext, new LSMColumnBatchPointSearchCursor(opContext));
     }
 
     @Override

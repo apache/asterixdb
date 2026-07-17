@@ -1,18 +1,18 @@
-distribute result [$$54] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+distribute result [$$54] [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+  exchange [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$54] <- [{"$1": $$56}] project: [$$54] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+    assign [$$54] <- [{"$1": $$56}] project: [$$54] [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$56] <- [agg-sql-sum($$58)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+      aggregate [$$56] <- [agg-sql-sum($$58)] [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+        exchange [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+          aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
           -- AGGREGATE  |PARTITIONED|
-            exchange [cardinality: 2.1, doc-size: 0.0, op-cost: 0.0, total-cost: 162608.96]
+            exchange [cardinality: 33.4, doc-size: 0.0, op-cost: 0.0, total-cost: 160151.66]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              distinct ([$$65]) [cardinality: 2.1, doc-size: 0.0, op-cost: 162608.96, total-cost: 162608.96]
+              distinct ([$$65]) [cardinality: 33.4, doc-size: 0.0, op-cost: 160151.66, total-cost: 160151.66]
               -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -19,19 +19,24 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
+import java.util.BitSet;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.BatchPredicate;
+import org.apache.hyracks.storage.am.btree.impls.BatchPredicateWithKeys;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexBatchPointCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 
 /**
  * This cursor performs point searches for each batch of search keys.
  * Assumption: the search keys must be sorted into the increasing order.
  */
-public class LSMBTreeBatchPointSearchCursor extends LSMBTreePointSearchCursor {
+public class LSMBTreeBatchPointSearchCursor extends LSMBTreePointSearchCursor implements ILSMIndexBatchPointCursor {
 
     public LSMBTreeBatchPointSearchCursor(ILSMIndexOperationContext opCtx) {
         super(opCtx);
@@ -78,6 +83,27 @@ public class LSMBTreeBatchPointSearchCursor extends LSMBTreePointSearchCursor {
 
     public int getKeyIndex() {
         return ((BatchPredicate) predicate).getKeyIndex();
+    }
+
+    @Override
+    public void setPredicate(ISearchPredicate predicate) {
+        this.predicate = (BatchPredicateWithKeys) predicate;
+    }
+
+    @Override
+    public void doHasNextWithPredicate(BitSet foundRecordsIndex) throws HyracksDataException {
+        // update the predicate to the new one
+        BatchPredicateWithKeys batchPred = (BatchPredicateWithKeys) predicate;
+        while (batchPred.hasNext()) {
+            batchPred.next();
+            // Shadow check for sampling: a key is "found" if it physically exists in any of the
+            // searched (newer) components, INCLUDING as an antimatter (delete) entry. Using the
+            // delete-resolving point search here would report a newer-deleted key as absent and let
+            // the sampler wrongly count the older, shadowed live tuple.
+            if (keyExistsIncludingAntimatter()) {
+                foundRecordsIndex.set(batchPred.getKeyIndex());
+            }
+        }
     }
 
 }

@@ -20,4 +20,4 @@
 USE test;
 
 DROP INDEX ds1.ds1_idx3;
-ANALYZE DATASET ds1;
+ANALYZE DATASET ds1 WITH { "sample-seed": 1000 };

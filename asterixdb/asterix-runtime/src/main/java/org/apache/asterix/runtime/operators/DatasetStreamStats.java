@@ -33,18 +33,32 @@ public final class DatasetStreamStats {
 
     private final int avgTupleSize;
 
+    private final long pinnedPages;
+
+    private final long coldReads;
+    private final long cloudPageReads;
+
     private final Map<String, IndexStats> indexesStats;
 
     public DatasetStreamStats(IOperatorStats opStats) {
+        long sampledTupleCount = opStats.getInputTupleCounter().get();
+        long sampledTupleSize = opStats.getTupleBytes().get();
         this.cardinality = opStats.getTupleCounter().get();
-        long totalTupleSize = opStats.getPageReadCounter().get();
-        this.avgTupleSize = cardinality > 0 ? (int) (totalTupleSize / cardinality) : 0;
+        this.avgTupleSize = sampledTupleCount > 0 ? (int) (sampledTupleSize / sampledTupleCount) : 0;
+        this.pinnedPages = opStats.getPageReadCounter().get();
+        this.coldReads = opStats.coldReadCounter().get();
+        this.cloudPageReads = opStats.cloudReadRequestCounter().get();
         this.indexesStats = opStats.getIndexesStats();
     }
 
-    static void update(IOperatorStats opStats, long tupleCount, long tupleSize, Map<String, IndexStats> indexStats) {
-        opStats.getTupleCounter().update(tupleCount);
-        opStats.getPageReadCounter().update(tupleSize);
+    static void update(IOperatorStats opStats, long sampledTupleCount, long estimatedCardinality, long totalTupleLength,
+            long pinnedPages, long coldReads, long cloudReadCount, Map<String, IndexStats> indexStats) {
+        opStats.getTupleCounter().update(estimatedCardinality);
+        opStats.getInputTupleCounter().update(sampledTupleCount);
+        opStats.getTupleBytes().update(totalTupleLength);
+        opStats.cloudReadRequestCounter().update(cloudReadCount);
+        opStats.coldReadCounter().update(coldReads);
+        opStats.getPageReadCounter().update(pinnedPages);
         opStats.updateIndexesStats(indexStats);
     }
 
@@ -54,6 +68,18 @@ public final class DatasetStreamStats {
 
     public int getAvgTupleSize() {
         return avgTupleSize;
+    }
+
+    public long getPinnedPages() {
+        return pinnedPages;
+    }
+
+    public long getColdReads() {
+        return coldReads;
+    }
+
+    public long getCloudPageReads() {
+        return cloudPageReads;
     }
 
     public Map<String, IndexStats> getIndexesStats() {

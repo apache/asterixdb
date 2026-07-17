@@ -102,4 +102,13 @@ public interface IIndexAccessor extends IDestroyable {
      *             If the BufferCache throws while un/pinning or un/latching.
      */
     void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException;
+
+    /**
+     * Perform the walk on the disk components for sampling till reaches a leaf.
+      * @param cursor
+     * @throws HyracksDataException
+     */
+    default void diskSampleScan(IIndexCursor cursor) throws HyracksDataException {
+        throw new UnsupportedOperationException("Disk sample scan is not supported for " + this.getClass().getName());
+    }
 }

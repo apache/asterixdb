@@ -1,30 +1,30 @@
-distribute result [$$36] [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 28.86]
+distribute result [$$36] [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 6.41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 28.86]
+  exchange [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 6.41]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$36] <- [{"A": $$A, "ord": $$ord}] project: [$$36] [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 28.86]
+    assign [$$36] <- [{"A": $$A, "ord": $$ord}] project: [$$36] [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 6.41]
     -- ASSIGN  |PARTITIONED|
-      project ([$$A, $$ord]) [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 28.86]
+      project ([$$A, $$ord]) [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 6.41]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 28.86]
+        exchange [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 6.41]
         -- SORT_MERGE_EXCHANGE [$$39(ASC), $$33(ASC) ]  |PARTITIONED|
-          order (ASC, $$39) (ASC, $$33) [cardinality: 8.0, doc-size: 560.0, op-cost: 24.0, total-cost: 28.86]
+          order (ASC, $$39) (ASC, $$33) [cardinality: 2.0, doc-size: 557.0, op-cost: 2.0, total-cost: 6.41]
           -- STABLE_SORT [$$39(ASC), $$33(ASC)]  |PARTITIONED|
-            exchange [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+            exchange [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              select (or(eq($$33, 7), eq($$33, 9), eq($$33, 12), eq($$33, 17))) [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+              select (or(eq($$33, 7), eq($$33, 9), eq($$33, 12), eq($$33, 17))) [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
               -- STREAM_SELECT  |PARTITIONED|
-                assign [$$33] <- [$$ord.getField("delivery_time")] [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                assign [$$33] <- [$$ord.getField("delivery_time")] [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                 -- ASSIGN  |PARTITIONED|
-                  unnest $$ord <- scan-collection($$40) project: [$$39, $$A, $$ord] [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                  unnest $$ord <- scan-collection($$40) project: [$$39, $$A, $$ord] [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                   -- UNNEST  |PARTITIONED|
-                    assign [$$40] <- [$$A.getField("orders")] [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                    assign [$$40] <- [$$A.getField("orders")] [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                     -- ASSIGN  |PARTITIONED|
-                      project ([$$39, $$A]) [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                      project ([$$39, $$A]) [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                        exchange [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$39, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$45, 1, $$45, true, true, true) [cardinality: 8.0, doc-size: 560.0, op-cost: 0.0, total-cost: 4.86]
+                          unnest-map [$$39, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$45, 1, $$45, true, true, true) [cardinality: 2.0, doc-size: 557.0, op-cost: 0.0, total-cost: 4.41]
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

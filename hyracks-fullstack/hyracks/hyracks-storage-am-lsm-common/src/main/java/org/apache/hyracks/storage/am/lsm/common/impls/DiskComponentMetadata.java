@@ -22,11 +22,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 
 public class DiskComponentMetadata implements IComponentMetadata {
 
     private final IMetadataPageManager mdpManager;
+    public static final MutableArrayValueReference THETA_INSERT_DELETE_SKETCH_KEY =
+            new MutableArrayValueReference("THETA_INSERT_DELETE_SKETCH_KEY".getBytes());
+    public static final MutableArrayValueReference MAX_LEAF_TUPLE_COUNT_KEY =
+            new MutableArrayValueReference("MAX_LEAF_TUPLE_COUNT_KEY".getBytes());
 
     public DiskComponentMetadata(IMetadataPageManager mdpManager) {
         this.mdpManager = mdpManager;

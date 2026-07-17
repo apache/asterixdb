@@ -175,4 +175,8 @@ public class LSMBTreeLocalResource extends LsmResource {
         return jsonNode.has(fieldName) ? jsonNode.get(fieldName).asBoolean() : defaultValue;
     }
 
+    protected static int getOrDefaultInt(JsonNode jsonNode, String fieldName, int defaultValue) {
+        return jsonNode.has(fieldName) ? jsonNode.get(fieldName).asInt() : defaultValue;
+    }
+
 }

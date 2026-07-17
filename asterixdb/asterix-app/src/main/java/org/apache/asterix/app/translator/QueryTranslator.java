@@ -5235,10 +5235,34 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             InternalDatasetDetails dsDetails = (InternalDatasetDetails) ds.getDatasetDetails();
             int sampleCardinalityTarget = stmtAnalyze.getSampleSize();
             long sampleSeed = stmtAnalyze.getOrCreateSampleSeed();
+            Index.SampleIndexDetails.SampleMethod sampleMethod = stmtAnalyze.getSampleMethod();
+
+            // Random sampling requires every primary-index disk component to carry the sampling metadata (theta
+            // sketch + max leaf tuple count). Components predating the feature acquire it only once merged; a freshly
+            // flushed component always carries it, so probing the existing disk components is sufficient. If any
+            // component is missing the metadata, an unbiased random sample is impossible, so fall back to full scan.
+            if (sampleMethod != Index.SampleIndexDetails.SampleMethod.FULL_SCAN) {
+                JobSpecification probeSpec = DatasetUtil.buildSamplingMetadataProbeJobSpec(ds, metadataProvider);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+                List<IOperatorStats> probeStats = runJob(hcc, probeSpec, jobFlags,
+                        Collections.singletonList(DatasetUtil.SAMPLING_METADATA_PROBE_OPERATOR_NAME));
+                // No stats => could not determine; be conservative and force a full scan.
+                long componentsMissingMetadata =
+                        probeStats == null || probeStats.isEmpty() ? -1 : probeStats.get(0).getTupleCounter().get();
+                if (componentsMissingMetadata != 0) {
+                    LOGGER.warn("Dataset '{}' has {} primary-index disk component(s) missing random-sampling "
+                            + "metadata; forcing full scan.", datasetName, componentsMissingMetadata);
+                    sampleMethod = Index.SampleIndexDetails.SampleMethod.FULL_SCAN;
+                }
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            }
 
             Index.SampleIndexDetails newIndexDetailsPendingAdd = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0,
-                    sampleSeed, Collections.emptyMap());
+                    sampleSeed, sampleMethod, Collections.emptyMap());
             newIndexPendingAdd = new Index(databaseName, dataverseName, datasetName, newIndexName, sampleIndexType,
                     newIndexDetailsPendingAdd, false, false, MetadataUtil.PENDING_ADD_OP, Creator.DEFAULT_CREATOR);
 
@@ -5278,9 +5302,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             DatasetStreamStats stats = new DatasetStreamStats(opStats.get(0));
 
+            LOGGER.info("ANALYZED statement stats: coldReads: {} -- pinnedPages: {} -- cloudPageReads:{}",
+                    stats.getColdReads(), stats.getPinnedPages(), stats.getCloudPageReads());
+
             Index.SampleIndexDetails newIndexDetailsFinal = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget,
-                    stats.getCardinality(), stats.getAvgTupleSize(), sampleSeed, stats.getIndexesStats());
+                    stats.getCardinality(), stats.getAvgTupleSize(), sampleSeed, sampleMethod, stats.getIndexesStats());
             Index newIndexFinal = new Index(databaseName, dataverseName, datasetName, newIndexName, sampleIndexType,
                     newIndexDetailsFinal, false, false, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
 

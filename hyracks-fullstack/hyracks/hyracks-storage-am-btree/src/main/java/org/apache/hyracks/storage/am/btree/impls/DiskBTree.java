@@ -19,17 +19,26 @@
 
 package org.apache.hyracks.storage.am.btree.impls;
 
+import java.nio.ByteBuffer;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.IDiskBTreeStatefulPointSearchCursor;
+import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
+import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexBatchPointCursor;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
@@ -43,6 +52,8 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class DiskBTree extends BTree {
 
@@ -115,6 +126,159 @@ public class DiskBTree extends BTree {
         return cmp <= 0;
     }
 
+    private void diskSampleScan(ITreeIndexCursor cursor, BTreeOpContext ctx,
+            IBufferCacheReadContext bufferCacheReadContext) throws HyracksDataException {
+        ctx.reset();
+        ctx.setCursor(cursor);
+        cursor.setBufferCache(bufferCache);
+        cursor.setFileId(getFileId());
+        // For sample cursors, we don't pick the first leaf here.
+        // Instead, we just set up the initial state and let the cursor pick its own
+        // first leaf on the first doHasNext() call using its seeded random generator.
+        // This ensures fully reproducible sampling.
+        ctx.getCursorInitialState().setSearchOperationCallback(ctx.getSearchCallback());
+        ctx.getCursorInitialState().setOriginialKeyComparator(ctx.getCmp());
+        ctx.getCursorInitialState().setPage(null); // No pre-selected page
+        ctx.getCursorInitialState().setPageId(-1);
+        ctx.getCursorInitialState().setRootPageId(rootPage);
+        cursor.open(ctx.getCursorInitialState(), ctx.getPred());
+    }
+
+    public ICachedPage getRandomLeafPage(int rootPageId, BTreeOpContext ctx,
+            IBufferCacheReadContext bufferCacheReadContext, Random random) throws HyracksDataException {
+        ICachedPage currentPage = null;
+        try {
+            currentPage =
+                    bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rootPageId), bufferCacheReadContext);
+            ctx.getInteriorFrame().setPage(currentPage);
+            int childPageId;
+            while (!ctx.getInteriorFrame().isLeaf()) {
+                // Count children: tupleCount + 1 if there's a valid right pointer
+                int numberOfChildren = ctx.getInteriorFrame().getTupleCount();
+                if (ctx.getInteriorFrame().getRightLeafOffset() > 0) {
+                    numberOfChildren += 1;
+                }
+
+                // Pick a random child index
+                int randomChildIndex = (random != null) ? random.nextInt(numberOfChildren)
+                        : ThreadLocalRandom.current().nextInt(numberOfChildren);
+
+                // Get the child page ID at that index
+                childPageId = getChildPageId(ctx, randomChildIndex, numberOfChildren);
+
+                ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), childPageId),
+                        bufferCacheReadContext);
+                bufferCache.unpin(currentPage, bufferCacheReadContext);
+                currentPage = nextPage;
+                ctx.getInteriorFrame().setPage(currentPage);
+            }
+
+            //IMPORTANT: In here, the leaf page is pinned.
+            return currentPage;
+        } catch (Exception e) {
+            if (!ctx.isExceptionHandled() && currentPage != null) {
+                bufferCache.unpin(currentPage, bufferCacheReadContext);
+            }
+            ctx.setExceptionHandled(true);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    /**
+     * Enumerates all leaf page IDs by traversing only the interior pages of the B-tree.
+     * <p>
+     * This performs a DFS through interior nodes. The key optimisation is at
+     * <b>level-1 nodes</b> (the lowest interior level): their children are
+     * guaranteed to be leaves, so we record the child page IDs directly
+     * <em>without pinning them</em>. This reduces page reads from
+     * {@code N_interior + N_leaf} to just {@code N_interior}, which is
+     * typically {@code < 0.4 %} of all pages because of fanout.
+     * <p>
+     * The returned array gives perfectly uniform random access to any leaf,
+     * eliminating the tree-walk bias that cause estimation error.
+     *
+     * <p>
+     * Memory: the result holds one int per leaf page, i.e. {@code 4 * N_leaf} bytes. This scales with the
+     * component size / page size: at the 128KB analytics page size a 1TB component (~8.4M leaves) needs ~33MB;
+     * at a 32KB page size the same component (~33M leaves) needs ~128MB. Transient (one array per component per
+     * sample job) and acceptable at current sizes.
+     * TODO: shrink this without losing O(1) random-access-by-index (needed for uniform leaf draws). The ids are a
+     * sorted, near-sequential list (DFS/key order, bulk load allocates pages roughly sequentially), so a succinct
+     * encoding — Elias-Fano, a Roaring/compressed bitmap with select(), or delta+varint over blocks — can cut this
+     * ~10-30x while still returning the i-th leaf id cheaply.
+     *
+     * @param rootPageId root page of the B-tree
+     * @param ctx        B-tree operation context
+     * @param bcOpCtx    buffer cache read context
+     * @return int array of every leaf page ID (in DFS / key order)
+     */
+    public int[] enumerateLeafPageIds(int rootPageId, BTreeOpContext ctx, IBufferCacheReadContext bcOpCtx)
+            throws HyracksDataException {
+        IntArrayList leafPageIds = new IntArrayList();
+        enumerateLeafPageIdsRecursive(rootPageId, ctx, bcOpCtx, leafPageIds);
+        return leafPageIds.toIntArray();
+    }
+
+    private void enumerateLeafPageIdsRecursive(int pageId, BTreeOpContext ctx, IBufferCacheReadContext bcOpCtx,
+            IntArrayList leafPageIds) throws HyracksDataException {
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), bcOpCtx);
+        try {
+            ctx.getInteriorFrame().setPage(page);
+            if (ctx.getInteriorFrame().isLeaf()) {
+                // Height-1 tree: the root itself is a leaf
+                leafPageIds.add(pageId);
+                return;
+            }
+            int numberOfChildren = ctx.getInteriorFrame().getTupleCount();
+            if (ctx.getInteriorFrame().getRightLeafOffset() > 0) {
+                numberOfChildren += 1;
+            }
+            int[] childPageIds = new int[numberOfChildren];
+            for (int i = 0; i < numberOfChildren; i++) {
+                childPageIds[i] = getChildPageId(ctx, i, numberOfChildren);
+            }
+
+            // Optimisation: if this interior node is at level 1, its children
+            // are guaranteed to be leaves (level 0). Record their page IDs
+            // directly without pinning — this avoids reading every leaf page
+            // during enumeration, cutting I/O by a factor of ~fan-out.
+            boolean childrenAreLeaves = (ctx.getInteriorFrame().getLevel() == 1);
+
+            bufferCache.unpin(page, bcOpCtx);
+            page = null;
+
+            if (childrenAreLeaves) {
+                for (int childId : childPageIds) {
+                    leafPageIds.add(childId);
+                }
+            } else {
+                for (int childId : childPageIds) {
+                    enumerateLeafPageIdsRecursive(childId, ctx, bcOpCtx, leafPageIds);
+                }
+            }
+        } finally {
+            if (page != null) {
+                bufferCache.unpin(page, bcOpCtx);
+            }
+        }
+    }
+
+    private int getChildPageId(BTreeOpContext ctx, int childIndex, int numberOfChildren) {
+        // If the childIndex is the last one, return the rightmost child page ID
+        if (childIndex == numberOfChildren - 1 && ctx.getInteriorFrame().getRightLeafOffset() > 0) {
+            return ctx.getInteriorFrame().getRightLeafOffset();
+        }
+        int tupleOffset = ctx.getInteriorFrame().getTupleOffset(childIndex);
+        ITreeIndexTupleReference frameTuple = ctx.getInteriorFrame().getTupleRef();
+        frameTuple.setFieldCount(ctx.getCmp().getKeyFieldCount());
+        ByteBuffer buf = ctx.getInteriorFrame().getBuffer();
+        frameTuple.resetByTupleOffset(buf.array(), tupleOffset);
+        int childPageId =
+                IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+                        + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
+        return childPageId;
+    }
+
     private void searchDown(ICachedPage page, int pageId, BTreeOpContext ctx, ITreeIndexCursor cursor,
             IBufferCacheReadContext bcOpCtx) throws HyracksDataException {
         ICachedPage currentPage = page;
@@ -148,6 +312,11 @@ public class DiskBTree extends BTree {
 
     @Override
     public BTreeAccessor createAccessor(IIndexAccessParameters iap) {
+        return new DiskBTreeAccessor(this, iap);
+    }
+
+    public BTreeAccessor createAccessor(IIndexAccessParameters iap, IIndexOperationContext opCtx, int index)
+            throws HyracksDataException {
         return new DiskBTreeAccessor(this, iap);
     }
 
@@ -202,10 +371,25 @@ public class DiskBTree extends BTree {
             return new DiskBTreeDiskScanCursor(leafFrame);
         }
 
+        public ITreeIndexCursor createSampleCursor(long componentSampleCardinality, long sampleSeed,
+                ILSMIndexBatchPointCursor searchCursor, int maxLeafAttempts, int leafDrawBatchSize,
+                int maxLeafTupleCount, int samplesPerPage, ITupleAcceptor antimatterAcceptor) {
+            IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
+            return new DiskBTreeSampleCursor((DiskBTree) btree, leafFrame, componentSampleCardinality, sampleSeed, ctx,
+                    getBufferCacheOperationContext(), searchCursor, maxLeafAttempts, leafDrawBatchSize,
+                    maxLeafTupleCount, antimatterAcceptor);
+        }
+
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.setOperation(IndexOperation.DISKORDERSCAN);
             ((DiskBTree) btree).diskOrderScan(cursor, ctx);
+        }
+
+        @Override
+        public void diskSampleScan(IIndexCursor cursor) throws HyracksDataException {
+            ctx.setOperation(IndexOperation.DISKORDERSCAN);
+            ((DiskBTree) btree).diskSampleScan((ITreeIndexCursor) cursor, ctx, getBufferCacheOperationContext());
         }
 
         protected IBufferCacheReadContext getBufferCacheOperationContext() {

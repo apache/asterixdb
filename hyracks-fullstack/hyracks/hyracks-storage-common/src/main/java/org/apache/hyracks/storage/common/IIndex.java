@@ -130,10 +130,12 @@ public interface IIndex {
     /**
      * @param fillFactor
      * @param verifyInput
+     * @param sampler
      * @throws HyracksDataException
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IPageWriteCallback callback) throws HyracksDataException;
+            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            throws HyracksDataException;
 
     /**
      * TODO: This should be moved to ILSMIndex since filters don't make sense in non LSM context

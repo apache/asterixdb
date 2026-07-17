@@ -24,4 +24,4 @@
 
 use test;
 
-analyze dataset ds1 with { "sample": "low" };
+analyze dataset ds1 with { "sample": "low", "sample-seed": 1000 };

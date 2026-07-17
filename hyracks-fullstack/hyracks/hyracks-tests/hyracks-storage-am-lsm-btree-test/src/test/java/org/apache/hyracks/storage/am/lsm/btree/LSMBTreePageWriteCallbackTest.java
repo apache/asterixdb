@@ -31,10 +31,12 @@ import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestDriver;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -45,6 +47,7 @@ import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 import org.apache.hyracks.storage.common.buffercache.SleepRateLimiter;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -124,6 +127,7 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Count data pages via getMaxPageId; component metadata now spans multiple pages (theta sketch)")
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey,
             ITupleReference prefixHighKey) throws Exception {
@@ -159,11 +163,25 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
             ILSMIOOperation mergeOp = accessor.scheduleMerge(((LSMBTree) ctx.getIndex()).getDiskComponents());
             mergeOp.addCompleteListener(op -> {
                 if (op.getIOOperationType() == LSMIOOperationType.MERGE) {
-                    long numPages = op.getNewComponent().getComponentSize()
-                            / harness.getDiskBufferCache().getPageSizeWithHeader() - 1;
-                    // we skipped the metadata page for simplicity
-                    Assert.assertEquals(numPages, pageCounter);
-                    Assert.assertEquals(numPages / PAGES_PER_FORCE, lastCallback.getTotalForces());
+                    try {
+                        // The rate limiter (pageCounter) sees exactly the rate-limited page writes:
+                        // the B-tree data pages (leaf + interior, page ids 0..maxPageId) plus the bloom
+                        // filter pages. Component metadata pages are written via NoOpPageWriteCallback
+                        // and never reach the rate limiter, so we must NOT derive the count from the raw
+                        // file size: the sampling metadata (theta sketch + max leaf tuple count) now spans
+                        // several metadata pages, which the old "fileSize - 1" formula wrongly counted.
+                        AbstractLSMWithBloomFilterDiskComponent component =
+                                (AbstractLSMWithBloomFilterDiskComponent) op.getNewComponent();
+                        IPageManager pageManager = component.getMetadataHolder().getPageManager();
+                        long btreeDataPages = pageManager.getMaxPageId(pageManager.createMetadataFrame()) + 1;
+                        // + 1 for the bloom filter's own metadata page, which (unlike the B-tree metadata
+                        // pages) is written through the rate limiter along with its bit-array pages.
+                        long numPages = btreeDataPages + component.getBloomFilter().getNumPages() + 1;
+                        Assert.assertEquals(numPages, pageCounter);
+                        Assert.assertEquals(numPages / PAGES_PER_FORCE, lastCallback.getTotalForces());
+                    } catch (HyracksDataException e) {
+                        throw new IllegalStateException(e);
+                    }
                 }
             });
 

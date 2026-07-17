@@ -20,13 +20,18 @@ package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -74,6 +79,19 @@ public class AnalyzingTestExecutor extends TestExecutor {
         analyzeFromRegex(dsMatcher, dv, 3);
         analyzeFromRegex(upsertMatcher, dv, 2);
         return res;
+    }
+
+    @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Compare plans without cost: ANALYZE uses random LSM sampling, so CBO cardinality/cost estimates are not reproducible run-to-run")
+    public void runScriptAndCompareWithResultPlan(File scriptFile, BufferedReader readerExpected,
+            BufferedReader readerActual) throws Exception {
+        // This suite runs ANALYZE (random leaf sampling) before planning, so the CBO
+        // cardinality/op-cost/total-cost estimates vary run-to-run (the LSM component layout
+        // differs, so the seeded sample draws different tuples). Compare plan structure only,
+        // stripping the cost annotations, which are not reproducible under random sampling.
+        List<String> expectedLines = readerExpected.lines().collect(Collectors.toList());
+        List<String> actualLines = readerActual.lines().collect(Collectors.toList());
+        TestHelper.comparePlansWithoutCost(expectedLines, actualLines, scriptFile);
     }
 
     private void analyzeFromRegex(Matcher m, String dv, int pos) throws Exception {

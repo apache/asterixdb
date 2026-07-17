@@ -18,18 +18,37 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import static org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata.MAX_LEAF_TUPLE_COUNT_KEY;
+import static org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata.THETA_INSERT_DELETE_SKETCH_KEY;
+
+import java.io.IOException;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndexBulkLoader;
+import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
-    private final IIndexBulkLoader bulkLoader;
+    // The serialized theta sketch can exceed a single metadata page (e.g., small test page sizes), so it is written
+    // via the chunking reader/writer, which stores it as-is when it fits and compresses+chunks it otherwise.
+    private static final ChunkedComponentMetadataReaderWriter THETA_SKETCH_RW =
+            new ChunkedComponentMetadataReaderWriter(THETA_INSERT_DELETE_SKETCH_KEY);
 
-    public LSMIndexBulkLoader(IIndexBulkLoader bulkLoader) {
+    protected final IComponentMetadata componentMetadata;
+    protected final IIndexBulkLoader bulkLoader;
+    protected final IComponentSampler sampler;
+
+    public LSMIndexBulkLoader(IIndexBulkLoader bulkLoader, IComponentMetadata componentMetadata,
+            IComponentSampler sampler) {
         this.bulkLoader = bulkLoader;
+        this.componentMetadata = componentMetadata;
+        this.sampler = sampler;
     }
 
     @Override
@@ -58,7 +77,25 @@ public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
 
     @Override
     public void end() throws HyracksDataException {
-        bulkLoader.end();
+        try {
+            IValueReference reference = sampler.serializeSamplingMetadata();
+            if (reference != null) {
+                THETA_SKETCH_RW.writeMetadata(reference, componentMetadata);
+            }
+            // Store the max leaf tuple count for Olken rejection sampling correction
+            if (bulkLoader instanceof org.apache.hyracks.storage.am.btree.impls.BTreeNSMBulkLoader) {
+                int maxLeafTupleCount = ((org.apache.hyracks.storage.am.btree.impls.BTreeNSMBulkLoader) bulkLoader)
+                        .getMaxLeafTupleCountOfLastPage();
+                if (maxLeafTupleCount > 0) {
+                    ArrayBackedValueStorage maxTupleCountStorage = new ArrayBackedValueStorage(Integer.BYTES);
+                    maxTupleCountStorage.getDataOutput().writeInt(maxLeafTupleCount);
+                    componentMetadata.put(MAX_LEAF_TUPLE_COUNT_KEY, maxTupleCountStorage);
+                }
+            }
+            bulkLoader.end();
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override

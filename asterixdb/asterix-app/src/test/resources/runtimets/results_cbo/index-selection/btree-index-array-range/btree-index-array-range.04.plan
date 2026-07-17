@@ -1,28 +1,28 @@
-distribute result [$$35] [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 20.16]
+distribute result [$$35] [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 20.16]
+  exchange [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$35] <- [{"A": $$A, "cat": $$cat}] project: [$$35] [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 20.16]
+    assign [$$35] <- [{"A": $$A, "cat": $$cat}] project: [$$35] [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
     -- ASSIGN  |PARTITIONED|
-      project ([$$A, $$cat]) [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 20.16]
+      project ([$$A, $$cat]) [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 20.16]
+        exchange [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
         -- SORT_MERGE_EXCHANGE [$$37(ASC) ]  |PARTITIONED|
-          order (ASC, $$37) [cardinality: 4.0, doc-size: 524.0, op-cost: 8.0, total-cost: 20.16]
+          order (ASC, $$37) [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
           -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
-            exchange [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+            exchange [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              select (or(eq($$cat, "Food"), eq($$cat, "Restaurant"))) [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+              select (or(eq($$cat, "Food"), eq($$cat, "Restaurant"))) [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
               -- STREAM_SELECT  |PARTITIONED|
-                unnest $$cat <- scan-collection($$38) project: [$$37, $$A, $$cat] [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+                unnest $$cat <- scan-collection($$38) project: [$$37, $$A, $$cat] [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
                 -- UNNEST  |PARTITIONED|
-                  assign [$$38] <- [$$A.getField("categories")] [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+                  assign [$$38] <- [$$A.getField("categories")] [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$37, $$A]) [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+                    project ([$$37, $$A]) [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+                      exchange [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$37, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$42, 1, $$42, true, true, true) [cardinality: 4.0, doc-size: 524.0, op-cost: 0.0, total-cost: 12.16]
+                        unnest-map [$$37, $$A] <- index-search("A", 0, "Default", "test", "A", true, false, 1, $$42, 1, $$42, true, true, true) [cardinality: 1.0, doc-size: 518.0, op-cost: 0.0, total-cost: 11.03]
                         -- BTREE_SEARCH  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

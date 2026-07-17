@@ -21,8 +21,6 @@ package org.apache.hyracks.storage.common.buffercache;
 public interface ICachedPageInternal extends ICachedPage {
     int getCachedPageId();
 
-    long getDiskPageId();
-
     Object getReplacementStrategyObject();
 
     /**

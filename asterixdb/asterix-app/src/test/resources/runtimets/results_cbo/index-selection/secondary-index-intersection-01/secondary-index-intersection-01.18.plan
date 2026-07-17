@@ -1,28 +1,28 @@
-distribute result [$$68] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+distribute result [$$68] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+  exchange [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$68] <- [{"$1": $$70}] project: [$$68] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+    assign [$$68] <- [{"$1": $$70}] project: [$$68] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$70] <- [agg-sql-sum($$73)] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+      aggregate [$$70] <- [agg-sql-sum($$73)] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+        exchange [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$73] <- [agg-sql-count(1)] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+          aggregate [$$73] <- [agg-sql-count(1)] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
           -- AGGREGATE  |PARTITIONED|
-            select (eq($$ol.getField("ol_delivery_d"), "2024-01-15")) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+            select (eq($$ol.getField("ol_delivery_d"), "2024-01-15")) [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
             -- STREAM_SELECT  |PARTITIONED|
-              unnest $$ol <- scan-collection($$71) project: [$$ol] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+              unnest $$ol <- scan-collection($$71) project: [$$ol] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
               -- UNNEST  |PARTITIONED|
-                select (and(or(eq($$54, "pending"), eq($$54, "delivered")), or(eq($$57, "east"), eq($$57, "central")))) project: [$$71] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                select (and(or(eq($$54, "pending"), eq($$54, "delivered")), or(eq($$57, "east"), eq($$57, "central")))) project: [$$71] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$57, $$54, $$71] <- [$$o.getField("region"), $$o.getField("status"), $$o.getField("o_orderline")] project: [$$57, $$54, $$71] [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                  assign [$$57, $$54, $$71] <- [$$o.getField("region"), $$o.getField("status"), $$o.getField("o_orderline")] project: [$$57, $$54, $$71] [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$o]) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                    project ([$$o]) [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                      exchange [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$69, $$o] <- index-search("orders", 0, "Default", "test", "orders", true, false, 1, $$76, 1, $$76, true, true, true) [cardinality: 103.48, doc-size: 0.0, op-cost: 0.0, total-cost: 881.11]
+                        unnest-map [$$69, $$o] <- index-search("orders", 0, "Default", "test", "orders", true, false, 1, $$76, 1, $$76, true, true, true) [cardinality: 18.87, doc-size: 0.0, op-cost: 0.0, total-cost: 769.5]
                         -- BTREE_SEARCH  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

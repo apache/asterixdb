@@ -19,5 +19,16 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="cloud_storage">
+    <test-case FilePath="ddl" check-warnings="true">
+      <compilation-unit name="analyze-dataset-1">
+        <output-dir compare="Text">analyze-dataset-1</output-dir>
+        <expected-warn>ASX1174: Sample has zero rows</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="analyze-dataset">
+        <output-dir compare="Text">analyze-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

@@ -19,6 +19,6 @@
 
 USE test;
 
-ANALYZE DATASET ds1;
-ANALYZE DATASET ds2;
-ANALYZE DATASET ds3;
+ANALYZE DATASET ds1 WITH { "sample-seed": 1000 };
+ANALYZE DATASET ds2 WITH { "sample-seed": 1000 };
+ANALYZE DATASET ds3 WITH { "sample-seed": 1000 };

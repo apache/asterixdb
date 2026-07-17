@@ -44,10 +44,13 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
+import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -329,11 +332,24 @@ public abstract class TreeIndexTestUtils {
 
     public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples)
             throws HyracksDataException {
-        bulkLoadCheckTuples(ctx, checkTuples, false);
+        bulkLoadCheckTuples(ctx, checkTuples, false, NoOpSampler.INSTANCE);
     }
 
     public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples, boolean filtered)
             throws HyracksDataException {
+        bulkLoadCheckTuples(ctx, checkTuples, filtered, NoOpSampler.INSTANCE);
+    }
+
+    /**
+     * Bulk loads check tuples with a custom sampler for cardinality estimation.
+     *
+     * @param ctx        the index test context
+     * @param checkTuples the tuples to bulk load
+     * @param filtered   whether to include filter field
+     * @param sampler    the sampler to use (e.g., ThetaSampler or NoOpSampler)
+     */
+    public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples, boolean filtered,
+            IComponentSampler sampler) throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
         ArrayTupleBuilder tupleBuilder =
@@ -341,7 +357,7 @@ public abstract class TreeIndexTestUtils {
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
         IIndexBulkLoader bulkLoader =
-                ctx.getIndex().createBulkLoader(0.7f, false, numTuples, false, NoOpPageWriteCallback.INSTANCE);
+                ctx.getIndex().createBulkLoader(0.7f, false, numTuples, false, sampler, NoOpPageWriteCallback.INSTANCE);
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isInfoEnabled()) {
@@ -354,6 +370,22 @@ public abstract class TreeIndexTestUtils {
             c++;
         }
         bulkLoader.end();
+    }
+
+    /**
+     * Creates a ThetaSampler configured for the given test context.
+     * The key fields are derived from ctx.getKeyFieldCount().
+     *
+     * @param ctx the index test context
+     * @return a new ThetaSampler instance
+     */
+    public static ThetaSampler createThetaSampler(IIndexTestContext ctx) {
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] keyFields = new int[numKeyFields];
+        for (int i = 0; i < numKeyFields; i++) {
+            keyFields[i] = i;
+        }
+        return new ThetaSampler(keyFields);
     }
 
     @SuppressWarnings("unchecked")

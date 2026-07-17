@@ -20,6 +20,7 @@
 package org.apache.asterix.runtime.operators;
 
 import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+import static org.apache.hyracks.storage.am.lsm.btree.dataflow.BTreeSampleCollectorOperatorDescriptorNodePushable.ESTIMATE_CARDINALITY;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
@@ -45,6 +47,8 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Computes total tuple count and total tuple length for all input tuples,
@@ -53,6 +57,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 2L;
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final String operatorName;
     private final IIndexDataflowHelperFactory[] indexes;
@@ -121,7 +126,17 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
                 IStatsCollector statsCollector = ctx.getStatsCollector();
                 if (statsCollector != null) {
                     IOperatorStats stats = statsCollector.getOperatorStats(operatorName);
-                    DatasetStreamStats.update(stats, totalTupleCount, totalTupleLength, indexesStats);
+                    Object totalNum = TaskUtil.get(ESTIMATE_CARDINALITY, ctx);
+                    if (totalNum == null) {
+                        totalNum = totalTupleCount;
+                    }
+                    if ((long) totalNum > 0) {
+                        long cloudPageReadCount = ctx.getThreadStats().getCloudPageReadCount();
+                        long coldReadCount = ctx.getThreadStats().getColdReadCount();
+                        long pinnedPagesCount = ctx.getThreadStats().getPinnedPagesCount();
+                        DatasetStreamStats.update(stats, totalTupleCount, (long) totalNum, totalTupleLength,
+                                pinnedPagesCount, coldReadCount, cloudPageReadCount, indexesStats);
+                    }
                 }
                 writer.close();
             }

@@ -32,11 +32,13 @@ import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementEvalFactory;
 import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanDescriptor;
 import org.apache.asterix.runtime.operators.DatasetStreamStatsOperatorDescriptor;
@@ -80,6 +82,7 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.sort.SortGroupByOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexCreateOperatorDescriptor;
@@ -88,6 +91,8 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Utility class for sampling operations.
@@ -98,6 +103,7 @@ import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
  */
 public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String DATASET_STATS_OPERATOR_NAME = "Sample.DatasetStats";
 
     private final MetadataProvider metadataProvider;
@@ -116,6 +122,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     private int groupbyNumFrames;
     private int[][] computeStorageMap;
     private int numPartitions;
+    private boolean isFullScan;
 
     protected SampleOperationsHelper(Dataset dataset, Index sampleIdx, MetadataProvider metadataProvider,
             SourceLocation sourceLoc) {
@@ -123,6 +130,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         this.sampleIdx = sampleIdx;
         this.metadataProvider = metadataProvider;
         this.sourceLoc = sourceLoc;
+        this.isFullScan = ((Index.SampleIndexDetails) sampleIdx.getIndexDetails()).isFullScan();
     }
 
     @Override
@@ -169,6 +177,104 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
+        if (isFullScan) {
+            return buildFullScanAnalyzePipeline();
+        }
+        return buildRandomScanAnalyzePipeline();
+    }
+
+    private JobSpecification buildRandomScanAnalyzePipeline() throws AlgebricksException {
+        Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) sampleIdx.getIndexDetails();
+        int sampleCardinalityTarget = indexDetails.getSampleCardinalityTarget();
+        long sampleSeed = indexDetails.getSampleSeed();
+        IDataFormat format = metadataProvider.getDataFormat();
+        int nFields = recordDesc.getFieldCount();
+        int[] columns = new int[nFields];
+        for (int i = 0; i < nFields; i++) {
+            columns[i] = i;
+        }
+        IStorageManager storageMgr = metadataProvider.getStorageComponentProvider().getStorageManager();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageMgr, fileSplitProvider);
+
+        // job spec:
+        IndexUtil.bindJobEventListener(spec, metadataProvider);
+
+        // if format == column. Bring the entire record as we are sampling
+        ITupleProjectorFactory projectorFactory = IndexUtil.createPrimaryIndexScanTupleProjectorFactory(
+                dataset.getDatasetFormatInfo(), ALL_FIELDS_TYPE, itemType, metaType, dataset.getPrimaryKeys().size());
+
+        // dummy key provider ----> primary index scan
+        IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
+        // Considering hash partitioner is fair in distribution, the sampleCardinalityTarget will be divided by
+        // the number of shards/partitions to get the target cardinality per partition. Round up so the aggregate
+        // across partitions is at least the requested target (floor would drop up to numPartitions-1 tuples).
+        int sampleCardinalityTargetPerPartition =
+                Math.max(1, (int) Math.ceil((double) sampleCardinalityTarget / numPartitions));
+        IOperatorDescriptor targetOp = DatasetUtil.createSampleScanOp(spec, metadataProvider, dataset,
+                sampleCardinalityTargetPerPartition, sampleSeed, projectorFactory);
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+        sourceOp = targetOp;
+
+        // primary index scan ----> stream stats op
+        List<Index> dsIndexes = metadataProvider.getSecondaryIndexes(dataset);
+        IndexDataflowHelperFactory[] indexes = new IndexDataflowHelperFactory[dsIndexes.size()];
+        String[] names = new String[dsIndexes.size()];
+        for (int i = 0; i < indexes.length; i++) {
+            Index idx = dsIndexes.get(i);
+            PartitioningProperties idxPartitioningProps =
+                    metadataProvider.getPartitioningProperties(dataset, idx.getIndexName());
+            indexes[i] = new IndexDataflowHelperFactory(storageMgr, idxPartitioningProps.getSplitsProvider());
+            names[i] = idx.getIndexName();
+        }
+        targetOp = new DatasetStreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME, indexes,
+                names, computeStorageMap);
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+        sourceOp = targetOp;
+
+        int[] sortFields = dataset.getPrimaryBloomFilterFields();
+        INormalizedKeyComputerFactoryProvider normKeyProvider = format.getNormalizedKeyComputerFactoryProvider();
+        INormalizedKeyComputerFactory[] normKeyFactories = new INormalizedKeyComputerFactory[sortFields.length];
+        List<IAType> primaryKeyTypes = KeyFieldTypeUtil
+                .getPartitioningKeyTypes((InternalDatasetDetails) dataset.getDatasetDetails(), itemType, metaType);
+        for (int i = 0; i < primaryKeyTypes.size(); i++) {
+            IAType primaryKeyType = primaryKeyTypes.get(i);
+            INormalizedKeyComputerFactory normalizedKeyComputerFactory =
+                    normKeyProvider.getNormalizedKeyComputerFactory(primaryKeyType, true);
+            if (normalizedKeyComputerFactory == null) {
+                LOGGER.error("No normalized key computer for primary key field {} of type {}", i,
+                        primaryKeyType.getTypeName());
+                throw new IllegalArgumentException(
+                        "No normalized key computer for primary key type " + primaryKeyType.getTypeName());
+            }
+            normKeyFactories[i] = normalizedKeyComputerFactory;
+        }
+
+        targetOp = new ExternalSortOperatorDescriptor(spec, getSortNumFrames(metadataProvider, sourceLoc), sortFields,
+                normKeyFactories, comparatorFactories, recordDesc);
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+        sourceOp = targetOp;
+
+        targetOp = createTreeIndexBulkLoadOp(spec, columns, dataflowHelperFactory,
+                StorageConstants.DEFAULT_TREE_FILL_FACTOR, sampleCardinalityTarget);
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+        sourceOp = targetOp;
+
+        // bulk load op ----> sink op
+        SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+        sinkRuntimeFactory.setSourceLocation(sourceLoc);
+        targetOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0, new IPushRuntimeFactory[] { sinkRuntimeFactory },
+                new RecordDescriptor[] { recordDesc });
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+
+        spec.addRoot(targetOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+
+        return spec;
+    }
+
+    private JobSpecification buildFullScanAnalyzePipeline() throws AlgebricksException {
         Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) sampleIdx.getIndexDetails();
         int sampleCardinalityTarget = indexDetails.getSampleCardinalityTarget();
         long sampleSeed = indexDetails.getSampleSeed();
@@ -324,6 +430,13 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
 
         return spec;
+    }
+
+    private static int getSortNumFrames(MetadataProvider metadataProvider, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        return OptimizationConfUtil.getSortNumFrames(metadataProvider.getApplicationContext().getCompilerProperties(),
+                metadataProvider.getConfig(), sourceLoc,
+                metadataProvider.getApplicationContext().getCompilerProperties().getFrameSize());
     }
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,

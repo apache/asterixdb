@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
+import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -79,8 +80,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
     public ColumnBTreeBulkloader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
             IPageWriteCallback callback, ITreeIndex index, ITreeIndexFrame leafFrame,
-            IBufferCacheWriteContext writeContext) throws HyracksDataException {
-        super(fillFactor, verifyInput, callback, index, leafFrame, writeContext);
+            IBufferCacheWriteContext writeContext, IComponentSampler sampler) throws HyracksDataException {
+        super(fillFactor, verifyInput, callback, index, leafFrame, sampler, writeContext);
         columnBufferPool = ((ColumnBTree) index).getColumnBufferPool();
         columnsPages = new ArrayList<>();
         pageZeroSegments = new ArrayList<>();
@@ -112,6 +113,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
     @Override
     public void add(ITupleReference tuple) throws HyracksDataException {
+        sampler.addTuple(tuple);
         // track the number of columns in the current tuple
         columnWriter.updateColumnMetadataForCurrentTuple(tuple);
         ensureWritersInitialized();
@@ -256,6 +258,11 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     }
 
     @Override
+    public int getMaxLeafTupleCountOfLastPage() {
+        return Math.max(maxLeafTupleCount, tupleCount);
+    }
+
+    @Override
     public void end() throws HyracksDataException {
         try {
             ensureWritersInitialized();
@@ -329,6 +336,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             // For logging
             maxNumberOfPagesInALeafNode = Math.max(maxNumberOfPagesInALeafNode, numberOfPagesInCurrentLeafNode);
             maxTupleCount = Math.max(maxTupleCount, tupleCount);
+            maxLeafTupleCount = Math.max(maxLeafTupleCount, tupleCount);
             // Starts with 1 for page0
             numberOfPagesInCurrentLeafNode = 1;
             numberOfLeafNodes++;

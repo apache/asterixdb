@@ -37,6 +37,7 @@ import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManagerFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.LSMColumnBTreeUtil;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResource;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -92,7 +93,7 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
         ioOpCallbackFactory.initialize(serviceCtx, this);
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         IDiskCacheMonitoringService diskCacheService = storageManager.getDiskCacheMonitoringService(serviceCtx);
-        return LSMColumnBTreeUtil.createLSMTree(config, ioManager, vbcs, file,
+        LSMBTree lsmBTree = (LSMBTree) LSMColumnBTreeUtil.createLSMTree(config, ioManager, vbcs, file,
                 storageManager.getBufferCache(serviceCtx), storageManager.getColumnBufferPool(serviceCtx), typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
@@ -100,6 +101,7 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
                 ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, metadataPageManagerFactory, false,
                 serviceCtx.getTracer(), compressorDecompressorFactory, nullTypeTraits, nullIntrospector,
                 columnManagerFactory, atomic, diskCacheService);
+        return lsmBTree;
     }
 
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)

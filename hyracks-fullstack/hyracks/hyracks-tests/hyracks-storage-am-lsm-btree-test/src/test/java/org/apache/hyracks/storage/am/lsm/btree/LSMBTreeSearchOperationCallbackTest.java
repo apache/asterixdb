@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.hyracks.util.trace.ITracer;
 import org.junit.Assert;
@@ -293,7 +294,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true,
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true, NoOpSampler.INSTANCE,
                     harness.getPageWriteCallbackFactory().createPageWriteCallback());
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);

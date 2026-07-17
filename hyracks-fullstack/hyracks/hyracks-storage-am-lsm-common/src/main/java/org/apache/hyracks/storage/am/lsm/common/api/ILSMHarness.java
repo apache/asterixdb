@@ -91,6 +91,17 @@ public interface ILSMHarness {
     void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;
 
     /**
+     * Scan all disk components of the index for sampling
+     *
+     * @param ctx
+     *            the search operation context
+     * @param cursor
+     *            the index cursor
+     * @throws HyracksDataException
+     */
+    void scanDiskComponentsForSample(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;
+
+    /**
      * End the scan
      *
      * @param ctx

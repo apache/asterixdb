@@ -1,0 +1,1 @@
+\{ "metadata": \{ "DatasetName": "ds1", "IndexName": "sample_idx_2_ds1", "SampleCardinalityTarget": 4252, "SourceCardinality": 11[0-9][0-9], "SourceAvgItemSize": true, "SampleSeed": 234 \}, "stats": \{ "cnt": 1100, "min_pk": 1, "max_pk": 1100, "min_x": -1100, "max_x": -1 \} \}

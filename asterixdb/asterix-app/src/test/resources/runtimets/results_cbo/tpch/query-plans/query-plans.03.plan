@@ -1,42 +1,42 @@
-distribute result [$$150] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+distribute result [$$150] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+  exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$150] <- [{"$1": 1, "l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$156, "sum_base_price": $$157, "sum_disc_price": $$158, "sum_charge": $$159, "avg_qty": $$160, "avg_price": $$161, "avg_disc": $$162, "count_order": $$163}] project: [$$150] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+    assign [$$150] <- [{"$1": 1, "l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$156, "sum_base_price": $$157, "sum_disc_price": $$158, "sum_charge": $$159, "avg_qty": $$160, "avg_price": $$161, "avg_disc": $$162, "count_order": $$163}] project: [$$150] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+      exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
       -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|
-        order (ASC, $$l_returnflag) (ASC, $$l_linestatus) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+        order (ASC, $$l_returnflag) (ASC, $$l_linestatus) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
         -- STABLE_SORT [$$l_returnflag(ASC), $$l_linestatus(ASC)]  |PARTITIONED|
-          exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1794936.26]
+          exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1785246.38]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$l_returnflag := $$191; $$l_linestatus := $$192]) decor ([]) {
                       aggregate [$$156, $$157, $$158, $$159, $$160, $$161, $$162, $$163] <- [global-sql-sum-serial($$183), global-sql-sum-serial($$184), global-sql-sum-serial($$185), global-sql-sum-serial($$186), global-sql-avg-serial($$187), global-sql-avg-serial($$188), global-sql-avg-serial($$189), sql-sum-serial($$190)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 1.0, doc-size: 0.0, op-cost: 597182.13, total-cost: 1794936.26]
+                   } [cardinality: 1.0, doc-size: 0.0, op-cost: 592066.19, total-cost: 1785246.38]
             -- EXTERNAL_GROUP_BY[$$191, $$192]  |PARTITIONED|
-              exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1197754.13]
+              exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 1193180.19]
               -- HASH_PARTITION_EXCHANGE [$$191, $$192]  |PARTITIONED|
                 group by ([$$191 := $$151; $$192 := $$152]) decor ([]) {
                           aggregate [$$183, $$184, $$185, $$186, $$187, $$188, $$189, $$190] <- [local-sql-sum-serial($$104), local-sql-sum-serial($$109), local-sql-sum-serial(numeric-multiply($$109, numeric-subtract(1, $$165))), local-sql-sum-serial(numeric-multiply(numeric-multiply($$109, numeric-subtract(1, $$165)), numeric-add(1, $$167))), local-sql-avg-serial($$104), local-sql-avg-serial($$109), local-sql-avg-serial($$165), sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- AGGREGATE  |LOCAL|
                             nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                       } [cardinality: 1.0, doc-size: 0.0, op-cost: 597182.13, total-cost: 1197754.13]
+                       } [cardinality: 1.0, doc-size: 0.0, op-cost: 592066.19, total-cost: 1193180.19]
                 -- EXTERNAL_GROUP_BY[$$151, $$152]  |PARTITIONED|
-                  exchange [cardinality: 597182.13, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                  exchange [cardinality: 592066.19, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    select (le($$l.getField(10), "1998-09-16")) project: [$$104, $$109, $$165, $$167, $$151, $$152] [cardinality: 597182.13, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                    select (le($$l.getField(10), "1998-09-16")) project: [$$104, $$109, $$165, $$167, $$151, $$152] [cardinality: 592066.19, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                     -- STREAM_SELECT  |PARTITIONED|
-                      assign [$$152, $$151, $$104, $$165, $$167, $$109] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)] [cardinality: 600572.0, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                      assign [$$152, $$151, $$104, $$165, $$167, $$109] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)] [cardinality: 601114.0, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$l]) [cardinality: 600572.0, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                        project ([$$l]) [cardinality: 601114.0, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 600572.0, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                          exchange [cardinality: 601114.0, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$154, $$155, $$l] <- tpch.lineitem [cardinality: 600572.0, doc-size: 0.0, op-cost: 0.0, total-cost: 600572.0]
+                            data-scan []<-[$$154, $$155, $$l] <- tpch.lineitem [cardinality: 601114.0, doc-size: 0.0, op-cost: 0.0, total-cost: 601114.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

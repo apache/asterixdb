@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -588,6 +589,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
         ILogicalOperator topOp = topSelect;
 
+        // Maps each index-subtree variable consumed by the panic UnionAll to the fresh variable
+        // the UnionAll produces in its place. Used below the equi-join to rewire operators above
+        // the join (afterJoinRefs) off the now-consumed input variables. Empty when no panic plan.
+        Map<LogicalVariable, LogicalVariable> indexVarToOutVar = new LinkedHashMap<>();
         // Hook up the indexed-nested loop join path with the "panic" (non indexed) nested-loop join path by putting a union all on top.
         if (panicJoinRef != null) {
             LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
@@ -595,16 +600,31 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             indexSubTreeLiveVars.add(inputSearchVar);
             List<LogicalVariable> panicPlanLiveVars = new ArrayList<>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
-            // Create variable mapping for union all operator.
+            // Create variable mapping for the union all operator. Each output variable must be a
+            // FRESH variable so produced variables are disjoint from used (input) variables — the
+            // SSA invariant checked by PlanStructureVerifier, which reusing the input var as the
+            // output violates. indexSubTreeLiveVars can contain duplicates (getLiveVariables above
+            // already returns the PKs, which are then added again, and inputSearchVar may already
+            // be live), so dedupe first: exactly one fresh output per distinct input. Otherwise the
+            // same input maps to two outputs and downstream references to the un-chosen one dangle.
             List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<>();
-            for (int i = 0; i < indexSubTreeLiveVars.size(); i++) {
-                LogicalVariable indexSubTreeVar = indexSubTreeLiveVars.get(i);
+            for (LogicalVariable indexSubTreeVar : new LinkedHashSet<>(indexSubTreeLiveVars)) {
                 LogicalVariable panicPlanVar = panicVarMap.get(indexSubTreeVar);
                 if (panicPlanVar == null) {
                     panicPlanVar = indexSubTreeVar;
                 }
+                LogicalVariable outVar = context.newVar();
+                indexVarToOutVar.put(indexSubTreeVar, outVar);
                 varMap.add(new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(indexSubTreeVar, panicPlanVar,
-                        indexSubTreeVar));
+                        outVar));
+            }
+            // Remap originalSubTreePKs to the UnionAll output vars so the downstream equi-join
+            // condition references the post-UnionAll variables.
+            for (int i = 0; i < originalSubTreePKs.size(); i++) {
+                LogicalVariable outVar = indexVarToOutVar.get(originalSubTreePKs.get(i));
+                if (outVar != null) {
+                    originalSubTreePKs.set(i, outVar);
+                }
             }
             UnionAllOperator unionAllOp = new UnionAllOperator(varMap);
             unionAllOp.setSourceLocation(topOp.getSourceLocation());
@@ -626,6 +646,18 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         topEqJoin.setExecutionMode(ExecutionMode.PARTITIONED);
         joinRef.setValue(topEqJoin);
         context.computeAndSetTypeEnvironmentForOperator(topEqJoin);
+
+        // When a panic UnionAll was inserted, the index-subtree variables it consumed are no longer
+        // live above the join — the UnionAll now produces fresh variables in their place. Rewire the
+        // operators above the join (afterJoinRefs) from the old variables to the fresh UnionAll
+        // outputs so their references don't dangle (undefined-used-variable). Substitute in each
+        // operator (self only); afterJoinRefs already enumerates the full above-join chain.
+        if (!indexVarToOutVar.isEmpty()) {
+            for (Mutable<ILogicalOperator> aboveJoinRef : afterJoinRefs) {
+                VariableUtilities.substituteVariables(aboveJoinRef.getValue(), indexVarToOutVar, context);
+                context.computeAndSetTypeEnvironmentForOperator(aboveJoinRef.getValue());
+            }
+        }
 
         return true;
     }
@@ -839,9 +871,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         isFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(isFilterableSelectOp);
 
-        // Select operator for removing tuples that are filterable.
+        // Select operator for removing tuples that are filterable. Clone the expression: the same
+        // isFilterableExpr instance is already owned by isFilterableSelectOp above, and an operator
+        // graph must not share expression object instances across operators (PlanStructureVerifier).
         List<Mutable<ILogicalExpression>> isNotFilterableArgs = new ArrayList<Mutable<ILogicalExpression>>();
-        isNotFilterableArgs.add(new MutableObject<ILogicalExpression>(isFilterableExpr));
+        isNotFilterableArgs.add(new MutableObject<ILogicalExpression>(isFilterableExpr.cloneExpression()));
         ScalarFunctionCallExpression isNotFilterableExpr = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), isNotFilterableArgs);
         isNotFilterableExpr.setSourceLocation(sourceLoc);

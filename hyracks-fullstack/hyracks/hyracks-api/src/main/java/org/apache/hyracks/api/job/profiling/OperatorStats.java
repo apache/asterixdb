@@ -189,8 +189,12 @@ public class OperatorStats implements IOperatorStats {
     @Override
     public void updateFrom(IOperatorStats stats) {
         tupleCounter.update(stats.getTupleCounter().get());
+        inputTupleCounter.update(stats.getInputTupleCounter().get());
         timeCounter.update(stats.getTimeCounter().get());
         pageReads.update(stats.getPageReadCounter().get());
+        tupleBytes.update(stats.getTupleBytes().get());
+        coldReadCounter.update(stats.coldReadCounter().get());
+        cloudReadRequestCounter.update(stats.cloudReadPageCounter().get());
         updateIndexesStats(stats.getIndexesStats());
     }
 
@@ -267,6 +271,14 @@ public class OperatorStats implements IOperatorStats {
                 + "\": " + frameCounter.get() + ", \"" + bytesRead.getName() + "\": " + bytesRead.get() + ", \""
                 + bytesWritten.getName() + "\": " + bytesWritten.get() + ", \"" + level.getName() + "\": " + level.get()
                 + ", \"indexStats\": \"" + indexesStats + "\" }";
+    }
+
+    public ICounter getCloudReadPageCounter() {
+        return cloudReadPageCounter;
+    }
+
+    public ICounter getColdReadCounter() {
+        return coldReadCounter;
     }
 
     public static void writeString(DataOutput output, String value) throws IOException {

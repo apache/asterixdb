@@ -50,6 +50,13 @@ public class TestSuiteParser {
         } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
             LOGGER.warn("ignoring exception setting sax parser property", e);
         }
+        try {
+            // Raise entity size limits to handle large test suite XML files (e.g. SqlppQueries entity > 100KB)
+            saxParser.setProperty("http://www.oracle.com/xml/jaxp/properties/totalEntitySizeLimit", 0);
+            saxParser.setProperty("http://www.oracle.com/xml/jaxp/properties/maxGeneralEntitySizeLimit", 0);
+        } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
+            LOGGER.warn("ignoring exception setting entity size limit sax parser property", e);
+        }
 
         JAXBContext ctx = JAXBContext.newInstance(TestSuite.class);
         Unmarshaller um = ctx.createUnmarshaller();

@@ -489,6 +489,23 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
+    public void scanDiskComponentsForSample(ILSMIndexOperationContext ctx, IIndexCursor cursor)
+            throws HyracksDataException {
+        if (!lsmIndex.isPrimaryIndex()) {
+            throw HyracksDataException.create(ErrorCode.DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX);
+        }
+        LSMOperationType opType = LSMOperationType.DISK_COMPONENT_SCAN;
+        getAndEnterComponents(ctx, opType, false);
+        try {
+            ctx.getSearchOperationCallback().before(null);
+            lsmIndex.scanDiskComponentsForSample(ctx, cursor);
+        } catch (Exception e) {
+            exitComponents(ctx, opType, null, true);
+            throw e;
+        }
+    }
+
+    @Override
     public void endScanDiskComponents(ILSMIndexOperationContext ctx) throws HyracksDataException {
         if (ctx.getOperation() == IndexOperation.DISK_COMPONENT_SCAN) {
             try {

@@ -25,6 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 
 public class BTreeBulkLoadRunner extends BTreeRunner {
@@ -41,7 +42,8 @@ public class BTreeBulkLoadRunner extends BTreeRunner {
     public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
         btree.create();
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = btree.createBulkLoader(1.0f, false, 0L, true, NoOpPageWriteCallback.INSTANCE);
+        IIndexBulkLoader bulkLoader =
+                btree.createBulkLoader(1.0f, false, 0L, true, NoOpSampler.INSTANCE, NoOpPageWriteCallback.INSTANCE);
         for (int i = 0; i < numBatches; i++) {
             TupleBatch batch = dataGen.tupleBatchQueue.take();
             for (int j = 0; j < batch.size(); j++) {

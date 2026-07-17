@@ -1,30 +1,30 @@
-distribute result [$$43] [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1006.0]
+distribute result [$$43] [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1006.0]
+  exchange [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$43] <- [{"A": $$A, "item": $$item}] project: [$$43] [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1006.0]
+    assign [$$43] <- [{"A": $$A, "item": $$item}] project: [$$43] [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
     -- ASSIGN  |PARTITIONED|
-      project ([$$A, $$item]) [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1006.0]
+      project ([$$A, $$item]) [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1006.0]
+        exchange [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
         -- SORT_MERGE_EXCHANGE [$$45(ASC) ]  |PARTITIONED|
-          order (ASC, $$45) [cardinality: 2.0, doc-size: 546.0, op-cost: 2.0, total-cost: 1006.0]
+          order (ASC, $$45) [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
           -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
-            exchange [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+            exchange [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              select (or(eq($$36, 120), eq($$36, 80))) project: [$$A, $$item, $$45] [cardinality: 2.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+              select (or(eq($$36, 120), eq($$36, 80))) project: [$$A, $$item, $$45] [cardinality: 0.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
               -- STREAM_SELECT  |PARTITIONED|
-                assign [$$36] <- [$$item.getField("qty")] [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                assign [$$36] <- [$$item.getField("qty")] [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                 -- ASSIGN  |PARTITIONED|
-                  unnest $$item <- scan-collection($$46) project: [$$45, $$A, $$item] [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                  unnest $$item <- scan-collection($$46) project: [$$45, $$A, $$item] [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                   -- UNNEST  |PARTITIONED|
-                    select (or(eq($$39, 1000), eq($$39, 1001))) project: [$$45, $$A, $$46] [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                    select (or(eq($$39, 1000), eq($$39, 1001))) project: [$$45, $$A, $$46] [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                     -- STREAM_SELECT  |PARTITIONED|
-                      assign [$$39, $$46] <- [$$A.getField("a_2"), $$A.getField("items")] [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                      assign [$$39, $$46] <- [$$A.getField("a_2"), $$A.getField("items")] [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                       -- ASSIGN  |PARTITIONED|
-                        exchange [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                        exchange [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$45, $$A] <- test.A [cardinality: 1004.0, doc-size: 546.0, op-cost: 0.0, total-cost: 1004.0]
+                          data-scan []<-[$$45, $$A] <- test.A [cardinality: 1004.0, doc-size: 200.0, op-cost: 0.0, total-cost: 1004.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

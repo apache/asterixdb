@@ -12,7 +12,7 @@ distribute result [$$paper] [cardinality: 24.0, doc-size: 284.21, op-cost: 0.0, 
           -- STREAM_PROJECT  |PARTITIONED|
             exchange [cardinality: 24.0, doc-size: 284.21, op-cost: 0.0, total-cost: 100.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              data-scan []<-[$$15, $$paper] <- test.DBLP1 condition (contains($$paper.getField(1), "kimL89")) limit 10 [cardinality: 24.0, doc-size: 284.21, op-cost: 0.0, total-cost: 100.0]
+              data-scan []<-[$$17, $$paper] <- test.DBLP1 condition (contains($$paper.getField(1), "kimL89")) limit 10 [cardinality: 24.0, doc-size: 284.21, op-cost: 0.0, total-cost: 100.0]
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

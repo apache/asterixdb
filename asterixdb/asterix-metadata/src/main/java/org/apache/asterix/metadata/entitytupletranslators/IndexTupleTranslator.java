@@ -100,6 +100,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
     public static final String SOURCE_CARDINALITY = "SourceCardinality";
     public static final String SOURCE_AVG_ITEM_SIZE = "SourceAvgItemSize";
+    public static final String SAMPLE_METHOD = "SampleMethod";
     public static final String INDEXES_STATS = "IndexStats";
     public static final String STATS_NUM_PAGES = "NumPages";
     public static final String STATS_INDEX_NAME = "IndexName";
@@ -513,6 +514,14 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 }
                 int sourceAvgItemSize = ((AInt32) indexRecord.getValueByPos(sourceAvgItemSizePos)).getIntegerValue();
 
+                // If "SampleMethod" is absent the index predates this field and was built with the original
+                // full-scan reservoir sampling (its disk components carry no theta metadata), so report FULL_SCAN.
+                int sampleMethodPos = indexRecord.getType().getFieldIndex(SAMPLE_METHOD);
+                Index.SampleIndexDetails.SampleMethod sampleMethod = sampleMethodPos >= 0
+                        ? Index.SampleIndexDetails.SampleMethod.fromMetadataName(
+                                ((AString) indexRecord.getValueByPos(sampleMethodPos)).getStringValue())
+                        : Index.SampleIndexDetails.SampleMethod.FULL_SCAN;
+
                 int indexesStatsPos = indexRecord.getType().getFieldIndex(INDEXES_STATS);
                 Map<String, IndexStats> indexesStats;
                 if (indexesStatsPos >= 0) {
@@ -532,7 +541,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 }
 
                 indexDetails = new Index.SampleIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize, sampleSeed, indexesStats);
+                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize, sampleSeed, sampleMethod,
+                        indexesStats);
                 break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
@@ -987,6 +997,14 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             aString.setValue(SOURCE_AVG_ITEM_SIZE);
             stringSerde.serialize(aString, nameValue.getDataOutput());
             int32Serde.serialize(new AInt32(indexDetails.getSourceAvgItemSize()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
+
+            nameValue.reset();
+            fieldValue.reset();
+            aString.setValue(SAMPLE_METHOD);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            aString.setValue(indexDetails.getSampleMethod().getMetadataName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(nameValue, fieldValue);
 
             Map<String, IndexStats> indexesStats = indexDetails.getIndexesStats();

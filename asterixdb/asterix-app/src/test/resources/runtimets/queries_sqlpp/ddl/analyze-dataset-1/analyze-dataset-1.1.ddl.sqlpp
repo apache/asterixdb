@@ -55,7 +55,7 @@ create dataset ds1(t1) primary key id;
 
 -- analyze on an empty dataset
 
-analyze dataset ds1;
+analyze dataset ds1 with { "sample-seed": 1000 };
 
 -- issue a warning for empty samples
 select * from ds1;

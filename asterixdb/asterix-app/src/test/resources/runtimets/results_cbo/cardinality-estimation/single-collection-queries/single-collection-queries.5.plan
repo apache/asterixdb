@@ -1,38 +1,38 @@
-distribute result [$$58] [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+distribute result [$$58] [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 11359.96]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+  exchange [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 11359.96]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$58] <- [{"$1": $$62}] project: [$$58] [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+    assign [$$58] <- [{"$1": $$62}] project: [$$58] [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 11359.96]
     -- ASSIGN  |PARTITIONED|
-      project ([$$62]) [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+      project ([$$62]) [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 11359.96]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 15506.8]
+        exchange [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 11359.96]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$l_orderkey := $$66]) decor ([]) {
                     aggregate [$$62] <- [sql-sum-serial($$65)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 887.0, doc-size: 0.0, op-cost: 4750.9, total-cost: 15506.8]
+                 } [cardinality: 148.0, doc-size: 0.0, op-cost: 2689.48, total-cost: 11359.96]
           -- EXTERNAL_GROUP_BY[$$66]  |PARTITIONED|
-            exchange [cardinality: 887.0, doc-size: 0.0, op-cost: 0.0, total-cost: 10755.9]
+            exchange [cardinality: 148.0, doc-size: 0.0, op-cost: 0.0, total-cost: 8670.48]
             -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
               group by ([$$66 := $$60]) decor ([]) {
                         aggregate [$$65] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 887.0, doc-size: 0.0, op-cost: 4750.9, total-cost: 10755.9]
+                     } [cardinality: 148.0, doc-size: 0.0, op-cost: 2689.48, total-cost: 8670.48]
               -- EXTERNAL_GROUP_BY[$$60]  |PARTITIONED|
-                exchange [cardinality: 4750.9, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                exchange [cardinality: 2689.48, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  select (and(gt($$l.getField(4), 10), gt($$l.getField(1), 1))) project: [$$60] [cardinality: 4750.9, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                  select (and(gt($$l.getField(4), 10), gt($$l.getField(1), 1))) project: [$$60] [cardinality: 2689.48, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                   -- STREAM_SELECT  |PARTITIONED|
-                    project ([$$60, $$l]) [cardinality: 6005.0, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                    project ([$$60, $$l]) [cardinality: 5981.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 6005.0, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                      exchange [cardinality: 5981.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        data-scan []<-[$$60, $$61, $$l] <- tpch.LineItem [cardinality: 6005.0, doc-size: 0.0, op-cost: 0.0, total-cost: 6005.0]
+                        data-scan []<-[$$60, $$61, $$l] <- tpch.LineItem [cardinality: 5981.0, doc-size: 0.0, op-cost: 0.0, total-cost: 5981.0]
                         -- DATASOURCE_SCAN  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

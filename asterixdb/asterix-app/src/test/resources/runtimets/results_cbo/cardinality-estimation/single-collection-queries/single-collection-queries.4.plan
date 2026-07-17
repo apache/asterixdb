@@ -1,38 +1,38 @@
-distribute result [$$55] [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 4491.54]
+distribute result [$$55] [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 3729.54]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 4491.54]
+  exchange [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 3729.54]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$55] <- [{"$1": $$58}] project: [$$55] [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 4491.54]
+    assign [$$55] <- [{"$1": $$58}] project: [$$55] [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 3729.54]
     -- ASSIGN  |PARTITIONED|
-      project ([$$58]) [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 4491.54]
+      project ([$$58]) [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 3729.54]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 4491.54]
+        exchange [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 3729.54]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$o_orderdate := $$61]) decor ([]) {
                     aggregate [$$58] <- [sql-sum-serial($$60)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1495.77, doc-size: 0.0, op-cost: 1495.77, total-cost: 4491.54]
+                 } [cardinality: 1057.0, doc-size: 0.0, op-cost: 1114.77, total-cost: 3729.54]
           -- EXTERNAL_GROUP_BY[$$61]  |PARTITIONED|
-            exchange [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 2995.77]
+            exchange [cardinality: 1057.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2614.77]
             -- HASH_PARTITION_EXCHANGE [$$61]  |PARTITIONED|
               group by ([$$61 := $$56]) decor ([]) {
                         aggregate [$$60] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 1495.77, doc-size: 0.0, op-cost: 1495.77, total-cost: 2995.77]
+                     } [cardinality: 1057.0, doc-size: 0.0, op-cost: 1114.77, total-cost: 2614.77]
               -- EXTERNAL_GROUP_BY[$$56]  |PARTITIONED|
-                exchange [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
+                exchange [cardinality: 1114.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$56] <- [$$o.getField(4)] project: [$$56] [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
+                  assign [$$56] <- [$$o.getField(4)] project: [$$56] [cardinality: 1114.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$o]) [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
+                    project ([$$o]) [cardinality: 1114.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
+                      exchange [cardinality: 1114.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$57, $$o] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$62, 0, false, true, false) [cardinality: 1495.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
+                        unnest-map [$$57, $$o] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$62, 0, false, true, false) [cardinality: 1114.77, doc-size: 0.0, op-cost: 0.0, total-cost: 1500.0]
                         -- BTREE_SEARCH  |PARTITIONED|
                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

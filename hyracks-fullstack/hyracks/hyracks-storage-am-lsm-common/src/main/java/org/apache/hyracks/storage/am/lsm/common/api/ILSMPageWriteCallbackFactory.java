@@ -37,7 +37,6 @@ public interface ILSMPageWriteCallbackFactory extends Serializable, IJsonSeriali
     /**
      * Create the page write callback
      *
-     * @param index
      * @return
      * @throws HyracksDataException
      */

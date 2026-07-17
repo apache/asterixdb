@@ -33,13 +33,16 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.LangRecordParseUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.object.base.AdmBigIntNode;
 import org.apache.asterix.object.base.AdmDoubleNode;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class AnalyzeStatement extends AbstractStatement {
 
@@ -53,6 +56,9 @@ public class AnalyzeStatement extends AbstractStatement {
     private static final int SAMPLE_DEFAULT_SIZE = SAMPLE_LOW_SIZE;
 
     private static final String SAMPLE_SEED_FIELD_NAME = "sample-seed";
+    // "sample-method" takes the same vocabulary persisted in the index metadata (Index.SampleIndexDetails.
+    // SampleMethod): "full-scan" or "random".
+    private static final String SAMPLE_METHOD_FIELD_NAME = "sample-method";
 
     private final Namespace namespace;
     private final String datasetName;
@@ -83,6 +89,11 @@ public class AnalyzeStatement extends AbstractStatement {
                         throw new CompilationException(ErrorCode.INVALID_SAMPLE_SEED);
                     }
                     break;
+                case SAMPLE_METHOD_FIELD_NAME:
+                    if (value.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
+                        throw new CompilationException(ErrorCode.INVALID_SAMPLE_METHOD);
+                    }
+                    break;
                 default:
                     throw new CompilationException(ErrorCode.INVALID_PARAM, key);
             }
@@ -108,13 +119,13 @@ public class AnalyzeStatement extends AbstractStatement {
     }
 
     public int getSampleSize() throws CompilationException {
-        IAdmNode n = getOption(SAMPLE_FIELD_NAME);
-        if (n == null) {
+        IAdmNode sampleSizeNode = getOption(SAMPLE_FIELD_NAME);
+        if (sampleSizeNode == null) {
             return SAMPLE_DEFAULT_SIZE;
         }
-        switch (n.getType()) {
+        switch (sampleSizeNode.getType()) {
             case STRING:
-                String s = ((AdmStringNode) n).get();
+                String s = ((AdmStringNode) sampleSizeNode).get();
                 switch (s.toLowerCase(Locale.ROOT)) {
                     case SAMPLE_LOW:
                         return SAMPLE_LOW_SIZE;
@@ -126,14 +137,14 @@ public class AnalyzeStatement extends AbstractStatement {
                         throw new CompilationException(ErrorCode.INVALID_SAMPLE_SIZE);
                 }
             case BIGINT:
-                int v = (int) ((AdmBigIntNode) n).get();
+                int v = (int) ((AdmBigIntNode) sampleSizeNode).get();
                 if (!isValidSampleSize(v)) {
                     throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
                             SAMPLE_HIGH_SIZE);
                 }
                 return v;
             case DOUBLE:
-                v = (int) ((AdmDoubleNode) n).get();
+                v = (int) ((AdmDoubleNode) sampleSizeNode).get();
                 if (!isValidSampleSize(v)) {
                     throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
                             SAMPLE_HIGH_SIZE);
@@ -141,23 +152,23 @@ public class AnalyzeStatement extends AbstractStatement {
                 return v;
             default:
                 throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_FIELD_NAME,
-                        BuiltinType.ASTRING.getTypeName(), n.getType().toString());
+                        BuiltinType.ASTRING.getTypeName(), sampleSizeNode.getType().toString());
         }
     }
 
     public long getOrCreateSampleSeed() throws AlgebricksException {
-        IAdmNode n = getOption(SAMPLE_SEED_FIELD_NAME);
-        return n != null ? getSampleSeed(n) : createSampleSeed();
+        IAdmNode sampleSeedNode = getOption(SAMPLE_SEED_FIELD_NAME);
+        return sampleSeedNode != null ? getSampleSeed(sampleSeedNode) : createSampleSeed();
     }
 
-    private long getSampleSeed(IAdmNode n) throws CompilationException {
-        switch (n.getType()) {
+    private long getSampleSeed(IAdmNode sampleSeedNode) throws CompilationException {
+        switch (sampleSeedNode.getType()) {
             case BIGINT:
-                return ((AdmBigIntNode) n).get();
+                return ((AdmBigIntNode) sampleSeedNode).get();
             case DOUBLE:
-                return (long) ((AdmDoubleNode) n).get();
+                return (long) ((AdmDoubleNode) sampleSeedNode).get();
             case STRING:
-                String s = ((AdmStringNode) n).get();
+                String s = ((AdmStringNode) sampleSeedNode).get();
                 try {
                     return Long.parseLong(s);
                 } catch (NumberFormatException e) {
@@ -165,7 +176,29 @@ public class AnalyzeStatement extends AbstractStatement {
                 }
             default:
                 throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_SEED_FIELD_NAME,
-                        BuiltinType.AINT64.getTypeName(), n.getType().toString());
+                        BuiltinType.AINT64.getTypeName(), sampleSeedNode.getType().toString());
+        }
+    }
+
+    /**
+     * The requested sampling method, using the same vocabulary persisted in the index metadata
+     * ("full-scan" / "random"), from the {@code sample-method} option. Defaults to {@code RANDOM}.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "sample-method WITH option aligned with the stored SampleMethod enum")
+    public Index.SampleIndexDetails.SampleMethod getSampleMethod() throws CompilationException {
+        IAdmNode methodNode = getOption(SAMPLE_METHOD_FIELD_NAME);
+        if (methodNode == null) {
+            return Index.SampleIndexDetails.SampleMethod.RANDOM;
+        }
+        if (methodNode.getType() != ATypeTag.STRING) {
+            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_METHOD_FIELD_NAME,
+                    BuiltinType.ASTRING.getTypeName(), methodNode.getType().toString());
+        }
+        String method = ((AdmStringNode) methodNode).get().toLowerCase(Locale.ROOT);
+        try {
+            return Index.SampleIndexDetails.SampleMethod.fromMetadataName(method);
+        } catch (IllegalArgumentException e) {
+            throw new CompilationException(ErrorCode.INVALID_SAMPLE_METHOD);
         }
     }
 
@@ -174,7 +207,7 @@ public class AnalyzeStatement extends AbstractStatement {
     }
 
     private boolean isValidSampleSize(int v) {
-        return v >= SAMPLE_LOW_SIZE && v <= SAMPLE_HIGH_SIZE;
+        return v >= SAMPLE_LOW_SIZE && v <= SAMPLE_HIGH_SIZE * 4;
     }
 
     private IAdmNode getOption(String optionName) {
