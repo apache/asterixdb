@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- Batch 3. HIGH-CARDINALITY incompressible columns: every field is a distinct pseudo-random
+-- int per (gen,e) so dictionary/delta encoding cannot collapse the column -> one column
+-- spans many data pages -> the component .dic spans many LAF pages during MERGE.
+
+USE test;
+
+INSERT INTO ColumnDataset
+SELECT VALUE {
+  "id": gen,
+  "scenarioResult": (SELECT VALUE {
+      "k": (gen*2654435761 + e*40503) % 2147483647,
+      "v": (e*2654435761 + gen*40503) % 2147483647,
+      "w": (gen*e*2246822519 + e*7919) % 2147483647
+    } FROM range(1, 250) AS e),
+  "executionDetail": (SELECT VALUE {
+      "step": (gen*1000003 + e*97) % 2147483647,
+      "ts": (gen*2147483629 + e*65537) % 2147483647,
+      "note": (e*2654435761 + gen*99991) % 2147483647
+    } FROM range(1, 250) AS e)
+}
+FROM range(5000001, 5006000) AS gen;

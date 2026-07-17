@@ -44,6 +44,13 @@ import org.apache.hyracks.util.annotations.NotThreadSafe;
  */
 @NotThreadSafe
 class LAFWriter implements ICompressedPageWriter {
+    // Lowest LAF page id not yet flushed. A frame is released to the (dual local+cloud) page
+    // writer only after every lower-id page has been flushed, so the append-only cloud .dic
+    // writer always receives pages in ascending offset order (otherwise a higher LAF page can
+    // flush while a lower one is still incomplete -> AbstractCloudIOManager.ensurePosition
+    // "Misaligned positions" -> merge halts the JVM). The local file is random-access and
+    // indifferent to flush order; only the cloud copy needs this guarantee. See ASTERIXDB-3788.
+    private int nextPageToFlush;
     private final CompressedFileManager compressedFileManager;
     private final IBufferCache bufferCache;
     private final IFIFOPageWriter pageWriter;
@@ -73,6 +80,7 @@ class LAFWriter implements ICompressedPageWriter {
         totalNumOfPages = 0;
         maxPageId = -1;
         currentPageId = -1;
+        nextPageToFlush = 0;
     }
 
     /* ************************************
@@ -140,8 +148,14 @@ class LAFWriter implements ICompressedPageWriter {
              */
             lastPage.setEOF();
         }
-        for (Entry<Integer, LAFFrame> entry : cachedFrames.entrySet()) {
-            pageWriter.write(entry.getValue().cPage);
+        // Flush remaining frames in ASCENDING page-id order. The append-only cloud .dic writer
+        // requires ascending offsets; HashMap iteration order does not guarantee that and would
+        // trip AbstractCloudIOManager.ensurePosition ("Misaligned positions"). ASTERIXDB-3788.
+        for (int pageId = nextPageToFlush; pageId <= maxPageId; pageId++) {
+            final LAFFrame frame = cachedFrames.remove(pageId);
+            if (frame != null) {
+                flushFrame(pageId, frame);
+            }
         }
 
         //Signal the compressedFileManager to change its state
@@ -169,7 +183,7 @@ class LAFWriter implements ICompressedPageWriter {
         lastOffset += size;
         totalNumOfPages++;
 
-        writeFullPage();
+        flushReadyPages();
         return pageOffset;
     }
 
@@ -194,18 +208,33 @@ class LAFWriter implements ICompressedPageWriter {
         return frame;
     }
 
-    private void writeFullPage() throws HyracksDataException {
-        if (currentFrame.isFull()) {
-            //The LAF page is filled. We do not need to keep it.
-            //Write it to the file and remove it from the cachedFrames map
-            pageWriter.write(currentFrame.cPage);
-            //Recycle the frame
-            final LAFFrame frame = cachedFrames.remove(currentPageId);
-            frame.setCachedPage(null);
-            recycledFrames.add(frame);
-            currentFrame = null;
-            currentPageId = -1;
+    /**
+     * Flush the longest contiguous run of FULL LAF pages starting at {@link #nextPageToFlush}.
+     * A higher LAF page that fills before a lower one is held back (it stays in
+     * {@code cachedFrames}) until every lower-id page has been flushed, so the append-only
+     * cloud .dic writer always receives pages in ascending offset order. The local file is
+     * random-access and indifferent to order; only the cloud copy needs this guarantee.
+     */
+    private void flushReadyPages() throws HyracksDataException {
+        LAFFrame frame;
+        while ((frame = cachedFrames.get(nextPageToFlush)) != null && frame.isFull()) {
+            final int pageId = nextPageToFlush;
+            cachedFrames.remove(pageId);
+            flushFrame(pageId, frame);
+            if (currentPageId == pageId) {
+                currentFrame = null;
+                currentPageId = -1;
+            }
         }
+    }
+
+    /** Write one LAF page to the (dual) page writer and recycle its frame. Advances
+     *  {@link #nextPageToFlush}; callers MUST invoke this in ascending page-id order. */
+    private void flushFrame(int pageId, LAFFrame frame) throws HyracksDataException {
+        pageWriter.write(frame.cPage);
+        frame.setCachedPage(null);
+        recycledFrames.add(frame);
+        nextPageToFlush = pageId + 1;
     }
 
     private int getLAFEntryPageId(int compressedPageId) {
