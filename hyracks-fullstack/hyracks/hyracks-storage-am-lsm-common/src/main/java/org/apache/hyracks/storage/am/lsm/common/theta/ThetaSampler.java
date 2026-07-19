@@ -40,10 +40,6 @@ import it.unimi.dsi.fastutil.longs.LongPriorityQueue;
  */
 public class ThetaSampler implements IComponentSampler {
 
-    public static IComponentSampler createSampler(int[] keyFields) {
-        return createSampler(keyFields, DEFAULT_K);
-    }
-
     public static IComponentSampler createSampler(int[] keyFields, int k) {
         return new ThetaSampler(keyFields, k);
     }
@@ -130,6 +126,7 @@ public class ThetaSampler implements IComponentSampler {
 
     // Non-destructive: serializePQ dequeues into a temp array and re-enqueues, so the heaps are left intact
     // and this sampler instance remains usable after serialization.
+    @Override
     public IValueReference serialize() throws IOException {
         serializedTheta.reset();
         DataOutput out = serializedTheta.getDataOutput();
@@ -168,7 +165,7 @@ public class ThetaSampler implements IComponentSampler {
         return new ThetaEstimator.ComponentStats(insertSamples, deleteSamples, K);
     }
 
-    public void serializePQ(LongPriorityQueue heap, DataOutput out) throws IOException {
+    private void serializePQ(LongPriorityQueue heap, DataOutput out) throws IOException {
         int size = heap.size();
         out.writeInt(size);
 
@@ -183,10 +180,5 @@ public class ThetaSampler implements IComponentSampler {
         for (int i = size - 1; i >= 0; i--) {
             out.writeLong(temp[i]);
         }
-    }
-
-    @Override
-    public IValueReference serializeSamplingMetadata() throws IOException {
-        return serialize();
     }
 }

@@ -47,7 +47,7 @@ public class SqlppAnalyzedExecutionTest {
             "array-index: composite-index-queries", "filters: upsert", "column: analyze-dataset",
             "column: filter/boolean", "column: filter/sql-compat", "ddl: analyze-dataset-with-indexes",
             "warnings: cardinality-hint-warning", "comparison: incomparable_types",
-            // MB-72758: under random-sample-based stats the index-intersection cost decision is not
+            // under random-sample-based stats the index-intersection cost decision is not
             // reproducible, so this plan's structure (INTERSECT vs single-index) varies run-to-run.
             // Excluded from the analyzed suite; still covered as a result test in the regular suite.
             "index-selection: secondary-index-intersection-01" };

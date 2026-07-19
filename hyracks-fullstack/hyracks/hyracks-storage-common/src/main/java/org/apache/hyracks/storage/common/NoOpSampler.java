@@ -28,7 +28,7 @@ public class NoOpSampler implements IComponentSampler {
     public static final NoOpSampler INSTANCE = new NoOpSampler();
 
     @Override
-    public IValueReference serializeSamplingMetadata() throws IOException {
+    public IValueReference serialize() throws IOException {
         return null;
     }
 

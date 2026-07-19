@@ -19,19 +19,5 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="failed">
-    <!-- NOTE: no check-warnings/expected-warn here (unlike sqlpp_queries.xml). ASX1174 "Sample has zero
-         rows" is emitted only by the CBO (optimizer/rules/cbo/*); this only-suite runs across configs that
-         disable CBO (e.g. RebalanceTest -> cc_no_cbo.conf), where the warning cannot fire. The warning is
-         still asserted in sqlpp_queries.xml, which runs under CBO-enabled configs. -->
-    <test-case FilePath="ddl">
-      <compilation-unit name="analyze-dataset-1">
-      <output-dir compare="Text">analyze-dataset-1</output-dir>
-    </compilation-unit>
-    </test-case>
-    <test-case FilePath="column">
-      <compilation-unit name="analyze-dataset">
-        <output-dir compare="Text">analyze-dataset</output-dir>
-      </compilation-unit>
-    </test-case>
   </test-group>
 </test-suite>

@@ -78,7 +78,7 @@ public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
     @Override
     public void end() throws HyracksDataException {
         try {
-            IValueReference reference = sampler.serializeSamplingMetadata();
+            IValueReference reference = sampler.serialize();
             if (reference != null) {
                 THETA_SKETCH_RW.writeMetadata(reference, componentMetadata);
             }

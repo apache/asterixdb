@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.logging.log4j.LogManager;
@@ -58,7 +59,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         metadata = new DiskComponentMetadata(mdPageManager);
         sampler = lsmIndex.isPrimaryIndex()
                 ? ThetaSampler.createSampler(lsmIndex.getBloomFilterKeyFields(), lsmIndex.getThetaSketchK())
-                : org.apache.hyracks.storage.common.NoOpSampler.INSTANCE;
+                : NoOpSampler.INSTANCE;
     }
 
     @Override
