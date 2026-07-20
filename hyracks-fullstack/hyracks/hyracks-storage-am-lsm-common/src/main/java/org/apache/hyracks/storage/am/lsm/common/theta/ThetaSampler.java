@@ -28,7 +28,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
-import org.apache.hyracks.storage.common.IComponentSampler;
+import org.apache.hyracks.storage.common.ISketchSampler;
 
 import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongHeapPriorityQueue;
@@ -38,9 +38,9 @@ import it.unimi.dsi.fastutil.longs.LongPriorityQueue;
 /**
  * Implements a Theta Sketch sampler for LSM disk components using the K-Minimum Values (KMV) algorithm.
  */
-public class ThetaSampler implements IComponentSampler {
+public class ThetaSampler implements ISketchSampler {
 
-    public static IComponentSampler createSampler(int[] keyFields, int k) {
+    public static ISketchSampler createSampler(int[] keyFields, int k) {
         return new ThetaSampler(keyFields, k);
     }
 

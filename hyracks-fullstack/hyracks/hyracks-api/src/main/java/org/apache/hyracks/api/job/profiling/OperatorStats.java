@@ -273,14 +273,6 @@ public class OperatorStats implements IOperatorStats {
                 + ", \"indexStats\": \"" + indexesStats + "\" }";
     }
 
-    public ICounter getCloudReadPageCounter() {
-        return cloudReadPageCounter;
-    }
-
-    public ICounter getColdReadCounter() {
-        return coldReadCounter;
-    }
-
     public static void writeString(DataOutput output, String value) throws IOException {
         byte[] data = value.getBytes(StandardCharsets.UTF_8);
         output.writeInt(data.length);

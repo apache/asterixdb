@@ -36,10 +36,10 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProj
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnBTreeOpContext;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IColumnBufferPool;
@@ -58,13 +58,13 @@ public class ColumnBTree extends DiskBTree {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback) {
+            boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback) {
         throw new IllegalAccessError("Missing write column metadata");
     }
 
     public IIndexBulkLoader createBulkLoader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
             IPageWriteCallback callback, IColumnMetadata columnMetadata, IColumnWriteContext writeContext,
-            IComponentSampler sampler) throws HyracksDataException {
+            ISketchSampler sampler) throws HyracksDataException {
         ColumnBTreeLeafFrameFactory columnLeafFrameFactory = (ColumnBTreeLeafFrameFactory) leafFrameFactory;
         ColumnBTreeWriteLeafFrame writeLeafFrame =
                 columnLeafFrameFactory.createWriterFrame(columnMetadata, writeContext);

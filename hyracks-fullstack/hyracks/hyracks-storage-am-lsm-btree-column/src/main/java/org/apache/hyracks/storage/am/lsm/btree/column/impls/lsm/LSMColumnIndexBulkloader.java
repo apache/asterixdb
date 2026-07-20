@@ -23,14 +23,14 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexBulkLoader;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.ISketchSampler;
 
 public class LSMColumnIndexBulkloader extends LSMIndexBulkLoader {
     private final IColumnMetadata columnMetadata;
 
     public LSMColumnIndexBulkloader(IIndexBulkLoader bulkLoader, IColumnMetadata columnMetadata,
-            IComponentMetadata componentMetadata, IComponentSampler sampler) {
+            IComponentMetadata componentMetadata, ISketchSampler sampler) {
         super(bulkLoader, componentMetadata, sampler);
         this.columnMetadata = columnMetadata;
     }

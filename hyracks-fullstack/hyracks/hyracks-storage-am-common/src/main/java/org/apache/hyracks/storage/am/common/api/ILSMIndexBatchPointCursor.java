@@ -24,10 +24,25 @@ import java.util.BitSet;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
+/**
+ * A cursor that resolves a batch of point lookups in a single pass, reusing the same underlying
+ * sample cursor across predicates instead of opening one cursor per key.
+ */
 public interface ILSMIndexBatchPointCursor {
 
-    // Reuses same sample cursor for the predicates
+    /**
+     * Sets the predicate to evaluate on the next {@link #hasNextWithPredicate(BitSet)} call.
+     * The same cursor instance is reused across predicates.
+     *
+     * @param predicate the search predicate to evaluate.
+     */
     void setPredicate(ISearchPredicate predicate);
 
-    void doHasNextWithPredicate(BitSet foundRecordsIndex) throws HyracksDataException;
+    /**
+     * Advances the cursor over the current predicate's keys and records which of them were found.
+     *
+     * @param foundRecordsIndex bit set whose i-th bit is set if the i-th key in the batch was found.
+     * @throws HyracksDataException if the underlying cursor fails.
+     */
+    void hasNextWithPredicate(BitSet foundRecordsIndex) throws HyracksDataException;
 }

@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public class NoOpSampler implements IComponentSampler {
+public class NoOpSampler implements ISketchSampler {
 
     public static final NoOpSampler INSTANCE = new NoOpSampler();
 

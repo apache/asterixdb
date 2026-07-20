@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
-import org.apache.hyracks.storage.common.IComponentSampler;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -80,7 +80,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
 
     public ColumnBTreeBulkloader(NCConfig storageConfig, float fillFactor, boolean verifyInput,
             IPageWriteCallback callback, ITreeIndex index, ITreeIndexFrame leafFrame,
-            IBufferCacheWriteContext writeContext, IComponentSampler sampler) throws HyracksDataException {
+            IBufferCacheWriteContext writeContext, ISketchSampler sampler) throws HyracksDataException {
         super(fillFactor, verifyInput, callback, index, leafFrame, sampler, writeContext);
         columnBufferPool = ((ColumnBTree) index).getColumnBufferPool();
         columnsPages = new ArrayList<>();

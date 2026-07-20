@@ -45,11 +45,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.logging.log4j.LogManager;
@@ -349,7 +349,7 @@ public abstract class TreeIndexTestUtils {
      * @param sampler    the sampler to use (e.g., ThetaSampler or NoOpSampler)
      */
     public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples, boolean filtered,
-            IComponentSampler sampler) throws HyracksDataException {
+            ISketchSampler sampler) throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
         ArrayTupleBuilder tupleBuilder =

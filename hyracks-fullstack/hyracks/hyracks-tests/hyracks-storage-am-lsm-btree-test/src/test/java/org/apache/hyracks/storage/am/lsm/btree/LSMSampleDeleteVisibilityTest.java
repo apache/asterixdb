@@ -59,7 +59,7 @@ import org.junit.Test;
  * of the logical, fully-merged dataset and must not be counted in the sample.
  * <p>
  * The sampler implements this shadow check via
- * {@link LSMBTreeBatchPointSearchCursor#doHasNextWithPredicate(BitSet)} over the set of newer
+ * {@link LSMBTreeBatchPointSearchCursor#hasNextWithPredicate(BitSet)} over the set of newer
  * components. A single disk component holding an antimatter entry for key K stands in exactly for
  * "the newer component the sampler searches" — the predicate must report K as present so the older
  * live tuple is rejected.
@@ -131,7 +131,7 @@ public class LSMSampleDeleteVisibilityTest {
             cursor.setPredicate(batchPredicate);
 
             BitSet found = new BitSet();
-            cursor.doHasNextWithPredicate(found);
+            cursor.hasNextWithPredicate(found);
 
             Assert.assertTrue("live (matter) key 10 must be reported present", found.get(0));
             Assert.assertTrue("antimatter key 25 must be reported present so the shadowed older "

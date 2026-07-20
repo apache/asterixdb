@@ -30,8 +30,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndexBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
@@ -42,10 +42,10 @@ public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
 
     protected final IComponentMetadata componentMetadata;
     protected final IIndexBulkLoader bulkLoader;
-    protected final IComponentSampler sampler;
+    protected final ISketchSampler sampler;
 
     public LSMIndexBulkLoader(IIndexBulkLoader bulkLoader, IComponentMetadata componentMetadata,
-            IComponentSampler sampler) {
+            ISketchSampler sampler) {
         this.bulkLoader = bulkLoader;
         this.componentMetadata = componentMetadata;
         this.sampler = sampler;

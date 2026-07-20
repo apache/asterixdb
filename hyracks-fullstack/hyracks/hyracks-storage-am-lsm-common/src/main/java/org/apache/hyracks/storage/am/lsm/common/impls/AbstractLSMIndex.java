@@ -71,10 +71,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.cloud.DefaultIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.common.cloud.IIndexDiskCacheManager;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.util.trace.ITracer;
@@ -579,7 +579,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public final IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback)
             throws HyracksDataException {
         return createBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex, Collections.emptyMap());
     }

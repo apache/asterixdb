@@ -31,7 +31,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
-import org.apache.hyracks.storage.common.IComponentSampler;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
@@ -43,7 +43,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected final IComponentSampler sampler;
+    protected final ISketchSampler sampler;
     private final DiskComponentMetadata metadata;
     private final ArrayBackedValueStorage buffer = new ArrayBackedValueStorage(Long.BYTES);
 
@@ -262,7 +262,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         return chainedBulkLoader;
     }
 
-    public IComponentSampler getSampler() {
+    public ISketchSampler getSampler() {
         return sampler;
     }
 

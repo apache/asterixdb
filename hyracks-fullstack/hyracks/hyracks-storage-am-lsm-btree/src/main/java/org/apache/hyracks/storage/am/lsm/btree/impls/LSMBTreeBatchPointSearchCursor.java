@@ -91,7 +91,7 @@ public class LSMBTreeBatchPointSearchCursor extends LSMBTreePointSearchCursor im
     }
 
     @Override
-    public void doHasNextWithPredicate(BitSet foundRecordsIndex) throws HyracksDataException {
+    public void hasNextWithPredicate(BitSet foundRecordsIndex) throws HyracksDataException {
         // update the predicate to the new one
         BatchPredicateWithKeys batchPred = (BatchPredicateWithKeys) predicate;
         while (batchPred.hasNext()) {

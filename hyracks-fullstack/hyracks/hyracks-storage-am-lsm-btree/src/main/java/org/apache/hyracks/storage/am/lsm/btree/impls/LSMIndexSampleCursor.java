@@ -168,9 +168,26 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
                 AntimatterAwareTupleAcceptor.INSTANCE);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Replaced the unreachable missing-theta-metadata fallback with an assert; the upfront "
-            + "sampling-metadata probe guarantees every component carries it in the random path")
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Split into logical units (collect stats, floor-allocate, distribute remainder, warn); "
+            + "assert replaces the unreachable missing-theta-metadata fallback")
     private void computeDiskComponentSampleProportionality() throws HyracksDataException {
+        List<ThetaEstimator.ComponentStats> componentStats = collectComponentStats();
+
+        // Compute globally-correct per-component live counts (accounts for cross-component shadowing)
+        ThetaEstimator.CardinalityEstimate estimate = ThetaEstimator.estimatePerComponentCardinality(componentStats);
+        estimatedCardinality = estimate.totalCardinality;
+        long[] liveMatterCount = estimate.perComponentCardinality;
+
+        double[] remainders = allocateFlooredProportionality(liveMatterCount);
+        long deficit = distributeRemainderToLargest(liveMatterCount, remainders);
+        logIfUnderAllocated(liveMatterCount, deficit);
+    }
+
+    /**
+     * Reads each operational component's theta-sketch stats and max leaf tuple count, populating
+     * {@link #maxLeafTupleCounts} and returning the per-component stats for cardinality estimation.
+     */
+    private List<ThetaEstimator.ComponentStats> collectComponentStats() throws HyracksDataException {
         List<ThetaEstimator.ComponentStats> componentStats = new ArrayList<>();
         ArrayBackedValueStorage thetaReference = new ArrayBackedValueStorage();
         // Reused across components: the metadata.get() call fully overwrites the
@@ -186,8 +203,7 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
             boolean hasTheta = THETA_SKETCH_RW.readMetadata(metadata, thetaReference) && thetaReference.getLength() > 0;
             assert hasTheta : "disk component missing theta metadata; the sampling-metadata probe should have "
                     + "forced a full scan";
-            ThetaEstimator.ComponentStats cStat = ThetaSampler.deserialize(thetaReference);
-            componentStats.add(cStat);
+            componentStats.add(ThetaSampler.deserialize(thetaReference));
 
             // Read max leaf tuple count for this component
             maxTupleCountRef.reset();
@@ -197,13 +213,14 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
                         IntegerPointable.getInteger(maxTupleCountRef.getByteArray(), maxTupleCountRef.getStartOffset());
             }
         }
+        return componentStats;
+    }
 
-        // Compute globally-correct per-component live counts (accounts for cross-component shadowing)
-        ThetaEstimator.CardinalityEstimate estimate = ThetaEstimator.estimatePerComponentCardinality(componentStats);
-        estimatedCardinality = estimate.totalCardinality;
-        long[] liveMatterCount = estimate.perComponentCardinality;
-
-        long totalAllocated = 0;
+    /**
+     * Assigns each component the floor of its proportional share (capped at its live count) and returns
+     * the fractional remainders for the subsequent largest-remainder distribution.
+     */
+    private double[] allocateFlooredProportionality(long[] liveMatterCount) {
         double[] remainders = new double[numDiskBTrees];
         for (int i = 0; i < numDiskBTrees; i++) {
             if (estimatedCardinality == 0) {
@@ -213,53 +230,73 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
             double exact = (double) sampleCardinality * liveMatterCount[i] / estimatedCardinality;
             proportionality[i] = Math.min(liveMatterCount[i], (long) exact);
             remainders[i] = exact - proportionality[i];
+        }
+        return remainders;
+    }
+
+    /**
+     * Distributes the samples left over after flooring to the components with the largest fractional
+     * remainders (Hamilton/largest-remainder apportionment), respecting each component's live-count cap.
+     *
+     * @return the remaining deficit; {@code > 0} only when total live capacity is below the requested
+     *         sample cardinality.
+     */
+    private long distributeRemainderToLargest(long[] liveMatterCount, double[] remainders) {
+        long totalAllocated = 0;
+        for (int i = 0; i < numDiskBTrees; i++) {
             totalAllocated += proportionality[i];
         }
-
-        // Distribute leftover samples to components with largest remainders.
+        long deficit = sampleCardinality - totalAllocated;
+        if (deficit <= 0) {
+            return deficit;
+        }
         // numDiskBTrees is small (a handful of components), so a primitive int[]
         // index array with a stable insertion sort by descending remainder is
         // both allocation-free (no Integer boxing, no lambda comparator) and
         // faster than Arrays.sort's setup cost at this size. The strict "<"
         // comparison keeps ties in original index order, matching the prior
         // stable Double.compare(...) descending behavior exactly.
-        long deficit = sampleCardinality - totalAllocated;
-        if (deficit > 0) {
-            int[] indices = new int[numDiskBTrees];
-            for (int i = 0; i < numDiskBTrees; i++) {
-                indices[i] = i;
+        int[] indices = new int[numDiskBTrees];
+        for (int i = 0; i < numDiskBTrees; i++) {
+            indices[i] = i;
+        }
+        for (int i = 1; i < numDiskBTrees; i++) {
+            int curIdx = indices[i];
+            double curRem = remainders[curIdx];
+            int j = i - 1;
+            // Shift entries with a strictly smaller remainder to the right.
+            while (j >= 0 && remainders[indices[j]] < curRem) {
+                indices[j + 1] = indices[j];
+                j--;
             }
-            for (int i = 1; i < numDiskBTrees; i++) {
-                int curIdx = indices[i];
-                double curRem = remainders[curIdx];
-                int j = i - 1;
-                // Shift entries with a strictly smaller remainder to the right.
-                while (j >= 0 && remainders[indices[j]] < curRem) {
-                    indices[j + 1] = indices[j];
-                    j--;
-                }
-                indices[j + 1] = curIdx;
-            }
-            for (int j = 0; j < numDiskBTrees && deficit > 0; j++) {
-                int idx = indices[j];
-                if (proportionality[idx] < liveMatterCount[idx]) {
-                    proportionality[idx]++;
-                    deficit--;
-                }
+            indices[j + 1] = curIdx;
+        }
+        for (int j = 0; j < numDiskBTrees && deficit > 0; j++) {
+            int idx = indices[j];
+            if (proportionality[idx] < liveMatterCount[idx]) {
+                proportionality[idx]++;
+                deficit--;
             }
         }
+        return deficit;
+    }
 
-        // Safety check: verify allocation matches the target
-        if (deficit > 0) {
-            long totalCapacity = 0;
-            for (long lmc : liveMatterCount) {
-                totalCapacity += lmc;
-            }
-            if (sampleCardinality <= totalCapacity) {
-                LOGGER.warn(
-                        "Sample proportionality under-allocated: distributed {} of {} requested (estimated capacity: {})",
-                        sampleCardinality - deficit, sampleCardinality, totalCapacity);
-            }
+    /**
+     * Logs a warning when the requested sample cardinality could not be fully distributed even though the
+     * components' total live capacity would have allowed it (i.e. a genuine under-allocation, not a
+     * capacity-bound shortfall).
+     */
+    private void logIfUnderAllocated(long[] liveMatterCount, long deficit) {
+        if (deficit <= 0) {
+            return;
+        }
+        long totalCapacity = 0;
+        for (long lmc : liveMatterCount) {
+            totalCapacity += lmc;
+        }
+        if (sampleCardinality <= totalCapacity) {
+            LOGGER.info("Sample proportionality under-allocated: distributed {} of {} requested (estimated "
+                    + "capacity: {})", sampleCardinality - deficit, sampleCardinality, totalCapacity);
         }
     }
 

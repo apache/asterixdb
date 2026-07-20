@@ -20,8 +20,6 @@
 package org.apache.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -139,49 +137,10 @@ public class DiskBTree extends BTree {
         ctx.getCursorInitialState().setSearchOperationCallback(ctx.getSearchCallback());
         ctx.getCursorInitialState().setOriginialKeyComparator(ctx.getCmp());
         ctx.getCursorInitialState().setPage(null); // No pre-selected page
-        ctx.getCursorInitialState().setPageId(-1);
-        ctx.getCursorInitialState().setRootPageId(rootPage);
+        // No pre-selected leaf; carry the root page id through the existing pageId slot for the cursor to
+        // start its own randomized descent.
+        ctx.getCursorInitialState().setPageId(rootPage);
         cursor.open(ctx.getCursorInitialState(), ctx.getPred());
-    }
-
-    public ICachedPage getRandomLeafPage(int rootPageId, BTreeOpContext ctx,
-            IBufferCacheReadContext bufferCacheReadContext, Random random) throws HyracksDataException {
-        ICachedPage currentPage = null;
-        try {
-            currentPage =
-                    bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rootPageId), bufferCacheReadContext);
-            ctx.getInteriorFrame().setPage(currentPage);
-            int childPageId;
-            while (!ctx.getInteriorFrame().isLeaf()) {
-                // Count children: tupleCount + 1 if there's a valid right pointer
-                int numberOfChildren = ctx.getInteriorFrame().getTupleCount();
-                if (ctx.getInteriorFrame().getRightLeafOffset() > 0) {
-                    numberOfChildren += 1;
-                }
-
-                // Pick a random child index
-                int randomChildIndex = (random != null) ? random.nextInt(numberOfChildren)
-                        : ThreadLocalRandom.current().nextInt(numberOfChildren);
-
-                // Get the child page ID at that index
-                childPageId = getChildPageId(ctx, randomChildIndex, numberOfChildren);
-
-                ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), childPageId),
-                        bufferCacheReadContext);
-                bufferCache.unpin(currentPage, bufferCacheReadContext);
-                currentPage = nextPage;
-                ctx.getInteriorFrame().setPage(currentPage);
-            }
-
-            //IMPORTANT: In here, the leaf page is pinned.
-            return currentPage;
-        } catch (Exception e) {
-            if (!ctx.isExceptionHandled() && currentPage != null) {
-                bufferCache.unpin(currentPage, bufferCacheReadContext);
-            }
-            ctx.setExceptionHandled(true);
-            throw HyracksDataException.create(e);
-        }
     }
 
     /**
@@ -230,7 +189,7 @@ public class DiskBTree extends BTree {
                 return;
             }
             int numberOfChildren = ctx.getInteriorFrame().getTupleCount();
-            if (ctx.getInteriorFrame().getRightLeafOffset() > 0) {
+            if (ctx.getInteriorFrame().getRightmostChildPageId() > 0) {
                 numberOfChildren += 1;
             }
             int[] childPageIds = new int[numberOfChildren];
@@ -265,8 +224,8 @@ public class DiskBTree extends BTree {
 
     private int getChildPageId(BTreeOpContext ctx, int childIndex, int numberOfChildren) {
         // If the childIndex is the last one, return the rightmost child page ID
-        if (childIndex == numberOfChildren - 1 && ctx.getInteriorFrame().getRightLeafOffset() > 0) {
-            return ctx.getInteriorFrame().getRightLeafOffset();
+        if (childIndex == numberOfChildren - 1 && ctx.getInteriorFrame().getRightmostChildPageId() > 0) {
+            return ctx.getInteriorFrame().getRightmostChildPageId();
         }
         int tupleOffset = ctx.getInteriorFrame().getTupleOffset(childIndex);
         ITreeIndexTupleReference frameTuple = ctx.getInteriorFrame().getTupleRef();

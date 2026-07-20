@@ -54,13 +54,13 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -901,7 +901,7 @@ public class RTree extends AbstractTreeIndex {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback)
             throws HyracksDataException {
         // TODO: verifyInput currently does nothing.
         return new RTreeBulkLoader(fillFactor, sampler, callback);
@@ -915,7 +915,7 @@ public class RTree extends AbstractTreeIndex {
         ByteBuffer mbr;
         List<Integer> prevNodeFrontierPages = new ArrayList<>();
 
-        public RTreeBulkLoader(float fillFactor, IComponentSampler sampler, IPageWriteCallback callback)
+        public RTreeBulkLoader(float fillFactor, ISketchSampler sampler, IPageWriteCallback callback)
                 throws HyracksDataException {
             super(fillFactor, callback, RTree.this, sampler);
             prevInteriorFrame = interiorFrameFactory.createFrame();

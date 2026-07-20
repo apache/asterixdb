@@ -213,7 +213,7 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
             releasePages();
         }
 
-        rootPageId = ((BTreeCursorInitialState) initialState).getRootPageId();
+        rootPageId = ((BTreeCursorInitialState) initialState).getPageId();
         leafPageIds = bTree.enumerateLeafPageIds(rootPageId, opCtx, context);
         // Scale the give-up threshold to the component's tuple-population ceiling
         // (leaf pages x max tuples/leaf), clamped to int to avoid an overflowed
@@ -402,7 +402,7 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
                 searchKeys.add(frameTuple);
                 batchPredicate.reset(searchKeys);
                 searchCursor.setPredicate(batchPredicate);
-                searchCursor.doHasNextWithPredicate(foundIndexes);
+                searchCursor.hasNextWithPredicate(foundIndexes);
                 if (!foundIndexes.isEmpty()) {
                     continue;
                 }

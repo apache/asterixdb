@@ -93,7 +93,7 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
         ioOpCallbackFactory.initialize(serviceCtx, this);
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         IDiskCacheMonitoringService diskCacheService = storageManager.getDiskCacheMonitoringService(serviceCtx);
-        LSMBTree lsmBTree = (LSMBTree) LSMColumnBTreeUtil.createLSMTree(config, ioManager, vbcs, file,
+        LSMBTree lsmBTree = LSMColumnBTreeUtil.createLSMTree(config, ioManager, vbcs, file,
                 storageManager.getBufferCache(serviceCtx), storageManager.getColumnBufferPool(serviceCtx), typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),

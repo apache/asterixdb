@@ -28,7 +28,6 @@ public class BTreeCursorInitialState implements ICursorInitialState {
 
     // This is only used by the LSM-RTree
     private int pageId;
-    private int rootPageId;
     private ICachedPage page;
     private ISearchOperationCallback searchCallback;
     private MultiComparator originalKeyCmp;
@@ -57,14 +56,6 @@ public class BTreeCursorInitialState implements ICursorInitialState {
 
     public void setPageId(int pageId) {
         this.pageId = pageId;
-    }
-
-    public void setRootPageId(int rootPageId) {
-        this.rootPageId = rootPageId;
-    }
-
-    public int getRootPageId() {
-        return rootPageId;
     }
 
     @Override

@@ -87,7 +87,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     private final Random randomNumGen;
     private ICachedPage page = null;
     private int pageId = -1;
-    private int rootPageId = -1;
     // Pre-enumerated leaf page IDs for perfectly uniform random access.
     // Enumeration touches only interior pages (level >= 1), skipping all
     // leaf-level I/O.
@@ -126,9 +125,10 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     private final int leafTupleCapacity;
 
     // Cached once: avoids querying the logging framework and, more importantly,
-    // gates the per-draw System.nanoTime() timing calls (a syscall-class
-    // operation) so they are skipped entirely on the hot path when debug is off.
-    private final boolean debugTimingEnabled;
+    // gates the per-draw System.nanoTime() timing calls (a syscall-class operation) and the per-batch
+    // unique-page counting loop so they are skipped entirely on the hot path. Gated on TRACE (not DEBUG,
+    // which is on by default) so this diagnostic instrumentation never runs in normal operation.
+    private final boolean traceTimingEnabled;
 
     // Debug and traceability
     private long totalTimeTakenToFindRandomLeaf = 0;
@@ -160,7 +160,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         this.totalAccessCount = 0;
         this.maxLeafFindingAttempts = maxLeafFindingAttempts;
         this.leafTupleCapacity = maxLeafTupleCount;
-        this.debugTimingEnabled = LOGGER.isDebugEnabled();
+        this.traceTimingEnabled = LOGGER.isTraceEnabled();
         this.leafDrawBatchSize = (int) Math.max(leafDrawBatchSize, componentSampleCardinality);
 
         // Pre-allocate flat SoA draw buffers once to avoid churn during refills.
@@ -178,7 +178,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         if (page != null) {
             releasePage();
         }
-        rootPageId = ((BTreeCursorInitialState) initialState).getRootPageId();
+        int rootPageId = ((BTreeCursorInitialState) initialState).getPageId();
         // Enumerate all leaf page IDs by traversing only interior pages.
         // The optimised DFS skips leaf-level I/O (level-1 nodes record their
         // children's page IDs directly), so the cost is proportional to the
@@ -233,7 +233,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
             searchKeys.add(frameTuple);
             batchPredicate.reset(searchKeys);
             searchCursor.setPredicate(batchPredicate);
-            searchCursor.doHasNextWithPredicate(foundIndexes);
+            searchCursor.hasNextWithPredicate(foundIndexes);
             if (foundIndexes.isEmpty()) {
                 // Tuple is unique and not found in newer components - valid sample
                 // Keep page pinned and return immediately
@@ -286,7 +286,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         // cache-friendly versus the previous boxed-object comparator sort.
         Arrays.sort(drawSortKeys);
 
-        if (debugTimingEnabled) {
+        if (traceTimingEnabled) {
             int uniquePages = 0;
             long prevPageId = Long.MIN_VALUE;
             for (int i = 0; i < leafDrawBatchSize; i++) {
@@ -320,7 +320,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      */
     private boolean pinAndAcceptLeafPage(LeafDraw leafDraw) throws HyracksDataException {
         // Skip the nanoTime() pair entirely unless debug logging will consume it.
-        long nanos = debugTimingEnabled ? System.nanoTime() : 0L;
+        long nanos = traceTimingEnabled ? System.nanoTime() : 0L;
         try {
             totalAccessCount++;
             if (pageId != leafDraw.pageId || page == null) {
@@ -351,7 +351,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
             return true;
         } finally {
             // Ensures elapsed time is correctly tracked even if the page is rejected
-            if (debugTimingEnabled) {
+            if (traceTimingEnabled) {
                 totalTimeTakenToFindRandomLeaf += (System.nanoTime() - nanos);
             }
         }
@@ -366,7 +366,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      * </p>
      */
     private int findRandomTuple(int tupleStartSeed) {
-        long nanos = debugTimingEnabled ? System.nanoTime() : 0L;
+        long nanos = traceTimingEnabled ? System.nanoTime() : 0L;
         int numberOfTuples = leafFrame.getTupleCount();
 
         // Strips sign bit for fast, uniform modulo arithmetic
@@ -375,7 +375,7 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         frameTuple.resetByTupleIndex(leafFrame, targetTupleIndex);
         int result = antimatterAcceptor.accept(frameTuple) ? -1 : targetTupleIndex;
 
-        if (debugTimingEnabled) {
+        if (traceTimingEnabled) {
             totalTimeTakenToFindRandomTuples += (System.nanoTime() - nanos);
         }
         return result;
@@ -398,14 +398,14 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
 
     @Override
     protected void doClose() throws HyracksDataException {
-        if (LOGGER.isDebugEnabled()) {
+        if (LOGGER.isTraceEnabled()) {
             double avgBatchDraws = totalLeafDrawBatches == 0 ? 0.0 : (double) totalLeafDraws / totalLeafDrawBatches;
             double avgBatchUniquePages =
                     totalLeafDrawBatches == 0 ? 0.0 : (double) totalLeafDrawUniquePages / totalLeafDrawBatches;
             double uniquePerDraw = totalLeafDraws == 0 ? 0.0 : (double) totalLeafDrawUniquePages / totalLeafDraws;
             double repinAvoidRate = (totalLeafPins + totalReusedPinnedPageHits) == 0 ? 0.0
                     : (double) totalReusedPinnedPageHits / (totalLeafPins + totalReusedPinnedPageHits);
-            LOGGER.debug(
+            LOGGER.trace(
                     "{} stats - sampledCount: {}, totalAccessCount: {}, "
                             + "totalTimeTakenToFindRandomLeaf: {} ns, totalTimeTakenToFindRandomTuples: {} ns, "
                             + "leafDrawBatches: {}, totalLeafDraws: {}, totalLeafDrawUniquePages: {}, "

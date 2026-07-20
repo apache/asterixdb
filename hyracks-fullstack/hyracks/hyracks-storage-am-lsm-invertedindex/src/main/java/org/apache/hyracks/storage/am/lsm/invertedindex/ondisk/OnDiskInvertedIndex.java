@@ -57,13 +57,13 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearc
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.TOccurrenceSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tuples.TokenKeyPairTuple;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
-import org.apache.hyracks.storage.common.IComponentSampler;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -279,13 +279,13 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         protected final MultiComparator invListCmp;
 
         protected final boolean verifyInput;
-        protected final IComponentSampler sampler;
+        protected final ISketchSampler sampler;
         protected final MultiComparator allCmp;
 
         protected final IFIFOPageWriter queue;
 
         public AbstractOnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, long numElementsHint,
-                boolean checkIfEmptyIndex, int startPageId, IComponentSampler sampler, IPageWriteCallback callback)
+                boolean checkIfEmptyIndex, int startPageId, ISketchSampler sampler, IPageWriteCallback callback)
                 throws HyracksDataException {
             this.verifyInput = verifyInput;
             this.sampler = sampler;
@@ -417,7 +417,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     public class OnDiskInvertedIndexMergeBulkLoader extends AbstractOnDiskInvertedIndexBulkLoader {
 
         public OnDiskInvertedIndexMergeBulkLoader(float btreeFillFactor, boolean verifyInput, long numElementsHint,
-                boolean checkIfEmptyIndex, int startPageId, IComponentSampler sampler, IPageWriteCallback callback)
+                boolean checkIfEmptyIndex, int startPageId, ISketchSampler sampler, IPageWriteCallback callback)
                 throws HyracksDataException {
             super(btreeFillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, startPageId, sampler, callback);
         }
@@ -447,7 +447,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     public class OnDiskInvertedIndexBulkLoader extends AbstractOnDiskInvertedIndexBulkLoader {
 
         public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, long numElementsHint,
-                boolean checkIfEmptyIndex, int startPageId, IComponentSampler sampler, IPageWriteCallback callback)
+                boolean checkIfEmptyIndex, int startPageId, ISketchSampler sampler, IPageWriteCallback callback)
                 throws HyracksDataException {
             super(btreeFillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, startPageId, sampler, callback);
         }
@@ -607,14 +607,14 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback)
             throws HyracksDataException {
         return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
                 rootPageId, sampler, callback);
     }
 
     public IIndexBulkLoader createMergeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IComponentSampler sampler, IPageWriteCallback callback)
+            boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback)
             throws HyracksDataException {
         return new OnDiskInvertedIndexMergeBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
                 rootPageId, sampler, callback);

@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public interface IComponentSampler {
+public interface ISketchSampler {
     IValueReference serialize() throws IOException;
 
     void addTuple(ITupleReference tuple);
