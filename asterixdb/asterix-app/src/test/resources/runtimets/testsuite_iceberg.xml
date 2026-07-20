@@ -47,6 +47,18 @@
         <output-dir compare="Text">variant-all-types</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-shredded">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-shredded</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-partially-shredded">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-partially-shredded</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="negative">
     <test-case FilePath="iceberg/negative">

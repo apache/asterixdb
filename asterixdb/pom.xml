@@ -118,10 +118,10 @@
     <io.opencensus.version>0.31.1</io.opencensus.version>
     <protobuf-java.version>4.34.2</protobuf-java.version>
 
-    <icebergjavasdk.version>1.10.2</icebergjavasdk.version>
+    <icebergjavasdk.version>1.11.0</icebergjavasdk.version>
 
     <!-- @derived-from: org.apache.iceberg:iceberg-nessie:${icebergjavasdk.version}#dep:nessie-client -->
-    <nessieproject.version>0.104.5</nessieproject.version>
+    <nessieproject.version>0.107.5</nessieproject.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>

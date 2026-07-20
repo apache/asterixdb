@@ -219,6 +219,10 @@
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-handler-proxy</usedDependency>
               <usedDependency>io.netty:netty-handler-proxy</usedDependency>
+              <!-- iceberg-orc is used only at runtime: Iceberg 1.11.0's FormatModelRegistry eagerly registers the
+                   ORC format model when the generic data model reads any table with deletes, so the iceberg-orc
+                   classes must be on the classpath even though we never read ORC data and reference no ORC type. -->
+              <usedDependency>org.apache.iceberg:iceberg-orc</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -674,6 +678,22 @@
     <dependency>
       <groupId>org.apache.iceberg</groupId>
       <artifactId>iceberg-data</artifactId>
+    </dependency>
+    <!-- Iceberg 1.11.0 introduced FormatModelRegistry, which eagerly registers the Avro, Parquet AND ORC format
+         models (GenericFormatModels#register) the first time the generic data model reads a table with deletes
+         (BaseDeleteLoader) or via IcebergGenerics. Without iceberg-orc on the classpath that static init fails with
+         NoClassDefFoundError: org/apache/iceberg/orc/OrcRowWriter. We never read ORC data, so we pull in only the
+         iceberg-orc classes (needed for the registration to load) and exclude the heavy orc-core / hive-storage-api
+         stack, which is only exercised when actually reading ORC files. -->
+    <dependency>
+      <groupId>org.apache.iceberg</groupId>
+      <artifactId>iceberg-orc</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->

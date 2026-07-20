@@ -25,6 +25,8 @@ import static org.apache.asterix.test.cloud_storage.CloudStorageTest.MOCK_SERVER
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import static org.apache.iceberg.types.Types.NestedField.required;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -44,6 +46,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -85,6 +89,7 @@ import org.apache.iceberg.io.FileAppender;
 import org.apache.iceberg.io.OutputFile;
 import org.apache.iceberg.nessie.NessieCatalog;
 import org.apache.iceberg.parquet.Parquet;
+import org.apache.iceberg.parquet.VariantShreddingFunction;
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.variants.ShreddedObject;
 import org.apache.iceberg.variants.Variant;
@@ -92,7 +97,12 @@ import org.apache.iceberg.variants.VariantMetadata;
 import org.apache.iceberg.variants.Variants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.Type;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -143,6 +153,9 @@ public class IcebergTest {
     private static final TableIdentifier ALL_TYPES_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "allTypesVariant");
     private static final TableIdentifier DEPTH_TEST_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "depthTestVariant");
+    private static final TableIdentifier SHREDDED_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "shreddedVariant");
+    private static final TableIdentifier PARTIALLY_SHREDDED_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "partiallyShreddedVariant");
 
     protected TestCaseContext tcCtx;
 
@@ -203,6 +216,8 @@ public class IcebergTest {
             writeAllTypesTable(catalog);
             writeAllTypesVariantTable(catalog);
             writeDepthTestVariantTable(catalog);
+            writeShreddedVariantTable(catalog);
+            writePartiallyShreddedVariantTable(catalog);
         }
     }
 
@@ -459,6 +474,190 @@ public class IcebergTest {
         ShreddedObject depthOne = Variants.object(metadata);
         depthOne.put("a", depthTwo);
         return Variant.of(metadata, depthOne);
+    }
+
+    // Top-level object fields promoted to typed_value in the PARTIALLY shredded fixture; every other field stays in
+    // the object-level residual value. Deliberately a mix (scalars, a date, a nested object) so the residual carries
+    // scalars, decimals, timestamps, binary, uuid, and the top-level array — the exact path Iceberg 1.10.x corrupted
+    // and 1.11.0 fixed (issue #15086 / PR #15087).
+    private static final Set<String> PARTIAL_SHREDDED_FIELDS =
+            Set.of("int32Value", "stringValue", "boolTrueValue", "doubleValue", "dateValue", "objectValue");
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Read-side FULL-shredding counterpart to IcebergVariantSerializedAndShreddedTest: writes the SAME multi-row variant fixture serialized (first half of ids) and FULLY shredded (second half, every field promoted to a typed sub-column), so an ORDER BY id query proves the read pipeline reconstructs identical values whether the column is serialized or fully shredded")
+    private static void writeShreddedVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, SHREDDED_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={}", table.name());
+        LOGGER.info("[TABLE] location={}", table.location());
+        LOGGER.info("[TABLE] schema(shredded_variant)={}", table.schema());
+        // The shredding schema is derived from the all-PhysicalType object (row 1) so every supported type gets a
+        // typed sub-column. The serialized file (ids 1..N) and the shredded file (ids N+1..2N) carry the SAME rows, so
+        // matching them across ids proves full shredding reconstructs each value identically to serialized.
+        Set<String> allFields = new TreeSet<>();
+        buildVariantAllPhysicalTypes().value().asObject().fieldNames().forEach(allFields::add);
+        List<Variant> rows = variantFixtureRows();
+        DataFile serialized =
+                writeVariantEncodingFile(table, "shredded_variant_serialized.parquet", 1, rows, null, null);
+        DataFile fullyShredded = writeVariantEncodingFile(table, "shredded_variant_full.parquet", rows.size() + 1,
+                variantFixtureRows(), shreddingFunc(buildVariantAllPhysicalTypes(), null), allFields);
+        table.newAppend().appendFile(serialized).appendFile(fullyShredded).commit();
+        LOGGER.info("[WRITE] shredded_variant table committed with {} record(s)", 2 * rows.size());
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Dedicated PARTIAL-shredding read test: writes the SAME multi-row variant fixture serialized (first half of ids) and PARTIALLY shredded (second half, a subset of fields promoted to typed sub-columns and the rest kept in the object-level residual value), so an ORDER BY id query proves the read pipeline reconstructs identical values. Exercises the typed_value + residual merge that Iceberg 1.10.x corrupted and 1.11.0 fixed (issue #15086 / PR #15087)")
+    private static void writePartiallyShreddedVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, PARTIALLY_SHREDDED_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={}", table.name());
+        LOGGER.info("[TABLE] location={}", table.location());
+        LOGGER.info("[TABLE] schema(partially_shredded_variant)={}", table.schema());
+        List<Variant> rows = variantFixtureRows();
+        DataFile serialized =
+                writeVariantEncodingFile(table, "partially_shredded_variant_serialized.parquet", 1, rows, null, null);
+        DataFile partiallyShredded = writeVariantEncodingFile(table, "partially_shredded_variant_partial.parquet",
+                rows.size() + 1, variantFixtureRows(),
+                shreddingFunc(buildVariantAllPhysicalTypes(), PARTIAL_SHREDDED_FIELDS), PARTIAL_SHREDDED_FIELDS);
+        table.newAppend().appendFile(serialized).appendFile(partiallyShredded).commit();
+        LOGGER.info("[WRITE] partially_shredded_variant table committed with {} record(s)", 2 * rows.size());
+    }
+
+    /**
+     * The rows each encoding file carries. It deliberately varies the <b>top-level Variant PhysicalType</b> across
+     * rows — an object, a bare int, a bare string, an array, a top-level null value, and a null column — rather than
+     * only objects. The shredding schema is object-oriented (derived from the all-types object), so the non-object
+     * rows fall to the residual {@code value} and must still reconstruct, exercising the mixed shredded/residual and
+     * value-as-variant read paths across several records. Fresh instances per call so the same fixture can be written
+     * to more than one file.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Multi-record fixture varying the top-level PhysicalType: all-types object, bare int, bare string, array, top-level null value, and a null column, so the shredded read path is exercised across heterogeneous rows (typed_value + residual + value-as-variant + null handling)")
+    private static List<Variant> variantFixtureRows() {
+        List<Variant> rows = new ArrayList<>();
+        rows.add(buildVariantAllPhysicalTypes()); // object covering every PhysicalType (shreddable)
+        rows.add(Variant.of(Variants.emptyMetadata(), Variants.of(123))); // bare int primitive
+        rows.add(Variant.of(Variants.emptyMetadata(), Variants.of("top level string"))); // bare string primitive
+        org.apache.iceberg.variants.ValueArray array = Variants.array();
+        array.add(Variants.of(10));
+        array.add(Variants.of("twenty"));
+        array.add(Variants.of(true));
+        rows.add(Variant.of(Variants.emptyMetadata(), array)); // top-level array
+        rows.add(Variant.of(Variants.emptyMetadata(), Variants.ofNull())); // top-level null value (distinct from null column)
+        rows.add(null); // null variant_field column
+        return rows;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes a multi-row Parquet data file (a null element writes a null variant column) using the given shredding function (null = serialized), then verifies the on-disk layout matches expectedShreddedFields (null = no typed_value) so a read test can never silently fall back to testing serialized data")
+    private static DataFile writeVariantEncodingFile(Table table, String fileName, int startId, List<Variant> rowValues,
+            VariantShreddingFunction shreddingFunc, Set<String> expectedShreddedFields) throws Exception {
+        String path = table.location() + "/data/" + fileName;
+        OutputFile out = table.io().newOutputFile(path);
+        Parquet.WriteBuilder builder =
+                Parquet.write(out).schema(table.schema()).createWriterFunc(GenericParquetWriter::create);
+        if (shreddingFunc != null) {
+            builder = builder.variantShreddingFunc(shreddingFunc);
+        }
+        GenericRecord template = GenericRecord.create(table.schema());
+        int id = startId;
+        try (FileAppender<Record> writer = builder.build()) {
+            for (Variant value : rowValues) {
+                Record row = template.copy();
+                row.setField("id", id++);
+                row.setField("variant_field", value);
+                writer.add(row);
+            }
+        }
+        long bytes = out.toInputFile().getLength();
+        // Guard against silently testing serialized data: confirm the file's physical layout on disk matches the
+        // intended encoding before any read test is allowed to rely on it.
+        assertVariantLayoutOnDisk(table, path, expectedShreddedFields);
+        LOGGER.info("[APPEND] file={} sizeBytes={} rows={} shreddedFields={}", path, bytes, rowValues.size(),
+                expectedShreddedFields == null ? "(serialized)" : expectedShreddedFields);
+        return DataFiles.builder(table.spec()).withPath(path).withRecordCount(rowValues.size())
+                .withFileSizeInBytes(bytes).withFormat(FileFormat.PARQUET).build();
+    }
+
+    /**
+     * Returns a {@link VariantShreddingFunction} for {@code value}. When {@code keep} is {@code null} it fully shreds —
+     * every object field is promoted to a typed sub-column, leaving nothing in the object-level residual {@code value}.
+     * When {@code keep} names a subset, only those fields are shredded and the rest stay in the residual value (partial
+     * shredding). Per-field {@code typed_value} Parquet types come from Iceberg's own
+     * {@code ParquetVariantUtil.toParquetSchema} (package-private, reached via reflection) so each of the ~23 Variant
+     * PhysicalTypes is encoded exactly as Iceberg expects; the partial variant just keeps a subset of that group's
+     * fields. Partial shredding round-trips correctly as of Iceberg 1.11.0 (the residual serialization bug in 1.10.x —
+     * issue #15086 / PR #15087 — is fixed).
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reflectively uses Iceberg's ParquetVariantUtil.toParquetSchema to build a canonical typed_value; keeps all fields (full shred) or a named subset (partial shred, rest to residual)")
+    private static VariantShreddingFunction shreddingFunc(Variant value, Set<String> keep) throws Exception {
+        Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
+                .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
+        toParquetSchema.setAccessible(true);
+        GroupType fullTyped = ((Type) toParquetSchema.invoke(null, value.value())).asGroupType();
+        Type typedValue;
+        if (keep == null) {
+            typedValue = fullTyped;
+        } else {
+            org.apache.parquet.schema.Types.GroupBuilder<GroupType> builder =
+                    org.apache.parquet.schema.Types.buildGroup(fullTyped.getRepetition());
+            for (Type field : fullTyped.getFields()) {
+                if (keep.contains(field.getName())) {
+                    builder.addField(field);
+                }
+            }
+            typedValue = builder.named(fullTyped.getName());
+        }
+        Type tv = typedValue;
+        // Single variant column, so fieldId/name are ignored; the same typed_value applies.
+        return (fieldId, name) -> tv;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reads the just-written file's Parquet footer through the table's own FileIO and asserts the variant column's typed_value holds exactly the expected shredded fields (null => serialized, no typed_value), so the fixture can never silently degrade to serialized or shred a different set than intended")
+    private static void assertVariantLayoutOnDisk(Table table, String path, Set<String> expectedShreddedFields)
+            throws Exception {
+        GroupType variant;
+        try (ParquetFileReader reader = ParquetFileReader.open(parquetInput(table.io().newInputFile(path)))) {
+            MessageType schema = reader.getFooter().getFileMetaData().getSchema();
+            variant = schema.getType("variant_field").asGroupType();
+        }
+        // Every encoding keeps the variant metadata and a value slot (residual for shredded, whole blob for serialized).
+        Assert.assertTrue("variant must keep metadata", variant.containsField("metadata"));
+        Assert.assertTrue("variant must keep a value blob", variant.containsField("value"));
+        if (expectedShreddedFields == null) {
+            Assert.assertFalse("serialized variant must NOT have typed_value", variant.containsField("typed_value"));
+            LOGGER.info("[VERIFY] file={} confirmed serialized (no typed_value)", path);
+            return;
+        }
+        Assert.assertTrue("shredded variant must have typed_value", variant.containsField("typed_value"));
+        GroupType typedValue = variant.getType("typed_value").asGroupType();
+        Set<String> actual = new TreeSet<>();
+        typedValue.getFields().forEach(field -> actual.add(field.getName()));
+        Assert.assertEquals("shredded typed_value fields on disk", new TreeSet<>(expectedShreddedFields), actual);
+        LOGGER.info("[VERIFY] file={} confirmed shredded; typed sub-columns={}", path, actual);
+    }
+
+    /** Adapts an Iceberg {@link org.apache.iceberg.io.InputFile} to a Parquet InputFile for footer inspection. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Bridges Iceberg FileIO to a Parquet InputFile so the shredded-layout check reads the footer through the table's own IO instead of a separate S3 client")
+    private static org.apache.parquet.io.InputFile parquetInput(org.apache.iceberg.io.InputFile in) {
+        return new org.apache.parquet.io.InputFile() {
+            @Override
+            public long getLength() throws IOException {
+                return in.getLength();
+            }
+
+            @Override
+            public org.apache.parquet.io.SeekableInputStream newStream() throws IOException {
+                org.apache.iceberg.io.SeekableInputStream delegate = in.newStream();
+                return new org.apache.parquet.io.DelegatingSeekableInputStream(delegate) {
+                    @Override
+                    public long getPos() throws IOException {
+                        return delegate.getPos();
+                    }
+
+                    @Override
+                    public void seek(long newPos) throws IOException {
+                        delegate.seek(newPos);
+                    }
+                };
+            }
+        };
     }
 
     private static org.apache.iceberg.nessie.NessieCatalog createNessieCatalog() throws Exception {

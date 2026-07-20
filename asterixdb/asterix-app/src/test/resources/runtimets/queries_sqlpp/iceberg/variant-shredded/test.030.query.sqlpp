@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- Project shredded typed sub-columns, including a 2-level nested path (objectValue.nestedString), so they come
+-- back as addressable, correctly typed fields. Restricted to the two all-types rows (serialized id=1, fully
+-- shredded id=7) via the real id column — a variant sub-field can't be used in a pushed-down predicate, but
+-- projecting one (at any depth) is fine. Both copies must yield identical projected values.
+SELECT id,
+       variant_field.int32Value AS i,
+       variant_field.stringValue AS s,
+       variant_field.objectValue.nestedString AS nested
+FROM shreddedVariant
+WHERE id = 1 OR id = 7
+ORDER BY id;
