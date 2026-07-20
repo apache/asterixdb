@@ -50,6 +50,8 @@ import io.netty.buffer.ByteBufInputStream;
 
 public class NCUdfDSApiServlet extends AbstractNCUdfServlet {
 
+    private String digestString;
+
     public NCUdfDSApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx) {
         super(ctx, paths, appCtx);
     }
@@ -58,8 +60,7 @@ public class NCUdfDSApiServlet extends AbstractNCUdfServlet {
             ExternalFunctionLanguage language, MessageDigest digest, Namespace namespace,
             IRequestReference requestReference, IServletRequest request) throws Exception {
         writeLibToCloud(uploadData, namespace, libName, digest, language);
-        doCreate(namespace, libName, language, ExternalLibraryUtils.digestToHexString(digest), null, true,
-                getSysAuthHeader(), requestReference, request);
+        doCreate(namespace, libName, language, digestString, null, true, getSysAuthHeader(), requestReference, request);
     }
 
     private void writeLibToCloud(LibraryUploadData uploadData, Namespace libNamespace, String libName,
@@ -83,8 +84,9 @@ public class NCUdfDSApiServlet extends AbstractNCUdfServlet {
             IOUtils.copyLarge(ui, outputStream, writeBuf);
             outputStream.flush();
             cloudIoMgr.sync(fh, true);
-            writeDescriptor(libraryManager, targetDescFile,
-                    new LibraryDescriptor(language, ExternalLibraryUtils.digestToHexString(digest)), true, writeBuf);
+            digestString = ExternalLibraryUtils.digestToHexString(digest);
+            writeDescriptor(libraryManager, targetDescFile, new LibraryDescriptor(language, digestString), true,
+                    writeBuf);
         } finally {
             cloudIoMgr.close(fh);
         }
