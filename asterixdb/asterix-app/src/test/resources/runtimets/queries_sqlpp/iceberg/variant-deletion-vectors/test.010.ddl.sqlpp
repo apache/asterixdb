@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// The deletionVectorVariant table carries the same shredded per-bucket layout as manyFilesVariant, but its deletes are
+// DELETION VECTORS — the format-v3 replacement for position delete files (a roaring bitmap of deleted row positions
+// for one data file, stored as a Puffin blob).
+//
+// A DV is FILE-scoped where an equality delete is partition-scoped, which is the point of this suite:
+//   1. One scan mixes both read paths, since only the files with a DV carry deletes. variant-deletes cannot produce
+//      that mix, because an equality delete attaches to every file.
+//   2. A delete can remove part of a file: buckets 100..102 share one file and a DV removes only position 1, so the
+//      delete-aware read must still return the survivors intact. Position deletes also add the synthetic _pos column
+//      to requiredSchema(), a widening equality deletes never trigger.
+//
+// Buckets 0..19 are one row per file; buckets 100..102 share one file. The ranges are far apart so a predicate selects
+// one group or the other, never both.
+DROP COLLECTION deletionVectorVariant IF EXISTS;
+DROP TYPE deletionVectorVariant IF EXISTS;
+
+CREATE TYPE deletionVectorVariant AS open {};
+CREATE EXTERNAL COLLECTION deletionVectorVariant(deletionVectorVariant)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="deletionVectorVariant"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet")
+);

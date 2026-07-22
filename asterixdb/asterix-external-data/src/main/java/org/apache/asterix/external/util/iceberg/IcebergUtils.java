@@ -181,8 +181,34 @@ public class IcebergUtils {
                     ExternalDataConstants.IcebergOptions.MAX_VARIANT_DEPTH);
         }
 
+        // if either pushdown flag is provided, it must be a boolean
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN);
+
         // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
+    }
+
+    /**
+     * Rejects a non-boolean value for an optional boolean WITH-clause option.
+     * <p>
+     * Worth validating because {@code Boolean.parseBoolean} maps anything it does not recognise to {@code false}, so a
+     * typo like {@code "ture"} or {@code "1"} would silently <em>disable</em> the optimization instead of failing.
+     * <p>
+     * Empty is rejected too, unlike {@code variantDepth} which treats it as absent: that option's runtime read falls
+     * back to the default on an empty value, while these flags are read with {@code getOrDefault} and so would see
+     * {@code ""}, which {@code parseBoolean} reads as off.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "DDL-time validation for the variant pushdown boolean flags, following the variantDepth pattern; rejects empty as well since parseBoolean would read it as a silent off")
+    private static void validateBoolean(Map<String, String> properties, String propertyName)
+            throws CompilationException {
+        String value = properties.get(propertyName);
+        if (value == null) {
+            return;
+        }
+        if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+            throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, propertyName, value);
+        }
     }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Validates the variantDepth WITH-clause option at DDL time, matching the existing timezone validation pattern in this method. The catch block is reserved purely for genuine Integer.parseInt failures; the out-of-range case throws CompilationException directly")

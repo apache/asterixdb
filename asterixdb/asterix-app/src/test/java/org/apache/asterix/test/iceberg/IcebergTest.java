@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,12 +64,15 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.iceberg.AppendFiles;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.FileFormat;
 import org.apache.iceberg.FileScanTask;
+import org.apache.iceberg.Metrics;
+import org.apache.iceberg.MetricsConfig;
 import org.apache.iceberg.PartitionData;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.RowDelta;
@@ -83,12 +87,15 @@ import org.apache.iceberg.data.GenericRecord;
 import org.apache.iceberg.data.IcebergGenerics;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetWriter;
+import org.apache.iceberg.deletes.BaseDVFileWriter;
+import org.apache.iceberg.deletes.DVFileWriter;
 import org.apache.iceberg.deletes.EqualityDeleteWriter;
 import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.io.FileAppender;
 import org.apache.iceberg.io.OutputFile;
 import org.apache.iceberg.nessie.NessieCatalog;
 import org.apache.iceberg.parquet.Parquet;
+import org.apache.iceberg.parquet.ParquetUtil;
 import org.apache.iceberg.parquet.VariantShreddingFunction;
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.variants.ShreddedObject;
@@ -154,6 +161,66 @@ public class IcebergTest {
     private static final TableIdentifier DEPTH_TEST_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "depthTestVariant");
     private static final TableIdentifier SHREDDED_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "shreddedVariant");
+    private static final TableIdentifier MANY_FILES_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "manyFilesVariant");
+    private static final TableIdentifier DOTTED_FIELD_NAME_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "dottedFieldNameVariant");
+    private static final TableIdentifier MIXED_SHREDDING_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "mixedShreddingVariant");
+    /** Files whose variant is fully shredded; the rest shred only "name", so their "bucket" has no bounds. */
+    private static final int MIXED_SHREDDING_SHREDDED_FILES = 3;
+    private static final int MIXED_SHREDDING_FILE_COUNT = 6;
+    // One shredded single-row data file per bucket value (0..N-1). The variant-stats-pushdown query suite only
+    // Do not change this without re-checking the suites that depend on it. variant-predicate-shapes filters on
+    // "bucket < 98" and expects the last two buckets, so it needs at least 100; the flag-off step of
+    // variant-stats-pushdown asserts processedObjects equals the whole file count, so it needs exactly this number.
+    private static final int MANY_FILES_VARIANT_FILE_COUNT = 100;
+    private static final TableIdentifier DELETES_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "deletesVariant");
+    // Same per-bucket shredded layout as manyFilesVariant, but with equality deletes. The variant-deletes query suite
+    // only references buckets 0..5, so any count >= 6 keeps its expected results valid; kept above that so a pruned
+    // scan is a visible fraction of the table.
+    private static final int DELETES_VARIANT_FILE_COUNT = 20;
+    /** Buckets whose (single) row is removed by an equality delete. Row id is bucket + 1. */
+    private static final int[] DELETES_VARIANT_DELETED_BUCKETS = { 2, 3 };
+    private static final TableIdentifier DELETION_VECTOR_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "deletionVectorVariant");
+    // Single-row files for buckets 0..N-1, plus one extra file holding DELETION_VECTOR_MULTI_ROW_BUCKETS. The
+    // variant-deletion-vectors suite references buckets 0..5 and the 100..102 group only, so any count >= 6 keeps its
+    // expected results valid.
+    private static final int DELETION_VECTOR_VARIANT_FILE_COUNT = 20;
+    /** The single-row file emptied by a deletion vector. Row id is bucket + 1. */
+    private static final int DELETION_VECTOR_DELETED_BUCKET = 3;
+    /**
+     * Buckets sharing one data file, so a deletion vector can remove only the middle row (bucket 101, at position 1)
+     * and leave the other two. Far from the single-row range so a predicate selects one group or the other.
+     */
+    private static final int[] DELETION_VECTOR_MULTI_ROW_BUCKETS = { 100, 101, 102 };
+    /**
+     * A second multi-row file whose deletion vector removes MORE THAN ONE position. Every other DV in this fixture
+     * deletes a single position, so without this the multi-position encoding of the roaring bitmap is never exercised.
+     * Buckets sit in a range no other step in the suite selects, so this file changes no existing expectation.
+     */
+    private static final int[] DELETION_VECTOR_MULTI_DELETE_BUCKETS = { 50, 51, 52, 53 };
+    private static final TableIdentifier MANY_ROW_GROUPS_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "manyRowGroupsVariant");
+    /**
+     * One data file holding every row, deliberately written with a tiny Parquet row-group size so it contains many
+     * row groups. Every other fixture file has a single row group, so this is the only thing that makes the reader's
+     * row-group loop iterate. The row count and row-group size are paired: the fixture asserts more than one row
+     * group was actually produced, so the test cannot silently degrade into the single-row-group case.
+     */
+    private static final int MANY_ROW_GROUPS_VARIANT_ROW_COUNT = 5000;
+    private static final int MANY_ROW_GROUPS_ROW_GROUP_BYTES = 16384;
+    private static final TableIdentifier NESTED_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "nestedVariantInStruct");
+    private static final int NESTED_VARIANT_ROW_COUNT = 4;
+    private static final TableIdentifier PARTITIONED_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "partitionedVariant");
+    /** Buckets 0..N-1, one row per file, grouped into partitions of PARTITIONED_VARIANT_GROUP_SIZE consecutive buckets. */
+    private static final int PARTITIONED_VARIANT_FILE_COUNT = 12;
+    private static final int PARTITIONED_VARIANT_GROUP_SIZE = 3;
+    private static final TableIdentifier TWO_VARIANTS_TABLE_ID = TableIdentifier.of(NAMESPACE, "twoVariants");
+    private static final int TWO_VARIANTS_FILE_COUNT = 6;
     private static final TableIdentifier PARTIALLY_SHREDDED_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "partiallyShreddedVariant");
 
@@ -165,6 +232,7 @@ public class IcebergTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        assertFlagsOffExpectationsAreCopies();
         final TestExecutor testExecutor = new TestExecutor();
         LOGGER.info("Starting S3 mock and Nessie containers");
         s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
@@ -184,6 +252,28 @@ public class IcebergTest {
                 MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort());
         LangExecutionUtil.setUp(CONFIG_FILE, testExecutor);
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE);
+    }
+
+    /**
+     * The variant-flags-off suite runs variant-shredded's queries with both pushdown flags disabled, and shows the
+     * optimized and unoptimized reads agree by reusing variant-shredded's expected files verbatim. Nothing in the test
+     * framework ties the two copies together, so regenerating them independently would leave a suite that still passes
+     * but no longer compares the two reads - only each read against itself. Checked here rather than as a test case
+     * because it is a property of the fixtures, and failing before the containers start makes the cause obvious.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    private static void assertFlagsOffExpectationsAreCopies() throws IOException {
+        Path results = Paths.get("src", "test", "resources", "runtimets", "results", "iceberg");
+        for (String fileName : List.of("result.020.adm", "result.030.adm")) {
+            Path optimized = results.resolve("variant-shredded").resolve(fileName);
+            Path flagsOff = results.resolve("variant-flags-off").resolve(fileName);
+            Assert.assertArrayEquals(
+                    fileName + ": variant-flags-off's expected file must stay byte-identical to "
+                            + "variant-shredded's - the suite proves the two reads agree only for as long as it reuses the "
+                            + "same expectation. If variant-shredded's output changed legitimately, copy it across rather "
+                            + "than regenerating the two independently.",
+                    Files.readAllBytes(optimized), Files.readAllBytes(flagsOff));
+        }
     }
 
     @Parameters(name = "IcebergTest {index}: {0}")
@@ -218,6 +308,15 @@ public class IcebergTest {
             writeDepthTestVariantTable(catalog);
             writeShreddedVariantTable(catalog);
             writePartiallyShreddedVariantTable(catalog);
+            writeManyFilesVariantTable(catalog);
+            writeDeletesVariantTable(catalog);
+            writeDeletionVectorVariantTable(catalog);
+            writeManyRowGroupsVariantTable(catalog);
+            writeNestedVariantInStructTable(catalog);
+            writePartitionedVariantTable(catalog);
+            writeTwoVariantsTable(catalog);
+            writeDottedFieldNameVariantTable(catalog);
+            writeMixedShreddingVariantTable(catalog);
         }
     }
 
@@ -521,6 +620,525 @@ public class IcebergTest {
         LOGGER.info("[WRITE] partially_shredded_variant table committed with {} record(s)", 2 * rows.size());
     }
 
+    // The per-bucket shredded variant shape shared by manyFilesVariant and deletesVariant. Several sub-field types so
+    // predicate pushdown can be exercised per type end to end (int, string, double, boolean and a nested int), not
+    // just on the int bucket.
+    private static final VariantMetadata BUCKET_VARIANT_METADATA =
+            Variants.metadata("bucket", "name", "ratio", "flag", "obj", "deep");
+
+    /** The variant for bucket {@code i}: bucket=i, name="f"+i, ratio=i*1.5, flag=(i%2==0), obj.deep=i. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Extracted from writeManyFilesVariantTable so the deletes fixture writes byte-identical per-bucket variants")
+    private static Variant bucketVariant(int i) {
+        ShreddedObject nested = Variants.object(BUCKET_VARIANT_METADATA);
+        nested.put("deep", Variants.of(i));
+        ShreddedObject obj = Variants.object(BUCKET_VARIANT_METADATA);
+        obj.put("bucket", Variants.of(i));
+        obj.put("name", Variants.of("f" + i));
+        obj.put("ratio", Variants.of(i * 1.5d));
+        obj.put("flag", Variants.of(i % 2 == 0));
+        obj.put("obj", nested);
+        return Variant.of(BUCKET_VARIANT_METADATA, obj);
+    }
+
+    /**
+     * Writes one fully-shredded data file holding the given {@code buckets}, one row each in the order given, and
+     * stages it on {@code append} with real metrics attached, so the file's manifest entry carries a narrow bound per
+     * shredded sub-field. Fixtures pass a single bucket so file-level pruning is observable: the number of objects
+     * processed equals the number of data files a predicate could not skip. Several buckets in one file is for tests
+     * that need a delete to remove some rows of a file without emptying it.
+     *
+     * @return the data file's path, so a deletion vector can reference it
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Extracted from writeManyFilesVariantTable so manyFilesVariant and deletesVariant share one file writer")
+    private static String appendShreddedBucketFile(Table table, AppendFiles append, VariantShreddingFunction shredder,
+            GenericRecord template, String filePrefix, int... buckets) throws Exception {
+        String path = table.location() + "/data/" + filePrefix + buckets[0] + ".parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+            for (int bucket : buckets) {
+                Record row = template.copy();
+                row.setField("id", bucket + 1);
+                row.setField("variant_field", bucketVariant(bucket));
+                writer.add(row);
+            }
+        }
+        long bytes = out.toInputFile().getLength();
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                .withFileSizeInBytes(bytes).withMetrics(metrics).build());
+        return path;
+    }
+
+    /**
+     * One table whose files do NOT agree on which variant sub-fields are shredded — the shape schema evolution
+     * produces when a table is written over time and the shredding config changes underneath it.
+     * <p>
+     * The first half of the files shred every sub-field, so each carries a narrow bound for {@code bucket}. The second
+     * half shred only {@code name}, so their {@code bucket} lives in the residual blob and has <b>no bound at all</b>.
+     * A predicate on {@code bucket} therefore meets both kinds of file in a single scan.
+     * <p>
+     * The risk this pins down is losing a row: bounds must never be treated as authoritative for a file that does not
+     * publish them. A file with no bound for the path must be read, not skipped — while the files that DO publish
+     * bounds must still prune, or the test would pass for the trivial reason that nothing prunes at all. The two
+     * queries in the suite assert both halves of that.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Files disagreeing on which variant sub-fields are shredded, so a predicate meets files with bounds and files without in one scan; guards against treating an absent bound as proof of no match")
+    private static void writeMixedShreddingVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, MIXED_SHREDDING_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantShreddingFunction full = shreddingFunc(bucketVariant(0), null);
+        // Only "name" is promoted to a typed sub-column here, so "bucket" falls into the residual and gets no bounds.
+        VariantShreddingFunction nameOnly = shreddingFunc(bucketVariant(0), Set.of("name"));
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < MIXED_SHREDDING_SHREDDED_FILES; i++) {
+            appendShreddedBucketFile(table, append, full, template, "mixed_full_", i);
+        }
+        for (int i = MIXED_SHREDDING_SHREDDED_FILES; i < MIXED_SHREDDING_FILE_COUNT; i++) {
+            appendShreddedBucketFile(table, append, nameOnly, template, "mixed_partial_", i);
+        }
+        append.commit();
+        LOGGER.info(
+                "[WRITE] mixedShreddingVariant committed: {} fully shredded files (buckets 0..{}) and {} files "
+                        + "shredding only name (buckets {}..{}), so bucket has bounds in the first group only",
+                MIXED_SHREDDING_SHREDDED_FILES, MIXED_SHREDDING_SHREDDED_FILES - 1,
+                MIXED_SHREDDING_FILE_COUNT - MIXED_SHREDDING_SHREDDED_FILES, MIXED_SHREDDING_SHREDDED_FILES,
+                MIXED_SHREDDING_FILE_COUNT - 1);
+    }
+
+    /**
+     * A variant holding <b>both</b> a sub-field literally named {@code "a.b"} and a nested {@code a} -> {@code b}, with
+     * different values, in one fully-shredded single-file table.
+     * <p>
+     * These two are indistinguishable once a filter's reference name is built: {@code IcebergTableFilterBuilder} joins
+     * the field-access path with {@code String.join(".", ..)}, so both arrive as the string
+     * {@code "variant_field.a.b"}. A rewrite that reads that as nesting would prune against the WRONG sub-field's
+     * bounds, and because the two values differ, doing so skips this table's only data file and returns no rows at all.
+     * The suite asserts the answer, so a mis-target is a visible wrong result rather than a silent inefficiency.
+     * <p>
+     * Values are chosen so the two readings disagree and the wrong one prunes everything away: the literal
+     * {@code "a.b"} is 5, the nested {@code a.b} is 99, so bounds for the nested path cannot contain 5.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Fixture probing whether a sub-field name containing a dot can be confused with nesting: holds literal \"a.b\"=5 alongside nested a.b=99 so pruning against the wrong path skips the only file and yields zero rows")
+    private static void writeDottedFieldNameVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, DOTTED_FIELD_NAME_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantMetadata meta = Variants.metadata("a.b", "a", "b");
+        ShreddedObject nested = Variants.object(meta);
+        nested.put("b", Variants.of(99));
+        ShreddedObject obj = Variants.object(meta);
+        obj.put("a.b", Variants.of(5));
+        obj.put("a", nested);
+        Variant variant = Variant.of(meta, obj);
+
+        VariantShreddingFunction shredder = shreddingFunc(variant, null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        String path = table.location() + "/data/dotted_field_name.parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+            Record row = template.copy();
+            row.setField("id", 1);
+            row.setField("variant_field", variant);
+            writer.add(row);
+        }
+        long bytes = out.toInputFile().getLength();
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        table.newAppend().appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                .withFileSizeInBytes(bytes).withMetrics(metrics).build()).commit();
+        LOGGER.info("[WRITE] dottedFieldNameVariant committed: literal \"a.b\"=5, nested a.b=99");
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes one shredded, single-row data file per bucket value (0..N-1) with bucket+name promoted to typed sub-columns and real metrics attached, so each file's manifest carries a narrow per-subfield bound. A predicate on variant_field.bucket then prunes almost every file via Iceberg's manifest evaluator (exercises variant sub-field predicate pushdown / file skipping)")
+    private static void writeManyFilesVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, MANY_FILES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        // One fully-shredded typed_value schema derived from bucket 0's shape, reused for every file, so all files
+        // shred the same way and each carries its own narrow bounds.
+        VariantShreddingFunction shredder = shreddingFunc(bucketVariant(0), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < MANY_FILES_VARIANT_FILE_COUNT; i++) {
+            appendShreddedBucketFile(table, append, shredder, template, "many_", i);
+        }
+        append.commit();
+        LOGGER.info("[WRITE] manyFilesVariant committed with {} single-row shredded files",
+                MANY_FILES_VARIANT_FILE_COUNT);
+    }
+
+    /**
+     * The same per-bucket shredded layout as {@link #writeManyFilesVariantTable}, plus <b>equality deletes</b>, so the
+     * variant read path is exercised with deletes present — a combination nothing else in either harness covers.
+     * <p>
+     * Two things are deliberately true of this fixture:
+     * <ul>
+     * <li><b>Every scan task has deletes attached.</b> An equality delete applies to all data files with a lower
+     * sequence number in the same partition, so committing the deletes in a later snapshot than the appends means no
+     * task takes the no-deletes branch. That forces the whole table through {@code DeleteFilter.requiredSchema()} —
+     * the widened-projection read path where variant sub-path <em>projection</em> pushdown is deliberately skipped, so
+     * these queries prove the fallback reconstructs variant sub-fields correctly.</li>
+     * <li><b>Predicate pushdown is still active.</b> File skipping happens during scan planning and does not look at
+     * deletes, which is sound because deletes only ever remove rows. So a query here must both prune to the right file
+     * set and drop the deleted rows.</li>
+     * </ul>
+     * Equality (not positional) deletes on purpose: these tables are format v3, where position deletes are superseded
+     * by deletion vectors, and equality deletes are the mechanism this harness already exercises on {@code users}.
+     * Deletion vectors are covered separately, by {@code writeDeletionVectorVariantTable} and the
+     * {@code variant-deletion-vectors} suite: the two delete kinds differ in scope, so both are needed. An equality
+     * delete is partition-scoped and attaches to every file in the partition, disabling projection pushdown across the
+     * whole scan; a deletion vector is file-scoped, so pruned and fallback reads interleave within one scan.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Shredded per-bucket variant table with equality deletes committed in a later snapshot, so every scan task carries deletes and the delete-aware read path (requiredSchema widening) is exercised together with variant sub-field file pruning")
+    private static void writeDeletesVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, DELETES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantShreddingFunction shredder = shreddingFunc(bucketVariant(0), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < DELETES_VARIANT_FILE_COUNT; i++) {
+            appendShreddedBucketFile(table, append, shredder, template, "del_", i);
+        }
+        append.commit();
+
+        RowDelta delta = table.newRowDelta();
+        for (int bucket : DELETES_VARIANT_DELETED_BUCKETS) {
+            // Row ids are bucket + 1 (see appendShreddedBucketFile).
+            delta.addDeletes(writeUnpartitionedEqualityDelete(table, bucket + 1));
+        }
+        delta.commit();
+        LOGGER.info("[WRITE] deletesVariant committed with {} single-row shredded files; deleted buckets={}",
+                DELETES_VARIANT_FILE_COUNT, Arrays.toString(DELETES_VARIANT_DELETED_BUCKETS));
+    }
+
+    /**
+     * Writes an equality delete on {@code id} for an unpartitioned table. The delete file's row schema is just
+     * {@code id} rather than the whole table schema, so the variant column never appears in a delete file — the
+     * equality comparison only needs the key.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Unpartitioned counterpart to writePartitionedEqualityDelete, with an id-only delete row schema so no variant column is written into the delete file")
+    private static DeleteFile writeUnpartitionedEqualityDelete(Table table, int idToDelete) throws Exception {
+        Schema deleteRowSchema = table.schema().select("id");
+        String delPath = table.location() + "/deletes/delete-eq-" + idToDelete + ".parquet";
+        OutputFile delOut = table.io().newOutputFile(delPath);
+        EqualityDeleteWriter<Record> delWriter = Parquet.writeDeletes(delOut).forTable(table)
+                .rowSchema(deleteRowSchema).withSpec(table.spec())
+                .equalityFieldIds(Collections.singletonList(table.schema().findField("id").fieldId()))
+                .createWriterFunc(GenericParquetWriter::create).buildEqualityWriter();
+        try (delWriter) {
+            Record d = GenericRecord.create(deleteRowSchema);
+            d.setField("id", idToDelete);
+            delWriter.write(d);
+        }
+        DeleteFile deleteFile = delWriter.toDeleteFile();
+        LOGGER.info("[DELETE FILE] location={} recordCount={} equalityFieldIds={}", deleteFile.location(),
+                deleteFile.recordCount(), deleteFile.equalityFieldIds());
+        return deleteFile;
+    }
+
+    /**
+     * A shredded per-bucket variant table whose deletes are <b>deletion vectors</b> — the format-v3 replacement for
+     * position delete files: a roaring bitmap of deleted row positions for a single data file, stored as a Puffin blob.
+     * <p>
+     * This covers what {@link #writeDeletesVariantTable} structurally cannot, because a DV is <em>file-scoped</em>
+     * where an equality delete is partition-scoped:
+     * <ul>
+     * <li><b>One scan mixes both read paths.</b> Only files that have a DV carry deletes, so within a single query some
+     * tasks take the no-deletes branch (variant projection pushdown active) while others take the delete-aware branch.
+     * The equality-delete fixture puts every task on the delete branch and can never produce this mix.</li>
+     * <li><b>A delete that removes only part of a file.</b> The multi-row file keeps two of its three rows, so the
+     * delete-aware read must still return correctly reconstructed variant sub-fields rather than nothing. Position
+     * deletes also make {@code DeleteFilter.requiredSchema()} add the synthetic {@code _pos} metadata column — a
+     * widening equality deletes never trigger, and the one that would defeat the schema clipper if variant projection
+     * pushdown were ever enabled on the delete path.</li>
+     * </ul>
+     * No production code here is delete-kind aware: the read path gates on whether a task has any deletes at all and
+     * hands the rest to Iceberg, whose delete loader reads DVs itself. This fixture is what proves that.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Deletion-vector (format v3) counterpart to the equality-delete fixture: DVs are file-scoped, so only some files carry deletes and one scan mixes the pruned no-deletes read with the delete-aware read; the multi-row file proves a DV removing only part of a file still reconstructs the surviving rows")
+    private static void writeDeletionVectorVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, DELETION_VECTOR_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantShreddingFunction shredder = shreddingFunc(bucketVariant(0), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        String emptiedFile = null;
+        for (int i = 0; i < DELETION_VECTOR_VARIANT_FILE_COUNT; i++) {
+            String path = appendShreddedBucketFile(table, append, shredder, template, "dv_", i);
+            if (i == DELETION_VECTOR_DELETED_BUCKET) {
+                emptiedFile = path;
+            }
+        }
+        String multiRowFile = appendShreddedBucketFile(table, append, shredder, template, "dv_multi_",
+                DELETION_VECTOR_MULTI_ROW_BUCKETS);
+        String multiDeleteFile = appendShreddedBucketFile(table, append, shredder, template, "dv_multidel_",
+                DELETION_VECTOR_MULTI_DELETE_BUCKETS);
+        append.commit();
+
+        // A position is the row's index within its own data file, so the multi-row file's middle bucket is position 1.
+        RowDelta delta = table.newRowDelta();
+        delta.addDeletes(writeDeletionVector(table, emptiedFile, "single", 0L));
+        delta.addDeletes(writeDeletionVector(table, multiRowFile, "multi", 1L));
+        // Two positions in ONE vector, leaving the rows between and after them: the only step that exercises a
+        // deletion vector holding more than a single position.
+        delta.addDeletes(writeDeletionVector(table, multiDeleteFile, "multidel", 0L, 2L));
+        delta.commit();
+        LOGGER.info(
+                "[WRITE] deletionVectorVariant committed: {} single-row files (bucket {} emptied by a DV) plus one "
+                        + "multi-row file {} with position 1 DV-deleted",
+                DELETION_VECTOR_VARIANT_FILE_COUNT, DELETION_VECTOR_DELETED_BUCKET,
+                Arrays.toString(DELETION_VECTOR_MULTI_ROW_BUCKETS));
+    }
+
+    /**
+     * Writes a deletion vector removing {@code positions} from {@code dataFilePath} and returns it. Iceberg writes the
+     * bitmap as a Puffin blob; the writer's second constructor argument is the "load this data file's existing DV"
+     * callback, and there is none here. Format v3 allows at most one DV per data file, which is asserted.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes a Puffin deletion vector for the given row positions of one data file")
+    private static DeleteFile writeDeletionVector(Table table, String dataFilePath, String dvName, long... positions)
+            throws Exception {
+        String dvPath = table.location() + "/deletes/dv-" + dvName + ".puffin";
+        DVFileWriter dvWriter = new BaseDVFileWriter(() -> table.io().newOutputFile(dvPath), path -> null);
+        try (dvWriter) {
+            for (long position : positions) {
+                dvWriter.delete(dataFilePath, position, table.spec(), null);
+            }
+        }
+        List<DeleteFile> written = dvWriter.result().deleteFiles();
+        Assert.assertEquals("v3 allows at most one deletion vector per data file", 1, written.size());
+        DeleteFile dv = written.get(0);
+        LOGGER.info("[DV] location={} referencedDataFile={} recordCount={}", dv.location(), dv.referencedDataFile(),
+                dv.recordCount());
+        return dv;
+    }
+
+    /**
+     * A single data file with many Parquet row groups, so a read actually iterates the row-group loop instead of
+     * consuming one group and stopping. Every other fixture writes one row group per file, which leaves that loop —
+     * and the row-group skipping decisions layered on it — untested.
+     * <p>
+     * Two things this makes reachable:
+     * <ul>
+     * <li><b>Row-group boundaries.</b> Thousands of rows spread over many groups will expose a reader that drops or
+     * repeats rows when advancing between them. The queries assert aggregates over the whole file, so a single
+     * duplicated or missing row changes the answer.</li>
+     * <li><b>Row-group skipping.</b> A predicate on the real {@code id} column binds against the Iceberg schema and
+     * reaches the metrics row-group filter, so groups outside its range are skipped rather than decoded. A predicate
+     * on a shredded variant sub-field cannot do this — {@code iceberg-parquet} has no extract-term support in its
+     * row-group filters — which is why this fixture filters on {@code id}.</li>
+     * </ul>
+     * No deletes, so the read takes the variant-pruned path rather than the delete-aware one.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Single data file written with a tiny Parquet row-group size so it holds many row groups, making the reader's row-group loop and its skipping decisions reachable; every other fixture file has one row group")
+    private static void writeManyRowGroupsVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, MANY_ROW_GROUPS_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantShreddingFunction shredder = shreddingFunc(bucketVariant(0), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        String path = table.location() + "/data/many_row_groups.parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer =
+                Parquet.write(out).schema(table.schema())
+                        .set(TableProperties.PARQUET_ROW_GROUP_SIZE_BYTES,
+                                Integer.toString(MANY_ROW_GROUPS_ROW_GROUP_BYTES))
+                        .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+            for (int i = 0; i < MANY_ROW_GROUPS_VARIANT_ROW_COUNT; i++) {
+                Record row = template.copy();
+                row.setField("id", i + 1);
+                row.setField("variant_field", bucketVariant(i));
+                writer.add(row);
+            }
+        }
+        long bytes = out.toInputFile().getLength();
+        assertMultipleRowGroups(table, path);
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        table.newAppend().appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                .withFileSizeInBytes(bytes).withMetrics(metrics).build()).commit();
+        LOGGER.info("[WRITE] manyRowGroupsVariant committed: 1 file, {} rows", MANY_ROW_GROUPS_VARIANT_ROW_COUNT);
+    }
+
+    /**
+     * Fails the fixture if the file ended up with a single row group. Without this the suite would still pass while
+     * testing nothing it was written for, because a one-row-group file never enters the loop under test.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards the row-groups fixture: fails if the file collapsed to a single row group, which would silently void the suite")
+    private static void assertMultipleRowGroups(Table table, String path) throws Exception {
+        int rowGroups;
+        try (ParquetFileReader reader = ParquetFileReader.open(parquetInput(table.io().newInputFile(path)))) {
+            rowGroups = reader.getFooter().getBlocks().size();
+        }
+        LOGGER.info("[VERIFY] file={} rowGroups={}", path, rowGroups);
+        Assert.assertTrue(
+                "expected more than one Parquet row group so the reader's row-group loop is exercised, got " + rowGroups
+                        + "; raise MANY_ROW_GROUPS_VARIANT_ROW_COUNT or lower MANY_ROW_GROUPS_ROW_GROUP_BYTES",
+                rowGroups > 1);
+    }
+
+    /**
+     * A VARIANT nested inside a struct, alongside an ordinary string sibling.
+     * <p>
+     * Iceberg cannot resolve a name through a variant at any depth, so neither {@code st.v} nor {@code st.v.bucket}
+     * binds — meaning a predicate on the nested variant can never be pushed down. What this fixture establishes is
+     * that such a query still <em>works</em>: the values are read and reconstructed, the engine applies the predicate
+     * to the rows, and the answer is correct. The sibling {@code st.label} is the control — a predicate on it must
+     * still push down, proving a variant next to it does not poison pruning for the whole struct.
+     * <p>
+     * Written serialized rather than shredded on purpose: sub-field bounds are irrelevant here because nothing can be
+     * pruned on a nested variant either way, and serialized keeps the fixture honest about what is being tested.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Table with a VARIANT nested inside a struct plus an ordinary sibling column, to establish that queries on a nested variant still return correct results (no pushdown possible) and that pruning on the sibling is unaffected")
+    private static void writeNestedVariantInStructTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "st",
+                        Types.StructType.of(Types.NestedField.optional(3, "v", Types.VariantType.get()),
+                                Types.NestedField.optional(4, "label", Types.StringType.get()))));
+        Table table = createTable(catalog, NESTED_VARIANT_TABLE_ID, schema, PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+
+        GenericRecord template = GenericRecord.create(table.schema());
+        GenericRecord structTemplate = GenericRecord.create(table.schema().findField("st").type().asStructType());
+        // The nested variant is SHREDDED, so its sub-fields carry manifest bounds. Without that, a predicate on
+        // st.v.bucket has nothing to prune against and this fixture could not tell "we decline to push it" apart from
+        // "we push it but there are no statistics".
+        VariantShreddingFunction nestedShredder = shreddingFunc(bucketVariant(0), null);
+        // One row per file, so pruning is observable through EITHER path: st.label has a distinct bound per file,
+        // and the shredded st.v sub-fields have their own bounds, so a predicate on the nested variant prunes too.
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < NESTED_VARIANT_ROW_COUNT; i++) {
+            String path = table.location() + "/data/nested_variant_" + i + ".parquet";
+            OutputFile out = table.io().newOutputFile(path);
+            Record struct = structTemplate.copy();
+            struct.setField("v", bucketVariant(i));
+            struct.setField("label", "L" + i);
+            Record row = template.copy();
+            row.setField("id", i + 1);
+            row.setField("st", struct);
+            try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                    .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(nestedShredder).build()) {
+                writer.add(row);
+            }
+            long bytes = out.toInputFile().getLength();
+            Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+            append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                    .withFileSizeInBytes(bytes).withMetrics(metrics).build());
+        }
+        append.commit();
+        LOGGER.info("[WRITE] nestedVariantInStruct committed with {} single-row file(s)", NESTED_VARIANT_ROW_COUNT);
+    }
+
+    /**
+     * A <b>partitioned</b> table with a shredded VARIANT column. Every other variant fixture is unpartitioned, so
+     * nothing else covers partition pruning and variant sub-field pruning acting on the same scan.
+     * <p>
+     * Buckets 0..11 go one row per file, grouped three consecutive buckets to a partition ({@code grp} = g0..g3), so
+     * each mechanism prunes a different amount and the two can be told apart: a predicate on {@code grp} alone leaves
+     * one partition's three files, a variant sub-field predicate alone leaves one file across all partitions, and both
+     * together still leave exactly one.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Partitioned table with a shredded VARIANT, the only fixture covering partition pruning together with variant sub-field pruning")
+    private static void writePartitionedVariantTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.required(2, "grp", Types.StringType.get()),
+                Types.NestedField.optional(3, "variant_field", Types.VariantType.get()));
+        Table table = catalog.buildTable(PARTITIONED_VARIANT_TABLE_ID, schema)
+                .withPartitionSpec(PartitionSpec.builderFor(schema).identity("grp").build())
+                .withProperty(TableProperties.FORMAT_VERSION, "3").create();
+        LOGGER.info("[TABLE] name={} location={} spec={}", table.name(), table.location(), table.spec());
+
+        VariantShreddingFunction shredder = shreddingFunc(bucketVariant(0), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < PARTITIONED_VARIANT_FILE_COUNT; i++) {
+            String group = "g" + (i / PARTITIONED_VARIANT_GROUP_SIZE);
+            PartitionData partitionData = new PartitionData(table.spec().partitionType());
+            partitionData.set(0, group);
+            String path = table.location() + "/data/" + group + "_" + i + ".parquet";
+            OutputFile out = table.io().newOutputFile(path);
+            Record row = template.copy();
+            row.setField("id", i + 1);
+            row.setField("grp", group);
+            row.setField("variant_field", bucketVariant(i));
+            try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                    .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+                writer.add(row);
+            }
+            long bytes = out.toInputFile().getLength();
+            Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+            append.appendFile(DataFiles.builder(table.spec()).withPath(path).withPartition(partitionData)
+                    .withFormat(FileFormat.PARQUET).withFileSizeInBytes(bytes).withMetrics(metrics).build());
+        }
+        append.commit();
+        LOGGER.info("[WRITE] partitionedVariant committed with {} single-row files across {} partitions",
+                PARTITIONED_VARIANT_FILE_COUNT, PARTITIONED_VARIANT_FILE_COUNT / PARTITIONED_VARIANT_GROUP_SIZE);
+    }
+
+    /**
+     * <b>Two</b> shredded VARIANT columns in one table, each with its own shape. {@code VariantProjectionPlan} is a map
+     * keyed by column and {@code VariantPredicateRewriter} resolves the root column per predicate, so both should be
+     * handled independently — but every other fixture has exactly one variant column, so nothing tested it. Pruning
+     * must work through either column, and projecting one must not drag the other's sub-columns along.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Table with two independent shredded VARIANT columns, each with its own shredding shape, to cover the per-column projection plan and rewriter root resolution")
+    private static void writeTwoVariantsTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "v1", Types.VariantType.get()),
+                Types.NestedField.optional(3, "v2", Types.VariantType.get()));
+        Table table = createTable(catalog, TWO_VARIANTS_TABLE_ID, schema, PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+
+        VariantMetadata secondMeta = Variants.metadata("code", "score");
+        // One typed_value per column: the shredding function is asked per field, so the two shapes stay distinct.
+        Type firstTyped = toParquetTypedValue(bucketVariant(0));
+        Type secondTyped = toParquetTypedValue(secondVariant(secondMeta, 0));
+        VariantShreddingFunction shredder = (fieldId, name) -> "v1".equals(name) ? firstTyped : secondTyped;
+
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < TWO_VARIANTS_FILE_COUNT; i++) {
+            String path = table.location() + "/data/two_" + i + ".parquet";
+            OutputFile out = table.io().newOutputFile(path);
+            Record row = template.copy();
+            row.setField("id", i + 1);
+            row.setField("v1", bucketVariant(i));
+            row.setField("v2", secondVariant(secondMeta, i));
+            try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                    .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+                writer.add(row);
+            }
+            long bytes = out.toInputFile().getLength();
+            Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+            append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                    .withFileSizeInBytes(bytes).withMetrics(metrics).build());
+        }
+        append.commit();
+        LOGGER.info("[WRITE] twoVariants committed with {} single-row files", TWO_VARIANTS_FILE_COUNT);
+    }
+
+    /** The second variant column's shape: deliberately unlike bucketVariant so the two cannot be confused. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Second variant column's shape for the two-variant fixture")
+    private static Variant secondVariant(VariantMetadata meta, int i) {
+        ShreddedObject object = Variants.object(meta);
+        object.put("code", Variants.of("c" + i));
+        object.put("score", Variants.of(i * 2));
+        return Variant.of(meta, object);
+    }
+
+    /** Iceberg's canonical typed_value for a value, via the package-private ParquetVariantUtil. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reflective helper for Iceberg's canonical typed_value, shared by the two-variant shredding function")
+    private static Type toParquetTypedValue(Variant value) throws Exception {
+        Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
+                .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
+        toParquetSchema.setAccessible(true);
+        return (Type) toParquetSchema.invoke(null, value.value());
+    }
+
     /**
      * The rows each encoding file carries. It deliberately varies the <b>top-level Variant PhysicalType</b> across
      * rows — an object, a bare int, a bare string, an array, a top-level null value, and a null column — rather than
@@ -571,8 +1189,13 @@ public class IcebergTest {
         assertVariantLayoutOnDisk(table, path, expectedShreddedFields);
         LOGGER.info("[APPEND] file={} sizeBytes={} rows={} shreddedFields={}", path, bytes, rowValues.size(),
                 expectedShreddedFields == null ? "(serialized)" : expectedShreddedFields);
-        return DataFiles.builder(table.spec()).withPath(path).withRecordCount(rowValues.size())
-                .withFileSizeInBytes(bytes).withFormat(FileFormat.PARQUET).build();
+        // Attach real metrics so the manifest carries per-subfield lower/upper bounds for the shredded VARIANT
+        // column (Iceberg encodes them as a Variant object keyed by normalized JSON path). Without this, the
+        // committed file has no bounds at all and Expressions.extract(..) file skipping can never prune, which
+        // would make a pushdown test silently prove nothing.
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        return DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET).withFileSizeInBytes(bytes)
+                .withMetrics(metrics).build();
     }
 
     /**

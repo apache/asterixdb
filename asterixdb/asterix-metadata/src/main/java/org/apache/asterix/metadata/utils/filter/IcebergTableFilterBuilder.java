@@ -19,7 +19,9 @@
 package org.apache.asterix.metadata.utils.filter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
@@ -51,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.logging.log4j.LogManager;
@@ -59,6 +62,15 @@ import org.apache.logging.log4j.Logger;
 public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * Reference name -> the path segments it was built from, before they were joined with dots. The join is lossy: a
+     * field literally named {@code "a.b"} and a nested {@code a -> b} both render as {@code "a.b"}, and a consumer that
+     * splits the name back apart cannot tell them apart. A name that two different paths produced maps to an EMPTY
+     * list, meaning "ambiguous within this query".
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Preserves the unjoined filter path segments so a VARIANT sub-field named with a dot cannot be mistaken for nesting during predicate pushdown")
+    private final Map<String, List<String>> pathSegments = new HashMap<>();
 
     public IcebergTableFilterBuilder(ExternalDatasetProjectionFiltrationInfo projectionFiltrationInfo,
             JobGenContext context, IVariableTypeEnvironment typeEnv) {
@@ -75,7 +87,7 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
                 LOGGER.warn("Error creating IcebergTable filter expression, skipping filter pushdown", e);
             }
         }
-        return new IcebergTableFilterEvaluatorFactory(icebergTablePredicate);
+        return new IcebergTableFilterEvaluatorFactory(icebergTablePredicate, pathSegments);
     }
 
     /**
@@ -386,12 +398,30 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
             // The field could be a nested field
             List<String> fieldList = new ArrayList<>();
             fieldList = createPathExpression(path, fieldList);
-            return String.join(".", fieldList);
+            return recordSegments(String.join(".", fieldList), fieldList);
         } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
-            return path.getFieldNames()[0];
+            String name = path.getFieldNames()[0];
+            return recordSegments(name, List.of(name));
         } else {
             throw new RuntimeException("Unsupported column expression: " + expression);
         }
+    }
+
+    /**
+     * Remembers which segments produced {@code name}, so a consumer never has to split the dotted name back apart.
+     * A name two different paths can produce is recorded as ambiguous (an empty list) rather than resolved to either.
+     *
+     * @return {@code name}, so callers can return it directly
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Records unjoined path segments per reference name, marking collisions ambiguous so pushdown declines instead of guessing")
+    private String recordSegments(String name, List<String> segments) {
+        List<String> existing = pathSegments.get(name);
+        if (existing == null) {
+            pathSegments.put(name, new ArrayList<>(segments));
+        } else if (!existing.equals(segments)) {
+            pathSegments.put(name, List.of());
+        }
+        return name;
     }
 
     private List<String> createPathExpression(ARecordType path, List<String> fieldList) {

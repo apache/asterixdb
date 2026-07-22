@@ -1,0 +1,2 @@
+{ "id": 1, "i": 42, "s": "hello variant", "nested": "inner" }
+{ "id": 7, "i": 42, "s": "hello variant", "nested": "inner" }

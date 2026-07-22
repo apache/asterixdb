@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.input.filter;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
@@ -29,9 +32,22 @@ import org.apache.iceberg.expressions.Expression;
 public class IcebergTableFilterEvaluatorFactory implements IExternalFilterEvaluatorFactory {
     private static final long serialVersionUID = 1L;
     private final Expression filterExpression;
+    /**
+     * The unjoined path segments behind each reference name in {@link #filterExpression}, e.g.
+     * {@code "v.a.b" -> ["v", "a", "b"]}. Carried alongside the expression because the reference name itself is
+     * dot-joined and that join is lossy: a field literally named {@code "a.b"} and a nested {@code a -> b} produce the
+     * same string. A variant sub-field predicate can only be rewritten safely with these. An entry mapped to an EMPTY
+     * list means two different paths collided on one name in this query, so neither can be resolved.
+     */
+    private final Map<String, List<String>> filterPathSegments;
 
     public IcebergTableFilterEvaluatorFactory(Expression expression) {
+        this(expression, java.util.Collections.emptyMap());
+    }
+
+    public IcebergTableFilterEvaluatorFactory(Expression expression, Map<String, List<String>> filterPathSegments) {
         this.filterExpression = expression;
+        this.filterPathSegments = filterPathSegments;
     }
 
     @Override
@@ -48,5 +64,10 @@ public class IcebergTableFilterEvaluatorFactory implements IExternalFilterEvalua
 
     public Expression getFilterExpression() {
         return filterExpression;
+    }
+
+    /** @see #filterPathSegments */
+    public Map<String, List<String>> getFilterPathSegments() {
+        return filterPathSegments;
     }
 }

@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// mixedShreddingVariant: 6 single-row files that do NOT agree on which variant sub-fields are shredded. Buckets 0-2
+// are fully shredded so each publishes a bound for "bucket"; buckets 3-5 shred only "name", so their "bucket" sits
+// in the residual and those files publish NO bound for it. This is the shape schema evolution leaves behind when the
+// shredding config changes under a table written over time.
+DROP COLLECTION variantMixedShredding IF EXISTS;
+DROP TYPE variantMixedShredding IF EXISTS;
+
+CREATE TYPE variantMixedShredding AS open {};
+CREATE EXTERNAL COLLECTION variantMixedShredding(variantMixedShredding)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="mixedShreddingVariant"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet")
+);

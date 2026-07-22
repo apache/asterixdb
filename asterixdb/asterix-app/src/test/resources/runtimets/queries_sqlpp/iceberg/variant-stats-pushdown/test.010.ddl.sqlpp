@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// The manyFilesVariant table holds one shredded, single-row data file per bucket value: file i carries
+// bucket=i (int), name="f"+i (string), ratio=i*1.5 (double), flag=(i%2==0) (boolean) and obj.deep=i (nested int),
+// all promoted to typed sub-columns, with real metrics attached so every file's manifest carries a narrow
+// per-subfield bound. A predicate on a shredded sub-field can therefore skip whole data files via the manifest
+// bounds (variant sub-field stats pushdown).
+//
+// This suite asserts only the returned rows, which are the same with or without pushdown. It exists so the
+// queries are exercised here too, and so the expected output is already in place should a way to observe the
+// number of files/objects actually scanned become available in this harness. The number-of-files assertions
+// live in the CBAS-side copy of this suite, whose step numbering this suite mirrors.
+DROP COLLECTION manyFilesVariant IF EXISTS;
+DROP TYPE manyFilesVariant IF EXISTS;
+
+CREATE TYPE manyFilesVariant AS open {};
+CREATE EXTERNAL COLLECTION manyFilesVariant(manyFilesVariant)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="manyFilesVariant"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet")
+);

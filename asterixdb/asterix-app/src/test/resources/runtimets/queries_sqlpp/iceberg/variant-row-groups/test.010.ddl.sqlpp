@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// manyRowGroupsVariant is a SINGLE data file holding 5000 rows, written with a tiny Parquet row-group size so it
+// contains many row groups. Every other variant fixture writes one row group per file, which means the reader's
+// row-group loop never iterates and its skipping decisions are never taken. The fixture asserts on write that more
+// than one row group was actually produced, so this suite cannot silently degrade into the single-group case.
+//
+// Row i carries bucket=i (0..4999) and id=i+1, so aggregates over the whole file have exact closed-form answers and
+// a single dropped or repeated row at a row-group boundary changes them.
+DROP COLLECTION manyRowGroupsVariant IF EXISTS;
+DROP TYPE manyRowGroupsVariant IF EXISTS;
+
+CREATE TYPE manyRowGroupsVariant AS open {};
+CREATE EXTERNAL COLLECTION manyRowGroupsVariant(manyRowGroupsVariant)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="manyRowGroupsVariant"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet")
+);

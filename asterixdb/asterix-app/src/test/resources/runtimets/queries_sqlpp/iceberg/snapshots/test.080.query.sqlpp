@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- A column added by SCHEMA EVOLUTION, read from files written BEFORE it existed.
+--
+-- evolved_note was added after rows 1-800 were written, so those files do not contain the column at all. Iceberg's
+-- reader materialises the projected schema rather than the file's, so the column comes back PRESENT WITH A NULL value
+-- rather than absent. That is the opposite of a field that is not in the table schema at all, which is MISSING and is
+-- omitted from the record entirely (see variant-predicate-shapes).
+--
+-- The two queries below are the decisive pair: IS MISSING must match nothing, IS NULL must match the old rows.
+SELECT id, evolved_note FROM usersNoSnapshot WHERE id = 1;

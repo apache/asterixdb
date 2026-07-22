@@ -460,6 +460,17 @@ public class ExternalDataConstants {
         public static final int DEFAULT_VARIANT_DEPTH = 500;
         public static final int MAX_VARIANT_DEPTH = 1000;
 
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant sub-path projection pushdown (reading shredded). Default on; a break-glass off-switch since releases (not patches) are shipped, and the off path doubles as the differential-test oracle (off == on for the same query)")
+        public static final String VARIANT_PROJECTION_PUSHDOWN = "variantProjectionPushdown";
+        public static final boolean DEFAULT_VARIANT_PROJECTION_PUSHDOWN = true;
+
+        // A second flag rather than one covering "variant pushdown", because the two fail differently: projection off
+        // reads more columns, stats off reads more files. Only stats pushdown could, if it were ever wrong, drop a row
+        // that should have been returned, which is what earns it a switch of its own.
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant sub-field stats pushdown (data-file skipping from manifest bounds). Default on; a break-glass off-switch since releases rather than patches are shipped, and the off path is a differential-test oracle: same rows, more files read")
+        public static final String VARIANT_STATS_PUSHDOWN = "variantStatsPushdown";
+        public static final boolean DEFAULT_VARIANT_STATS_PUSHDOWN = true;
+
         static {
             if (DEFAULT_VARIANT_DEPTH < 1 || DEFAULT_VARIANT_DEPTH > MAX_VARIANT_DEPTH) {
                 throw new IllegalStateException(

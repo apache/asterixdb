@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// nestedVariantInStruct holds a VARIANT nested inside a struct (st.v) next to an ordinary string sibling (st.label).
+//
+// Iceberg cannot resolve a name through a variant at any depth, so neither st.v nor st.v.bucket can be bound and a
+// predicate on the nested variant can never be pushed down. The point of this suite is that such a query still WORKS:
+// the values are read and reconstructed and the engine applies the predicate to the rows. Step 040 is the control — a
+// predicate on the ordinary sibling must still push down, so a variant inside a struct does not poison pruning for the
+// whole struct.
+DROP COLLECTION nestedVariantInStruct IF EXISTS;
+DROP TYPE nestedVariantInStruct IF EXISTS;
+
+CREATE TYPE nestedVariantInStruct AS open {};
+CREATE EXTERNAL COLLECTION nestedVariantInStruct(nestedVariantInStruct)
+USING S3
+(
+    ("table-format"="iceberg"),
+    ("namespace"="my_namespace"),
+    ("tableName"="nestedVariantInStruct"),
+    ("region"="custom-region"),
+    ("serviceEndpoint"="%DOCKER_S3_CONTAINER%"),
+    ("pathStyleAddressing"="true"),
+    ("catalogName"="myNessieCatalog"),
+    ("format"="parquet")
+);

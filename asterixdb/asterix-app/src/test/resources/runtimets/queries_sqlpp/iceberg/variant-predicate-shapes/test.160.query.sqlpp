@@ -1,0 +1,28 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- The other direction: a missing field that must NOT eliminate rows. Every other missing-field step here returns
+-- empty, so a bug that made these predicates over-eliminate would look identical to correct behaviour. IS MISSING is
+-- true for a field the table does not have, so this must return exactly what "bucket < 3" alone returns.
+-- The predicate is still dropped from the pushed filter (unbindable), which is precisely why it has to be evaluated
+-- correctly on the rows.
+SELECT id
+FROM variantPredicateShapes
+WHERE variant_field.bucket < 3 AND nosuchcolumn IS MISSING
+ORDER BY id;

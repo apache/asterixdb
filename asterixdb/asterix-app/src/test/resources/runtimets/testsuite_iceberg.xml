@@ -59,6 +59,74 @@
         <output-dir compare="Text">variant-partially-shredded</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-stats-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-stats-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-deletes">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-deletes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-deletion-vectors">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-deletion-vectors</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-row-groups">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-row-groups</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-nested-in-struct">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-nested-in-struct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-flags-off">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-flags-off</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg" check-warnings="true">
+      <compilation-unit name="variant-predicate-shapes">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-predicate-shapes</output-dir>
+        <expected-warn>Iceberg filter 'ref(name="nosuchcolumn") == 1' could not be pushed to the table scan and was skipped; the query is correct but reads more data than necessary</expected-warn>
+        <expected-warn>Iceberg filter 'ref(name="nosuchroot.deep") == 1' could not be pushed to the table scan and was skipped; the query is correct but reads more data than necessary</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-partitioned">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-partitioned</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-dotted-field-name">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-dotted-field-name</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-mixed-shredding">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-mixed-shredding</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-two-columns">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-two-columns</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="negative">
     <test-case FilePath="iceberg/negative">
@@ -129,6 +197,8 @@
         <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 2</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 0</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 1001</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'variantProjectionPushdown': ture</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'variantStatsPushdown': 1</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
