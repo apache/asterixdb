@@ -22,11 +22,6 @@ import org.apache.hyracks.api.result.IResultMetadata;
 
 public interface ICompilationContext {
 
-    ICompilationContext INSTANCE = new ICompilationContext() {
-    };
-
-    default IResultMetadata resultMetadata() {
-        return null;
-    }
+    IResultMetadata resultMetadata();
 
 }

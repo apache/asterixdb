@@ -105,10 +105,8 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
                 JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op), context, columns);
 
         ICompilationContext compilationContext = context.getCompilationContext();
-        IResultMetadata resultMetadata = compilationContext != null ? compilationContext.resultMetadata() : null;
-        if (resultMetadata == null) {
-            resultMetadata = resultOp.getResultMetadata();
-        }
+        IResultMetadata resultMetadata =
+                compilationContext != null ? compilationContext.resultMetadata() : resultOp.getResultMetadata();
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getResultHandleRuntime(resultOp.getDataSink(), columns, pf, context.getWriterFactory(),
