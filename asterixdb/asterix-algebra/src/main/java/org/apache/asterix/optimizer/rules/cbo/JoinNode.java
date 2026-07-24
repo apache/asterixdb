@@ -1731,6 +1731,12 @@ public class JoinNode {
     protected String dumpCost(ICost cost) {
         StringBuilder sb = new StringBuilder(128);
         sb.append((double) Math.round(cost.computeTotalCost() * 100) / 100).append('\n');
+        sb.append("  processed ").append(dumpDouble(((Cost) cost).getDocsProcessed()));
+        sb.append("  produced ").append(dumpDouble(((Cost) cost).getDocsProduced()));
+        sb.append("  sent ").append(dumpDouble(((Cost) cost).getDocsSent()));
+        sb.append("  overFlow ").append(dumpDouble(((Cost) cost).getOverFlow()));
+        sb.append("  ioSeq ").append(dumpDouble(((Cost) cost).getIoSeq()));
+        sb.append("  ioRand ").append(dumpDouble(((Cost) cost).getIoRand()));
         return sb.toString();
     }
 
@@ -1755,6 +1761,8 @@ public class JoinNode {
 
         sb.append("  left plan cost ").append(dumpDoubleNoNewline(leftPlanTotalCost.computeTotalCost()))
                 .append(", right plan cost ").append(dumpDouble(rightPlanTotalCost.computeTotalCost()));
+        sb.append("  left sent ").append(dumpDoubleNoNewline(((Cost) pn.getLeftExchangeCost()).getDocsSent()))
+                .append(", right sent ").append(dumpDouble(((Cost) pn.getRightExchangeCost()).getDocsSent()));
         return sb.toString();
     }
 

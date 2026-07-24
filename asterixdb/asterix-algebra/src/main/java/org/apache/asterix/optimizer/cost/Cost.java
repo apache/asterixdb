@@ -27,14 +27,29 @@ public class Cost implements ICost {
     public static final double MIN_CARD = 2.1;
     private static final int COST_EQ = 0;
 
-    private final double cost;
+    private static final int SEQ_IO_WEIGHT = 1;
+    private static final int RAND_IO_WEIGHT = 0;
+    // not using random costs any more because index access happens after sorts. May consider removing this component in V2
+
+    private final double docsProcessed;
+    private final double docsProduced;
+    private final double docsSent;
+    private final double overFlow;
+    private final double ioSeq;
+    private final double ioRand;
 
     public Cost() {
-        this.cost = 0.0;
+        this(0, 0, 0, 0, 0, 0);
     }
 
-    public Cost(double cost) {
-        this.cost = cost;
+    public Cost(double docsProcessed, double docsProduced, double docsSent, double overFlow, double ioSeq,
+            double ioRand) {
+        this.docsProcessed = docsProcessed;
+        this.docsProduced = docsProduced;
+        this.docsSent = docsSent;
+        this.overFlow = overFlow;
+        this.ioSeq = ioSeq;
+        this.ioRand = ioRand;
     }
 
     @Override
@@ -44,12 +59,14 @@ public class Cost implements ICost {
 
     @Override
     public ICost maxCost() {
-        return new Cost(MAX_CARD);
+        return new Cost(MAX_CARD, MAX_CARD, MAX_CARD, MAX_CARD, 0, 0);
     }
 
     @Override
     public ICost costAdd(ICost cost) {
-        return new Cost(computeTotalCost() + cost.computeTotalCost());
+        Cost other = (Cost) cost;
+        return new Cost(docsProcessed + other.docsProcessed, docsProduced + other.docsProduced,
+                docsSent + other.docsSent, overFlow + other.overFlow, ioSeq + other.ioSeq, ioRand + other.ioRand);
     }
 
     @Override
@@ -79,7 +96,7 @@ public class Cost implements ICost {
 
     @Override
     public double computeTotalCost() {
-        return cost;
+        return docsProcessed + docsProduced + docsSent + overFlow + ioSeq * SEQ_IO_WEIGHT + ioRand * RAND_IO_WEIGHT;
     }
 
     @Override
@@ -87,8 +104,33 @@ public class Cost implements ICost {
         return Double.compare(computeTotalCost(), cost.computeTotalCost());
     }
 
+    public double getDocsProcessed() {
+        return docsProcessed;
+    }
+
+    public double getDocsProduced() {
+        return docsProduced;
+    }
+
+    public double getDocsSent() {
+        return docsSent;
+    }
+
+    public double getOverFlow() {
+        return overFlow;
+    }
+
+    public double getIoSeq() {
+        return ioSeq;
+    }
+
+    public double getIoRand() {
+        return ioRand;
+    }
+
     @Override
     public String toString() {
-        return Double.toString(cost);
+        return "{docsProcessed = " + docsProcessed + ", docsProduced = " + docsProduced + ", docsSent = " + docsSent
+                + ", overFlow = " + overFlow + ", ioSeq = " + ioSeq + ", ioRand = " + ioRand + '}';
     }
 }
