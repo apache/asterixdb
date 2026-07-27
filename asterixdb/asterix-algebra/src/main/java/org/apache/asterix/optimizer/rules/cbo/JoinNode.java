@@ -1084,6 +1084,19 @@ public class JoinNode {
         return retVal;
     }
 
+    // True when the inner side's own predicates already consume the index chosen for the join probe.
+    private static boolean isIndexClaimedByLocalPredicate(JoinNode innerJn, Index index) {
+        if (innerJn.indexCostInfoList == null) {
+            return false;
+        }
+        for (IndexCostInfo indexCostInfo : innerJn.indexCostInfoList) {
+            if (indexCostInfo.getIndex().equals(index)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean NLJoinApplicable(JoinNode leftJn, JoinNode rightJn, boolean outerJoin,
             ILogicalExpression nestedLoopJoinExpr,
             List<AbstractIntroduceAccessMethodRule.IndexAccessInfo> chosenIndexes,
@@ -1235,6 +1248,7 @@ public class JoinNode {
         }
 
         Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint = new Pair<>(null, null);
+        Index chosenIndex = null;
         nljCost = joinEnum.getCostHandle().maxCost();
         ICost curNljCost;
         for (Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry : analyzedAMs.entrySet()) {
@@ -1250,6 +1264,7 @@ public class JoinNode {
                 curNljCost = joinEnum.getCostMethodsHandle().costIndexNLJoin(this, index);
                 if (curNljCost.costLE(nljCost)) {
                     nljCost = curNljCost;
+                    chosenIndex = index;
                     indexNames.add(index.getIndexName());
                     exprAndHint = new Pair<>(afce, IndexedNLJoinExpressionAnnotation.newInstance(indexNames));
                 }
@@ -1268,6 +1283,9 @@ public class JoinNode {
             pn = new JoinPlanNode(this, leftPlan, rightPlan, outerJoin);
             pn.setJoinAndHintInfo(JoinPlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN, nestedLoopJoinExpr, exprAndHint, null,
                     hintNLJoin);
+            if (hintNLJoin != null && !isIndexClaimedByLocalPredicate(rightJn, chosenIndex)) {
+                pn.numHintsUsed++;
+            }
             pn.setJoinCosts(nljCost, totalCost, leftExchangeCost, rightExchangeCost);
             planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
