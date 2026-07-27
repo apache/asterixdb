@@ -18,10 +18,15 @@
  */
 package org.apache.hyracks.control.cc;
 
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_5;
+import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.ASSISTED;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
+
 import java.io.File;
 import java.net.URI;
 
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,8 +81,9 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
     }
 
     @Override
+    @AiProvenance(agent = CLAUDE_OPUS_5, tool = CLAUDE_CODE_UI, contributionKind = ASSISTED, notes = "log4j 2.26 added a List<URI> overload; cast to URI disambiguates the call")
     public Configuration getConfiguration(final LoggerContext loggerContext, final ConfigurationSource source) {
-        return getConfiguration(loggerContext, source.toString(), null);
+        return getConfiguration(loggerContext, source.toString(), (URI) null);
     }
 
     @Override
