@@ -33,7 +33,7 @@ public class ADayTimeDurationPrinterFactory implements IPrinterFactory {
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
         ps.print("\"");
         PrintTools.printDayTimeDurationString(b, s, l, ps);
-        ps.print("\")");
+        ps.print("\"");
     };
 
     @Override
