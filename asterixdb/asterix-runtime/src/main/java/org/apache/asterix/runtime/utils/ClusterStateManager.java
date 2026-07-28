@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.runtime.utils;
 
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_5;
+import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.ASSISTED;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +59,7 @@ import org.apache.hyracks.control.common.application.ConfigManagerApplicationCon
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.util.NetworkUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -151,6 +156,7 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
+    @AiProvenance(agent = CLAUDE_OPUS_5, tool = CLAUDE_CODE_UI, contributionKind = ASSISTED, notes = "ASTERIXDB-3798: clear pendingRemoval on deactivation, as the node is no longer a participant")
     public synchronized void updateNodeState(String nodeId, boolean active, NcLocalCounters localCounters,
             Partitions activePartitions) {
         if (active) {
@@ -168,6 +174,10 @@ public class ClusterStateManager implements IClusterStateManager {
 
         } else {
             participantNodes.remove(nodeId);
+            // pendingRemoval is only meaningful for participants; discard the registration, as removePending()
+            // cannot re-register a non-participant.  the node's partitions are deactivated below, so they are
+            // excluded from the cluster locations regardless
+            pendingRemoval.remove(nodeId);
             deactivateNodePartitions(nodeId);
         }
     }
@@ -429,8 +439,13 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
+    @AiProvenance(agent = CLAUDE_OPUS_5, tool = CLAUDE_CODE_UI, contributionKind = ASSISTED, notes = "ASTERIXDB-3798: clear pendingRemoval, as the node is no longer a participant")
     public synchronized void deregisterNodePartitions(String nodeId) throws HyracksDataException {
         ClusterPartition[] nodePartitions = node2PartitionsMap.remove(nodeId);
+        // the node is on its way out; discard any pending removal registration, as removePending() cannot
+        // re-register a non-participant.  note this is done unconditionally, as the partitions may have
+        // already been deregistered
+        pendingRemoval.remove(nodeId);
         if (nodePartitions == null) {
             LOGGER.info("deregisterNodePartitions unknown node {} (already removed?)", nodeId);
         } else {
