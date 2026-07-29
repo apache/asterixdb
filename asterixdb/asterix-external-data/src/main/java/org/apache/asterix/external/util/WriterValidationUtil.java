@@ -31,10 +31,13 @@ import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_JSON
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQUET;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_PAGE_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_ROW_GROUP_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_FILE_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_RESULT;
 import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_MAX_SCHEMAS_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_MAX_SCHEMAS_MAX_VALUE;
 import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_WRITER_VERSION_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_FILE_SIZE_MAXIMUM;
+import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_FILE_SIZE_MINIMUM;
 import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_RESULT_MINIMUM;
 
 import java.util.List;
@@ -57,6 +60,7 @@ public class WriterValidationUtil {
         validateAdapter(adapter, supportedAdapters, sourceLocation);
         validateFormat(configuration, sourceLocation);
         validateMaxResult(configuration, sourceLocation);
+        validateMaxFileSize(configuration);
     }
 
     private static void validateQuote(Map<String, String> configuration, SourceLocation sourceLocation)
@@ -180,6 +184,29 @@ public class WriterValidationUtil {
             }
         } catch (NumberFormatException e) {
             throw CompilationException.create(ErrorCode.INTEGER_VALUE_EXPECTED, sourceLocation, maxResult);
+        }
+    }
+
+    private static void validateMaxFileSize(Map<String, String> configuration) throws CompilationException {
+        String maxFileSize = configuration.get(KEY_WRITER_MAX_FILE_SIZE);
+        if (maxFileSize == null) {
+            return;
+        }
+
+        long value;
+        try {
+            value = StorageUtil.getByteValue(maxFileSize);
+        } catch (IllegalArgumentException e) {
+            throw CompilationException.create(ErrorCode.ILLEGAL_SIZE_PROVIDED, KEY_WRITER_MAX_FILE_SIZE, maxFileSize);
+        }
+
+        if (value < WRITER_MAX_FILE_SIZE_MINIMUM) {
+            throw new CompilationException(MINIMUM_VALUE_ALLOWED_FOR_PARAM, KEY_WRITER_MAX_FILE_SIZE,
+                    StorageUtil.toHumanReadableSize(WRITER_MAX_FILE_SIZE_MINIMUM), maxFileSize);
+        }
+        if (value > WRITER_MAX_FILE_SIZE_MAXIMUM) {
+            throw new CompilationException(MAXIMUM_VALUE_ALLOWED_FOR_PARAM, KEY_WRITER_MAX_FILE_SIZE,
+                    StorageUtil.toHumanReadableSize(WRITER_MAX_FILE_SIZE_MAXIMUM), maxFileSize);
         }
     }
 

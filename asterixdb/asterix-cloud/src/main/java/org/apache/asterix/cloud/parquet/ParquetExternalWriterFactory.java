@@ -38,15 +38,17 @@ public class ParquetExternalWriterFactory implements Serializable {
     private static final long serialVersionUID = 8971234908711236L;
     private final IExternalFileWriterFactory writerFactory;
     private final int maxResult;
+    private final long maxFileSize;
     private final ParquetExternalFilePrinterFactory printerFactory;
     private final IPathResolver resolver;
     private final IHyracksTaskContext ctx;
 
     public ParquetExternalWriterFactory(IHyracksTaskContext ctx, IExternalFileWriterFactory writerFactory,
-            int maxResult, ParquetExternalFilePrinterFactory printerFactory, IPathResolver resolver) {
+            int maxResult, long maxFileSize, ParquetExternalFilePrinterFactory printerFactory, IPathResolver resolver) {
         this.ctx = ctx;
         this.writerFactory = writerFactory;
         this.maxResult = maxResult;
+        this.maxFileSize = maxFileSize;
         this.printerFactory = printerFactory;
         this.resolver = resolver;
     }
@@ -55,7 +57,7 @@ public class ParquetExternalWriterFactory implements Serializable {
         MessageType schema = generateSchema(schemaNode);
         printerFactory.setParquetSchema(schema);
         IExternalFileWriter writer = writerFactory.createWriter(ctx, printerFactory);
-        return new ExternalFileWriter(resolver, writer, maxResult);
+        return new ExternalFileWriter(resolver, writer, maxResult, maxFileSize);
     }
 
 }

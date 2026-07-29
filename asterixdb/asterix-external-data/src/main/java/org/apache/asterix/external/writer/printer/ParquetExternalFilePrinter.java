@@ -82,6 +82,13 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
     }
 
     @Override
+    public long getBytesWritten() {
+        // flushed row groups are counted as compressed bytes, the open row group as encoded bytes; the
+        // footer is only written on close and is therefore not counted
+        return writer == null ? 0 : writer.getDataSize();
+    }
+
+    @Override
     public void print(IValueReference value) throws HyracksDataException {
         try {
             this.writer.write(value);

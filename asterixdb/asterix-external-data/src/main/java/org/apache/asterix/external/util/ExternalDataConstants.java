@@ -379,10 +379,16 @@ public class ExternalDataConstants {
      * Writer Constants
      */
     public static final String KEY_WRITER_MAX_RESULT = "max-objects-per-file";
+    public static final String KEY_WRITER_MAX_FILE_SIZE = "max-file-size";
     public static final String KEY_VALIDATE_WRITE_PERMISSION = "validate-write-permission";
     public static final String KEY_WRITER_COMPRESSION = "compression";
     public static final int WRITER_MAX_RESULT_DEFAULT = 10000;
     public static final int WRITER_MAX_RESULT_MINIMUM = 1000;
+    public static final long WRITER_MAX_FILE_SIZE_UNLIMITED = -1L;
+    public static final long WRITER_MAX_FILE_SIZE_MINIMUM =
+            StorageUtil.getLongSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
+    public static final long WRITER_MAX_FILE_SIZE_MAXIMUM =
+            StorageUtil.getLongSizeInBytes(5, StorageUtil.StorageUnit.TERABYTE);
     public static final Set<String> WRITER_SUPPORTED_FORMATS;
     public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
     public static final Set<String> TEXTUAL_WRITER_SUPPORTED_COMPRESSION;

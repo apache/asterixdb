@@ -36,6 +36,7 @@ final class LocalFSExternalFileWriter implements IExternalFileWriter {
     private final IExternalPrinter printer;
     private final ILocalFSValidator validator;
     private final SourceLocation pathSourceLocation;
+    private FileOutputStream currentFileStream;
 
     LocalFSExternalFileWriter(IExternalPrinter printer, ILocalFSValidator validator,
             SourceLocation pathSourceLocation) {
@@ -64,7 +65,8 @@ final class LocalFSExternalFileWriter implements IExternalFileWriter {
             if (!currentFile.createNewFile()) {
                 throw RuntimeDataException.create(ErrorCode.COULD_NOT_CREATE_FILE, currentFile.getAbsolutePath());
             }
-            printer.newStream(new BufferedOutputStream(new FileOutputStream(currentFile)));
+            currentFileStream = new FileOutputStream(currentFile);
+            printer.newStream(new BufferedOutputStream(currentFileStream));
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -74,6 +76,17 @@ final class LocalFSExternalFileWriter implements IExternalFileWriter {
     @Override
     public void write(IValueReference value) throws HyracksDataException {
         printer.print(value);
+    }
+
+    @Override
+    public long getBytesWritten() throws HyracksDataException {
+        try {
+            // lags behind by whatever the buffered stream has not flushed yet
+            long writtenBytes = currentFileStream == null ? 0 : currentFileStream.getChannel().position();
+            return Math.max(writtenBytes, printer.getBytesWritten());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override

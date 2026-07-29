@@ -55,6 +55,14 @@ public interface IExternalFileWriter {
     void write(IValueReference value) throws HyracksDataException;
 
     /**
+     * Size of the file currently being written. The value is approximate: it reflects the bytes accepted for
+     * the target after compression, and may exclude bytes that are only produced when the file is closed.
+     *
+     * @return bytes written to the current file, or 0 if no file is open
+     */
+    long getBytesWritten() throws HyracksDataException;
+
+    /**
      * Run the abort sequence in case of a failure
      */
     void abort() throws HyracksDataException;

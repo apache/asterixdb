@@ -28,13 +28,24 @@ public final class ExternalFileWriter implements IExternalWriter {
     private final IPathResolver pathResolver;
     private final IExternalFileWriter writer;
     private final int maxResultPerFile;
+    private final long maxFileSize;
+    private final boolean fileSizeBounded;
     private String partitionPath;
     private int tupleCounter;
 
-    public ExternalFileWriter(IPathResolver pathResolver, IExternalFileWriter writer, int maxResultPerFile) {
+    /**
+     * @param pathResolver     resolves partition directories and file names
+     * @param writer           the file writer to delegate to
+     * @param maxResultPerFile maximum objects per file
+     * @param maxFileSize      maximum size in bytes of a single file, or any non-positive value for no limit
+     */
+    public ExternalFileWriter(IPathResolver pathResolver, IExternalFileWriter writer, int maxResultPerFile,
+            long maxFileSize) {
         this.pathResolver = pathResolver;
         this.writer = writer;
         this.maxResultPerFile = maxResultPerFile;
+        this.maxFileSize = maxFileSize;
+        this.fileSizeBounded = maxFileSize > 0;
     }
 
     @Override
@@ -62,7 +73,7 @@ public final class ExternalFileWriter implements IExternalWriter {
         // e.g., if max is 1000, we hit tuple 1001, we will upload and create a new file, if we only have 1000
         // we will stop here, and calling the close/finish will upload whatever is written. This is to avoid
         // creating and uploading empty files
-        if (tupleCounter >= maxResultPerFile) {
+        if (tupleCounter >= maxResultPerFile || (fileSizeBounded && writer.getBytesWritten() >= maxFileSize)) {
             newFile();
         }
 

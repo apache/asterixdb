@@ -274,6 +274,19 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
+      <compilation-unit name="bad-max-file-size">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">bad-max-file-size</output-dir>
+        <expected-error>Minimum value allowed for 'max-file-size' is 5 MiB. Found 1MB</expected-error>
+        <expected-error>ASX1206: Storage units expected for the field 'max-file-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
+        <expected-error>Maximum value allowed for 'max-file-size' is 5 TiB. Found 6TB</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
       <compilation-unit name="csv-error-checks">
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="pathprefix" value="" />

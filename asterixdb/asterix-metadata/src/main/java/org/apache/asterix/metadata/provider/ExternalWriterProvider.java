@@ -116,6 +116,14 @@ public class ExternalWriterProvider {
         return Integer.parseInt(maxResultString);
     }
 
+    private static long getMaxFileSize(IWriteDataSink sink) {
+        String maxFileSizeString = sink.getConfiguration().get(ExternalDataConstants.KEY_WRITER_MAX_FILE_SIZE);
+        if (maxFileSizeString == null) {
+            return ExternalDataConstants.WRITER_MAX_FILE_SIZE_UNLIMITED;
+        }
+        return StorageUtil.getByteValue(maxFileSizeString);
+    }
+
     private static int getMaxParquetSchema(Map<String, String> conf) {
         String maxResultString = conf.get(ExternalDataConstants.PARQUET_MAX_SCHEMAS_KEY);
         if (maxResultString == null) {
@@ -159,6 +167,7 @@ public class ExternalWriterProvider {
         fileWriterFactory.validate(appCtx);
         String fileExtension = ExternalWriterProvider.getFileExtension(sink);
         int maxResult = ExternalWriterProvider.getMaxResult(sink);
+        long maxFileSize = ExternalWriterProvider.getMaxFileSize(sink);
 
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
@@ -184,7 +193,7 @@ public class ExternalWriterProvider {
                 printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
                 externalPrinterFactory = new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
                 writerFactory = new ExternalFileWriterFactory(fileWriterFactory, externalPrinterFactory,
-                        pathResolverFactory, maxResult);
+                        pathResolverFactory, maxResult, maxFileSize);
 
                 return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
                         partitionComparatorFactories, inputDesc, writerFactory);
@@ -200,7 +209,7 @@ public class ExternalWriterProvider {
                         externalPrinterFactory =
                                 new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);
                         writerFactory = new ExternalFileWriterFactory(fileWriterFactory, externalPrinterFactory,
-                                pathResolverFactory, maxResult);
+                                pathResolverFactory, maxResult, maxFileSize);
                         return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
                                 partitionComparatorFactories, inputDesc, writerFactory);
                     } else {
@@ -234,7 +243,7 @@ public class ExternalWriterProvider {
                                     (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
 
                     ExternalFileWriterFactory parquetWriterFactory = new ExternalFileWriterFactory(fileWriterFactory,
-                            parquetPrinterFactory, pathResolverFactory, maxResult);
+                            parquetPrinterFactory, pathResolverFactory, maxResult, maxFileSize);
                     return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
                             partitionComparatorFactories, inputDesc, parquetWriterFactory);
                 }
@@ -245,8 +254,8 @@ public class ExternalWriterProvider {
                         new ParquetExternalFilePrinterFactoryProvider(compressionCodecName, (IAType) sourceType,
                                 rowGroupSize, pageSize, writerVersion);
                 return new ParquetSinkExternalWriterFactory(partitionerFactory, inputDesc, sourceColumn,
-                        (IAType) sourceType, maxSchemas, fileWriterFactory, maxResult, printerFactoryProvider,
-                        pathResolverFactory);
+                        (IAType) sourceType, maxSchemas, fileWriterFactory, maxResult, maxFileSize,
+                        printerFactoryProvider, pathResolverFactory);
 
             default:
                 throw new CompilationException(ErrorCode.UNSUPPORTED_WRITING_FORMAT, pathSourceLocation, format,

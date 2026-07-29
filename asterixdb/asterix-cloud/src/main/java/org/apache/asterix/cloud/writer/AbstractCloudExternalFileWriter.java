@@ -107,6 +107,12 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     }
 
     @Override
+    public final long getBytesWritten() {
+        long acceptedBytes = cloudWriter == null ? 0 : cloudWriter.position();
+        return Math.max(acceptedBytes, printer.getBytesWritten());
+    }
+
+    @Override
     public final void abort() throws HyracksDataException {
         try {
             if (cloudWriter != null) {

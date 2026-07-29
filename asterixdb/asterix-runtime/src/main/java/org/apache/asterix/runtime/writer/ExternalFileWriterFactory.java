@@ -28,20 +28,22 @@ public class ExternalFileWriterFactory implements IExternalWriterFactory {
     private final IExternalFileWriterFactory writerFactory;
     private final IExternalPrinterFactory printerFactory;
     private final int maxResult;
+    private final long maxFileSize;
     private final IPathResolverFactory pathResolverFactory;
 
     public ExternalFileWriterFactory(IExternalFileWriterFactory writerFactory, IExternalPrinterFactory printerFactory,
-            IPathResolverFactory pathResolverFactory, int maxResult) {
+            IPathResolverFactory pathResolverFactory, int maxResult, long maxFileSize) {
         this.writerFactory = writerFactory;
         this.printerFactory = printerFactory;
         this.pathResolverFactory = pathResolverFactory;
         this.maxResult = maxResult;
+        this.maxFileSize = maxFileSize;
     }
 
     @Override
     public IExternalWriter createWriter(IHyracksTaskContext context) throws HyracksDataException {
         IPathResolver resolver = pathResolverFactory.createResolver(context);
         IExternalFileWriter writer = writerFactory.createWriter(context, printerFactory);
-        return new ExternalFileWriter(resolver, writer, maxResult);
+        return new ExternalFileWriter(resolver, writer, maxResult, maxFileSize);
     }
 }

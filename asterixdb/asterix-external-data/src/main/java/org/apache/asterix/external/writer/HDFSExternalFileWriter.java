@@ -109,6 +109,12 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
     }
 
     @Override
+    public long getBytesWritten() {
+        long writtenBytes = outputStream == null ? 0 : outputStream.getPos();
+        return Math.max(writtenBytes, printer.getBytesWritten());
+    }
+
+    @Override
     public void abort() throws HyracksDataException {
         try {
             printer.close();

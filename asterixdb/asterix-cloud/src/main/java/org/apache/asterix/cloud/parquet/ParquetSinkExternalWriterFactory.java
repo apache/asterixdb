@@ -39,12 +39,13 @@ public class ParquetSinkExternalWriterFactory extends AbstractPushRuntimeFactory
     private final IAType sourceType;
     private final IExternalFileWriterFactory writerFactory;
     private final int maxResult;
+    private final long maxFileSize;
     private final ParquetExternalFilePrinterFactoryProvider printerFactoryProvider;
     private final IPathResolverFactory pathResolverFactory;
 
     public ParquetSinkExternalWriterFactory(WriterPartitionerFactory partitionerFactory,
             RecordDescriptor inputRecordDesc, int sourceColumn, IAType sourceType, int maxSchemas,
-            IExternalFileWriterFactory writerFactory, int maxResult,
+            IExternalFileWriterFactory writerFactory, int maxResult, long maxFileSize,
             ParquetExternalFilePrinterFactoryProvider printerFactoryProvider,
             IPathResolverFactory pathResolverFactory) {
         this.partitionerFactory = partitionerFactory;
@@ -54,6 +55,7 @@ public class ParquetSinkExternalWriterFactory extends AbstractPushRuntimeFactory
         this.maxSchemas = maxSchemas;
         this.writerFactory = writerFactory;
         this.maxResult = maxResult;
+        this.maxFileSize = maxFileSize;
         this.printerFactoryProvider = printerFactoryProvider;
         this.pathResolverFactory = pathResolverFactory;
     }
@@ -63,7 +65,7 @@ public class ParquetSinkExternalWriterFactory extends AbstractPushRuntimeFactory
         ParquetExternalFilePrinterFactory printerFactory =
                 (ParquetExternalFilePrinterFactory) printerFactoryProvider.createPrinterFactory();
         ParquetExternalWriterFactory parquetExternalWriterFactory = new ParquetExternalWriterFactory(ctx, writerFactory,
-                maxResult, printerFactory, pathResolverFactory.createResolver(ctx));
+                maxResult, maxFileSize, printerFactory, pathResolverFactory.createResolver(ctx));
         ParquetSinkExternalWriterRuntime runtime =
                 new ParquetSinkExternalWriterRuntime(sourceColumn, partitionerFactory.createPartitioner(),
                         inputRecordDesc, parquetExternalWriterFactory, sourceType, maxSchemas);
