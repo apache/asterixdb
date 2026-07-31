@@ -5487,29 +5487,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             long sampleSeed = stmtAnalyze.getOrCreateSampleSeed();
             Index.SampleIndexDetails.SampleMethod sampleMethod = stmtAnalyze.getSampleMethod();
 
-            // Random sampling requires every primary-index disk component to carry the sampling metadata (theta
-            // sketch + max leaf tuple count). Components predating the feature acquire it only once merged; a freshly
-            // flushed component always carries it, so probing the existing disk components is sufficient. If any
-            // component is missing the metadata, an unbiased random sample is impossible, so fall back to full scan.
-            if (sampleMethod != Index.SampleIndexDetails.SampleMethod.FULL_SCAN) {
-                JobSpecification probeSpec = DatasetUtil.buildSamplingMetadataProbeJobSpec(ds, metadataProvider);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                bActiveTxn = false;
-                List<IOperatorStats> probeStats = runJob(hcc, probeSpec, jobFlags,
-                        Collections.singletonList(DatasetUtil.SAMPLING_METADATA_PROBE_OPERATOR_NAME));
-                // No stats => could not determine; be conservative and force a full scan.
-                long componentsMissingMetadata =
-                        probeStats == null || probeStats.isEmpty() ? -1 : probeStats.get(0).getTupleCounter().get();
-                if (componentsMissingMetadata != 0) {
-                    LOGGER.warn("Dataset '{}' has {} primary-index disk component(s) missing random-sampling "
-                            + "metadata; forcing full scan.", datasetName, componentsMissingMetadata);
-                    sampleMethod = Index.SampleIndexDetails.SampleMethod.FULL_SCAN;
-                }
-                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                bActiveTxn = true;
-                metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            }
-
+            // The random-vs-full-scan fallback decision and the live-partition count are both derived from a
+            // single sample-cardinality probe run after the flush below (see that block). The pending-add index
+            // is created with the requested sampleMethod; it is a transient placeholder replaced by the final
+            // index whose sampleMethod reflects the probe outcome.
             Index.SampleIndexDetails newIndexDetailsPendingAdd = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0,
                     sampleSeed, sampleMethod, Collections.emptyMap());
@@ -5536,12 +5517,64 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. flush dataset
             FlushDatasetUtil.flushDataset(hcc, metadataProvider, databaseName, dataverseName, datasetName);
 
+            //   flush --> PROBE (one metadata walk per partition, random path only) --> load
+            //              |  tupleCounter = # components missing theta   -->  >0 : fall back to FULL_SCAN
+            //              +  tupleBytes   = # partitions with live data  -->  random per-partition divisor
+            //
+            // Why post-flush: recent deletes must be reflected in the on-disk theta sketches before we count
+            //   live data. Why the divisor: an empty/fully-deleted partition emits no tuples, so counting it in
+            //   the random per-partition quota drops its share of the target and leaves the sample short
+            //   (SampleOperationsHelper). Why random-only: a full scan needs neither theta nor this divisor, so
+            //   the probe is skipped for it (full scan is not the common path).
+            if (sampleMethod != Index.SampleIndexDetails.SampleMethod.FULL_SCAN) {
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                JobSpecification cardinalityProbeSpec =
+                        DatasetUtil.buildSampleCardinalityProbeJobSpec(ds, metadataProvider);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+                List<IOperatorStats> probeStats = runJob(hcc, cardinalityProbeSpec, jobFlags,
+                        Collections.singletonList(DatasetUtil.SAMPLE_CARDINALITY_PROBE_OPERATOR_NAME));
+                boolean noStats = probeStats == null || probeStats.isEmpty();
+                // No stats => could not determine; be conservative and force a full scan.
+                long componentsMissingMetadata = noStats ? -1 : probeStats.get(0).getTupleCounter().get();
+                // Divergence detector at the probe boundary: noStats means the probe operator produced no stats
+                // (plumbing/op-name mismatch) and we silently fall back to full scan; a live count of 0 with no
+                // missing metadata means every partition is empty. Both are anomalies worth a line.
+                LOGGER.debug("sample-cardinality probe for '{}': missingMetadata={}, livePartitions={}", datasetName,
+                        componentsMissingMetadata, noStats ? -1 : probeStats.get(0).getTupleBytes().get());
+                if (componentsMissingMetadata != 0) {
+                    // The probe stops at the first component missing sampling metadata, so this is a >0 fallback
+                    // flag rather than an exact component count.
+                    LOGGER.warn("Dataset '{}' has primary-index disk component(s) missing random-sampling "
+                            + "metadata; forcing full scan.", datasetName);
+                    sampleMethod = Index.SampleIndexDetails.SampleMethod.FULL_SCAN;
+                } else {
+                    long livePartitions = probeStats.get(0).getTupleBytes().get();
+                    if (livePartitions > 0) {
+                        metadataProvider.setProperty(SampleOperationsHelper.SAMPLE_LIVE_PARTITION_COUNT,
+                                (int) livePartitions);
+                    }
+                }
+            }
+
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
             // #. load data into the index in NC.
-            spec = IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, newIndexPendingAdd, metadataProvider, sourceLoc);
+            // newIndexPendingAdd was created before the sample-cardinality probe ran, so it still carries the
+            // *requested* sampleMethod. Build the loading spec from an index carrying the probe-adjusted
+            // sampleMethod so a fallback to full scan actually drives the load pipeline (SampleOperationsHelper
+            // reads isFullScan from this index). The persisted metadata record is corrected by newIndexFinal
+            // below; all other fields are identical to newIndexPendingAdd.
+            Index.SampleIndexDetails loadIndexDetails = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
+                    dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0,
+                    sampleSeed, sampleMethod, Collections.emptyMap());
+            Index loadIndex = new Index(databaseName, dataverseName, datasetName, newIndexName, sampleIndexType,
+                    loadIndexDetails, false, false, MetadataUtil.PENDING_ADD_OP, Creator.DEFAULT_CREATOR);
+            spec = IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, loadIndex, metadataProvider, sourceLoc);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 

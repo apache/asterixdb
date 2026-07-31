@@ -105,6 +105,12 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String DATASET_STATS_OPERATOR_NAME = "Sample.DatasetStats";
+    // MetadataProvider property carrying the number of storage partitions that hold live data, as measured by
+    // the sample-cardinality probe (DatasetSampleCardinalityProbeOperatorDescriptor) run before this job. Used
+    // as the per-partition-quota divisor so empty/fully-deleted partitions do not drop their share of the
+    // target. Absent/<=0 => fall back to numPartitions (pre-fix behavior).
+    public static final String SAMPLE_LIVE_PARTITION_COUNT = "sample-live-partition-count";
+
     private final MetadataProvider metadataProvider;
     private final Dataset dataset;
     private final Index sampleIdx;
@@ -206,11 +212,25 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
         // dummy key provider ----> primary index scan
         IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
-        // Considering hash partitioner is fair in distribution, the sampleCardinalityTarget will be divided by
-        // the number of shards/partitions to get the target cardinality per partition. Round up so the aggregate
-        // across partitions is at least the requested target (floor would drop up to numPartitions-1 tuples).
+        // The sampleCardinalityTarget is divided by the number of partitions to get the per-partition quota;
+        // the hash partitioner keeps partitions ~evenly populated, so an even split yields a uniform sample.
+        // Divide by the number of partitions that actually hold live data (see resolveLiveDivisor): an empty
+        // or fully-deleted partition draws 0, and counting it in the divisor would drop its share and leave the
+        // realized sample below the target. Round up so the aggregate is at least the requested target.
+        int liveDivisor = resolveLiveDivisor();
         int sampleCardinalityTargetPerPartition =
-                Math.max(1, (int) Math.ceil((double) sampleCardinalityTarget / numPartitions));
+                Math.max(1, (int) Math.ceil((double) sampleCardinalityTarget / liveDivisor));
+        // Divergence detector: the realized sample is ~liveDivisor * perPartition. It falls short of the
+        // target only when liveDivisor < numPartitions (empty/fully-deleted partitions excluded) AND the ceil
+        // rounding cannot make it up. Log the inputs so an under-fill (MB-73067 class) is diagnosable from a
+        // single line: liveDivisor==numPartitions is the healthy case; liveDivisor<numPartitions is the fix
+        // engaging; projected<target would signal the fix under-shooting.
+        LOGGER.debug(
+                "sample allocation for '{}': target={}, liveDivisor={}, numPartitions={}, perPartition={}, "
+                        + "projected~={}{}",
+                dataset.getDatasetName(), sampleCardinalityTarget, liveDivisor, numPartitions,
+                sampleCardinalityTargetPerPartition, (long) sampleCardinalityTargetPerPartition * liveDivisor,
+                liveDivisor < numPartitions ? " [empty-partitions-excluded]" : "");
         IOperatorDescriptor targetOp = DatasetUtil.createSampleScanOp(spec, metadataProvider, dataset,
                 sampleCardinalityTargetPerPartition, sampleSeed, projectorFactory);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
@@ -429,6 +449,20 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
 
         return spec;
+    }
+
+    /**
+     * The per-partition-quota divisor: the number of storage partitions holding live data, as measured by the
+     * sample-cardinality probe and passed via {@link #SAMPLE_LIVE_PARTITION_COUNT}. Falls back to the total
+     * partition count when the probe result is absent or out of range (e.g. the probe did not run), preserving
+     * pre-fix behavior.
+     */
+    private int resolveLiveDivisor() {
+        Integer livePartitionCount = metadataProvider.getProperty(SAMPLE_LIVE_PARTITION_COUNT);
+        if (livePartitionCount != null && livePartitionCount > 0 && livePartitionCount <= numPartitions) {
+            return livePartitionCount;
+        }
+        return numPartitions;
     }
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,

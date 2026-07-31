@@ -76,7 +76,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.asterix.runtime.operators.DatasetSamplingMetadataProbeOperatorDescriptor;
+import org.apache.asterix.runtime.operators.DatasetSampleCardinalityProbeOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -694,16 +694,23 @@ public class DatasetUtil {
         return keyProviderOp;
     }
 
-    public static final String SAMPLING_METADATA_PROBE_OPERATOR_NAME = "Sampling-Metadata-Probe";
+    public static final String SAMPLE_CARDINALITY_PROBE_OPERATOR_NAME = "Sample-Cardinality-Probe";
 
     /**
-     * Builds a metadata-only job that opens the dataset's primary index and counts how many disk components are
-     * missing the random-sampling metadata keys. The count is reported via operator stats under
-     * {@link #SAMPLING_METADATA_PROBE_OPERATOR_NAME} (summed across partitions); a total of {@code 0} means every
-     * disk component carries the metadata required for an unbiased random sample.
+     * Builds a metadata-only job over the primary-index disk components that reports two values via
+     * {@link #SAMPLE_CARDINALITY_PROBE_OPERATOR_NAME} operator stats (both summed across partitions):
+     * <ul>
+     * <li>{@code tupleCounter} = number of disk components missing random-sampling metadata; {@code 0} means
+     * random sampling is safe, any positive value means the caller must fall back to a full scan (upgrade
+     * fallback — retired once pre-theta components are EoL).</li>
+     * <li>{@code tupleBytes} = number of storage partitions holding live data, used to set the sample
+     * allocation divisor so empty/fully-deleted partitions do not drop their share of the target (see
+     * {@code SampleOperationsHelper}).</li>
+     * </ul>
+     * Both come from a single partition walk.
      */
-    public static JobSpecification buildSamplingMetadataProbeJobSpec(Dataset dataset, MetadataProvider metadataProvider)
-            throws AlgebricksException {
+    public static JobSpecification buildSampleCardinalityProbeJobSpec(Dataset dataset,
+            MetadataProvider metadataProvider) throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         IStorageManager storageMgr = metadataProvider.getStorageComponentProvider().getStorageManager();
@@ -711,8 +718,8 @@ public class DatasetUtil {
                 new IndexDataflowHelperFactory(storageMgr, partitioningProperties.getSplitsProvider());
 
         IOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec, dataset, metadataProvider);
-        DatasetSamplingMetadataProbeOperatorDescriptor probeOp =
-                new DatasetSamplingMetadataProbeOperatorDescriptor(spec, SAMPLING_METADATA_PROBE_OPERATOR_NAME,
+        DatasetSampleCardinalityProbeOperatorDescriptor probeOp =
+                new DatasetSampleCardinalityProbeOperatorDescriptor(spec, SAMPLE_CARDINALITY_PROBE_OPERATOR_NAME,
                         primaryIndexHelperFactory, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, probeOp,
                 partitioningProperties.getConstraints());
