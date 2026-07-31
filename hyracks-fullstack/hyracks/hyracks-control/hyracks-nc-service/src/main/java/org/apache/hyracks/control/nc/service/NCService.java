@@ -31,7 +31,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -85,12 +84,6 @@ public class NCService {
      * The management bean for obtaining settings of the underlying operating system and hardware.
      */
     private static OperatingSystemMXBean osMXBean;
-
-    public static final String[] DEFAULT_ADD_OPENS =
-            { "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
-                    "--add-opens=java.management/sun.management=ALL-UNNAMED",
-                    "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED",
-                    "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED" };
 
     private static List<String> buildCommand() throws IOException {
         List<String> cList = new ArrayList<>();
@@ -146,13 +139,6 @@ public class NCService {
             int heapSize = "32".equals(System.getProperty("sun.arch.data.model"))
                     ? (proportionalRamSize <= 1024 ? proportionalRamSize : 1024) : proportionalRamSize;
             jvmargs = jvmargs + " -Xmx" + heapSize + "m";
-        }
-
-        // Squelch some module access warnings and errors from JDK9+
-        if (!jvmargs.contains("-add-opens")) {
-            StringBuilder jvmArgsBuilder = new StringBuilder(jvmargs);
-            Arrays.stream(DEFAULT_ADD_OPENS).map(s -> jvmArgsBuilder.append(s));
-            jvmargs = jvmArgsBuilder.toString();
         }
 
         env.put("JAVA_OPTS", jvmargs.trim());
