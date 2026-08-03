@@ -53,6 +53,9 @@ public class AnalyzeStatement extends AbstractStatement {
     private static final int SAMPLE_LOW_SIZE = 1063;
     private static final int SAMPLE_MEDIUM_SIZE = SAMPLE_LOW_SIZE * 4;
     private static final int SAMPLE_HIGH_SIZE = SAMPLE_MEDIUM_SIZE * 4;
+    // Upper bound for an explicit numeric sample size: 4x beyond the "high" preset for headroom. Keep the
+    // validator and the OUT_OF_RANGE_SAMPLE_SIZE message on this same constant.
+    private static final int SAMPLE_MAX_SIZE = SAMPLE_HIGH_SIZE * 4;
     private static final int SAMPLE_DEFAULT_SIZE = SAMPLE_LOW_SIZE;
 
     private static final String SAMPLE_SEED_FIELD_NAME = "sample-seed";
@@ -140,14 +143,14 @@ public class AnalyzeStatement extends AbstractStatement {
                 int v = (int) ((AdmBigIntNode) sampleSizeNode).get();
                 if (!isValidSampleSize(v)) {
                     throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
-                            SAMPLE_HIGH_SIZE);
+                            SAMPLE_MAX_SIZE);
                 }
                 return v;
             case DOUBLE:
                 v = (int) ((AdmDoubleNode) sampleSizeNode).get();
                 if (!isValidSampleSize(v)) {
                     throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
-                            SAMPLE_HIGH_SIZE);
+                            SAMPLE_MAX_SIZE);
                 }
                 return v;
             default:
@@ -207,7 +210,7 @@ public class AnalyzeStatement extends AbstractStatement {
     }
 
     private boolean isValidSampleSize(int v) {
-        return v >= SAMPLE_LOW_SIZE && v <= SAMPLE_HIGH_SIZE * 4;
+        return v >= SAMPLE_LOW_SIZE && v <= SAMPLE_MAX_SIZE;
     }
 
     private IAdmNode getOption(String optionName) {
