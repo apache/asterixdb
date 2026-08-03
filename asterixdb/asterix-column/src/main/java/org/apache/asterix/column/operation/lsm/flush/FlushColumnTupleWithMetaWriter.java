@@ -21,12 +21,18 @@ package org.apache.asterix.column.operation.lsm.flush;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
     private final ColumnTransformer metaColumnTransformer;
     private final RecordLazyVisitablePointable metaPointable;
+    // Look-ahead counterpart of metaColumnTransformer: feeds the meta record into columnMetadataWithCurrentTuple so
+    // the page-zero fit-check counts meta columns too. Without it the check sizes page zero for main-only columns
+    // while the flush lays it out for main+meta columns, overflowing the zeroth segment (meta-sparse collections).
+    private final NoWriteColumnTransformer metaTransformerForCurrentTuple;
+    private final RecordLazyVisitablePointable metaPointableForCurrentTuple;
 
     public FlushColumnTupleWithMetaWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
             double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
@@ -34,6 +40,23 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
         metaColumnTransformer =
                 new ColumnTransformer(columnMetadata, columnMetadata.getMetaRoot(), presentColumnsIndexes);
         metaPointable = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
+        metaTransformerForCurrentTuple = new NoWriteColumnTransformer(columnMetadataWithCurrentTuple,
+                columnMetadataWithCurrentTuple.getMetaRoot(), null);
+        metaPointableForCurrentTuple = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
+    }
+
+    @Override
+    public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
+        // Account for the main-record columns (super) and the meta-record columns (below) in the fit-check
+        // look-ahead, mirroring writeRecord + writeMeta on the real write path.
+        super.updateColumnMetadataForCurrentTuple(tuple);
+        if (!(tuple instanceof LSMBTreeTupleReference) || ((LSMBTreeTupleReference) tuple).isAntimatter()) {
+            return;
+        }
+        int metaFieldId = columnMetadata.getMetaRecordFieldIndex();
+        metaPointableForCurrentTuple.set(tuple.getFieldData(metaFieldId), tuple.getFieldStart(metaFieldId),
+                tuple.getFieldLength(metaFieldId));
+        metaTransformerForCurrentTuple.transform(metaPointableForCurrentTuple);
     }
 
     @Override
