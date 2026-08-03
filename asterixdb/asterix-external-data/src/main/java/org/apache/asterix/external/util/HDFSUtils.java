@@ -308,6 +308,21 @@ public class HDFSUtils {
             conf.set(ExternalDataConstants.KEY_HADOOP_AUTHENTICATION, ExternalDataConstants.KERBEROS_PROTOCOL);
             conf.set(ExternalDataConstants.KEY_NAMENODE_PRINCIPAL_PATTERN, "*");
 
+            // FileInputFormat delegates input path listing to LocatedFileStatusFetcher, which
+            // globs on a thread pool obtained from HadoopExecutors whenever this is greater than
+            // one. As of Java 24 (JEP 486) the Subject established by UserGroupInformation.doAs
+            // is no longer inherited by child threads, and HadoopExecutors does not use
+            // SubjectInheritingThread, so those pool threads resolve the current user to the
+            // process login user rather than the delegation-token UGI we authenticated with; a
+            // secured NameNode then rejects them with "SIMPLE authentication is not enabled".
+            // Keep the listing on the calling thread so that it stays within the doAs. The
+            // fetcher parallelizes per input path and per discovered directory, and we set a
+            // single input dir without recursive listing, so this only forfeits parallelism for
+            // wildcard paths spanning multiple directories. HADOOP-19906 restores propagation to
+            // child threads within SubjectUtil and is fixed in Hadoop 3.4.4, 3.5.1 and 3.6.0;
+            // this workaround can be removed once we consume one of those.
+            conf.setInt(org.apache.hadoop.mapreduce.lib.input.FileInputFormat.LIST_STATUS_NUM_THREADS, 1);
+
             String kerberosRealm = configuration.get(ExternalDataConstants.KERBEROS_REALM);
             String kerberosKdc = configuration.get(ExternalDataConstants.KERBEROS_KDC);
             String kerberosPrincipal = configuration.get(ExternalDataConstants.KERBEROS_PRINCIPAL);

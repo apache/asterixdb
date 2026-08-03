@@ -93,6 +93,10 @@
     <testcontainers.version>1.21.4</testcontainers.version>
     <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.10-SNAPSHOT</hyracks.version>
+    <!-- When moving past 3.5.0, check whether the release includes HADOOP-19906 (fixed in 3.4.4,
+         3.5.1 and 3.6.0), which restores Subject propagation to child threads on JDK 22+. The
+         single-threaded input listing forced in HDFSUtils#configureHadoopAuthentication is a
+         workaround for its absence and should be removed at that point. -->
     <hadoop.version>3.5.0</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
