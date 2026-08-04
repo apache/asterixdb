@@ -261,13 +261,13 @@
     <dependency>
       <groupId>org.twitter4j</groupId>
       <artifactId>twitter4j-core</artifactId>
-      <version>4.0.3</version>
+      <version>4.0.3</version> <!-- do not update unless necessary, we cannot build against newer versions-->
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.twitter4j</groupId>
       <artifactId>twitter4j-stream</artifactId>
-      <version>4.0.3</version>
+      <version>4.0.3</version> <!-- do not update unless necessary, we cannot build against newer versions-->
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -283,6 +283,7 @@
       <artifactId>privilegedaccessor</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- TODO: remove this core-io and its uses- DO NOT UPDATE this until that time -->
     <dependency>
       <groupId>com.couchbase.client</groupId>
       <artifactId>core-io</artifactId>
