@@ -80,12 +80,12 @@
     <netty.version>4.1.136.Final</netty.version>
     <netty.tcnative.version>2.0.81.Final</netty.tcnative.version>
     <asm.version>9.10.1</asm.version>
-    <awsjavasdk.version>2.49.6</awsjavasdk.version>
+    <awsjavasdk.version>2.50.3</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
-    <google-cloud-storage.version>2.70.0</google-cloud-storage.version>
+    <google-cloud-storage.version>2.71.0</google-cloud-storage.version>
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
-    <google-cloud-core.version>2.72.0</google-cloud-core.version>
+    <google-cloud-core.version>2.73.0</google-cloud-core.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -901,7 +901,7 @@
             <dependency>
               <groupId>com.github.javaparser</groupId>
               <artifactId>javaparser-core</artifactId>
-              <version>3.26.4</version>
+              <version>3.28.2</version>
             </dependency>
           </dependencies>
         </plugin>

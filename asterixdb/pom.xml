@@ -104,9 +104,9 @@
     <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <awsjavasdk.version>2.49.6</awsjavasdk.version>
+    <awsjavasdk.version>2.50.3</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
-    <awsjavasdk.crt.version>0.48.0</awsjavasdk.crt.version>
+    <awsjavasdk.crt.version>0.48.2</awsjavasdk.crt.version>
 
     <azureblobjavasdk.version>12.35.0</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.34.0</azurecommonjavasdk.version>
@@ -116,7 +116,7 @@
     <azurecorehttpnetty.version>1.16.5</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <google-cloud-storage.version>2.70.0</google-cloud-storage.version>
+    <google-cloud-storage.version>2.71.0</google-cloud-storage.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
@@ -622,7 +622,7 @@
             <dependency>
               <groupId>com.github.javaparser</groupId>
               <artifactId>javaparser-core</artifactId>
-              <version>3.26.4</version>
+              <version>3.28.2</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -1286,7 +1286,7 @@
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
-        <version>7.2.1</version>
+        <version>7.2.2</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -1555,7 +1555,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.22.0</version>
+        <version>1.22.1</version>
       </dependency>
       <dependency>
         <groupId>it.unimi.dsi</groupId>
@@ -1935,14 +1935,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.83.0</version>
+        <version>1.83.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.83.0</version>
+        <version>1.83.1</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>
