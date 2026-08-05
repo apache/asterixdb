@@ -26,6 +26,29 @@ The tree has two roots:
 
 Files here carry the **Apache license header** (see `README.md`). Preserve it when editing or creating files.
 
+## Code Review
+
+Changes go through **Gerrit** (`asterix-gerrit.ics.uci.edu`), not GitHub pull requests. The `gerrit` remote points at `ssh://<user>@asterix-gerrit.ics.uci.edu:29418/asterixdb` (port `29418`, project `asterixdb`). If it is missing, add it with:
+
+```bash
+git remote add gerrit ssh://<user>@asterix-gerrit.ics.uci.edu:29418/asterixdb
+```
+
+Push a change (or a new patchset) for review:
+
+```bash
+git push gerrit HEAD:refs/for/<branch>
+```
+
+### Topics: at most one open change per project per topic
+
+A topic (`-o topic=<topic>`) groups the changes of one coordinated change spanning several repositories. **The tooling that applies a topic across projects fails when a project has more than one open change carrying the same topic.** So when the work in *this* repo is a stack of several commits, do not put the shared topic on every commit. Instead:
+
+- Put the topic only on the **leaf** (final) commit of the stack, and leave the preparatory commits topic-less; or
+- If the stack contains discrete sets of cross-project changes that can be submitted independently, give each set its **own intermediate topic**.
+
+Unrelated follow-up work (e.g. a docs tweak noticed along the way) should be pushed as its own change with **no topic**, or a different one — not added to the coordinated change's topic.
+
 ## AI Provenance Annotation
 
 **When you (an AI agent) generate or assist with Java code in this tree, annotate it with `@AiProvenance`.** This records which model and tool produced the code so the contribution is auditable. The annotation is defined *here*, in this repository.
