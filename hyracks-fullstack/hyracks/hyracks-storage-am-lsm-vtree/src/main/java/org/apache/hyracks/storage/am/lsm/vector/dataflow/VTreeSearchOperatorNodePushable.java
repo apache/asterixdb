@@ -94,9 +94,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     // The actual tuple filter, created from the factory
     protected ITupleFilter tupleFilter;
 
-    // Multiplier for candidate limit: K * kMultiplier candidates sent to PK for reranking
-    protected final int kMultiplier;
-
     /** Epsilon from vector index metadata (default 0.3 when absent in catalog). */
     protected final double indexEpsilon;
 
@@ -126,7 +123,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             ISearchOperationCallbackFactory searchCallbackFactory, ITupleProjectorFactory projectorFactory,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDistanceFunctionFactory distanceFunctionFactory,
             IVTreeQuantizerFactory quantizerFactory, int[][] partitionsMap, ITupleFilterFactory tupleFilterFactory,
-            int kMultiplier, double indexEpsilon, int numPrimaryKeys, boolean indexOnly) throws HyracksDataException {
+            double indexEpsilon, int numPrimaryKeys, boolean indexOnly) throws HyracksDataException {
         // Vector search does its filtering in the cursor, so the operator passes no filter fields,
         // tuple filter, output limit, or search-callback proceed result (see the args below).
         super(ctx, inputRecDesc, partition, null, // minFilterFieldIndexes
@@ -149,7 +146,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.quantizerFactory = quantizerFactory;
         this.tupleFilterFactory = tupleFilterFactory;
-        this.kMultiplier = kMultiplier;
         this.indexEpsilon = indexEpsilon;
         this.numPrimaryKeys = numPrimaryKeys;
         this.indexOnly = indexOnly;
@@ -221,11 +217,12 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
                             queryParamsTuple.getFieldStart(QP_FIELD_MIN_PROBE_FRACTION) + 1)
                     : 0.0);
 
-            // k_multiplier: the per-query value, unless the session config compiler.vector.kmultiplier is set
-            // (> 1), which currently wins.
+            // k_multiplier (ann_distance arg 5): widen the per-partition candidate limit to K * k_multiplier
+            // tuples sent to the PK for reranking, compensating for cross-partition ranking error. Defaults to
+            // 1 when the query omits the argument.
             int queryKMultiplier = queryFields.length > QP_FIELD_K_MULTIPLIER
                     ? Math.max(1, readIntegerQueryParam(QP_FIELD_K_MULTIPLIER)) : 1;
-            vectorPred.setKMultiplier(kMultiplier > 1 ? kMultiplier : queryKMultiplier);
+            vectorPred.setKMultiplier(queryKMultiplier);
 
             // Tuple filter for INCLUDE field predicates (e.g. year > 2000), applied at cursor level so that K
             // counts only passing tuples. null when this search has no pushed filter.

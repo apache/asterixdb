@@ -80,9 +80,6 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     // When set, the cursor will only return tuples that pass this filter
     protected final ITupleFilterFactory tupleFilterFactory;
 
-    // Multiplier for candidate limit: K * kMultiplier candidates sent to PK for reranking
-    protected final int kMultiplier;
-
     /** Epsilon from vector index WITH metadata (ANN / cluster search). */
     protected final double indexEpsilon;
 
@@ -99,7 +96,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
             ISearchOperationCallbackFactory searchCallbackFactory, IVTreeBinaryAccessorFactory vectorAccessorFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
             int[][] partitionsMap, int numPrimaryKeys, int numSecondaryKeys, ITupleFilterFactory tupleFilterFactory,
-            int kMultiplier, double indexEpsilon, boolean indexOnly) {
+            double indexEpsilon, boolean indexOnly) {
         super(spec, 1, 1); // 1 input, 1 output
         this.queryFields = queryFields;
         this.indexHelperFactory = indexHelperFactory;
@@ -112,7 +109,6 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.numPrimaryKeys = numPrimaryKeys;
         this.numSecondaryKeys = numSecondaryKeys;
         this.tupleFilterFactory = tupleFilterFactory;
-        this.kMultiplier = kMultiplier;
         this.indexEpsilon = indexEpsilon;
         this.indexOnly = indexOnly;
         this.outRecDescs[0] = outRecDesc;
@@ -128,7 +124,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         return new VTreeSearchOperatorNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), queryFields, indexHelperFactory,
                 retainInput, searchCallbackFactory, tupleProjectorFactory, vectorAccessorFactory,
-                distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, kMultiplier, indexEpsilon,
+                distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, indexEpsilon,
                 numPrimaryKeys, indexOnly);
     }
 }

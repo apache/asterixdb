@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.cluster.PartitioningProperties;
-import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.StorageProperties;
@@ -859,19 +858,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int numSecondaryKeys = isQuantized ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
                 : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
 
-        // Session-level kMultiplier override. A value > 1 signals to the NodePushable to widen
-        // the per-partition top-k to compensate for cross-partition ranking error.
-        int kMultiplier = 1;
-        String kmultStr = (String) getConfig().get(CompilerProperties.COMPILER_VECTOR_K_MULTIPLIER_KEY);
-        if (kmultStr != null && !kmultStr.trim().isEmpty()) {
-            try {
-                int parsed = Integer.parseInt(kmultStr.trim());
-                kMultiplier = Math.max(1, parsed);
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Invalid compiler.vector.kmultiplier '{}', using default 1", kmultStr);
-            }
-        }
-
         AOrderedListVectorBinaryAccessorFactory vectorAccessorFactory = new AOrderedListVectorBinaryAccessorFactory();
         // The distance metric is fixed at index creation and baked into the factories the search operator
         // ships; the storage layer never sees a metric string.
@@ -884,7 +870,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         VTreeSearchOperatorDescriptor vectorSearchOp = new VTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                 queryFields, indexDataflowHelperFactory, retainInput, searchCallbackFactory, vectorAccessorFactory,
                 distanceFunctionFactory, quantizerFactory, partitionsMap, numPrimaryKeys, numSecondaryKeys,
-                tupleFilterFactory, kMultiplier, indexEpsilon, indexOnly);
+                tupleFilterFactory, indexEpsilon, indexOnly);
 
         return new Pair<>(vectorSearchOp, partitioningProperties.getConstraints());
     }
