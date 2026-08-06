@@ -789,9 +789,9 @@ Each partition itself will also be sorted by the `name` field, and compressed wi
 objects or fewer per file. 
 
 A file is also started afresh once it reaches `max-file-size`, so whichever of the two limits is reached first ends the
-current file. `max-file-size` accepts a storage unit string such as `5MB` or `1GB`, has a minimum of `5MB`, and is
+current file. `max-file-size` accepts a storage unit string such as `5MB` or `1GB`, ranges from `5MB` to `5GB`, and is
 unbounded when it is not specified. It is measured on the bytes written to the target after compression and is
 approximate: an object is never split across files, so the object that reaches the limit takes the file past it. For
 `parquet` the size is only observable at row group boundaries, so `max-file-size` should be set comfortably above
-`row-group-size`. The largest file the target itself accepts is generally lower than the maximum accepted here, as it
-depends on the target's multipart upload limits.
+`row-group-size`. The largest file a target itself accepts may be lower still, as it depends on the target's multipart
+upload limits.

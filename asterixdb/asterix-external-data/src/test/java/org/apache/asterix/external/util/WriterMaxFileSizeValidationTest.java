@@ -44,8 +44,8 @@ public class WriterMaxFileSizeValidationTest {
         validate("5MB");
         validate("128MB");
         validate("1GB");
-        validate("8.5GB");
-        validate("5TB");
+        validate("4.5GB");
+        validate("5GB");
         validate("10485760");
     }
 

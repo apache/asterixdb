@@ -388,7 +388,7 @@ public class ExternalDataConstants {
     public static final long WRITER_MAX_FILE_SIZE_MINIMUM =
             StorageUtil.getLongSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
     public static final long WRITER_MAX_FILE_SIZE_MAXIMUM =
-            StorageUtil.getLongSizeInBytes(5, StorageUtil.StorageUnit.TERABYTE);
+            StorageUtil.getLongSizeInBytes(5, StorageUtil.StorageUnit.GIGABYTE);
     public static final Set<String> WRITER_SUPPORTED_FORMATS;
     public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
     public static final Set<String> TEXTUAL_WRITER_SUPPORTED_COMPRESSION;
