@@ -191,6 +191,8 @@ public @interface AiProvenance {
         // =========================
         // Anthropic — Claude Opus
         // =========================
+        CLAUDE_OPUS_5(ANTHROPIC, "claude-opus-5", "Claude Opus 5"),
+
         CLAUDE_OPUS_4(ANTHROPIC, "claude-4-opus", "Claude Opus 4"),
         CLAUDE_OPUS_4_8(ANTHROPIC, "claude-4-opus-4.8", "Claude Opus 4.8"),
         CLAUDE_OPUS_4_7(ANTHROPIC, "claude-4-opus-4.7", "Claude Opus 4.7"),
