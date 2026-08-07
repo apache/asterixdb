@@ -37,12 +37,10 @@ import java.util.UUID;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
-import org.apache.asterix.runtime.utils.VectorDistanceCalculation;
 import org.apache.asterix.runtime.utils.VectorDistanceFunctionFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,7 +52,6 @@ import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -78,8 +75,6 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 import org.apache.hyracks.dataflow.std.misc.PartitionedUUID;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Enhanced version of LocalKMeansPlusPlusCentroidsOperatorDescriptor that maintains
@@ -138,398 +133,35 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
     private static final long serialVersionUID = -6161592596382830106L;
 
-    /**
-     * Simple state class to pass tuple count between activities.
-     */
-    private static class TupleCountState extends AbstractStateObject {
-        private static final long serialVersionUID = 1L;
-        private int totalTupleCount;
-
-        public TupleCountState(JobId jobId, PartitionedUUID objectId) {
-            super(jobId, objectId);
-            this.totalTupleCount = 0;
-        }
-
-        public int getTotalTupleCount() {
-            return totalTupleCount;
-        }
-
-        public void setTotalTupleCount(int totalTupleCount) {
-            this.totalTupleCount = totalTupleCount;
-        }
-
-        public void addTupleCount(int count) {
-            this.totalTupleCount += count;
-        }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-            out.writeInt(totalTupleCount);
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-            totalTupleCount = in.readInt();
-        }
-    }
-
-    /**
-     * Result class for K-means++ clustering operations.
-     */
-    private static class ClusteringResult {
-        public final List<double[]> centroids;
-        public final int[] assignments;
-
-        public ClusteringResult(List<double[]> centroids, int[] assignments) {
-            this.centroids = centroids;
-            this.assignments = assignments;
-        }
-    }
-
-    /**
-     * Data structure to hold hierarchical clustering results with parent-child relationships.
-     */
-    private static class HierarchicalClusterStructure {
-        // Store centroids for each level (separate parent and child levels)
-        private static final Logger LOGGER = LogManager.getLogger();
-        private final Map<Integer, List<CentroidInfo>> levelCentroids;
-
-        // Track parent-child relationships
-        private final Map<Integer, Map<Integer, List<Integer>>> parentChildRelations;
-
-        public HierarchicalClusterStructure() {
-            this.levelCentroids = new HashMap<>();
-            this.parentChildRelations = new HashMap<>();
-        }
-
-        public static class CentroidInfo {
-            public final int centroidId;
-            public final int parentClusterId;
-            public final double[] embedding;
-            public final int level;
-            public final List<Integer> childrenIds;
-
-            public CentroidInfo(int centroidId, int parentClusterId, double[] embedding, int level) {
-                this.centroidId = centroidId;
-                this.parentClusterId = parentClusterId;
-                this.embedding = embedding;
-                this.level = level;
-                this.childrenIds = new ArrayList<>();
-            }
-        }
-
-        /**
-         * Initialize a level with empty centroids (for parents)
-         */
-        public void initializeParentLevel(int level, int parentCount) {
-            List<CentroidInfo> parentLevel = new ArrayList<>();
-            Map<Integer, List<Integer>> parentChildMap = new HashMap<>();
-
-            // Initialize empty parent centroids
-            for (int i = 0; i < parentCount; i++) {
-                parentLevel.add(new CentroidInfo(i, -1, null, level)); // -1 means no parent (root level)
-                parentChildMap.put(i, new ArrayList<>());
-            }
-
-            this.levelCentroids.put(level, parentLevel);
-            this.parentChildRelations.put(level, parentChildMap);
-        }
-
-        /**
-         * Build parent-child relationships using assignments
-         */
-        public void buildLevelFromAssignments(List<double[]> childCentroids, List<double[]> parentCentroids,
-                int[] assignments, int parentLevel, int childLevel) {
-
-            // 1. Populate parent centroids
-            List<CentroidInfo> parentLevelInfo = this.levelCentroids.get(parentLevel);
-            for (int i = 0; i < parentCentroids.size() && i < parentLevelInfo.size(); i++) {
-                CentroidInfo parentInfo = parentLevelInfo.get(i);
-                // Update parent centroid with actual embedding
-                parentLevelInfo.set(i,
-                        new CentroidInfo(parentInfo.centroidId, -1, parentCentroids.get(i), parentLevel));
-            }
-
-            // 2. Create child level with proper parent assignments
-            List<CentroidInfo> childLevelInfo = new ArrayList<>();
-            Map<Integer, List<Integer>> parentChildMap = this.parentChildRelations.get(parentLevel);
-
-            for (int i = 0; i < assignments.length; i++) {
-                int parentClusterId = assignments[i]; // Which parent cluster this child belongs to
-                int childId = i; // Child centroid index
-
-                // Create child centroid info
-                CentroidInfo childInfo = new CentroidInfo(childId, parentClusterId, childCentroids.get(i), childLevel);
-                childLevelInfo.add(childInfo);
-
-                // Add child to parent's children list
-                if (parentChildMap.containsKey(parentClusterId)) {
-                    parentChildMap.get(parentClusterId).add(childId);
-                }
-            }
-
-            // Store child level information
-            this.levelCentroids.put(childLevel, childLevelInfo);
-        }
-
-        /**
-         * Output format: <treeLevel, centroidId, parentClusterId, embedding>
-         * Uses BFS traversal starting from root level
-         */
-        public void outputHierarchicalStructure(FrameTupleAppender appender, IFrameWriter writer,
-                IHyracksTaskContext ctx) throws HyracksDataException {
-            // levelCentroids keys: 0 = leaf level in k-means terms, maxLevel = root.
-            int maxLevel = -1;
-            for (Integer level : levelCentroids.keySet()) {
-                maxLevel = Math.max(maxLevel, level);
-            }
-
-            if (maxLevel == -1) {
-                return;
-            }
-
-            // Emission order: bottom-up (leaves first, root last) so that
-            // VTreeStaticStructureBuilder writes leaves at the lowest page ids and
-            // the root last (at the highest page id).
-            //
-            // Centroid IDs preserve the BFS-from-root convention (root = 0..N_root-1,
-            // leaves at the highest IDs), independent of emission order. To achieve
-            // that with bottom-up emission, we pre-compute per-level ID offsets so the
-            // root level starts at 0, the next level down starts at root_size, etc.
-            int[] idOffset = new int[maxLevel + 1];
-            idOffset[maxLevel] = 0;
-            for (int L = maxLevel - 1; L >= 0; L--) {
-                List<CentroidInfo> levelAbove = levelCentroids.get(L + 1);
-                int sizeAbove = (levelAbove != null) ? levelAbove.size() : 0;
-                idOffset[L] = idOffset[L + 1] + sizeAbove;
-            }
-
-            // Walk levels bottom-up: levelCentroids key 0 (leaves) → key maxLevel (root).
-            // The tuple's treeLevel field keeps the existing convention: root = 0, leaf = maxLevel.
-            for (int L = 0; L <= maxLevel; L++) {
-                List<CentroidInfo> levelInfo = levelCentroids.get(L);
-                if (levelInfo == null) {
-                    continue;
-                }
-                int treeLevel = maxLevel - L;
-                int globalCentroidId = idOffset[L];
-                for (CentroidInfo centroid : levelInfo) {
-                    createHierarchicalTuple(treeLevel, globalCentroidId, centroid.parentClusterId, centroid.embedding,
-                            appender, writer, ctx);
-                    globalCentroidId++;
-                }
-            }
-        }
-
-        private void createHierarchicalTuple(int treeLevel, int centroidId, int parentClusterId, double[] embedding,
-                FrameTupleAppender appender, IFrameWriter writer, IHyracksTaskContext ctx) throws HyracksDataException {
-            try {
-                // Apply clipping to embedding before creating tuple to prevent exorbitant values
-                double[] clippedEmbedding = clipCentroid(embedding);
-
-                // Create tuple: <treeLevel, centroidId, parentClusterId, embedding>
-                ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(4);
-                tupleBuilder.reset();
-
-                // Field 0: Tree Level
-                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, treeLevel);
-
-                // Field 1: Centroid ID
-                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, centroidId);
-
-                // Field 2: Parent Cluster ID
-                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, parentClusterId);
-
-                // Field 3: Embedding - create AsterixDB AOrderedList format using clipped embedding
-                OrderedListBuilder listBuilder = new OrderedListBuilder();
-                listBuilder.reset(new AOrderedListType(ADOUBLE, "embedding"));
-
-                ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
-                AMutableDouble aDouble = new AMutableDouble(0.0);
-
-                for (int i = 0; i < clippedEmbedding.length; i++) {
-                    aDouble.setValue(clippedEmbedding[i]);
-                    storage.reset();
-                    storage.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
-                    ADoubleSerializerDeserializer.INSTANCE.serialize(aDouble, storage.getDataOutput());
-                    listBuilder.addItem(storage);
-                }
-
-                storage.reset();
-                listBuilder.write(storage.getDataOutput(), true);
-                tupleBuilder.addField(storage.getByteArray(), 0, storage.getLength());
-
-                // Append tuple to frame, handle buffer overflow manually
-                if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                        tupleBuilder.getSize())) {
-                    // Frame is full, flush and reset
-                    FrameUtils.flushFrame(appender.getBuffer(), writer);
-                    appender.reset(new VSizeFrame(ctx), true);
-                    appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                            tupleBuilder.getSize());
-                }
-
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
-        }
-
-        public int getNumLevels() {
-            return levelCentroids.size();
-        }
-
-        /**
-         * Calculate estimated tuple size for hierarchical output format (DOUBLE type).
-         * Formula: 38 + 13 × dimension bytes
-         * Breakdown:
-         * - Tuple overhead: 20 bytes (4 bytes tuple offset + 4×4 bytes field offsets)
-         * - Fixed fields: 12 bytes (3 integers: treeLevel, centroidId, parentClusterId)
-         * - AOrderedList overhead: 6 bytes (tag + itemTag + list size)
-         * - Item offsets: 4 bytes × dimension
-         * - Item data: 9 bytes × dimension (1 byte type tag + 8 bytes double)
-         * @param embeddingDimension The dimension of the embedding vector
-         * @return Estimated tuple size in bytes
-         */
-        public static long calculateEstimatedTupleSize(int embeddingDimension) {
-            return 38L + 13L * embeddingDimension;
-        }
-
-        /**
-         * Check if a level with given number of centroids fits in one frame.
-         * @param centroidCount Number of centroids at the level
-         * @param embeddingDimension Dimension of embedding vectors
-         * @param frameSize Frame size in bytes
-         * @return true if the level fits in one frame, false otherwise
-         */
-        public static boolean doesLevelFitInFrame(int centroidCount, int embeddingDimension, int frameSize) {
-            if (centroidCount <= 0 || embeddingDimension <= 0 || frameSize <= 0) {
-                return false;
-            }
-            long tupleSize = calculateEstimatedTupleSize(embeddingDimension);
-            long totalDataSize = (long) centroidCount * tupleSize;
-            long frameOverhead = 9L + (4L * centroidCount); // META_DATA_LEN + tuple offsets
-            long totalSize = totalDataSize + frameOverhead;
-            return totalSize <= frameSize;
-        }
-    }
-
     // Clipping constants for centroid values
     private static final double DEFAULT_CLIP_MIN = -1e3;
+
     private static final double DEFAULT_CLIP_MAX = 1e3;
 
     private final UUID sampleUUID;
+
     private final UUID tupleCountUUID;
 
     // Configuration parameters for hierarchical clustering
-    private IScalarEvaluatorFactory args; // Evaluator for extracting vector data from tuples
-    private int K; // Number of clusters for initial level (leaf nodes)
-    private int maxScalableKmeansIter; // Maximum iterations for scalable K-means++ candidate selection
-    private VectorSimilarityMetric distanceMetricEnum; // resolved from distanceMetric; drives cosine normalization
-    private RecordDescriptor secondaryRecDesc; // Input record descriptor (2-field format)
-    private int vectorDimension;
+    private final IScalarEvaluatorFactory args; // Evaluator for extracting vector data from tuples
+
+    private final int K; // Number of clusters for initial level (leaf nodes)
+
+    private final int maxScalableKmeansIter; // Maximum iterations for scalable K-means++ candidate selection
+
+    private final VectorSimilarityMetric similarityMetric; // resolved from distanceMetric; drives cosine normalization
+
+    private final RecordDescriptor secondaryRecDesc; // Input record descriptor (2-field format)
+
+    private final int vectorDimension;
+
     private final long trainSeed; // Base seed for the training RNG; per-partition offset keeps partitions decorrelated
-
-    private static VectorSimilarityMetric resolveMetric(String distanceType) {
-        // similarity is a mandatory index parameter (VectorIndexDeclUtil rejects a missing one at DDL
-        // validation, IndexTupleTranslator at persist), so a missing/unsupported value here means a corrupt index.
-        VectorSimilarityMetric metric = (distanceType == null) ? null : VectorSimilarityMetric.fromAlias(distanceType);
-        if (metric == null) {
-            throw new IllegalArgumentException(
-                    "Vector index has a missing or unsupported 'similarity' metric: " + distanceType);
-        }
-        return metric;
-    }
-
-    private static IVTreeDistanceFunction distanceFunctionFor(VectorSimilarityMetric metric) {
-        try {
-            return new VectorDistanceFunctionFactory(metric).createDistanceFunction();
-        } catch (HyracksDataException e) {
-            throw new IllegalStateException("Failed to build vector distance function for " + metric, e);
-        }
-    }
-
-    /**
-     * Clips centroid values to reasonable bounds to prevent exorbitant values.
-     * @param centroid The centroid array to clip
-     * @return Clipped centroid array with values bounded between DEFAULT_CLIP_MIN and DEFAULT_CLIP_MAX
-     */
-    private static double[] clipCentroid(double[] centroid) {
-        if (centroid == null) {
-            return centroid;
-        }
-
-        double[] clipped = new double[centroid.length];
-
-        for (int i = 0; i < centroid.length; i++) {
-            double value = centroid[i];
-
-            // Check for NaN or Infinity
-            if (Double.isNaN(value) || Double.isInfinite(value)) {
-                clipped[i] = 0.0; // Replace with 0
-            } else if (value < DEFAULT_CLIP_MIN) {
-                clipped[i] = DEFAULT_CLIP_MIN;
-            } else if (value > DEFAULT_CLIP_MAX) {
-                clipped[i] = DEFAULT_CLIP_MAX;
-            } else {
-                clipped[i] = value;
-            }
-        }
-
-        return clipped;
-    }
-
-    /**
-     * Normalize {@code a} in place to unit L2 norm (no-op if the norm is zero or NaN). Local copy of the
-     * former {@code VectorDistanceArrCalculation.normalizeL2}, which the reorganized VectorDistanceCalculation
-     * (double[]-only distance API) no longer exposes.
-     */
-    private static void normalizeL2(double[] a) {
-        double norm = l2Norm(a);
-        if (norm > 0.0 && !Double.isNaN(norm)) {
-            for (int i = 0; i < a.length; i++) {
-                a[i] /= norm;
-            }
-        }
-    }
-
-    private static double l2Norm(double[] a) {
-        double sum = 0.0;
-        for (int i = 0; i < a.length; i++) {
-            double v = a[i];
-            sum += v * v;
-        }
-        return Double.isNaN(sum) ? Double.NaN : Math.sqrt(sum);
-    }
-
-    /**
-     * Creates a RecordDescriptor for the hierarchical clustering output format.
-     * Format: <treeLevel, centroidId, parentClusterId, embedding>
-     * @return RecordDescriptor with 4 fields: 3 integers + 1 AOrderedList of doubles
-     */
-    public static RecordDescriptor createHierarchicalOutputRecordDescriptor() {
-        @SuppressWarnings("rawtypes")
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[4];
-
-        // Field 0: Tree Level (int)
-        fieldSerdes[0] = IntegerSerializerDeserializer.INSTANCE;
-
-        // Field 1: Centroid ID (int)
-        fieldSerdes[1] = IntegerSerializerDeserializer.INSTANCE;
-
-        // Field 2: Parent Cluster ID (int)
-        fieldSerdes[2] = IntegerSerializerDeserializer.INSTANCE;
-
-        // Field 3: Embedding (AOrderedList of doubles)
-        fieldSerdes[3] = new AOrderedListSerializerDeserializer(new AOrderedListType(ADOUBLE, "embedding"));
-
-        return new RecordDescriptor(fieldSerdes);
-    }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor outputRecDesc, RecordDescriptor secondaryRecDesc, UUID sampleUUID, UUID tupleCountUUID,
-            IScalarEvaluatorFactory args, int K, int maxScalableKmeansIter, String distanceMetric, int vectorDimension,
-            long trainSeed) {
+            IScalarEvaluatorFactory args, int K, int maxScalableKmeansIter, VectorSimilarityMetric similarityMetric,
+            int vectorDimension, long trainSeed) {
         super(spec, 1, 1);
         // Output record descriptor defines the format of output tuples (treeLevel, centroidId, parentClusterId, embedding)
         // Input record descriptor is the 2-field format with vector embeddings
@@ -542,9 +174,8 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
         this.maxScalableKmeansIter = maxScalableKmeansIter;
         this.vectorDimension = vectorDimension;
         this.trainSeed = trainSeed;
-
         // Distance function from index DDL (WITH similarity "euclidean"|"cosine"|"cosine similarity"|etc.); default euclidean squared
-        this.distanceMetricEnum = resolveMetric(distanceMetric);
+        this.similarityMetric = similarityMetric;
     }
 
     @Override
@@ -568,10 +199,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
      * Activity 1: Store Centroids and Materialize Data
      * This activity performs initial K-means++ on raw data and materializes all data for later processing.
      */
-    protected class StoreCentroidsActivity extends AbstractActivityNode {
+    private class StoreCentroidsActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        protected StoreCentroidsActivity(ActivityId id) {
+        private StoreCentroidsActivity(ActivityId id) {
             super(id);
         }
 
@@ -579,6 +210,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryInputSinkOperatorNodePushable() {
+                private final FrameTupleAccessor fta = new FrameTupleAccessor(secondaryRecDesc);
                 private MaterializerTaskState materializedSample;
                 private TupleCountState tupleCountState;
 
@@ -597,10 +229,8 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                     // Count tuples in this frame
-                    FrameTupleAccessor fta = new FrameTupleAccessor(secondaryRecDesc);
                     fta.reset(buffer);
-                    int tupleCount = fta.getTupleCount();
-                    tupleCountState.addTupleCount(tupleCount);
+                    tupleCountState.addTupleCount(fta.getTupleCount());
 
                     // Materialize all data to disk for subsequent processing passes
                     // This allows us to make multiple passes over the data without loading it all into memory
@@ -630,10 +260,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
      * Activity 2: Find Candidates and Perform Hierarchical Clustering
      * This activity performs memory-efficient hierarchical clustering using the materialized data.
      */
-    protected class FindCandidatesActivity extends AbstractActivityNode {
+    private class FindCandidatesActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        protected FindCandidatesActivity(ActivityId id) {
+        private FindCandidatesActivity(ActivityId id) {
             super(id);
         }
 
@@ -654,36 +284,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                 // Stateless distance function, built here on the NC from the serialized metric enum. Living on
                 // the per-partition pushable (never Java-serialized) keeps the un-serializable function off the
                 // wire and out of the shared descriptor.
-                private final IVTreeDistanceFunction distanceFunction = distanceFunctionFor(distanceMetricEnum);
-
-                private double calculateDistance(double[] a, double[] b) {
-                    try {
-                        return distanceFunction.apply(a, b);
-                    } catch (HyracksDataException e) {
-                        throw new RuntimeException("Error calculating distance", e);
-                    }
-                }
-
-                /**
-                 * Whether the current distance function requires centroids to be L2-normalized after each
-                 * Lloyd update. Normalization is required only for cosine (spherical k-means); aligns with
-                 * FAISS spherical k-means and Spark's CosineDistanceMeasure. Dot product (MIPS) uses raw
-                 * centroids and does not require normalization.
-                 */
-                private boolean requiresNormalizedCentroids() {
-                    return distanceMetricEnum == VectorSimilarityMetric.COSINE;
-                }
-
-                /**
-                 * Normalizes centroid in place to unit L2 norm when using cosine similarity (spherical
-                 * k-means), so that centroid semantics match FAISS/Spark. Dot product is not normalized.
-                 * No-op for other metrics.
-                 */
-                private void maybeNormalizeCentroid(double[] centroid) {
-                    if (centroid != null && requiresNormalizedCentroids()) {
-                        normalizeL2(centroid);
-                    }
-                }
+                private final IVTreeDistanceFunction distanceFunction = distanceFunctionFor(similarityMetric);
 
                 @Override
                 public void initialize() throws HyracksDataException {
@@ -820,7 +421,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     }
                                     double minDist = Double.POSITIVE_INFINITY;
                                     for (double[] center : currentCenters) {
-                                        double dist = calculateDistance(point, center);
+                                        double dist = distanceFunction.apply(point, center);
                                         minDist = Math.min(minDist, dist);
                                     }
 
@@ -864,7 +465,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     // RECOMPUTE D(x) (no storage from pass 1)
                                     double minDist = Double.POSITIVE_INFINITY;
                                     for (double[] center : currentCenters) {
-                                        double dist = calculateDistance(point, center);
+                                        double dist = distanceFunction.apply(point, center);
                                         minDist = Math.min(minDist, dist);
                                     }
 
@@ -923,7 +524,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 double minDist = Double.POSITIVE_INFINITY;
                                 int nearestCandidate = -1;
                                 for (int c = 0; c < candidates.size(); c++) {
-                                    double dist = calculateDistance(point, candidates.get(c));
+                                    double dist = distanceFunction.apply(point, candidates.get(c));
                                     if (dist < minDist) {
                                         minDist = dist;
                                         nearestCandidate = c;
@@ -951,7 +552,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                         // Check if this candidate is a duplicate of an existing weighted candidate
                         boolean foundDuplicate = false;
                         for (int j = 0; j < weightedCandidates.size(); j++) {
-                            double dist = calculateDistance(candidates.get(i), weightedCandidates.get(j));
+                            double dist = distanceFunction.apply(candidates.get(i), weightedCandidates.get(j));
                             if (dist < 1e-10) { // Consider identical if very close
                                 // Merge near-duplicate candidates by adding their weights
                                 weightedCandidateWeights.set(j, weightedCandidateWeights.get(j) + candidateWeights[i]);
@@ -1009,7 +610,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     // Avoid duplicates - only add if not too close to existing centroids
                                     boolean isDuplicate = false;
                                     for (double[] existingCentroid : centroids) {
-                                        double dist = calculateDistance(additionalPoint, existingCentroid);
+                                        double dist = distanceFunction.apply(additionalPoint, existingCentroid);
                                         if (dist < 1e-10) { // Consider it a duplicate if very close
                                             isDuplicate = true;
                                             break;
@@ -1067,7 +668,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     double minDist = Double.POSITIVE_INFINITY;
                                     int closestCentroid = 0;
                                     for (int c = 0; c < centroids.size(); c++) {
-                                        double dist = calculateDistance(point, centroids.get(c));
+                                        double dist = distanceFunction.apply(point, centroids.get(c));
                                         if (dist < minDist) {
                                             minDist = dist;
                                             closestCentroid = c;
@@ -1130,7 +731,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     newCentroids[i][d] /= counts[i];
                                 }
                                 // Check if centroid moved significantly
-                                double dist = calculateDistance(centroids.get(i), newCentroids[i]);
+                                double dist = distanceFunction.apply(centroids.get(i), newCentroids[i]);
                                 if (dist > 1e-4) {
                                     converged = false;
                                 }
@@ -1155,7 +756,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                  * Uses weights when computing probabilities and weighted averages.
                  */
                 private List<double[]> performWeightedKMeansPlusPlusOnCandidates(List<double[]> candidates,
-                        int[] weights, int k, Random rand, int maxIterations) {
+                        int[] weights, int k, Random rand, int maxIterations) throws HyracksDataException {
                     if (candidates.isEmpty() || k <= 0) {
                         return new ArrayList<>();
                     }
@@ -1206,7 +807,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                         for (int j = 0; j < candidates.size(); j++) {
                             double minDist = Double.POSITIVE_INFINITY;
                             for (double[] centroid : resultCentroids) {
-                                double dist = calculateDistance(candidates.get(j), centroid);
+                                double dist = distanceFunction.apply(candidates.get(j), centroid);
                                 minDist = Math.min(minDist, dist);
                             }
                             // Weighted distance: weight[j] * D(c_j)
@@ -1241,7 +842,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                             double minDist = Double.POSITIVE_INFINITY;
                             int closestCentroid = 0;
                             for (int j = 0; j < resultCentroids.size(); j++) {
-                                double dist = calculateDistance(candidates.get(i), resultCentroids.get(j));
+                                double dist = distanceFunction.apply(candidates.get(i), resultCentroids.get(j));
                                 if (dist < minDist) {
                                     minDist = dist;
                                     closestCentroid = j;
@@ -1277,7 +878,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     newCentroids[i][d] /= totalWeights[i];
                                 }
                                 // Check if centroid moved significantly
-                                double dist = calculateDistance(resultCentroids.get(i), newCentroids[i]);
+                                double dist = distanceFunction.apply(resultCentroids.get(i), newCentroids[i]);
                                 if (dist > 1e-4) {
                                     converged = false;
                                 }
@@ -1304,7 +905,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 // Check if this candidate is already a centroid
                                 boolean isAlreadyCentroid = false;
                                 for (double[] centroid : resultCentroids) {
-                                    double dist = calculateDistance(candidates.get(i), centroid);
+                                    double dist = distanceFunction.apply(candidates.get(i), centroid);
                                     if (dist < 1e-10) {
                                         isAlreadyCentroid = true;
                                         break;
@@ -1317,7 +918,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 // Find minimum distance to existing centroids
                                 double minDist = Double.POSITIVE_INFINITY;
                                 for (double[] centroid : resultCentroids) {
-                                    double dist = calculateDistance(candidates.get(i), centroid);
+                                    double dist = distanceFunction.apply(candidates.get(i), centroid);
                                     minDist = Math.min(minDist, dist);
                                 }
 
@@ -1567,7 +1168,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                  * Perform scalable K-means++ on centroids (not raw data).
                  */
                 private ClusteringResult performScalableKMeansPlusPlusOnCentroids(List<double[]> centroids, int k,
-                        Random rand, int maxIterations) {
+                        Random rand, int maxIterations) throws HyracksDataException {
                     if (centroids.isEmpty() || k <= 0) {
                         return new ClusteringResult(new ArrayList<>(), new int[0]);
                     }
@@ -1589,7 +1190,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                         for (int j = 0; j < centroids.size(); j++) {
                             double minDist = Double.POSITIVE_INFINITY;
                             for (double[] centroid : resultCentroids) {
-                                double dist = calculateDistance(centroids.get(j), centroid);
+                                double dist = distanceFunction.apply(centroids.get(j), centroid);
                                 minDist = Math.min(minDist, dist);
                             }
                             distances[j] = minDist;
@@ -1625,7 +1226,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 // Check if this centroid is already selected
                                 boolean alreadySelected = false;
                                 for (double[] existing : resultCentroids) {
-                                    double dist = calculateDistance(centroids.get(j), existing);
+                                    double dist = distanceFunction.apply(centroids.get(j), existing);
                                     if (dist < 1e-10) {
                                         alreadySelected = true;
                                         break;
@@ -1638,7 +1239,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 // Find minimum distance to existing centroids
                                 double minDist = Double.POSITIVE_INFINITY;
                                 for (double[] existing : resultCentroids) {
-                                    double dist = calculateDistance(centroids.get(j), existing);
+                                    double dist = distanceFunction.apply(centroids.get(j), existing);
                                     minDist = Math.min(minDist, dist);
                                 }
 
@@ -1668,7 +1269,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                             double minDist = Double.POSITIVE_INFINITY;
                             int closestCentroid = 0;
                             for (int j = 0; j < resultCentroids.size(); j++) {
-                                double dist = calculateDistance(centroids.get(i), resultCentroids.get(j));
+                                double dist = distanceFunction.apply(centroids.get(i), resultCentroids.get(j));
                                 if (dist < minDist) {
                                     minDist = dist;
                                     closestCentroid = j;
@@ -1697,7 +1298,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     newCentroids[i][d] /= counts[i];
                                 }
                                 // Check if centroid moved significantly
-                                double dist = calculateDistance(resultCentroids.get(i), newCentroids[i]);
+                                double dist = distanceFunction.apply(resultCentroids.get(i), newCentroids[i]);
                                 if (dist > 1e-4) {
                                     converged = false;
                                 }
@@ -1725,7 +1326,329 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                     return new ClusteringResult(resultCentroids, assignments);
                 }
 
+                /**
+                 * Normalizes centroid in place to unit L2 norm when using cosine similarity (spherical
+                 * k-means), so that centroid semantics match FAISS/Spark. Dot product is not normalized.
+                 * No-op for other metrics.
+                 */
+                private void maybeNormalizeCentroid(double[] centroid) {
+                    if (centroid != null && requiresNormalizedCentroids()) {
+                        KMeansUtils.normalizeL2(centroid);
+                    }
+                }
+
+                /**
+                 * Whether the current distance function requires centroids to be L2-normalized after each
+                 * Lloyd update. Normalization is required only for cosine (spherical k-means); aligns with
+                 * FAISS spherical k-means and Spark's CosineDistanceMeasure. Dot product (MIPS) uses raw
+                 * centroids and does not require normalization.
+                 */
+                private boolean requiresNormalizedCentroids() {
+                    return similarityMetric == VectorSimilarityMetric.COSINE;
+                }
+
+                private static IVTreeDistanceFunction distanceFunctionFor(VectorSimilarityMetric metric) {
+                    try {
+                        return new VectorDistanceFunctionFactory(metric).createDistanceFunction();
+                    } catch (HyracksDataException e) {
+                        throw new IllegalStateException("Failed to build vector distance function for " + metric, e);
+                    }
+                }
             };
         }
     }
+
+    /**
+     * Simple state class to pass tuple count between activities.
+     */
+    private static class TupleCountState extends AbstractStateObject {
+        private int totalTupleCount;
+
+        public TupleCountState(JobId jobId, PartitionedUUID objectId) {
+            super(jobId, objectId);
+            this.totalTupleCount = 0;
+        }
+
+        public int getTotalTupleCount() {
+            return totalTupleCount;
+        }
+
+        public void addTupleCount(int count) {
+            this.totalTupleCount += count;
+        }
+
+        @Override
+        public void toBytes(DataOutput out) throws IOException {
+            out.writeInt(totalTupleCount);
+        }
+
+        @Override
+        public void fromBytes(DataInput in) throws IOException {
+            totalTupleCount = in.readInt();
+        }
+    }
+
+    /**
+     * Result class for K-means++ clustering operations.
+     */
+    private record ClusteringResult(List<double[]> centroids, int[] assignments) {
+    }
+
+    /**
+     * Data structure to hold hierarchical clustering results with parent-child relationships.
+     */
+    private static class HierarchicalClusterStructure {
+        // Store centroids for each level (separate parent and child levels)
+        private final Map<Integer, List<CentroidInfo>> levelCentroids;
+
+        // Track parent-child relationships
+        private final Map<Integer, Map<Integer, List<Integer>>> parentChildRelations;
+
+        private HierarchicalClusterStructure() {
+            this.levelCentroids = new HashMap<>();
+            this.parentChildRelations = new HashMap<>();
+        }
+
+        private static class CentroidInfo {
+            public final int centroidId;
+            public final int parentClusterId;
+            public final double[] embedding;
+            public final int level;
+            public final List<Integer> childrenIds;
+
+            private CentroidInfo(int centroidId, int parentClusterId, double[] embedding, int level) {
+                this.centroidId = centroidId;
+                this.parentClusterId = parentClusterId;
+                this.embedding = embedding;
+                this.level = level;
+                this.childrenIds = new ArrayList<>();
+            }
+        }
+
+        private int getNumLevels() {
+            return levelCentroids.size();
+        }
+
+        /**
+         * Initialize a level with empty centroids (for parents)
+         */
+        private void initializeParentLevel(int level, int parentCount) {
+            List<CentroidInfo> parentLevel = new ArrayList<>();
+            Map<Integer, List<Integer>> parentChildMap = new HashMap<>();
+
+            // Initialize empty parent centroids
+            for (int i = 0; i < parentCount; i++) {
+                parentLevel.add(new CentroidInfo(i, -1, null, level)); // -1 means no parent (root level)
+                parentChildMap.put(i, new ArrayList<>());
+            }
+
+            this.levelCentroids.put(level, parentLevel);
+            this.parentChildRelations.put(level, parentChildMap);
+        }
+
+        /**
+         * Build parent-child relationships using assignments
+         */
+        private void buildLevelFromAssignments(List<double[]> childCentroids, List<double[]> parentCentroids,
+                int[] assignments, int parentLevel, int childLevel) {
+
+            // 1. Populate parent centroids
+            List<CentroidInfo> parentLevelInfo = this.levelCentroids.get(parentLevel);
+            for (int i = 0; i < parentCentroids.size() && i < parentLevelInfo.size(); i++) {
+                CentroidInfo parentInfo = parentLevelInfo.get(i);
+                // Update parent centroid with actual embedding
+                parentLevelInfo.set(i,
+                        new CentroidInfo(parentInfo.centroidId, -1, parentCentroids.get(i), parentLevel));
+            }
+
+            // 2. Create child level with proper parent assignments
+            List<CentroidInfo> childLevelInfo = new ArrayList<>();
+            Map<Integer, List<Integer>> parentChildMap = this.parentChildRelations.get(parentLevel);
+
+            for (int i = 0; i < assignments.length; i++) {
+                int parentClusterId = assignments[i]; // Which parent cluster this child belongs to
+                int childId = i; // Child centroid index
+
+                // Create child centroid info
+                CentroidInfo childInfo = new CentroidInfo(childId, parentClusterId, childCentroids.get(i), childLevel);
+                childLevelInfo.add(childInfo);
+
+                // Add child to parent's children list
+                if (parentChildMap.containsKey(parentClusterId)) {
+                    parentChildMap.get(parentClusterId).add(childId);
+                }
+            }
+
+            // Store child level information
+            this.levelCentroids.put(childLevel, childLevelInfo);
+        }
+
+        /**
+         * Output format: <treeLevel, centroidId, parentClusterId, embedding>
+         * Uses BFS traversal starting from root level
+         */
+        private void outputHierarchicalStructure(FrameTupleAppender appender, IFrameWriter writer,
+                IHyracksTaskContext ctx) throws HyracksDataException {
+            // levelCentroids keys: 0 = leaf level in k-means terms, maxLevel = root.
+            int maxLevel = -1;
+            for (Integer level : levelCentroids.keySet()) {
+                maxLevel = Math.max(maxLevel, level);
+            }
+
+            if (maxLevel == -1) {
+                return;
+            }
+
+            // Emission order: bottom-up (leaves first, root last) so that
+            // VTreeStaticStructureBuilder writes leaves at the lowest page ids and
+            // the root last (at the highest page id).
+            //
+            // Centroid IDs preserve the BFS-from-root convention (root = 0..N_root-1,
+            // leaves at the highest IDs), independent of emission order. To achieve
+            // that with bottom-up emission, we pre-compute per-level ID offsets so the
+            // root level starts at 0, the next level down starts at root_size, etc.
+            int[] idOffset = new int[maxLevel + 1];
+            idOffset[maxLevel] = 0;
+            for (int L = maxLevel - 1; L >= 0; L--) {
+                List<CentroidInfo> levelAbove = levelCentroids.get(L + 1);
+                int sizeAbove = (levelAbove != null) ? levelAbove.size() : 0;
+                idOffset[L] = idOffset[L + 1] + sizeAbove;
+            }
+
+            // Walk levels bottom-up: levelCentroids key 0 (leaves) → key maxLevel (root).
+            // The tuple's treeLevel field keeps the existing convention: root = 0, leaf = maxLevel.
+            for (int L = 0; L <= maxLevel; L++) {
+                List<CentroidInfo> levelInfo = levelCentroids.get(L);
+                if (levelInfo == null) {
+                    continue;
+                }
+                int treeLevel = maxLevel - L;
+                int globalCentroidId = idOffset[L];
+                for (CentroidInfo centroid : levelInfo) {
+                    createHierarchicalTuple(treeLevel, globalCentroidId, centroid.parentClusterId, centroid.embedding,
+                            appender, writer, ctx);
+                    globalCentroidId++;
+                }
+            }
+        }
+
+        private static void createHierarchicalTuple(int treeLevel, int centroidId, int parentClusterId,
+                double[] embedding, FrameTupleAppender appender, IFrameWriter writer, IHyracksTaskContext ctx)
+                throws HyracksDataException {
+            try {
+                // Apply clipping to embedding before creating tuple to prevent exorbitant values
+                double[] clippedEmbedding = clipCentroid(embedding);
+
+                // Create tuple: <treeLevel, centroidId, parentClusterId, embedding>
+                ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(4);
+                tupleBuilder.reset();
+
+                // Field 0: Tree Level
+                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, treeLevel);
+
+                // Field 1: Centroid ID
+                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, centroidId);
+
+                // Field 2: Parent Cluster ID
+                tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, parentClusterId);
+
+                // Field 3: Embedding - create AsterixDB AOrderedList format using clipped embedding
+                OrderedListBuilder listBuilder = new OrderedListBuilder();
+                listBuilder.reset(new AOrderedListType(ADOUBLE, "embedding"));
+
+                ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+                AMutableDouble aDouble = new AMutableDouble(0.0);
+
+                for (int i = 0; i < clippedEmbedding.length; i++) {
+                    aDouble.setValue(clippedEmbedding[i]);
+                    storage.reset();
+                    storage.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
+                    ADoubleSerializerDeserializer.INSTANCE.serialize(aDouble, storage.getDataOutput());
+                    listBuilder.addItem(storage);
+                }
+
+                storage.reset();
+                listBuilder.write(storage.getDataOutput(), true);
+                tupleBuilder.addField(storage.getByteArray(), 0, storage.getLength());
+
+                // Append tuple to frame, handle buffer overflow manually
+                if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                        tupleBuilder.getSize())) {
+                    // Frame is full, flush and reset
+                    FrameUtils.flushFrame(appender.getBuffer(), writer);
+                    appender.reset(new VSizeFrame(ctx), true);
+                    appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                            tupleBuilder.getSize());
+                }
+
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+
+        /**
+         * Calculate estimated tuple size for hierarchical output format (DOUBLE type).
+         * Formula: 38 + 13 × dimension bytes
+         * Breakdown:
+         * - Tuple overhead: 20 bytes (4 bytes tuple offset + 4×4 bytes field offsets)
+         * - Fixed fields: 12 bytes (3 integers: treeLevel, centroidId, parentClusterId)
+         * - AOrderedList overhead: 6 bytes (tag + itemTag + list size)
+         * - Item offsets: 4 bytes × dimension
+         * - Item data: 9 bytes × dimension (1 byte type tag + 8 bytes double)
+         * @param embeddingDimension The dimension of the embedding vector
+         * @return Estimated tuple size in bytes
+         */
+        private static long calculateEstimatedTupleSize(int embeddingDimension) {
+            return 38L + 13L * embeddingDimension;
+        }
+
+        /**
+         * Check if a level with given number of centroids fits in one frame.
+         * @param centroidCount Number of centroids at the level
+         * @param embeddingDimension Dimension of embedding vectors
+         * @param frameSize Frame size in bytes
+         * @return true if the level fits in one frame, false otherwise
+         */
+        private static boolean doesLevelFitInFrame(int centroidCount, int embeddingDimension, int frameSize) {
+            if (centroidCount <= 0 || embeddingDimension <= 0 || frameSize <= 0) {
+                return false;
+            }
+            long tupleSize = calculateEstimatedTupleSize(embeddingDimension);
+            long totalDataSize = (long) centroidCount * tupleSize;
+            long frameOverhead = 9L + (4L * centroidCount); // META_DATA_LEN + tuple offsets
+            long totalSize = totalDataSize + frameOverhead;
+            return totalSize <= frameSize;
+        }
+
+        /**
+         * Clips centroid values to reasonable bounds to prevent exorbitant values.
+         * @param centroid The centroid array to clip
+         * @return Clipped centroid array with values bounded between DEFAULT_CLIP_MIN and DEFAULT_CLIP_MAX
+         */
+        private static double[] clipCentroid(double[] centroid) {
+            if (centroid == null) {
+                return centroid;
+            }
+
+            double[] clipped = new double[centroid.length];
+
+            for (int i = 0; i < centroid.length; i++) {
+                double value = centroid[i];
+
+                // Check for NaN or Infinity
+                if (Double.isNaN(value) || Double.isInfinite(value)) {
+                    clipped[i] = 0.0; // Replace with 0
+                } else if (value < DEFAULT_CLIP_MIN) {
+                    clipped[i] = DEFAULT_CLIP_MIN;
+                } else if (value > DEFAULT_CLIP_MAX) {
+                    clipped[i] = DEFAULT_CLIP_MAX;
+                } else {
+                    clipped[i] = value;
+                }
+            }
+
+            return clipped;
+        }
+    }
+
 }

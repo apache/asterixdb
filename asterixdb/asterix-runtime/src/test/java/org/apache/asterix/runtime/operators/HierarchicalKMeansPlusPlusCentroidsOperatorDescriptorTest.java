@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.operators;
 
+import static org.apache.asterix.om.types.BuiltinType.ADOUBLE;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -292,14 +295,13 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
 
             RecordDescriptor inRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                     new AOrderedListSerializerDeserializer(DOUBLE_LIST_TYPE), IntegerSerializerDeserializer.INSTANCE });
-            RecordDescriptor outRecDesc =
-                    HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor.createHierarchicalOutputRecordDescriptor();
+            RecordDescriptor outRecDesc = createHierarchicalOutputRecordDescriptor();
 
             JobSpecification spec = new JobSpecification();
             HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor desc =
                     new HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(spec, outRecDesc, inRecDesc,
-                            UUID.randomUUID(), UUID.randomUUID(), new ColumnAccessEvalFactory(0), k, 5, "euclidean",
-                            DIM, seed);
+                            UUID.randomUUID(), UUID.randomUUID(), new ColumnAccessEvalFactory(0), k, 5,
+                            VectorSimilarityMetric.EUCLIDEAN, DIM, seed);
 
             List<IActivity> activities = new ArrayList<>();
             IActivityGraphBuilder graphBuilder = Mockito.mock(IActivityGraphBuilder.class);
@@ -519,5 +521,29 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
         byte[] copy = new byte[t.getFieldLength(field)];
         System.arraycopy(t.getFieldData(field), t.getFieldStart(field), copy, 0, copy.length);
         return copy;
+    }
+
+    /**
+     * Creates a RecordDescriptor for the hierarchical clustering output format.
+     * Format: <treeLevel, centroidId, parentClusterId, embedding>
+     * @return RecordDescriptor with 4 fields: 3 integers + 1 AOrderedList of doubles
+     */
+    public static RecordDescriptor createHierarchicalOutputRecordDescriptor() {
+        @SuppressWarnings("rawtypes")
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[4];
+
+        // Field 0: Tree Level (int)
+        fieldSerdes[0] = IntegerSerializerDeserializer.INSTANCE;
+
+        // Field 1: Centroid ID (int)
+        fieldSerdes[1] = IntegerSerializerDeserializer.INSTANCE;
+
+        // Field 2: Parent Cluster ID (int)
+        fieldSerdes[2] = IntegerSerializerDeserializer.INSTANCE;
+
+        // Field 3: Embedding (AOrderedList of doubles)
+        fieldSerdes[3] = new AOrderedListSerializerDeserializer(new AOrderedListType(ADOUBLE, "embedding"));
+
+        return new RecordDescriptor(fieldSerdes);
     }
 }

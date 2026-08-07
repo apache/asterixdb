@@ -51,19 +51,14 @@ public class VectorDistanceFunctionFactory implements IVTreeDistanceFunctionFact
     // Built fresh on the NC (createDistanceFunction runs at runtime), so the returned lambdas are never
     // Java-serialized; IVTreeDistanceFunction is a @FunctionalInterface over the stateless calculation methods.
     private static IVTreeDistanceFunction functionFor(VectorSimilarityMetric metric) {
-        switch (metric) {
-            case EUCLIDEAN:
-                return VectorDistanceCalculation::euclidean;
-            case EUCLIDEAN_SQUARED:
-                return VectorDistanceCalculation::euclideanSquared;
-            case COSINE:
-                return VectorDistanceCalculation::cosineDistance;
-            case DOT:
+        return switch (metric) {
+            case EUCLIDEAN -> VectorDistanceCalculation::euclidean;
+            case EUCLIDEAN_SQUARED -> VectorDistanceCalculation::euclideanSquared;
+            case COSINE -> VectorDistanceCalculation::cosineDistance;
+            case DOT ->
                 // dotDistance returns -dot(a,b) so that minimizing "distance" equals maximizing dot product (MIPS).
-                return VectorDistanceCalculation::dotDistance;
-            default:
-                throw new IllegalStateException("Unhandled vector similarity metric: " + metric);
-        }
+                    VectorDistanceCalculation::dotDistance;
+        };
     }
 
     @Override
@@ -75,7 +70,7 @@ public class VectorDistanceFunctionFactory implements IVTreeDistanceFunctionFact
     // survives NC restart as part of the factory (it is not stored anywhere else on the resource).
     @Override
     public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
-        ObjectNode json = (ObjectNode) registry.getClassIdentifier(getClass(), serialVersionUID);
+        ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
         json.put(METRIC_FIELD, metric.canonical());
         return json;
     }
