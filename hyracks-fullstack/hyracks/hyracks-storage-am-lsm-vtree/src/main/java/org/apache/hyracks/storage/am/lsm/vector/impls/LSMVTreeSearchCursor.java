@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentTy
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
+import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.impls.ClusterSearchResult;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.impls.VTree.VTreeAccessor;
@@ -104,13 +105,18 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
     private boolean[] clusterExhausted; // Whether each component exhausted its current cluster
     private boolean stopAdvancing; // Flag to stop advancing after K reached
 
-    // Debug counters to track reconciliation
+    // Progress counters that feed cluster-advancement / early-termination decisions. These are load-bearing,
+    // not diagnostics: both are maintained in doNext() (one tuple produced == one doNext() call), never in
+    // doGetTuple(), which a consumer may call any number of times per tuple.
+    private int tuplesProduced; // Tuples handed to the consumer so far (K progress)
+    private int validTuplesFromCurrentCluster; // Tuples produced from the current cluster (empty-cluster nprobe)
+
+    // Debug counters to track reconciliation (trace logging only — see doClose())
     private int totalTuplesPopped; // Total tuples popped from priority queue (including cancelled)
     private int antimatterTuplesDetected; // Antimatter tuples detected
     private int cancellationsMade; // Matter tuples cancelled by antimatter
     private int getTupleCallCount; // Track how many times doGetTuple() is called
     private int tuplesFilteredOut; // Tuples that failed INCLUDE field filter
-    private int validTuplesFromCurrentCluster; // Valid tuples output from current cluster (for empty-cluster nprobe)
 
     // Tuple filter for INCLUDE field predicates (e.g., year > 2000)
     // When set, only tuples passing this filter are returned and counted toward K
@@ -189,10 +195,12 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
         this.cancellationsMade = 0;
         this.getTupleCallCount = 0;
         this.tuplesFilteredOut = 0;
+        this.tuplesProduced = 0;
         this.validTuplesFromCurrentCluster = 0;
 
         // Set up comparator and operational components
         cmp = lsmInitialState.getOriginalKeyComparator();
+        LSMVTreeUtils.validateKeyComparators(cmp, pkStartField, numPrimaryKeyFields);
         operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
 
@@ -424,11 +432,11 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
             LOGGER.trace(
                     "Search summary: mode={}, K={}, nprobe={}, levelWiseClusters={}, levelWiseComplete={},"
                             + " minClustersProbed={}, tuplesProcessed={}, antimatter={}, cancellations={},"
-                            + " filteredOut={}, getTupleCalls={}",
+                            + " filteredOut={}, tuplesProduced={}, getTupleCalls={}",
                     fullScanMode ? "MERGE" : "QUERY", K, nprobe,
                     clusterStrategy != null ? clusterStrategy.getLevelWiseClusterCount() : 0,
                     clusterStrategy != null && clusterStrategy.isLevelWisePhaseComplete(), getMinClustersProbed(),
-                    totalTuplesPopped, antimatterTuplesDetected, cancellationsMade, tuplesFilteredOut,
+                    totalTuplesPopped, antimatterTuplesDetected, cancellationsMade, tuplesFilteredOut, tuplesProduced,
                     getTupleCallCount);
         }
         super.doClose();
@@ -450,6 +458,15 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
 
         // Track total tuples popped (including those that may be cancelled)
         totalTuplesPopped++;
+
+        // Count the tuple as produced HERE, not in doGetTuple(): getTuple() is not contractually called
+        // exactly once per tuple, so counting there would inflate K-progress for any consumer that reads the
+        // same tuple twice and trigger early termination sooner — silently reducing recall. Both counters
+        // below feed cluster-advancement decisions (see pushIntoQueueAndAdvanceClusterIfNeeded).
+        if (outputElement != null) {
+            tuplesProduced++;
+            validTuplesFromCurrentCluster++;
+        }
     }
 
     @Override
@@ -747,9 +764,6 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
     @Override
     public ITupleReference doGetTuple() {
         getTupleCallCount++;
-        if (outputElement != null) {
-            validTuplesFromCurrentCluster++;
-        }
         return outputElement != null ? outputElement.getTuple() : null;
     }
 
@@ -807,11 +821,11 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
 
     @Override
     protected boolean isDeleted(PriorityQueueElement element) throws HyracksDataException {
-        // Check if tuple has antimatter bit set (indicates deleted record)
+        // Check if tuple has antimatter bit set (indicates deleted record).
         // During merge with full-scan mode, tuples may be rebuilt as ArrayTupleReference
-        // which doesn't have antimatter bit - treat those as matter tuples
+        // which doesn't have antimatter bit - treat those as matter tuples.
         ITupleReference tuple = element.getTuple();
-        return ((ILSMTreeTupleReference) tuple).isAntimatter();
+        return tuple instanceof ILSMTreeTupleReference && ((ILSMTreeTupleReference) tuple).isAntimatter();
     }
 
     /**
@@ -913,7 +927,7 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
 
         // Calculate minimum clusters explored across all components
         int minClustersExplored = getMinClustersProbed();
-        int resultsCollected = getTupleCallCount;
+        int resultsCollected = tuplesProduced;
 
         if (clusterStrategy.shouldStopAdvancing(minClustersExplored, resultsCollected)) {
             // We have enough results AND probed enough clusters - stop advancing

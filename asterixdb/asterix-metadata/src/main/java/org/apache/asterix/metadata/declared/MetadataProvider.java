@@ -1682,14 +1682,17 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, database, dataverseName, datasetName);
         int numKeys = primaryKeys.size() + secondaryKeys.size();
-        int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
 
-        // Vector indexes do not support tuple filters; drop any factories supplied by the caller.
+        // Vector indexes do not support tuple filters; drop any factories supplied by the caller, and do NOT
+        // append a filter column to the permutation either — a filter field the index never reads would still
+        // cost bytes in every data tuple (VTree.getNumOfFilterFields() is 0 on the storage side). CREATE INDEX
+        // rejects a vector index on a filtered dataset (see QueryTranslator), so this is belt-and-braces for
+        // an index created before that check existed.
         filterFactory = null;
         prevFilterFactory = null;
 
-        // Field permutation layout: <secondary keys (vector + include fields), primary keys, filter field?>
-        int[] fieldPermutation = new int[numKeys + numFilterFields];
+        // Field permutation layout: <secondary keys (vector + include fields), primary keys>
+        int[] fieldPermutation = new int[numKeys];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int[] pkFields = new int[primaryKeys.size()];
         int i = 0;
@@ -1710,15 +1713,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             j++;
         }
 
-        if (numFilterFields > 0) {
-            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
-            fieldPermutation[numKeys] = idx;
-        }
-
         // For UPSERT, also build the permutation for the previous tuple.
         int[] prevFieldPermutation = null;
         if (indexOp == IndexOperation.UPSERT) {
-            prevFieldPermutation = new int[numKeys + numFilterFields];
+            prevFieldPermutation = new int[numKeys];
             int k = 0;
 
             for (LogicalVariable varKey : prevSecondaryKeys) {
@@ -1731,11 +1729,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 int idx = propagatedSchema.findVariable(varKey);
                 prevFieldPermutation[k] = idx;
                 k++;
-            }
-
-            if (numFilterFields > 0) {
-                int idx = propagatedSchema.findVariable(prevAdditionalFilteringKeys.get(0));
-                prevFieldPermutation[numKeys] = idx;
             }
         }
 

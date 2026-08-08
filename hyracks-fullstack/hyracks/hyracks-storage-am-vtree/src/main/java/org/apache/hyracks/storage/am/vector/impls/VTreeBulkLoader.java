@@ -488,11 +488,11 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
         // Destination page ids are deterministic: sequential from staticBasePageId, in source
         // page-id order. This lets both passes below run with a bounded number of pages in
         // memory (one source pin plus at most one confiscated destination page at a time).
-        int staticBasePageId = freePageManager.takePage(metaFrame);
-        // Allocate remaining S-1 pages
-        for (int i = 1; i < numStaticPages; i++) {
-            freePageManager.takePage(metaFrame);
-        }
+        // Reserve a CONTIGUOUS block: takeBlock returns the first of numStaticPages consecutive ids, which is
+        // what makes the (staticBasePageId + i) destination math valid. A per-page takePage() loop is NOT safe
+        // here — on a free-list page manager takePage() can hand back non-contiguous ids (see the same
+        // reasoning in VTreeFlushLoader.copyStaticStructure).
+        int staticBasePageId = freePageManager.takeBlock(metaFrame, numStaticPages);
 
         // Create frames for pointer adjustment
         IVTreeInteriorFrame intFrame = (IVTreeInteriorFrame) treeIndex.getInteriorFrameFactory().createFrame();

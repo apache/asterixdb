@@ -26,6 +26,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
@@ -44,6 +46,7 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -184,6 +187,14 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     private static final int QP_FIELD_MIN_PROBE_FRACTION = 3;
     private static final int QP_FIELD_K_MULTIPLIER = 4;
 
+    // Serialized ADM integer type tags, matching ATypeTag.{TINYINT,SMALLINT,INTEGER,BIGINT}.serialize() in
+    // asterix-om. Hardcoded for the same reason as ADOUBLE_TYPE_TAG below: Hyracks cannot depend on
+    // asterix-om, and the optimizer side that packs this tuple uses those types.
+    private static final byte AINT8_TYPE_TAG = 1;
+    private static final byte AINT16_TYPE_TAG = 2;
+    private static final byte AINT32_TYPE_TAG = 3;
+    private static final byte AINT64_TYPE_TAG = 4;
+
     @Override
     protected void resetSearchPredicate(int tupleIndex) {
         // Update queryParamsTuple to point to current input tuple
@@ -196,44 +207,69 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             vectorPred.setQueryTuple(queryParamsTuple);
             vectorPred.setQueryFieldIndex(QP_FIELD_QUERY_VECTOR);
 
-            // Extract K value if available (+1 to skip the ADM type tag)
-            if (queryFields.length > QP_FIELD_K) {
-                int k = IntegerPointable.getInteger(queryParamsTuple.getFieldData(QP_FIELD_K),
-                        queryParamsTuple.getFieldStart(QP_FIELD_K) + 1);
-                vectorPred.setK(k);
-            }
+            // EVERY slot below is set unconditionally, on every input row. The predicate instance is reused
+            // across rows, so a slot left untouched silently inherits the previous row's value — which would
+            // turn "0 means use the default" into "0 means whatever the previous row used".
 
-            // Extract min_probe_fraction (double, +1 to skip type tag).
-            // Fraction of leaf clusters to probe (0.0-1.0). 0 means use default (0.1).
-            if (queryFields.length > QP_FIELD_MIN_PROBE_FRACTION) {
-                double minProbeFraction =
-                        DoublePointable.getDouble(queryParamsTuple.getFieldData(QP_FIELD_MIN_PROBE_FRACTION),
-                                queryParamsTuple.getFieldStart(QP_FIELD_MIN_PROBE_FRACTION) + 1);
-                if (minProbeFraction > 0.0) {
-                    vectorPred.setMinProbeFraction(minProbeFraction);
-                }
-            }
+            // K (+1 to skip the ADM type tag). 0 when the plan did not supply the slot.
+            vectorPred.setK(queryFields.length > QP_FIELD_K ? readIntegerQueryParam(QP_FIELD_K) : 0);
 
-            // Extract k_multiplier (int, +1 to skip type tag)
-            if (queryFields.length > QP_FIELD_K_MULTIPLIER) {
-                int queryKMult = IntegerPointable.getInteger(queryParamsTuple.getFieldData(QP_FIELD_K_MULTIPLIER),
-                        queryParamsTuple.getFieldStart(QP_FIELD_K_MULTIPLIER) + 1);
-                vectorPred.setKMultiplier(Math.max(1, queryKMult));
-            }
+            // min_probe_fraction (double, +1 to skip type tag), a fraction in (0, 1] of the epsilon-filtered
+            // candidate clusters. setMinProbeFraction() maps <= 0 to its own default, so pass 0 when absent.
+            vectorPred.setMinProbeFraction(queryFields.length > QP_FIELD_MIN_PROBE_FRACTION
+                    ? DoublePointable.getDouble(queryParamsTuple.getFieldData(QP_FIELD_MIN_PROBE_FRACTION),
+                            queryParamsTuple.getFieldStart(QP_FIELD_MIN_PROBE_FRACTION) + 1)
+                    : 0.0);
 
-            // Set tuple filter for INCLUDE field predicates (e.g., year > 2000)
-            // This filter is applied at cursor level for proper K counting
-            if (tupleFilter != null) {
-                vectorPred.setTupleFilter(tupleFilter);
-            }
+            // k_multiplier: the per-query value, unless the session config compiler.vector.kmultiplier is set
+            // (> 1), which currently wins.
+            int queryKMultiplier = queryFields.length > QP_FIELD_K_MULTIPLIER
+                    ? Math.max(1, readIntegerQueryParam(QP_FIELD_K_MULTIPLIER)) : 1;
+            vectorPred.setKMultiplier(kMultiplier > 1 ? kMultiplier : queryKMultiplier);
 
-            // Session config compiler.vector.kmultiplier overrides query arg if set (kMultiplier > 1 from constructor)
-            if (kMultiplier > 1) {
-                vectorPred.setKMultiplier(kMultiplier);
-            }
+            // Tuple filter for INCLUDE field predicates (e.g. year > 2000), applied at cursor level so that K
+            // counts only passing tuples. null when this search has no pushed filter.
+            vectorPred.setTupleFilter(tupleFilter);
 
             vectorPred.setEpsilon(indexEpsilon);
         }
+    }
+
+    /**
+     * Read an integer query parameter, honouring its ADM type tag.
+     * <p>
+     * A fixed 4-byte {@code IntegerPointable} read is not safe on its own: a SQL++ integer literal is an
+     * {@code AInt32} today ({@code LIMIT 3}), but a literal that does not fit in 32 bits, and any folded or
+     * parameterised expression that types as BIGINT, arrives as an 8-byte {@code AInt64} — whose first four
+     * big-endian bytes are 0 for every small value. That produced a silently wrong {@code k} (0) rather than
+     * an error, so switch on the tag instead of assuming the width.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private int readIntegerQueryParam(int fieldIndex) {
+        byte[] data = queryParamsTuple.getFieldData(fieldIndex);
+        int tagOffset = queryParamsTuple.getFieldStart(fieldIndex);
+        int valueOffset = tagOffset + 1; // skip the ADM type tag
+        byte typeTag = data[tagOffset];
+        long value;
+        switch (typeTag) {
+            case AINT8_TYPE_TAG:
+                value = data[valueOffset];
+                break;
+            case AINT16_TYPE_TAG:
+                value = ShortPointable.getShort(data, valueOffset);
+                break;
+            case AINT32_TYPE_TAG:
+                value = IntegerPointable.getInteger(data, valueOffset);
+                break;
+            case AINT64_TYPE_TAG:
+                value = LongPointable.getLong(data, valueOffset);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected type tag " + typeTag + " for integer query parameter at "
+                        + "position " + fieldIndex + " of the vector-search query-parameters tuple");
+        }
+        // Clamp rather than overflow: k / k_multiplier are counts used to size buffers.
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, value));
     }
 
     /**

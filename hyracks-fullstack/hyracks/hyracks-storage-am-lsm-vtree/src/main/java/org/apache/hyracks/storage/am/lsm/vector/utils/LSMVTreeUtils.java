@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
@@ -56,7 +57,9 @@ import org.apache.hyracks.storage.am.vector.frames.VTreeInteriorFrameFactory;
 import org.apache.hyracks.storage.am.vector.frames.VTreeLeafFrameFactory;
 import org.apache.hyracks.storage.am.vector.frames.VTreeMetadataFrameFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
+import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Factory helper that wires the four frame factories, the {@link VTreeFactory}, and the LSM glue
@@ -71,6 +74,31 @@ public final class LSMVTreeUtils {
     private static final int TREE_INDEX_FIELD_COUNT = 4;
 
     private LSMVTreeUtils() {
+    }
+
+    /**
+     * Assert that the search key comparators cover {@code <distance, PK…>} — i.e. that there is a comparator
+     * for field 0 and for each of the {@code numPrimaryKeyFields} fields starting at {@code pkStartField}.
+     * <p>
+     * Both vector search cursors build their ordering / antimatter-cancellation key from exactly those
+     * positions, and both derive "how many PK fields can I compare" as
+     * {@code min(comparators.length - pkStartField, numPrimaryKeyFields)}. A short comparator array therefore
+     * does not fail — it silently shortens the key, and a zero-length key is worse than an error:
+     * ordering collapses to distance-only (so pairwise antimatter cancellation can fire against an unrelated
+     * same-distance row) and "same primary key" becomes universally true (so group reconciliation keeps only
+     * the newest tuple of an equal-distance group and drops the rest). Production wiring satisfies the
+     * precondition; this turns a future mis-wiring into a hard failure instead of wrong results.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public static void validateKeyComparators(MultiComparator cmp, int pkStartField, int numPrimaryKeyFields)
+            throws HyracksDataException {
+        int available = cmp == null ? 0 : cmp.getComparators().length;
+        if (available < pkStartField + numPrimaryKeyFields) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "VTree search key comparators too few: " + available + " comparators, but the <distance, PK> key "
+                            + "needs " + (pkStartField + numPrimaryKeyFields) + " (pkStartField=" + pkStartField
+                            + ", numPrimaryKeyFields=" + numPrimaryKeyFields + ")");
+        }
     }
 
     /**

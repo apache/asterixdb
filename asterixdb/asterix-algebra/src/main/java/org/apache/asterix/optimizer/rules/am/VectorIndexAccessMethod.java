@@ -297,7 +297,18 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         // Index-only opportunity detected upstream in IntroduceTopKAccessMethodRule (PK-only
         // projection above LIMIT). When set, the secondary UnnestMap emits an extra $$dist field, the
         // ORDER BY rebinds to it, and the primary BTree lookup + rerank are skipped (see branch below).
+        //
+        // Every precondition must be settled HERE, before the params are handed to
+        // AccessMethodUtils.createSecondaryIndexUnnestMap(): that call serializes jobGenParams into the
+        // index-search function arguments, so clearing indexOnly afterwards does not change the emitted plan
+        // — the runtime would still emit [pk..., dist] while the plan declares only the PK variables, an
+        // output arity mismatch. The ORDER shape the branch below relies on is checkable now.
         boolean isIndexOnlyPlan = indexOnly;
+        if (isIndexOnlyPlan) {
+            ILogicalOperator orderCandidate = orderRef.getValue();
+            isIndexOnlyPlan = orderCandidate.getOperatorTag() == LogicalOperatorTag.ORDER
+                    && ((OrderOperator) orderCandidate).getOrderExpressions().size() == 1;
+        }
         jobGenParams.setIndexOnly(isIndexOnlyPlan);
 
         // Create UNNEST-MAP operator for vector index search
@@ -329,120 +340,113 @@ public class VectorIndexAccessMethod implements IAccessMethod {
             //   5. Skip createRestOfIndexSearchPlan — no primary BTree lookup, no record assembly. The
             //      runtime reads D(q,x) from the cursor and appends it.
             if (!(secondaryIndexUnnestOp instanceof UnnestMapOperator)) {
-                // Unexpected shape — fall through to the legacy lookup-and-rerank plan below.
-                isIndexOnlyPlan = false;
-                jobGenParams.setIndexOnly(false);
+                // Not recoverable: indexOnly=true is already baked into the index-search arguments above, so
+                // there is no falling back to lookup-and-rerank from here. retainInput/retainNull are both
+                // false, which is exactly the case where createSecondaryIndexUnnestMap returns an
+                // UnnestMapOperator, so this is a broken invariant rather than an unsupported plan shape.
+                throw new AlgebricksException("Vector index-only plan: expected an UnnestMapOperator from the "
+                        + "secondary index search but got " + secondaryIndexUnnestOp.getOperatorTag());
             } else {
                 UnnestMapOperator unnestMap = (UnnestMapOperator) secondaryIndexUnnestOp;
                 LogicalVariable distVar = context.newVar();
                 unnestMap.getVariables().add(distVar);
                 unnestMap.getVariableTypes().add(BuiltinType.ADOUBLE);
 
-                // Rewrite ORDER BY: replace the ann_distance call with VarRef($$dist). The earlier
-                // pattern-match guarantees orderOp has exactly one expression (the ann_distance call);
-                // keep the same direction.
+                // Rewrite ORDER BY: replace the ann_distance call with VarRef($$dist). isIndexOnlyPlan was
+                // only left true if orderOp has exactly one expression (the ann_distance call); keep the same
+                // direction.
                 OrderOperator orderOp = (OrderOperator) orderRef.getValue();
-                if (orderOp.getOrderExpressions().size() != 1) {
-                    // Unexpected ORDER shape — roll back the distVar addition before falling through.
-                    unnestMap.getVariables().remove(unnestMap.getVariables().size() - 1);
-                    unnestMap.getVariableTypes().remove(unnestMap.getVariableTypes().size() - 1);
-                    isIndexOnlyPlan = false;
-                    jobGenParams.setIndexOnly(false);
-                } else {
-                    VariableReferenceExpression distVarRef = new VariableReferenceExpression(distVar);
-                    distVarRef.setSourceLocation(orderOp.getSourceLocation());
-                    orderOp.getOrderExpressions().get(0).second.setValue(distVarRef);
+                VariableReferenceExpression distVarRef = new VariableReferenceExpression(distVar);
+                distVarRef.setSourceLocation(orderOp.getSourceLocation());
+                orderOp.getOrderExpressions().get(0).second.setValue(distVarRef);
+
+                // Build the variable substitution map: old PK vars → new PK vars. The secondary
+                // UnnestMap allocates fresh context.newVar() PK variables, so anything that
+                // referenced the old PK variable from the DataSourceScan needs to be redirected.
+                List<LogicalVariable> oldVars = dataSourceOp.getVariables();
+                int numPK = dataset.getPrimaryKeys().size();
+                List<LogicalVariable> newPkVars = unnestMap.getVariables().subList(0, numPK);
+                Map<LogicalVariable, LogicalVariable> pkSubstitution = new java.util.HashMap<>();
+                for (int i = 0; i < numPK; i++) {
+                    pkSubstitution.put(oldVars.get(i), newPkVars.get(i));
+                }
+                // The record variable (and meta record var, if present) — we rewrite
+                // field-access($$rec, "<pk_field>") to VarRef($$pk_new) below.
+                LogicalVariable oldRecVar = numPK < oldVars.size() ? oldVars.get(numPK) : null;
+
+                // Map PK field name -> new PK variable.
+                Map<String, LogicalVariable> pkFieldToNewVar = new java.util.HashMap<>();
+                List<List<String>> pkPaths = dataset.getPrimaryKeys();
+                for (int i = 0; i < numPK; i++) {
+                    List<String> p = pkPaths.get(i);
+                    if (p != null && p.size() == 1) {
+                        pkFieldToNewVar.put(p.get(0), newPkVars.get(i));
+                    }
                 }
 
-                if (isIndexOnlyPlan) {
-                    // Build the variable substitution map: old PK vars → new PK vars. The secondary
-                    // UnnestMap allocates fresh context.newVar() PK variables, so anything that
-                    // referenced the old PK variable from the DataSourceScan needs to be redirected.
-                    List<LogicalVariable> oldVars = dataSourceOp.getVariables();
-                    int numPK = dataset.getPrimaryKeys().size();
-                    List<LogicalVariable> newPkVars = unnestMap.getVariables().subList(0, numPK);
-                    Map<LogicalVariable, LogicalVariable> pkSubstitution = new java.util.HashMap<>();
-                    for (int i = 0; i < numPK; i++) {
-                        pkSubstitution.put(oldVars.get(i), newPkVars.get(i));
-                    }
-                    // The record variable (and meta record var, if present) — we rewrite
-                    // field-access($$rec, "<pk_field>") to VarRef($$pk_new) below.
-                    LogicalVariable oldRecVar = numPK < oldVars.size() ? oldVars.get(numPK) : null;
+                // The rewrites below must cover the operators ABOVE the LIMIT too — the result
+                // projection (e.g. SELECT VALUE m.idx) lives above LIMIT and references the old
+                // record var via field-access($$rec, "idx"). Walking only from limitRef would leave
+                // it dangling ("Could not infer type"). aboveLimitOps[0] is the outermost ancestor
+                // (e.g. DistributeResult); walking from it reaches the projection, the LIMIT, the
+                // ORDER, and the ASSIGNs below in a single descent.
+                ILogicalOperator rewriteRoot = (aboveLimitOps != null && !aboveLimitOps.isEmpty())
+                        ? aboveLimitOps.get(0) : (ILogicalOperator) limitRef.getValue();
 
-                    // Map PK field name -> new PK variable.
-                    Map<String, LogicalVariable> pkFieldToNewVar = new java.util.HashMap<>();
-                    List<List<String>> pkPaths = dataset.getPrimaryKeys();
-                    for (int i = 0; i < numPK; i++) {
-                        List<String> p = pkPaths.get(i);
-                        if (p != null && p.size() == 1) {
-                            pkFieldToNewVar.put(p.get(0), newPkVars.get(i));
-                        }
-                    }
+                // 1. Substitute old PK var refs throughout the plan (above and below LIMIT).
+                org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities
+                        .substituteVariablesInDescendantsAndSelf(rewriteRoot, pkSubstitution, context);
 
-                    // The rewrites below must cover the operators ABOVE the LIMIT too — the result
-                    // projection (e.g. SELECT VALUE m.idx) lives above LIMIT and references the old
-                    // record var via field-access($$rec, "idx"). Walking only from limitRef would leave
-                    // it dangling ("Could not infer type"). aboveLimitOps[0] is the outermost ancestor
-                    // (e.g. DistributeResult); walking from it reaches the projection, the LIMIT, the
-                    // ORDER, and the ASSIGNs below in a single descent.
-                    ILogicalOperator rewriteRoot = (aboveLimitOps != null && !aboveLimitOps.isEmpty())
-                            ? aboveLimitOps.get(0) : (ILogicalOperator) limitRef.getValue();
-
-                    // 1. Substitute old PK var refs throughout the plan (above and below LIMIT).
-                    org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities
-                            .substituteVariablesInDescendantsAndSelf(rewriteRoot, pkSubstitution, context);
-
-                    // 2. Rewrite field-access on the old record var to direct PK VarRefs (e.g. the
-                    //    SELECT VALUE m.idx projection above LIMIT).
-                    if (oldRecVar != null) {
-                        rewriteRecordFieldAccessToPk(rewriteRoot, oldRecVar, pkFieldToNewVar);
-                    }
-
-                    // 3. Any remaining ASSIGN expression that still references oldRecVar (transitively) —
-                    // for example $$x := $$m.getField("embedding") hoisted by the SQL++ compiler out of
-                    // ann_distance(m.embedding, ...) — is now structurally orphaned: no operator above
-                    // LIMIT consumes it (we wouldn't have entered the index-only branch otherwise) but the
-                    // type system still walks it. Replace each such expression with MISSING so it types
-                    // cleanly. None of these values is ever read at runtime.
-                    if (oldRecVar != null) {
-                        neutralizeDanglingExpressions(rewriteRoot, oldRecVar);
-                    }
-
-                    // Recompute type env bottom-up over every operator whose schema/expressions changed:
-                    // the new secondary UnnestMap, the LIMIT chain, then each above-LIMIT ancestor from the
-                    // one closest to LIMIT up to the root (aboveLimitOps is ordered root-first).
-                    context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
-                    org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil.typeOpRec(limitRef, context);
-                    if (aboveLimitOps != null) {
-                        for (int ai = aboveLimitOps.size() - 1; ai >= 0; ai--) {
-                            context.computeAndSetTypeEnvironmentForOperator(aboveLimitOps.get(ai));
-                        }
-                    }
-
-                    // Cross-pollination dedup (index-only branch): when cross_pollination_m > 1 the secondary
-                    // cursor emits up to M (pk..., dist) copies per record. The primary-lookup path dedups via a
-                    // DistinctOperator above its primary UNNEST-MAP (see createRestOfIndexSearchPlan below), but the
-                    // index-only branch skips that path, so it must splice its OWN Distinct — keyed on the new
-                    // secondary-UnnestMap PK vars — directly above the secondary UNNEST-MAP and below ORDER BY/LIMIT,
-                    // so LIMIT applies to DISTINCT PKs. DistinctOperator propagates all input vars, so $$dist
-                    // survives for the ORDER BY $$dist above it. For M == 1 we return the bare UNNEST-MAP so the
-                    // plan stays byte-identical to the legacy path.
-                    if (extractCrossPollinationM(chosenIndex) > 1 && numPK > 0) {
-                        List<Mutable<ILogicalExpression>> dedupExprs = new ArrayList<>(numPK);
-                        for (LogicalVariable pkVar : newPkVars) {
-                            VariableReferenceExpression pkRef = new VariableReferenceExpression(pkVar);
-                            pkRef.setSourceLocation(secondaryIndexUnnestOp.getSourceLocation());
-                            dedupExprs.add(new MutableObject<>(pkRef));
-                        }
-                        DistinctOperator dedupOp = new DistinctOperator(dedupExprs);
-                        dedupOp.setSourceLocation(secondaryIndexUnnestOp.getSourceLocation());
-                        dedupOp.getInputs().add(new MutableObject<>(secondaryIndexUnnestOp));
-                        dedupOp.setExecutionMode(secondaryIndexUnnestOp.getExecutionMode());
-                        context.computeAndSetTypeEnvironmentForOperator(dedupOp);
-                        return dedupOp;
-                    }
-                    return secondaryIndexUnnestOp;
+                // 2. Rewrite field-access on the old record var to direct PK VarRefs (e.g. the
+                //    SELECT VALUE m.idx projection above LIMIT).
+                if (oldRecVar != null) {
+                    rewriteRecordFieldAccessToPk(rewriteRoot, oldRecVar, pkFieldToNewVar);
                 }
+
+                // 3. Any remaining ASSIGN expression that still references oldRecVar (transitively) —
+                // for example $$x := $$m.getField("embedding") hoisted by the SQL++ compiler out of
+                // ann_distance(m.embedding, ...) — is now structurally orphaned: no operator above
+                // LIMIT consumes it (we wouldn't have entered the index-only branch otherwise) but the
+                // type system still walks it. Replace each such expression with MISSING so it types
+                // cleanly. None of these values is ever read at runtime.
+                if (oldRecVar != null) {
+                    neutralizeDanglingExpressions(rewriteRoot, oldRecVar);
+                }
+
+                // Recompute type env bottom-up over every operator whose schema/expressions changed:
+                // the new secondary UnnestMap, the LIMIT chain, then each above-LIMIT ancestor from the
+                // one closest to LIMIT up to the root (aboveLimitOps is ordered root-first).
+                context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
+                org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil.typeOpRec(limitRef, context);
+                if (aboveLimitOps != null) {
+                    for (int ai = aboveLimitOps.size() - 1; ai >= 0; ai--) {
+                        context.computeAndSetTypeEnvironmentForOperator(aboveLimitOps.get(ai));
+                    }
+                }
+
+                // Cross-pollination dedup (index-only branch): when cross_pollination_m > 1 the secondary
+                // cursor emits up to M (pk..., dist) copies per record. The primary-lookup path dedups via a
+                // DistinctOperator above its primary UNNEST-MAP (see createRestOfIndexSearchPlan below), but the
+                // index-only branch skips that path, so it must splice its OWN Distinct — keyed on the new
+                // secondary-UnnestMap PK vars — directly above the secondary UNNEST-MAP and below ORDER BY/LIMIT,
+                // so LIMIT applies to DISTINCT PKs. DistinctOperator propagates all input vars, so $$dist
+                // survives for the ORDER BY $$dist above it. For M == 1 we return the bare UNNEST-MAP so the
+                // plan stays byte-identical to the legacy path.
+                if (extractCrossPollinationM(chosenIndex) > 1 && numPK > 0) {
+                    List<Mutable<ILogicalExpression>> dedupExprs = new ArrayList<>(numPK);
+                    for (LogicalVariable pkVar : newPkVars) {
+                        VariableReferenceExpression pkRef = new VariableReferenceExpression(pkVar);
+                        pkRef.setSourceLocation(secondaryIndexUnnestOp.getSourceLocation());
+                        dedupExprs.add(new MutableObject<>(pkRef));
+                    }
+                    DistinctOperator dedupOp = new DistinctOperator(dedupExprs);
+                    dedupOp.setSourceLocation(secondaryIndexUnnestOp.getSourceLocation());
+                    dedupOp.getInputs().add(new MutableObject<>(secondaryIndexUnnestOp));
+                    dedupOp.setExecutionMode(secondaryIndexUnnestOp.getExecutionMode());
+                    context.computeAndSetTypeEnvironmentForOperator(dedupOp);
+                    return dedupOp;
+                }
+                return secondaryIndexUnnestOp;
             }
         }
 

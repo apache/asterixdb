@@ -109,6 +109,12 @@ public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataF
      * Split a full metadata frame into two halves and insert {@code tuple} into whichever side preserves the
      * {@code max_distance}-ascending invariant. Uses a copy-and-reinitialize strategy (rather than in-place
      * deletes) to avoid page fragmentation.
+     * <p>
+     * Both halves are re-initialized, which resets their next-page pointers to the end-of-chain sentinel. Re-linking
+     * the two halves into the directory chain — and, crucially, preserving this page's original successor as the
+     * right half's successor — is the caller's responsibility (see
+     * {@code VTree.handleMetadataPageOverflow}); {@link #getNextPage()} must therefore be read <em>before</em>
+     * calling this method.
      */
     public void split(IVTreeMetadataFrame rightFrame, ITupleReference tuple) throws HyracksDataException {
         int tupleCount = getTupleCount();
@@ -126,8 +132,11 @@ public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataF
             rightTuples[i - splitIndex] = TupleUtils.copyTuple(frameTuple);
         }
 
-        initBuffer((byte) 0);
-        rightFrame.initBuffer((byte) 0);
+        // Preserve this frame's level in both halves rather than hardcoding 0: a directory page is not
+        // necessarily at level 0, and initBuffer() is what stamps the level into the page header.
+        byte level = getLevel();
+        initBuffer(level);
+        rightFrame.initBuffer(level);
 
         for (int i = 0; i < leftTuples.length; i++) {
             insert(leftTuples[i], i);

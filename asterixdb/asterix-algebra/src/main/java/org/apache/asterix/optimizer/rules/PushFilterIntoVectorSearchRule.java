@@ -32,6 +32,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
@@ -55,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
@@ -156,31 +158,34 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
             }
         }
 
-        Set<String> filterFieldNames = new HashSet<>();
-        extractFieldNames(conditionRef.getValue(), searchInfo.recordType(), filterFieldNames);
+        // Collect the FULL field paths the filter reads, resolved against the record variable(s) this vector
+        // search feeds. Matching on full paths (not leaf names) is what keeps `WHERE m.b.year > 2000` from
+        // being pushed against an `INCLUDE (a.year)` column, and restricting the base to this subtree's
+        // record variable(s) is what keeps a second record (from a join or a LET) from being redirected into
+        // the index's INCLUDE field.
+        Set<List<String>> filterFieldPaths = new HashSet<>();
+        extractFieldPaths(conditionRef.getValue(), searchInfo, filterFieldPaths);
 
-        if (filterFieldNames.isEmpty()) {
+        if (filterFieldPaths.isEmpty()) {
             return false;
         }
 
         // Bail out if the filter references any field that is not in the index's INCLUDE list.
-        Map<String, Integer> includeFieldIndex = buildIncludeFieldIndex(searchInfo.includeFieldNames());
-        // Leaf-name-keyed matching (here and in the variable-creation loop below) is ambiguous if two
-        // INCLUDE fields share a leaf name -- only possible with nested paths, e.g. INCLUDE(a.x, b.x).
-        // A collapsed map would silently bind the filter to whichever field was inserted last. Bail
-        // rather than risk pushing a predicate that resolves to the wrong physical field.
+        Map<List<String>, Integer> includeFieldIndex = buildIncludeFieldIndex(searchInfo.includeFieldNames());
+        // Two identical INCLUDE paths would collapse the map and bind the filter to whichever was inserted
+        // last; bail rather than risk pushing a predicate that resolves to the wrong physical field.
         if (includeFieldIndex.size() < searchInfo.includeFieldNames().size()) {
             return false;
         }
-        for (String fieldName : filterFieldNames) {
-            if (!includeFieldIndex.containsKey(fieldName)) {
+        for (List<String> fieldPath : filterFieldPaths) {
+            if (!includeFieldIndex.containsKey(fieldPath)) {
                 return false;
             }
         }
 
         // Create fresh logical variables for INCLUDE fields referenced by the filter. These variables
         // are produced by VECTOR_INDEX_UNNEST solely for filter evaluation.
-        Map<String, LogicalVariable> fieldToNewVar = new HashMap<>();
+        Map<List<String>, LogicalVariable> fieldToNewVar = new HashMap<>();
         Map<LogicalVariable, Integer> filterVarToFieldIndex = new HashMap<>();
         Map<LogicalVariable, IAType> filterVarToType = new HashMap<>();
 
@@ -188,15 +193,14 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         // Non-quantized: [distance, centroidId, pk_0..pk_{N-1}, include_fields...]
         // Quantized:     [distance, centroidId, qDist, qEmbed, pk_0..pk_{N-1}, include_fields...]
         // INCLUDE fields start after the secondary keys and ALL primary key columns.
-        int numSecondaryKeys = searchInfo.isQuantized() ? 4 : 2;
+        int numSecondaryKeys = searchInfo.isQuantized() ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
+                : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
         int includeFieldPhysicalIndex = numSecondaryKeys + searchInfo.numPrimaryKeys();
 
         for (List<String> fieldPath : searchInfo.includeFieldNames()) {
-            String fieldName = fieldPath.get(fieldPath.size() - 1);
-
-            if (filterFieldNames.contains(fieldName)) {
+            if (filterFieldPaths.contains(fieldPath)) {
                 LogicalVariable newVar = context.newVar();
-                fieldToNewVar.put(fieldName, newVar);
+                fieldToNewVar.put(fieldPath, newVar);
                 filterVarToFieldIndex.put(newVar, includeFieldPhysicalIndex);
 
                 // For open-schema fields not in the type declaration, getSubFieldType returns null;
@@ -212,8 +216,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         }
 
         // Rewrite field-access expressions in the condition to reference the new INCLUDE variables.
-        ILogicalExpression rewrittenCondition =
-                rewriteFieldAccess(conditionRef.getValue(), fieldToNewVar, searchInfo.recordType());
+        ILogicalExpression rewrittenCondition = rewriteFieldAccess(conditionRef.getValue(), fieldToNewVar, searchInfo);
 
         // Completeness guard: the pushed condition must reference ONLY the freshly-created INCLUDE
         // variables. The earlier checks act on field names that extractFieldNames recognizes; an
@@ -232,7 +235,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         searchInfo.vectorUnnest().getAnnotations().put(VECTOR_FILTER_VAR_TYPES, filterVarToType);
 
         // Register filter variables as produced by the unnest-map so sanity checks recognize them.
-        for (Map.Entry<String, LogicalVariable> entry : fieldToNewVar.entrySet()) {
+        for (Map.Entry<List<String>, LogicalVariable> entry : fieldToNewVar.entrySet()) {
             LogicalVariable var = entry.getValue();
             IAType type = filterVarToType.get(var);
             searchInfo.vectorUnnest().getVariables().add(var);
@@ -254,9 +257,13 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
 
     /**
      * Information about a vector index search found in the plan.
+     *
+     * @param recordVars the variables produced between the SELECT and the vector search — i.e. the record
+     *                   (and PK) variables of THIS search's primary-index lookup. A field access must be
+     *                   rooted at one of these to be a candidate for pushdown.
      */
     private record VectorSearchInfo(UnnestMapOperator vectorUnnest, List<List<String>> includeFieldNames,
-            ARecordType recordType, boolean isQuantized, int numPrimaryKeys) {
+            ARecordType recordType, boolean isQuantized, int numPrimaryKeys, Set<LogicalVariable> recordVars) {
     }
 
     /**
@@ -268,14 +275,16 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         while (current.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             current = current.getInputs().get(0).getValue();
         }
-        return searchForVectorUnnest(current, context);
+        return searchForVectorUnnest(current, context, new HashSet<>());
     }
 
     /**
-     * Recursively searches for a VECTOR_INDEX_UNNEST under the given operator.
+     * Recursively searches for a VECTOR_INDEX_UNNEST under the given operator, accumulating on the way down
+     * the variables produced by the non-vector unnest-maps it passes through — the primary-index lookup that
+     * materializes the dataset record the filter reads.
      */
-    private VectorSearchInfo searchForVectorUnnest(ILogicalOperator op, IOptimizationContext context)
-            throws AlgebricksException {
+    private VectorSearchInfo searchForVectorUnnest(ILogicalOperator op, IOptimizationContext context,
+            Set<LogicalVariable> recordVars) throws AlgebricksException {
 
         if (op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
             UnnestMapOperator unnest = (UnnestMapOperator) op;
@@ -292,14 +301,15 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
                         if (unnest.getSelectCondition() != null) {
                             return null;
                         }
-                        return buildSearchInfo(unnest, params, context);
+                        return buildSearchInfo(unnest, params, context, recordVars);
                     }
                 }
             }
+            recordVars.addAll(unnest.getVariables());
         }
 
         for (Mutable<ILogicalOperator> inputRef : op.getInputs()) {
-            VectorSearchInfo result = searchForVectorUnnest(inputRef.getValue(), context);
+            VectorSearchInfo result = searchForVectorUnnest(inputRef.getValue(), context, recordVars);
             if (result != null) {
                 return result;
             }
@@ -313,7 +323,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private VectorSearchInfo buildSearchInfo(UnnestMapOperator unnest, AccessMethodJobGenParams params,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context, Set<LogicalVariable> recordVars) throws AlgebricksException {
 
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
 
@@ -338,7 +348,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
 
         return new VectorSearchInfo(unnest, details.getIncludeFieldNames(), recordType, quantization != null,
-                dataset.getPrimaryKeys().size());
+                dataset.getPrimaryKeys().size(), recordVars);
     }
 
     /**
@@ -361,90 +371,143 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
     }
 
     /**
-     * Builds a map from field name to its index in the INCLUDE list.
+     * Builds a map from an INCLUDE field's full path to its index in the INCLUDE list.
+     * <p>
+     * Keyed by the whole path, not the leaf name: {@code INCLUDE (a.year)} must not match a filter on
+     * {@code b.year}. {@link List} equality gives exactly path equality.
      */
-    private Map<String, Integer> buildIncludeFieldIndex(List<List<String>> includeFieldNames) {
-        Map<String, Integer> result = new HashMap<>();
+    private Map<List<String>, Integer> buildIncludeFieldIndex(List<List<String>> includeFieldNames) {
+        Map<List<String>, Integer> result = new HashMap<>();
         for (int i = 0; i < includeFieldNames.size(); i++) {
-            List<String> path = includeFieldNames.get(i);
-            String fieldName = path.get(path.size() - 1);
-            result.put(fieldName, i);
+            result.put(includeFieldNames.get(i), i);
         }
         return result;
     }
 
     /**
-     * Extracts field names from field-access expressions in the filter.
+     * Collects the full field paths the filter reads from this vector search's record variable(s).
+     * <p>
+     * Only accesses rooted at one of {@code searchInfo.recordVars()} are collected. An access on any other
+     * record is deliberately ignored here, so it survives the rewrite and trips the completeness guard in
+     * {@link #rewritePre} — the rule then leaves the SELECT alone instead of silently evaluating someone
+     * else's predicate against an INCLUDE column.
      */
-    private void extractFieldNames(ILogicalExpression expr, ARecordType recordType, Set<String> fieldNames) {
+    private void extractFieldPaths(ILogicalExpression expr, VectorSearchInfo searchInfo, Set<List<String>> fieldPaths)
+            throws AlgebricksException {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return;
         }
 
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
-
-        if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
-            if (funcExpr.getArguments().size() >= 2) {
-                String fieldName = AccessMethodUtils.getStringConstant(funcExpr.getArguments().get(1));
-                if (fieldName != null) {
-                    fieldNames.add(fieldName);
-                }
-            }
-        } else if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
-            if (funcExpr.getArguments().size() >= 2 && recordType != null) {
-                Integer idx = AccessMethodUtils.getInt32Constant(funcExpr.getArguments().get(1));
-                if (idx != null) {
-                    String[] names = recordType.getFieldNames();
-                    if (idx >= 0 && idx < names.length) {
-                        fieldNames.add(names[idx]);
-                    }
-                }
-            }
+        List<String> path = resolveFieldPath(funcExpr, searchInfo);
+        if (path != null) {
+            fieldPaths.add(path);
+            // Do not recurse: the nested accesses under this one are the prefix of the path just added.
+            return;
         }
 
         // Recurse into arguments
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-            extractFieldNames(arg.getValue(), recordType, fieldNames);
+            extractFieldPaths(arg.getValue(), searchInfo, fieldPaths);
         }
+    }
+
+    /**
+     * Resolve a (possibly nested) field-access expression to its full path relative to one of this vector
+     * search's record variables, or {@code null} if it is not such an access.
+     * <p>
+     * {@code FIELD_ACCESS_BY_INDEX}'s integer is an index into the field names of the type of ITS OWN base
+     * expression, so for a nested access the base's type has to be resolved first (descending the record
+     * type as the recursion descends) — resolving every level against the top-level record type produces a
+     * bogus name, which in the worst case collides with a real INCLUDE path. Note that
+     * {@code ByNameToByIndexFieldAccessRule} has already converted accesses on a declared type to
+     * {@code FIELD_ACCESS_BY_INDEX} by the time this rule runs, so the nested case is the common one.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private List<String> resolveFieldPath(AbstractFunctionCallExpression funcExpr, VectorSearchInfo searchInfo)
+            throws AlgebricksException {
+        FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
+        boolean byName = fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+        boolean byIndex = fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+        if ((!byName && !byIndex) || funcExpr.getArguments().size() < 2) {
+            return null;
+        }
+
+        // Resolve the base: either this search's record variable (empty prefix) or an enclosing field access.
+        ILogicalExpression base = funcExpr.getArguments().get(0).getValue();
+        List<String> prefix;
+        if (base.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            LogicalVariable baseVar = ((VariableReferenceExpression) base).getVariableReference();
+            if (!searchInfo.recordVars().contains(baseVar)) {
+                return null;
+            }
+            prefix = List.of();
+        } else if (base.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            prefix = resolveFieldPath((AbstractFunctionCallExpression) base, searchInfo);
+            if (prefix == null) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+
+        String fieldName;
+        if (byName) {
+            fieldName = AccessMethodUtils.getStringConstant(funcExpr.getArguments().get(1));
+        } else {
+            Integer idx = AccessMethodUtils.getInt32Constant(funcExpr.getArguments().get(1));
+            ARecordType baseType = resolveRecordTypeAt(searchInfo.recordType(), prefix);
+            if (idx == null || baseType == null) {
+                return null;
+            }
+            String[] names = baseType.getFieldNames();
+            fieldName = idx >= 0 && idx < names.length ? names[idx] : null;
+        }
+        if (fieldName == null) {
+            return null;
+        }
+
+        List<String> path = new ArrayList<>(prefix);
+        path.add(fieldName);
+        return path;
+    }
+
+    /**
+     * The record type reached by following {@code path} from {@code recordType}, or {@code null} if the path
+     * does not resolve to a record type (open field, non-record type, unknown path).
+     */
+    private ARecordType resolveRecordTypeAt(ARecordType recordType, List<String> path) throws AlgebricksException {
+        if (recordType == null) {
+            return null;
+        }
+        if (path.isEmpty()) {
+            return recordType;
+        }
+        IAType type = recordType.getSubFieldType(path);
+        if (type != null && type.getTypeTag() == ATypeTag.OBJECT) {
+            return (ARecordType) type;
+        }
+        return null;
     }
 
     /**
      * Rewrites field-access expressions to use new INCLUDE field variables.
      * Example: gt($row.getField(2), 2000) -> gt($year, 2000)
      */
-    private ILogicalExpression rewriteFieldAccess(ILogicalExpression expr, Map<String, LogicalVariable> fieldToVar,
-            ARecordType recordType) {
+    private ILogicalExpression rewriteFieldAccess(ILogicalExpression expr,
+            Map<List<String>, LogicalVariable> fieldToVar, VectorSearchInfo searchInfo) throws AlgebricksException {
 
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return expr;
         }
 
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
 
-        // Check if this is a field access to replace
-        String fieldName = null;
-
-        if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
-            if (funcExpr.getArguments().size() >= 2) {
-                fieldName = AccessMethodUtils.getStringConstant(funcExpr.getArguments().get(1));
-            }
-        } else if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
-            if (funcExpr.getArguments().size() >= 2 && recordType != null) {
-                Integer idx = AccessMethodUtils.getInt32Constant(funcExpr.getArguments().get(1));
-                if (idx != null) {
-                    String[] names = recordType.getFieldNames();
-                    if (idx >= 0 && idx < names.length) {
-                        fieldName = names[idx];
-                    }
-                }
-            }
-        }
-
-        // Replace field access with variable reference
-        if (fieldName != null && fieldToVar.containsKey(fieldName)) {
-            LogicalVariable newVar = fieldToVar.get(fieldName);
+        // Replace a field access with a variable reference only when its FULL path — resolved against this
+        // search's record variable — is one of the INCLUDE fields we created a variable for.
+        List<String> path = resolveFieldPath(funcExpr, searchInfo);
+        if (path != null && fieldToVar.containsKey(path)) {
+            LogicalVariable newVar = fieldToVar.get(path);
             VariableReferenceExpression varRef = new VariableReferenceExpression(newVar);
             varRef.setSourceLocation(funcExpr.getSourceLocation());
             return varRef;
@@ -455,7 +518,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         boolean changed = false;
 
         for (Mutable<ILogicalExpression> argRef : funcExpr.getArguments()) {
-            ILogicalExpression newArg = rewriteFieldAccess(argRef.getValue(), fieldToVar, recordType);
+            ILogicalExpression newArg = rewriteFieldAccess(argRef.getValue(), fieldToVar, searchInfo);
             newArgs.add(new MutableObject<>(newArg));
             if (newArg != argRef.getValue()) {
                 changed = true;

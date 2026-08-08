@@ -682,16 +682,6 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         super.destroy();
     }
 
-    @Override
-    public synchronized void activate() throws HyracksDataException {
-        if (isActive) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_ACTIVATE_ACTIVE_INDEX);
-        }
-        loadDiskComponents();
-        completeActivation();
-        isActive = true;
-    }
-
     private void loadStaticStructure() throws HyracksDataException {
         LSMVTreeFileManager vTreeFileManager = (LSMVTreeFileManager) fileManager;
         LSMVTreeComponentFileReferences ssFileRef = vTreeFileManager.getStaticStructureFileReference();
@@ -703,16 +693,17 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         setStaticStructure((LSMVTreeDiskComponent) ssComponent);
     }
 
-    private void loadDiskComponents() throws HyracksDataException {
-        diskComponents.clear();
-        List<LSMComponentFileReferences> validFileReferences = fileManager.cleanupAndGetValidFiles();
-        for (LSMComponentFileReferences lsmComponentFileReferences : validFileReferences) {
-            ILSMDiskComponent component =
-                    createDiskComponent(componentFactory, lsmComponentFileReferences.getInsertIndexFileReference(),
-                            lsmComponentFileReferences.getDeleteIndexFileReference(),
-                            lsmComponentFileReferences.getBloomFilterFileReference(), false);
-            diskComponents.add(component);
-        }
+    /**
+     * Load the data components exactly as the base class does, then attach the shared static structure —
+     * which is required to navigate any of them.
+     * <p>
+     * The base implementation is sufficient for the data components: this index's file manager leaves the
+     * bloom-filter slot empty (a VTree component has no bloom filter) and carries the shared static structure
+     * in {@link LSMVTreeComponentFileReferences}' own slot, which {@link #loadStaticStructure()} reads.
+     */
+    @Override
+    protected void loadDiskComponents() throws HyracksDataException {
+        super.loadDiskComponents();
         loadStaticStructure();
     }
 }

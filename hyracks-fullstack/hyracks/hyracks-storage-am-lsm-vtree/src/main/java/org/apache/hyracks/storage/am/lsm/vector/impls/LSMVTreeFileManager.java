@@ -72,8 +72,12 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
         final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + VCTREE_SUFFIX), null,
-                baseDir.getChild(baseName + DELIMITER + STATIC_STRUCTURE_SUFFIX));
+        // The static structure is shared by every component and is never rewritten by a merge, so the merged
+        // component references the same shared file the flush path references — there is no per-merge
+        // ".staticstructure" file, and nothing ever creates one. It goes in the dedicated static-structure
+        // slot, not the bloom-filter slot.
+        return new LSMVTreeComponentFileReferences(baseDir.getChild(baseName + DELIMITER + VCTREE_SUFFIX), null, null,
+                baseDir.getChild(STATIC_STRUCTURE_SUFFIX));
     }
 
     @Override
@@ -85,7 +89,9 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
         collectVTreeFiles(allVTreeFiles);
 
         // The single shared static structure (one per index) is required to read any component; without a
-        // valid one no VTree component can be opened, so drop everything.
+        // valid one no VTree component can be opened, so drop everything. Note that this branch DELETES every
+        // data component, so it must only be taken when the static structure is *known* to be absent — an
+        // I/O error while probing is propagated by validateStaticStructureFile() instead (see there).
         FileReference staticStructureFile = baseDir.getChild(STATIC_STRUCTURE_SUFFIX);
         if (!validateStaticStructureFile(staticStructureFile)) {
             LOGGER.log(Level.TRACE, "Invalid or missing shared .staticstructure file: {}",
@@ -130,7 +136,10 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
         for (IndexComponentFileReference vTreeFile : survivors) {
             LOGGER.log(Level.TRACE, "Valid VTree component: {} (using shared .staticstructure)",
                     vTreeFile.getSequence());
-            validFiles.add(new LSMComponentFileReferences(vTreeFile.getFileRef(), null, staticStructureFile));
+            // Shared static structure goes in its own slot (LSMVTreeComponentFileReferences), not the
+            // bloom-filter slot — a VTree component has no bloom filter.
+            validFiles
+                    .add(new LSMVTreeComponentFileReferences(vTreeFile.getFileRef(), null, null, staticStructureFile));
         }
         return validFiles;
     }
@@ -159,41 +168,37 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
     /**
      * Lists all VTree component files in the base directory and appends their
      * IndexComponentFileReference forms to the supplied list.
+     * <p>
+     * Goes through {@link IIOManager} rather than {@code baseDir.getFile().list(...)}: on cloud deployments a
+     * component that exists for the resource need not have a local file, so a direct {@code java.io.File}
+     * listing under-reports (and would silently drop valid components here).
      */
-    private void collectVTreeFiles(List<IndexComponentFileReference> files) {
-        String[] fileNames = baseDir.getFile().list(vTreeFilter);
-        if (fileNames == null) {
-            return;
-        }
-        for (String fileName : fileNames) {
-            FileReference fileRef = baseDir.getChild(fileName);
+    private void collectVTreeFiles(List<IndexComponentFileReference> files) throws HyracksDataException {
+        for (FileReference fileRef : ioManager.list(baseDir, vTreeFilter)) {
             files.add(IndexComponentFileReference.of(fileRef));
         }
     }
 
     /**
      * Validates that a .staticstructure file exists and is valid.
+     * <p>
+     * Returns {@code false} only for a file that is <em>definitely</em> absent. An I/O failure while probing
+     * ("could not determine") is propagated, deliberately: {@link #cleanupAndGetValidFiles()} reads
+     * {@code false} as "this index has no static structure" and deletes every data component, so swallowing a
+     * transient failure here (a cloud hiccup, EMFILE, a slow mount) would destroy an otherwise healthy index
+     * instead of failing activation.
      *
      * @param staticStructureFile The .staticstructure file to validate
-     * @return true if the file exists and is valid, false otherwise
+     * @return true if the file exists and is valid, false if it is known not to exist
+     * @throws HyracksDataException if existence could not be determined
      */
-    private boolean validateStaticStructureFile(FileReference staticStructureFile) {
-        try {
-            // Check if file exists
-            if (!ioManager.exists(staticStructureFile)) {
-                LOGGER.log(Level.TRACE, "Static structure file does not exist: {}",
-                        staticStructureFile.getAbsolutePath());
-                return false;
-            }
-
-            LOGGER.log(Level.TRACE, "Static structure file is valid: {}", staticStructureFile.getAbsolutePath());
-            return true;
-
-        } catch (Exception e) {
-            LOGGER.log(Level.TRACE, "Error validating static structure file {}: {}",
-                    staticStructureFile.getAbsolutePath(), e.getMessage());
+    private boolean validateStaticStructureFile(FileReference staticStructureFile) throws HyracksDataException {
+        if (!ioManager.exists(staticStructureFile)) {
+            LOGGER.log(Level.TRACE, "Static structure file does not exist: {}", staticStructureFile.getAbsolutePath());
             return false;
         }
+        LOGGER.log(Level.TRACE, "Static structure file is valid: {}", staticStructureFile.getAbsolutePath());
+        return true;
     }
 
     /**

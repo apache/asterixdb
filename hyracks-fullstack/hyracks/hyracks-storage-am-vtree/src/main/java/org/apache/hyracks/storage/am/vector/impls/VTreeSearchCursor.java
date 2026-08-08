@@ -46,6 +46,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -534,9 +535,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
                 LOGGER.warn("VTreeSearchCursor: -1 directory page sentinel in query mode (fileId={}, rootPageId={}); "
                         + "treating cluster as empty", fileId, rootPageId);
             }
-            this.currentDataPageId = -1;
-            this.tupleCount = 0;
-            this.currentTupleIndex = 0;
+            markCurrentClusterEmpty();
             return;
         }
 
@@ -560,9 +559,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
                                     + "(fileId={}, rootPageId={}); treating cluster as empty",
                             directoryPageId, fileId, rootPageId);
                 }
-                this.currentDataPageId = -1;
-                this.tupleCount = 0;
-                this.currentTupleIndex = 0;
+                markCurrentClusterEmpty();
                 return;
             }
 
@@ -578,11 +575,10 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         // Open first data page
         if (this.currentDataPageId != -1) {
             openDataPage(this.currentDataPageId);
+            this.currentTupleIndex = 0;
         } else {
-            this.tupleCount = 0;
+            markCurrentClusterEmpty();
         }
-
-        this.currentTupleIndex = 0;
     }
 
     /**
@@ -809,13 +805,33 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     }
 
     /**
+     * Position the cursor on an empty cluster: release the page of the cluster being abandoned and drop the
+     * frame that was reading it.
+     * <p>
+     * Clearing {@code dataFrame}/{@code frameTuple} is what makes this safe. Leaving them pointing at the
+     * previous cluster's page lets the next {@code hasNext()} fall into {@link #moveToNextDataPage()}, which
+     * reads {@code dataFrame.getNextPage()} off that stale frame and silently resumes the abandoned cluster's
+     * data-page chain. That is reachable in practice because the LSM layer re-points this cursor mid-cluster
+     * during cross-component cluster synchronization ({@code openClusterByResult}), so a cluster is not
+     * necessarily drained to the end of its chain before the next one is opened.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private void markCurrentClusterEmpty() throws HyracksDataException {
+        closeCurrentPage();
+        this.dataFrame = null;
+        this.frameTuple = null;
+        this.currentDataPageId = -1;
+        this.tupleCount = 0;
+        this.currentTupleIndex = 0;
+    }
+
+    /**
      * Open a specific cluster for scanning.
      * Gets metadata page, then opens first data page.
      */
     private void openCluster(ClusterSearchResult cluster) throws HyracksDataException {
         if (cluster == null) {
-            this.currentDataPageId = -1;
-            this.tupleCount = 0;
+            markCurrentClusterEmpty();
             return;
         }
 
@@ -830,12 +846,11 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
 
         if (this.currentDataPageId != -1) {
             openDataPage(this.currentDataPageId);
+            this.currentTupleIndex = 0;
         } else {
             // Empty cluster
-            this.tupleCount = 0;
+            markCurrentClusterEmpty();
         }
-
-        this.currentTupleIndex = 0;
     }
 
     /**

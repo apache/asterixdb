@@ -98,12 +98,14 @@ public class NprobeClusterSelectionStrategy implements IClusterSelectionStrategy
                         vTree.getInteriorFrameFactory(), vTree.getLeafFrameFactory(), queryVector, distFunc, epsilon,
                         quantizedQueryVector, quantizer);
 
-                // Compute nprobe from minProbeFraction * totalLeafClusters
-                int totalLeafClusters = globalLevelWiseClusters != null ? globalLevelWiseClusters.size() : 1;
-                // Always probe at least one cluster: for small indexes floor(total*fraction) can round to
-                // 0, which would make the search entirely K-gated. The max(1,...) clamp is intentional and
-                // makes nprobe non-monotonic vs the configured fraction for tiny datasets.
-                this.nprobe = Math.max(1, (int) Math.floor(totalLeafClusters * minProbeFraction));
+                // nprobe = minProbeFraction * (number of candidate clusters for THIS query), i.e. a fraction
+                // of the epsilon-filtered level-wise list — NOT a fraction of the index's leaf clusters. The
+                // effective probe count therefore also moves with epsilon and with the query vector.
+                int candidateClusterCount = globalLevelWiseClusters != null ? globalLevelWiseClusters.size() : 1;
+                // Always probe at least one cluster: for small candidate lists floor(count*fraction) can
+                // round to 0, which would make the search entirely K-gated. The max(1,...) clamp is
+                // intentional and makes nprobe non-monotonic vs the configured fraction for tiny datasets.
+                this.nprobe = Math.max(1, (int) Math.floor(candidateClusterCount * minProbeFraction));
 
                 // Mark first cluster as visited and start getNextCluster() from index 1
                 // The cursor handles index 0 separately via getFirstCluster()
@@ -113,7 +115,7 @@ public class NprobeClusterSelectionStrategy implements IClusterSelectionStrategy
                 }
 
                 LOGGER.trace("Computed {} level-wise clusters with epsilon={}, minProbeFraction={}, nprobe={}",
-                        totalLeafClusters, epsilon, minProbeFraction, nprobe);
+                        candidateClusterCount, epsilon, minProbeFraction, nprobe);
             } catch (HyracksDataException e) {
                 // Level-wise probing is an optimization over the DFS fallback; on a storage error we can
                 // still answer via DFS, but that reduces recall, so surface it at WARN with the cause
@@ -124,6 +126,15 @@ public class NprobeClusterSelectionStrategy implements IClusterSelectionStrategy
                         + "selection (recall may be reduced)", e);
                 globalLevelWiseClusters = null;
             }
+        } else if (epsilon <= 0.0 && queryVector != null && vTree != null) {
+            // epsilon == 0 is accepted by DDL/query validation but disables the level-wise phase entirely:
+            // globalLevelWiseClusters stays null, nprobe stays 1, getFirstCluster() returns null, and the
+            // search degrades to a greedy DFS from a single cluster. That is a large, silent recall loss, so
+            // say so rather than answering quietly.
+            LOGGER.warn(
+                    "epsilon={} disables level-wise cluster selection; falling back to greedy DFS from a "
+                            + "single cluster (recall will be reduced). Use a positive epsilon for ANN search.",
+                    epsilon);
         }
     }
 

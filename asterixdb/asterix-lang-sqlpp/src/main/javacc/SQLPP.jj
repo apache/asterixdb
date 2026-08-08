@@ -1578,7 +1578,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
   String fullTextConfigName = null;
   Token startElementToken = null;
   Boolean excludeUnknown = null;
-  Pair<Map<String, String>, Boolean> castConfigDefaultNull;
+  Pair<Map<String, String>, Boolean> castConfigDefaultNull = null;
   Boolean castDefaultNull = null;
   Map<String, String> castConfig = null;
   RecordConstructor withRecord = null;
@@ -1702,6 +1702,17 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
             "Vector index requires WITH clause specifying index configuration");
         }
 
+        // ENFORCED and CAST(...) do not apply to a vector index: the statement below hardcodes them to
+        // false/null, so accepting them would silently discard what the user typed.
+        if (enforced) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken),
+            "ENFORCED is not supported for a vector index (TYPE VTREE)");
+        }
+        if (castConfigDefaultNull != null) {
+          throw new SqlppParseException(getSourceLocation(startStmtToken),
+            "CAST (...) is not supported for a vector index (TYPE VTREE)");
+        }
+
         // Validate that EXCLUDE UNKNOWN KEY is specified
         if (excludeUnknown == null || !excludeUnknown) {
           throw new SqlppParseException(getSourceLocation(startStmtToken),
@@ -1727,6 +1738,13 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
       if (!nonVectorFieldsList.isEmpty()) {
         throw new SqlppParseException(getSourceLocation(startStmtToken),
           "INCLUDE clause is only supported for vector indexes (TYPE VTREE)");
+      }
+
+      // Validate: the WITH clause is only for vector indexes. The non-vector statement built below does not
+      // read withRecord, so accepting it here would silently discard it (e.g. a typo'd option on a BTREE).
+      if (withRecord != null) {
+        throw new SqlppParseException(getSourceLocation(startStmtToken),
+          "WITH clause is only supported for vector indexes (TYPE VTREE)");
       }
 
       // Handle regular (non-vector) index creation

@@ -236,7 +236,12 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected void completeActivation() throws HyracksDataException {
     }
 
-    private void loadDiskComponents() throws HyracksDataException {
+    /**
+     * Load this index's disk components from the valid on-disk files. Called from {@link #activate()}.
+     * Subclasses whose components need extra loading steps (e.g. a shared sidecar component) override this
+     * and delegate to {@code super.loadDiskComponents()}.
+     */
+    protected void loadDiskComponents() throws HyracksDataException {
         diskComponents.clear();
         List<LSMComponentFileReferences> validFileReferences = fileManager.cleanupAndGetValidFiles();
         for (LSMComponentFileReferences lsmComponentFileReferences : validFileReferences) {

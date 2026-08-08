@@ -109,6 +109,7 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -207,6 +208,25 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         return sampleSize < TRAIN_LIST_MIN_SAMPLE_SIZE;
     }
 
+    /**
+     * The seed shared by the train-list sample and the k-means RNG: the request-level
+     * {@code compiler.vector.trainseed} when set (so an index build is reproducible), otherwise a fresh
+     * {@code nanoTime()} seed.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private long resolveTrainSeed() {
+        Object trainSeedCfg = metadataProvider.getConfig().get(CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY);
+        if (trainSeedCfg != null) {
+            try {
+                return Long.parseLong(String.valueOf(trainSeedCfg).trim());
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid {} '{}', using a random seed", CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY,
+                        trainSeedCfg);
+            }
+        }
+        return System.nanoTime();
+    }
+
     @Override
     public JobSpecification buildStaticStructureJobSpec() throws AlgebricksException {
         IDataFormat format = metadataProvider.getDataFormat();
@@ -236,9 +256,14 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         AdmObjectNode withObjectNodeForSampling = indexDetails.getWithObjectNode();
         double trainListFraction = (withObjectNodeForSampling != null)
                 ? withObjectNodeForSampling.getOptionalDouble("train_list_fraction", 0.1) : 0.1;
-        // sample_seed is not a supported WITH field (not in VectorIndexDeclUtil.ALLOWED_VECTOR_INDEX_WITH_FIELDS),
-        // so it was never actually settable; deterministic training is driven by compiler.vector.trainseed instead.
-        long sampleSeed = System.currentTimeMillis();
+        // Seed for BOTH the train-list sample and the k-means RNG: overridable per request
+        // (SET `compiler.vector.trainseed` "42") so CI / regression tests get reproducible centroids, and a
+        // fresh random seed otherwise. The sample seed must honour the same override, otherwise a sampled
+        // train list (train_list_fraction < 1.0) makes the whole index build irreproducible no matter what
+        // the k-means seed is. sample_seed is not a supported WITH field
+        // (see VectorIndexDeclUtil.ALLOWED_VECTOR_INDEX_WITH_FIELDS), so this is the only channel.
+        long trainSeed = resolveTrainSeed();
+        long sampleSeed = trainSeed;
 
         // Retrieve cardinality from sample index metadata (needed for fraction-based sample size)
         Index sampleIndex = metadataProvider.findSampleIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
@@ -288,13 +313,15 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         UUID sampleUUID = UUID.randomUUID();
         UUID tupleCountUUID = UUID.randomUUID();
 
-        // Extract K value from WITH clause
+        // Extract K value from WITH clause.
+        // The default is sqrt(cardinality / partitions), clamped to at least 1: for a small dataset on a
+        // multi-partition cluster (datasetCardinality < numPartitions) the expression is 0, and hierarchical
+        // k-means cannot be run with K = 0. An explicit num_clusters is already validated as >= 1 by
+        // VectorIndexDeclUtil.validateNumClusters, so the clamp only affects the computed default.
         AdmObjectNode withObjectNode = indexDetails.getWithObjectNode();
-        int K = (int) Math.sqrt((double) datasetCardinality / numPartitions); // default value
-        if (withObjectNode != null) {
-            K = withObjectNode.getOptionalInt("num_clusters",
-                    (int) Math.sqrt((double) datasetCardinality / numPartitions));
-        }
+        int defaultNumClusters = Math.max(1, (int) Math.sqrt((double) datasetCardinality / numPartitions));
+        int K = withObjectNode != null ? withObjectNode.getOptionalInt("num_clusters", defaultNumClusters)
+                : defaultNumClusters;
 
         // Distance metric from index DDL (WITH similarity "euclidean"|"cosine"|"cosine similarity"|etc.).
         // For cosine, embeddings must be L2-normalized to unit length before insert; the engine does not normalize.
@@ -327,19 +354,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         RecordDescriptor hierarchicalRecDesc = new RecordDescriptor(hierarchicalSerde, hierarchicalTraits);
 
         // ====== STATIC STRUCTURE JOB: K-MEANS → STATIC STRUCTURE CREATION ======
-
-        // Training RNG seed: overridable per request (SET `compiler.vector.trainseed` "42") so CI /
-        // regression tests get reproducible centroids; defaults to a fresh nanoTime seed otherwise.
-        long trainSeed = System.nanoTime();
-        Object trainSeedCfg = metadataProvider.getConfig().get(CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY);
-        if (trainSeedCfg != null) {
-            try {
-                trainSeed = Long.parseLong(String.valueOf(trainSeedCfg).trim());
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Invalid {} '{}', using a random seed", CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY,
-                        trainSeedCfg);
-            }
-        }
 
         HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor candidates =
                 new HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(spec, hierarchicalRecDesc, secondaryRecDesc,

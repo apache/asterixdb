@@ -712,9 +712,14 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                         fieldMatch = new Pair<>(VectorIndexAccessMethod.INSTANCE, index);
                     }
                 } else {
-                    // No query metric available - use first field match (backward compatibility).
-                    result.add(new Pair<>(VectorIndexAccessMethod.INSTANCE, index));
-                    break;
+                    // No query metric available. Do NOT pick an arbitrary index here: without a metric to
+                    // compare against, the first VTREE index found could easily answer a cosine query from a
+                    // euclidean index — silently wrong results. This should be unreachable (isAnnDistance()
+                    // requires the ANN hint and the rewrite visitor always fills in a validated metric), so
+                    // bail out to the exact plan rather than guess.
+                    LOGGER.warn("No query distance metric available for ANN search; skipping vector index "
+                            + "selection and falling back to full scan (KNN).");
+                    return;
                 }
             }
         }

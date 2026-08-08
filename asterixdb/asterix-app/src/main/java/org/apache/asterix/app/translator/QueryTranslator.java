@@ -1760,6 +1760,25 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 CreateIndexStatement.IndexedElement indexedElement = stmtCreateIndex.getIndexedElements().get(0);
                 List<String> keyFieldNames = indexedElement.getProjectList().get(0).first;
 
+                // The vector field is not part of `indexedElements` for a VTREE (that local was swapped to the
+                // INCLUDE list above), so the shared "cannot create index on meta fields" check did not see
+                // it. Reject a meta-sourced vector field here: IndexTupleTranslator does not persist source
+                // indicators for a vector index — it hardcodes RECORD_INDICATOR on read — so a meta-sourced
+                // field would work in the session that created it and silently switch to record-sourced once
+                // the metadata is re-read.
+                if (indexedElement.getSourceIndicator() != Index.RECORD_INDICATOR) {
+                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
+                            "Cannot create index on meta fields");
+                }
+
+                // LSM component filters are not applied by the vector index (MetadataProvider drops the filter
+                // factories and VTree.getNumOfFilterFields() is 0). Creating one on a filtered dataset would
+                // silently make the user's filter a no-op for this index, so reject the combination instead.
+                if (DatasetUtil.getFilterField(ds) != null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Cannot create a vector index on a dataset with a filter field");
+                }
+
                 // Validate that the vector field exists in the dataset schema
                 Triple<IAType, Boolean, Boolean> vectorFieldType =
                         KeyFieldTypeUtil.getKeyProjectType(aRecordType, keyFieldNames, sourceLoc);

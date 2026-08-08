@@ -101,6 +101,9 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
     private final Map<Integer, int[]> leafDirectory = new HashMap<>();
     // Leaf page ids in ascending order (the order leaves must be re-uploaded in, for the cloud writer).
     private final TreeSet<Integer> leafPageIds = new TreeSet<>();
+    // Whether the leaf resolution/upload pass has already run. Guards against a second pass re-uploading
+    // pages the append-only cloud writer has already seen (it requires monotonically increasing offsets).
+    private boolean leafNeighborsResolved;
 
     // Structure shape
     private final int numLevels;
@@ -392,6 +395,10 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
      * runs the compression prepare step (unlike the previous pin/flush path, which assumed no compression).
      */
     private void resolveAndUploadLeafNeighbors() throws HyracksDataException {
+        if (leafNeighborsResolved) {
+            return;
+        }
+        leafNeighborsResolved = true;
         for (int leafPageId : leafPageIds) {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, leafPageId);
             ICachedPage page = bufferCache.confiscateAndLoad(dpid);
@@ -500,8 +507,17 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
         // (e.g. caller called end() with a partially-built page), flush it now.
         if (currentPage != null) {
             LOGGER.log(Level.TRACE, "end(): flushing unfinalized page {}", currentPageId);
+            boolean flushedLeafPage = currentLevel == numLevels - 1;
             writePage(currentPage);
             currentPage = null;
+            if (flushedLeafPage) {
+                // writePage() published that page LOCAL-ONLY (leaf placement). transitionToNextLevel() —
+                // the only other caller of the resolution pass — never ran for the leaf level in this case
+                // (a single-level structure, or end() on a partially-built structure), so without this the
+                // page would stay local and never be uploaded in cloud deployments. The pass is
+                // idempotent-guarded, so this cannot double-upload leaves that were already resolved.
+                resolveAndUploadLeafNeighbors();
+            }
         }
 
         if (hasFailed()) {

@@ -287,16 +287,9 @@ public class VTree extends AbstractTreeIndex {
                 long targetDataPageId = findDataPageInMetadataPage(ctx.getMetadataFrame(), distance, isLastInChain);
 
                 if (targetDataPageId != -1) {
-                    // Found appropriate data page - try to insert
-                    boolean inserted =
-                            tryInsertIntoDataPage(targetDataPageId, vector, distance, centroidId, originalTuple, ctx);
-
-                    if (inserted) {
-                        return; // Successfully inserted
-                    }
-
-                    // If insert failed due to space, we need to handle overflow
-                    handleDataPageOverflow(currentMetadataPageId, vector, distance, centroidId, originalTuple, ctx);
+                    // Found appropriate data page - insert into it. insertIntoDataPage() either inserts
+                    // directly, compacts and inserts, or splits the page; it never reports "no room".
+                    insertIntoDataPage(targetDataPageId, vector, distance, centroidId, originalTuple, ctx);
                     return;
                 }
 
@@ -370,9 +363,12 @@ public class VTree extends AbstractTreeIndex {
     }
 
     /**
-     * Try to insert into a specific data page. Returns true if successful, false if page is full.
+     * Insert into a specific data page. The page always absorbs the tuple: with contiguous free space it is
+     * inserted directly, with fragmented free space the page is compacted first, and with no free space the
+     * page is split (the tuple then lands in whichever half covers its distance). Any other space status is a
+     * frame-level invariant violation and is reported as {@code ILLEGAL_STATE}.
      */
-    private boolean tryInsertIntoDataPage(long dataPageId, double[] vector, double distance, int centroidId,
+    private void insertIntoDataPage(long dataPageId, double[] vector, double distance, int centroidId,
             ITupleReference originalTuple, VTreeOpContext ctx) throws HyracksDataException {
 
         ICachedPage dataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), (int) dataPageId));
@@ -395,7 +391,7 @@ public class VTree extends AbstractTreeIndex {
             switch (spaceStatus) {
                 case SUFFICIENT_CONTIGUOUS_SPACE:
                     insertSortedIntoDataPage(dataTuple, distance, dataPageId, originalTuple, ctx);
-                    return true;
+                    return;
                 case SUFFICIENT_SPACE:
                     // Fix bug-vtree-delete-frame-corruption: reclaimable space exists but is fragmented
                     // (FREE_SPACE_OFFSET has been pushed past the slot region by prior inserts whose
@@ -404,12 +400,12 @@ public class VTree extends AbstractTreeIndex {
                     // BTreeNSMLeafFrame pattern (BTree.java:309-315).
                     ctx.getDataFrame().compact();
                     insertSortedIntoDataPage(dataTuple, distance, dataPageId, originalTuple, ctx);
-                    return true;
+                    return;
                 case INSUFFICIENT_SPACE:
                     // Handle overflow by splitting the data page (split recomputes the insertion index
                     // in whichever half the tuple lands, so no position needs to be passed in).
                     splitDataPageMaintainOrder(ctx.getMetadataPageId(), dataPageId, dataTuple, ctx);
-                    return true;
+                    return;
 
                 default:
                     throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "Unexpected FrameOpSpaceStatus "
@@ -428,7 +424,7 @@ public class VTree extends AbstractTreeIndex {
      * Insert a data tuple into the currently-latched data frame at its distance-sorted position, fire the
      * modification callback, bump the page LSN, and grow the catch-all page's metadata max_distance if this
      * distance is a new maximum. Shared by the contiguous-space and post-compaction insert paths in
-     * {@link #tryInsertIntoDataPage}.
+     * {@link #insertIntoDataPage}.
      */
     private void insertSortedIntoDataPage(ITupleReference dataTuple, double distance, long dataPageId,
             ITupleReference originalTuple, VTreeOpContext ctx) throws HyracksDataException {
@@ -651,6 +647,21 @@ public class VTree extends AbstractTreeIndex {
 
     private void handleDataPageOverflow(long metadataPageId, double[] vector, double distance, int centroidId,
             ITupleReference originalTuple, VTreeOpContext ctx) throws HyracksDataException {
+        // This method creates the FIRST data page of a directory page and therefore leaves the data-page
+        // chain's next-page pointers alone: with no existing entry there is no predecessor to link from, and
+        // the search cursor reaches data pages only by starting at directory entry 0 and following the chain.
+        // Its single caller reaches it exactly when the directory page has no entries (a page with entries
+        // always yields either a covering entry or the catch-all last entry). Enforce that here rather than
+        // in prose: if this ever runs against a populated directory the new page would be registered in the
+        // directory but unreachable from the chain, i.e. silently invisible to search.
+        VTreeMetadataFrame directoryFrame = requireLatchedMetadataFrame(metadataPageId, ctx);
+        if (directoryFrame.getTupleCount() != 0) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "handleDataPageOverflow on a non-empty directory page " + metadataPageId + " ("
+                            + directoryFrame.getTupleCount()
+                            + " entries): the new data page would not be linked into the data-page chain");
+        }
+
         // Use the frame factories and page manager to handle overflow
         IVTreeDataFrame dataFrame = (IVTreeDataFrame) ctx.getDataFrameFactory().createFrame();
         IPageManager pageManager = ctx.getFreePageManager();
@@ -807,14 +818,23 @@ public class VTree extends AbstractTreeIndex {
             rightFrame.setPage(newMetadataPage);
             rightFrame.initBuffer((byte) 0);
 
+            // Capture the split page's successor BEFORE splitting: split() re-initializes both halves, which
+            // resets their next-page pointers to the end-of-chain sentinel. The directory page being split is
+            // not necessarily the last in its chain (this method runs on whichever page the insert walk landed
+            // on), so terminating the right half unconditionally would orphan every page after it — making
+            // their data pages unreachable to both the insert walk and tryPhysicalDelete. Splice the new page
+            // in: left -> new -> original successor, mirroring splitDataPageMaintainOrder().
+            int originalNextPage = ctx.getMetadataFrame().getNextPage();
+
             // Split the current metadata page using the correct method from VTreeMetadataFrame
             ((VTreeMetadataFrame) ctx.getMetadataFrame()).split(rightFrame, newTuple);
 
             // Update the next page pointer in the original metadata page
             ctx.getMetadataFrame().setNextPage(newMetadataPageId);
 
-            // Initialize the next page pointer in the new metadata page to end-of-chain.
-            rightFrame.setNextPage(VTreeDataTupleAccessor.NO_NEXT_PAGE);
+            // The new (right) page inherits the split page's successor, which is the end-of-chain sentinel
+            // exactly when the split page was itself last in the chain.
+            rightFrame.setNextPage(originalNextPage);
 
         } finally {
             if (latched) {

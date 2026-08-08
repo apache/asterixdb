@@ -27,6 +27,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.HyracksConstants;
@@ -37,6 +38,7 @@ import org.apache.hyracks.storage.am.common.tuples.ReferenceFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
@@ -181,6 +183,18 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
         this.pkStartField = dataAccessor.pkStartField();
         this.numPrimaryKeyFields = ((LSMVTree) opCtx.getIndex()).getNumPrimaryKeyFields();
 
+        // This cursor is quantized-only: dataAccessor is fixed to the quantized layout, so it reads field 3
+        // as the quantized embedding and locates the PKs at pkStartField = 4. It is selected purely by the
+        // USE_TOPK_SEARCH access parameter, which is independent of the index's quantization — so check the
+        // assumption instead of inheriting it. On a non-quantized index field 3 is a PK/INCLUDE field and the
+        // whole read would be silent garbage.
+        if (!((LSMVTree) opCtx.getIndex()).isQuantized()) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "LSMVTreeTopKSearchCursor requires a quantized VTree index (USE_TOPK_SEARCH was requested for a "
+                            + "non-quantized index)");
+        }
+        LSMVTreeUtils.validateKeyComparators(cmp, pkStartField, numPrimaryKeyFields);
+
         // Extract tuple filter from search predicate for INCLUDE field predicates
         this.tupleFilter = vectorPred.getTupleFilter();
         if (this.tupleFilter != null) {
@@ -262,6 +276,15 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
             if (this.queryVector == null) {
                 throw HyracksDataException
                         .create(new IllegalArgumentException("Query vector must be provided for naive blocked search"));
+            }
+
+            // computeApproximateDistance() dequantizes every candidate with these two, and they arrive
+            // independently of the USE_TOPK_SEARCH flag that selected this cursor (from a quantizer factory
+            // or instance in the index access parameters). Fail here rather than NPE per candidate.
+            if (this.quantizer == null || this.quantizedQueryVector == null) {
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "LSMVTreeTopKSearchCursor requires a quantizer and a quantized query vector; none was supplied "
+                                + "through the index access parameters");
             }
 
             // Initialize strategy with first component's tree (candidateLimit so we collect 2*K for reranking)
