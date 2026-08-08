@@ -48,16 +48,17 @@ public class VectorDistanceFunctionFactory implements IVTreeDistanceFunctionFact
         this.metric = metric;
     }
 
-    // Built fresh on the NC (createDistanceFunction runs at runtime), so the returned lambdas are never
-    // Java-serialized; IVTreeDistanceFunction is a @FunctionalInterface over the stateless calculation methods.
+    // Built fresh on the NC (createDistanceFunction runs at runtime), so these are never Java-serialized.
+    // The implementations live in VectorDistanceCalculation next to the calculations they wrap, keeping this
+    // Serializable factory a plain metric-to-function lookup.
     private static IVTreeDistanceFunction functionFor(VectorSimilarityMetric metric) {
         return switch (metric) {
-            case EUCLIDEAN -> VectorDistanceCalculation::euclidean;
-            case EUCLIDEAN_SQUARED -> VectorDistanceCalculation::euclideanSquared;
-            case COSINE -> VectorDistanceCalculation::cosineDistance;
+            case EUCLIDEAN -> VectorDistanceCalculation.EUCLIDEAN_FN;
+            case EUCLIDEAN_SQUARED -> VectorDistanceCalculation.EUCLIDEAN_SQUARED_FN;
+            case COSINE -> VectorDistanceCalculation.COSINE_DISTANCE_FN;
             case DOT ->
                 // dotDistance returns -dot(a,b) so that minimizing "distance" equals maximizing dot product (MIPS).
-                    VectorDistanceCalculation::dotDistance;
+                    VectorDistanceCalculation.DOT_DISTANCE_FN;
         };
     }
 

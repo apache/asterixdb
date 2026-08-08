@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.vector.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -120,19 +118,6 @@ public class VTreeNavigationUtils {
     }
 
     /**
-     * Extract the full-precision centroid embedding from a static-structure tuple. The embedding sits at
-     * {@link VTreeStaticTupleConstants#EMBEDDING_FIELD} in every interior and leaf layout, so only that
-     * field is decoded; the surrounding fields (centroid id, child/metadata pointer, optional quantized
-     * bytes / neighbor list) are left untouched.
-     */
-    private static double[] extractCentroid(ITreeIndexTupleReference tuple) throws HyracksDataException {
-        int field = VTreeStaticTupleConstants.EMBEDDING_FIELD;
-        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(tuple.getFieldData(field),
-                tuple.getFieldStart(field), tuple.getFieldLength(field)));
-        return DoubleArraySerializerDeserializer.INSTANCE.deserialize(dis);
-    }
-
-    /**
      * Collects every child of an interior page (including its overflow chain) and returns them
      * sorted by distance to {@code queryVector}, closest first. {@code initialFrame} must already
      * be set to {@code startPageId} and that page must be pinned/latched by the caller; overflow
@@ -166,13 +151,18 @@ public class VTreeNavigationUtils {
                     try {
                         ITreeIndexTupleReference tuple = currentFrame.createTupleReference();
                         tuple.resetByTupleIndex(currentFrame, i);
-                        double[] centroid = extractCentroid(tuple);
+                        int field = VTreeStaticTupleConstants.EMBEDDING_FIELD;
+                        byte[] data = tuple.getFieldData(field);
+                        int start = tuple.getFieldStart(field);
+                        int len = tuple.getFieldLength(field);
 
-                        if (centroid.length != queryVector.length) {
+                        if (DoubleArraySerializerDeserializer.readLength(data, start, len) != queryVector.length) {
                             continue;
                         }
 
-                        double distance = distanceFunction.apply(queryVector, centroid);
+                        // Interior centroids are measured to pick a child and then discarded, so this never
+                        // materializes one -- no destination array, and none to allocate.
+                        double distance = distanceFunction.decodeAndApply(queryVector, data, start, len);
                         int childPageId = currentFrame.getChildPageId(i);
                         children.add(new VTreeChildCentroid(childPageId, distance, i));
                     } catch (HyracksDataException e) {
@@ -240,20 +230,28 @@ public class VTreeNavigationUtils {
                     try {
                         ITreeIndexTupleReference frameTuple = currentFrame.createTupleReference();
                         frameTuple.resetByTupleIndex(currentFrame, i);
-                        double[] centroid = extractCentroid(frameTuple);
+                        int field = VTreeStaticTupleConstants.EMBEDDING_FIELD;
+                        byte[] data = frameTuple.getFieldData(field);
+                        int start = frameTuple.getFieldStart(field);
+                        int len = frameTuple.getFieldLength(field);
                         int centroidId = currentFrame.getCentroidId(i);
                         long directoryPageId = currentFrame.getMetadataPagePointer(i);
 
-                        if (centroid.length != queryVector.length) {
+                        if (DoubleArraySerializerDeserializer.readLength(data, start, len) != queryVector.length) {
                             continue;
                         }
 
-                        double distance = distanceFunction.apply(queryVector, centroid);
+                        // This centroid escapes into the returned ClusterSearchResult, so it gets its own
+                        // array -- but decoding and measuring still happen in one pass over the page bytes.
+                        double[] centroid = new double[queryVector.length];
+                        double distance = distanceFunction.decodeAndApply(queryVector, data, start, len, centroid);
                         double quantizedDistance = quantizedDistanceOrNaN(currentFrame, i, quantizedQueryVector,
                                 quantizer, distanceFunction);
 
-                        centroids.add(ClusterSearchResult.create(currentPageId, i, centroid.clone(), distance,
-                                centroidId, directoryPageId, quantizedDistance));
+                        // No defensive copy: this array was just allocated above and nothing else references
+                        // it, and ClusterSearchResult documents its centroid as read-only.
+                        centroids.add(ClusterSearchResult.create(currentPageId, i, centroid, distance, centroidId,
+                                directoryPageId, quantizedDistance));
                     } catch (HyracksDataException e) {
                         // Skip only genuinely malformed leaf tuples (decode/accessor failures);
                         // unexpected runtime failures (NPE, contract violations) propagate so silent
