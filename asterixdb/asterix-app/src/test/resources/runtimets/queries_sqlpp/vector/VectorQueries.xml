@@ -28,6 +28,11 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-meta-pk">
+            <output-dir compare="Clean-JSON">create-index-vtree-meta-pk</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-nested">
             <output-dir compare="Clean-JSON">create-index-vtree-nested</output-dir>
         </compilation-unit>

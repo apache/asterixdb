@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -791,12 +792,13 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      *       in {@link #aboveLimitOps}.</li>
      *   <li>For each live-out variable, trace through the bindings: it is PK-safe iff it resolves to a
      *       PK variable, a constant, or a {@code field-access-by-name($$rec, f)} where {@code f} is the
-     *       (top-level, single-segment) name of a PK column. If any live-out variable fails the trace,
-     *       the optimization cannot be safely applied.</li>
+     *       (top-level, single-segment) name of a PK column sourced from the SAME record ($$rec being the
+     *       dataset record or the meta record) that the PK column is actually declared on. If any live-out
+     *       variable fails the trace, the optimization cannot be safely applied.</li>
      * </ol>
      *
-     * <p>Conservatively returns {@code false} for any dataset with a meta record (currently out of
-     * scope), composite PK paths, external data sources, or unfamiliar plan shapes.
+     * <p>Conservatively returns {@code false} for composite or nested PK paths, external data sources, or
+     * unfamiliar plan shapes.
      */
     protected boolean isProjectionPkOnly() {
         // Index-only skips the primary BTree lookup and emits (pk, dist) straight from the secondary VTree.
@@ -818,14 +820,20 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         List<LogicalVariable> dsVars = dataSourceOp.getVariables();
 
         // PK fields: only support top-level single-segment paths (e.g. ["id"]); composite or nested PK
-        // paths are out of scope for the initial activation.
+        // paths are out of scope for the initial activation. Split PK field names by their key source
+        // (data record vs. meta record) so a PK sourced from meta() named "id" is never confused with an
+        // unrelated data-record field that happens to share the same name.
         List<List<String>> pkPaths = subTree.getDataset().getPrimaryKeys();
-        Set<String> pkFieldNames = new HashSet<>();
-        for (List<String> p : pkPaths) {
+        List<Integer> keySourceIndicators = DatasetUtil.getKeySourceIndicators(subTree.getDataset());
+        Set<String> recordPkFieldNames = new HashSet<>();
+        Set<String> metaPkFieldNames = new HashSet<>();
+        for (int i = 0; i < pkPaths.size(); i++) {
+            List<String> p = pkPaths.get(i);
             if (p == null || p.size() != 1) {
                 return false;
             }
-            pkFieldNames.add(p.get(0));
+            boolean fromMeta = keySourceIndicators != null && keySourceIndicators.get(i) == 1;
+            (fromMeta ? metaPkFieldNames : recordPkFieldNames).add(p.get(0));
         }
         int numPK = pkPaths.size();
         if (dsVars.size() < numPK + 1) {
@@ -833,8 +841,13 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         Set<LogicalVariable> pkVars = new HashSet<>(dsVars.subList(0, numPK));
         // Anything after PKs is the dataset record (+ optional meta record). Direct references to these
-        // mean we need the assembled record; only field-access for PK names is OK.
+        // mean we need the assembled record; only field-access for PK names is OK, and only against the
+        // record that field's PK is actually sourced from.
         Set<LogicalVariable> recordVars = new HashSet<>(dsVars.subList(numPK, dsVars.size()));
+        LogicalVariable dataRecordVar = dsVars.get(numPK);
+        LogicalVariable metaRecordVar = dsVars.size() > numPK + 1 ? dsVars.get(numPK + 1) : null;
+        PkFieldContext pkCtx = new PkFieldContext(pkVars, recordVars, dataRecordVar, metaRecordVar, recordPkFieldNames,
+                metaPkFieldNames);
 
         // Collect ASSIGN bindings throughout the entire subtree.
         Map<LogicalVariable, ILogicalExpression> bindings = new HashMap<>();
@@ -853,7 +866,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // Trace each live-out variable; fail on the first non-PK-derived one.
         Set<LogicalVariable> visiting = new HashSet<>();
         for (LogicalVariable v : liveOut) {
-            if (!isVarPkSafe(v, bindings, pkVars, recordVars, pkFieldNames, visiting)) {
+            if (!isVarPkSafe(v, bindings, pkCtx, visiting)) {
                 LOGGER.trace("isProjectionPkOnly: live-out variable {} is not PK-derived; bailing", v);
                 return false;
             }
@@ -869,12 +882,39 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         Set<LogicalVariable> filterVars = new HashSet<>();
         collectSelectConditionVars(subTree.getRoot(), filterVars);
         for (LogicalVariable v : filterVars) {
-            if (!isVarPkSafe(v, bindings, pkVars, recordVars, pkFieldNames, visiting)) {
+            if (!isVarPkSafe(v, bindings, pkCtx, visiting)) {
                 LOGGER.trace("isProjectionPkOnly: WHERE condition var {} is not PK-safe; not index-only", v);
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Groups the pieces {@link #isVarPkSafe} and {@link #isExprPkSafe} need to decide whether a
+     * {@code field-access-by-name} target is PK-safe: the data-source PK variables, the combined
+     * record/meta "direct use" variables, the data-record and meta-record variables individually, and the
+     * PK field names declared on each of those two records (kept separate so a same-named field on the
+     * "wrong" record — e.g. a data-record field called "id" next to a {@code meta().id} PK — is never
+     * treated as PK-safe).
+     */
+    private static final class PkFieldContext {
+        final Set<LogicalVariable> pkVars;
+        final Set<LogicalVariable> recordVars;
+        final LogicalVariable dataRecordVar;
+        final LogicalVariable metaRecordVar;
+        final Set<String> recordPkFieldNames;
+        final Set<String> metaPkFieldNames;
+
+        PkFieldContext(Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, LogicalVariable dataRecordVar,
+                LogicalVariable metaRecordVar, Set<String> recordPkFieldNames, Set<String> metaPkFieldNames) {
+            this.pkVars = pkVars;
+            this.recordVars = recordVars;
+            this.dataRecordVar = dataRecordVar;
+            this.metaRecordVar = metaRecordVar;
+            this.recordPkFieldNames = recordPkFieldNames;
+            this.metaPkFieldNames = metaPkFieldNames;
+        }
     }
 
     /**
@@ -921,12 +961,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     private boolean isVarPkSafe(LogicalVariable v, Map<LogicalVariable, ILogicalExpression> bindings,
-            Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, Set<String> pkFieldNames,
-            Set<LogicalVariable> visiting) {
-        if (pkVars.contains(v)) {
+            PkFieldContext pkCtx, Set<LogicalVariable> visiting) {
+        if (pkCtx.pkVars.contains(v)) {
             return true;
         }
-        if (recordVars.contains(v)) {
+        if (pkCtx.recordVars.contains(v)) {
             // Direct use of the dataset record — requires the assembled record. Not safe.
             return false;
         }
@@ -941,40 +980,44 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 // don't track). Be conservative.
                 return false;
             }
-            return isExprPkSafe(e, bindings, pkVars, recordVars, pkFieldNames, visiting);
+            return isExprPkSafe(e, bindings, pkCtx, visiting);
         } finally {
             visiting.remove(v);
         }
     }
 
     private boolean isExprPkSafe(ILogicalExpression e, Map<LogicalVariable, ILogicalExpression> bindings,
-            Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, Set<String> pkFieldNames,
-            Set<LogicalVariable> visiting) {
+            PkFieldContext pkCtx, Set<LogicalVariable> visiting) {
         switch (e.getExpressionTag()) {
             case CONSTANT:
                 return true;
             case VARIABLE:
-                return isVarPkSafe(((VariableReferenceExpression) e).getVariableReference(), bindings, pkVars,
-                        recordVars, pkFieldNames, visiting);
+                return isVarPkSafe(((VariableReferenceExpression) e).getVariableReference(), bindings, pkCtx, visiting);
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fid = fce.getFunctionIdentifier();
-                // Special-case field access on the record variable: PK fields only.
+                // Special-case field access on the record/meta variable: PK fields sourced from that SAME
+                // record only. A PK field name that collides with an unrelated field on the OTHER record
+                // (e.g. a data-record field "id" next to a meta()-sourced PK also named "id") must not be
+                // treated as PK-safe here — only field-access on the record the PK is actually declared on
+                // is a safe substitute.
                 if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid) && fce.getArguments().size() == 2) {
                     ILogicalExpression a0 = fce.getArguments().get(0).getValue();
                     ILogicalExpression a1 = fce.getArguments().get(1).getValue();
                     if (a0.getExpressionTag() == LogicalExpressionTag.VARIABLE
                             && a1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                         LogicalVariable target = ((VariableReferenceExpression) a0).getVariableReference();
-                        if (recordVars.contains(target)) {
+                        if (target.equals(pkCtx.dataRecordVar) || target.equals(pkCtx.metaRecordVar)) {
                             String fieldName = extractStringConstant(a1);
-                            return fieldName != null && pkFieldNames.contains(fieldName);
+                            Set<String> allowedNames = target.equals(pkCtx.dataRecordVar) ? pkCtx.recordPkFieldNames
+                                    : pkCtx.metaPkFieldNames;
+                            return fieldName != null && allowedNames.contains(fieldName);
                         }
                     }
                 }
                 // For any other function call: all argument expressions must be PK-safe.
                 for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
-                    if (!isExprPkSafe(arg.getValue(), bindings, pkVars, recordVars, pkFieldNames, visiting)) {
+                    if (!isExprPkSafe(arg.getValue(), bindings, pkCtx, visiting)) {
                         return false;
                     }
                 }

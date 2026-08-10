@@ -33,6 +33,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
@@ -370,17 +371,25 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 for (int i = 0; i < numPK; i++) {
                     pkSubstitution.put(oldVars.get(i), newPkVars.get(i));
                 }
-                // The record variable (and meta record var, if present) — we rewrite
-                // field-access($$rec, "<pk_field>") to VarRef($$pk_new) below.
+                // The record variable and, if present, the meta record variable — we rewrite
+                // field-access($$rec, "<pk_field>") / field-access($$meta, "<pk_field>") to
+                // VarRef($$pk_new) below, keeping the two separate so a PK field name that collides
+                // with an unrelated field on the OTHER record (e.g. a data-record field "id" next to a
+                // meta()-sourced PK also named "id") is never substituted on the wrong record.
                 LogicalVariable oldRecVar = numPK < oldVars.size() ? oldVars.get(numPK) : null;
+                LogicalVariable oldMetaVar = numPK + 1 < oldVars.size() ? oldVars.get(numPK + 1) : null;
 
-                // Map PK field name -> new PK variable.
-                Map<String, LogicalVariable> pkFieldToNewVar = new java.util.HashMap<>();
+                // Map PK field name -> new PK variable, split by the record the PK field is actually
+                // sourced from (0 = data record, 1 = meta record).
+                List<Integer> keySourceIndicators = DatasetUtil.getKeySourceIndicators(dataset);
+                Map<String, LogicalVariable> recordPkFieldToNewVar = new java.util.HashMap<>();
+                Map<String, LogicalVariable> metaPkFieldToNewVar = new java.util.HashMap<>();
                 List<List<String>> pkPaths = dataset.getPrimaryKeys();
                 for (int i = 0; i < numPK; i++) {
                     List<String> p = pkPaths.get(i);
                     if (p != null && p.size() == 1) {
-                        pkFieldToNewVar.put(p.get(0), newPkVars.get(i));
+                        boolean fromMeta = keySourceIndicators != null && keySourceIndicators.get(i) == 1;
+                        (fromMeta ? metaPkFieldToNewVar : recordPkFieldToNewVar).put(p.get(0), newPkVars.get(i));
                     }
                 }
 
@@ -397,20 +406,30 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities
                         .substituteVariablesInDescendantsAndSelf(rewriteRoot, pkSubstitution, context);
 
-                // 2. Rewrite field-access on the old record var to direct PK VarRefs (e.g. the
-                //    SELECT VALUE m.idx projection above LIMIT).
+                // 2. Rewrite field-access on the old record/meta vars to direct PK VarRefs (e.g. the
+                //    SELECT VALUE m.idx projection above LIMIT), each against only its own PK fields.
                 if (oldRecVar != null) {
-                    rewriteRecordFieldAccessToPk(rewriteRoot, oldRecVar, pkFieldToNewVar);
+                    rewriteRecordFieldAccessToPk(rewriteRoot, oldRecVar, recordPkFieldToNewVar);
+                }
+                if (oldMetaVar != null) {
+                    rewriteRecordFieldAccessToPk(rewriteRoot, oldMetaVar, metaPkFieldToNewVar);
                 }
 
-                // 3. Any remaining ASSIGN expression that still references oldRecVar (transitively) —
-                // for example $$x := $$m.getField("embedding") hoisted by the SQL++ compiler out of
-                // ann_distance(m.embedding, ...) — is now structurally orphaned: no operator above
-                // LIMIT consumes it (we wouldn't have entered the index-only branch otherwise) but the
-                // type system still walks it. Replace each such expression with MISSING so it types
-                // cleanly. None of these values is ever read at runtime.
+                // 3. Any remaining ASSIGN expression that still references oldRecVar/oldMetaVar
+                // (transitively) — for example $$x := $$m.getField("embedding") hoisted by the SQL++
+                // compiler out of ann_distance(m.embedding, ...) — is now structurally orphaned: no
+                // operator above LIMIT consumes it (we wouldn't have entered the index-only branch
+                // otherwise) but the type system still walks it. Replace each such expression with
+                // MISSING so it types cleanly. None of these values is ever read at runtime.
+                List<LogicalVariable> deadRecordVars = new ArrayList<>();
                 if (oldRecVar != null) {
-                    neutralizeDanglingExpressions(rewriteRoot, oldRecVar);
+                    deadRecordVars.add(oldRecVar);
+                }
+                if (oldMetaVar != null) {
+                    deadRecordVars.add(oldMetaVar);
+                }
+                if (!deadRecordVars.isEmpty()) {
+                    neutralizeDanglingExpressions(rewriteRoot, deadRecordVars);
                 }
 
                 // Recompute type env bottom-up over every operator whose schema/expressions changed:
@@ -695,16 +714,15 @@ public class VectorIndexAccessMethod implements IAccessMethod {
 
     /**
      * Replace any ASSIGN expression whose subtree (transitively) mentions a dead variable with a MISSING
-     * constant. Seeded with the now-gone dataset record variable; the closure grows to include every
-     * variable whose defining ASSIGN we neutralize, so chains such as
-     * {@code $$237 := field-access($$rec, "embedding")} → {@code $$dist := ann_distance($$237, ...)} are
-     * fully repaired (the second ASSIGN references {@code $$237}, not {@code $$rec} directly, and would
+     * constant. Seeded with the now-gone dataset record variable(s) (data record and, if present, meta
+     * record); the closure grows to include every variable whose defining ASSIGN we neutralize, so chains
+     * such as {@code $$237 := field-access($$rec, "embedding")} → {@code $$dist := ann_distance($$237, ...)}
+     * are fully repaired (the second ASSIGN references {@code $$237}, not {@code $$rec} directly, and would
      * otherwise dangle and fail type inference). The live-out check guarantees nothing above LIMIT depends
      * on these values, but the type system still walks them.
      */
-    private static void neutralizeDanglingExpressions(ILogicalOperator root, LogicalVariable oldRecVar) {
-        Set<LogicalVariable> dead = new java.util.HashSet<>();
-        dead.add(oldRecVar);
+    private static void neutralizeDanglingExpressions(ILogicalOperator root, List<LogicalVariable> oldRecordVars) {
+        Set<LogicalVariable> dead = new java.util.HashSet<>(oldRecordVars);
         // Iterate to a fixpoint: each pass may neutralize an ASSIGN whose variable then feeds the next.
         while (neutralizeDeadPass(root, dead)) {
             // keep going until no new variable becomes dead
