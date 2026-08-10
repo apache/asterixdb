@@ -1,0 +1,24 @@
+commit
+-- COMMIT  |PARTITIONED|
+  project ([$$18])
+  -- STREAM_PROJECT  |PARTITIONED|
+    exchange
+    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      upsert into prod.myData from record: $$21 partitioned by [$$18] out: ([record-before-upsert:$$20]) 
+      -- INSERT_DELETE  |PARTITIONED|
+        exchange
+        -- HASH_PARTITION_EXCHANGE [$$18]  |PARTITIONED|
+          assign [$$18] <- [$$21.getField(0)]
+          -- ASSIGN  |PARTITIONED|
+            assign [$$21] <- [cast({"id": $$22})] project: [$$21]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$22])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$22, $$x] <- sync.myData
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -4691,6 +4691,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="upsert-cross-dataverse-same-dataset-name">
+        <output-dir compare="Text">upsert-cross-dataverse-same-dataset-name</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-and-scan-dataset-with-index">
         <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
       </compilation-unit>

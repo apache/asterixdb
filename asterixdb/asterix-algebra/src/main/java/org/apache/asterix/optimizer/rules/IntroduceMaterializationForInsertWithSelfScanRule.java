@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSource.Type;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -59,7 +60,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
         InsertDeleteUpsertOperator insertOp = (InsertDeleteUpsertOperator) op;
         boolean sameDataset = checkIfInsertAndScanDatasetsSame(op,
-                ((DatasetDataSource) insertOp.getDataSource()).getDataset().getDatasetName());
+                ((DatasetDataSource) insertOp.getDataSource()).getDataset().getDatasetFullyQualifiedName());
 
         if (sameDataset) {
             MaterializeOperator materializeOperator = new MaterializeOperator();
@@ -83,8 +84,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
     }
 
-    private boolean checkIfInsertAndScanDatasetsSame(AbstractLogicalOperator op, String insertDatasetName)
-            throws AlgebricksException {
+    private boolean checkIfInsertAndScanDatasetsSame(AbstractLogicalOperator op,
+            DatasetFullyQualifiedName insertDatasetName) throws AlgebricksException {
         boolean sameDataset = false;
         for (int i = 0; i < op.getInputs().size(); ++i) {
             AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(i).getValue();
@@ -100,9 +101,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
                     }
                     AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                     jobGenParams.readFromFuncArgs(f.getArguments());
-                    boolean isPrimaryIndex = jobGenParams.isPrimaryIndex();
-                    String indexName = jobGenParams.getIndexName();
-                    if (isPrimaryIndex && indexName.compareTo(insertDatasetName) == 0) {
+                    if (jobGenParams.isPrimaryIndex() && new DatasetFullyQualifiedName(jobGenParams.getDatabaseName(),
+                            jobGenParams.getDataverseName(), jobGenParams.getDatasetName()).equals(insertDatasetName)) {
                         return true;
                     }
                 }
@@ -110,7 +110,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 DataSource ds = (DataSource) dataSourceScanOp.getDataSource();
                 if ((ds.getDatasourceType() == Type.INTERNAL_DATASET || ds.getDatasourceType() == Type.EXTERNAL_DATASET)
-                        && ((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
+                        && ((DatasetDataSource) ds).getDataset().getDatasetFullyQualifiedName()
+                                .equals(insertDatasetName)) {
                     return true;
                 }
             }
