@@ -61,6 +61,36 @@
             <output-dir compare="Text">self-join-advise</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-nested">
+            <output-dir compare="Text">vector-advise-nested</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-multi">
+            <output-dir compare="Text">vector-advise-multi</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-join">
+            <output-dir compare="Text">vector-advise-join</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-existing">
+            <output-dir compare="Text">vector-advise-existing</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-none">
+            <output-dir compare="Text">vector-advise-none</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="vector-advise-cost">
+            <output-dir compare="Text">vector-advise-cost</output-dir>
+        </compilation-unit>
+    </test-case>
     <test-case FilePath="cbo-join">
         <compilation-unit name="computed-join-predicate">
             <output-dir compare="Text">computed-join-predicate</output-dir>

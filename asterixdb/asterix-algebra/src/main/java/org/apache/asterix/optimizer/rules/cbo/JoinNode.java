@@ -988,8 +988,10 @@ public class JoinNode {
      * to a plan already registered, which answers the query exactly rather than approximately.
      *
      * @param rootOp operator the top-k pattern is searched from
+     * @param indexProvider where this dataset's indexes are looked up
      */
-    protected void addVectorIndexAccessPlans(ILogicalOperator rootOp) throws AlgebricksException {
+    protected void addVectorIndexAccessPlans(ILogicalOperator rootOp, IIndexProvider indexProvider)
+            throws AlgebricksException {
         record CostedIndex(Index index, ICost cost, double entryBytes) {
             double totalCost() {
                 return cost.computeTotalCost();
@@ -1006,7 +1008,7 @@ public class JoinNode {
 
         List<IntroduceTopKAccessMethodRule.VectorIndexCandidate> candidates = new ArrayList<>();
         new IntroduceTopKAccessMethodRule().collectVectorIndexCandidates(new MutableObject<>(rootOp), joinEnum.optCtx,
-                origCardinality, candidates);
+                indexProvider, origCardinality, candidates);
         if (candidates.isEmpty()) {
             return;
         }

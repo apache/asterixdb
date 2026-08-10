@@ -73,7 +73,8 @@ public class AdvisorPlanParser {
         if (planNode == null) {
             return null;
         }
-        return new CBOPlanStateTree(planNode);
+        return new CBOPlanStateTree(planNode,
+                AdvisorConditionParser.extractVectorConditions(opRef.getValue(), context));
     }
 
     private static AbstractAdvisorPlanNode getJoinOpsAndLeafInputs(ILogicalOperator op, IOptimizationContext context)

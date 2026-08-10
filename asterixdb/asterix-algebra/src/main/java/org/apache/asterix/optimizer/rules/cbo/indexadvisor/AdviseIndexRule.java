@@ -26,7 +26,9 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
+import org.apache.asterix.optimizer.rules.am.VectorIndexAccessMethod;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -113,7 +115,8 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
             if (jobGenParams.isPrimaryIndex()) {
                 return;
             }
-            if (jobGenParams.getIndexType() != DatasetConfig.IndexType.BTREE) {
+            DatasetConfig.IndexType indexType = jobGenParams.getIndexType();
+            if (indexType != DatasetConfig.IndexType.BTREE && indexType != DatasetConfig.IndexType.VTREE) {
                 return;
             }
 
@@ -162,10 +165,46 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                             getCreateArrayIndexClause(getArrayIndexName(fakeArrayIndexDetails.getElementList()),
                                     fakeArrayIndexDetails, databaseName, dataverse, datasetName));
                 }
+            } else if (fakeIndex.getIndexDetails() instanceof Index.VectorIndexDetails fakeVectorIndexDetails) {
+                Index actualIndex = lookupVectorIndex(databaseName, dataverse, datasetName, fakeIndex,
+                        actualIndexProvider);
+                if (actualIndex != null
+                        && actualIndex.getIndexDetails() instanceof Index.VectorIndexDetails vectorIndexDetails) {
+                    indexAdvisor.addPresentAdviseString(getCreateVectorIndexClause(actualIndex.getIndexName(),
+                            vectorIndexDetails, databaseName, dataverse, datasetName));
+                } else {
+                    indexAdvisor.addRecommendedAdviseString(getCreateVectorIndexClause(
+                            getVectorIndexName(fakeVectorIndexDetails.getKeyFieldNames()), fakeVectorIndexDetails,
+                            databaseName, dataverse, datasetName));
+                }
             }
 
         }
 
+    }
+
+    private static Index lookupVectorIndex(String databaseName, DataverseName dataverseName, String datasetName,
+            Index adviseIndex, IIndexProvider indexProvider) throws AlgebricksException {
+        return indexProvider.getDatasetIndexes(databaseName, dataverseName, datasetName).stream()
+                .filter(index -> index.getIndexDetails() instanceof Index.VectorIndexDetails)
+                .filter(index -> !index.isEnforced()).filter(index -> servesSameSearch(index, adviseIndex)).findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * A vector index serves a search only if it is on the searched field, carries every field the search
+     * filters on, and was built for the search's similarity metric and dimension.
+     *
+     * @param index index the dataset already has
+     * @param adviseIndex index the search would be served by
+     */
+    private static boolean servesSameSearch(Index index, Index adviseIndex) {
+        Index.VectorIndexDetails details = (Index.VectorIndexDetails) index.getIndexDetails();
+        Index.VectorIndexDetails adviseDetails = (Index.VectorIndexDetails) adviseIndex.getIndexDetails();
+        return details.getKeyFieldNames().equals(adviseDetails.getKeyFieldNames())
+                && details.getIncludeFieldNames().containsAll(adviseDetails.getIncludeFieldNames())
+                && VectorIndexAccessMethod.getIndexMetric(index) == VectorIndexAccessMethod.getIndexMetric(adviseIndex)
+                && details.getVectorParameters().getDimension() == adviseDetails.getVectorParameters().getDimension();
     }
 
     private static Index lookupArrayIndex(String databaseName, DataverseName dataverseName, String datasetName,
@@ -197,16 +236,64 @@ public class AdviseIndexRule implements IAlgebraicRewriteRule {
                 .collect(Collectors.joining("_")).replaceAll(" ", "");
     }
 
+    public static String getVectorIndexName(List<List<String>> keyFieldNames) {
+        return "idx_adv_vector_" + keyFieldNames.stream().map(field -> String.join("_", field))
+                .collect(Collectors.joining("_")).replaceAll(" ", "");
+    }
+
+    public static String getCreateVectorIndexClause(String indexName, Index.VectorIndexDetails vectorIndexDetails,
+            String databaseName, DataverseName dataverseName, String datasetName) {
+        return getCreateIndexPrefix(indexName, databaseName, dataverseName, datasetName)
+                + getVectorKeyFieldNameClause(vectorIndexDetails.getKeyFieldNames())
+                + getVectorIncludeClause(vectorIndexDetails.getIncludeFieldNames()) + " TYPE VTREE"
+                + getVectorWithClause(vectorIndexDetails.getVectorParameters()) + ";";
+    }
+
+    /**
+     * @param keyFieldNames the single searched field, as the sole entry of the list
+     */
+    private static String getVectorKeyFieldNameClause(List<List<String>> keyFieldNames) {
+        return "(" + keyFieldNames.getFirst().stream().map(field -> "`" + field + "`").collect(Collectors.joining("."))
+                + " VECTOR)";
+    }
+
+    /**
+     * @param includeFieldNames fields the search is filtered on, empty when it is unfiltered
+     */
+    private static String getVectorIncludeClause(List<List<String>> includeFieldNames) {
+        if (includeFieldNames.isEmpty()) {
+            return "";
+        }
+        return includeFieldNames.stream()
+                .map(fields -> fields.stream().map(field -> "`" + field + "`").collect(Collectors.joining(".")))
+                .collect(Collectors.joining(",", " INCLUDE (", ")"));
+    }
+
+    /**
+     * The two parameters a vector index cannot be created without; the rest default.
+     *
+     * @param parameters the index's parameters
+     */
+    private static String getVectorWithClause(VectorIndexParameters parameters) {
+        return " WITH {\"" + VectorIndexParameters.DIMENSION + "\": " + parameters.getDimension() + ", \""
+                + VectorIndexParameters.SIMILARITY + "\": \"" + parameters.getSimilarity().canonical() + "\"}";
+    }
+
     public static String getCreateArrayIndexClause(String indexName, Index.ArrayIndexDetails arrayIndexDetails,
             String databaseName, DataverseName dataverseName, String datasetName) {
-        return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName + "`"
+        return getCreateIndexPrefix(indexName, databaseName, dataverseName, datasetName)
                 + getArrayKeyFieldNamesClause(arrayIndexDetails) + " EXCLUDE UNKNOWN KEY;";
     }
 
     public static String getCreateIndexClause(String indexName, List<List<String>> keyFieldNames, String databaseName,
             DataverseName dataverseName, String datasetName) {
-        return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName + "`"
+        return getCreateIndexPrefix(indexName, databaseName, dataverseName, datasetName)
                 + getKeyFieldNamesClause(keyFieldNames) + ";";
+    }
+
+    private static String getCreateIndexPrefix(String indexName, String databaseName, DataverseName dataverseName,
+            String datasetName) {
+        return "CREATE INDEX " + indexName + " ON `" + databaseName + "`.`" + dataverseName + "`.`" + datasetName + "`";
     }
 
     public static String getArrayKeyFieldNamesClause(Index.ArrayIndexDetails arrayIndexDetails) {

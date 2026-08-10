@@ -1,0 +1,1 @@
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_vector_embedding ON `Default`.`test`.`Vec`(`embedding` VECTOR) TYPE VTREE WITH {\"dimension\": 4, \"similarity\": \"euclidean\"};"}]}}}}]

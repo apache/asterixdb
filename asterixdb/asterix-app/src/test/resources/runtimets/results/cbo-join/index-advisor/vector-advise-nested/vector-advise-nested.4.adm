@@ -1,0 +1,1 @@
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_vector_meta_embedding ON `Default`.`test`.`MovieNested`(`meta`.`embedding` VECTOR) TYPE VTREE WITH {\"dimension\": 4, \"similarity\": \"euclidean\"};"}]}}}}]

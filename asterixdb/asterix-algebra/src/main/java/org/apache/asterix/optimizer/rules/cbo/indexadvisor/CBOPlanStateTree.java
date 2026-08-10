@@ -19,6 +19,7 @@
 package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -27,9 +28,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 public class CBOPlanStateTree {
     private final AbstractAdvisorPlanNode cboPlanNode;
     private final Map<LogicalVariable, DataSourceScanOperator> dataSourceScanVariableMap;
+    private final List<VectorFilterCondition> vectorFilterConditions;
 
-    public CBOPlanStateTree(AbstractAdvisorPlanNode cboPlanNode) {
+    public CBOPlanStateTree(AbstractAdvisorPlanNode cboPlanNode, List<VectorFilterCondition> vectorFilterConditions) {
         this.cboPlanNode = cboPlanNode;
+        this.vectorFilterConditions = vectorFilterConditions;
         dataSourceScanVariableMap = new HashMap<>();
         for (AdvisorScanPlanNode scanNode : cboPlanNode.getLeafs()) {
             DataSourceScanOperator scanOperator = scanNode.getScanOperator();
@@ -45,6 +48,10 @@ public class CBOPlanStateTree {
 
     public Map<LogicalVariable, DataSourceScanOperator> getDataSourceScanVariableMap() {
         return dataSourceScanVariableMap;
+    }
+
+    public List<VectorFilterCondition> getVectorFilterConditions() {
+        return vectorFilterConditions;
     }
 
 }

@@ -21,11 +21,18 @@ package org.apache.asterix.optimizer.rules.cbo.indexadvisor;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
+import org.apache.asterix.common.annotations.AnnSearchPreferenceAnnotation;
+import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.metadata.utils.PushdownUtil;
+import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.BTreeAccessMethod;
+import org.apache.asterix.optimizer.rules.am.VectorIndexAccessMethod;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -38,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -46,6 +54,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -240,6 +250,118 @@ public class AdvisorConditionParser {
             return null;
         }
         return new ScanFilterCondition(fi, accessPath.getFirst(), accessPath.getSecond(), constantExpression);
+    }
+
+    /**
+     * Describes each ANN search under {@code op} by the field, metric and dimension an index needs to serve it.
+     *
+     * @param op root to search below
+     * @param context optimization context
+     */
+    public static List<VectorFilterCondition> extractVectorConditions(ILogicalOperator op, IOptimizationContext context)
+            throws AlgebricksException {
+        List<VectorFilterCondition> vectorFilterConditions = new ArrayList<>();
+        List<ExprRef> vectorExprRefs = new ArrayList<>();
+        preOrderVisitNestedOps(op, (logicalOperator) -> {
+            accumulateVectorExprRefsFromOp(logicalOperator, vectorExprRefs);
+            return null;
+        });
+        vectorExprRefs.removeIf(exprRef -> findVectorDistanceCall(exprRef.getExpr()) == null);
+        if (vectorExprRefs.isEmpty()) {
+            return vectorFilterConditions;
+        }
+        preOrderVisitNestedOps(op, (logicalOperator) -> {
+            if (logicalOperator.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                replaceExprsWithAssign((AssignOperator) logicalOperator, vectorExprRefs);
+            }
+            return null;
+        });
+        for (ExprRef exprRef : vectorExprRefs) {
+            IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(exprRef.getOp(), context);
+            VectorFilterCondition vectorFilterCondition = parseVectorCondition(exprRef.getExpr(), typeEnv);
+            // The same search may be written more than once in a query; one fake index serves all of them.
+            if (vectorFilterCondition != null && !vectorFilterConditions.contains(vectorFilterCondition)) {
+                vectorFilterConditions.add(vectorFilterCondition);
+            }
+        }
+        return vectorFilterConditions;
+    }
+
+    private static void accumulateVectorExprRefsFromOp(ILogicalOperator op, List<ExprRef> vectorExprRefs) {
+        if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
+            for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : ((OrderOperator) op).getOrderExpressions()) {
+                vectorExprRefs.add(new ExprRef(orderExpr.second, op));
+            }
+        } else if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            for (Mutable<ILogicalExpression> expr : ((AssignOperator) op).getExpressions()) {
+                vectorExprRefs.add(new ExprRef(expr, op));
+            }
+        }
+    }
+
+    private static VectorFilterCondition parseVectorCondition(ILogicalExpression logicalExpression,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        AbstractFunctionCallExpression vectorExpr = findVectorDistanceCall(logicalExpression);
+        if (vectorExpr == null) {
+            return null;
+        }
+        // The searched field and the query vector may be written in either order.
+        ILogicalExpression firstArg = vectorExpr.getArguments().get(0).getValue();
+        ILogicalExpression secondArg = vectorExpr.getArguments().get(1).getValue();
+        Pair<LogicalVariable, List<String>> accessPath = parseAccessPath(firstArg, typeEnv);
+        ILogicalExpression queryVectorExpr;
+        if (accessPath != null) {
+            queryVectorExpr = secondArg;
+        } else {
+            accessPath = parseAccessPath(secondArg, typeEnv);
+            queryVectorExpr = firstArg;
+        }
+        if (accessPath == null) {
+            return null;
+        }
+        AnnSearchPreferenceAnnotation searchPreference = vectorExpr.getAnnotation(AnnSearchPreferenceAnnotation.class);
+        VectorSimilarityMetric similarity = VectorIndexAccessMethod.resolveQueryMetric(searchPreference.getMetric());
+        OptionalInt dimension = parseVectorDimension(queryVectorExpr);
+        // An index needs both to be declared, so a search that leaves either open cannot be advised for.
+        if (similarity == null || dimension.isEmpty()) {
+            return null;
+        }
+        return new VectorFilterCondition(accessPath.getFirst(), accessPath.getSecond(), similarity,
+                dimension.getAsInt());
+    }
+
+    private static AbstractFunctionCallExpression findVectorDistanceCall(ILogicalExpression expr) {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return null;
+        }
+        AbstractFunctionCallExpression functionCallExpr = (AbstractFunctionCallExpression) expr;
+        if (functionCallExpr.hasAnnotation(AnnSearchPreferenceAnnotation.class)
+                && functionCallExpr.getArguments().size() >= 2) {
+            return functionCallExpr;
+        }
+        for (Mutable<ILogicalExpression> argument : functionCallExpr.getArguments()) {
+            AbstractFunctionCallExpression vectorExpr = findVectorDistanceCall(argument.getValue());
+            if (vectorExpr != null) {
+                return vectorExpr;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param queryVectorExpr the query vector; its dimension is only readable when it is a non-empty literal list
+     */
+    private static OptionalInt parseVectorDimension(ILogicalExpression queryVectorExpr) {
+        if (queryVectorExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            return OptionalInt.empty();
+        }
+        IAlgebricksConstantValue constantValue = ((ConstantExpression) queryVectorExpr).getValue();
+        if (!(constantValue instanceof AsterixConstantValue asterixConstantValue)) {
+            return OptionalInt.empty();
+        }
+        IAObject queryVector = asterixConstantValue.getObject();
+        return queryVector instanceof AOrderedList orderedList && orderedList.size() > 0
+                ? OptionalInt.of(orderedList.size()) : OptionalInt.empty();
     }
 
     private record UnnestExprRef(LogicalVariable scanVar, List<List<String>> unnestList, List<String> projectList) {

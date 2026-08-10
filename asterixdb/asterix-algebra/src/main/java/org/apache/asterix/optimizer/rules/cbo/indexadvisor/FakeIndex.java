@@ -27,6 +27,7 @@ import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.util.OptionalBoolean;
 
 public class FakeIndex extends Index {
@@ -40,6 +41,17 @@ public class FakeIndex extends Index {
                         OptionalBoolean.empty(), null, null, null)
 
                 , false, isPrimary, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
+    }
+
+    public FakeIndex(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
+            List<String> vectorFieldName, List<List<String>> includeFieldNames,
+            VectorIndexParameters vectorParameters) {
+        super(databaseName, dataverseName, datasetName, indexName, DatasetConfig.IndexType.VTREE,
+                new VectorIndexDetails(vectorFieldName, includeFieldNames,
+                        Collections.nCopies(includeFieldNames.size(), 0),
+                        Collections.nCopies(includeFieldNames.size(), BuiltinType.ANY), false, OptionalBoolean.empty(),
+                        vectorParameters),
+                false, false, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
     }
 
     public FakeIndex(String databaseName, DataverseName dataverseName, String datasetName, String indexName,

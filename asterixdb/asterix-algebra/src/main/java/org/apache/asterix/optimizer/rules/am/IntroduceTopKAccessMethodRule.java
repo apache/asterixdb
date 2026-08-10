@@ -167,7 +167,12 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         clear();
-        setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());
+        boolean adviseIndex = context.getIndexAdvisor().getAdvise();
+        if (adviseIndex && context.getIndexAdvisor().getFakeIndexProvider() != null) {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getIndexAdvisor().getFakeIndexProvider());
+        } else {
+            setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());
+        }
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
@@ -877,13 +882,15 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      *
      * @param opRef operator to search from
      * @param context the optimization context
+     * @param indexProvider where the dataset's indexes are looked up
      * @param datasetCardinality rows in the dataset; the index holds an entry per row whatever the query filters
      * @param candidates filled with the applicable indexes, left empty when none apply
      */
     public boolean collectVectorIndexCandidates(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            double datasetCardinality, List<VectorIndexCandidate> candidates) throws AlgebricksException {
+            IIndexProvider indexProvider, double datasetCardinality, List<VectorIndexCandidate> candidates)
+            throws AlgebricksException {
         clear();
-        setMetadataIndexDeclarations(context, (IIndexProvider) context.getMetadataProvider());
+        setMetadataIndexDeclarations(context, indexProvider);
         return matchTopKPattern(opRef, context, ctx -> describeCandidates(ctx, datasetCardinality, candidates));
     }
 

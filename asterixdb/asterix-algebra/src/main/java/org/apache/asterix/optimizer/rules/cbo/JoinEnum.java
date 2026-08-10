@@ -1235,7 +1235,7 @@ public class JoinEnum {
         }
 
         if (this.numberOfTerms == 1 && !cboTestMode) {
-            jnArray[1].addVectorIndexAccessPlans(this.op);
+            jnArray[1].addVectorIndexAccessPlans(this.op, indexProvider);
         }
         return this.numberOfTerms;
     }

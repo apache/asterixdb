@@ -1,0 +1,1 @@
+[{"#operator":"Advise","advice":{"#operator":"IndexAdvice","adviseinfo":{"current_indexes":[],"recommended_indexes":{"indexes":[{"index_statement":"CREATE INDEX idx_adv_code ON `Default`.`test`.`MovieSmall`(`code`);"},{"index_statement":"CREATE INDEX idx_adv_movie_code ON `Default`.`test`.`Ratings`(`movie_code`);"}]}}}}]
