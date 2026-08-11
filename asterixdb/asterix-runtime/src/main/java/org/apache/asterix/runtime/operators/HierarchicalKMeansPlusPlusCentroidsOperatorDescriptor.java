@@ -178,6 +178,15 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
         this.similarityMetric = similarityMetric;
     }
 
+    /**
+     * Whether the index can hold this vector. The bulk load applies the same rule, so one that fails here is
+     * never indexed, and must not shape the centroids either: not as a seed, candidate, padding or mean.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    private boolean hasIndexDimension(double[] point) {
+        return point.length == vectorDimension;
+    }
+
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         // Activity 1: Store centroids and materialize data
@@ -332,7 +341,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                     } catch (Throwable e) {
                         writer.fail();
-                        throw new RuntimeException(e);
+                        throw HyracksDataException.create(e);
                     } finally {
                         // Close the LAST reader opened by any nested reset, not just the first one.
                         closeCurrentSampleReader();
@@ -395,6 +404,12 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                     int firstIdx = rand.nextInt(totalTupleCount);
                     double[] firstCentroid = getPointAtIndex(in, fta, tuple, eval, inputVal, listAccessorConstant,
                             kMeansUtils, firstIdx, ctx);
+                    if (firstCentroid != null && !hasIndexDimension(firstCentroid)) {
+                        // Every pass below skips non-indexable vectors, so seeding with one would train
+                        // around a centroid nothing can be assigned to.
+                        firstCentroid = seedFromFirstIndexableVector(ctx, fta, tuple, eval, inputVal,
+                                listAccessorConstant, kMeansUtils, partition);
+                    }
                     if (firstCentroid == null) {
                         return new ClusteringResult(new ArrayList<>(), assignments);
                     }
@@ -432,10 +447,11 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
                                     double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
-                                    // Compute D(x) = min distance to current centers
-                                    if (point.length != vectorDimension) {
+                                    if (!hasIndexDimension(point)) {
+                                        tempIdx++;
                                         continue;
                                     }
+                                    // Compute D(x) = min distance to current centers
                                     double minDist = Double.POSITIVE_INFINITY;
                                     for (double[] center : currentCenters) {
                                         double dist = distanceFunction.apply(point, center);
@@ -478,6 +494,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
                                     double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    if (!hasIndexDimension(point)) {
+                                        currentIdx++;
+                                        continue;
+                                    }
 
                                     // RECOMPUTE D(x) (no storage from pass 1)
                                     double minDist = Double.POSITIVE_INFINITY;
@@ -536,6 +556,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                             listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                             try {
                                 double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                if (!hasIndexDimension(point)) {
+                                    weightIdx++;
+                                    continue;
+                                }
 
                                 // Find nearest candidate (recompute distance)
                                 double minDist = Double.POSITIVE_INFINITY;
@@ -623,7 +647,8 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                             List<double[]> additionalPoints = getPointsAtSortedIndices(in, fta, tuple, eval, inputVal,
                                     listAccessorConstant, kMeansUtils, additionalIndices, ctx);
                             for (double[] additionalPoint : additionalPoints) {
-                                if (additionalPoint != null) {
+                                // Non-indexable vectors must not become centroids either.
+                                if (additionalPoint != null && hasIndexDimension(additionalPoint)) {
                                     // Avoid duplicates - only add if not too close to existing centroids
                                     boolean isDuplicate = false;
                                     for (double[] existingCentroid : centroids) {
@@ -686,6 +711,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
                                     double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    if (!hasIndexDimension(point)) {
+                                        currentIdx++;
+                                        continue;
+                                    }
 
                                     // Find closest centroid
                                     double minDist = Double.POSITIVE_INFINITY;
@@ -732,6 +761,10 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
                                     double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    if (!hasIndexDimension(point)) {
+                                        currentIdx++;
+                                        continue;
+                                    }
 
                                     int centroidIdx = assignments[currentIdx];
                                     for (int d = 0; d < point.length; d++) {
@@ -1010,6 +1043,38 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                         }
                     }
                     return candidates.size() - 1; // Fallback
+                }
+
+                /**
+                 * Returns the first indexable vector, to seed k-means when the random pick was not one, or
+                 * {@code null} if this partition holds none. The first build job already rejects that case, so
+                 * it is unreachable here for a dimension mismatch.
+                 */
+                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+                private double[] seedFromFirstIndexableVector(IHyracksTaskContext ctx, FrameTupleAccessor fta,
+                        FrameTupleReference tuple, IScalarEvaluator eval, IPointable inputVal,
+                        ListAccessor listAccessor, KMeansUtils kMeansUtils, int partition)
+                        throws HyracksDataException, IOException {
+                    GeneratedRunFileReader reader = resetRunFileReader(ctx, sampleUUID, partition);
+                    VSizeFrame frame = new VSizeFrame(ctx);
+                    while (reader.nextFrame(frame)) {
+                        fta.reset(frame.getBuffer());
+                        int tupleCount = fta.getTupleCount();
+                        for (int i = 0; i < tupleCount; i++) {
+                            tuple.reset(fta, i);
+                            eval.evaluate(tuple, inputVal);
+                            if (!ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()])
+                                    .isListType()) {
+                                continue;
+                            }
+                            listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
+                            double[] point = kMeansUtils.createPrimitveList(listAccessor);
+                            if (hasIndexDimension(point)) {
+                                return point;
+                            }
+                        }
+                    }
+                    return null;
                 }
 
                 /**

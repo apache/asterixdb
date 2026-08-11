@@ -492,6 +492,10 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
         // what makes the (staticBasePageId + i) destination math valid. A per-page takePage() loop is NOT safe
         // here — on a free-list page manager takePage() can hand back non-contiguous ids (see the same
         // reasoning in VTreeFlushLoader.copyStaticStructure).
+        // takeBlock reads metaFrame.getMaxPage() without binding the frame, unlike takePage which binds it
+        // first. On an empty load no add() ever called takePage, so bind it here. getMaxPageId binds to the
+        // metadata page without consuming one.
+        freePageManager.getMaxPageId(metaFrame);
         int staticBasePageId = freePageManager.takeBlock(metaFrame, numStaticPages);
 
         // Create frames for pointer adjustment

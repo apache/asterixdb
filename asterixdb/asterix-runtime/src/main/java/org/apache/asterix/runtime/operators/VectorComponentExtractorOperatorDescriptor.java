@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.operators;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -71,14 +73,16 @@ public class VectorComponentExtractorOperatorDescriptor extends AbstractSingleAc
 
     private final IScalarEvaluatorFactory vectorFieldEvalFactory;
     private final RecordDescriptor inputRecDesc;
+    private final int vectorDimension;
 
     public VectorComponentExtractorOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IScalarEvaluatorFactory vectorFieldEvalFactory, RecordDescriptor inputRecDesc,
-            RecordDescriptor outputRecDesc) {
+            RecordDescriptor outputRecDesc, int vectorDimension) {
         super(spec, 1, 1);
         this.vectorFieldEvalFactory = vectorFieldEvalFactory;
         this.inputRecDesc = inputRecDesc;
         this.outRecDescs[0] = outputRecDesc;
+        this.vectorDimension = vectorDimension;
     }
 
     @Override
@@ -96,6 +100,9 @@ public class VectorComponentExtractorOperatorDescriptor extends AbstractSingleAc
         private IScalarEvaluator vectorFieldEval;
         private final IPointable vectorFieldValue = new VoidPointable();
         private final ListAccessor listAccessor = new ListAccessor();
+        private boolean sawIndexableVector;
+        private long skippedVectorCount;
+        private int skippedDimension = -1;
         private final IPointable tempVal = new VoidPointable();
         private final ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
         @SuppressWarnings("unchecked")
@@ -151,6 +158,17 @@ public class VectorComponentExtractorOperatorDescriptor extends AbstractSingleAc
                 listAccessor.reset(data, offset);
                 ATypeTag itemTypeTag = listAccessor.getItemType();
                 int listSize = listAccessor.size();
+
+                // The bulk load and k-means both skip a vector of another dimension, so its components must
+                // not shape the quantization constants either.
+                if (listSize != vectorDimension) {
+                    skippedVectorCount++;
+                    if (skippedDimension < 0) {
+                        skippedDimension = listSize;
+                    }
+                    continue;
+                }
+                sawIndexableVector = true;
 
                 for (int j = 0; j < listSize; j++) {
                     try {
@@ -239,10 +257,42 @@ public class VectorComponentExtractorOperatorDescriptor extends AbstractSingleAc
             writer.fail();
         }
 
+        /**
+         * Rejects a partition that sampled vectors but can index none of them: it would contribute nothing to
+         * the index. Raised in this first build job, ahead of any training work.
+         */
+        private void rejectIfNothingIndexable() throws HyracksDataException {
+            if (!sawIndexableVector && skippedVectorCount > 0) {
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "the index declares dimension " + vectorDimension + ", but none of the " + skippedVectorCount
+                                + " vector(s) sampled in one partition match it (found " + "dimension "
+                                + skippedDimension + "). Set the index \"dimension\" parameter to match the data.");
+            }
+        }
+
         @Override
         public void close() throws HyracksDataException {
-            FrameUtils.flushFrame(appender.getBuffer(), writer);
-            writer.close();
+            // A failed writer must still be closed: fail() only moves it to FAILED, and per IFrameWriter
+            // close() is the one call allowed from there.
+            HyracksDataException failure = null;
+            try {
+                rejectIfNothingIndexable();
+                FrameUtils.flushFrame(appender.getBuffer(), writer);
+            } catch (HyracksDataException e) {
+                failure = e;
+                writer.fail();
+            }
+            try {
+                writer.close();
+            } catch (Throwable closeFailure) {
+                if (failure == null) {
+                    throw closeFailure;
+                }
+                failure.addSuppressed(closeFailure);
+            }
+            if (failure != null) {
+                throw failure;
+            }
         }
     }
 }

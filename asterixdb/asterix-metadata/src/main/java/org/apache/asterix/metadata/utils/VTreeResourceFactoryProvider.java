@@ -92,9 +92,14 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     vectorIndexDetails.getKeyFieldNames().size(), index.getIndexType(), 1);
         }
 
-        // Extract vector dimensions from WITH clause
+        // The index's physical dimension: it sizes the data frames and is what query vectors are checked
+        // against. Mandatory at CREATE INDEX and at persist, so a missing value here means a corrupt record.
         AdmObjectNode withObjectNode = vectorIndexDetails.getWithObjectNode();
-        int vectorDimensions = (withObjectNode != null) ? withObjectNode.getOptionalInt(WITH_KEY_DIMENSION, 384) : 384;
+        int vectorDimensions = (withObjectNode != null) ? withObjectNode.getOptionalInt(WITH_KEY_DIMENSION, -1) : -1;
+        if (vectorDimensions <= 0) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Index " + index.getIndexName() + " is missing the required positive `dimension` parameter");
+        }
 
         // Get INCLUDE fields count from index details (needed by factory)
         List<List<String>> includeFieldNames = vectorIndexDetails.getIncludeFieldNames();

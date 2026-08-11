@@ -677,7 +677,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         RecordDescriptor flattenedRecordDesc = new RecordDescriptor(flattenedSerDes, flattenedTypeTraits);
 
         targetOp = new VectorComponentExtractorOperatorDescriptor(spec, vectorFieldEvalFactory,
-                dataset.getPrimaryRecordDescriptor(metadataProvider), flattenedRecordDesc);
+                dataset.getPrimaryRecordDescriptor(metadataProvider), flattenedRecordDesc, vectorDimensions);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, targetOp, samplePartitionConstraint);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
         sourceOp = targetOp;

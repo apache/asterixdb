@@ -145,6 +145,10 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                 private int sampleCount = 0;
                 private boolean quantizationParamsLoaded = false;
 
+                /** Set on producer failure, so {@code close()} does not build over a truncated stream. */
+                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+                private boolean upstreamFailed = false;
+
                 // Get all storage partitions for this compute partition
                 private final int[] storagePartitions = partitionsMap[partition];
 
@@ -250,7 +254,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    // no op
+                    upstreamFailed = true;
                 }
 
                 private void processTuple(ITupleReference tuple) throws HyracksDataException {
@@ -440,7 +444,11 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
 
                 @Override
                 public void close() throws HyracksDataException {
-
+                    if (upstreamFailed) {
+                        // Only a prefix of the centroids arrived, if any. Building on that would fail here
+                        // and replace the producer's real error.
+                        return;
+                    }
                     try {
                         createStaticStructure();
                     } finally {

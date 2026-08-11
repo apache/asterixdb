@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -64,6 +65,9 @@ import org.mockito.Mockito;
 public class VectorComponentExtractorOperatorDescriptorTest {
 
     private static final int FRAME_SIZE = 32768;
+
+    /** For tests that feed no vector at all, where the declared dimension cannot matter. */
+    private static final int NO_VECTORS = 1;
 
     private final RecordDescriptor inRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANY) });
@@ -108,7 +112,7 @@ public class VectorComponentExtractorOperatorDescriptorTest {
     public void testDoubleListEmitsOneTuplePerComponent() throws Exception {
         List<byte[]> inputs = new ArrayList<>();
         inputs.add(buildDoubleList(1.5, 2.5, 3.5));
-        double[] result = runOperator(inputs);
+        double[] result = runOperator(inputs, 3);
         Assert.assertArrayEquals(new double[] { 1.5, 2.5, 3.5 }, result, 0.0);
     }
 
@@ -133,7 +137,7 @@ public class VectorComponentExtractorOperatorDescriptorTest {
     public void testHeterogeneousListCoercesToDouble() throws Exception {
         List<byte[]> inputs = new ArrayList<>();
         inputs.add(buildAnyList(new Object[] { 2, 3.5, 7 }));
-        double[] result = runOperator(inputs);
+        double[] result = runOperator(inputs, 3);
         Assert.assertArrayEquals(new double[] { 2.0, 3.5, 7.0 }, result, 0.0);
     }
 
@@ -142,9 +146,60 @@ public class VectorComponentExtractorOperatorDescriptorTest {
         List<byte[]> inputs = new ArrayList<>();
         inputs.add(buildDoubleList(1.0, 2.0));
         inputs.add(new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG });
+        inputs.add(buildDoubleList(3.0, 4.0));
+        double[] result = runOperator(inputs, 2);
+        Assert.assertArrayEquals(new double[] { 1.0, 2.0, 3.0, 4.0 }, result, 0.0);
+    }
+
+    /**
+     * Quantization constants must describe the vectors the index will hold, so a vector of another
+     * dimension contributes no components. The build carries on over the ones that do match.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @Test
+    public void testOffDimensionVectorsContributeNoComponents() throws Exception {
+        List<byte[]> inputs = new ArrayList<>();
+        inputs.add(buildDoubleList(1.0, 2.0));
+        inputs.add(buildDoubleList(9.0, 9.0, 9.0));
         inputs.add(buildDoubleList(3.0));
-        double[] result = runOperator(inputs);
-        Assert.assertArrayEquals(new double[] { 1.0, 2.0, 3.0 }, result, 0.0);
+        inputs.add(buildDoubleList(4.0, 5.0));
+        double[] result = runOperator(inputs, 2);
+        Assert.assertArrayEquals(new double[] { 1.0, 2.0, 4.0, 5.0 }, result, 0.0);
+    }
+
+    /**
+     * A partition that can index none of its sampled vectors would leave the index empty there, so the build
+     * is rejected in this first job, naming both dimensions, before any training runs.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @Test
+    public void testWhollyNonIndexableSampleIsRejected() throws Exception {
+        List<byte[]> inputs = new ArrayList<>();
+        inputs.add(buildDoubleList(1.0, 2.0, 3.0, 4.0));
+        inputs.add(buildDoubleList(5.0, 6.0, 7.0, 8.0));
+        try {
+            runOperator(inputs, 1);
+            Assert.fail("Expected the build to be rejected when no sampled vector is indexable");
+        } catch (HyracksDataException e) {
+            Assert.assertEquals(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED.intValue(), e.getErrorCode());
+            String message = e.getMessage();
+            Assert.assertTrue(message, message.contains("declares dimension 1"));
+            Assert.assertTrue(message, message.contains("found dimension 4"));
+        }
+    }
+
+    /**
+     * A partition whose sample holds no vectors at all is not a dimension problem, and must keep the
+     * existing global handling: records without the vector field are legal under EXCLUDE UNKNOWN KEY.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @Test
+    public void testSampleWithNoVectorsDoesNotFail() throws Exception {
+        List<byte[]> inputs = new ArrayList<>();
+        inputs.add(new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG });
+        inputs.add(buildTaggedDouble(42.0));
+        double[] result = runOperator(inputs, 384);
+        Assert.assertEquals(0, result.length);
     }
 
     /**
@@ -152,10 +207,14 @@ public class VectorComponentExtractorOperatorDescriptorTest {
      * returns the emitted double components in order.
      */
     private double[] runOperator(List<byte[]> vectorFields) throws HyracksDataException {
+        return runOperator(vectorFields, NO_VECTORS);
+    }
+
+    private double[] runOperator(List<byte[]> vectorFields, int declaredDimension) throws HyracksDataException {
         IHyracksTaskContext ctx = mockTaskContext();
         JobSpecification spec = new JobSpecification();
         VectorComponentExtractorOperatorDescriptor desc = new VectorComponentExtractorOperatorDescriptor(spec,
-                new ColumnAccessEvalFactory(0), inRecDesc, outRecDesc);
+                new ColumnAccessEvalFactory(0), inRecDesc, outRecDesc, declaredDimension);
 
         IRecordDescriptorProvider rdp = Mockito.mock(IRecordDescriptorProvider.class);
         Mockito.when(rdp.getInputRecordDescriptor(Mockito.any(), Mockito.anyInt())).thenReturn(inRecDesc);

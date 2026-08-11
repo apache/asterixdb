@@ -70,6 +70,19 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <!-- Either build job can report a wholly non-indexable sample: the quantization job names the
+             declared and the found dimension, and the training job names the declared one among the causes
+             of an empty parameter block. Which one arrives first is not deterministic, so match the phrase
+             they share. Matching is a literal substring test under CancellationTestExecutor, so this cannot
+             be an alternation. -->
+        <compilation-unit name="create-index-vtree-dimension-mismatch">
+            <output-dir compare="Text">create-index-vtree-dimension-mismatch</output-dir>
+            <expected-error>the index declares</expected-error>
+            <!-- Raised by a build job on an NC, so it carries no source location. -->
+            <source-location>false</source-location>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-composite-pk">
             <output-dir compare="Clean-JSON">create-index-vtree-composite-pk</output-dir>
         </compilation-unit>

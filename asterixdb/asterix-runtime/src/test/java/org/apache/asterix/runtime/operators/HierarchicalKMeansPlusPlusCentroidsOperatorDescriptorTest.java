@@ -140,6 +140,41 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
 
     // ------------------------------------------------------------------ tests
 
+    /**
+     * Off-dimension vectors are never indexed, so they must not shape the centroids either. Before the
+     * guard, a longer one met a shorter centroid in the distance loop and threw
+     * {@link ArrayIndexOutOfBoundsException}.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @Test
+    public void testOffDimensionVectorsDoNotShapeCentroids() throws Exception {
+        List<double[]> baseline = twoClusterVectors(20);
+        List<CentroidTuple> expected = parseAll(runOperator(42L, 2, 32768, baseline));
+
+        List<double[]> polluted = new ArrayList<>(baseline);
+        for (int i = 0; i < 10; i++) {
+            polluted.add(new double[DIM + 1]);
+            polluted.add(new double[DIM - 1]);
+        }
+        List<CentroidTuple> actual = parseAll(runOperator(42L, 2, 32768, polluted));
+
+        Assert.assertEquals("Off-dimension vectors must not change the centroid count", expected.size(), actual.size());
+        for (CentroidTuple t : actual) {
+            Assert.assertEquals("Centroids must carry the declared dimension", DIM, t.embedding.length);
+        }
+    }
+
+    /**
+     * k-means emits no centroids rather than failing: the first build job has already rejected a wholly
+     * non-indexable sample, so this only arises when the operator is driven on its own.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @Test
+    public void testNoIndexableVectorEmitsNoCentroids() throws Exception {
+        List<ITupleReference> run = runOperator(42L, 2, 32768, twoClusterVectors(20), DIM + 4);
+        Assert.assertTrue("A partition with nothing indexable must emit no centroids", run.isEmpty());
+    }
+
     @Test
     public void testDeterministicOutputWithSameSeed() throws Exception {
         List<double[]> vectors = twoClusterVectors(20);
@@ -289,6 +324,11 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
      */
     private List<ITupleReference> runOperator(long seed, int k, int frameSize, List<double[]> vectors)
             throws Exception {
+        return runOperator(seed, k, frameSize, vectors, DIM);
+    }
+
+    private List<ITupleReference> runOperator(long seed, int k, int frameSize, List<double[]> vectors,
+            int declaredDimension) throws Exception {
         IOManager ioManager = createIoManager();
         try {
             IHyracksTaskContext ctx = mockTaskContext(frameSize, ioManager);
@@ -301,7 +341,7 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
             HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor desc =
                     new HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(spec, outRecDesc, inRecDesc,
                             UUID.randomUUID(), UUID.randomUUID(), new ColumnAccessEvalFactory(0), k, 5,
-                            VectorSimilarityMetric.EUCLIDEAN, DIM, seed);
+                            VectorSimilarityMetric.EUCLIDEAN, declaredDimension, seed);
 
             List<IActivity> activities = new ArrayList<>();
             IActivityGraphBuilder graphBuilder = Mockito.mock(IActivityGraphBuilder.class);
