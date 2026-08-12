@@ -85,10 +85,16 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.8.3-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.8.3-SNAPSHOT</hyracks.version>
+    <!-- hadoop's S3A ChecksumSupport reads the awssdk it was built against: 3.4.3 wants
+         CHECKSUM_ALGORITHM CRC64_NVME, added in awssdk 2.30, and initialising that class
+         against an older SDK throws NoSuchFieldError on the thread compiling the query,
+         which halts the JVM. awssdk cannot move to 2.30+ while these tests run against
+         io.findify S3Mock, which mishandles the newer SDK's default upload checksums. -->
+    <!-- @pinned-with: ${awsjavasdk.version} -->
     <hadoop.version>3.4.2</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.5</log4j.version>
-    <awsjavasdk.version>2.29.27</awsjavasdk.version>
+    <awsjavasdk.version>2.29.52</awsjavasdk.version>
     <s3mock.version>0.2.6</s3mock.version>
     <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
@@ -1708,7 +1714,7 @@
       <dependency>
         <groupId>org.msgpack</groupId>
         <artifactId>msgpack-core</artifactId>
-        <version>0.9.11</version>
+        <version>0.9.12</version>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
@@ -1860,14 +1866,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.80.0</version>
+        <version>1.83.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.80.0</version>
+        <version>1.83.1</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>
