@@ -203,6 +203,11 @@ public @interface AiProvenance {
         CLAUDE_OPUS_3(ANTHROPIC, "claude-3-opus", "Claude Opus 3"),
 
         // =========================
+        // Anthropic — Claude Fable
+        // =========================
+        CLAUDE_FABLE_5(ANTHROPIC, "claude-fable-5", "Claude Fable 5"),
+
+        // =========================
         // Anthropic — Claude Sonnet
         // =========================
         CLAUDE_SONNET_5(ANTHROPIC, "claude-sonnet-5", "Claude Sonnet 5"),
