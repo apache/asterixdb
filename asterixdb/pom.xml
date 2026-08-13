@@ -1701,12 +1701,12 @@
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>postgresql</artifactId>
-        <version>1.16.3</version>
+        <version>1.21.4</version>
       </dependency>
       <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.2.29</version>
+        <version>42.7.13</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
