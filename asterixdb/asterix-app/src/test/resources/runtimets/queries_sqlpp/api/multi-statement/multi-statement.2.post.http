@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
--- statuscode 404
-
-$result
+/*
+ * Description: async delivery answers with a handle before the statement has run, so the statements of
+ *              a request cannot be sequenced: several statements with mode=async are rejected
+ */
+/query/service
+--body={"statement": "select 1; select 2;", "multi-statement": true, "mode": "async"}

@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
--- statuscode 404
-
-$result
+/*
+ * Description: multiple statements are rejected when the request does not allow them
+ */
+/query/service
+--body={"statement": "select 1; select 2;", "multi-statement": false}

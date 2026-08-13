@@ -33,6 +33,67 @@ public class ExecutionPlans implements Serializable {
     private String statementParameters;
     private boolean explainOnly;
 
+    public ExecutionPlans() {
+    }
+
+    /** Copies a statement's plans, so they can be reported with it while the live plans go on changing. */
+    public ExecutionPlans(ExecutionPlans other) {
+        expressionTree = other.expressionTree;
+        rewrittenExpressionTree = other.rewrittenExpressionTree;
+        logicalPlan = other.logicalPlan;
+        optimizedLogicalPlan = other.optimizedLogicalPlan;
+        job = other.job;
+        signature = other.signature;
+        statementCategory = other.statementCategory;
+        statementParameters = other.statementParameters;
+        explainOnly = other.explainOnly;
+    }
+
+    /** Forgets the plans of the statement that just finished, so the next one does not report them as its own. */
+    /**
+     * Puts back the plans of {@code accumulated} that the statement just run did not produce, so that a request
+     * reporting itself as a whole reports what it always did: each statement overwriting the fields it produces.
+     */
+    public void restoreMissingFrom(ExecutionPlans accumulated) {
+        if (expressionTree == null) {
+            expressionTree = accumulated.expressionTree;
+        }
+        if (rewrittenExpressionTree == null) {
+            rewrittenExpressionTree = accumulated.rewrittenExpressionTree;
+        }
+        if (logicalPlan == null) {
+            logicalPlan = accumulated.logicalPlan;
+        }
+        if (optimizedLogicalPlan == null) {
+            optimizedLogicalPlan = accumulated.optimizedLogicalPlan;
+        }
+        if (job == null) {
+            job = accumulated.job;
+        }
+        if (signature == null) {
+            signature = accumulated.signature;
+        }
+        if (statementCategory == null) {
+            statementCategory = accumulated.statementCategory;
+        }
+        if (statementParameters == null) {
+            statementParameters = accumulated.statementParameters;
+        }
+        explainOnly |= accumulated.explainOnly;
+    }
+
+    public void clear() {
+        expressionTree = null;
+        rewrittenExpressionTree = null;
+        logicalPlan = null;
+        optimizedLogicalPlan = null;
+        job = null;
+        signature = null;
+        statementCategory = null;
+        statementParameters = null;
+        explainOnly = false;
+    }
+
     public String getExpressionTree() {
         return expressionTree;
     }

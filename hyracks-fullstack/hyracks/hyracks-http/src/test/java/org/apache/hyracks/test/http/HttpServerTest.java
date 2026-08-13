@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -49,6 +50,7 @@ import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.test.http.servlet.ChattyServlet;
 import org.apache.hyracks.test.http.servlet.EchoServlet;
+import org.apache.hyracks.test.http.servlet.ErrorAfterHeaderServlet;
 import org.apache.hyracks.test.http.servlet.SleepyServlet;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -407,6 +409,33 @@ public class HttpServerTest {
                 final String responseBody = EntityUtils.toString(response.getEntity());
                 Assert.assertEquals(response.getStatusLine().getStatusCode(), HttpResponseStatus.OK.code());
                 Assert.assertEquals(responseBody, requestBody);
+            }
+        } finally {
+            webMgr.stop();
+        }
+    }
+
+    @Test
+    public void errorAfterHeaderSentTest() throws Exception {
+        // an error raised after the header was sent goes out as the last chunk, and the response is terminated
+        final WebManager webMgr = new WebManager();
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setThreadCount(16).setRequestQueueSize(16).build();
+        final HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config);
+        server.addServlet(new ErrorAfterHeaderServlet(server.ctx(), new String[] { PATH }));
+        webMgr.add(server);
+        webMgr.start();
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            final URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, null, null);
+            try (CloseableHttpResponse response = httpClient.execute(new HttpGet(uri))) {
+                // the status line was committed to by the first chunk, so it stays 200 whatever followed
+                Assert.assertEquals(HttpResponseStatus.OK.code(), response.getStatusLine().getStatusCode());
+                // must not fail: the response has to be properly terminated
+                final String responseBody = EntityUtils.toString(response.getEntity());
+                Assert.assertTrue("content sent before the error is missing",
+                        responseBody.startsWith(ErrorAfterHeaderServlet.CONTENT));
+                Assert.assertTrue("the error was not delivered to the client",
+                        responseBody.endsWith(ErrorAfterHeaderServlet.ERROR));
             }
         } finally {
             webMgr.stop();

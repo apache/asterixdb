@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.algebra.base.ILangExtension;
@@ -47,6 +48,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType;
@@ -159,6 +161,14 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
                 new ExecuteStatementResponseMessage(requestMessageId, clientContextID, requestReference.getUuid());
         final IStatementExecutor.StatementProperties statementProperties = new IStatementExecutor.StatementProperties();
         responseMsg.setStatementProperties(statementProperties);
+        final IStatementExecutor.ResultMetadata outMetadata = new IStatementExecutor.ResultMetadata();
+        responseMsg.setMetadata(outMetadata);
+        final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
+        stats.setProfileType(profileType);
+        responseMsg.setStats(stats);
+        // set before the statements run: a response reporting them is served even when a later one failed
+        responseMsg.setExecutionPlans(new ExecutionPlans());
+        responseMsg.setWarnings(new ArrayList<>());
         try {
             List<Warning> warnings = new ArrayList<>();
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
@@ -174,22 +184,22 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
             SessionOutput sessionOutput = new SessionOutput(sessionConfig, outPrinter, resultPrefix, resultPostfix,
                     appendHandle, appendStatus);
-            IStatementExecutor.ResultMetadata outMetadata = new IStatementExecutor.ResultMetadata();
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
                     compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
-            final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
-            stats.setProfileType(profileType);
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters =
                     createRequestParameters(statementProperties, stmtParams, outMetadata, stats);
-            translator.compileAndExecute(ccApp.getHcc(), requestParameters);
+            try {
+                translator.compileAndExecute(ccApp.getHcc(), requestParameters);
+            } finally {
+                // the parser's warnings belong to their statement whether or not the request went on to fail
+                addParserWarningsToStatements(outMetadata, parser.getWarningsPerStatement(), maxWarnings);
+            }
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
-            responseMsg.setMetadata(outMetadata);
-            responseMsg.setStats(stats);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
             responseMsg.setWarnings(warnings);
         } catch (AlgebricksException | HyracksException | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
@@ -201,6 +211,24 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             responseMsg.setError(e);
         }
         sendResponseToNc(messageBroker, responseMsg);
+    }
+
+    /**
+     * Adds the warnings the parser raised for a statement to what that statement reports, matching them by position.
+     * Every warning is counted, and {@code maxWarnings} of them reported, per statement.
+     */
+    private static void addParserWarningsToStatements(IStatementExecutor.ResultMetadata outMetadata,
+            List<Set<Warning>> warningsPerStatement, long maxWarnings) {
+        for (IStatementExecutor.StatementInfo statement : outMetadata.getStatements()) {
+            int parsedAt = statement.getPosition() - 1;
+            if (parsedAt >= 0 && parsedAt < warningsPerStatement.size()) {
+                Set<Warning> parserWarnings = warningsPerStatement.get(parsedAt);
+                statement.addWarnings(parserWarnings.stream().limit(maxWarnings).toList());
+                if (statement.getStats() != null) {
+                    statement.getStats().updateTotalWarningsCount(parserWarnings.size());
+                }
+            }
+        }
     }
 
     protected IRequestParameters createRequestParameters(IStatementExecutor.StatementProperties statementProperties,

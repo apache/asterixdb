@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -322,6 +323,12 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private final Map<SourceLocation, String> hintCollector = new HashMap<SourceLocation, String>();
 
+    /** The warnings of each statement, in the order the statements were parsed. */
+    private final List<Set<Warning>> allStatementWarnings = new ArrayList<Set<Warning>>();
+
+    /** The warnings of the statement being parsed. */
+    private final Set<Warning> currentStatementWarnings = new HashSet<Warning>();
+
     private INamespaceResolver namespaceResolver;
 
     private static class IndexParams {
@@ -569,6 +576,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
             final String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(msg));
         } finally {
+            // the hints of a statement that failed to parse; a parsed statement drained its own already
             reportUnclaimedHints();
         }
     }
@@ -591,6 +599,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
     @Override
     public long getTotalWarningsCount() {
         return warningCollector.getTotalWarningsCount();
+    }
+
+    @Override
+    public List<Set<Warning>> getWarningsPerStatement() {
+        return allStatementWarnings;
     }
 
     protected String getMessage(ParseException pe) {
@@ -751,10 +764,12 @@ class SQLPPParser extends ScopeChecker implements IParser {
         }
 
 
+    /** Reports the hints no clause claimed. Called per statement, so the collector is drained each time. */
     private void reportUnclaimedHints() {
         for (Map.Entry<SourceLocation, String> me : hintCollector.entrySet()) {
             warnUnexpectedHint(me.getValue(), me.getKey(), "None");
         }
+        hintCollector.clear();
     }
 
     private void warnUnexpectedHint(String actualHint, SourceLocation sourceLoc, SqlppHint... expectedHints) {
@@ -763,8 +778,14 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private void warnUnexpectedHint(String actualHint, SourceLocation sourceLoc, String expectedHints) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
+            warn(Warning.of(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
         }
+    }
+
+    /** Records a warning against the statement being parsed as well as against the request. */
+    private void warn(Warning warning) {
+        warningCollector.warn(warning);
+        currentStatementWarnings.add(warning);
     }
 
     private IExpressionAnnotation parseExpressionAnnotation(Token hintToken) {
@@ -919,13 +940,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
         }
       } catch (SqlppParseException e) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+            warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
               hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;
       } catch (CompilationException e) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+            warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
               hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;
@@ -1011,9 +1032,15 @@ List<Statement> Statement() throws ParseException:
 }
 {
   (
+     {
+         currentStatementWarnings.clear();
+     }
     (stmt = ExplainOrAdviseStatement()
       {
         decls.add(stmt);
+        // unclaimed hints are warnings of this statement too
+        reportUnclaimedHints();
+        allStatementWarnings.add(new HashSet<Warning>(currentStatementWarnings));
       }
     )?
     (<SEMICOLON>)+

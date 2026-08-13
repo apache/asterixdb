@@ -59,7 +59,6 @@
         <compilation-unit name="async-exhausted-result">
             <output-dir compare="Clean-JSON">async-exhausted-result</output-dir>
             <parameter name="profile" value="timings" type="string"/>
-            <expected-error>HTTP/1.1 404 Not Found</expected-error>
             <source-location>false</source-location>
         </compilation-unit>
     </test-case>

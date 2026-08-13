@@ -151,6 +151,8 @@ public class ResultExtractor {
     private static final ObjectWriter WRITER = OBJECT_MAPPER.writer();
     private static final ObjectWriter PP_WRITER = OBJECT_MAPPER.writer(new JsonPrettyPrinter());
     private static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(ObjectNode.class);
+    /** The field a response uses when it reports its statements one by one. */
+    private static final String STATEMENTS_FIELD_NAME = "statements";
 
     public static ExtractedResult extract(InputStream resultStream, Charset resultCharset, OutputFormat outputFormat)
             throws Exception {
@@ -221,7 +223,7 @@ public class ResultExtractor {
 
         final ObjectNode result;
         try {
-            result = OBJECT_READER.readValue(resultStr);
+            result = flattenStatements(OBJECT_READER.readValue(resultStr));
         } catch (Exception e) {
             // whoops, not JSON (e.g. 404) - just include the body
             GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "result: {} json parse exception: {}", resultStr, e);
@@ -324,6 +326,44 @@ public class ResultExtractor {
             }
             throw new Exception(errors.asText());
         }
+    }
+
+    /**
+     * Reads a response that reports its statements one by one as the flat response the rest of this extractor expects:
+     * each statement's results in order, and the errors and warnings of all of them. What describes a single statement
+     * is dropped, since an expected result describes the request. Any other response is returned as it is.
+     */
+    private static ObjectNode flattenStatements(ObjectNode response) {
+        JsonNode statements = response.get(STATEMENTS_FIELD_NAME);
+        if (statements == null || !statements.isArray()) {
+            return response;
+        }
+        ObjectNode flat = response.deepCopy();
+        flat.remove(STATEMENTS_FIELD_NAME);
+        ArrayNode warnings = null;
+        int resultSets = 0;
+        for (JsonNode statement : statements) {
+            JsonNode results = statement.get(ResultField.RESULTS.getFieldName());
+            if (results != null) {
+                // the first result set is "results", the ones after it "results-0", "results-1", ...
+                flat.set(resultSets == 0 ? ResultField.RESULTS.getFieldName()
+                        : ResultField.RESULTS.getFieldName() + '-' + (resultSets - 1), results);
+                resultSets++;
+            }
+            JsonNode errors = statement.get(ResultField.ERRORS.getFieldName());
+            if (errors != null && !flat.has(ResultField.ERRORS.getFieldName())) {
+                // nothing runs after a failure, so the first errors are the request's
+                flat.set(ResultField.ERRORS.getFieldName(), errors);
+            }
+            JsonNode statementWarnings = statement.get(ResultField.WARNINGS.getFieldName());
+            if (statementWarnings != null) {
+                if (warnings == null) {
+                    warnings = flat.putArray(ResultField.WARNINGS.getFieldName());
+                }
+                statementWarnings.forEach(warnings::add);
+            }
+        }
+        return flat;
     }
 
     private static void extractWarnings(JsonNode warningsValue, ExtractedResult exeResult) {

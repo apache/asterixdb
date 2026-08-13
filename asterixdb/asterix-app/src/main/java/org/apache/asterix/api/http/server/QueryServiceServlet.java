@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -276,7 +277,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             executionState.finish();
         }
         responsePrinter.printResults();
-        buildResponseFooters(elapsedStart, errorCount, stats, executionState, resultCharset, responsePrinter, delivery);
+        // a request reporting its statements one by one succeeds as a request while one of them failed
+        buildResponseFooters(elapsedStart, errorCount + executionState.failedStatementCount(), stats, executionState,
+                resultCharset, responsePrinter, delivery);
         responsePrinter.printFooters();
         responsePrinter.end();
         if (sessionOutput.out().checkError()) {
@@ -322,7 +325,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         responsePrinter.addFooterPrinter(new CachedPlanPrinter(stats.isCachedPlan()));
         if (ResultDelivery.ASYNC != delivery) {
             responsePrinter.addFooterPrinter(new StatusPrinter(executionState.getResultStatus()));
-            responsePrinter.addFooterPrinter(new MetricsPrinter(metrics, resultCharset));
+            responsePrinter
+                    .addFooterPrinter(new MetricsPrinter(metrics, resultCharset, requestMetrics(executionState)));
         } else {
             // in case of ASYNC mode and compilation/parsing error, we need to print the status
             responsePrinter.addFooterPrinter(new StatusPrinter(getAsyncResultStatus(executionState.getResultStatus())));
@@ -451,6 +455,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         requestParameters.setSQLCompatMode(param.isSQLCompatMode());
         requestParameters.setSkipQueryPlanCache(param.isSkipQueryPlanCache());
         return requestParameters;
+    }
+
+    /** The metrics a request reports for itself. Overridable for a response that reports some of them elsewhere. */
+    protected Set<MetricsPrinter.Metrics> requestMetrics(RequestExecutionState executionState) {
+        return EnumSet.allOf(MetricsPrinter.Metrics.class);
     }
 
     protected static boolean isPrintingProfile(IStatementExecutor.Stats stats) {

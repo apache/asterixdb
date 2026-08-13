@@ -19,8 +19,12 @@
 
 package org.apache.asterix.api.http.server;
 
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -31,10 +35,14 @@ import org.apache.asterix.app.message.CancelQueryRequest;
 import org.apache.asterix.app.message.ExecuteStatementRequestMessage;
 import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
 import org.apache.asterix.app.result.ResponsePrinter;
+import org.apache.asterix.app.result.fields.MetricsPrinter;
 import org.apache.asterix.app.result.fields.NcResultPrinter;
+import org.apache.asterix.app.result.fields.NcStatementsPrinter;
 import org.apache.asterix.app.result.fields.SignaturePrinter;
+import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IRequestReference;
+import org.apache.asterix.common.api.IResponseFieldPrinter;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -53,6 +61,7 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.InterruptOnCloseHandler;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.logging.log4j.Level;
 
@@ -63,6 +72,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * Delegates query execution to CC, then serves the result.
  */
 public class NCQueryServiceServlet extends QueryServiceServlet {
+
+    /** What a request reports for itself where its statements report the rest. */
+    private static final Set<MetricsPrinter.Metrics> REQUEST_METRICS = EnumSet.of(MetricsPrinter.Metrics.ELAPSED_TIME,
+            MetricsPrinter.Metrics.EXECUTION_TIME, MetricsPrinter.Metrics.ERROR_COUNT);
 
     public NCQueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
             ILangExtension.Language queryLanguage, ILangCompilationProvider compilationProvider,
@@ -119,8 +132,10 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         }
 
         updatePropertiesFromCC(statementProperties, responseMsg);
+        boolean perStatement = useMultiStatementResponse(responseMsg);
         Throwable err = responseMsg.getError();
-        if (err != null) {
+        // reported one by one, a failure belongs to its statement, so long as another statement did run
+        if (err != null && (!perStatement || !anyStatementSucceeded(responseMsg))) {
             if (err instanceof Error) {
                 throw (Error) err;
             } else if (err instanceof Exception) {
@@ -136,15 +151,70 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
         }
         updateStatsFromCC(stats, responseMsg);
-        if (param.isSignature() && delivery != IStatementExecutor.ResultDelivery.ASYNC && !param.isParseOnly()) {
-            responsePrinter.addResultPrinter(SignaturePrinter.newInstance(responseMsg.getExecutionPlans()));
+        if (perStatement) {
+            responsePrinter.addResultPrinter(newStatementsPrinter(responseMsg, delivery, sessionOutput,
+                    HttpUtil.getPreferredCharset(request), param.isSignature() && !param.isParseOnly(),
+                    param.isIncludeHost() ? null : requestReference.getUuid()));
+            // kept for the footers, which report what belongs to the request rather than to a statement
+            executionState.setStatements(statementsOf(responseMsg));
+        } else {
+            if (param.isSignature() && delivery != IStatementExecutor.ResultDelivery.ASYNC && !param.isParseOnly()) {
+                responsePrinter.addResultPrinter(SignaturePrinter.newInstance(responseMsg.getExecutionPlans()));
+            }
+            if (hasResult(responseMsg)) {
+                responsePrinter.addResultPrinter(
+                        new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
+            }
+            warnings.addAll(responseMsg.getWarnings());
+            buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings,
+                    executionState);
         }
-        if (hasResult(responseMsg)) {
-            responsePrinter.addResultPrinter(
-                    new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
+    }
+
+    /** Where each statement reports what it produced, the request reports only what is its own. */
+    @Override
+    protected Set<MetricsPrinter.Metrics> requestMetrics(RequestExecutionState executionState) {
+        return executionState.getStatements().isEmpty() ? super.requestMetrics(executionState) : REQUEST_METRICS;
+    }
+
+    /**
+     * Whether to report this request statement by statement. Off here deliberately: this service has always accepted
+     * several statements, so clients rely on the response it already returns. A deployment that rejected them can turn
+     * it on with {@link #hasMultipleStatements}.
+     */
+    protected boolean useMultiStatementResponse(ExecuteStatementResponseMessage responseMsg) {
+        return false;
+    }
+
+    /**
+     * Whether the request carried more than one statement of the client's own. {@code USE}, {@code SET} and
+     * {@code DECLARE FUNCTION} get an entry of their own but are not counted, as in the rejection path.
+     */
+    protected static boolean hasMultipleStatements(ExecuteStatementResponseMessage responseMsg) {
+        return statementsOf(responseMsg).stream().filter(statement -> statement.getKind() != null
+                && QueryTranslator.isNotAllowedMultiStatement(statement.getKind())).count() > 1;
+    }
+
+    /** Overridable so that a deployment can report the statements in a form of its own. */
+    protected IResponseFieldPrinter newStatementsPrinter(ExecuteStatementResponseMessage responseMsg,
+            IStatementExecutor.ResultDelivery delivery, SessionOutput sessionOutput, Charset resultCharset,
+            boolean printSignature, String requestId) throws Exception {
+        return new NcStatementsPrinter(appCtx, statementsOf(responseMsg), getResultSet(), delivery, sessionOutput,
+                resultCharset, printSignature, requestId);
+    }
+
+    /** The client's statements as the CC reported them; the request's own dataverse declaration is not one. */
+    protected static List<IStatementExecutor.StatementInfo> statementsOf(ExecuteStatementResponseMessage responseMsg) {
+        IStatementExecutor.ResultMetadata metadata = responseMsg.getMetadata();
+        if (metadata == null) {
+            return Collections.emptyList();
         }
-        warnings.addAll(responseMsg.getWarnings());
-        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings, executionState);
+        return metadata.getStatements().stream().filter(statement -> statement.getPosition() > 0).toList();
+    }
+
+    /** Whether any statement ran, which decides whether the request reports a failure of its own. */
+    private static boolean anyStatementSucceeded(ExecuteStatementResponseMessage responseMsg) {
+        return statementsOf(responseMsg).stream().anyMatch(statement -> statement.getError() == null);
     }
 
     protected void ensureOptionalParameters(Map<String, String> optionalParameters) throws HyracksDataException {

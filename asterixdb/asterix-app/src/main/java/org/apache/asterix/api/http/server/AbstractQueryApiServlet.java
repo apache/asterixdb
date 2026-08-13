@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
@@ -34,6 +35,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.translator.ClientRequest;
+import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -226,6 +228,7 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         private long execEnd = -1;
         private ResultStatus resultStatus = ResultStatus.FATAL;
         private HttpResponseStatus httpResponseStatus = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        private List<IStatementExecutor.StatementInfo> statements = Collections.emptyList();
 
         public void setStatus(ResultStatus resultStatus, HttpResponseStatus httpResponseStatus) {
             this.resultStatus = resultStatus;
@@ -234,6 +237,20 @@ public class AbstractQueryApiServlet extends AbstractServlet {
 
         public ResultStatus getResultStatus() {
             return resultStatus;
+        }
+
+        /** What each statement produced, where the request reports them one by one; empty where it does not. */
+        public List<IStatementExecutor.StatementInfo> getStatements() {
+            return statements;
+        }
+
+        /** How many statements failed; execution stops at the first failure, so 0 or 1. */
+        public long failedStatementCount() {
+            return statements.stream().filter(statement -> statement.getError() != null).count();
+        }
+
+        public void setStatements(List<IStatementExecutor.StatementInfo> statements) {
+            this.statements = statements;
         }
 
         public HttpResponseStatus getHttpStatus() {

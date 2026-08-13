@@ -271,6 +271,7 @@ import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.ExecutionPlansHtmlPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutor.StatementInfo;
 import org.apache.asterix.translator.SchedulableClientRequest;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
@@ -382,6 +383,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return sessionOutput;
     }
 
+    /** The dataverse declaration this translator adds itself, so that it is not counted as the client's. */
+    private Statement syntheticStatement;
+
+    /** What the request had produced before the running statement, for telling that statement's own apart. */
+    private ExecutionPlans plansBeforeStatement;
+
+    private List<Warning> warningsBeforeStatement = Collections.emptyList();
+
+    private long warningsRaisedBeforeStatement;
+
     public IWarningCollector getWarningCollector() {
         return warningCollector;
     }
@@ -407,6 +418,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         warningCollector.setMaxWarnings(sessionConfig.getMaxWarnings());
         boolean hasResultSet = false;
         Exception exception = null;
+        // the client's statements are numbered from 1; the request's own dataverse declaration is not one
+        int statementPosition = 0;
+        final boolean multiStatementRequest = isMultiStatementRequest();
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -420,208 +434,224 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 rewriteStatement(stmt, stmtRewriter, metadataProvider); // Rewrite the statement's AST.
                 Statement.Kind kind = stmt.getKind();
                 statementProperties.setKind(kind);
-                switch (kind) {
-                    case SET:
-                        handleSetStatement(stmt, config);
-                        break;
-                    case DATAVERSE_DECL:
-                        activeNamespace = handleUseDataverseStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_DATABASE:
-                        handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case CREATE_DATAVERSE:
-                        handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case CREATE_DATASET:
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case CREATE_INDEX:
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case CREATE_FULL_TEXT_FILTER:
-                        handleCreateFullTextFilterStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_FULL_TEXT_CONFIG:
-                        handleCreateFullTextConfigStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_TYPE:
-                        handleCreateTypeStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_NODEGROUP:
-                        handleCreateNodeGroupStatement(metadataProvider, stmt);
-                        break;
-                    case DATABASE_DROP:
-                        handleDatabaseDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case DATAVERSE_DROP:
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case TRUNCATE:
-                        handleDatasetTruncateStatement(metadataProvider, stmt, requestParameters);
-                        break;
-                    case DATASET_DROP:
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case INDEX_DROP:
-                        handleIndexDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case FULL_TEXT_FILTER_DROP:
-                        handleFullTextFilterDrop(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case FULL_TEXT_CONFIG_DROP:
-                        handleFullTextConfigDrop(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case TYPE_DROP:
-                        handleTypeDropStatement(metadataProvider, stmt);
-                        break;
-                    case NODEGROUP_DROP:
-                        handleNodegroupDropStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_ADAPTER:
-                        handleCreateAdapterStatement(metadataProvider, stmt);
-                        break;
-                    case ADAPTER_DROP:
-                        handleAdapterDropStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_FUNCTION:
-                        handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
-                                Creator.DEFAULT_CREATOR, hcc);
-                        break;
-                    case FUNCTION_DROP:
-                        handleFunctionDropStatement(metadataProvider, stmt, requestParameters);
-                        break;
-                    case CREATE_LIBRARY:
-                        handleCreateLibraryStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case LIBRARY_DROP:
-                        handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case CREATE_SYNONYM:
-                        handleCreateSynonymStatement(metadataProvider, stmt, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case SYNONYM_DROP:
-                        handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
-                        break;
-                    case CREATE_VIEW:
-                        handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
-                                Creator.DEFAULT_CREATOR);
-                        break;
-                    case VIEW_DROP:
-                        handleViewDropStatement(metadataProvider, stmt, requestParameters);
-                        break;
-                    case LOAD:
-                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
-                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
-                        }
-                        handleLoadStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case COPY_FROM:
-                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
-                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
-                        }
-                        handleCopyFromStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case COPY_TO:
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
-                        // The result should to be read just once
-                        metadataProvider.setMaxResultReads(1);
-                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
-                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
-                        }
-                        handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
-                                requestParameters, stmtParams, stats);
-                        break;
-                    case INSERT:
-                    case UPDATE:
-                    case UPSERT:
-                        if (((InsertStatement) stmt).getReturnExpression() != null) {
+                boolean synthetic = stmt == syntheticStatement;
+                if (!synthetic) {
+                    statementPosition++;
+                }
+                // recorded before the statement runs, so that a statement that fails is reported too
+                StatementInfo statementInfo =
+                        beginStatement(outMetadata, synthetic ? 0 : statementPosition, stmt, multiStatementRequest);
+                final Stats statsBeforeStatement = stats.snapshot();
+                try {
+                    validateStatement(stmt, requestParameters);
+                    switch (kind) {
+                        case SET:
+                            handleSetStatement(stmt, config);
+                            break;
+                        case DATAVERSE_DECL:
+                            activeNamespace = handleUseDataverseStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_DATABASE:
+                            handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case CREATE_DATAVERSE:
+                            handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case CREATE_DATASET:
+                            handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case CREATE_INDEX:
+                            handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case CREATE_FULL_TEXT_FILTER:
+                            handleCreateFullTextFilterStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_FULL_TEXT_CONFIG:
+                            handleCreateFullTextConfigStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_TYPE:
+                            handleCreateTypeStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_NODEGROUP:
+                            handleCreateNodeGroupStatement(metadataProvider, stmt);
+                            break;
+                        case DATABASE_DROP:
+                            handleDatabaseDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case DATAVERSE_DROP:
+                            handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case TRUNCATE:
+                            handleDatasetTruncateStatement(metadataProvider, stmt, requestParameters);
+                            break;
+                        case DATASET_DROP:
+                            handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case INDEX_DROP:
+                            handleIndexDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case FULL_TEXT_FILTER_DROP:
+                            handleFullTextFilterDrop(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case FULL_TEXT_CONFIG_DROP:
+                            handleFullTextConfigDrop(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case TYPE_DROP:
+                            handleTypeDropStatement(metadataProvider, stmt);
+                            break;
+                        case NODEGROUP_DROP:
+                            handleNodegroupDropStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_ADAPTER:
+                            handleCreateAdapterStatement(metadataProvider, stmt);
+                            break;
+                        case ADAPTER_DROP:
+                            handleAdapterDropStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_FUNCTION:
+                            handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
+                                    Creator.DEFAULT_CREATOR, hcc);
+                            break;
+                        case FUNCTION_DROP:
+                            handleFunctionDropStatement(metadataProvider, stmt, requestParameters);
+                            break;
+                        case CREATE_LIBRARY:
+                            handleCreateLibraryStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case LIBRARY_DROP:
+                            handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case CREATE_SYNONYM:
+                            handleCreateSynonymStatement(metadataProvider, stmt, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case SYNONYM_DROP:
+                            handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
+                            break;
+                        case CREATE_VIEW:
+                            handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
+                                    Creator.DEFAULT_CREATOR);
+                            break;
+                        case VIEW_DROP:
+                            handleViewDropStatement(metadataProvider, stmt, requestParameters);
+                            break;
+                        case LOAD:
+                            if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                                this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                            }
+                            handleLoadStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case COPY_FROM:
+                            if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                                this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                            }
+                            handleCopyFromStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case COPY_TO:
+                            metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
+                            // The result should to be read just once
+                            metadataProvider.setMaxResultReads(1);
+                            if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                                this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                            }
+                            handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
+                                    requestParameters, stmtParams, stats);
+                            break;
+                        case INSERT:
+                        case UPDATE:
+                        case UPSERT:
+                            if (((InsertStatement) stmt).getReturnExpression() != null) {
+                                metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
+                                metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
+                                        || resultDelivery == ResultDelivery.DEFERRED);
+                                metadataProvider.setMaxResultReads(maxResultReads);
+                            }
+                            if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                                this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                            }
+                            handleInsertUpsertStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery,
+                                    outMetadata, stats, requestParameters, stmtParams, stmtRewriter);
+                            break;
+                        case DELETE:
+                            handleDeleteStatement(metadataProvider, stmt, hcc, stmtParams, stmtRewriter,
+                                    requestParameters);
+                            break;
+                        case CREATE_FEED:
+                            handleCreateFeedStatement(metadataProvider, stmt);
+                            break;
+                        case DROP_FEED:
+                            handleDropFeedStatement(metadataProvider, stmt, hcc);
+                            break;
+                        case DROP_FEED_POLICY:
+                            handleDropFeedPolicyStatement(metadataProvider, stmt);
+                            break;
+                        case CONNECT_FEED:
+                            handleConnectFeedStatement(metadataProvider, stmt);
+                            break;
+                        case DISCONNECT_FEED:
+                            handleDisconnectFeedStatement(metadataProvider, stmt);
+                            break;
+                        case START_FEED:
+                            handleStartFeedStatement(metadataProvider, stmt, hcc);
+                            break;
+                        case STOP_FEED:
+                            handleStopFeedStatement(metadataProvider, stmt);
+                            break;
+                        case CREATE_FEED_POLICY:
+                            handleCreateFeedPolicyStatement(metadataProvider, stmt);
+                            break;
+                        case QUERY:
                             metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
-                            metadataProvider.setMaxResultReads(maxResultReads);
-                        }
-                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
-                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
-                        }
-                        handleInsertUpsertStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
-                                stats, requestParameters, stmtParams, stmtRewriter);
-                        break;
-                    case DELETE:
-                        handleDeleteStatement(metadataProvider, stmt, hcc, stmtParams, stmtRewriter, requestParameters);
-                        break;
-                    case CREATE_FEED:
-                        handleCreateFeedStatement(metadataProvider, stmt);
-                        break;
-                    case DROP_FEED:
-                        handleDropFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    case DROP_FEED_POLICY:
-                        handleDropFeedPolicyStatement(metadataProvider, stmt);
-                        break;
-                    case CONNECT_FEED:
-                        handleConnectFeedStatement(metadataProvider, stmt);
-                        break;
-                    case DISCONNECT_FEED:
-                        handleDisconnectFeedStatement(metadataProvider, stmt);
-                        break;
-                    case START_FEED:
-                        handleStartFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    case STOP_FEED:
-                        handleStopFeedStatement(metadataProvider, stmt);
-                        break;
-                    case CREATE_FEED_POLICY:
-                        handleCreateFeedPolicyStatement(metadataProvider, stmt);
-                        break;
-                    case QUERY:
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
-                        metadataProvider.setResultAsyncMode(
-                                resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
-                        metadataProvider.setMaxResultReads(getMaxResultReads(resultDelivery, maxResultReads));
-                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
-                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
-                        }
-                        handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
-                                requestParameters, stmtParams, stmtRewriter);
-                        break;
-                    case ANALYZE:
-                        handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case ANALYZE_DROP:
-                        handleAnalyzeDropStatement(metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case COMPACT:
-                        handleCompactStatement(metadataProvider, stmt, hcc);
-                        break;
-                    case FUNCTION_DECL:
-                        handleDeclareFunctionStatement(metadataProvider, stmt);
-                        break;
-                    case EXTENSION:
-                        final ExtensionStatement extStmt = (ExtensionStatement) stmt;
-                        statementProperties.setName(extStmt.getName());
-                        if (!isCompileOnly()) {
-                            extStmt.handle(hcc, this, requestParameters, metadataProvider,
-                                    resultSetIdCounter.getAndInc());
-                        }
-                        break;
-                    case CATALOG_CREATE:
-                    case CATALOG_DROP:
-                        handleCatalogStatement(kind, metadataProvider, stmt, hcc, requestParameters);
-                        break;
-                    case CRS_CREATE:
-                    case CRS_DROP:
-                        handleCRSStatement(kind, metadataProvider, stmt);
-                        break;
-                    default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
-                                "Unexpected statement: " + kind);
+                            metadataProvider.setMaxResultReads(getMaxResultReads(resultDelivery, maxResultReads));
+                            if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                                this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                            }
+                            handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata,
+                                    stats, requestParameters, stmtParams, stmtRewriter);
+                            break;
+                        case ANALYZE:
+                            handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case ANALYZE_DROP:
+                            handleAnalyzeDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case COMPACT:
+                            handleCompactStatement(metadataProvider, stmt, hcc);
+                            break;
+                        case FUNCTION_DECL:
+                            handleDeclareFunctionStatement(metadataProvider, stmt);
+                            break;
+                        case EXTENSION:
+                            final ExtensionStatement extStmt = (ExtensionStatement) stmt;
+                            statementProperties.setName(extStmt.getName());
+                            if (!isCompileOnly()) {
+                                extStmt.handle(hcc, this, requestParameters, metadataProvider,
+                                        resultSetIdCounter.getAndInc());
+                            }
+                            break;
+                        case CATALOG_CREATE:
+                        case CATALOG_DROP:
+                            handleCatalogStatement(kind, metadataProvider, stmt, hcc, requestParameters);
+                            break;
+                        case CRS_CREATE:
+                        case CRS_DROP:
+                            handleCRSStatement(kind, metadataProvider, stmt);
+                            break;
+                        default:
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                    stmt.getSourceLocation(), "Unexpected statement: " + kind);
+                    }
+                } catch (Exception e) {
+                    endStatement(statementInfo, statsBeforeStatement, stats, e);
+                    throw e;
                 }
+                endStatement(statementInfo, statsBeforeStatement, stats, null);
                 hasResultSet |= metadataProvider.getResultSetId() != null;
                 if (shouldInvalidateQueryPlanCache(stmt)) {
                     queryPlanCache.clear();
@@ -653,6 +683,81 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             Thread.currentThread().setName(threadName);
         }
+    }
+
+    /**
+     * Starts the record of what a statement produces, on the result metadata the CC sends back to the NC.
+     *
+     * @param position the statement's position among the client's, 0 for the request's own
+     * @return the record, or null when the request is not reported statement by statement
+     */
+    private StatementInfo beginStatement(ResultMetadata outMetadata, int position, Statement stmt,
+            boolean multiStatementRequest) {
+        if (outMetadata == null || !multiStatementRequest) {
+            return null;
+        }
+        String name = stmt.getKind() == Statement.Kind.EXTENSION ? ((ExtensionStatement) stmt).getName() : null;
+        StatementInfo statementInfo = new StatementInfo(position, stmt.getKind(), name);
+        outMetadata.getStatements().add(statementInfo);
+        // kept so that endStatement can tell this statement's plans apart and put the request's back
+        plansBeforeStatement = new ExecutionPlans(apiFramework.getExecutionPlans());
+        warningsBeforeStatement = requestWarnings();
+        warningsRaisedBeforeStatement = warningCollector.getTotalWarningsCount();
+        allowWarningsForStatement();
+        apiFramework.getExecutionPlans().clear();
+        return statementInfo;
+    }
+
+    /**
+     * Gives the statement about to run max-warnings warnings of its own: the collector stops keeping them once the
+     * request has raised that many, which would leave a later statement with none. A response reporting the request as
+     * a whole is unaffected - it lists the first max-warnings the collector kept, and those are the same ones.
+     */
+    private void allowWarningsForStatement() {
+        long maxWarnings = sessionConfig.getMaxWarnings();
+        long raised = warningCollector.getTotalWarningsCount();
+        warningCollector.setMaxWarnings(maxWarnings > Long.MAX_VALUE - raised ? Long.MAX_VALUE : raised + maxWarnings);
+    }
+
+    /** The warnings the request has collected so far, in the order they were raised. */
+    private List<Warning> requestWarnings() {
+        List<Warning> warnings = new ArrayList<>();
+        warningCollector.getWarnings(warnings, Long.MAX_VALUE);
+        return warnings;
+    }
+
+    /**
+     * Records what the statement that just ran produced. Its result is recorded where the result is created, in
+     * {@link #deliverResult}.
+     *
+     * @param statementInfo the record, null when the request is not reported statement by statement
+     */
+    private void endStatement(StatementInfo statementInfo, Stats statsBeforeStatement, Stats stats, Exception error) {
+        if (statementInfo == null) {
+            return;
+        }
+        Stats statementStats = stats.since(statsBeforeStatement);
+        statementInfo.setError(error);
+        // the statement started from no plans, so what the request holds now is its own; the request's are put back
+        ExecutionPlans requestPlans = apiFramework.getExecutionPlans();
+        statementInfo.setPlans(new ExecutionPlans(requestPlans));
+        requestPlans.restoreMissingFrom(plansBeforeStatement);
+        // what the collector gained while the statement ran is this statement's; it is not drained, being the request's
+        List<Warning> warningsNow = requestWarnings();
+        statementInfo.addWarnings(
+                warningsNow.subList(Math.min(warningsBeforeStatement.size(), warningsNow.size()), warningsNow.size()));
+        statementStats
+                .updateTotalWarningsCount(warningCollector.getTotalWarningsCount() - warningsRaisedBeforeStatement);
+        statementInfo.setStats(statementStats);
+    }
+
+    /**
+     * Validates the statement about to run, as opposed to {@link #validateStatements(IRequestParameters)}, which
+     * validates the request. What depends on the statement belongs here, so a failure is reported against it.
+     */
+    protected void validateStatement(Statement statement, IRequestParameters requestParameters)
+            throws AlgebricksException, HyracksDataException {
+        // no statement-level validation in AsterixDB
     }
 
     private void completeDeferred(ClientRequest clientRequest, boolean hasResultSet, Exception exception) {
@@ -6046,8 +6151,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                     responsePrinter.printResults();
                     if (outMetadata != null) {
-                        outMetadata.getResultSets()
-                                .add(new ResultSetInfo(id, resultSetId, metadataProvider.findOutputRecordType()));
+                        ResultSetInfo resultSetInfo =
+                                new ResultSetInfo(id, resultSetId, metadataProvider.findOutputRecordType());
+                        outMetadata.getResultSets().add(resultSetInfo);
+                        // the result belongs to the statement being executed
+                        if (!outMetadata.getStatements().isEmpty()) {
+                            outMetadata.getStatements().get(outMetadata.getStatements().size() - 1)
+                                    .setResultSet(resultSetInfo);
+                        }
                     }
                 }, requestParameters, cancellable, appCtx, metadataProvider, atomicStmt, jobKind);
                 break;
@@ -6412,13 +6523,28 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDecl requestDataverseDecl = getRequestDataverseDecl(requestParameters);
         if (requestDataverseDecl != null) {
             statements.add(0, requestDataverseDecl);
+            syntheticStatement = requestDataverseDecl;
         }
         validateAsyncSupported(requestParameters);
     }
 
+    /**
+     * Whether the request carries more than one statement of the client's own. {@code USE}, {@code SET},
+     * {@code DECLARE FUNCTION} and the request's own dataverse declaration are not counted, by the same predicate as
+     * the {@code multi-statement = false} rejection.
+     */
+    protected boolean isMultiStatementRequest() {
+        return statements.stream().filter(QueryTranslator::isNotAllowedMultiStatement).count() > 1;
+    }
+
     private void validateAsyncSupported(IRequestParameters requestParameters) throws CompilationException {
         if (requestParameters.getResultProperties().getDelivery() == ResultDelivery.ASYNC) {
-            Optional<Statement> stmsOpt = statements.stream().findAny().filter(s -> !s.getKind().isSupportAsync());
+            if (isMultiStatementRequest()) {
+                // async answers with a handle before a statement has run, so the statements cannot be sequenced
+                throw new CompilationException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS_FOR_DELIVERY_MODE,
+                        ResultDelivery.ASYNC.getName());
+            }
+            Optional<Statement> stmsOpt = statements.stream().filter(s -> !s.getKind().isSupportAsync()).findAny();
             if (stmsOpt.isPresent()) {
                 Statement stmt = stmsOpt.get();
                 throw new CompilationException(ErrorCode.ASYNC_NOT_SUPPORTED_FOR_STATEMENT, stmt.getSourceLocation(),
@@ -6445,7 +6571,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected static boolean isNotAllowedMultiStatement(Statement statement) {
-        switch (statement.getKind()) {
+        return isNotAllowedMultiStatement(statement.getKind());
+    }
+
+    /**
+     * Whether a statement of this kind counts towards the number of statements a request carries. A statement that only
+     * affects the ones that follow it - {@code USE}, {@code SET}, {@code DECLARE FUNCTION} - does not.
+     */
+    public static boolean isNotAllowedMultiStatement(Statement.Kind kind) {
+        switch (kind) {
             case DATAVERSE_DECL:
             case FUNCTION_DECL:
             case SET:
