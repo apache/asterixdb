@@ -71,6 +71,7 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -547,6 +548,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                 /**
                  * Build the static structure on a single storage partition.
                  */
+                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Release the LOAD I/O declaration on the failure path")
                 private void buildStaticStructureOnPartition(int storagePartition, List<Integer> clustersPerLevel,
                         List<List<Integer>> centroidsPerCluster, List<ITupleReference> convertedTuples)
                         throws HyracksDataException {
@@ -582,15 +584,41 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                         IIndexBulkLoader partitionBulkLoader =
                                 partitionLsmIndex.createBulkLoader(fillFactor, false, 0L, false, parameters);
 
-                        int totalTuplesProcessed = 0;
-                        for (ITupleReference convertedTuple : convertedTuples) {
-                            partitionBulkLoader.add(convertedTuple);
-                            totalTuplesProcessed++;
-                        }
+                        // createBulkLoader() has already declared an active LOAD I/O operation on the
+                        // dataset (AbstractLSMIndex.createBulkLoader -> ioOpCallback.scheduled). That
+                        // declaration is released ONLY by end() or abort(). Leaving this scope by any other
+                        // route leaks it permanently, and a leaked I/O op is not a slow leak: the next
+                        // DatasetLifecycleManager.unregister() -- for instance the drop that rolls this
+                        // CREATE INDEX back -- blocks forever in DatasetInfo.waitForIO() while holding the
+                        // DatasetLifecycleManager monitor, which wedges every other index operation on the
+                        // node with no timeout. Mirror IndexBulkLoadOperatorNodePushable.closeBulkLoaders().
+                        //
+                        // endInvoked is set BEFORE end() on purpose: end() releases the declaration in its
+                        // own finally even when it throws, so aborting a failed end() would release it a
+                        // second time and drive numActiveIOOps negative.
+                        boolean endInvoked = false;
+                        try {
+                            int totalTuplesProcessed = 0;
+                            for (ITupleReference convertedTuple : convertedTuples) {
+                                partitionBulkLoader.add(convertedTuple);
+                                totalTuplesProcessed++;
+                            }
 
-                        partitionBulkLoader.end();
-                        LOGGER.info("Static structure finalized on storage partition {} ({} tuples)", storagePartition,
-                                totalTuplesProcessed);
+                            endInvoked = true;
+                            partitionBulkLoader.end();
+                            LOGGER.info("Static structure finalized on storage partition {} ({} tuples)",
+                                    storagePartition, totalTuplesProcessed);
+                        } finally {
+                            if (!endInvoked) {
+                                try {
+                                    partitionBulkLoader.abort();
+                                } catch (Exception abortFailure) {
+                                    // Never mask the failure that brought us here; the abort is best effort.
+                                    LOGGER.warn("Failed to abort the static-structure bulk load on storage "
+                                            + "partition {}", storagePartition, abortFailure);
+                                }
+                            }
+                        }
 
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
