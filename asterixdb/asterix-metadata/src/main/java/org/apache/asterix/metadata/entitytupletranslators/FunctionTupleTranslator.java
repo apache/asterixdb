@@ -443,6 +443,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         writeLibrary(function);
         writeNullCall(function);
         writeDeterministic(function);
+        writeBatched(function);
         writeFunctionCreator(function);
         writeIsTransform(function);
     }
