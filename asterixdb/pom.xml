@@ -99,14 +99,14 @@
     <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <azureblobjavasdk.version>12.31.3</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.30.3</azurecommonjavasdk.version>
-    <azureidentity.version>1.17.0</azureidentity.version>
-    <azuredatalakejavasdk.version>12.24.3</azuredatalakejavasdk.version>
-    <azurecore.version>1.57.1</azurecore.version>
-    <azurecorehttpnetty.version>1.16.5</azurecorehttpnetty.version>
+    <azureblobjavasdk.version>12.35.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.34.0</azurecommonjavasdk.version>
+    <azureidentity.version>1.18.4</azureidentity.version>
+    <azuredatalakejavasdk.version>12.28.0</azuredatalakejavasdk.version>
+    <azurecore.version>1.59.0</azurecore.version>
+    <azurecorehttpnetty.version>1.16.6</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.64.1</gcsjavasdk.version>
+    <gcsjavasdk.version>2.71.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
