@@ -22,6 +22,13 @@ const PROXY_CONFIG = {
       "target": "http://localhost:19002",
       "secure": false,
       logLevel: "debug"
+    },
+    "/mcp": {
+      "target": "http://127.0.0.1:19200",
+      "secure": false,
+      "ws": true,
+      "changeOrigin": true,
+      logLevel: "debug"
     }
 }
 
