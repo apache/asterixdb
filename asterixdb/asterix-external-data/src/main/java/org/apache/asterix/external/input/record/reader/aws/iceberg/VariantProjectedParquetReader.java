@@ -154,7 +154,7 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
         // Clip each planned variant column's typed_value down to the requested sub-paths. Per file: the same column can
         // be shredded here and residual-only elsewhere, and the clipper no-ops whenever it cannot narrow safely.
         MessageType clipped = projection;
-        for (String column : plan.columns()) {
+        for (List<String> column : plan.columns()) {
             RequestedVariantPaths paths = plan.get(column);
             clipped = VariantSchemaClipper.clip(clipped, column, paths);
         }

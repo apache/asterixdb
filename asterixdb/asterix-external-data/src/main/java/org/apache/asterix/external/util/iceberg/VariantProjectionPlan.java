@@ -18,8 +18,11 @@
  */
 package org.apache.asterix.external.util.iceberg;
 
+import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +30,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Type;
+import org.apache.iceberg.types.Types;
 import org.apache.iceberg.types.Types.NestedField;
 
 /**
@@ -43,6 +47,12 @@ import org.apache.iceberg.types.Types.NestedField;
  * the plan so it stays on the normal, un-clipped read path. When the plan {@link #isEmpty() is empty} the reader does
  * exactly what it does today. This class holds no Parquet types; the read path combines it with the per-file Parquet
  * schema (via {@link VariantSchemaClipper}) to actually prune reads.
+ * <p>
+ * Variants are found at <b>any struct depth</b>, not just as top-level columns, and each is keyed by the unjoined path
+ * that reaches it — {@code ["variant_field"]}, or {@code ["st", "v"]} inside a struct. Segments rather than a dotted
+ * name because the join is lossy: a field literally named {@code "st.v"} would collide with the nested reading, and
+ * both shapes exist in the fixtures. The walk follows struct nesting only; a variant inside a list or map is left off
+ * the plan, matching the predicate side, because element bounds and element clipping are not modelled.
  */
 @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Variant projection gating: builds the map of VARIANT column -> requested sub-paths, gated on the flag, the "
         + "Iceberg VARIANT type, and whether the request actually narrows the column")
@@ -51,9 +61,10 @@ public final class VariantProjectionPlan {
     private static final VariantProjectionPlan EMPTY = new VariantProjectionPlan(Collections.emptyMap());
 
     /** Variant column name -> requested sub-paths; only columns that are variants AND actually narrowed. */
-    private final Map<String, RequestedVariantPaths> byColumn;
+    /** Keyed by the variant's unjoined path: ["variant_field"], or ["st", "v"] when nested in a struct. */
+    private final Map<List<String>, RequestedVariantPaths> byColumn;
 
-    private VariantProjectionPlan(Map<String, RequestedVariantPaths> byColumn) {
+    private VariantProjectionPlan(Map<List<String>, RequestedVariantPaths> byColumn) {
         this.byColumn = byColumn;
     }
 
@@ -74,21 +85,35 @@ public final class VariantProjectionPlan {
         if (!enabled || projectedSchema == null) {
             return EMPTY;
         }
-        Map<String, RequestedVariantPaths> byColumn = null;
-        for (NestedField field : projectedSchema.columns()) {
-            if (field.type().typeId() != Type.TypeID.VARIANT) {
-                continue; // structs/primitives are pruned by Iceberg's normal column projection, not here
+        Map<List<String>, RequestedVariantPaths> byColumn = new LinkedHashMap<>();
+        collectVariants(projectedSchema.asStruct(), new ArrayDeque<>(), projectedType, byColumn);
+        return byColumn.isEmpty() ? EMPTY : new VariantProjectionPlan(Collections.unmodifiableMap(byColumn));
+    }
+
+    /**
+     * Collects every variant reachable through STRUCT nesting, with the path that reaches it.
+     * <p>
+     * Struct nesting only, deliberately: a variant inside a list or map is left out because the clipper cannot express
+     * one, and because the predicate side excludes them too — keeping the two halves of the feature on the same set of
+     * shapes. Ordinary structs and primitives are also skipped here; Iceberg's own column projection already prunes
+     * those.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Walks the schema for variants at any struct depth, keyed by unjoined path, so a variant nested in a struct gets column pruning like a top-level one")
+    private static void collectVariants(Types.StructType struct, Deque<String> path, ARecordType projectedType,
+            Map<List<String>, RequestedVariantPaths> byColumn) {
+        for (NestedField field : struct.fields()) {
+            path.addLast(field.name());
+            if (field.type().typeId() == Type.TypeID.VARIANT) {
+                List<String> columnPath = List.copyOf(path);
+                RequestedVariantPaths paths = RequestedVariantPaths.fromProjectedType(projectedType, columnPath);
+                if (!paths.isAll()) {
+                    byColumn.put(columnPath, paths); // whole variant requested -> nothing to prune, so skip it
+                }
+            } else if (field.type().isStructType()) {
+                collectVariants(field.type().asStructType(), path, projectedType, byColumn);
             }
-            RequestedVariantPaths paths = RequestedVariantPaths.fromProjectedType(projectedType, field.name());
-            if (paths.isAll()) {
-                continue; // whole variant requested -> nothing to prune, leave on the normal read path
-            }
-            if (byColumn == null) {
-                byColumn = new LinkedHashMap<>();
-            }
-            byColumn.put(field.name(), paths);
+            path.removeLast();
         }
-        return byColumn == null ? EMPTY : new VariantProjectionPlan(Collections.unmodifiableMap(byColumn));
     }
 
     /** @return {@code true} when there is nothing to prune (reader behaves exactly as it does today). */
@@ -97,12 +122,12 @@ public final class VariantProjectionPlan {
     }
 
     /** @return the requested sub-paths for a variant column, or {@code null} if that column is not in the plan. */
-    public RequestedVariantPaths get(String columnName) {
-        return byColumn.get(columnName);
+    public RequestedVariantPaths get(List<String> columnPath) {
+        return byColumn.get(columnPath);
     }
 
     /** @return the variant column names covered by this plan. */
-    public Set<String> columns() {
+    public Set<List<String>> columns() {
         return byColumn.keySet();
     }
 

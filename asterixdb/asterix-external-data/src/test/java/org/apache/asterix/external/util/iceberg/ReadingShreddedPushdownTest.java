@@ -95,13 +95,13 @@ public class ReadingShreddedPushdownTest {
 
     @Test
     public void paths_nullProjection_isAll() {
-        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(null, COLUMN).isAll());
+        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(null, List.of(COLUMN)).isAll());
     }
 
     @Test
     public void paths_allFieldsSentinel_isAll() {
         RequestedVariantPaths p =
-                RequestedVariantPaths.fromProjectedType(ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, COLUMN);
+                RequestedVariantPaths.fromProjectedType(ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, List.of(COLUMN));
         Assert.assertTrue(p.isAll());
         Assert.assertTrue("child of all is all", p.child("anything").isAll());
         Assert.assertTrue(p.requestedFieldNames().isEmpty());
@@ -109,14 +109,14 @@ public class ReadingShreddedPushdownTest {
 
     @Test
     public void paths_emptyFieldsSentinel_isAll() {
-        Assert.assertTrue(
-                RequestedVariantPaths.fromProjectedType(ProjectionFiltrationTypeUtil.EMPTY_TYPE, COLUMN).isAll());
+        Assert.assertTrue(RequestedVariantPaths
+                .fromProjectedType(ProjectionFiltrationTypeUtil.EMPTY_TYPE, List.of(COLUMN)).isAll());
     }
 
     @Test
     public void paths_columnAbsent_isAll() throws Exception {
         ARecordType projected = projected(List.of(List.of("id"), List.of("other", "x")));
-        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(projected, COLUMN).isAll());
+        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(projected, List.of(COLUMN)).isAll());
     }
 
     @Test
@@ -128,7 +128,7 @@ public class ReadingShreddedPushdownTest {
     public void paths_scalarLeaf_isAll() throws Exception {
         ARecordType projected = ProjectionFiltrationTypeUtil
                 .getMergedPathRecordType(ProjectionFiltrationTypeUtil.EMPTY_TYPE, List.of(COLUMN), BuiltinType.AINT64);
-        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(projected, COLUMN).isAll());
+        Assert.assertTrue(RequestedVariantPaths.fromProjectedType(projected, List.of(COLUMN)).isAll());
     }
 
     @Test
@@ -162,8 +162,10 @@ public class ReadingShreddedPushdownTest {
         Assert.assertEquals(Set.of("nestedString"), asSet(objectValue.requestedFieldNames()));
         Assert.assertTrue(objectValue.child("nestedString").isAll());
 
-        Assert.assertTrue("sibling scalar column is all", RequestedVariantPaths
-                .fromProjectedType(projected(List.of(List.of(COLUMN, "status"), List.of("id"))), "id").isAll());
+        Assert.assertTrue("sibling scalar column is all",
+                RequestedVariantPaths
+                        .fromProjectedType(projected(List.of(List.of(COLUMN, "status"), List.of("id"))), List.of("id"))
+                        .isAll());
     }
 
     @Test
@@ -189,8 +191,8 @@ public class ReadingShreddedPushdownTest {
     @Test
     public void paths_multipleVariantColumns_extractIndependently() throws Exception {
         ARecordType projected = projected(List.of(List.of("v1", "a"), List.of("v2", "b", "c")));
-        RequestedVariantPaths v1 = RequestedVariantPaths.fromProjectedType(projected, "v1");
-        RequestedVariantPaths v2 = RequestedVariantPaths.fromProjectedType(projected, "v2");
+        RequestedVariantPaths v1 = RequestedVariantPaths.fromProjectedType(projected, List.of("v1"));
+        RequestedVariantPaths v2 = RequestedVariantPaths.fromProjectedType(projected, List.of("v2"));
         Assert.assertEquals(Set.of("a"), asSet(v1.requestedFieldNames()));
         Assert.assertEquals(Set.of("b"), asSet(v2.requestedFieldNames()));
         Assert.assertEquals(Set.of("c"), asSet(v2.child("b").requestedFieldNames()));
@@ -202,7 +204,7 @@ public class ReadingShreddedPushdownTest {
         ARecordType inner = new ARecordType("v", new String[] { "zzz", "aaa", "mmm" },
                 new IAType[] { BuiltinType.ANY, BuiltinType.ANY, BuiltinType.ANY }, true);
         ARecordType root = new ARecordType("root", new String[] { COLUMN }, new IAType[] { inner }, true);
-        RequestedVariantPaths p = RequestedVariantPaths.fromProjectedType(root, COLUMN);
+        RequestedVariantPaths p = RequestedVariantPaths.fromProjectedType(root, List.of(COLUMN));
         Assert.assertEquals(List.of("zzz", "aaa", "mmm"), new ArrayList<>(p.requestedFieldNames()));
     }
 
@@ -234,15 +236,16 @@ public class ReadingShreddedPushdownTest {
     public void clip_columnAbsent_isNoOp() throws Exception {
         MessageType schema = message(variant(objectTyped(scalar("status"))));
         // Ask for a column that isn't in the schema.
-        Assert.assertSame(schema,
-                VariantSchemaClipper.clip(schema, "does_not_exist", pathsFor(List.of(List.of("does_not_exist", "x")))));
+        Assert.assertSame(schema, VariantSchemaClipper.clip(schema, List.of("does_not_exist"),
+                pathsFor(List.of(List.of("does_not_exist", "x")))));
     }
 
     @Test
     public void clip_columnIsPrimitive_isNoOp() throws Exception {
         MessageType schema = message(variant(objectTyped(scalar("status"))));
         // "id" is a primitive column, not a variant group.
-        Assert.assertSame(schema, VariantSchemaClipper.clip(schema, "id", pathsFor(List.of(List.of("id", "x")))));
+        Assert.assertSame(schema,
+                VariantSchemaClipper.clip(schema, List.of("id"), pathsFor(List.of(List.of("id", "x")))));
     }
 
     @Test
@@ -376,8 +379,8 @@ public class ReadingShreddedPushdownTest {
         GroupType v2 = variantNamed("v2", objectTyped(scalar("c"), scalar("d")));
         MessageType schema = new MessageType("table", List.of(v1, v2));
 
-        MessageType clipped = VariantSchemaClipper.clip(schema, "v1",
-                RequestedVariantPaths.fromProjectedType(projected(List.of(List.of("v1", "a"))), "v1"));
+        MessageType clipped = VariantSchemaClipper.clip(schema, List.of("v1"),
+                RequestedVariantPaths.fromProjectedType(projected(List.of(List.of("v1", "a"))), List.of("v1")));
 
         Assert.assertEquals("v1 narrowed", Set.of("a"),
                 asSet(fieldNames(clipped.getType("v1").asGroupType().getType(TYPED_VALUE).asGroupType())));
@@ -421,11 +424,11 @@ public class ReadingShreddedPushdownTest {
         VariantProjectionPlan plan =
                 VariantProjectionPlan.from(icebergSchema(), projected(List.of(List.of(COLUMN, "status"))), true);
         Assert.assertFalse(plan.isEmpty());
-        Assert.assertEquals(Set.of(COLUMN), asSet(plan.columns()));
-        RequestedVariantPaths paths = plan.get(COLUMN);
+        Assert.assertEquals(Set.of(List.of(COLUMN)), plan.columns());
+        RequestedVariantPaths paths = plan.get(List.of(COLUMN));
         Assert.assertNotNull(paths);
         Assert.assertEquals(Set.of("status"), asSet(paths.requestedFieldNames()));
-        Assert.assertNull("non-variant column absent from plan", plan.get("id"));
+        Assert.assertNull("non-variant column absent from plan", plan.get(List.of("id")));
     }
 
     @Test
@@ -452,16 +455,16 @@ public class ReadingShreddedPushdownTest {
     public void plan_mixedVariantAndStruct_onlyVariantIncluded() throws Exception {
         VariantProjectionPlan plan = VariantProjectionPlan.from(icebergSchema(),
                 projected(List.of(List.of(COLUMN, "status"), List.of("a_struct", "x"))), true);
-        Assert.assertEquals("only the variant column is planned", Set.of(COLUMN), asSet(plan.columns()));
+        Assert.assertEquals("only the variant column is planned", Set.of(List.of(COLUMN)), plan.columns());
     }
 
     @Test
     public void plan_multipleVariantColumns_allIncluded() throws Exception {
         VariantProjectionPlan plan = VariantProjectionPlan.from(icebergSchema(),
                 projected(List.of(List.of(COLUMN, "status"), List.of("v2", "y"))), true);
-        Assert.assertEquals(Set.of(COLUMN, "v2"), asSet(plan.columns()));
-        Assert.assertEquals(Set.of("status"), asSet(plan.get(COLUMN).requestedFieldNames()));
-        Assert.assertEquals(Set.of("y"), asSet(plan.get("v2").requestedFieldNames()));
+        Assert.assertEquals(Set.of(List.of(COLUMN), List.of("v2")), plan.columns());
+        Assert.assertEquals(Set.of("status"), asSet(plan.get(List.of(COLUMN)).requestedFieldNames()));
+        Assert.assertEquals(Set.of("y"), asSet(plan.get(List.of("v2")).requestedFieldNames()));
     }
 
     /** id (primitive) + two VARIANT columns + a real STRUCT column, to exercise the type gating.
@@ -718,6 +721,106 @@ public class ReadingShreddedPushdownTest {
         top.put("x", org.apache.iceberg.variants.Variants.of(i));
         top.put("d1", value);
         return org.apache.iceberg.variants.Variant.of(meta, top);
+    }
+
+    /**
+     * Column pruning for a variant that is NOT a top-level column, end to end.
+     * <p>
+     * This is the case the plan used to miss entirely: it walked {@code projectedSchema.columns()}, so a variant inside
+     * a struct never entered the plan and every one of its shredded sub-columns was read. It also settles the one thing
+     * that could not be reasoned about — whether Parquet accepts a requested schema in which an <em>intermediate</em>
+     * group was rebuilt. Clipping a top-level column only ever splices a field into the message; here the enclosing
+     * {@code st} group is reconstructed around a clipped {@code v}, and every level must keep its repetition, name,
+     * field id and annotation or the read fails outright rather than merely reading too much.
+     * <p>
+     * The ordinary sibling {@code st.label} is asserted too: rebuilding the struct must not disturb the fields that
+     * were never part of the variant.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "End-to-end proof that a struct-nested variant is planned, clipped and read with fewer bytes, and that Parquet accepts a rebuilt intermediate group")
+    @Test
+    public void endToEnd_prunedReadClipsAVariantNestedInAStruct() throws Exception {
+        org.apache.iceberg.Schema schema =
+                new org.apache.iceberg.Schema(
+                        org.apache.iceberg.types.Types.NestedField.required(1, "id",
+                                org.apache.iceberg.types.Types.IntegerType
+                                        .get()),
+                        org.apache.iceberg.types.Types.NestedField.optional(2, "st",
+                                org.apache.iceberg.types.Types.StructType.of(
+                                        org.apache.iceberg.types.Types.NestedField.optional(3, "v",
+                                                org.apache.iceberg.types.Types.VariantType.get()),
+                                        org.apache.iceberg.types.Types.NestedField.optional(4, "label",
+                                                org.apache.iceberg.types.Types.StringType.get()))));
+
+        // The plan must find the variant behind the struct, keyed by its unjoined path.
+        VariantProjectionPlan plan = VariantProjectionPlan.from(schema,
+                projected(List.of(List.of("st", "v", "kept"), List.of("st", "label"))), true);
+        Assert.assertEquals("the nested variant must be planned, keyed by its path",
+                java.util.Set.of(List.of("st", "v")), plan.columns());
+        Assert.assertEquals(java.util.Set.of("kept"), asSet(plan.get(List.of("st", "v")).requestedFieldNames()));
+
+        java.io.File dir = java.nio.file.Files.createTempDirectory("shredded-pushdown-nested").toFile();
+        java.io.File dataFile = new java.io.File(dir, "nested.parquet");
+        org.apache.iceberg.variants.VariantMetadata meta =
+                org.apache.iceberg.variants.Variants.metadata("kept", "fat1", "fat2", "fat3");
+        java.lang.reflect.Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
+                .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
+        toParquetSchema.setAccessible(true);
+        Type typedValue = (Type) toParquetSchema.invoke(null, wideVariant(meta, 0).value());
+
+        org.apache.iceberg.data.GenericRecord template = org.apache.iceberg.data.GenericRecord.create(schema);
+        org.apache.iceberg.data.GenericRecord structTemplate =
+                org.apache.iceberg.data.GenericRecord.create(schema.findField("st").type().asStructType());
+        try (org.apache.iceberg.io.FileAppender<org.apache.iceberg.data.Record> writer =
+                org.apache.iceberg.parquet.Parquet.write(org.apache.iceberg.Files.localOutput(dataFile)).schema(schema)
+                        .createWriterFunc(org.apache.iceberg.data.parquet.GenericParquetWriter::create)
+                        .variantShreddingFunc((fieldId, name) -> typedValue).build()) {
+            for (int i = 0; i < WIDE_ROW_COUNT; i++) {
+                org.apache.iceberg.data.Record struct = structTemplate.copy();
+                struct.setField("v", wideVariant(meta, i));
+                struct.setField("label", "L" + i);
+                org.apache.iceberg.data.Record row = template.copy();
+                row.setField("id", i);
+                row.setField("st", struct);
+                writer.add(row);
+            }
+        }
+
+        CountingInputFile baselineFile = new CountingInputFile(org.apache.iceberg.Files.localInput(dataFile));
+        int baselineRows = 0;
+        try (org.apache.iceberg.io.CloseableIterable<org.apache.iceberg.data.Record> it =
+                org.apache.iceberg.parquet.Parquet.read(baselineFile).project(schema)
+                        .createReaderFunc(
+                                fs -> org.apache.iceberg.data.parquet.GenericParquetReaders.buildReader(schema, fs))
+                        .build()) {
+            for (org.apache.iceberg.data.Record ignored : it) {
+                baselineRows++;
+            }
+        }
+
+        CountingInputFile prunedFile = new CountingInputFile(org.apache.iceberg.Files.localInput(dataFile));
+        int prunedRows = 0;
+        try (VariantProjectedParquetReader reader =
+                VariantProjectedParquetReader.open(prunedFile, schema, null, 0, 0, true, plan)) {
+            Assert.assertTrue("the nested variant must actually be clipped", reader.canPrune());
+            for (org.apache.iceberg.data.Record record : reader) {
+                org.apache.iceberg.data.Record struct = (org.apache.iceberg.data.Record) record.getField("st");
+                Assert.assertEquals("the struct's ordinary sibling must survive the rebuild", "L" + prunedRows,
+                        struct.getField("label"));
+                org.apache.iceberg.variants.VariantValue value =
+                        ((org.apache.iceberg.variants.Variant) struct.getField("v")).value();
+                Assert.assertNotNull("requested sub-field must be present", value.asObject().get("kept"));
+                Assert.assertNull("unreferenced sub-field must be pruned", value.asObject().get("fat1"));
+                prunedRows++;
+            }
+        }
+
+        Assert.assertEquals("both reads must see every row", WIDE_ROW_COUNT, baselineRows);
+        Assert.assertEquals("pruning must not change the row count", baselineRows, prunedRows);
+        long baselineBytes = baselineFile.bytesRead();
+        long prunedBytes = prunedFile.bytesRead();
+        Assert.assertTrue(
+                "nested pruning must fetch far fewer bytes, got pruned=" + prunedBytes + " baseline=" + baselineBytes,
+                prunedBytes * 2 < baselineBytes);
     }
 
     private static Schema icebergSchema() {
@@ -1600,7 +1703,7 @@ public class ReadingShreddedPushdownTest {
     }
 
     private static MessageType clip(MessageType schema, RequestedVariantPaths paths) {
-        return VariantSchemaClipper.clip(schema, COLUMN, paths);
+        return VariantSchemaClipper.clip(schema, List.of(COLUMN), paths);
     }
 
     private static GroupType clippedVariant(MessageType schema, RequestedVariantPaths paths) {
@@ -1626,6 +1729,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     private static RequestedVariantPaths pathsFor(List<List<String>> queryPaths) throws Exception {
-        return RequestedVariantPaths.fromProjectedType(projected(queryPaths), COLUMN);
+        return RequestedVariantPaths.fromProjectedType(projected(queryPaths), List.of(COLUMN));
     }
 }

@@ -20,6 +20,7 @@ package org.apache.asterix.external.util.iceberg;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,22 +75,34 @@ public final class RequestedVariantPaths {
      * Extracts the requested sub-paths of {@code columnName} from a projected record type.
      *
      * @param projectedType the projected type the optimizer produced for the scan, or {@code null}
-     * @param columnName    the top-level variant column name (e.g. {@code "variant_field"})
+     * @param columnPath    the variant's location as unjoined segments, e.g. {@code ["variant_field"]} or
+     *                      {@code ["st", "v"]} for one nested in a struct
      * @return the requested sub-path tree; {@link #all()} when the whole variant is needed, the column is absent from
      *         the projection, or the projection requests all fields
      */
-    public static RequestedVariantPaths fromProjectedType(ARecordType projectedType, String columnName) {
-        if (projectedType == null || projectedType == ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE) {
+    public static RequestedVariantPaths fromProjectedType(ARecordType projectedType, List<String> columnPath) {
+        if (projectedType == null || projectedType == ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE || columnPath == null
+                || columnPath.isEmpty()) {
             // No projection, or "all fields" requested -> the whole variant is needed.
             return ALL;
         }
-        IAType columnType = projectedType.getFieldType(columnName);
-        if (columnType == null) {
-            // The column is not individually projected. It is either not read at all, or read whole; either way the
-            // safe answer is "keep everything".
-            return ALL;
+        // Walk the projected type down to the variant. A variant nested in a struct arrives as nested record types
+        // (st -> v -> {bucket}), so the walk mirrors the schema path segment by segment rather than doing one flat
+        // lookup. Anything missing or not a record along the way means the variant is not individually projected.
+        IAType current = projectedType;
+        for (String segment : columnPath) {
+            IAType unwrapped = unwrap(current);
+            if (!(unwrapped instanceof ARecordType)) {
+                return ALL;
+            }
+            IAType next = ((ARecordType) unwrapped).getFieldType(segment);
+            if (next == null) {
+                // Not individually projected: either not read at all, or read whole. Either way keep everything.
+                return ALL;
+            }
+            current = next;
         }
-        return build(columnType);
+        return build(current);
     }
 
     /** @return {@code true} iff the whole value is requested and nothing below may be pruned. */

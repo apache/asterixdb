@@ -74,27 +74,65 @@ public final class VariantSchemaClipper {
     }
 
     /**
-     * Returns a copy of {@code fileSchema} in which the top-level variant column {@code columnName} is clipped to
-     * {@code paths}. Returns {@code fileSchema} unchanged when the column is absent, is not a group, or nothing can be
-     * pruned.
+     * Returns a copy of {@code fileSchema} in which the variant reached by {@code path} is clipped to {@code paths}.
+     * <p>
+     * {@code path} is the variant's location in the file schema, as unjoined segments: {@code ["variant_field"]} for a
+     * top-level column, {@code ["st", "v"]} for one nested in a struct. Segments rather than a dotted name because the
+     * join is lossy — a field literally named {@code "st.v"} and a nested {@code st} -> {@code v} would collide, and
+     * both shapes occur in the fixtures.
+     * <p>
+     * Returns {@code fileSchema} unchanged when the path is absent, does not lead to a group, or nothing can be pruned.
      */
-    public static MessageType clip(MessageType fileSchema, String columnName, RequestedVariantPaths paths) {
-        if (fileSchema == null || paths == null || paths.isAll() || !fileSchema.containsField(columnName)) {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Takes the variant's location as unjoined segments so a variant nested in a struct can be clipped, not just a top-level column")
+    public static MessageType clip(MessageType fileSchema, List<String> path, RequestedVariantPaths paths) {
+        if (fileSchema == null || paths == null || paths.isAll() || path == null || path.isEmpty()) {
             return fileSchema;
         }
-        Type column = fileSchema.getType(columnName);
-        if (column.isPrimitive()) {
+        Type clipped = clipAt(fileSchema, path, 0, paths);
+        if (clipped == null) {
             return fileSchema;
         }
-        GroupType clippedColumn = clipValueGroup(column.asGroupType(), paths);
-        if (clippedColumn == column) {
-            return fileSchema;
+        return new MessageType(fileSchema.getName(), clipped.asGroupType().getFields());
+    }
+
+    /**
+     * Clips the group at {@code path[index]} within {@code enclosing}, then rebuilds {@code enclosing} around it.
+     * <p>
+     * The rebuild on the way back up is the whole difficulty of nesting: an enclosing group has to be reproduced with
+     * its repetition, name, field id and logical-type annotation intact, or Parquet cannot resolve the column and
+     * Iceberg cannot build a reader for it. {@link #rebuild} is the single place that preserves all four, and it
+     * returns {@code null} on any failure, which propagates up here as "keep the original schema".
+     *
+     * @return the rebuilt enclosing group, or {@code null} when nothing changed or the clip could not be applied
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Recursive descent that clips a variant at an arbitrary struct depth and rebuilds every enclosing group, preserving field ids and annotations")
+    private static Type clipAt(GroupType enclosing, List<String> path, int index, RequestedVariantPaths paths) {
+        String name = path.get(index);
+        if (!enclosing.containsField(name)) {
+            return null;
         }
-        List<Type> newFields = new ArrayList<>(fileSchema.getFieldCount());
-        for (Type field : fileSchema.getFields()) {
-            newFields.add(field.getName().equals(columnName) ? clippedColumn : field);
+        Type child = enclosing.getType(name);
+        if (child.isPrimitive()) {
+            return null;
         }
-        return new MessageType(fileSchema.getName(), newFields);
+        Type clippedChild;
+        if (index == path.size() - 1) {
+            GroupType clipped = clipValueGroup(child.asGroupType(), paths);
+            clippedChild = clipped == child ? null : clipped;
+        } else {
+            clippedChild = clipAt(child.asGroupType(), path, index + 1, paths);
+        }
+        if (clippedChild == null) {
+            return null; // nothing narrowed below, or it could not be rebuilt: leave this level alone too
+        }
+        List<Type> newFields = new ArrayList<>(enclosing.getFieldCount());
+        for (Type field : enclosing.getFields()) {
+            newFields.add(field.getName().equals(name) ? clippedChild : field);
+        }
+        if (enclosing instanceof MessageType) {
+            return new MessageType(enclosing.getName(), newFields);
+        }
+        return rebuild(enclosing, newFields);
     }
 
     /**
