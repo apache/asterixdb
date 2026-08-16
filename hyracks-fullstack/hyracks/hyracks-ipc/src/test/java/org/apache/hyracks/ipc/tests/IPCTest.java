@@ -20,7 +20,7 @@ package org.apache.hyracks.ipc.tests;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.hyracks.ipc.api.IIPCHandle;
@@ -59,7 +59,7 @@ public class IPCTest {
     }
 
     private IPCSystem createServerIPCSystem() throws IOException {
-        final Executor executor = Executors.newCachedThreadPool();
+        final ExecutorService executor = Executors.newCachedThreadPool();
         IIPCI ipci = new IIPCI() {
             @Override
             public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload) {
@@ -82,11 +82,12 @@ public class IPCTest {
             }
         };
         return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), PlainSocketChannelFactory.INSTANCE, ipci,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
+                new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
     }
 
     private IPCSystem createClientIPCSystem(RPCInterface rpci) throws IOException {
+        final ExecutorService executor = Executors.newCachedThreadPool();
         return new IPCSystem(new InetSocketAddress("127.0.0.1", 0), PlainSocketChannelFactory.INSTANCE, rpci,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
+                new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
     }
 }

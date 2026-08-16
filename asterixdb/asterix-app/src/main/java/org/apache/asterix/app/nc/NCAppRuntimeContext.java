@@ -535,7 +535,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                         ClusterControllerInfo ccInfo = ncSrv.getNodeParameters(primaryCcId).getClusterControllerInfo();
                         NetworkUtil.closeQuietly(hc);
                         hcc = hc = new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort(),
-                                ncSrv.getNetworkSecurityManager().getSocketChannelFactory());
+                                ncSrv.getNetworkSecurityManager().getSocketChannelFactory(), getThreadExecutor());
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
                     }

@@ -22,12 +22,26 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MuxDemuxReconnectTest {
+
+    private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "MuxDemuxReconnectTest Handshake thread");
+        t.setDaemon(true);
+        return t;
+    });
+
+    @After
+    public void shutdownExecutor() {
+        executor.shutdownNow();
+    }
 
     @Test
     public void testReconnectReplacesFailedCachedConnection() throws Exception {
@@ -47,10 +61,10 @@ public class MuxDemuxReconnectTest {
         Assert.assertSame(secondConnection, getOutgoingConnection(client, serverAddress));
     }
 
-    private static MuxDemux createMuxDemux() {
+    private MuxDemux createMuxDemux() {
         return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), channel -> {
             // This test only exercises connection caching and reconnect behavior.
-        }, 1, 5, FullFrameChannelInterfaceFactory.INSTANCE, PlainSocketChannelFactory.INSTANCE);
+        }, 1, 5, FullFrameChannelInterfaceFactory.INSTANCE, PlainSocketChannelFactory.INSTANCE, executor);
     }
 
     @SuppressWarnings("unchecked")

@@ -21,6 +21,7 @@ package org.apache.hyracks.client.net;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
@@ -36,12 +37,12 @@ public class ClientNetworkManager implements IChannelConnectionFactory {
 
     private final MuxDemux md;
 
-    public ClientNetworkManager(int nThreads, ISocketChannelFactory socketChannelFactory) {
+    public ClientNetworkManager(int nThreads, ISocketChannelFactory socketChannelFactory, ExecutorService executor) {
         /* This is a connect only socket and does not listen to any incoming connections, so pass null to
          * localAddress and listener.
          */
         md = new MuxDemux(null, null, nThreads, MAX_CONNECTION_ATTEMPTS, FullFrameChannelInterfaceFactory.INSTANCE,
-                socketChannelFactory);
+                socketChannelFactory, executor);
     }
 
     public void start() throws IOException {

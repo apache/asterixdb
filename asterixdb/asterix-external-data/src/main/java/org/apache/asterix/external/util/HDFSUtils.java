@@ -78,7 +78,7 @@ public class HDFSUtils {
         try {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
                     ccContext.getClusterControllerInfo().getClientNetPort(),
-                    networkSecurityManager.getSocketChannelFactory());
+                    networkSecurityManager.getSocketChannelFactory(), serviceCtx.getControllerService().getExecutor());
         } catch (HyracksException e) {
             throw new RuntimeDataException(ErrorCode.UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER);
         }

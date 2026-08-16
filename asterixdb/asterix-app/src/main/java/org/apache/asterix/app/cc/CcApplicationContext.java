@@ -209,7 +209,8 @@ public class CcApplicationContext implements ICcApplicationContext {
                         NetworkUtil.closeQuietly(rs);
 
                         NetworkUtil.closeQuietly(hc);
-                        hcc = hc = new HyracksConnection(hcc.getHost(), hcc.getPort());
+                        hcc = hc = new HyracksConnection(hcc.getHost(), hcc.getPort(),
+                                ccServiceCtx.getControllerService().getExecutor());
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
                     }

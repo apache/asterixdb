@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
@@ -58,12 +59,14 @@ public class TCPEndpoint {
     private int nextThread;
 
     private final ISocketChannelFactory socketChannelFactory;
+    private final ExecutorService executor;
 
     public TCPEndpoint(ITCPConnectionListener connectionListener, int nThreads,
-            ISocketChannelFactory socketChannelFactory) {
+            ISocketChannelFactory socketChannelFactory, ExecutorService executor) {
         this.connectionListener = connectionListener;
         this.nThreads = nThreads;
         this.socketChannelFactory = socketChannelFactory;
+        this.executor = executor;
     }
 
     public void start(InetSocketAddress localAddress) throws IOException {
@@ -318,7 +321,8 @@ public class TCPEndpoint {
         }
 
         private void asyncHandshake(PendingHandshakeConnection connection) {
-            CompletableFuture.supplyAsync(connection.socketChannel::handshake).exceptionally(ex -> false)
+            CompletableFuture.supplyAsync(connection.socketChannel::handshake, TCPEndpoint.this.executor)
+                    .exceptionally(ex -> false)
                     .thenAccept(handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, connection));
         }
 

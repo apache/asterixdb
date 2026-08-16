@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
@@ -88,12 +89,14 @@ public class Scheduler {
      * @param ipAddress      IP address
      * @param port           Port
      * @param channelFactory Channel Factory
+     * @param executor       Executor on which asynchronous socket handshakes are performed
      * @throws HyracksException
      */
 
-    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory) throws HyracksException {
+    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory, ExecutorService executor)
+            throws HyracksException {
         try {
-            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port, channelFactory);
+            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port, channelFactory, executor);
             this.ncNameToNcInfos = hcc.getNodeControllerInfos();
             ClusterTopology topology = hcc.getClusterTopology();
             this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()

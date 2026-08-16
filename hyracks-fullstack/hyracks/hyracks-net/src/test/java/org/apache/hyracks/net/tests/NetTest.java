@@ -22,6 +22,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,10 +35,23 @@ import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactor
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class NetTest {
+
+    private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "NetTest Handshake thread");
+        t.setDaemon(true);
+        return t;
+    });
+
+    @After
+    public void shutdownExecutor() {
+        executor.shutdownNow();
+    }
+
     @Test
     public void test() throws Exception {
         AtomicBoolean failFlag = new AtomicBoolean();
@@ -163,7 +178,7 @@ public class NetTest {
             }
         };
         return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener, 1, 5,
-                FullFrameChannelInterfaceFactory.INSTANCE, PlainSocketChannelFactory.INSTANCE);
+                FullFrameChannelInterfaceFactory.INSTANCE, PlainSocketChannelFactory.INSTANCE, executor);
     }
 
     private class ChannelIO {

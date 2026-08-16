@@ -21,6 +21,7 @@ package org.apache.hyracks.client.result;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
@@ -40,11 +41,11 @@ public class ResultDirectory implements IResultDirectory, Closeable {
     private final IPCSystem ipc;
     private final IResultDirectory remoteResultDirectory;
 
-    public ResultDirectory(String resultHost, int resultPort, ISocketChannelFactory socketChannelFactory)
-            throws IOException, IPCException {
+    public ResultDirectory(String resultHost, int resultPort, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor) throws IOException, IPCException {
         RPCInterface rpci = new RPCInterface();
         ipc = new IPCSystem(new InetSocketAddress(0), socketChannelFactory, rpci,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
+                new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
         ipc.start();
         IIPCHandle ddsIpchandle = ipc.getReconnectingHandle(new InetSocketAddress(resultHost, resultPort));
         this.remoteResultDirectory = new ResultDirectoryRemoteProxy(ddsIpchandle, rpci);

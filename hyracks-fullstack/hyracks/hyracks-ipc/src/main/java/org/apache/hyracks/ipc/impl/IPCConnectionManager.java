@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.network.ISocketChannel;
@@ -45,16 +46,20 @@ import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.NetworkUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class IPCConnectionManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    // TODO(mblow): the next two could be config parameters
+    // TODO(mblow): the next four could be config parameters
     private static final int INITIAL_RETRY_DELAY_MILLIS = 100;
     private static final int MAX_RETRY_DELAY_MILLIS = 15000;
     private static final int MAX_STOP_JOIN_WAIT_MILLIS = 30000;
+    // must exceed the SSL handshake deadline, so that a handshake still in progress is not abandoned here
+    private static final int CONNECT_TIMEOUT_MILLIS =
+            (int) TimeUnit.SECONDS.toMillis(Integer.getInteger("hyracks.ipc.connect.timeout.sec", 120));
 
     private final IPCSystem system;
 
@@ -77,11 +82,13 @@ public class IPCConnectionManager {
     private volatile boolean stopped;
 
     private final ISocketChannelFactory socketChannelFactory;
+    private final ExecutorService executor;
 
-    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory)
-            throws IOException {
+    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor) throws IOException {
         this.system = system;
         this.socketChannelFactory = socketChannelFactory;
+        this.executor = executor;
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
@@ -130,7 +137,7 @@ public class IPCConnectionManager {
                     networkThread.selector.wakeup();
                 }
             }
-            if (handle.waitTillConnected()) {
+            if (handle.waitTillConnected(CONNECT_TIMEOUT_MILLIS)) {
                 return handle;
             }
             if (maxRetries < 0 || retries++ < maxRetries) {
@@ -344,9 +351,16 @@ public class IPCConnectionManager {
             workingPendingConnections.clear();
         }
 
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "discard late connect")
         private void connectionEstablished(IPCHandle handle, SelectionKey channelKey, ISocketChannel channel) {
+            if (!handle.setStateUnlessClosed(HandleState.CONNECT_SENT)) {
+                // the waiter timed out and gave up on this handle; discard the late connection
+                LOGGER.warn("connect to {} completed after the handle was closed; discarding it",
+                        handle.getRemoteAddress());
+                close(channelKey, channel.getSocketChannel());
+                return;
+            }
             handle.setSocketChannel(channel);
-            handle.setState(HandleState.CONNECT_SENT);
             handle.setKey(channelKey);
             registerHandle(handle);
             IPCConnectionManager.this.write(createInitialReqMessage(handle));
@@ -514,8 +528,10 @@ public class IPCConnectionManager {
         }
 
         private void asyncHandshake(ISocketChannel socketChannel, IPCHandle handle, SelectionKey channelKey) {
-            CompletableFuture.supplyAsync(socketChannel::handshake).exceptionally(ex -> false).thenAccept(
-                    handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, socketChannel, handle, channelKey));
+            CompletableFuture.supplyAsync(socketChannel::handshake, IPCConnectionManager.this.executor)
+                    .exceptionally(ex -> false)
+                    .thenAccept(handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, socketChannel, handle,
+                            channelKey));
         }
 
         private void handleHandshakeCompletion(Boolean handshakeSuccess, ISocketChannel socketChannel, IPCHandle handle,

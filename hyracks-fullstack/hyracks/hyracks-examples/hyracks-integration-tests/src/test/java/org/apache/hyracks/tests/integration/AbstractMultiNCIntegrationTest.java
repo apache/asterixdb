@@ -163,8 +163,8 @@ public abstract class AbstractMultiNCIntegrationTest {
         IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
         if (!spec.getResultSetIds().isEmpty()) {
-            IResultSet resultSet =
-                    new ResultSet(hcc, PlainSocketChannelFactory.INSTANCE, spec.getFrameSize(), nReaders);
+            IResultSet resultSet = new ResultSet(hcc, PlainSocketChannelFactory.INSTANCE, spec.getFrameSize(), nReaders,
+                    cc.getExecutor());
             IResultSetReader reader = resultSet.createReader(jobId, spec.getResultSetIds().get(0));
 
             ObjectMapper om = new ObjectMapper();
