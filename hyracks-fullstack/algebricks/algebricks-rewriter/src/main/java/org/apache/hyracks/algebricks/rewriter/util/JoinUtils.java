@@ -340,7 +340,7 @@ public class JoinUtils {
         return null;
     }
 
-    private static void warnIfCrossProduct(ILogicalExpression conditionExpr, SourceLocation sourceLoc,
+    public static void warnIfCrossProduct(ILogicalExpression conditionExpr, SourceLocation sourceLoc,
             IOptimizationContext context) {
         if (OperatorPropertiesUtil.isAlwaysTrueCond(conditionExpr) && sourceLoc != null) {
             IWarningCollector warningCollector = context.getWarningCollector();
