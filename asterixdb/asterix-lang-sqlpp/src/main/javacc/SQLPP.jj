@@ -326,6 +326,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
     /** The warnings of each statement, in the order the statements were parsed. */
     private final List<Set<Warning>> allStatementWarnings = new ArrayList<Set<Warning>>();
 
+    /**
+     * Where each statement began and ended - beginLine, beginColumn, endLine, endColumn - in the order the statements
+     * were parsed. Kept rather than the text itself, so that a request whose statements nobody asks about pays only
+     * for the four numbers.
+     */
+    private final List<int[]> allStatementSpans = new ArrayList<int[]>();
+
     /** The warnings of the statement being parsed. */
     private final Set<Warning> currentStatementWarnings = new HashSet<Warning>();
 
@@ -604,6 +611,15 @@ class SQLPPParser extends ScopeChecker implements IParser {
     @Override
     public List<Set<Warning>> getWarningsPerStatement() {
         return allStatementWarnings;
+    }
+
+    @Override
+    public List<String> getStatementTexts() {
+        List<String> texts = new ArrayList<String>(allStatementSpans.size());
+        for (int[] span : allStatementSpans) {
+            texts.add(extractFragment(span[0], span[1], span[2], span[3]));
+        }
+        return texts;
     }
 
     protected String getMessage(ParseException pe) {
@@ -1029,11 +1045,13 @@ List<Statement> Statement() throws ParseException:
   scopeStack.push(RootScopeFactory.createRootScope(this));
   List<Statement> decls = new ArrayList<Statement>();
   Statement stmt = null;
+  Token statementStart = null;
 }
 {
   (
      {
          currentStatementWarnings.clear();
+         statementStart = getToken(1);
      }
     (stmt = ExplainOrAdviseStatement()
       {
@@ -1041,6 +1059,9 @@ List<Statement> Statement() throws ParseException:
         // unclaimed hints are warnings of this statement too
         reportUnclaimedHints();
         allStatementWarnings.add(new HashSet<Warning>(currentStatementWarnings));
+        // the statement spans its first token to its last; the semicolon that ends it is not part of it
+        allStatementSpans.add(new int[] { statementStart.beginLine, statementStart.beginColumn - 1, token.endLine,
+            token.endColumn + 1 });
       }
     )?
     (<SEMICOLON>)+

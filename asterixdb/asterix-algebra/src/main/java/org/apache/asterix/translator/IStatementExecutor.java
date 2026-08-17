@@ -121,6 +121,8 @@ public interface IStatementExecutor {
         private final String name;
         private ResultSetInfo resultSet;
         private ExecutionPlans plans;
+        /** The statement's own text */
+        private String text;
         private Stats stats;
         private Throwable error;
         private final List<Warning> warnings = new ArrayList<>();
@@ -141,6 +143,14 @@ public interface IStatementExecutor {
 
         public String getName() {
             return name;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
         }
 
         public ResultSetInfo getResultSet() {

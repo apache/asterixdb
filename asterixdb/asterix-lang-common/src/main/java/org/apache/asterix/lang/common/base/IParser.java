@@ -70,4 +70,12 @@ public interface IParser {
     default List<Set<Warning>> getWarningsPerStatement() {
         return Collections.emptyList();
     }
+
+    /**
+     * The text of each statement of the request, in parse order: from a statement's first token to its last, without
+     * the semicolon that ends it. A parser that does not keep the text of a statement returns none.
+     */
+    default List<String> getStatementTexts() {
+        return Collections.emptyList();
+    }
 }

@@ -194,7 +194,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
                 translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             } finally {
                 // the parser's warnings belong to their statement whether or not the request went on to fail
-                addParserWarningsToStatements(outMetadata, parser.getWarningsPerStatement(), maxWarnings);
+                addParserResultsToStatements(outMetadata, parser, maxWarnings);
             }
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
@@ -214,14 +214,27 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     }
 
     /**
-     * Adds the warnings the parser raised for a statement to what that statement reports, matching them by position.
-     * Every warning is counted, and {@code maxWarnings} of them reported, per statement.
+     * Adds what the parser knows about a statement - its text, and the warnings it raised - to what that statement
+     * reports, matching them by position. Every warning is counted, and {@code maxWarnings} of them reported, per
+     * statement.
      */
-    private static void addParserWarningsToStatements(IStatementExecutor.ResultMetadata outMetadata,
-            List<Set<Warning>> warningsPerStatement, long maxWarnings) {
+    private static void addParserResultsToStatements(IStatementExecutor.ResultMetadata outMetadata, IParser parser,
+            long maxWarnings) {
+        if (outMetadata.getStatements().isEmpty()) {
+            // nothing reports the statements of this request, so their text is not worth building
+            return;
+        }
+        List<Set<Warning>> warningsPerStatement = parser.getWarningsPerStatement();
+        List<String> texts = parser.getStatementTexts();
         for (IStatementExecutor.StatementInfo statement : outMetadata.getStatements()) {
             int parsedAt = statement.getPosition() - 1;
-            if (parsedAt >= 0 && parsedAt < warningsPerStatement.size()) {
+            if (parsedAt < 0) {
+                continue;
+            }
+            if (parsedAt < texts.size()) {
+                statement.setText(texts.get(parsedAt));
+            }
+            if (parsedAt < warningsPerStatement.size()) {
                 Set<Warning> parserWarnings = warningsPerStatement.get(parsedAt);
                 statement.addWarnings(parserWarnings.stream().limit(maxWarnings).toList());
                 if (statement.getStats() != null) {
