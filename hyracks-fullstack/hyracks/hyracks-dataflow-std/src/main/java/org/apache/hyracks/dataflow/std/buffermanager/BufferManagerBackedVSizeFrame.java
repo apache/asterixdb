@@ -56,19 +56,23 @@ public class BufferManagerBackedVSizeFrame implements IFrame {
     }
 
     @Override
-    public void ensureFrameSize(int newSize) throws HyracksDataException {
+    public boolean ensureFrameSize(int newSize) throws HyracksDataException {
         if (newSize > getFrameSize()) {
             bufferManager.releaseFrame(frame);
             frame = bufferManager.acquireFrame(newSize);
+            return true;
         }
+        return false;
     }
 
     @Override
-    public void resize(int frameSize) throws HyracksDataException {
+    public boolean resize(int frameSize) throws HyracksDataException {
         if (getFrameSize() != frameSize) {
             bufferManager.releaseFrame(frame);
             frame = bufferManager.acquireFrame(frameSize);
+            return true;
         }
+        return false;
     }
 
     @Override

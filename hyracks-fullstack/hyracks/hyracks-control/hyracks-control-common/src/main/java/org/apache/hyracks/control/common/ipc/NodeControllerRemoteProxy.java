@@ -34,6 +34,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.base.INodeController;
@@ -67,9 +68,9 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
             List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
             Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId,
-            long jobStartTime, String jobStartTimeZoneId) throws Exception {
+            long jobStartTime, String jobStartTimeZoneId, JobKind jobKind) throws Exception {
         StartTasksFunction stf = new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors,
-                connectorPolicies, flags, jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId);
+                connectorPolicies, flags, jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId, jobKind);
         ipcHandle.send(-1, stf, null);
     }
 

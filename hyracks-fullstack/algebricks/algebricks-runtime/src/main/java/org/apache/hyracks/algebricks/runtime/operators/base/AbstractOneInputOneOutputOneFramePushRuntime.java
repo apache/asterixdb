@@ -22,7 +22,6 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameAppender;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -40,7 +39,7 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
     protected FrameTupleReference tRef;
 
     protected final void initAccessAppend(IHyracksTaskContext ctx) throws HyracksDataException {
-        frame = new VSizeFrame(ctx);
+        frame = ctx.allocateVSizeFrame();
         appender = new FrameTupleAppender(frame);
         tAccess = new FrameTupleAccessor(inputRecordDesc);
     }

@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
@@ -85,7 +84,7 @@ public class InMemoryHashJoin {
         this.tpcBuild = tpcBuild;
         this.accessorProbe = accessorProbe;
         this.tpcProbe = tpcProbe;
-        appender = new FrameTupleAppender(new VSizeFrame(ctx));
+        appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
             int fieldCountOuter = accessorBuild.getFieldCount();

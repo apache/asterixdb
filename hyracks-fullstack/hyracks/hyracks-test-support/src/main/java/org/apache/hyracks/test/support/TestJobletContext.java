@@ -30,8 +30,10 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
@@ -69,6 +71,11 @@ public class TestJobletContext implements IHyracksJobletContext {
     public ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newFrameSizeInBytes, boolean copyOldData)
             throws HyracksDataException {
         return frameManger.reallocateFrame(tobeDeallocate, newFrameSizeInBytes, copyOldData);
+    }
+
+    @Override
+    public IFrameProfiler getProfiler() {
+        return IFrameProfiler.NOOP_FRAME_PROFILER;
     }
 
     public IJobletEventListenerFactory getJobletEventListenerFactory() {
@@ -157,5 +164,10 @@ public class TestJobletContext implements IHyracksJobletContext {
     @Override
     public long nextUniqueId() {
         return ids.getAndIncrement();
+    }
+
+    @Override
+    public JobKind getJobKind() {
+        return JobKind.USER_QUERY;
     }
 }

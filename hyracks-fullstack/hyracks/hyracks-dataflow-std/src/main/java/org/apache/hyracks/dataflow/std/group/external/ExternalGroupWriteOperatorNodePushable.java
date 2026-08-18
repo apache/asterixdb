@@ -174,7 +174,7 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
         ExternalHashGroupBy groupBy = new ExternalHashGroupBy(this, table, runFileWriters, partialAggRecordDesc);
         reader.open();
         try {
-            VSizeFrame frame = new VSizeFrame(ctx);
+            VSizeFrame frame = ctx.allocateVSizeFrame();
             while (reader.nextFrame(frame)) {
                 groupBy.insert(frame.getBuffer());
             }

@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IIntrospectingOperator;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
@@ -222,7 +221,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             searchPred = createSearchPredicate();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+            appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
             ISearchOperationCallback searchCallback =
                     searchCallbackFactory.createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             IIndexAccessParameters iap = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, searchCallback);

@@ -40,7 +40,6 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallback;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
@@ -245,7 +244,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     @Override
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(inputRecDesc);
-        writeBuffer = new VSizeFrame(ctx);
+        writeBuffer = ctx.allocateVSizeFrame();
         writer.open();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
@@ -265,7 +264,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             searchPred = createSearchPredicate();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+            appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
             modCallback =
                     modOpCallbackFactory.createModificationOperationCallback(indexHelper.getResource(), ctx, this);
             abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;

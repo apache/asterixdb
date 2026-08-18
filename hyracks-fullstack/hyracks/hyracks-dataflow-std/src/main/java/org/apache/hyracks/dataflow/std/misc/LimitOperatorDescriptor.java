@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -67,7 +66,7 @@ public class LimitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
                     fta.reset(buffer);
                     int count = fta.getTupleCount();
                     if ((currentSize + count) > outputLimit) {
-                        FrameTupleAppender partialAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+                        FrameTupleAppender partialAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
                         int copyCount = outputLimit - currentSize;
                         for (int i = 0; i < copyCount; i++) {
                             FrameUtils.appendToWriter(writer, partialAppender, fta, i);

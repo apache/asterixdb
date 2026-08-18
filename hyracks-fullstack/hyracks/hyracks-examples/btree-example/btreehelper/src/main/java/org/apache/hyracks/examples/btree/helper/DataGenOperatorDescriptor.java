@@ -23,7 +23,6 @@ import java.io.DataOutput;
 import java.util.HashSet;
 import java.util.Random;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -64,7 +63,7 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
 
-        final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+        final FrameTupleAppender appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
         final RecordDescriptor recDesc = outRecDescs[0];
         final ArrayTupleBuilder tb = new ArrayTupleBuilder(recDesc.getFields().length);
         final Random rnd = new Random(randomSeed);

@@ -33,6 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
@@ -42,8 +43,8 @@ import org.apache.hyracks.ipc.exceptions.IPCException;
 public interface INodeController {
     void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
             List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
-            Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long startTime,
-            String startTimeZoneId) throws Exception;
+            Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId,
+            long jobStartTime, String jobStartTimeZoneId, JobKind jobKind) throws Exception;
 
     void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;
 

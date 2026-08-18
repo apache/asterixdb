@@ -24,7 +24,6 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -52,7 +51,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
             try {
                 pWriters[i] = pwFactory.createFrameWriter(consumerPartitions[i]);
                 appenders[i] = new FrameTupleAppender();
-                appenders[i].reset(new VSizeFrame(ctx), true);
+                appenders[i].reset(ctx.allocateVSizeFrame(), true);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }

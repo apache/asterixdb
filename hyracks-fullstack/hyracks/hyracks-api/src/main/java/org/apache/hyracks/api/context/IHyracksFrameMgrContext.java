@@ -21,18 +21,38 @@ package org.apache.hyracks.api.context;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobKind;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
+import org.apache.hyracks.api.util.HyracksThrowingFunction;
 
 public interface IHyracksFrameMgrContext {
 
-    public int getInitialFrameSize();
+    HyracksThrowingFunction<IHyracksFrameMgrContext, VSizeFrame> DEFAULT_VSIZE_FRAME_GENERATOR = VSizeFrame::new;
 
-    public ByteBuffer allocateFrame() throws HyracksDataException;
+    int getInitialFrameSize();
 
-    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException;
+    ByteBuffer allocateFrame() throws HyracksDataException;
 
-    public ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newSizeInBytes, boolean copyOldData)
+    ByteBuffer allocateFrame(int bytes) throws HyracksDataException;
+
+    ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newSizeInBytes, boolean copyOldData)
             throws HyracksDataException;
 
-    public void deallocateFrames(int bytes);
+    IFrameProfiler getProfiler();
+
+    /**
+     * Returns the {@link JobKind} associated with this frame manager context, or {@code null}
+     * if not operating within a specific job kind context.
+     */
+    default JobKind getJobKind() {
+        return null;
+    }
+
+    void deallocateFrames(int bytes);
+
+    default VSizeFrame allocateVSizeFrame() throws HyracksDataException {
+        return DEFAULT_VSIZE_FRAME_GENERATOR.process(this);
+    }
 }

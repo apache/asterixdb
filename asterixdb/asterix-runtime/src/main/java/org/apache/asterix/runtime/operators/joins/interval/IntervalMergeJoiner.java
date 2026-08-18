@@ -30,7 +30,6 @@ import org.apache.asterix.runtime.operators.joins.interval.utils.memory.TuplePoi
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -87,8 +86,8 @@ public class IntervalMergeJoiner {
         inputCursor[PROBE_PARTITION] = new FrameTupleCursor(probeRd);
 
         inputBuffer = new IFrame[JOIN_PARTITIONS];
-        inputBuffer[BUILD_PARTITION] = new VSizeFrame(ctx);
-        inputBuffer[PROBE_PARTITION] = new VSizeFrame(ctx);
+        inputBuffer[BUILD_PARTITION] = ctx.allocateVSizeFrame();
+        inputBuffer[PROBE_PARTITION] = ctx.allocateVSizeFrame();
 
         //Two frames are used for the runfile stream, and one frame for each input (2 outputs).
         framePool = new DeallocatableFramePool(ctx, (memorySize - 4) * ctx.getInitialFrameSize());
@@ -108,7 +107,7 @@ public class IntervalMergeJoiner {
         inputTuple[BUILD_PARTITION] = new IntervalSideTuple(mjc, inputCursor[BUILD_PARTITION], buildKeys);
 
         // Result
-        this.resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+        this.resultAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
     }
 
     public void processBuildFrame(ByteBuffer buffer) throws HyracksDataException {

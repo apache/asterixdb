@@ -117,7 +117,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.feedManager = (ActiveManager) ((INcApplicationContext) ctx.getJobletContext().getServiceContext()
                 .getApplicationContext()).getActiveManager();
         if (hasMessage) {
-            this.message = new VSizeFrame(ctx);
+            this.message = ctx.allocateVSizeFrame();
             TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
         } else {
             this.message = null;

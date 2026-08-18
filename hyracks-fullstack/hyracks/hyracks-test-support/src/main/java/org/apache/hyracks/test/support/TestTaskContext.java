@@ -39,6 +39,7 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.control.common.job.profiling.StatsCollector;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -78,6 +79,11 @@ public class TestTaskContext implements IHyracksTaskContext {
             throws HyracksDataException {
         return jobletContext.reallocateFrame(tobeDeallocate, newSizeInBytes, copyOldData);
 
+    }
+
+    @Override
+    public IFrameProfiler getProfiler() {
+        return jobletContext.getProfiler();
     }
 
     @Override

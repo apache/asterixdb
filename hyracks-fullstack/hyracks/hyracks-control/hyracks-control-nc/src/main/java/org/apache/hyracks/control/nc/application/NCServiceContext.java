@@ -20,12 +20,16 @@ package org.apache.hyracks.control.nc.application;
 
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.IVSizeFrameFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.common.application.ServiceContext;
@@ -47,6 +51,8 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
     private final NodeControllerService ncs;
     private IChannelInterfaceFactory messagingChannelInterfaceFactory;
     private final ITracer tracer;
+    private IFrameProfiler frameProfiler = IFrameProfiler.NOOP_FRAME_PROFILER;
+    private Function<JobKind, IVSizeFrameFactory> vSizeFrameFactoryProvider = kind -> IVSizeFrameFactory.DEFAULT;
 
     public NCServiceContext(NodeControllerService ncs, ServerContext serverCtx, IOManager ioManager, String nodeId,
             MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
@@ -118,5 +124,25 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
     @Override
     public Object getApplicationContext() {
         return ncs.getApplicationContext();
+    }
+
+    @Override
+    public IFrameProfiler getFrameProfiler() {
+        return frameProfiler;
+    }
+
+    @Override
+    public void setFrameProfiler(IFrameProfiler frameProfiler) {
+        this.frameProfiler = frameProfiler;
+    }
+
+    @Override
+    public void setVSizeFrameFactoryProvider(Function<JobKind, IVSizeFrameFactory> provider) {
+        this.vSizeFrameFactoryProvider = provider;
+    }
+
+    @Override
+    public IVSizeFrameFactory getVSizeFrameFactoryForKind(JobKind jobKind) {
+        return vSizeFrameFactoryProvider.apply(jobKind);
     }
 }
