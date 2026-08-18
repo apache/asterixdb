@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -161,8 +162,9 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
                 NoOpSampler.INSTANCE, NoOpPageWriteCallback.INSTANCE);
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Release every bulk loader even when one throws an unchecked exception")
     private void closeBulkLoaders() throws HyracksDataException {
-        HyracksDataException failure = null;
+        Throwable failure = null;
         for (IIndexBulkLoader bulkLoader : bulkLoaders) {
             // bulkloader can be null if an exception is thrown before it is initialized.
             try {
@@ -173,7 +175,14 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
                         bulkLoader.abort();
                     }
                 }
-            } catch (HyracksDataException e) {
+            } catch (Throwable e) { // NOSONAR: every loader must be released, whatever end()/abort() threw
+                // Catch Throwable, not just HyracksDataException. end()/abort() reach index-specific code
+                // that can throw unchecked exceptions (an NPE from a page manager, say), and letting one
+                // escape here skips the remaining loaders entirely. Each createBulkLoader() has declared an
+                // active I/O operation on its dataset that only end()/abort() releases, so a skipped loader
+                // leaks that declaration permanently -- and a leaked declaration parks the next
+                // DatasetLifecycleManager.unregister() forever in DatasetInfo.waitForIO() while it holds the
+                // manager's monitor, wedging every other index operation on the node.
                 if (failure == null) {
                     failure = e;
                 } else {
@@ -182,7 +191,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
             }
         }
         if (failure != null) {
-            throw failure;
+            throw HyracksDataException.create(failure);
         }
     }
 

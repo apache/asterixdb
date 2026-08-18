@@ -113,12 +113,21 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
         int maxStaticPageId = staticTree.getPageManager().getMaxPageId(staticMeta);
         int numStaticPages = maxStaticPageId + 1;
 
-        // Allocate a CONTIGUOUS block of disk pages for the static structure. takeBlock reserves
-        // numStaticPages consecutive pages and returns the first id, so the destination-id math below
-        // (staticBasePageId + i) is guaranteed. A per-page takePage() loop is NOT safe here: on a free-list
-        // page manager takePage() can hand back non-contiguous ids, which would break the +i offset.
+        // Reserve a CONTIGUOUS block of page ids: takeBlock returns the first of numStaticPages
+        // consecutive pages, so the destination-id math below (staticBasePageId + i) is guaranteed. A
+        // per-page takePage() loop is NOT safe here: on a free-list page manager takePage() can hand back
+        // non-contiguous ids, which would break the +i offset.
+        //
+        // takeBlock() reads metaFrame.getMaxPage() directly and, unlike takePage(), does not bind the frame
+        // to the metadata page first -- the caller must have bound it. Do not rely on copyPage() having run:
+        // a flush with no pages to copy never calls it, leaving the frame unbound and takeBlock() dying with
+        // an NPE inside LIFOMetaDataFrame.getMaxPage(). getMaxPageId() binds the frame as a side effect
+        // (metaFrame.setPage), which is the missing step. Sound here because this loader's page manager is
+        // open for write, so its firstPage is set and getMaxPageId() leaves the frame bound to a page it did
+        // not unpin. Note the getMaxPageId() call above is on the STATIC tree's manager and frame, so it does
+        // nothing for this one.
+        freePageManager.getMaxPageId(metaFrame);
         int staticBasePageId = freePageManager.takeBlock(metaFrame, numStaticPages);
-
         // Create frames for pointer adjustment
         IVTreeInteriorFrame intFrame = (IVTreeInteriorFrame) treeIndex.getInteriorFrameFactory().createFrame();
         IVTreeLeafFrame lfFrame = (IVTreeLeafFrame) treeIndex.getLeafFrameFactory().createFrame();
