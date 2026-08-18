@@ -69,7 +69,9 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.job.HyracksJobProperty;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.IResultSetReader;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -285,7 +287,7 @@ public class AnalysisUtil {
             compiler.optimize();
 
             JobSpecification jobSpec = compiler.createJob(appCtx, new JobEventListenerFactory(newTxnId, false));
-
+            jobSpec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.SYS_QUERY);
             JobId jobId = JobUtils.runJob(appCtx.getHcc(), jobSpec, true);
 
             IResultSetReader resultSetReader = appCtx.getResultSet().createReader(jobId, resultSetId);

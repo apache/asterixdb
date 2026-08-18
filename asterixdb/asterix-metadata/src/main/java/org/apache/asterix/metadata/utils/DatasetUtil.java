@@ -75,6 +75,8 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.job.HyracksJobProperty;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -298,10 +300,8 @@ public class DatasetUtil {
     public static JobSpecification dropDatasetJobSpec(Dataset dataset, MetadataProvider metadataProvider,
             Set<IndexDropOperatorDescriptor.DropOption> options) throws AlgebricksException, ACIDException {
         LOGGER.info("DROP DATASET: " + dataset);
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        }
         JobSpecification specPrimary = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
+        specPrimary.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
@@ -360,6 +360,7 @@ public class DatasetUtil {
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
+        spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         return spec;
     }
 

@@ -33,6 +33,7 @@ import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.commons.lang3.tuple.Pair;
@@ -54,7 +55,6 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Level level = Level.DEBUG;
-    public static final String ACTIVE_ENTITY_PROPERTY_NAME = "ActiveJob";
     private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
     private final Map<JobId, EntityId> jobId2EntityId;
     private boolean suspended = false;
@@ -97,10 +97,10 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     @Override
     public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification,
             IJobCapacityController.JobSubmissionStatus status) throws HyracksDataException {
-        Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
+        Object property = jobSpecification.getProperty(AsterixJobProperty.ACTIVE_ENTITY);
         if (!(property instanceof EntityId)) {
             if (property != null) {
-                LOGGER.debug("{} is not an ingestion job. job property={}", jobId, property);
+                LOGGER.debug("{} is not an ingestion job. found entity={}", jobId, property);
             }
             return;
         }

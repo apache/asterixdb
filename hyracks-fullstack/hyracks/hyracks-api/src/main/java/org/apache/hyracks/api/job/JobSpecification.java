@@ -70,7 +70,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private transient Map<Object, String> logical2PhysicalMap;
 
-    private final Map<String, Serializable> properties;
+    private final Map<IJobProperty, Serializable> properties;
 
     private final Set<Constraint> userConstraints;
 
@@ -155,12 +155,12 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                 Pair.of(Pair.of(producerOp, producerPort), Pair.of(consumerOp, consumerPort)));
     }
 
-    public void setProperty(String name, Serializable value) {
-        properties.put(name, value);
+    public void setProperty(IJobProperty property, Serializable value) {
+        properties.put(property, value);
     }
 
-    public Serializable getProperty(String name) {
-        return properties.get(name);
+    public Serializable getProperty(IJobProperty property) {
+        return properties.get(property);
     }
 
     private <T> void extend(List<T> list, int index) {
