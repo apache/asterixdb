@@ -1,0 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+use test;
+
+-- The buffer cache page is 32KB here and an element costs about 14 bytes, so a 4000 element array
+-- makes a document of roughly 56KB. That is more than one page, so the sample index bulk load has to
+-- take a page spanning two slots for it, which is the shape that failed. The reported case used a
+-- 32768 element array, which is the same shape with more frames but exceeds this configuration's
+-- sort budget.
+INSERT INTO ds (
+    SELECT VALUE { "k": i, "arr": (SELECT VALUE j FROM range(1, 4000) j) }
+    FROM range(1, 5) i
+);

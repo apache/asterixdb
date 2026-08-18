@@ -128,4 +128,11 @@
   </test-group>
   &sqlpp_queries;
   &ClusterByQueries;
+  <test-group name="large-page-analyze">
+    <test-case FilePath="cloud_storage">
+      <compilation-unit name="large-page-analyze">
+        <output-dir compare="Text">large-page-analyze</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
