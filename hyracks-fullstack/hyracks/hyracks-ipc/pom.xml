@@ -41,6 +41,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables combine.children="append">
+            <!-- the handshake bound is read once at class-init; shorten it so the timeout test is quick -->
+            <hyracks.ssl.handshake.timeout.sec>3</hyracks.ssl.handshake.timeout.sec>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
     </plugins>
   </build>

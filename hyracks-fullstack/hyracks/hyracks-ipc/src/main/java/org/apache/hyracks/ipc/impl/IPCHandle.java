@@ -21,12 +21,17 @@ package org.apache.hyracks.ipc.impl;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 final class IPCHandle implements IIPCHandle {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024;
 
     private final IPCSystem system;
@@ -131,14 +136,47 @@ final class IPCHandle implements IIPCHandle {
         notifyAll();
     }
 
-    synchronized boolean waitTillConnected() throws InterruptedException {
+    /**
+     * Transitions to the given state unless the handle is already {@link HandleState#CLOSED}. A closed
+     * handle stays closed: its waiter has already given up on it (e.g. {@link #waitTillConnected} timed
+     * out and the caller retried with a fresh handle), so a late-completing connection must not resurrect
+     * it into a live handle nobody references.
+     *
+     * @return true if the transition was made, false if the handle was already closed
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "closed is terminal")
+    synchronized boolean setStateUnlessClosed(HandleState newState) {
+        if (state == HandleState.CLOSED) {
+            return false;
+        }
+        setState(newState);
+        return true;
+    }
+
+    /**
+     * Waits for this handle to reach a terminal state, for at most {@code timeoutMillis}. On expiry the
+     * handle is marked {@link HandleState#CLOSED} so that it is treated as a failed connection and reaped
+     * by {@link IPCConnectionManager#unregisterHandle}; teardown of its channel remains with the network
+     * thread's existing close paths.
+     *
+     * @return true if the handle became connected, false if it was closed or the wait timed out
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "bound the connect wait")
+    synchronized boolean waitTillConnected(long timeoutMillis) throws InterruptedException {
+        final long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         while (true) {
             switch (state) {
                 case INITIAL:
                 case CONNECT_SENT:
                 case CONNECT_RECEIVED:
-                    // TODO: need a reasonable timeout here
-                    wait();
+                    final long remainingNanos = deadlineNanos - System.nanoTime();
+                    if (remainingNanos <= 0) {
+                        LOGGER.warn("timed out after {}ms waiting to connect to {} (state {})", timeoutMillis,
+                                remoteAddress, state);
+                        setState(HandleState.CLOSED);
+                        return false;
+                    }
+                    TimeUnit.NANOSECONDS.timedWait(this, remainingNanos);
                     break;
                 case CONNECTED:
                 case CLOSED:

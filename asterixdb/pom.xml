@@ -112,8 +112,8 @@
     <azurecommonjavasdk.version>12.34.0</azurecommonjavasdk.version>
     <azureidentity.version>1.18.4</azureidentity.version>
     <azuredatalakejavasdk.version>12.28.0</azuredatalakejavasdk.version>
-    <azurecore.version>1.58.1</azurecore.version>
-    <azurecorehttpnetty.version>1.16.5</azurecorehttpnetty.version>
+    <azurecore.version>1.59.0</azurecore.version>
+    <azurecorehttpnetty.version>1.16.6</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <google-cloud-storage.version>2.71.0</google-cloud-storage.version>
