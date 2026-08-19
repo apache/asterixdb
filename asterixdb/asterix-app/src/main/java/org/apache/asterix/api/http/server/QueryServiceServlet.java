@@ -276,14 +276,44 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } finally {
             executionState.finish();
         }
-        responsePrinter.printResults();
-        // a request reporting its statements one by one succeeds as a request while one of them failed
-        buildResponseFooters(elapsedStart, errorCount + executionState.failedStatementCount(), stats, executionState,
-                resultCharset, responsePrinter, delivery);
-        responsePrinter.printFooters();
-        responsePrinter.end();
+        Exception printFailure = printResultsQuietly(responsePrinter, requestRef);
+        if (printFailure != null) {
+            // the failure is reported in the response rather than thrown: part of it has already been sent
+            executionState.setStatus(ResultStatus.FATAL, executionState.getHttpStatus());
+            // a response that reports an error counts it, whether the request failed or the printing of it did
+            errorCount = Math.max(errorCount, 1);
+            requestFailed(printFailure, responsePrinter, executionState);
+            printResultsQuietly(responsePrinter, requestRef);
+        }
+        try {
+            // a request reporting its statements one by one succeeds as a request while one of them failed
+            buildResponseFooters(elapsedStart, errorCount + executionState.failedStatementCount(), stats,
+                    executionState, resultCharset, responsePrinter, delivery);
+            responsePrinter.printFooters();
+        } catch (Exception e) {
+            LOGGER.warn("failure while printing the footers of {}", requestRef.getUuid(), e);
+        } finally {
+            // whatever failed, the response the client has already been sent part of must be terminated
+            responsePrinter.end();
+        }
         if (sessionOutput.out().checkError()) {
             LOGGER.warn("Error flushing output writer");
+        }
+    }
+
+    /**
+     * Prints what the response has queued, answering with the failure instead of throwing it. Part of the response has
+     * already been sent by the time this is reached, so what is left to do with a failure is to report it in the rest.
+     *
+     * @return what failed, or null where nothing did
+     */
+    private Exception printResultsQuietly(ResponsePrinter responsePrinter, IRequestReference requestRef) {
+        try {
+            responsePrinter.printResults();
+            return null;
+        } catch (Exception e) {
+            LOGGER.warn("failure while printing the results of {}", requestRef.getUuid(), e);
+            return e;
         }
     }
 

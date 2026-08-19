@@ -70,11 +70,16 @@ public class ResponsePrinter implements IResponsePrinter {
     @Override
     public void printResults() throws HyracksDataException {
         sessionOutput.release();
-        print(results);
-        if (!resultsPrinted) {
-            resultsPrinted = !results.isEmpty();
+        try {
+            print(results);
+        } finally {
+            // discarded whatever happened: a printer that failed has written what it could, and printing it again
+            // would repeat its field in the response
+            if (!resultsPrinted) {
+                resultsPrinted = !results.isEmpty();
+            }
+            results.clear();
         }
-        results.clear();
     }
 
     @Override

@@ -53,11 +53,12 @@ public class NcResultPrinter extends AbstractResultsPrinter {
         if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultSets.isEmpty()) {
             for (int i = 0; i < resultSets.size(); i++) {
                 IStatementExecutor.ResultSetInfo rsmd = resultSets.get(i);
+                // the reader is opened before the separator, so that failing to open it leaves no dangling comma
                 ResultReader resultReader = new ResultReader(resultSet, rsmd.getJobId(), rsmd.getResultSetId());
-                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, rsmd.getRecordType());
-                if (i + 1 != resultSets.size()) {
+                if (i > 0) {
                     ResponsePrinter.printFieldSeparator(pw);
                 }
+                ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, rsmd.getRecordType());
             }
         } else {
             pw.append(responseMsg.getResult());

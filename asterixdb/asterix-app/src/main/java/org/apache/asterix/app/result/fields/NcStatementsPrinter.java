@@ -102,27 +102,34 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
         pw.print("\t\"");
         pw.print(FIELD_NAME);
         pw.print("\": [\n");
-        boolean first = true;
-        for (StatementInfo statement : statements) {
-            // the request's own dataverse declaration is not the client's, so it gets no entry
-            if (statement.getPosition() == 0) {
-                continue;
+        try {
+            boolean first = true;
+            for (StatementInfo statement : statements) {
+                // the request's own dataverse declaration is not the client's, so it gets no entry
+                if (statement.getPosition() == 0) {
+                    continue;
+                }
+                printStatement(pw, statement, !first);
+                first = false;
             }
-            if (!first) {
-                pw.print(",\n");
-            }
-            first = false;
-            printStatement(pw, statement);
+        } finally {
+            // closed even where a statement failed to print, so that what was already sent stays a valid response;
+            // the failure is reported for the request, which is where a partly written response is completed
+            pw.print("\n\t]");
         }
-        pw.print("\n\t]");
     }
 
-    private void printStatement(PrintWriter pw, StatementInfo statement) throws HyracksDataException {
+    private void printStatement(PrintWriter pw, StatementInfo statement, boolean separatorBefore)
+            throws HyracksDataException {
         Stats stats = statement.getStats() == null ? new Stats() : statement.getStats();
         boolean failed = statement.getError() != null;
         ResultSetInfo resultSetInfo = statement.getResultSet();
         ExecutionPlans plans = statement.getPlans();
         List<FieldEmitter> fields = new ArrayList<>();
+        // opened before anything of this statement is written, so that a reader that cannot be opened - the job of a
+        // cancelled request is gone - leaves neither a half written statement nor a separator with nothing after it
+        ResultReader rows = resultSetInfo != null && delivery == ResultDelivery.IMMEDIATE
+                ? new ResultReader(resultSet, resultSetInfo.getJobId(), resultSetInfo.getResultSetId()) : null;
 
         fields.add(w -> printField(w, POSITION_FIELD_NAME, String.valueOf(statement.getPosition())));
         fields.add(w -> printField(w, KIND_FIELD_NAME, quoted(statementKind(statement))));
@@ -133,7 +140,7 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
         }
         if (resultSetInfo != null) {
             if (delivery == ResultDelivery.IMMEDIATE) {
-                fields.add(w -> printRows(w, resultSetInfo, stats));
+                fields.add(w -> printRows(w, rows, resultSetInfo, stats));
             } else if (delivery == ResultDelivery.DEFERRED) {
                 // a handle per statement, each naming that statement's own job
                 fields.add(new ResultHandlePrinter(sessionOutput,
@@ -157,22 +164,28 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
             fields.add(new ProfilePrinter(stats.getJobProfile())::print);
         }
 
-        pw.print("\t\t{\n");
-        for (int i = 0; i < fields.size(); i++) {
-            fields.get(i).emit(pw);
-            if (i + 1 != fields.size()) {
-                pw.print(",\n");
-            }
+        if (separatorBefore) {
+            pw.print(",\n");
         }
-        pw.print("\n\t\t}");
+        pw.print("\t\t{\n");
+        try {
+            for (int i = 0; i < fields.size(); i++) {
+                fields.get(i).emit(pw);
+                if (i + 1 != fields.size()) {
+                    pw.print(",\n");
+                }
+            }
+        } finally {
+            pw.print("\n\t\t}");
+        }
     }
 
     /** Streams this statement's rows; every statement has already run by the time this is reached. */
-    private void printRows(PrintWriter pw, ResultSetInfo resultSetInfo, Stats stats) throws HyracksDataException {
+    private void printRows(PrintWriter pw, ResultReader reader, ResultSetInfo resultSetInfo, Stats stats)
+            throws HyracksDataException {
         pw.print(FIELD_INDENT);
         pw.print(quoted(ResultsPrinter.FIELD_NAME));
         pw.print(": ");
-        ResultReader reader = new ResultReader(resultSet, resultSetInfo.getJobId(), resultSetInfo.getResultSetId());
         // no result decorators: this printer names the field itself, so the decorators that name and number it must not
         SessionOutput undecorated = new SessionOutput(sessionOutput.config(), pw);
         ResultUtil.printResults(appCtx, reader, undecorated, stats, resultSetInfo.getRecordType());
