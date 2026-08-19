@@ -549,9 +549,8 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
                     "Run ANALYZE on the dataset before creating a vector index.");
         }
 
-        // 2. Extract quantization parameters (default label SQ8 matches DDL; bits 8 for SQ8)
-        String qLabel = vectorParameters.getQuantization();
-        int bits = VectorIndexParameters.quantizationBits(qLabel);
+        // 2. Extract quantization parameters (the scheme defaults to SQ8 at DDL time, so bits is always set)
+        int bits = vectorParameters.getQuantization().bits();
         // confidence_interval is not a declared WITH parameter (see VectorIndexParameters), so it was never
         // readable from the WITH clause; use the constant directly until it becomes a real DDL knob.
         float confidenceInterval = DEFAULT_CONFIDENCE_INTERVAL;

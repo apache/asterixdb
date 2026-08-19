@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.vector.VectorQuantization;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.object.base.AdmBigIntNode;
@@ -158,23 +159,22 @@ public class VectorIndexDeclUtil {
         return metric;
     }
 
-    private static String validateQuantization(AdmObjectNode node) throws CompilationException {
+    /**
+     * Validates {@code quantization} and returns the resolved scheme. Optional: an absent value takes
+     * {@link VectorIndexParameters#DEFAULT_QUANTIZATION}, since every vector index is quantized.
+     */
+    private static VectorQuantization validateQuantization(AdmObjectNode node) throws CompilationException {
         IAdmNode qNode = node.get(QUANTIZATION);
         if (qNode == null) {
             return DEFAULT_QUANTIZATION;
         }
-        if (qNode.getType() != ATypeTag.STRING) {
+        VectorQuantization quantization =
+                qNode.getType() == ATypeTag.STRING ? VectorQuantization.fromLabel(((AdmStringNode) qNode).get()) : null;
+        if (quantization == null) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Invalid `quantization` parameter value. Allowed values: "
-                            + VectorIndexParameters.quantizationList());
+                    "Invalid `quantization` parameter value. Allowed values: " + VectorQuantization.labelList());
         }
-        String normalized = ((AdmStringNode) qNode).get().trim().toUpperCase(Locale.ROOT);
-        if (!VectorIndexParameters.isAllowedQuantization(normalized)) {
-            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Invalid `quantization` parameter value. Allowed values: "
-                            + VectorIndexParameters.quantizationList());
-        }
-        return normalized;
+        return quantization;
     }
 
     /**

@@ -37,6 +37,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.vector.VectorQuantization;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.IndexEntity;
@@ -78,15 +79,16 @@ public class VectorIndexParametersTupleTranslatorTest {
     public void everyParameterRoundTrips() throws AlgebricksException, IOException {
         VectorIndexParameters written =
                 VectorIndexParameters.builder().setDimension(128).setSimilarity(VectorSimilarityMetric.EUCLIDEAN)
-                        .setQuantization(VectorIndexParameters.QUANTIZATION_SQ4).setTrainListFraction(0.375)
-                        .setEpsilon(0.625).setNumClusters(7).setCrossPollinationM(3).setRngFactor(1.5).build();
+                        .setQuantization(VectorQuantization.SQ4).setTrainListFraction(0.375).setEpsilon(0.625)
+                        .setNumClusters(7).setCrossPollinationM(3).setRngFactor(1.5).build();
 
         VectorIndexParameters readBack = roundTrip(written);
 
         Assert.assertEquals(written, readBack);
         Assert.assertEquals(128, readBack.getDimension());
         Assert.assertEquals(VectorSimilarityMetric.EUCLIDEAN, readBack.getSimilarity());
-        Assert.assertEquals(VectorIndexParameters.QUANTIZATION_SQ4, readBack.getQuantization());
+        Assert.assertEquals(VectorQuantization.SQ4, readBack.getQuantization());
+        Assert.assertEquals(4, readBack.getQuantization().bits());
         Assert.assertTrue(readBack.isQuantized());
         Assert.assertEquals(0.375, readBack.getTrainListFraction(), 0.0);
         Assert.assertEquals(0.625, readBack.getEpsilon(), 0.0);

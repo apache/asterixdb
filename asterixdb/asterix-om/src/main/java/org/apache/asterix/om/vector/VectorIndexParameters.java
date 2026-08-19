@@ -26,6 +26,7 @@ import java.util.OptionalInt;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.vector.VectorQuantization;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
@@ -79,18 +80,7 @@ public final class VectorIndexParameters implements Serializable {
     public static final String CROSS_POLLINATION_M = "cross_pollination_m";
     public static final String RNG_FACTOR = "rng_factor";
 
-    public static final String QUANTIZATION_SQ4 = "SQ4";
-    public static final String QUANTIZATION_SQ8 = "SQ8";
-    /**
-     * Every accepted {@code quantization} label. Both the DDL validator and the build path check against this
-     * one declaration, so they cannot drift apart on which labels exist. A {@code List} rather than a
-     * {@code Set} because {@link #quantizationList()} renders it into a diagnostic: {@code Set.of} iteration
-     * order is randomized per JVM run, which would make that message's wording vary between runs.
-     */
-    private static final List<String> QUANTIZATION_LABELS = List.of(QUANTIZATION_SQ4, QUANTIZATION_SQ8);
-    public static final String DEFAULT_QUANTIZATION = QUANTIZATION_SQ8;
-    /** Bit width of {@link #DEFAULT_QUANTIZATION} ({@link #QUANTIZATION_SQ8}); {@link #QUANTIZATION_SQ4} is 4. */
-    public static final int DEFAULT_QUANTIZATION_BITS_SQ8 = 8;
+    public static final VectorQuantization DEFAULT_QUANTIZATION = VectorQuantization.SQ8;
     public static final double DEFAULT_TRAIN_LIST_FRACTION = 0.1;
     public static final double DEFAULT_EPSILON = 0.25;
     public static final int DEFAULT_CROSS_POLLINATION_M = 1;
@@ -107,7 +97,7 @@ public final class VectorIndexParameters implements Serializable {
 
     private final int dimension;
     private final VectorSimilarityMetric similarity;
-    private final String quantization;
+    private final VectorQuantization quantization;
     private final double trainListFraction;
     private final double epsilon;
     /** {@code null} when unset: the builder then derives it from the dataset cardinality at build time. */
@@ -143,12 +133,12 @@ public final class VectorIndexParameters implements Serializable {
     }
 
     /**
-     * The quantization label, never {@code null}: it is optional in the {@code WITH} clause but defaults to
+     * The quantization scheme, never {@code null}: it is optional in the {@code WITH} clause but defaults to
      * {@link #DEFAULT_QUANTIZATION}, and an index record that predates the parameter reads back as that
-     * default too. {@code SecondaryVectorOperationsHelper#buildCreationJobSpec} relies on this — it derives
-     * the quantization bit width from the label unconditionally, outside any {@link #isQuantized()} guard.
+     * default too. {@code SecondaryVectorOperationsHelper#buildCreationJobSpec} relies on this — it takes the
+     * scheme's bit width unconditionally, outside any {@link #isQuantized()} guard.
      */
-    public String getQuantization() {
+    public VectorQuantization getQuantization() {
         return quantization;
     }
 
@@ -203,20 +193,6 @@ public final class VectorIndexParameters implements Serializable {
         return String.join(", ", NAMES);
     }
 
-    public static boolean isAllowedQuantization(String label) {
-        return QUANTIZATION_LABELS.contains(label);
-    }
-
-    /** Comma-separated {@code quantization} labels, for "allowed values are ..." diagnostics. */
-    public static String quantizationList() {
-        return String.join(", ", QUANTIZATION_LABELS);
-    }
-
-    /** Bit width the given (already normalized) quantization label encodes at. */
-    public static int quantizationBits(String label) {
-        return QUANTIZATION_SQ4.equals(label) ? 4 : DEFAULT_QUANTIZATION_BITS_SQ8;
-    }
-
     /**
      * Serializes this configuration into {@code recordBuilder} as one open field per present parameter, in
      * {@link #NAMES} order. Only {@code num_clusters} is genuinely optional, and it is written only when set,
@@ -226,7 +202,7 @@ public final class VectorIndexParameters implements Serializable {
         FieldWriter writer = new FieldWriter(recordBuilder);
         writer.writeInt(DIMENSION, dimension);
         writer.writeString(SIMILARITY, similarity.canonical());
-        writer.writeString(QUANTIZATION, quantization);
+        writer.writeString(QUANTIZATION, quantization.label());
         writer.writeDouble(TRAIN_LIST_FRACTION, trainListFraction);
         writer.writeDouble(EPSILON, epsilon);
         if (numClusters != null) {
@@ -263,9 +239,16 @@ public final class VectorIndexParameters implements Serializable {
             builder.setSimilarity(metric);
         }
         // An index record with no `quantization` field predates the parameter; it reads back as the default,
-        // which is the label its creation job would have quantized with anyway.
-        String quantization = reader.readString(QUANTIZATION);
-        if (quantization != null) {
+        // which is the scheme its creation job would have quantized with anyway. A field that is present but
+        // unrecognized is corrupt metadata, not a defaultable case: silently falling back to SQ8 would decode
+        // the stored embeddings at the wrong bit width.
+        String quantizationStr = reader.readString(QUANTIZATION);
+        if (quantizationStr != null) {
+            VectorQuantization quantization = VectorQuantization.fromLabel(quantizationStr);
+            if (quantization == null) {
+                throw new AsterixException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Unrecognized `" + QUANTIZATION + "` value `" + quantizationStr + "` in index metadata");
+            }
             builder.setQuantization(quantization);
         }
         Double trainListFraction = reader.readDouble(TRAIN_LIST_FRACTION);
@@ -296,10 +279,9 @@ public final class VectorIndexParameters implements Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof VectorIndexParameters)) {
+        if (!(o instanceof VectorIndexParameters other)) {
             return false;
         }
-        VectorIndexParameters other = (VectorIndexParameters) o;
         return dimension == other.dimension && Objects.equals(similarity, other.similarity)
                 && Objects.equals(quantization, other.quantization)
                 && Double.compare(trainListFraction, other.trainListFraction) == 0
@@ -318,7 +300,7 @@ public final class VectorIndexParameters implements Serializable {
         StringBuilder sb = new StringBuilder("{ ");
         sb.append(DIMENSION).append(": ").append(dimension);
         sb.append(", ").append(SIMILARITY).append(": ").append(similarity.canonical());
-        sb.append(", ").append(QUANTIZATION).append(": ").append(quantization);
+        sb.append(", ").append(QUANTIZATION).append(": ").append(quantization.label());
         sb.append(", ").append(TRAIN_LIST_FRACTION).append(": ").append(trainListFraction);
         sb.append(", ").append(EPSILON).append(": ").append(epsilon);
         if (numClusters != null) {
@@ -338,7 +320,7 @@ public final class VectorIndexParameters implements Serializable {
 
         private int dimension = -1;
         private VectorSimilarityMetric similarity;
-        private String quantization = DEFAULT_QUANTIZATION;
+        private VectorQuantization quantization = DEFAULT_QUANTIZATION;
         private double trainListFraction = DEFAULT_TRAIN_LIST_FRACTION;
         private double epsilon = DEFAULT_EPSILON;
         private Integer numClusters;
@@ -358,7 +340,7 @@ public final class VectorIndexParameters implements Serializable {
             return this;
         }
 
-        public Builder setQuantization(String quantization) {
+        public Builder setQuantization(VectorQuantization quantization) {
             this.quantization = Objects.requireNonNull(quantization, QUANTIZATION);
             return this;
         }
