@@ -34,7 +34,6 @@ import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -538,11 +537,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         if (!(details instanceof Index.VectorIndexDetails)) {
             return 1;
         }
-        AdmObjectNode withObj = ((Index.VectorIndexDetails) details).getWithObjectNode();
-        if (withObj == null) {
-            return 1;
-        }
-        return Math.max(1, withObj.getOptionalInt("cross_pollination_m", 1));
+        return ((Index.VectorIndexDetails) details).getVectorParameters().getCrossPollinationM();
     }
 
     /**
@@ -635,11 +630,10 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         }
 
         Index.VectorIndexDetails vectorDetails = (Index.VectorIndexDetails) index.getIndexDetails();
-        AdmObjectNode withObjectNode = vectorDetails.getWithObjectNode();
 
-        String indexMetric = (withObjectNode != null) ? withObjectNode.getOptionalString("similarity", "") : "";
-
-        return normalizeDistanceMetric(indexMetric);
+        // Already canonical: the metric was resolved through VectorSimilarityMetric at DDL time, so unlike
+        // the query-side hint (see normalizeDistanceMetric) there is no alias or casing left to normalize.
+        return vectorDetails.getVectorParameters().getSimilarity().canonical();
     }
 
     /**

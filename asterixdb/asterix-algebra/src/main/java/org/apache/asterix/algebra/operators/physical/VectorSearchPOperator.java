@@ -28,7 +28,6 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.PushFilterIntoVectorSearchRule;
@@ -151,9 +150,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         Index vectorIndex = mp.getIndex(jobGenParams.getDatabaseName(), jobGenParams.getDataverseName(),
                 jobGenParams.getDatasetName(), jobGenParams.getIndexName());
         Index.VectorIndexDetails vectorDetails = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
-        AdmObjectNode withObjectNode = vectorDetails.getWithObjectNode();
-        String quantization = (withObjectNode != null) ? withObjectNode.getOptionalString("quantization", null) : null;
-        boolean isQuantized = (quantization != null);
+        boolean isQuantized = vectorDetails.getVectorParameters().isQuantized();
         int numSecondaryKeys = isQuantized ? 4 : 2;
 
         // Create tuple filter factory if selectCondition is present (for INCLUDE field filtering)

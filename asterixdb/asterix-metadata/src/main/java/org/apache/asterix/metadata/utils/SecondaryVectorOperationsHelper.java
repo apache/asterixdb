@@ -23,8 +23,6 @@ import static org.apache.asterix.om.types.BuiltinType.*;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
@@ -44,11 +42,11 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.runtime.aggregates.std.QuantizationConstantsAggregateDescriptor;
 import org.apache.asterix.runtime.operators.HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
@@ -118,16 +116,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
     private static final Logger LOGGER = LogManager.getLogger();
     private RecordDescriptor recordDesc;
     private static final float DEFAULT_CONFIDENCE_INTERVAL = 0.99f;
-    // Must match VectorIndexDeclUtil.VECTOR_INDEX_DEFAULT_EPSILON (injected into the WITH node at DDL validation).
-    private static final double DEFAULT_EPSILON = 0.25;
-    /**
-     * Default {@code quantization} label when omitted in the vector index WITH clause; must match
-     * {@code VectorIndexDeclUtil.VECTOR_INDEX_DEFAULT_QUANTIZATION} in {@code asterix-lang-common}.
-     */
-    private static final String DEFAULT_VECTOR_INDEX_QUANTIZATION = "SQ8";
-    /** Bit width for {@link #DEFAULT_VECTOR_INDEX_QUANTIZATION} (SQ8). */
-    private static final int DEFAULT_QUANTIZATION_BITS_SQ8 = 8;
-    private static final Set<String> ALLOWED_VECTOR_INDEX_QUANTIZATION = Set.of("SQ4", "SQ8");
     /** Minimum train-list sample size for static-structure build; below this after clamp → full scan. */
     private static final int TRAIN_LIST_MIN_SAMPLE_SIZE = 10000;
     /** Maximum train-list sample size cap for static-structure build. */
@@ -137,18 +125,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
     protected SecondaryVectorOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
             SourceLocation sourceLoc) throws AlgebricksException {
         super(dataset, index, metadataProvider, sourceLoc);
-    }
-
-    /**
-     * Reads the mandatory {@code dimension} WITH parameter. IndexTupleTranslator enforces it at persist
-     * time, so a missing/non-positive value indicates a corrupt index rather than a defaultable case.
-     */
-    private static int requireDimension(AdmObjectNode withObjectNode) {
-        int dim = (withObjectNode != null) ? withObjectNode.getOptionalInt("dimension", -1) : -1;
-        if (dim <= 0) {
-            throw new IllegalStateException("Vector index is missing the required positive 'dimension' parameter");
-        }
-        return dim;
     }
 
     @Override
@@ -166,30 +142,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
      */
     public IVTreeBinaryAccessorFactory getVectorAccessorFactory() {
         return vectorAccessorFactory;
-    }
-
-    /**
-     * Resolves {@code quantization} from metadata: missing or blank defaults to SQ8 (same as DDL);
-     * non-empty values must be SQ4 or SQ8 (case-insensitive), returned uppercase.
-     */
-    private String resolveEffectiveQuantizationLabel(String raw) throws CompilationException {
-        if (raw == null) {
-            return DEFAULT_VECTOR_INDEX_QUANTIZATION;
-        }
-        String trimmed = raw.trim();
-        if (trimmed.isEmpty()) {
-            return DEFAULT_VECTOR_INDEX_QUANTIZATION;
-        }
-        String qNorm = trimmed.toUpperCase(Locale.ROOT);
-        if (!ALLOWED_VECTOR_INDEX_QUANTIZATION.contains(qNorm)) {
-            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, sourceLoc,
-                    "Invalid `quantization` parameter value. Allowed values: SQ4, SQ8");
-        }
-        return qNorm;
-    }
-
-    private static int bitsForQuantizationLabel(String qNorm) {
-        return "SQ4".equals(qNorm) ? 4 : DEFAULT_QUANTIZATION_BITS_SQ8;
     }
 
     private static int clampTrainListSampleSize(int sampleSize, long datasetCardinality) {
@@ -253,15 +205,13 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
 
         // ============ SAMPLING OR FULL SCAN based on sampleSize threshold ============
         // Extract sampling parameters from WITH clause (train_list_fraction only; validated at compile time)
-        AdmObjectNode withObjectNodeForSampling = indexDetails.getWithObjectNode();
-        double trainListFraction = (withObjectNodeForSampling != null)
-                ? withObjectNodeForSampling.getOptionalDouble("train_list_fraction", 0.1) : 0.1;
+        double trainListFraction = indexDetails.getVectorParameters().getTrainListFraction();
         // Seed for BOTH the train-list sample and the k-means RNG: overridable per request
         // (SET `compiler.vector.trainseed` "42") so CI / regression tests get reproducible centroids, and a
         // fresh random seed otherwise. The sample seed must honour the same override, otherwise a sampled
         // train list (train_list_fraction < 1.0) makes the whole index build irreproducible no matter what
         // the k-means seed is. sample_seed is not a supported WITH field
-        // (see VectorIndexDeclUtil.ALLOWED_VECTOR_INDEX_WITH_FIELDS), so this is the only channel.
+        // (it is not declared in VectorIndexParameters), so this is the only channel.
         long trainSeed = resolveTrainSeed();
         long sampleSeed = trainSeed;
 
@@ -318,16 +268,15 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         // multi-partition cluster (datasetCardinality < numPartitions) the expression is 0, and hierarchical
         // k-means cannot be run with K = 0. An explicit num_clusters is already validated as >= 1 by
         // VectorIndexDeclUtil.validateNumClusters, so the clamp only affects the computed default.
-        AdmObjectNode withObjectNode = indexDetails.getWithObjectNode();
+        VectorIndexParameters vectorParameters = indexDetails.getVectorParameters();
         int defaultNumClusters = Math.max(1, (int) Math.sqrt((double) datasetCardinality / numPartitions));
-        int K = withObjectNode != null ? withObjectNode.getOptionalInt("num_clusters", defaultNumClusters)
-                : defaultNumClusters;
+        int K = vectorParameters.getNumClusters().orElse(defaultNumClusters);
 
         // Distance metric from index DDL (WITH similarity "euclidean"|"cosine"|"cosine similarity"|etc.).
         // For cosine, embeddings must be L2-normalized to unit length before insert; the engine does not normalize.
-        String distanceMetric = (withObjectNode != null) ? withObjectNode.getOptionalString("similarity", "") : "";
+        VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
 
-        int vectorDimension = requireDimension(withObjectNode);
+        int vectorDimension = vectorParameters.getDimension();
 
         int maxScalableKmeansIter = 2;
 
@@ -358,7 +307,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor candidates =
                 new HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(spec, hierarchicalRecDesc, secondaryRecDesc,
                         sampleUUID, tupleCountUUID, new ColumnAccessEvalFactory(0), K, maxScalableKmeansIter,
-                        VectorSimilarityMetric.fromAlias(distanceMetric), vectorDimension, trainSeed);
+                        distanceMetric, vectorDimension, trainSeed);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, candidates,
                 primaryPartitionConstraint);
         targetOp = candidates;
@@ -368,7 +317,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
 
         VTreeStaticStructureCreatorOperatorDescriptor vcTreeCreator =
                 new VTreeStaticStructureCreatorOperatorDescriptor(spec, dataflowHelperFactory, 100, 0.7f,
-                        hierarchicalRecDesc, distanceMetric, partitioningProperties.getComputeStorageMap());
+                        hierarchicalRecDesc, distanceMetric.canonical(), partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, vcTreeCreator,
                 primaryPartitionConstraint);
         targetOp = vcTreeCreator;
@@ -411,25 +360,18 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
 
         // Extract WITH clause parameters early (needed for output record descriptor construction).
         // For cosine similarity, embeddings and query vectors must be L2-normalized to unit length before use.
-        AdmObjectNode withObjectNode = indexDetails.getWithObjectNode();
-        String distanceMetric = (withObjectNode != null) ? withObjectNode.getOptionalString("similarity", "") : "";
-        int vectorDimension = requireDimension(withObjectNode);
-        String quantization = (withObjectNode != null) ? withObjectNode.getOptionalString("quantization", null) : null;
-        double levelwiseEpsilon = (withObjectNode != null)
-                ? withObjectNode.getOptionalDouble("epsilon", DEFAULT_EPSILON) : DEFAULT_EPSILON;
+        VectorIndexParameters vectorParameters = indexDetails.getVectorParameters();
+        VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
+        int vectorDimension = vectorParameters.getDimension();
+        double levelwiseEpsilon = vectorParameters.getEpsilon();
         // Cross-pollination: at bulk-load, write each record into the M closest leaf centroids (M=1 = legacy).
-        int crossPollinationM =
-                (withObjectNode != null) ? Math.max(1, withObjectNode.getOptionalInt("cross_pollination_m", 1)) : 1;
+        int crossPollinationM = vectorParameters.getCrossPollinationM();
         // RNG (relative neighborhood graph) factor for SPTAG-style diversity among replicas. 1.0 =
         // canonical SPTAG. Validated to be positive finite at DDL time (VectorIndexDeclUtil).
-        double rngFactor = (withObjectNode != null) ? withObjectNode.getOptionalDouble("rng_factor", 1.0) : 1.0;
-        final boolean isQuantized;
-        if (withObjectNode != null) {
-            resolveEffectiveQuantizationLabel(quantization);
-            isQuantized = true;
-        } else {
-            isQuantized = false;
-        }
+        double rngFactor = vectorParameters.getRngFactor();
+        // The same predicate VTreeResourceFactoryProvider and MetadataProvider use: all three must agree on
+        // the tuple layout. DDL injects the SQ8 default, so a validated index is always quantized in practice.
+        final boolean isQuantized = vectorParameters.isQuantized();
 
         // Create output record descriptor for VTreeBulkLoaderAndGroupingOperatorDescriptor
         // secondaryRecDesc format: [embedding, include_fields..., pk...]
@@ -503,7 +445,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
 
         VTreeBulkLoaderAndGroupingOperatorDescriptor bulkLoaderAndGroupingOp =
                 new VTreeBulkLoaderAndGroupingOperatorDescriptor(spec, dataflowHelperFactory, secondaryRecDesc,
-                        outputRecDesc, vectorFieldAccessor, distanceMetric, vectorDimension, numPrimaryKeys,
+                        outputRecDesc, vectorFieldAccessor, distanceMetric.canonical(), vectorDimension, numPrimaryKeys,
                         numIncludeFieldsForBulkLoader, isQuantized, partitioningProperties.getComputeStorageMap(),
                         levelwiseEpsilon, crossPollinationM, rngFactor);
         bulkLoaderAndGroupingOp.setSourceLocation(sourceLoc);
@@ -592,15 +534,12 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
     @Override
     public JobSpecification buildCreationJobSpec() throws AlgebricksException {
         Index.VectorIndexDetails vectorIndexDetails = (Index.VectorIndexDetails) index.getIndexDetails();
-        AdmObjectNode withObjectNode = vectorIndexDetails.getWithObjectNode();
-        if (withObjectNode == null) {
-            return super.buildCreationJobSpec();
-        }
+        VectorIndexParameters vectorParameters = vectorIndexDetails.getVectorParameters();
 
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IndexUtil.bindJobEventListener(spec, metadataProvider);
 
-        int vectorDimensions = requireDimension(withObjectNode);
+        int vectorDimensions = vectorParameters.getDimension();
 
         // 1. Identify "ANALYZE" sample index
         Index sampleIndex = metadataProvider.findSampleIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
@@ -611,10 +550,10 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         }
 
         // 2. Extract quantization parameters (default label SQ8 matches DDL; bits 8 for SQ8)
-        String qLabel = resolveEffectiveQuantizationLabel(withObjectNode.getOptionalString("quantization", null));
-        int bits = bitsForQuantizationLabel(qLabel);
-        // confidence_interval is not a supported WITH field (not in ALLOWED_VECTOR_INDEX_WITH_FIELDS), so the
-        // WITH read always returned the default; use the constant directly until it becomes a real DDL knob.
+        String qLabel = vectorParameters.getQuantization();
+        int bits = VectorIndexParameters.quantizationBits(qLabel);
+        // confidence_interval is not a declared WITH parameter (see VectorIndexParameters), so it was never
+        // readable from the WITH clause; use the constant directly until it becomes a real DDL knob.
         float confidenceInterval = DEFAULT_CONFIDENCE_INTERVAL;
 
         // 3. Prepare Vector Extraction

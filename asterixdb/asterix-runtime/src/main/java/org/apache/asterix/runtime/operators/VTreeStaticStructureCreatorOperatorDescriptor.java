@@ -98,7 +98,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
         this.indexHelperFactory = indexHelperFactory;
         this.maxEntriesPerPage = maxEntriesPerPage;
         this.fillFactor = fillFactor;
-        this.distanceMetric = distanceMetric != null ? distanceMetric : "";
+        this.distanceMetric = distanceMetric;
         this.inputRecordDescriptor = inputRecordDescriptor;
         this.partitionsMap = partitionsMap;
     }

@@ -29,7 +29,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -340,15 +339,11 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
 
         Index.VectorIndexDetails details = (Index.VectorIndexDetails) index.getIndexDetails();
 
-        // Determine quantization from WITH clause quantization field
-        AdmObjectNode withObjectNode = details.getWithObjectNode();
-        String quantization = (withObjectNode != null) ? withObjectNode.getOptionalString("quantization", null) : null;
-
         ARecordType recordType = (ARecordType) mp.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
 
-        return new VectorSearchInfo(unnest, details.getIncludeFieldNames(), recordType, quantization != null,
-                dataset.getPrimaryKeys().size(), recordVars);
+        return new VectorSearchInfo(unnest, details.getIncludeFieldNames(), recordType,
+                details.getVectorParameters().isQuantized(), dataset.getPrimaryKeys().size(), recordVars);
     }
 
     /**

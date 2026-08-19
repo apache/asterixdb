@@ -33,12 +33,12 @@ import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.runtime.utils.VectorDistanceFunctionFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -67,16 +67,6 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
     public static final VTreeResourceFactoryProvider INSTANCE = new VTreeResourceFactoryProvider();
 
-    // WITH-clause parameter keys read from the stored index configuration. These mirror the
-    // VectorIndexDeclUtil.VECTOR_INDEX_PARAMETER_* constants but are inlined here because asterix-metadata
-    // does not depend on asterix-lang-common (where those live). Keep the two sets in sync.
-    private static final String WITH_KEY_DIMENSION = "dimension";
-    private static final String WITH_KEY_QUANTIZATION = "quantization";
-    private static final String WITH_KEY_SIMILARITY = "similarity";
-    private static final String WITH_KEY_CROSS_POLLINATION_M = "cross_pollination_m";
-    private static final String WITH_KEY_RNG_FACTOR = "rng_factor";
-    private static final String WITH_KEY_EPSILON = "epsilon";
-
     private VTreeResourceFactoryProvider() {
     }
 
@@ -92,23 +82,16 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     vectorIndexDetails.getKeyFieldNames().size(), index.getIndexType(), 1);
         }
 
-        // The index's physical dimension: it sizes the data frames and is what query vectors are checked
-        // against. Mandatory at CREATE INDEX and at persist, so a missing value here means a corrupt record.
-        AdmObjectNode withObjectNode = vectorIndexDetails.getWithObjectNode();
-        int vectorDimensions = (withObjectNode != null) ? withObjectNode.getOptionalInt(WITH_KEY_DIMENSION, -1) : -1;
-        if (vectorDimensions <= 0) {
-            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Index " + index.getIndexName() + " is missing the required positive `dimension` parameter");
-        }
+        // Extract vector dimensions from WITH clause
+        VectorIndexParameters vectorParameters = vectorIndexDetails.getVectorParameters();
+        int vectorDimensions = vectorParameters.getDimension();
 
         // Get INCLUDE fields count from index details (needed by factory)
         List<List<String>> includeFieldNames = vectorIndexDetails.getIncludeFieldNames();
         int numIncludeFields = (includeFieldNames != null) ? includeFieldNames.size() : 0;
 
-        // Determine data tuple creator factory based on description (quantization indicator)
-        String description =
-                (withObjectNode != null) ? withObjectNode.getOptionalString(WITH_KEY_QUANTIZATION, null) : null;
-        boolean isQuantized = (description != null);
+        // Determine data tuple creator factory based on whether the index is quantized
+        boolean isQuantized = vectorParameters.isQuantized();
         IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
         if (isQuantized) {
             dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, true);
@@ -160,21 +143,17 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
             // Pull the DDL-supplied similarity (normalized form is already validated by VectorIndexDeclUtil).
             // Threaded onto the resource so insert/delete/bulkload routing uses the user's metric even
             // after the resource is reconstituted from JSON (e.g., after NC restart).
-            String distanceMetric =
-                    (withObjectNode != null) ? withObjectNode.getOptionalString(WITH_KEY_SIMILARITY, null) : null;
+            VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
 
             // Cross-pollination placement: read the SAME WITH-clause params (with the SAME defaults) that
             // the bulk-load job uses in SecondaryVectorOperationsHelper#buildLoadingJobSpec, so incremental
             // insert/delete resolve the identical M leaf clusters per record. Drift here would let a delete
             // miss replicas (leaked deletes) — keep these three reads in lock-step with the bulk-load helper.
             CrossPollinationConfig crossPollination = CrossPollinationConfig.LEGACY;
-            if (withObjectNode != null) {
-                int crossPollinationM = Math.max(1, withObjectNode.getOptionalInt(WITH_KEY_CROSS_POLLINATION_M, 1));
-                if (crossPollinationM > 1) {
-                    double rngFactor = withObjectNode.getOptionalDouble(WITH_KEY_RNG_FACTOR, 1.0);
-                    double levelwiseEpsilon = withObjectNode.getOptionalDouble(WITH_KEY_EPSILON, 0.3);
-                    crossPollination = new CrossPollinationConfig(crossPollinationM, rngFactor, levelwiseEpsilon);
-                }
+            int crossPollinationM = vectorParameters.getCrossPollinationM();
+            if (crossPollinationM > 1) {
+                crossPollination = new CrossPollinationConfig(crossPollinationM, vectorParameters.getRngFactor(),
+                        vectorParameters.getEpsilon());
             }
 
             // Create vector accessor factory for extracting vectors from ADM ordered lists
@@ -182,8 +161,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     new AOrderedListVectorBinaryAccessorFactory();
             // Distance-function factory — persisted on the resource so a restarted index reconstructs
             // the same distance implementation.
-            VectorDistanceFunctionFactory distanceFunctionFactory =
-                    new VectorDistanceFunctionFactory(VectorSimilarityMetric.fromAlias(distanceMetric));
+            VectorDistanceFunctionFactory distanceFunctionFactory = new VectorDistanceFunctionFactory(distanceMetric);
             return new LSMVTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                     filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory,
                     metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,

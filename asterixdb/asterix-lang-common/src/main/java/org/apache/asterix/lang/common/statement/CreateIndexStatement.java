@@ -35,7 +35,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.VectorIndexDeclUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -59,7 +59,7 @@ public class CreateIndexStatement extends AbstractStatement {
     private final Map<String, String> castConfig;
 
     private final List<CreateIndexStatement.IndexedElement> includeElements;
-    private final AdmObjectNode withObjectNode;
+    private final VectorIndexParameters vectorParameters;
 
     public CreateIndexStatement(Namespace namespace, Identifier datasetName, Identifier indexName, IndexType indexType,
             List<IndexedElement> indexedElements, boolean enforced, int gramLength, String fullTextConfigName,
@@ -79,7 +79,10 @@ public class CreateIndexStatement extends AbstractStatement {
         this.castDefaultNull = OptionalBoolean.ofNullable(castDefaultNull);
         this.castConfig = castConfig == null ? Collections.emptyMap() : castConfig;
         this.includeElements = includeElements;
-        this.withObjectNode = VectorIndexDeclUtil.validateAndGetWithObjectNode(withObjectRecord);
+        // The WITH clause is vector-index-only (the grammar rejects it on any other index type), and a
+        // vector index always has one, so this is non-null exactly for TYPE VTREE.
+        this.vectorParameters =
+                indexType == IndexType.VTREE ? VectorIndexDeclUtil.validateAndGetParameters(withObjectRecord) : null;
     }
 
     public String getFullTextConfigName() {
@@ -146,8 +149,12 @@ public class CreateIndexStatement extends AbstractStatement {
         return castConfig;
     }
 
-    public AdmObjectNode getWithObjectNode() {
-        return withObjectNode;
+    /**
+     * The validated {@code WITH} parameters of a {@code TYPE VTREE} index, never {@code null} for that index
+     * type; {@code null} for every other type, none of which accepts a {@code WITH} clause.
+     */
+    public VectorIndexParameters getVectorParameters() {
+        return vectorParameters;
     }
 
     @Override

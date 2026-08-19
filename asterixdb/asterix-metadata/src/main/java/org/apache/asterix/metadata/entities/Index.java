@@ -36,12 +36,12 @@ import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.job.profiling.IndexStats;
@@ -466,34 +466,22 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         private final Boolean excludeUnknownKey;
 
-        private final AdmObjectNode withObjectNode;
-
-        // Quantization parameters (computed from ANALYZE sample during index creation)
-        private final Float quantizationMinQ;
-        private final Float quantizationMaxQ;
-        private final Float quantizationAlpha;
+        private final VectorIndexParameters vectorParameters;
 
         public VectorIndexDetails(List<String> keyFieldNames, List<List<String>> includeFieldNames,
                 List<Integer> includeFieldSourceIndicators, List<IAType> includeFieldTypes,
-                boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey, AdmObjectNode withObjectNode) {
-            this(keyFieldNames, includeFieldNames, includeFieldSourceIndicators, includeFieldTypes,
-                    overrideKeyFieldTypes, excludeUnknownKey, withObjectNode, null, null, null);
-        }
-
-        public VectorIndexDetails(List<String> keyFieldNames, List<List<String>> includeFieldNames,
-                List<Integer> includeFieldSourceIndicators, List<IAType> includeFieldTypes,
-                boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey, AdmObjectNode withObjectNode,
-                Float quantizationMinQ, Float quantizationMaxQ, Float quantizationAlpha) {
+                boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey,
+                VectorIndexParameters vectorParameters) {
             this.keyFieldNames = keyFieldNames;
             this.overrideKeyFieldTypes = overrideKeyFieldTypes;
             this.excludeUnknownKey = excludeUnknownKey.isEmpty() ? null : excludeUnknownKey.get();
             this.includeFieldNames = includeFieldNames;
             this.includeFieldTypes = includeFieldTypes;
             this.includeFieldSourceIndicators = includeFieldSourceIndicators;
-            this.withObjectNode = withObjectNode;
-            this.quantizationMinQ = quantizationMinQ;
-            this.quantizationMaxQ = quantizationMaxQ;
-            this.quantizationAlpha = quantizationAlpha;
+            // A vector index is never without WITH parameters: `dimension` and `similarity` are mandatory at
+            // DDL time and both are persisted, so every construction path — CREATE INDEX and metadata read
+            // alike — has a validated object here. Enforcing it means consumers read parameters directly.
+            this.vectorParameters = Objects.requireNonNull(vectorParameters, "vector index WITH parameters");
         }
 
         @Override
@@ -517,25 +505,9 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             return OptionalBoolean.ofNullable(excludeUnknownKey);
         }
 
-        public AdmObjectNode getWithObjectNode() {
-            return withObjectNode;
-        }
-
-        // Quantization parameter getters
-        public Float getQuantizationMinQ() {
-            return quantizationMinQ;
-        }
-
-        public Float getQuantizationMaxQ() {
-            return quantizationMaxQ;
-        }
-
-        public Float getQuantizationAlpha() {
-            return quantizationAlpha;
-        }
-
-        public boolean hasQuantizationConstants() {
-            return quantizationMinQ != null && quantizationMaxQ != null && quantizationAlpha != null;
+        /** The index's validated {@code WITH} parameters; never {@code null}. */
+        public VectorIndexParameters getVectorParameters() {
+            return vectorParameters;
         }
 
         @Override

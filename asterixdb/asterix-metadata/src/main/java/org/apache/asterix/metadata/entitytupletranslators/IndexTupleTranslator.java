@@ -49,13 +49,8 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.metadata.utils.TupleTranslatorUtils;
-import org.apache.asterix.object.base.AdmBigIntNode;
-import org.apache.asterix.object.base.AdmDoubleNode;
-import org.apache.asterix.object.base.AdmObjectNode;
-import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
-import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
@@ -73,6 +68,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -82,6 +78,7 @@ import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.OptionalBoolean;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.google.common.base.Strings;
 
@@ -474,7 +471,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
                 excludeUnknownKey = OptionalBoolean.empty();
                 castDefaultNull = OptionalBoolean.empty();
-                AdmObjectNode withObjectNode = readWithProperties(indexRecord);
+                VectorIndexParameters vectorParameters = VectorIndexParameters.readFields(indexRecord);
 
                 // Read include_fields from metadata
                 // Each item is an inner list holding the field's path components, so a nested INCLUDE path like
@@ -504,7 +501,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
                 indexDetails = new Index.VectorIndexDetails(keyFieldNames.getFirst(), includeFieldNames,
                         includeFieldSourceIndicators, includeFieldTypes, isOverridingKeyTypes, excludeUnknownKey,
-                        withObjectNode);
+                        vectorParameters);
                 break;
             case TEXT:
                 keyFieldNames =
@@ -753,11 +750,11 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
         writeSearchKeyType(index);
 
-        if (Index.IndexCategory.of(index.getIndexType()) == Index.IndexCategory.VTREE) {
-            // Vector indexes do not have enforced keys.
-            return;
-        }
-
+        // Every index type runs the writers below. A vector index has nothing to contribute to most of them
+        // — it is never enforced, takes no CAST, is not a sample index, and its EXCLUDE UNKNOWN KEY is
+        // implicit — and each writer is already guarded on the index type, so they no-op for VTREE. Returning
+        // early instead used to skip writeIndexCreator as well, which is *not* a no-op: the creator is read
+        // back generically for every index type, so a vector index silently lost its creator on reload.
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
         writeExcludeUnknownKey(index);
@@ -856,265 +853,14 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
     }
 
-    private void writeWithProperties(Index.VectorIndexDetails index) throws HyracksDataException, AlgebricksException {
-        AdmObjectNode properties = index.getWithObjectNode();
-
-        // Sentinel defaults for the case where no WITH clause was specified.
-        int dimension = -1;
-        double train_list_fraction = -1.0;
-        int num_clusters = -1;
-        String quantization = "INVALID";
-        String similarity = "INVALID";
-        double epsilon = 0.3;
-        // cross_pollination_m: each record replicated into the M closest leaf centroids at bulk-load.
-        // 1 = legacy behavior (no cross-pollination).
-        int cross_pollination_m = 1;
-        // rng_factor / creation_mode: bulk-load routing + training-algorithm knobs. Both are read by the
-        // build path (VTreeResourceFactoryProvider / SecondaryVectorOperationsHelper), so they must survive
-        // a metadata reload; previously they were validated on the statement node but never persisted.
-        double rng_factor = 1.0;
-        String creation_mode = "INVALID";
-
-        if (properties != null) {
-            dimension = properties.getOptionalInt("dimension", -1);
-            train_list_fraction = properties.getOptionalDouble("train_list_fraction", -1.0);
-            num_clusters = properties.getOptionalInt("num_clusters", -1);
-            quantization = properties.getOptionalString("quantization", "INVALID");
-            similarity = properties.getOptionalString("similarity", "INVALID");
-            epsilon = properties.getOptionalDouble("epsilon", 0.3);
-            cross_pollination_m = properties.getOptionalInt("cross_pollination_m", 1);
-            rng_factor = properties.getOptionalDouble("rng_factor", 1.0);
-            creation_mode = properties.getOptionalString("creation_mode", "INVALID");
-        }
-
-        if (dimension < 0) {
-            throw new AsterixException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Missing `dimension` parameter in the WITH clause");
-        }
-
-        if ("INVALID".equals(similarity)) {
-            throw new AsterixException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Missing `similarity` parameter in the WITH clause");
-        }
-        nameValue.reset();
-        aString.setValue("dimension");
-        stringSerde.serialize(aString, nameValue.getDataOutput());
-        fieldValue.reset();
-        int32Serde.serialize(new AInt32(dimension), fieldValue.getDataOutput());
-        recordBuilder.addField(nameValue, fieldValue);
-
-        nameValue.reset();
-        aString.setValue("train_list_fraction");
-        stringSerde.serialize(aString, nameValue.getDataOutput());
-        fieldValue.reset();
-        doubleSerde.serialize(new ADouble(train_list_fraction), fieldValue.getDataOutput());
-        recordBuilder.addField(nameValue, fieldValue);
-
-        if (num_clusters > 0) {
-            nameValue.reset();
-            aString.setValue("num_clusters");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            int32Serde.serialize(new AInt32(num_clusters), fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-
-        if (!"INVALID".equals(quantization)) {
-            nameValue.reset();
-            aString.setValue("quantization");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(quantization);
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-
-        if (!"INVALID".equals(similarity)) {
-            nameValue.reset();
-            aString.setValue("similarity");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(similarity);
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-
-        nameValue.reset();
-        aString.setValue("epsilon");
-        stringSerde.serialize(aString, nameValue.getDataOutput());
-        fieldValue.reset();
-        doubleSerde.serialize(new ADouble(epsilon), fieldValue.getDataOutput());
-        recordBuilder.addField(nameValue, fieldValue);
-
-        // Only persist cross_pollination_m when > 1 — older metadata (no field) reads back as 1.
-        if (cross_pollination_m > 1) {
-            nameValue.reset();
-            aString.setValue("cross_pollination_m");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            int32Serde.serialize(new AInt32(cross_pollination_m), fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-
-        // Persist rng_factor only when non-default (1.0); absent reads back as 1.0 (older metadata / M=1).
-        if (rng_factor != 1.0) {
-            nameValue.reset();
-            aString.setValue("rng_factor");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            doubleSerde.serialize(new ADouble(rng_factor), fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-
-        // Persist creation_mode only when a non-default mode was chosen; absent reads back as bottom-up.
-        if (!"INVALID".equals(creation_mode) && !"bottom-up".equals(creation_mode)) {
-            nameValue.reset();
-            aString.setValue("creation_mode");
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            fieldValue.reset();
-            aString.setValue(creation_mode);
-            stringSerde.serialize(aString, fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
-        }
-    }
-
-    private AdmObjectNode readWithProperties(ARecord indexRecord) throws AlgebricksException {
-        // Default values match writeWithProperties() above.
-        int dimension = -1;
-        double train_list_fraction = -1.0;
-        int num_clusters = -1;
-        String quantization = "INVALID";
-        String similarity = "INVALID";
-        double epsilon = 0.3;
-        int epsilonPos = indexRecord.getType().getFieldIndex("epsilon");
-        // cross_pollination_m: 1 = legacy (no cross-pollination), absent in older metadata.
-        int cross_pollination_m = 1;
-        int crossPollinationMPos = indexRecord.getType().getFieldIndex("cross_pollination_m");
-        double rng_factor = 1.0;
-        int rngFactorPos = indexRecord.getType().getFieldIndex("rng_factor");
-        String creation_mode = "INVALID";
-        int creationModePos = indexRecord.getType().getFieldIndex("creation_mode");
-
-        int dimensionPos = indexRecord.getType().getFieldIndex("dimension");
-        if (dimensionPos >= 0) {
-            IAObject dimensionObj = indexRecord.getValueByPos(dimensionPos);
-            if (dimensionObj != null && dimensionObj.getType().getTypeTag() == ATypeTag.INTEGER) {
-                dimension = ((AInt32) dimensionObj).getIntegerValue();
-            }
-        }
-
-        int trainListFractionPos = indexRecord.getType().getFieldIndex("train_list_fraction");
-        if (trainListFractionPos >= 0) {
-            IAObject trainListFractionObj = indexRecord.getValueByPos(trainListFractionPos);
-            if (trainListFractionObj != null && trainListFractionObj.getType().getTypeTag() == ATypeTag.DOUBLE) {
-                train_list_fraction = ((ADouble) trainListFractionObj).getDoubleValue();
-            }
-        }
-
-        int numClustersPos = indexRecord.getType().getFieldIndex("num_clusters");
-        if (numClustersPos >= 0) {
-            IAObject numClustersObj = indexRecord.getValueByPos(numClustersPos);
-            if (numClustersObj != null && numClustersObj.getType().getTypeTag() == ATypeTag.INTEGER) {
-                num_clusters = ((AInt32) numClustersObj).getIntegerValue();
-            }
-        }
-
-        int quantizationPos = indexRecord.getType().getFieldIndex("quantization");
-        if (quantizationPos >= 0) {
-            IAObject quantizationObj = indexRecord.getValueByPos(quantizationPos);
-            if (quantizationObj != null && quantizationObj.getType().getTypeTag() == ATypeTag.STRING) {
-                quantization = ((AString) quantizationObj).getStringValue();
-            }
-        }
-
-        int similarityPos = indexRecord.getType().getFieldIndex("similarity");
-        if (similarityPos >= 0) {
-            IAObject similarityObj = indexRecord.getValueByPos(similarityPos);
-            if (similarityObj != null && similarityObj.getType().getTypeTag() == ATypeTag.STRING) {
-                similarity = ((AString) similarityObj).getStringValue();
-            }
-        }
-
-        // epsilon is optional in older metadata records.
-        if (epsilonPos >= 0) {
-            IAObject epsilonObj = indexRecord.getValueByPos(epsilonPos);
-            if (epsilonObj != null && epsilonObj.getType().getTypeTag() == ATypeTag.DOUBLE) {
-                epsilon = ((ADouble) epsilonObj).getDoubleValue();
-            }
-        }
-
-        // Read cross_pollination_m field (optional for older metadata; absence == 1)
-        if (crossPollinationMPos >= 0) {
-            IAObject mObj = indexRecord.getValueByPos(crossPollinationMPos);
-            if (mObj != null && mObj.getType().getTypeTag() == ATypeTag.INTEGER) {
-                cross_pollination_m = ((AInt32) mObj).getIntegerValue();
-            }
-        }
-
-        // rng_factor / creation_mode: optional; absence reads back as the defaults (1.0 / bottom-up).
-        if (rngFactorPos >= 0) {
-            IAObject rngObj = indexRecord.getValueByPos(rngFactorPos);
-            if (rngObj != null && rngObj.getType().getTypeTag() == ATypeTag.DOUBLE) {
-                rng_factor = ((ADouble) rngObj).getDoubleValue();
-            }
-        }
-        if (creationModePos >= 0) {
-            IAObject cmObj = indexRecord.getValueByPos(creationModePos);
-            if (cmObj != null && cmObj.getType().getTypeTag() == ATypeTag.STRING) {
-                creation_mode = ((AString) cmObj).getStringValue();
-            }
-        }
-
-        // Reconstruct AdmObjectNode only if at least one field differs from default
-        boolean hasNonDefaultValues = (dimension != -1) || (train_list_fraction >= 0) || (num_clusters != -1)
-                || (!"default".equals(quantization) && !"INVALID".equals(quantization))
-                || (!"INVALID".equals(similarity)) || (epsilonPos >= 0 && Math.abs(epsilon - 0.3) > 1e-12)
-                || (cross_pollination_m > 1) || (rng_factor != 1.0)
-                || (!"INVALID".equals(creation_mode) && !"bottom-up".equals(creation_mode));
-
-        if (!hasNonDefaultValues) {
-            return null;
-        }
-
-        AdmObjectNode withObjectNode = new AdmObjectNode();
-
-        if (dimension != -1) {
-            withObjectNode.set("dimension", new AdmBigIntNode(dimension));
-        }
-
-        if (train_list_fraction >= 0) {
-            withObjectNode.set("train_list_fraction", new AdmDoubleNode(train_list_fraction));
-        }
-
-        if (num_clusters != -1) {
-            withObjectNode.set("num_clusters", new AdmBigIntNode(num_clusters));
-        }
-
-        if (!"default".equals(quantization) && !"INVALID".equals(quantization)) {
-            withObjectNode.set("quantization", new AdmStringNode(quantization));
-        }
-
-        if (!"INVALID".equals(similarity)) {
-            withObjectNode.set("similarity", new AdmStringNode(similarity));
-        }
-
-        if (epsilonPos >= 0) {
-            withObjectNode.set("epsilon", new AdmDoubleNode(epsilon));
-        }
-
-        if (cross_pollination_m > 1) {
-            withObjectNode.set("cross_pollination_m", new AdmBigIntNode(cross_pollination_m));
-        }
-
-        if (rng_factor != 1.0) {
-            withObjectNode.set("rng_factor", new AdmDoubleNode(rng_factor));
-        }
-
-        if (!"INVALID".equals(creation_mode) && !"bottom-up".equals(creation_mode)) {
-            withObjectNode.set("creation_mode", new AdmStringNode(creation_mode));
-        }
-
-        return withObjectNode;
+    /**
+     * Persists the vector index {@code WITH} parameters as open fields of the index record. The parameters,
+     * their storage types and their order all come from {@link VectorIndexParameters}, which also owns the
+     * read side, so a parameter cannot be dropped here by forgetting a second enumeration.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
+    private void writeWithProperties(Index.VectorIndexDetails index) throws HyracksDataException {
+        index.getVectorParameters().writeFields(recordBuilder);
     }
 
     private void writeIncludeFields(Index.VectorIndexDetails index) throws HyracksDataException {
@@ -1231,6 +977,15 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 break;
             case SAMPLE:
                 keySourceIndicator = ((Index.SampleIndexDetails) index.getIndexDetails()).getKeyFieldSourceIndicators();
+                break;
+            case VTREE:
+                // A vector index key is always record-sourced: QueryTranslator rejects a meta()-sourced vector
+                // field outright. One indicator per SearchKey entry keeps this list aligned with that field the
+                // way the other categories are, and because every value is RECORD_INDICATOR the writer below
+                // serializes nothing — so the record layout is unchanged until meta-sourced keys are allowed.
+                keySourceIndicator = Collections.nCopies(
+                        ((Index.VectorIndexDetails) index.getIndexDetails()).getKeyFieldNames().size(),
+                        Index.RECORD_INDICATOR);
                 break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, index.getIndexType().toString());

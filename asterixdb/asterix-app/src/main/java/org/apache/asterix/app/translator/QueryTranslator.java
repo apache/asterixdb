@@ -1867,10 +1867,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 // The vector field is not part of `indexedElements` for a VTREE (that local was swapped to the
                 // INCLUDE list above), so the shared "cannot create index on meta fields" check did not see
-                // it. Reject a meta-sourced vector field here: IndexTupleTranslator does not persist source
-                // indicators for a vector index — it hardcodes RECORD_INDICATOR on read — so a meta-sourced
-                // field would work in the session that created it and silently switch to record-sourced once
-                // the metadata is re-read.
+                // it. Reject a meta-sourced vector field here: the metadata reader hardcodes RECORD_INDICATOR
+                // for a vector index's key and INCLUDE fields, so a meta-sourced field would work in the
+                // session that created it and silently switch to record-sourced once the metadata is re-read.
+                // Lifting this needs the reader to resolve the field against the meta type as well; the writer
+                // side already emits the key's indicators (IndexTupleTranslator#writeSearchKeySourceIndicator).
                 if (indexedElement.getSourceIndicator() != Index.RECORD_INDICATOR) {
                     throw new AsterixException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
                             "Cannot create index on meta fields");
@@ -1913,9 +1914,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 // excludeUnknownKey is a BTree/Array-index DDL option that does not apply to a vector index;
                 // the vector CREATE INDEX path never sets it, so it is always empty here.
-                indexDetails =
-                        new Index.VectorIndexDetails(keyFieldNames, includeFieldNames, includeFieldSourceIndicators,
-                                includeFieldTypes, false, OptionalBoolean.empty(), stmtCreateIndex.getWithObjectNode());
+                indexDetails = new Index.VectorIndexDetails(keyFieldNames, includeFieldNames,
+                        includeFieldSourceIndicators, includeFieldTypes, false, OptionalBoolean.empty(),
+                        stmtCreateIndex.getVectorParameters());
 
                 Index newIndex = new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails,
                         stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);

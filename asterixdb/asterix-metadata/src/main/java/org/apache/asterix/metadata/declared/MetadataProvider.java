@@ -103,7 +103,6 @@ import org.apache.asterix.metadata.utils.DataPartitioningProvider;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.FullTextUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.functions.IFunctionManager;
@@ -111,6 +110,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.runtime.base.AsterixTupleFilterFactory;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
@@ -853,10 +853,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         //   Non-quantized: [distance, centroidId]                                              -> 2 fields
         //   Quantized:     [distance, centroidId, quantized_distance, quantized_embedding]     -> 4 fields
         Index.VectorIndexDetails vectorIndexDetails = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
-        AdmObjectNode withObjectNode = vectorIndexDetails.getWithObjectNode();
-        double indexEpsilon = (withObjectNode != null) ? withObjectNode.getOptionalDouble("epsilon", 0.3) : 0.3;
-        String quantization = (withObjectNode != null) ? withObjectNode.getOptionalString("quantization", null) : null;
-        boolean isQuantized = (quantization != null);
+        VectorIndexParameters vectorParameters = vectorIndexDetails.getVectorParameters();
+        double indexEpsilon = vectorParameters.getEpsilon();
+        boolean isQuantized = vectorParameters.isQuantized();
         int numSecondaryKeys = isQuantized ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
                 : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
 
@@ -876,10 +875,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         AOrderedListVectorBinaryAccessorFactory vectorAccessorFactory = new AOrderedListVectorBinaryAccessorFactory();
         // The distance metric is fixed at index creation and baked into the factories the search operator
         // ships; the storage layer never sees a metric string.
-        String distanceMetric = (withObjectNode != null) ? withObjectNode.getOptionalString("similarity", null) : null;
-        VectorDistanceFunctionFactory distanceFunctionFactory =
-                new VectorDistanceFunctionFactory(VectorSimilarityMetric.fromAlias(distanceMetric));
-        OptimizedScalarQuantizerFactory quantizerFactory = new OptimizedScalarQuantizerFactory(distanceMetric);
+        VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
+        VectorDistanceFunctionFactory distanceFunctionFactory = new VectorDistanceFunctionFactory(distanceMetric);
+        OptimizedScalarQuantizerFactory quantizerFactory =
+                new OptimizedScalarQuantizerFactory(distanceMetric.canonical());
 
         int[][] partitionsMap = partitioningProperties.getComputeStorageMap();
         VTreeSearchOperatorDescriptor vectorSearchOp = new VTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,

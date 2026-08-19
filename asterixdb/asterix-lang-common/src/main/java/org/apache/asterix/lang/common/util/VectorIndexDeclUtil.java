@@ -18,11 +18,23 @@
  */
 package org.apache.asterix.lang.common.util;
 
+import static org.apache.asterix.om.vector.VectorIndexParameters.CROSS_POLLINATION_M;
+import static org.apache.asterix.om.vector.VectorIndexParameters.DEFAULT_QUANTIZATION;
+import static org.apache.asterix.om.vector.VectorIndexParameters.DIMENSION;
+import static org.apache.asterix.om.vector.VectorIndexParameters.EPSILON;
+import static org.apache.asterix.om.vector.VectorIndexParameters.MAX_CROSS_POLLINATION_M;
+import static org.apache.asterix.om.vector.VectorIndexParameters.NUM_CLUSTERS;
+import static org.apache.asterix.om.vector.VectorIndexParameters.QUANTIZATION;
+import static org.apache.asterix.om.vector.VectorIndexParameters.RNG_FACTOR;
+import static org.apache.asterix.om.vector.VectorIndexParameters.SIMILARITY;
+import static org.apache.asterix.om.vector.VectorIndexParameters.TRAIN_LIST_FRACTION;
+
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Set;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
@@ -33,42 +45,17 @@ import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
- * Validates the {@code WITH} clause of a {@code CREATE INDEX ... TYPE VTREE} statement and
- * produces the canonical {@link AdmObjectNode} stored on the {@code CreateIndexStatement}.
+ * Validates the {@code WITH} clause of a {@code CREATE INDEX ... TYPE VTREE} statement and turns it into the
+ * typed {@link VectorIndexParameters} carried by {@code CreateIndexStatement}.
+ * <p>
+ * The parameter names, defaults and bounds all come from {@link VectorIndexParameters}, which also owns how
+ * they are persisted; this class only holds the per-parameter value validation and the diagnostics for it.
  */
 public class VectorIndexDeclUtil {
-
-    public static final String VECTOR_INDEX_PARAMETER_DIMENSION = "dimension";
-    public static final String VECTOR_INDEX_PARAMETER_QUANTIZATION = "quantization";
-    public static final String VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION = "train_list_fraction";
-    public static final String VECTOR_INDEX_PARAMETER_SIMILARITY = "similarity";
-    public static final String VECTOR_INDEX_PARAMETER_NUM_K = "num_clusters";
-    public static final String VECTOR_INDEX_PARAMETER_EPSILON = "epsilon";
-    /**
-     * Cross-pollination factor: each record is written into the M closest leaf centroids at bulk-load,
-     * not just the closest one. M=1 reproduces the legacy (no cross-pollination) behavior.
-     */
-    public static final String VECTOR_INDEX_PARAMETER_CROSS_POLLINATION_M = "cross_pollination_m";
-    /**
-     * RNG (relative neighborhood graph) factor for SPTAG-style cross-pollination diversity. A candidate
-     * centroid {@code c_i} is rejected iff some already-accepted replica {@code r} satisfies
-     * {@code rng_factor * dist(c_i, r) < dist(x, c_i)}. The canonical SPTAG rule is {@code 1.0}; larger
-     * values loosen the rule (more replicas survive), smaller values tighten. A non-finite value
-     * effectively disables RNG, degrading to the pure top-{@code cross_pollination_m} slice.
-     */
-    public static final String VECTOR_INDEX_PARAMETER_RNG_FACTOR = "rng_factor";
-    public static final String VECTOR_INDEX_DEFAULT_QUANTIZATION = "SQ8";
-    /** Default for level-wise centroid search and ANN search predicate (matches VectorSearchPredicate). */
-    public static final double VECTOR_INDEX_DEFAULT_TRAIN_LIST = 0.1;
-    public static final double VECTOR_INDEX_DEFAULT_EPSILON = 0.25;
-    public static final long VECTOR_INDEX_DEFAULT_CROSS_POLLINATION_M = 1L;
-    /** Sanity cap on cross_pollination_m: anything larger almost certainly indicates a user error. */
-    public static final long VECTOR_INDEX_MAX_CROSS_POLLINATION_M = 1024L;
-    /** Default RNG factor: canonical SPTAG rule. */
-    public static final double VECTOR_INDEX_DEFAULT_RNG_FACTOR = 1.0;
 
     /**
      * Human-readable list of the accepted {@code similarity} values, derived from
@@ -77,82 +64,84 @@ public class VectorIndexDeclUtil {
     private static final String ALLOWED_SIMILARITY_VALUES = Arrays.stream(VectorSimilarityMetric.values())
             .map(m -> m.canonical().toUpperCase(Locale.ROOT)).collect(Collectors.joining(", "));
 
-    private static final Set<String> ALLOWED_VECTOR_INDEX_QUANTIZATION = Set.of("SQ4", "SQ8");
-
-    /**
-     * Only these keys may appear in the vector index {@code WITH} clause (unknown keys are a compile error).
-     */
-    private static final Set<String> ALLOWED_VECTOR_INDEX_WITH_FIELDS = Set.of(VECTOR_INDEX_PARAMETER_DIMENSION,
-            VECTOR_INDEX_PARAMETER_SIMILARITY, VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION,
-            VECTOR_INDEX_PARAMETER_QUANTIZATION, VECTOR_INDEX_PARAMETER_EPSILON, VECTOR_INDEX_PARAMETER_NUM_K,
-            VECTOR_INDEX_PARAMETER_CROSS_POLLINATION_M, VECTOR_INDEX_PARAMETER_RNG_FACTOR);
-
     private VectorIndexDeclUtil() {
     }
 
-    public static AdmObjectNode validateAndGetWithObjectNode(RecordConstructor withRecord) throws CompilationException {
-        if (withRecord == null) {
-            return null;
-        }
-        return validateAndGetWithObjectNode(withRecord, withRecord.getSourceLocation());
+    /**
+     * Validates the {@code WITH} clause of a vector index and returns its typed, defaulted form.
+     * <p>
+     * A vector index always has a {@code WITH} clause: the grammar rejects {@code TYPE VTREE} without one, and
+     * {@code dimension} and {@code similarity} have no defaults that could stand in. So this never returns
+     * {@code null}, and neither does {@code Index.VectorIndexDetails#getVectorParameters()} — consumers read
+     * parameters straight off it without a null check.
+     *
+     * @param withRecord the {@code WITH} record; must not be {@code null}
+     */
+    public static VectorIndexParameters validateAndGetParameters(RecordConstructor withRecord)
+            throws CompilationException {
+        return validateAndGetParameters(withRecord, withRecord == null ? null : withRecord.getSourceLocation());
     }
 
-    public static AdmObjectNode validateAndGetWithObjectNode(RecordConstructor withRecord, SourceLocation sourceLoc)
+    public static VectorIndexParameters validateAndGetParameters(RecordConstructor withRecord, SourceLocation sourceLoc)
             throws CompilationException {
         if (withRecord == null) {
-            return null;
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, sourceLoc,
+                    "A vector index requires a WITH clause specifying at least `dimension` and `similarity`.");
         }
-        final AdmObjectNode node = ExpressionUtils.toNode(withRecord);
-
+        AdmObjectNode node = ExpressionUtils.toNode(withRecord);
         validateWithClauseFieldNames(node);
-        validateDimension(node);
-        validateTrainList(node);
-        validateSimilarity(node);
-        validateQuantization(node);
-        validateEpsilon(node);
-        validateNumClusters(node);
-        validateCrossPollinationM(node);
-        validateRngFactor(node);
 
-        return node;
+        VectorIndexParameters.Builder builder = VectorIndexParameters.builder();
+        builder.setDimension(validateDimension(node));
+        builder.setSimilarity(validateSimilarity(node));
+        builder.setQuantization(validateQuantization(node));
+        builder.setTrainListFraction(validateTrainList(node));
+        builder.setEpsilon(validateEpsilon(node));
+        validateNumClusters(node).ifPresent(builder::setNumClusters);
+        builder.setCrossPollinationM(validateCrossPollinationM(node));
+        builder.setRngFactor(validateRngFactor(node));
+        try {
+            return builder.build();
+        } catch (AsterixException e) {
+            // Unreachable: the two mandatory parameters are validated above, which reports a clearer error.
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, e, sourceLoc,
+                    e.getMessage());
+        }
     }
 
     private static void validateWithClauseFieldNames(AdmObjectNode node) throws CompilationException {
         for (String name : node.getFieldNames()) {
-            if (!ALLOWED_VECTOR_INDEX_WITH_FIELDS.contains(name)) {
+            if (!VectorIndexParameters.isKnown(name)) {
                 throw new CompilationException("Failed to create vector index. Unknown field `" + name
-                        + "` in WITH clause. Allowed fields: dimension, similarity, train_list_fraction, quantization, "
-                        + "epsilon, num_clusters, cross_pollination_m, rng_factor");
+                        + "` in WITH clause. Allowed fields: " + VectorIndexParameters.nameList());
             }
         }
     }
 
-    private static void validateDimension(AdmObjectNode node) throws CompilationException {
-        IAdmNode dimNode = node.get(VECTOR_INDEX_PARAMETER_DIMENSION);
+    private static int validateDimension(AdmObjectNode node) throws CompilationException {
+        IAdmNode dimNode = node.get(DIMENSION);
         if (dimNode == null) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Missing required parameter `dimension` in WITH clause.");
         }
-        long dimValue;
-        switch (dimNode.getType()) {
-            case BIGINT:
-                long lv = ((AdmBigIntNode) dimNode).get();
-                if (lv <= 0 || lv > Integer.MAX_VALUE) {
-                    throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                            "Invalid `dimension` parameter value. It must be an integer greater than 0");
-                }
-                dimValue = lv;
-                break;
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                        "Invalid `dimension` parameter value. It must be an integer greater than 0");
+        if (dimNode.getType() != ATypeTag.BIGINT) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Invalid `dimension` parameter value. It must be an integer greater than 0");
         }
-        node.remove(VECTOR_INDEX_PARAMETER_DIMENSION);
-        node.set(VECTOR_INDEX_PARAMETER_DIMENSION, new AdmBigIntNode(dimValue));
+        long value = ((AdmBigIntNode) dimNode).get();
+        if (value <= 0 || value > Integer.MAX_VALUE) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Invalid `dimension` parameter value. It must be an integer greater than 0");
+        }
+        return (int) value;
     }
 
-    private static void validateSimilarity(AdmObjectNode node) throws CompilationException {
-        IAdmNode simNode = node.get(VECTOR_INDEX_PARAMETER_SIMILARITY);
+    /**
+     * Validates {@code similarity} against the single source of truth for metric aliases and returns the
+     * resolved metric, so neither the persisted value nor any consumer depends on the alias or casing written.
+     */
+    private static VectorSimilarityMetric validateSimilarity(AdmObjectNode node) throws CompilationException {
+        IAdmNode simNode = node.get(SIMILARITY);
         if (simNode == null) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Missing required parameter `similarity` in WITH clause.");
@@ -161,124 +150,110 @@ public class VectorIndexDeclUtil {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `similarity` parameter value. " + "Allowed values: " + ALLOWED_SIMILARITY_VALUES);
         }
-        // Validate against the single source of truth for metric aliases and normalize the stored value to
-        // the canonical spelling, so the persisted `similarity` does not depend on the alias/casing written.
-        String similarity = ((AdmStringNode) simNode).get();
-        VectorSimilarityMetric metric = VectorSimilarityMetric.fromAlias(similarity);
+        VectorSimilarityMetric metric = VectorSimilarityMetric.fromAlias(((AdmStringNode) simNode).get());
         if (metric == null) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `similarity` parameter value. " + "Allowed values: " + ALLOWED_SIMILARITY_VALUES);
         }
-        node.update(VECTOR_INDEX_PARAMETER_SIMILARITY, new AdmStringNode(metric.canonical()));
+        return metric;
     }
 
-    private static void validateQuantization(AdmObjectNode node) throws CompilationException {
-        IAdmNode qNode = node.get(VECTOR_INDEX_PARAMETER_QUANTIZATION);
+    private static String validateQuantization(AdmObjectNode node) throws CompilationException {
+        IAdmNode qNode = node.get(QUANTIZATION);
         if (qNode == null) {
-            node.set(VECTOR_INDEX_PARAMETER_QUANTIZATION, new AdmStringNode(VECTOR_INDEX_DEFAULT_QUANTIZATION));
-            return;
+            return DEFAULT_QUANTIZATION;
         }
-        switch (qNode.getType()) {
-            case STRING:
-                String quantization = ((AdmStringNode) qNode).get();
-                String qNorm = quantization.trim().toUpperCase(Locale.ROOT);
-                if (!ALLOWED_VECTOR_INDEX_QUANTIZATION.contains(qNorm)) {
-                    throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                            "Invalid `quantization` parameter value. Allowed values: SQ4 and SQ8");
-                } else {
-                    node.set(VECTOR_INDEX_PARAMETER_QUANTIZATION, new AdmStringNode(qNorm));
-                }
-                break;
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                        "Invalid `quantization` parameter value. Allowed values: SQ4 and SQ8");
+        if (qNode.getType() != ATypeTag.STRING) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Invalid `quantization` parameter value. Allowed values: "
+                            + VectorIndexParameters.quantizationList());
         }
+        String normalized = ((AdmStringNode) qNode).get().trim().toUpperCase(Locale.ROOT);
+        if (!VectorIndexParameters.isAllowedQuantization(normalized)) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Invalid `quantization` parameter value. Allowed values: "
+                            + VectorIndexParameters.quantizationList());
+        }
+        return normalized;
     }
 
     /**
      * Training list size is specified only via {@code train_list_fraction} (with ANALYZE/cardinality at build time).
      */
-    private static void validateTrainList(AdmObjectNode node) throws CompilationException {
-        IAdmNode fn = node.get(VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION);
+    private static double validateTrainList(AdmObjectNode node) throws CompilationException {
+        IAdmNode fn = node.get(TRAIN_LIST_FRACTION);
         if (fn == null) {
-            node.set(VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION, new AdmDoubleNode(VECTOR_INDEX_DEFAULT_TRAIN_LIST));
-            return;
+            return VectorIndexParameters.DEFAULT_TRAIN_LIST_FRACTION;
         }
-        double trainListFractionValue = parseDoubleOrBigInt(fn,
+        double value = parseDoubleOrBigInt(fn,
                 "Invalid `train_list_fraction` parameter value. It must be in the range of (0,1]");
-        if (trainListFractionValue <= 0 || trainListFractionValue > 1) {
+        if (value <= 0 || value > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `train_list_fraction` parameter value. It must be in the range of (0,1]");
         }
-        if (fn.getType() == ATypeTag.BIGINT) {
-            node.remove(VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION);
-            node.set(VECTOR_INDEX_PARAMETER_TRAIN_LIST_FRACTION, new AdmDoubleNode(trainListFractionValue));
-        }
+        return value;
     }
 
-    private static void validateEpsilon(AdmObjectNode node) throws CompilationException {
-        IAdmNode epsNode = node.get(VECTOR_INDEX_PARAMETER_EPSILON);
+    private static double validateEpsilon(AdmObjectNode node) throws CompilationException {
+        IAdmNode epsNode = node.get(EPSILON);
         if (epsNode == null) {
-            node.set(VECTOR_INDEX_PARAMETER_EPSILON, new AdmDoubleNode(VECTOR_INDEX_DEFAULT_EPSILON));
-            return;
+            return VectorIndexParameters.DEFAULT_EPSILON;
         }
-        double v = parseDoubleOrBigInt(epsNode, "Invalid `epsilon` parameter value. It must be in the range of [0,1]");
-        if (v < 0 || v > 1) {
+        double value =
+                parseDoubleOrBigInt(epsNode, "Invalid `epsilon` parameter value. It must be in the range of [0,1]");
+        if (value < 0 || value > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `epsilon` parameter value. It must be in the range of [0,1]");
         }
-        if (epsNode.getType() == ATypeTag.BIGINT) {
-            node.remove(VECTOR_INDEX_PARAMETER_EPSILON);
-            node.set(VECTOR_INDEX_PARAMETER_EPSILON, new AdmDoubleNode(v));
-        }
+        return value;
     }
 
     /**
      * Validates {@code cross_pollination_m}: each record is written into the M closest leaf centroids at
      * bulk-load (M=1 means no cross-pollination, matching legacy behavior). Must be a positive integer;
-     * capped at {@link #VECTOR_INDEX_MAX_CROSS_POLLINATION_M} as a sanity check.
+     * capped at {@link VectorIndexParameters#MAX_CROSS_POLLINATION_M} as a sanity check.
      */
-    private static void validateCrossPollinationM(AdmObjectNode node) throws CompilationException {
-        IAdmNode mNode = node.get(VECTOR_INDEX_PARAMETER_CROSS_POLLINATION_M);
+    private static int validateCrossPollinationM(AdmObjectNode node) throws CompilationException {
+        IAdmNode mNode = node.get(CROSS_POLLINATION_M);
         if (mNode == null) {
-            node.set(VECTOR_INDEX_PARAMETER_CROSS_POLLINATION_M,
-                    new AdmBigIntNode(VECTOR_INDEX_DEFAULT_CROSS_POLLINATION_M));
-            return;
+            return VectorIndexParameters.DEFAULT_CROSS_POLLINATION_M;
         }
         if (mNode.getType() != ATypeTag.BIGINT) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `cross_pollination_m` parameter " + "value. It must be an integer in [1, "
-                            + VECTOR_INDEX_MAX_CROSS_POLLINATION_M + "]");
+                            + MAX_CROSS_POLLINATION_M + "]");
         }
-        long v = ((AdmBigIntNode) mNode).get();
-        if (v < 1 || v > VECTOR_INDEX_MAX_CROSS_POLLINATION_M) {
+        long value = ((AdmBigIntNode) mNode).get();
+        if (value < 1 || value > MAX_CROSS_POLLINATION_M) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `cross_pollination_m` parameter " + "value. It must be an integer in [1, "
-                            + VECTOR_INDEX_MAX_CROSS_POLLINATION_M + "]");
+                            + MAX_CROSS_POLLINATION_M + "]");
         }
+        return (int) value;
     }
 
     /**
      * Validates {@code num_clusters}: the target number of leaf clusters per storage partition. Optional —
      * when absent the builder derives it as sqrt(cardinality / numPartitions), so no default is injected
-     * here. When present it must be a positive BIGINT that fits in an int (it is later read via
-     * {@code getOptionalInt}); a wrong-typed or non-positive value previously slipped past DDL and either
-     * threw a ClassCastException during metadata serialization or was silently dropped.
+     * here. When present it must be a positive BIGINT that fits in an int; a wrong-typed or non-positive
+     * value previously slipped past DDL and either threw a ClassCastException during metadata serialization
+     * or was silently dropped.
      */
-    private static void validateNumClusters(AdmObjectNode node) throws CompilationException {
-        IAdmNode kNode = node.get(VECTOR_INDEX_PARAMETER_NUM_K);
+    private static OptionalInt validateNumClusters(AdmObjectNode node) throws CompilationException {
+        IAdmNode kNode = node.get(NUM_CLUSTERS);
         if (kNode == null) {
-            return;
+            return OptionalInt.empty();
         }
         if (kNode.getType() != ATypeTag.BIGINT) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `num_clusters` parameter value. " + "It must be an integer greater than 0.");
         }
-        long v = ((AdmBigIntNode) kNode).get();
-        if (v < 1 || v > Integer.MAX_VALUE) {
+        long value = ((AdmBigIntNode) kNode).get();
+        if (value < 1 || value > Integer.MAX_VALUE) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `num_clusters` parameter value. " + "It must be an integer greater than 0.");
         }
+        return OptionalInt.of((int) value);
     }
 
     /**
@@ -287,22 +262,18 @@ public class VectorIndexDeclUtil {
      * BIGINT literal is coerced to DOUBLE. To effectively disable RNG, use a value much larger than the
      * maximum expected centroid-to-centroid distance.
      */
-    private static void validateRngFactor(AdmObjectNode node) throws CompilationException {
-        IAdmNode rngNode = node.get(VECTOR_INDEX_PARAMETER_RNG_FACTOR);
+    private static double validateRngFactor(AdmObjectNode node) throws CompilationException {
+        IAdmNode rngNode = node.get(RNG_FACTOR);
         if (rngNode == null) {
-            node.set(VECTOR_INDEX_PARAMETER_RNG_FACTOR, new AdmDoubleNode(VECTOR_INDEX_DEFAULT_RNG_FACTOR));
-            return;
+            return VectorIndexParameters.DEFAULT_RNG_FACTOR;
         }
-        double v = parseDoubleOrBigInt(rngNode,
+        double value = parseDoubleOrBigInt(rngNode,
                 "Invalid `rng_factor` parameter " + "value. It must be a positive finite number.");
-        if (!(v > 0.0) || !Double.isFinite(v)) {
+        if (!(value > 0.0) || !Double.isFinite(value)) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                     "Invalid `rng_factor` parameter value. " + "It must be a positive finite number.");
         }
-        if (rngNode.getType() == ATypeTag.BIGINT) {
-            node.remove(VECTOR_INDEX_PARAMETER_RNG_FACTOR);
-            node.set(VECTOR_INDEX_PARAMETER_RNG_FACTOR, new AdmDoubleNode(v));
-        }
+        return value;
     }
 
     private static double parseDoubleOrBigInt(IAdmNode n, String errorMsg) throws CompilationException {
@@ -315,4 +286,5 @@ public class VectorIndexDeclUtil {
                 throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, errorMsg);
         }
     }
+
 }
