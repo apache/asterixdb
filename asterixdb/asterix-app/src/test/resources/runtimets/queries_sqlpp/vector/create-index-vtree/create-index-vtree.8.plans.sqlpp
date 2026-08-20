@@ -20,6 +20,10 @@
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
 
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
+
 // A DESC order-by asks for the farthest K, but the top-K cursor returns the nearest K. So
 // IntroduceTopKAccessMethodRule must NOT rewrite this into a vector index search: the optimized
 // plan falls back to a full scan and therefore does not name idx_emb. (Contrast with step 7, ASC.)

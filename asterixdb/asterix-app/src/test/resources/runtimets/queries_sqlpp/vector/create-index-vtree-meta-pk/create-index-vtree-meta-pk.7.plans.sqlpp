@@ -20,6 +20,10 @@
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
 
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
+
 // Even though "id" collides in name with the meta()-sourced PK, the plan must still use the vector
 // index (idx_emb); it just cannot safely take the index-only shortcut for this projection, so it
 // falls back to lookup-and-rerank instead. Either way idx_emb must appear, confirming step 5's

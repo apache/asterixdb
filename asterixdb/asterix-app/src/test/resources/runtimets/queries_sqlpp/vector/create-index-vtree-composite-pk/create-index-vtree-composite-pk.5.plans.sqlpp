@@ -20,6 +20,10 @@
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
 
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
+
 // The optimized plan must show the year filter PUSHED into the vector index search:
 // the vector unnest-map (index-search on idx_cpk_emb) carries "condition (...)"
 // (PushFilterIntoVectorSearchRule). Projecting the non-indexed `title` forces the

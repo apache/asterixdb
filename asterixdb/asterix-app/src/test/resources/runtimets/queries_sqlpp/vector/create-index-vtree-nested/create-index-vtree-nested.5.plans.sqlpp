@@ -20,6 +20,10 @@
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
 
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
+
 // The optimized plan must reference idx_emb: proves IntroduceTopKAccessMethodRule rewrote the scan
 // into a vector index search on the NESTED key path meta.embedding (a fallback scan never names it).
 SELECT VALUE m.id

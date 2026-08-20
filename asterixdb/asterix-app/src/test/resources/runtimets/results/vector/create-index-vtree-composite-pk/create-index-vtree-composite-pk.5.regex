@@ -1,1 +1,0 @@
-/(?s).*index-search\("idx_cpk_emb"[^\n]*condition \(gt\(\$\$\d+, 2000\)\).*/

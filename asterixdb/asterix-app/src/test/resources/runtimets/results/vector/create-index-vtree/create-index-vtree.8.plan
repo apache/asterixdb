@@ -1,0 +1,28 @@
+distribute result [$$21]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 3
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$21])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$20(DESC) ]  |PARTITIONED|
+          limit 3
+          -- STREAM_LIMIT  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 3) (DESC, $$20)
+              -- STABLE_SORT [topK: 3] [$$20(DESC)]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$20] <- [euclidean-distance($$m.getField(1), array: [ 0.0, 0.0, 0.0, 0.0 ])] project: [$$21, $$20]
+                  -- ASSIGN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$21, $$m] <- test.MovieSmall
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

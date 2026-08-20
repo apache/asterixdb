@@ -20,6 +20,10 @@
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
 
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
+
 // Discriminator check: vector_distance is EXACT KNN. It desugars to the same distance builtin as
 // ann_distance but carries NO ANN hint, so IntroduceTopKAccessMethodRule must NOT rewrite it into a
 // vector index search. The optimized plan therefore does not name idx_emb (contrast step 7, ann_distance).

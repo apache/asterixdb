@@ -19,6 +19,10 @@
 
 -- param compile-only:string=true
 -- param optimized-logical-plan:string=true
+
+// CBO cost estimates vary with the cluster shape (partition count / core count), which
+// differs between a local run and CI. Disable the CBO so the plan is stable everywhere.
+SET `compiler.cbo` "false";
 // Decisive check: the optimized plan must name idx_emb. This proves the index over the UNDECLARED (open)
 // 'embedding' field was actually populated and is served by IntroduceTopKAccessMethodRule -- i.e. the open
 // field is genuinely trained/indexed, NOT an empty index that silently falls back to a full scan (which
