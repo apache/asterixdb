@@ -194,7 +194,8 @@ public class VTree extends AbstractTreeIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, ISketchSampler sampler, IPageWriteCallback callback)
             throws HyracksDataException {
-        throw new UnsupportedOperationException();
+        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "createBulkLoader",
+                VTree.class.getSimpleName());
     }
 
     /**
@@ -1188,7 +1189,8 @@ public class VTree extends AbstractTreeIndex {
         @Override
         public void update(ITupleReference tuple) throws HyracksDataException {
             ctx.setOperation(IndexOperation.UPDATE);
-            throw new UnsupportedOperationException();
+            throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "update",
+                    VTree.class.getSimpleName());
         }
 
         @Override
@@ -1200,7 +1202,8 @@ public class VTree extends AbstractTreeIndex {
 
         @Override
         public void upsert(ITupleReference tuple) throws HyracksDataException {
-            throw new UnsupportedOperationException();
+            throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "upsert",
+                    VTree.class.getSimpleName());
         }
 
         @Override
@@ -1383,7 +1386,8 @@ public class VTree extends AbstractTreeIndex {
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
             ctx.setOperation(IndexOperation.DISKORDERSCAN);
-            throw new UnsupportedOperationException("Disk order scan not yet implemented");
+            throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "diskOrderScan",
+                    VTree.class.getSimpleName());
         }
 
         public VTreeOpContext getOpContext() {

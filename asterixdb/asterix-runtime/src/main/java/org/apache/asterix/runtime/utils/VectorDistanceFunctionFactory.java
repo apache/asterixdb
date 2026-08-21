@@ -63,7 +63,7 @@ public class VectorDistanceFunctionFactory implements IVTreeDistanceFunctionFact
     }
 
     @Override
-    public IVTreeDistanceFunction createDistanceFunction() throws HyracksDataException {
+    public IVTreeDistanceFunction createDistanceFunction() {
         return functionFor(metric);
     }
 

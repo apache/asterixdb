@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -176,51 +178,61 @@ public class QuantizationConstantsAggregateDescriptor extends AbstractAggregateF
             int contentLength = valuesPointable.getContentLength();
 
             if (contentLength < Integer.BYTES) {
-                throw new HyracksDataException("Binary data too short: expected at least " + Integer.BYTES
-                        + " bytes for numValues, got " + contentLength);
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants are too short: expected at least " + Integer.BYTES
+                                + " bytes for numValues, got " + contentLength);
             }
 
             if (contentStartOffset + Integer.BYTES > valuesBytes.length) {
-                throw new HyracksDataException("Out of bounds: trying to read numValues at offset " + contentStartOffset
-                        + ", but array length is " + valuesBytes.length);
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants are out of bounds: reading numValues at offset " + contentStartOffset
+                                + ", but the array length is " + valuesBytes.length);
             }
 
             int numValues = IntegerPointable.getInteger(valuesBytes, contentStartOffset);
 
             if (numValues < 0) {
-                throw new HyracksDataException("Invalid numValues: " + numValues + " (negative)");
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants declare a negative value count: " + numValues);
             }
             if (numValues > 10000000) {
-                throw new HyracksDataException("Invalid numValues: " + numValues + " (too large, possible corruption)");
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants declare an implausibly large value count: " + numValues);
             }
 
             long expectedBytes = (long) Integer.BYTES + ((long) numValues * (long) Double.BYTES);
             if (expectedBytes > Integer.MAX_VALUE) {
-                throw new HyracksDataException("Calculated expected bytes exceeds Integer.MAX_VALUE: " + expectedBytes);
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants require " + expectedBytes + " bytes, which exceeds the maximum "
+                                + Integer.MAX_VALUE);
             }
             int expectedBytesInt = (int) expectedBytes;
 
             if (expectedBytesInt > contentLength) {
-                throw new HyracksDataException("Binary data too short: expected " + expectedBytesInt + " bytes, got "
-                        + contentLength + " (numValues=" + numValues + ")");
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants are too short: expected " + expectedBytesInt + " bytes, got "
+                                + contentLength + " for " + numValues + " values");
             }
 
             int lastByteOffset = contentStartOffset + expectedBytesInt - 1;
             if (lastByteOffset >= valuesBytes.length) {
-                throw new HyracksDataException("Out of bounds: trying to read up to offset " + lastByteOffset
-                        + ", but array length is " + valuesBytes.length);
+                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                        "Quantization constants are out of bounds: reading up to offset " + lastByteOffset
+                                + ", but the array length is " + valuesBytes.length);
             }
 
             int pointer = contentStartOffset + Integer.BYTES;
             for (int i = 0; i < numValues; i++) {
                 if (pointer + Double.BYTES > contentStartOffset + contentLength) {
-                    throw new HyracksDataException("Out of bounds: trying to read double #" + (i + 1) + " at offset "
-                            + pointer + ", but content ends at " + (contentStartOffset + contentLength));
+                    throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                            "Quantization constants are out of bounds: reading value #" + (i + 1) + " at offset "
+                                    + pointer + ", but the content ends at " + (contentStartOffset + contentLength));
                 }
 
                 if (pointer + Double.BYTES > valuesBytes.length) {
-                    throw new HyracksDataException("Out of bounds: trying to read double #" + (i + 1) + " at offset "
-                            + pointer + ", but array length is " + valuesBytes.length);
+                    throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                            "Quantization constants are out of bounds: reading value #" + (i + 1) + " at offset "
+                                    + pointer + ", but the array length is " + valuesBytes.length);
                 }
 
                 double value = BufferSerDeUtil.getDouble(valuesBytes, pointer);

@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.vector;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
@@ -64,7 +65,8 @@ public class TestDoubleArrayVectorAccessor implements IVTreeBinaryAccessor {
     public int getDimension() throws HyracksDataException {
         // Format: [int:length][double:v0]...
         if (length < Integer.BYTES) {
-            throw new HyracksDataException("Invalid vector data: too short to read dimension");
+            throw HyracksDataException.create(ErrorCode.UNEXPECTED_VECTOR_VALUE,
+                    "The vector data is too short to read a dimension");
         }
         return ((data[start] & 0xFF) << 24) | ((data[start + 1] & 0xFF) << 16) | ((data[start + 2] & 0xFF) << 8)
                 | (data[start + 3] & 0xFF);

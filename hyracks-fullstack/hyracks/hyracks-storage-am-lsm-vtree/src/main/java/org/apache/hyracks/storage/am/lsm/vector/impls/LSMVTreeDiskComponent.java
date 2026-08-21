@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
@@ -178,9 +179,10 @@ public class LSMVTreeDiskComponent extends AbstractLSMDiskComponent {
         Integer maxEntriesParam = (Integer) parameters.get(PARAM_MAX_ENTRIES_PER_PAGE);
         if (numLevelsParam == null || clustersPerLevel == null || centroidsPerCluster == null
                 || maxEntriesParam == null) {
-            throw new HyracksDataException("static-structure bulk load requires non-null " + PARAM_NUM_LEVELS + ", "
-                    + PARAM_CLUSTERS_PER_LEVEL + ", " + PARAM_CENTROIDS_PER_CLUSTER + ", and "
-                    + PARAM_MAX_ENTRIES_PER_PAGE + " parameters");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "A static-structure bulk load requires non-null " + PARAM_NUM_LEVELS + ", "
+                            + PARAM_CLUSTERS_PER_LEVEL + ", " + PARAM_CENTROIDS_PER_CLUSTER + " and "
+                            + PARAM_MAX_ENTRIES_PER_PAGE + " parameters");
         }
         int numLevels = numLevelsParam;
         int maxEntriesPerPage = maxEntriesParam;
@@ -198,8 +200,8 @@ public class LSMVTreeDiskComponent extends AbstractLSMDiskComponent {
     private IChainedComponentBulkLoader createVTreeBulkLoader(ILSMIOOperation operation) throws HyracksDataException {
         Object staticParam = operation.getParameters().get(PARAM_STATIC_STRUCTURE_COMPONENT);
         if (!(staticParam instanceof LSMVTreeDiskComponent staticComponent)) {
-            throw new HyracksDataException(
-                    PARAM_STATIC_STRUCTURE_COMPONENT + " must be provided in parameters for data loading");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    PARAM_STATIC_STRUCTURE_COMPONENT + " must be provided in the parameters for data loading");
         }
         ITreeIndexAccessor staticAccessor =
                 staticComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);

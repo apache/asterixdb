@@ -446,7 +446,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
-                                    double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    double[] point = kMeansUtils.createPrimitiveList(listAccessorConstant);
                                     if (!hasIndexDimension(point)) {
                                         tempIdx++;
                                         continue;
@@ -461,7 +461,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     // Accumulate sum (NO STORAGE)
                                     totalDistance += minDist;
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                                    throw HyracksDataException.create(e);
                                 }
                                 tempIdx++;
                             }
@@ -493,7 +493,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
-                                    double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    double[] point = kMeansUtils.createPrimitiveList(listAccessorConstant);
                                     if (!hasIndexDimension(point)) {
                                         currentIdx++;
                                         continue;
@@ -516,7 +516,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                         sampledCount++;
                                     }
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                                    throw HyracksDataException.create(e);
                                 }
                                 currentIdx++;
                             }
@@ -555,7 +555,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                             listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                             try {
-                                double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                double[] point = kMeansUtils.createPrimitiveList(listAccessorConstant);
                                 if (!hasIndexDimension(point)) {
                                     weightIdx++;
                                     continue;
@@ -575,7 +575,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     candidateWeights[nearestCandidate]++;
                                 }
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw HyracksDataException.create(e);
                             }
                             weightIdx++;
                         }
@@ -710,7 +710,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
-                                    double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    double[] point = kMeansUtils.createPrimitiveList(listAccessorConstant);
                                     if (!hasIndexDimension(point)) {
                                         currentIdx++;
                                         continue;
@@ -729,7 +729,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     assignments[currentIdx] = closestCentroid;
 
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                                    throw HyracksDataException.create(e);
                                 }
                                 currentIdx++;
                             }
@@ -760,7 +760,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                                 try {
-                                    double[] point = kMeansUtils.createPrimitveList(listAccessorConstant);
+                                    double[] point = kMeansUtils.createPrimitiveList(listAccessorConstant);
                                     if (!hasIndexDimension(point)) {
                                         currentIdx++;
                                         continue;
@@ -773,7 +773,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                     counts[centroidIdx]++;
 
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                                    throw HyracksDataException.create(e);
                                 }
                                 currentIdx++;
                             }
@@ -1068,7 +1068,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 continue;
                             }
                             listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
-                            double[] point = kMeansUtils.createPrimitveList(listAccessor);
+                            double[] point = kMeansUtils.createPrimitiveList(listAccessor);
                             if (hasIndexDimension(point)) {
                                 return point;
                             }
@@ -1103,7 +1103,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 }
 
                                 listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
-                                return kMeansUtils.createPrimitveList(listAccessorConstant);
+                                return kMeansUtils.createPrimitiveList(listAccessorConstant);
                             }
                             currentIndex++;
                         }
@@ -1141,7 +1141,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                                 if (ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()])
                                         .isListType()) {
                                     listAccessorConstant.reset(inputVal.getByteArray(), inputVal.getStartOffset());
-                                    results.set(ti, kMeansUtils.createPrimitveList(listAccessorConstant));
+                                    results.set(ti, kMeansUtils.createPrimitiveList(listAccessorConstant));
                                 }
                                 ti++;
                             }
@@ -1462,11 +1462,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                 }
 
                 private static IVTreeDistanceFunction distanceFunctionFor(VectorSimilarityMetric metric) {
-                    try {
-                        return new VectorDistanceFunctionFactory(metric).createDistanceFunction();
-                    } catch (HyracksDataException e) {
-                        throw new IllegalStateException("Failed to build vector distance function for " + metric, e);
-                    }
+                    return new VectorDistanceFunctionFactory(metric).createDistanceFunction();
                 }
             };
         }

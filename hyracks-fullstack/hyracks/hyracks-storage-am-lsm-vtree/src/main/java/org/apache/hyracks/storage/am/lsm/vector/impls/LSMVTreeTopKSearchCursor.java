@@ -274,8 +274,8 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
             this.quantizer = firstSearchCursor.getQuantizer();
 
             if (this.queryVector == null) {
-                throw HyracksDataException
-                        .create(new IllegalArgumentException("Query vector must be provided for naive blocked search"));
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "A query vector is required for the vector index blocked search");
             }
 
             // computeApproximateDistance() dequantizes every candidate with these two, and they arrive
@@ -700,6 +700,7 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     @Override
     protected void doNext() throws HyracksDataException {
         if (!doHasNext()) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw HyracksDataException.create(new IllegalStateException("No more tuples"));
         }
         drainIterator.next();
@@ -824,6 +825,9 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
                     }
                 }
             } catch (Throwable e) {
+                // Matches the LSMIndexSearchCursor / LSMRTree / LSMBTree comparator idiom: Comparator.compare
+                // cannot throw a checked exception. The cause is a coded HyracksDataException and
+                // ExceptionUtils.unwrap() follows it, so the error code survives to the user.
                 throw new IllegalArgumentException(e);
             }
 

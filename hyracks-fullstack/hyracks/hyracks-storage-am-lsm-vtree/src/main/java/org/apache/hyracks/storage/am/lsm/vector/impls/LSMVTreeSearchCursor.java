@@ -746,6 +746,9 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
                 // Merge ordering shares the exact <distance, PK> key with antimatter cancellation.
                 result = compareKey(cmp, tupleA, tupleB);
             } catch (Throwable e) {
+                // Matches the LSMIndexSearchCursor / LSMRTree / LSMBTree comparator idiom: Comparator.compare
+                // cannot throw a checked exception. The cause is a coded HyracksDataException and
+                // ExceptionUtils.unwrap() follows it, so the error code survives to the user.
                 throw new IllegalArgumentException(e);
             }
             if (result != 0) {

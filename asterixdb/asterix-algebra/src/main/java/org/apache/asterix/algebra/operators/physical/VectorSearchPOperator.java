@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -121,7 +123,8 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         AbstractUnnestMapOperator unnestMap = (AbstractUnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            throw new AlgebricksException("Vector search unnest expression must be a function call");
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                    "the vector search unnest expression is not a function call");
         }
         AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) unnestExpr;
         FunctionIdentifier funcIdent = unnestFuncExpr.getFunctionIdentifier();

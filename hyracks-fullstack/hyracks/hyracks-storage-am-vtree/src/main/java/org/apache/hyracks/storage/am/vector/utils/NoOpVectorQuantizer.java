@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.vector.utils;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 
@@ -43,8 +44,8 @@ public class NoOpVectorQuantizer implements IVTreeQuantizer {
         // caller failed to strip a length prefix (or passed a truncated buffer). Fail loudly here
         // (test-only helper) rather than silently dropping trailing bytes.
         if (quantizedBytes.length % Double.BYTES != 0) {
-            throw new IllegalArgumentException("quantizedBytes length " + quantizedBytes.length
-                    + " is not a multiple of Double.BYTES (" + Double.BYTES + ")");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "The quantized vector is "
+                    + quantizedBytes.length + " bytes, which is not a multiple of " + Double.BYTES);
         }
         int count = quantizedBytes.length / Double.BYTES;
 

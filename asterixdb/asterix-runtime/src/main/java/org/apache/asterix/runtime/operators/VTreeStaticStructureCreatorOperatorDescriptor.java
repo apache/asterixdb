@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.operators;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.vector.OptimizedScalarQuantizationCodec;
 import org.apache.asterix.om.types.ATypeTag;
@@ -327,7 +331,8 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                         }
 
                         if (embedding == null || embedding.length == 0) {
-                            throw new HyracksDataException("Failed to extract embedding from hierarchical tuple");
+                            throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                                    "Failed to extract an embedding from a centroid tuple");
                         }
 
                         // Check if this is a leaf level (maxLevel) - apply quantization only to leaf nodes
@@ -342,7 +347,8 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                         }
 
                     } catch (Exception e) {
-                        throw new HyracksDataException("Failed to convert tuple to VCTreeBuilder format", e);
+                        throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, e,
+                                "Failed to convert a centroid tuple to the static-structure builder format");
                     }
                 }
 
@@ -411,8 +417,9 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                                 quantizedBytes[i * 4 + 3] = (byte) ints[i];
                             }
                         } else {
-                            throw new HyracksDataException(
-                                    "Unexpected quantized bytes type: " + quantizedResult.quantizedBytes.getClass());
+                            throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                                    "Unexpected quantized-bytes type "
+                                            + quantizedResult.quantizedBytes.getClass().getName());
                         }
 
                         // Create 4-field tuple: [centroidId, embedding, quantizedBytes, neighborList].
@@ -467,10 +474,10 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                     List<List<Integer>> centroidsPerCluster = new ArrayList<>();
 
                     if (levelDistribution == null || levelDistribution.isEmpty()) {
-                        throw HyracksDataException.create(
-                                new RuntimeException("Cannot build vector index: no training vectors were found. "
-                                        + "Verify that the indexed field exists in the dataset and contains vector data, "
-                                        + "and that sampling produced enough vectors for train_list_fraction."));
+                        throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                                "No training vectors were found. Verify that the indexed field exists in the "
+                                        + "collection and contains vector data, and that sampling produced enough "
+                                        + "vectors for train_list_fraction");
                     }
 
                     // Find max level
@@ -571,14 +578,16 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
 
                         IIndex indexInstance = partitionHelper.getIndexInstance();
                         if (!(indexInstance instanceof ILSMIndex)) {
-                            throw new HyracksDataException("Index is not an ILSMIndex instance, got: "
-                                    + (indexInstance != null ? indexInstance.getClass().getName() : "null"));
+                            throw HyracksDataException.create(ILLEGAL_STATE,
+                                    "The vector index resource is not an ILSMIndex, but a "
+                                            + (indexInstance != null ? indexInstance.getClass().getName() : "null"));
                         }
                         ILSMIndex partitionLsmIndex = (ILSMIndex) indexInstance;
 
                         if (!(partitionLsmIndex instanceof LSMVTree)) {
-                            throw new HyracksDataException("Index is not an LSMVTree instance, got: "
-                                    + partitionLsmIndex.getClass().getName());
+                            throw HyracksDataException.create(ILLEGAL_STATE,
+                                    "The vector index resource is not an LSMVTree, but a "
+                                            + partitionLsmIndex.getClass().getName());
                         }
 
                         Map<String, Object> parameters = new HashMap<>();
@@ -678,7 +687,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
             case BIGINT:
                 return LongPointable.getLong(data, start + 1);
             default:
-                throw new HyracksDataException("Unsupported numeric type: " + typeTag);
+                throw new RuntimeDataException(ErrorCode.UNSUPPORTED_VECTOR_ELEMENT_TYPE, typeTag);
         }
     }
 

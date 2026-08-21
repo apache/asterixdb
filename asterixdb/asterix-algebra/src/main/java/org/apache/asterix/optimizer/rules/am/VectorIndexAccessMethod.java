@@ -30,6 +30,8 @@ import java.util.Set;
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
 import org.apache.asterix.common.annotations.AnnSearchPreferenceAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -344,8 +346,9 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 // there is no falling back to lookup-and-rerank from here. retainInput/retainNull are both
                 // false, which is exactly the case where createSecondaryIndexUnnestMap returns an
                 // UnnestMapOperator, so this is a broken invariant rather than an unsupported plan shape.
-                throw new AlgebricksException("Vector index-only plan: expected an UnnestMapOperator from the "
-                        + "secondary index search but got " + secondaryIndexUnnestOp.getOperatorTag());
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                        "the vector index-only plan expected an UnnestMapOperator from the secondary index "
+                                + "search but got " + secondaryIndexUnnestOp.getOperatorTag());
             } else {
                 UnnestMapOperator unnestMap = (UnnestMapOperator) secondaryIndexUnnestOp;
                 LogicalVariable distVar = context.newVar();

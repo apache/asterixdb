@@ -20,10 +20,10 @@ package org.apache.hyracks.dataflow.common.data.marshalling;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.EOFException;
 import java.io.IOException;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -96,14 +96,14 @@ public class DoubleArraySerializerDeserializer implements ISerializerDeserialize
      */
     public static int readLength(byte[] bytes, int offset, int length) throws HyracksDataException {
         if (length < Integer.BYTES) {
-            throw HyracksDataException.create(new EOFException(
-                    "array field is " + length + " bytes, need at least " + Integer.BYTES + " for the length prefix"));
+            throw HyracksDataException.create(ErrorCode.MALFORMED_VECTOR_INDEX, "The encoded array field is " + length
+                    + " bytes, but at least " + Integer.BYTES + " are needed for the length prefix");
         }
         int len = IntegerPointable.getInteger(bytes, offset);
         long required = (long) Integer.BYTES + (long) len * Double.BYTES;
         if (len < 0 || required > length) {
-            throw HyracksDataException.create(new EOFException(
-                    "encoded array length " + len + " needs " + required + " bytes but the field is " + length));
+            throw HyracksDataException.create(ErrorCode.MALFORMED_VECTOR_INDEX, "The encoded array declares " + len
+                    + " elements, needing " + required + " bytes, but the field is " + length + " bytes");
         }
         return len;
     }
@@ -117,8 +117,8 @@ public class DoubleArraySerializerDeserializer implements ISerializerDeserialize
     public static void readInto(byte[] bytes, int offset, int length, double[] dst) throws HyracksDataException {
         int len = readLength(bytes, offset, length);
         if (dst.length != len) {
-            throw HyracksDataException.create(new IllegalArgumentException(
-                    "destination has " + dst.length + " elements but the encoded array has " + len));
+            throw HyracksDataException.create(ErrorCode.UNEXPECTED_VECTOR_VALUE,
+                    "Expected to see " + dst.length + " elements but the encoded vector has " + len);
         }
         decode(bytes, offset, dst, len);
     }

@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.vector.frames;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ISlotManager;
@@ -127,7 +128,8 @@ public abstract class VTreeNSMFrame extends TreeIndexNSMFrame implements IVTreeF
             IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache) throws HyracksDataException {
         // Generic split is not supported on VTree frames; subclasses that split (e.g. data/metadata frames)
         // expose their own split(...) entry points with the right argument types.
-        throw new HyracksDataException("Split operation not implemented for " + this.getClass().getSimpleName());
+        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "split",
+                this.getClass().getSimpleName());
     }
 
     @Override

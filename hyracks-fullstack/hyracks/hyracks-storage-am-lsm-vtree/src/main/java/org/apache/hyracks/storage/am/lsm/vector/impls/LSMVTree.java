@@ -252,6 +252,9 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
 
     public LSMVTreeDiskComponent getStaticStructure() {
         if (staticStructure == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
+            // getStaticStructure() has no throws clause, so coding this needs a signature change; decide
+            // whether that is worth it or whether the invariant should stay unchecked.
             throw new IllegalStateException("Static structure must be built before loading records");
         }
         return staticStructure;
@@ -375,9 +378,10 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public void scanDiskComponents(ILSMIndexOperationContext ictx, IIndexCursor cursor) {
+    public void scanDiskComponents(ILSMIndexOperationContext ictx, IIndexCursor cursor) throws HyracksDataException {
         // Vector clustering trees don't support disk-component scanning the way BTrees do.
-        throw new UnsupportedOperationException("Disk component scanning not supported for vector clustering trees");
+        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "scanDiskComponents",
+                LSMVTree.class.getSimpleName());
     }
 
     @Override

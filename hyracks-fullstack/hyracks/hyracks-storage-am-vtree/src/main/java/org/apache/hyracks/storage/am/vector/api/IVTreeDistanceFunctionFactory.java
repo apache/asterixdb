@@ -20,7 +20,6 @@ package org.apache.hyracks.storage.am.vector.api;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 
 /**
@@ -42,5 +41,5 @@ public interface IVTreeDistanceFunctionFactory extends Serializable, IJsonSerial
      * index creation (it is determined by the embedding model) and baked into the concrete factory, so
      * Hyracks never passes or is aware of a metric string. Must not return {@code null}.
      */
-    IVTreeDistanceFunction createDistanceFunction() throws HyracksDataException;
+    IVTreeDistanceFunction createDistanceFunction();
 }

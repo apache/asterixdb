@@ -200,7 +200,8 @@ public class VectorComponentExtractorOperatorDescriptor extends AbstractSingleAc
                             appender.reset(new VSizeFrame(ctx), true);
                             if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                                     tupleBuilder.getSize())) {
-                                throw HyracksDataException.create(new IOException("Tuple too large to fit in frame"));
+                                throw new RuntimeDataException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                                        "A vector is too large to fit in a single frame");
                             }
                         }
                     } catch (IOException e) {

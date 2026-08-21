@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -237,6 +238,7 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
         int childClusterIndex = computeChildClusterIndex();
         int childPageId = firstPageIdOfCluster[currentLevel + 1][childClusterIndex];
         if (childPageId < 0) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException(
                     "Child page id not yet recorded for level=" + (currentLevel + 1) + ", cluster=" + childClusterIndex
                             + ". Input must be in bottom-up order (leaf level first, root last).");
@@ -302,7 +304,8 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
             return entryTupleRef;
         } catch (Exception e) {
             LOGGER.log(Level.TRACE, "Error creating entry tuple: {}", e.getMessage());
-            throw new HyracksDataException("Failed to create entry tuple", e);
+            throw HyracksDataException.create(ErrorCode.VECTOR_INDEX_BUILD_FAILED, e,
+                    "Failed to create an entry tuple");
         }
     }
 
@@ -528,6 +531,7 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
         // also the page with the highest id since the root level is processed last.
         int rootPageId = firstPageIdOfCluster[0][0];
         if (rootPageId < 0) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw HyracksDataException
                     .create(new IllegalStateException("Root page id was never recorded; static structure incomplete."));
         }

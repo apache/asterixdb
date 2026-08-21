@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -291,6 +292,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         // value means the caller bypassed that path and the search cannot proceed safely.
         this.distanceFunction = vectorState.getDistanceFunction();
         if (this.distanceFunction == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException(
                     "VTreeSearchCursor opened without a distance function on the initial state");
         }
@@ -306,8 +308,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             // Query mode: Find closest cluster using DFS
             // NOTE: Level-wise exploration is handled by LSM layer via openClusterById()
             if (this.queryVector == null) {
-                throw HyracksDataException
-                        .create(new IllegalArgumentException("Query vector must be provided for centroid finding"));
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "A query vector is required for vector index centroid finding");
             }
 
             // Create navigation state for iterative DFS with shared visited set
@@ -370,9 +372,11 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     @Override
     protected void doNext() throws HyracksDataException {
         if (!isOpen) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw HyracksDataException.create(new IllegalStateException("Cursor is not open"));
         }
         if (!doHasNext()) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw HyracksDataException.create(new IllegalStateException("No more tuples"));
         }
 
@@ -423,6 +427,9 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         this.totalLeafClusters = totalClusters;
 
         if (this.totalLeafClusters == 0) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
+            // An empty vector index is arguably a normal state a query should tolerate rather than an
+            // error; decide whether this should return "no results" instead.
             throw HyracksDataException.create(new IllegalStateException("No leaf centroids found - empty index"));
         }
 
@@ -466,6 +473,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
                 if (interiorFrame.getTupleCount() > 0) {
                     currentPageId = interiorFrame.getChildPageId(0);
                 } else {
+                    // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
                     throw HyracksDataException
                             .create(new IllegalStateException("Empty interior page encountered during navigation"));
                 }
@@ -858,6 +866,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      */
     private IVTreeMetadataFrame createMetadataFrame() {
         if (metadataFrameFactory == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException("Metadata frame factory not set");
         }
         return (IVTreeMetadataFrame) metadataFrameFactory.createFrame();
@@ -868,6 +877,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      */
     private IVTreeDataFrame createDataFrame() {
         if (dataFrameFactory == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException("Data frame factory not set");
         }
         return (IVTreeDataFrame) dataFrameFactory.createFrame();
@@ -996,6 +1006,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      */
     private IVTreeInteriorFrame createInteriorFrame() {
         if (interiorFrameFactory == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException("Interior frame factory not set");
         }
         return (IVTreeInteriorFrame) interiorFrameFactory.createFrame();
@@ -1003,6 +1014,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
 
     private IVTreeLeafFrame createLeafFrame() {
         if (leafFrameFactory == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
             throw new IllegalStateException("Leaf frame factory not set");
         }
         return (IVTreeLeafFrame) leafFrameFactory.createFrame();

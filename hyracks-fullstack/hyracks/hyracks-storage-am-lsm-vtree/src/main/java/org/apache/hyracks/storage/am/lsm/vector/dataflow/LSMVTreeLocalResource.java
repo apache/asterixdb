@@ -186,14 +186,14 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         // tripped through the resource registry on JSON read. A null here indicates a corrupted
         // resource (e.g., a JSON file with the {@link #KEY_VECTOR_ACCESSOR_FACTORY} key missing).
         if (vectorAccessorFactory == null) {
-            throw new HyracksDataException("Vector accessor factory missing from LSMVTreeLocalResource (path=" + path
-                    + "); resource is corrupted or was written by an unsupported codebase version.");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "The vector accessor factory is missing from the resource at " + path);
         }
         // Distance-function factory is always supplied at DDL and round-tripped through the registry;
         // a null indicates a corrupted or unsupported-version resource.
         if (distanceFunctionFactory == null) {
-            throw new HyracksDataException("Distance-function factory missing from LSMVTreeLocalResource (path=" + path
-                    + "); resource is corrupted or was written by an unsupported codebase version.");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "The distance-function factory is missing from the resource at " + path);
         }
 
         // Quantization params for lazy quantizer creation at query time

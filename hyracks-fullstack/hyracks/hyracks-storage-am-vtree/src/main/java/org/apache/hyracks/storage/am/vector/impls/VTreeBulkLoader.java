@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -377,7 +378,8 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
         } catch (HyracksDataException e) {
             throw e;
         } catch (Exception e) {
-            throw new HyracksDataException("Failed to create directory entry", e);
+            throw HyracksDataException.create(ErrorCode.VECTOR_INDEX_BUILD_FAILED, e,
+                    "Failed to create a directory entry");
         }
     }
 

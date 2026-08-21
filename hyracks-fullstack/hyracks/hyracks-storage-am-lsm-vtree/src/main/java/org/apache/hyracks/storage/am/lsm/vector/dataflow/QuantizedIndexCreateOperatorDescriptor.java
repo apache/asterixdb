@@ -179,7 +179,8 @@ public class QuantizedIndexCreateOperatorDescriptor extends AbstractSingleActivi
                     indexBuilder.build();
                 }
             } else {
-                throw new HyracksDataException("QuantizedIndexCreateOperator: No quantization constants received.");
+                throw HyracksDataException.create(ErrorCode.VECTOR_INDEX_BUILD_FAILED,
+                        "No quantization constants were received");
             }
         }
     }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.vector;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
@@ -51,7 +52,8 @@ public class OptimizedScalarQuantizerFactory implements IVTreeQuantizerFactory {
     public IVTreeQuantizer createQuantizer(int vectorDimensions, VTreeQuantizationParams params)
             throws HyracksDataException {
         if (params == null) {
-            throw HyracksDataException.create(new IllegalArgumentException("Quantization params must not be null"));
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "Null quantization params reached the quantizer factory");
         }
 
         OptimizedScalarQuantizationCodec.Params p =

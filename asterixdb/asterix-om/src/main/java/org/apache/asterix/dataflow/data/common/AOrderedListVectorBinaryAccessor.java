@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -53,6 +55,9 @@ public class AOrderedListVectorBinaryAccessor implements IVTreeBinaryAccessor {
     @Override
     public double[] getVector() throws HyracksDataException {
         if (data == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> surfaces to the user as "Internal error".
+            // Reachable only if a caller skips reset(); decide whether to keep it as an unchecked
+            // invariant or convert to RuntimeDataException(ErrorCode.ILLEGAL_STATE, ...).
             throw new IllegalStateException("Accessor not initialized. Call reset() first.");
         }
 
@@ -69,8 +74,12 @@ public class AOrderedListVectorBinaryAccessor implements IVTreeBinaryAccessor {
         return vector;
     }
 
+    @Override
     public int getDimension() throws HyracksDataException {
         if (data == null) {
+            // TODO(vector-errors): uncoded IllegalStateException -> surfaces to the user as "Internal error".
+            // Reachable only if a caller skips reset(); decide whether to keep it as an unchecked
+            // invariant or convert to RuntimeDataException(ErrorCode.ILLEGAL_STATE, ...).
             throw new IllegalStateException("Accessor not initialized. Call reset() first.");
         }
         return listLength;
@@ -99,17 +108,12 @@ public class AOrderedListVectorBinaryAccessor implements IVTreeBinaryAccessor {
             valueOffset = itemOffset + 1; // Skip type tag
         }
 
-        switch (actualType) {
-            case DOUBLE:
-                return DoublePointable.getDouble(data, valueOffset);
-            case FLOAT:
-                return FloatPointable.getFloat(data, valueOffset);
-            case INTEGER:
-                return IntegerPointable.getInteger(data, valueOffset);
-            case BIGINT:
-                return LongPointable.getLong(data, valueOffset);
-            default:
-                throw new HyracksDataException("Unsupported numeric type in vector: " + actualType);
-        }
+        return switch (actualType) {
+            case DOUBLE -> DoublePointable.getDouble(data, valueOffset);
+            case FLOAT -> FloatPointable.getFloat(data, valueOffset);
+            case INTEGER -> IntegerPointable.getInteger(data, valueOffset);
+            case BIGINT -> LongPointable.getLong(data, valueOffset);
+            default -> throw new RuntimeDataException(ErrorCode.UNSUPPORTED_VECTOR_ELEMENT_TYPE, actualType);
+        };
     }
 }

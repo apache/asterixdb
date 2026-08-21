@@ -265,6 +265,9 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
                 value = LongPointable.getLong(data, valueOffset);
                 break;
             default:
+                // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
+                // The compiler types the query-parameters tuple, so a non-integer tag here is a plan bug
+                // rather than bad user input; confirm before coding it.
                 throw new IllegalStateException("Unexpected type tag " + typeTag + " for integer query parameter at "
                         + "position " + fieldIndex + " of the vector-search query-parameters tuple");
         }

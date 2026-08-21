@@ -831,8 +831,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         Index vectorIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
                 dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (vectorIndex == null) {
-            throw new AlgebricksException(
-                    "Code generation error: no index " + indexName + " for dataset " + dataset.getDatasetName());
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "no index " + indexName
+                    + " was found for collection " + dataset.getDatasetName() + " during code generation");
         }
 
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -1761,7 +1761,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
             return new Pair<>(op, partitioningProperties.getConstraints());
         } catch (Exception e) {
-            throw new AlgebricksException(e);
+            throw CompilationException.create(ErrorCode.COMPILATION_ERROR, e,
+                    "failed to generate the vector index modification runtime: " + e.getMessage());
         }
     }
 

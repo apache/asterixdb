@@ -20,6 +20,8 @@ package org.apache.asterix.runtime.operators;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -46,7 +48,8 @@ public class KMeansUtils {
     }
 
     // Euclidean Distance
-    protected double[] createPrimitveList(ListAccessor listAccessor) throws IOException {
+    protected double[] createPrimitiveList(ListAccessor listAccessor) throws IOException {
+        // TODO(vector-errors): update consumers to create HyracksDataException.create(e);
         ATypeTag typeTag = listAccessor.getItemType();
         double[] primitiveArray = new double[listAccessor.size()];
         storage.reset();
@@ -66,11 +69,12 @@ public class KMeansUtils {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
             return getValueFromTag(typeTag, data, offset);
         } else {
-            throw new HyracksDataException("Unsupported type tag for numeric vector extraction: " + derivedTypeTag);
+            throw new RuntimeDataException(ErrorCode.UNSUPPORTED_VECTOR_ELEMENT_TYPE, derivedTypeTag);
         }
     }
 
     protected double getValueFromTag(ATypeTag typeTag, byte[] data, int offset) throws HyracksDataException {
+        // TODO(vector-index): refactor
         return switch (typeTag) {
             case TINYINT -> AInt8SerializerDeserializer.getByte(data, offset + 1);
             case SMALLINT -> AInt16SerializerDeserializer.getShort(data, offset + 1);

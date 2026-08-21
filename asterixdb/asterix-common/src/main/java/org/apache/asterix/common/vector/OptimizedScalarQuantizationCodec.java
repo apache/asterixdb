@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.common.vector;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 /**
  * Optimized scalar quantization (OSQ) utilities for vector indexes.
  *
@@ -147,19 +151,18 @@ public final class OptimizedScalarQuantizationCodec {
      * @param params Quantization parameters including bits, minQuantile, maxQuantile, alpha
      * @param similarityFunction The similarity function type (recorded on the result)
      * @return QuantizedVector containing quantized bytes and metadata
-     * @throws IllegalArgumentException if vector is null or params are invalid
+     * @throws HyracksDataException if vector is null or params are invalid
      */
-    public static QuantizedVector quantizeVector(double[] vector, Params params,
-            SimilarityFunction similarityFunction) {
+    public static QuantizedVector quantizeVector(double[] vector, Params params, SimilarityFunction similarityFunction)
+            throws HyracksDataException {
         if (vector == null) {
-            throw new IllegalArgumentException("vector must be non-null");
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "A null vector reached the quantizer");
         }
         if (params == null) {
-            throw new IllegalArgumentException("params must be non-null");
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Null quantization params reached the quantizer");
         }
         if (vector.length != params.vectorDimensions) {
-            throw new IllegalArgumentException(
-                    "vector dimension mismatch: expected " + params.vectorDimensions + ", got " + vector.length);
+            throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, params.vectorDimensions, vector.length);
         }
 
         final int bits = params.bits;
@@ -176,7 +179,8 @@ public final class OptimizedScalarQuantizationCodec {
         } else if (bits <= 32) {
             quantizedBytes = quantizeToInt(vector, minQ, maxQ, alpha, levels);
         } else {
-            throw new IllegalArgumentException("bits must be <= 32, got " + bits);
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                    "Unsupported quantization bit width " + bits + "; the maximum is 32");
         }
 
         return new QuantizedVector(quantizedBytes, similarityFunction);
@@ -300,15 +304,15 @@ public final class OptimizedScalarQuantizationCodec {
      *                       inverse mapping; bits and vectorDimensions for validation)
      * @return double[] array where each element approximates the original value via
      *         inverse quantization: value = quantizedInt / alpha + minQuantile
-     * @throws IllegalArgumentException if inputs are null or array length doesn't
-     *                                  match params
+     * @throws HyracksDataException if inputs are null or array length doesn't
+     *                              match params
      */
-    public static double[] dequantizeToDoubleArray(Object quantizedBytes, Params params) {
+    public static double[] dequantizeToDoubleArray(Object quantizedBytes, Params params) throws HyracksDataException {
         if (quantizedBytes == null) {
-            throw new IllegalArgumentException("quantizedBytes must be non-null");
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "A null quantized vector reached the dequantizer");
         }
         if (params == null) {
-            throw new IllegalArgumentException("params must be non-null");
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Null quantization params reached the dequantizer");
         }
 
         final int dims = params.vectorDimensions;
@@ -319,12 +323,12 @@ public final class OptimizedScalarQuantizationCodec {
         if (bits <= 8) {
             // byte[] - treat as unsigned
             if (!(quantizedBytes instanceof byte[])) {
-                throw new IllegalArgumentException(
-                        "Expected byte[] for " + bits + " bits, got " + quantizedBytes.getClass().getName());
+                throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Expected a byte[] quantized vector for " + bits
+                        + " bits, but got a " + quantizedBytes.getClass().getName());
             }
             byte[] bytes = (byte[]) quantizedBytes;
             if (bytes.length != dims) {
-                throw new IllegalArgumentException("Array length mismatch: expected " + dims + ", got " + bytes.length);
+                throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, bytes.length);
             }
             for (int i = 0; i < dims; i++) {
                 result[i] = ((double) (bytes[i] & 0xFF)) / params.alpha + params.minQuantile;
@@ -332,13 +336,12 @@ public final class OptimizedScalarQuantizationCodec {
         } else if (bits <= 16) {
             // short[] - treat as unsigned
             if (!(quantizedBytes instanceof short[])) {
-                throw new IllegalArgumentException(
-                        "Expected short[] for " + bits + " bits, got " + quantizedBytes.getClass().getName());
+                throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Expected a short[] quantized vector for "
+                        + bits + " bits, but got a " + quantizedBytes.getClass().getName());
             }
             short[] shorts = (short[]) quantizedBytes;
             if (shorts.length != dims) {
-                throw new IllegalArgumentException(
-                        "Array length mismatch: expected " + dims + ", got " + shorts.length);
+                throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, shorts.length);
             }
             for (int i = 0; i < dims; i++) {
                 result[i] = ((double) (shorts[i] & 0xFFFF)) / params.alpha + params.minQuantile;
@@ -346,18 +349,19 @@ public final class OptimizedScalarQuantizationCodec {
         } else if (bits <= 32) {
             // int[] - treat as unsigned
             if (!(quantizedBytes instanceof int[])) {
-                throw new IllegalArgumentException(
-                        "Expected int[] for " + bits + " bits, got " + quantizedBytes.getClass().getName());
+                throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Expected an int[] quantized vector for " + bits
+                        + " bits, but got a " + quantizedBytes.getClass().getName());
             }
             int[] ints = (int[]) quantizedBytes;
             if (ints.length != dims) {
-                throw new IllegalArgumentException("Array length mismatch: expected " + dims + ", got " + ints.length);
+                throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, ints.length);
             }
             for (int i = 0; i < dims; i++) {
                 result[i] = ((double) (ints[i] & 0xFFFFFFFFL)) / params.alpha + params.minQuantile;
             }
         } else {
-            throw new IllegalArgumentException("bits must be <= 32, got " + bits);
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                    "Unsupported quantization bit width " + bits + "; the maximum is 32");
         }
 
         return result;

@@ -112,8 +112,8 @@ public class VectorIndexDeclUtil {
     private static void validateWithClauseFieldNames(AdmObjectNode node) throws CompilationException {
         for (String name : node.getFieldNames()) {
             if (!VectorIndexParameters.isKnown(name)) {
-                throw new CompilationException("Failed to create vector index. Unknown field `" + name
-                        + "` in WITH clause. Allowed fields: " + VectorIndexParameters.nameList());
+                throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, "Unknown field `"
+                        + name + "` in WITH clause. Allowed fields: " + VectorIndexParameters.nameList());
             }
         }
     }

@@ -21,6 +21,8 @@ package org.apache.hyracks.storage.am.lsm.vector.impls;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.projection.ITupleProjector;
@@ -57,8 +59,8 @@ public class PKOnlyTupleProjector implements ITupleProjector {
         int endField = numSecondaryKeys + numPrimaryKeys;
 
         if (endField > totalFields) {
-            throw new IOException("Invalid field range: trying to extract fields [" + startField + ", " + endField
-                    + ") from tuple with " + totalFields + " fields");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "The primary-key projection needs fields ["
+                    + startField + ", " + endField + ") of a tuple that only has " + totalFields + " fields");
         }
 
         for (int i = startField; i < endField; i++) {

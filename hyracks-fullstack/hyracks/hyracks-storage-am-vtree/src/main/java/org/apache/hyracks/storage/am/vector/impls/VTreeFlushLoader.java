@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.vector.impls;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -73,7 +74,8 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
 
     @Override
     public void add(ITupleReference tuple) throws HyracksDataException {
-        throw new UnsupportedOperationException("Use copyPage() instead");
+        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "add (use copyPage instead)",
+                VTreeFlushLoader.class.getSimpleName());
     }
 
     /**
@@ -237,7 +239,9 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
 
     @Override
     public void end() throws HyracksDataException {
-        throw new UnsupportedOperationException("Use end(numLeafCentroid, firstLeafCentroidId, rootPageId) instead");
+        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION,
+                "end (use end(numLeafCentroid, firstLeafCentroidId, rootPageId) instead)",
+                VTreeFlushLoader.class.getSimpleName());
     }
 
     @Override

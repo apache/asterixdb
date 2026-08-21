@@ -27,6 +27,8 @@ import java.util.Set;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -530,7 +532,9 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     }
 
     @Override
-    public JobSpecification buildStaticStructureJobSpec() {
-        throw new UnsupportedOperationException();
+    public JobSpecification buildStaticStructureJobSpec() throws AlgebricksException {
+        // Samples are BTrees; only vector indexes have a static-structure build phase.
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                "a static-structure job was requested for the sample index");
     }
 }

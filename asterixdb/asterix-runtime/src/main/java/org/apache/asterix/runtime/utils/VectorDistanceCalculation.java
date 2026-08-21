@@ -19,6 +19,8 @@
 
 package org.apache.asterix.runtime.utils;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
@@ -244,8 +246,7 @@ public class VectorDistanceCalculation {
     private static int checkedLength(byte[] bytes, int offset, int length, double[] dst) throws HyracksDataException {
         int len = DoubleArraySerializerDeserializer.readLength(bytes, offset, length);
         if (dst != null && dst.length != len) {
-            throw HyracksDataException.create(new IllegalArgumentException(
-                    "destination has " + dst.length + " elements but the encoded array has " + len));
+            throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dst.length, len);
         }
         return len;
     }

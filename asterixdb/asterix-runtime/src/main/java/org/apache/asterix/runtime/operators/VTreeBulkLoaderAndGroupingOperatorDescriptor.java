@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.operators;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
@@ -126,8 +128,8 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
         // validation, IndexTupleTranslator at persist), so a missing/unsupported value here means a corrupt index.
         VectorSimilarityMetric metric = (distanceType == null) ? null : VectorSimilarityMetric.fromAlias(distanceType);
         if (metric == null) {
-            throw new IllegalArgumentException(
-                    "Vector index has a missing or unsupported 'similarity' metric: " + distanceType);
+            throw HyracksDataException.create(ILLEGAL_STATE,
+                    "The index has a missing or unsupported 'similarity' metric: " + distanceType);
         }
         return new VectorDistanceFunctionFactory(metric).createDistanceFunction();
     }
@@ -339,7 +341,8 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
         private double[] extractEmbedding(ITupleReference tuple) throws HyracksDataException {
             try {
                 if (tuple == null) {
-                    throw new IllegalArgumentException("Tuple cannot be null");
+                    throw HyracksDataException.create(ILLEGAL_STATE,
+                            "A null tuple reached the vector index bulk loader");
                 }
                 embeddingEval.evaluate((IFrameTupleReference) tuple, embeddingInputVal);
                 if (embeddingInputVal.getLength() == 0) {
@@ -351,7 +354,7 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
                     return null;
                 }
                 embeddingListAccessor.reset(embeddingInputVal.getByteArray(), embeddingInputVal.getStartOffset());
-                double[] embedding = embeddingKMeansUtils.createPrimitveList(embeddingListAccessor);
+                double[] embedding = embeddingKMeansUtils.createPrimitiveList(embeddingListAccessor);
                 if (embedding == null || embedding.length == 0) {
                     return null;
                 }
@@ -395,14 +398,15 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
                 IIndex indexInstance = indexHelper.getIndexInstance();
 
                 if (!(indexInstance instanceof ILSMIndex)) {
-                    throw new HyracksDataException("Index is not an ILSMIndex instance, got: "
-                            + (indexInstance != null ? indexInstance.getClass().getName() : "null"));
+                    throw HyracksDataException.create(ILLEGAL_STATE,
+                            "The vector index resource is not an " + "ILSMIndex, but a "
+                                    + (indexInstance != null ? indexInstance.getClass().getName() : "null"));
                 }
                 ILSMIndex lsmIndex = (ILSMIndex) indexInstance;
 
                 if (!(lsmIndex instanceof LSMVTree)) {
-                    throw new HyracksDataException(
-                            "Index is not an LSMVTree instance, got: " + lsmIndex.getClass().getName());
+                    throw HyracksDataException.create(ILLEGAL_STATE,
+                            "The vector index resource is not an LSMVTree, but a " + lsmIndex.getClass().getName());
                 }
                 LSMVTree = (LSMVTree) lsmIndex;
 
@@ -441,6 +445,9 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
             // Get LocalResource from index helper (a genuine read failure propagates rather than defaulting)
             LocalResource localResource = indexHelper.getResource();
             if (localResource == null) {
+                // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
+                // A quantized vector index with no LocalResource is a broken invariant; decide whether to
+                // keep it unchecked or code it as ErrorCode.ILLEGAL_STATE / CORRUPTED_VECTOR_INDEX.
                 throw HyracksDataException.create(new IllegalStateException(
                         "Quantized VTree is missing its LocalResource; cannot read quantization params"));
             }
@@ -459,12 +466,14 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
             }
 
             if (vcResource == null) {
+                // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
                 throw HyracksDataException
                         .create(new IllegalStateException("Quantized VTree resource is not an LSMVTreeLocalResource: "
                                 + (resource == null ? "null" : resource.getClass().getName())));
             }
 
             if (!vcResource.hasQuantizationParams()) {
+                // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
                 throw HyracksDataException
                         .create(new IllegalStateException("Quantized VTree resource is missing quantization params"));
             }
@@ -506,7 +515,7 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
          * @return QuantizedVector containing per-dimension quantized bytes (and metadata)
          */
         private OptimizedScalarQuantizationCodec.QuantizedVector quantizeVector(double[] embedding,
-                OptimizedScalarQuantizationCodec.Params params, String distanceMetric) {
+                OptimizedScalarQuantizationCodec.Params params, String distanceMetric) throws HyracksDataException {
             if (embedding == null || params == null) {
                 return null;
             }
@@ -521,18 +530,22 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
                 throws HyracksDataException {
             try {
                 if (queryVector == null) {
-                    throw new IllegalArgumentException("Query vector cannot be null");
+                    throw HyracksDataException.create(ILLEGAL_STATE,
+                            "A null query vector reached the vector index centroid search");
                 }
 
                 if (queryVector.length == 0) {
-                    throw new IllegalArgumentException("Query vector cannot be empty");
+                    throw HyracksDataException.create(ILLEGAL_STATE,
+                            "An empty query vector reached the vector index centroid search");
                 }
 
                 if (vcTreeAccessor == null) {
+                    // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
                     throw new IllegalStateException("VTreeAccessor not initialized");
                 }
 
                 if (distanceFunction == null) {
+                    // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
                     throw new IllegalStateException("DistanceFunction not initialized");
                 }
 
