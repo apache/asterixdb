@@ -53,6 +53,7 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -95,6 +96,7 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * This rule matches the pattern:
@@ -835,11 +837,16 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private boolean exprIsRecord(IVariableTypeEnvironment typeEnvironment, ILogicalExpression recordExpr)
             throws AlgebricksException {
         if (recordExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             IAType type = (IAType) typeEnvironment.getType(recordExpr);
-            return type != null && type.getTypeTag() == ATypeTag.OBJECT;
+            // the payload type can be missable, e.g. cast-lax() output for datasets with a meta part. a missing
+            // payload is the encoding for delete: the primary op emits a DELETE_EXISTING indicator, and on that
+            // indicator the secondary op only deletes the previous entry, so the unknown keys the field accesses
+            // produce for the new record are never inserted
+            return type != null && TypeComputeUtils.getActualType(type).getTypeTag() == ATypeTag.OBJECT;
         }
         return false;
     }
