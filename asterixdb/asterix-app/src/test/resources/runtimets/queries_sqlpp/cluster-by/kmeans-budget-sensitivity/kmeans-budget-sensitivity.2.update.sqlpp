@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- Generated rather than loaded: 2000 x 128 doubles is ~2 MB as a data file, and the generator is
+-- deterministic, so the fixture costs nothing in the repository. The mixing term (i*d % 71) keeps the
+-- rows from lying on a line, and all 2000 vectors are distinct -- k=64 needs at least 64 distinct
+-- points or the run legitimately fails with CLUSTER_BY_INVALID_INPUT.
+use test;
+
+insert into Points (
+  select value { "id": i,
+                 "vec": (select value (((i * 37 + d * 101 + (i*d) % 71) % 1000) / 1000.0)
+                         from range(0, 127) as d) }
+  from range(1, 2000) as i
+);

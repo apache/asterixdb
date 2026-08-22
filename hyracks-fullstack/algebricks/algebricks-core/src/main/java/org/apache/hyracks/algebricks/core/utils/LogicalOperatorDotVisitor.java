@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -339,6 +340,31 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             }
         }
         stringBuilder.append("])");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public String visitKMeansStageOperator(KMeansStageOperator op, Boolean showDetails) throws AlgebricksException {
+        stringBuilder.setLength(0);
+        stringBuilder.append("kmeans-stage ").append(str(op.getCandidateVariable())).append(" <- ")
+                .append(op.getMode().getLabel());
+        switch (op.getMode()) {
+            case RECLUSTER:
+                stringBuilder.append(" pool ").append(str(op.getPoolVariable())).append(" to ").append(op.getTopCount())
+                        .append(" means");
+                break;
+            case OVERSAMPLE_LOOP:
+                stringBuilder.append(' ').append(op.getLoopRounds()).append(" rounds of ")
+                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()));
+                break;
+            default:
+                stringBuilder.append(' ').append(str(op.getVectorVariable())).append(" vs pool ")
+                        .append(str(op.getPoolVariable()));
+                break;
+        }
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

@@ -31,6 +31,7 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
@@ -38,6 +39,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.VariableCloneAndSubstitutionUtil;
 import org.apache.asterix.lang.common.visitor.CloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -255,8 +257,29 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         GroupbyClause groupbyClause = newGroupby == null ? null : (GroupbyClause) newGroupby.first;
         SelectBlock newSelectBlock = new SelectBlock((SelectClause) newSelect.first, fromClause, newLetWhereClauses,
                 groupbyClause, newLetHavingClausesAfterGby);
+        if (selectBlock.hasClusterbyClause()) {
+            newSelectBlock.setClusterbyClause(
+                    (ClusterbyClause) selectBlock.getClusterbyClause().accept(this, currentEnv).first);
+        }
         newSelectBlock.setSourceLocation(selectBlock.getSourceLocation());
         return new Pair<>(newSelectBlock, currentEnv);
+    }
+
+    @Override
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ClusterbyClause cc,
+            VariableSubstitutionEnvironment env) throws CompilationException {
+        Expression newExpr = (Expression) cc.getClusteringExpression().accept(this, env).first;
+        VariableExpr newDescVar = generateNewVariable(context, cc.getClusterDescriptorVar());
+        VariableExpr newMembersVar =
+                cc.hasClusterMembersVar() ? generateNewVariable(context, cc.getClusterMembersVar()) : null;
+        List<Pair<Expression, Identifier>> newClusterFieldList = cc.hasClusterFieldList()
+                ? VariableCloneAndSubstitutionUtil.substInFieldList(cc.getClusterFieldList(), env, this) : null;
+        RecordConstructor newWith =
+                cc.hasWithOptions() ? (RecordConstructor) cc.getWithOptions().accept(this, env).first : null;
+        ClusterbyClause newClusterbyClause =
+                new ClusterbyClause(newExpr, newDescVar, newMembersVar, newClusterFieldList, newWith);
+        newClusterbyClause.setSourceLocation(cc.getSourceLocation());
+        return new Pair<>(newClusterbyClause, env);
     }
 
     @Override

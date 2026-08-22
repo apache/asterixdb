@@ -29,12 +29,14 @@ import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -126,6 +128,26 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(projection.getExpression());
         projection.setExpression(p.second);
         return p.first;
+    }
+
+    @Override
+    public Boolean visit(ClusterbyClause cc, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(cc.getClusteringExpression());
+        cc.setClusteringExpression(p.second);
+        boolean changed = p.first;
+        if (cc.hasClusterFieldList()) {
+            for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
+                Pair<Boolean, Expression> fp = inlineUdfsAndViewsInExpr(field.first);
+                field.first = fp.second;
+                changed |= fp.first;
+            }
+        }
+        if (cc.hasWithOptions()) {
+            Pair<Boolean, Expression> wp = inlineUdfsAndViewsInExpr(cc.getWithOptions());
+            cc.setWithOptions((RecordConstructor) wp.second);
+            changed |= wp.first;
+        }
+        return changed;
     }
 
     @Override

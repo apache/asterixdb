@@ -63,6 +63,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
+        COMPILER_CLUSTERBYMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+                "The memory budget (in bytes) for a CLUSTER BY k-means operator instance in a partition"),
         COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY(
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
@@ -236,6 +240,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_GROUPMEMORY_KEY = Option.COMPILER_GROUPMEMORY.ini();
 
+    public static final String COMPILER_CLUSTERBYMEMORY_KEY = Option.COMPILER_CLUSTERBYMEMORY.ini();
+
     public static final String COMPILER_JOINMEMORY_KEY = Option.COMPILER_JOINMEMORY.ini();
 
     public static final String COMPILER_WINDOWMEMORY_KEY = Option.COMPILER_WINDOWMEMORY.ini();
@@ -320,6 +326,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public long getGroupMemorySize() {
         return accessor.getLong(Option.COMPILER_GROUPMEMORY);
+    }
+
+    public long getClusterByMemorySize() {
+        return accessor.getLong(Option.COMPILER_CLUSTERBYMEMORY);
     }
 
     public long getWindowMemorySize() {

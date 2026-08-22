@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -398,6 +399,12 @@ public class EstimatedCostComputationVisitor
     public EstimatedCostComputationVisitor.CardSizeCost visitIntersectOperator(IntersectOperator op, Double arg)
             throws AlgebricksException {
         // Needs more work.
+        return annotate(this, op, arg);
+    }
+
+    @Override
+    public EstimatedCostComputationVisitor.CardSizeCost visitKMeansStageOperator(KMeansStageOperator op, Double arg)
+            throws AlgebricksException {
         return annotate(this, op, arg);
     }
 

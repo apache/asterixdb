@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.visitor.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -70,4 +71,6 @@ public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
     R visit(WindowExpression windowExpression, T arg) throws CompilationException;
 
     R visit(ChangeExpression changeExpr, T arg) throws CompilationException;
+
+    R visit(ClusterbyClause clusterbyClause, T arg) throws CompilationException;
 }

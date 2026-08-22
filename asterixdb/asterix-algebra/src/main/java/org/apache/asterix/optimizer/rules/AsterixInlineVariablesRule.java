@@ -38,5 +38,11 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_POINT);
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_POLYGON);
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_RECTANGLE);
+        // CLUSTER BY scoring functions evaluate a point against a BROADCAST centroid list. Inlining an
+        // assign of these past a projection (e.g. into a group-by's aggregate argument) forces the
+        // centroid list to survive per row through sorts — observed as ~14x wider sort tuples. The
+        // desugar deliberately binds them pre-sort; keep those bindings where they are.
+        doNotInlineFuncs.add(BuiltinFunctions.NEAREST_CENTROID);
+        doNotInlineFuncs.add(BuiltinFunctions.NEAREST_CENTROID_DISTANCE);
     }
 }

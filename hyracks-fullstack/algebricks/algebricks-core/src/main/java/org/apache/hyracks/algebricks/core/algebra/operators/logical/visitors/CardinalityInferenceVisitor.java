@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -306,6 +307,13 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
             }
         }
         return cardinality;
+    }
+
+    @Override
+    public Long visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
+        // The output is a candidate set sized by the requested cluster count, not by how many rows came in,
+        // so the input's cardinality says nothing about it.
+        return UNKNOWN;
     }
 
     // Visits an operator that has the left outer semantics, e.g.,

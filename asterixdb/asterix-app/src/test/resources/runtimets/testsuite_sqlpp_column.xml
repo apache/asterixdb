@@ -20,9 +20,13 @@
         <!ENTITY SqlppQueries SYSTEM "sqlpp_queries.xml">
         <!ENTITY ObjectsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
         <!ENTITY AsyncDeferredQueries SYSTEM "queries_sqlpp/async-deferred/AsyncDeferredQueries.xml">
+        <!-- CLUSTER BY must also run under columnar storage: the filter pushdown evaluates pushed
+             predicates per array ELEMENT of a repeated column, a failure mode no row-format suite can see. -->
+        <!ENTITY ClusterByQueries SYSTEM "queries_sqlpp/cluster-by/ClusterByQueries.xml">
         ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
   &ObjectsQueries;
   &AsyncDeferredQueries;
   &SqlppQueries;
+  &ClusterByQueries;
 </test-suite>

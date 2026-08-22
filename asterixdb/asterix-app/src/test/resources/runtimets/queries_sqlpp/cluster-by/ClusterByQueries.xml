@@ -1,0 +1,232 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<test-group name="cluster-by">
+    <!-- CLUSTER BY syntax end-to-end: the SqlppClusterByVisitor rewrite desugars CLUSTER BY (sc descriptor +
+         CLUSTER AS members) into the distributed k-means query and runs it on the tiny 2-D dataset. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-syntax">
+            <output-dir compare="Text">kmeans-syntax</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The same clause inside a view body and a function body: the function-body rewriter runs the
+         CLUSTER BY rewrite too. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-in-view">
+            <output-dir compare="Text">kmeans-in-view</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The default kmeansPP initialization on a fixture with enough clusters to expose a bad candidate-pool
+         reduction; the shared 6-point k=2 dataset converges correctly from any seeding and so cannot. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-init-kmeanspp">
+            <output-dir compare="Text">kmeans-init-kmeanspp</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- init_mode "random" seeding: k vectors drawn uniformly (the k smallest row hashes), not the k
+         lexicographically smallest vectors, which would be the k most similar points in the data set.
+         Needs a fixture large enough for the two to differ; see the case's own comments. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-init-random">
+            <output-dir compare="Text">kmeans-init-random</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- CLUSTER BY over an input of differing parallelism (a global LIMIT): the loop stages are pinned to one
+         instance per compute partition, so the plan must repartition into them. Previously an
+         ArrayIndexOutOfBoundsException at job-build time. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-limit-input">
+            <output-dir compare="Text">kmeans-limit-input</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- CLUSTER BY under non-inlined WITH/LET compilation (SET inline_with false): guards the shared-subplan
+         path; the desugar's own centroid LETs are always non-inlined via markNoInlineLetVar. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-syntax-noinline">
+            <output-dir compare="Text">kmeans-syntax-noinline</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The k-means|| init runtime operator path (SET cluster_by_runtime_init true): round 1 runs as the
+         Store+Score operator; results must equal the pure-desugar reference path. -->
+    <!-- init_mode "random": C0 = the k lexicographically smallest vectors, no k-means|| tower;
+         the Lloyd stages and labeling are shared with the default kmeansPP mode. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-syntax-random">
+            <output-dir compare="Text">kmeans-syntax-random</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- Negative cases: CLUSTER BY WITH-option validation (SqlppClusterByVisitor, rewrite phase).
+         GROUP BY + CLUSTER BY mutual exclusion is enforced at the grammar level and covered by
+         ClusterByParserTest, so it is not duplicated here. -->
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="missing-numclusters">
+            <output-dir compare="Text">missing-numclusters</output-dir>
+            <expected-error>CLUSTER BY requires the 'num_clusters' option.</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="nonpositive-numclusters">
+            <output-dir compare="Text">nonpositive-numclusters</output-dir>
+            <expected-error>CLUSTER BY 'num_clusters' must be a positive integer</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="missing-dimension">
+            <output-dir compare="Text">missing-dimension</output-dir>
+            <expected-error>CLUSTER BY with K-Means requires the 'dimension' option</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="dimension-wrong-arity">
+            <output-dir compare="Text">dimension-wrong-arity</output-dir>
+            <expected-error>'dimension' must hold exactly one element</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="dimension-not-array">
+            <output-dir compare="Text">dimension-not-array</output-dir>
+            <expected-error>CLUSTER BY 'dimension' must be an array of positive integers</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="dimension-nonpositive">
+            <output-dir compare="Text">dimension-nonpositive</output-dir>
+            <expected-error>CLUSTER BY 'dimension' must be a positive integer</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unknown-option">
+            <output-dir compare="Text">unknown-option</output-dir>
+            <expected-error>Unknown CLUSTER BY option 'numcluster'</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unknown-init-mode">
+            <output-dir compare="Text">unknown-init-mode</output-dir>
+            <expected-error>Unknown CLUSTER BY 'init_mode' 'randm'</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unknown-distance">
+            <output-dir compare="Text">unknown-distance</output-dir>
+            <expected-error>CLUSTER BY 'similarity' 'euclidian' is not supported. Supported: EUCLIDEAN, EUCLIDEAN_SQUARED.</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unsupported-distance">
+            <output-dir compare="Text">unsupported-distance</output-dir>
+            <expected-error>CLUSTER BY 'similarity' 'cosine' is not supported</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unsupported-algorithm">
+            <output-dir compare="Text">unsupported-algorithm</output-dir>
+            <expected-error>Unsupported CLUSTER BY 'clustering_algorithm' 'DBSCAN'</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="let-in-block">
+            <output-dir compare="Text">let-in-block</output-dir>
+            <expected-error>CLUSTER BY currently does not support LET in its query block.</expected-error>
+        </compilation-unit>
+    </test-case>
+    <!-- A two-term FROM clause: the clustered vector comes from one dataset while the predicate spans both, so
+         the rewrite rebuilds its input from the whole FROM clause rather than a single source variable. Four
+         groups at k=4, with a year predicate that removes a quarter of the rows, so both the join and the filter
+         are part of the assertion. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="join-in-from">
+            <output-dir compare="Text">join-in-from</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The same path reached through UNNEST of a nested array, where the second FROM term is correlated with
+         the first rather than independent. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="unnest-in-from">
+            <output-dir compare="Text">unnest-in-from</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- v1 scope restrictions: no set operations. -->
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="setop-with-clusterby">
+            <output-dir compare="Text">setop-with-clusterby</output-dir>
+            <expected-error>CLUSTER BY is not supported with set operations (UNION/INTERSECT/EXCEPT).</expected-error>
+        </compilation-unit>
+    </test-case>
+    <!-- Budget sensitivity: the same clustering at three memory budgets, the smallest of which cannot
+         hold its working set and must spill every stage. All three arms share one expected result. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-budget-sensitivity">
+            <output-dir compare="Text">kmeans-budget-sensitivity</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The budget knob is live: below the declared 4-frame minimum the query is rejected before it
+         runs. This is what keeps kmeans-budget-sensitivity honest, since an unregistered or ignored
+         `compiler.clusterbymemory` would leave every arm at the default budget, agreeing trivially. -->
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="clusterbymemory-below-minimum">
+            <output-dir compare="Text">clusterbymemory-below-minimum</output-dir>
+            <expected-error>Invalid `compiler.clusterbymemory`</expected-error>
+        </compilation-unit>
+    </test-case>
+    <!-- Fewer candidates attract rows than num_clusters, so fewer clusters are returned and the shortfall
+         is reported. Two regimes: all-distinct input, where every candidate attracts rows, and duplicated
+         input, where some attract none because an earlier candidate sits on the same point. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-more-clusters-than-data">
+            <output-dir compare="Text">kmeans-more-clusters-than-data</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-duplicate-points">
+            <output-dir compare="Text">kmeans-duplicate-points</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The cluster descriptor exposes exactly three fields, and the rewrite substitutes each away. A
+         reference that survives is either an unknown field or the descriptor used whole; both must name the
+         fields that exist rather than surface the rewrite's own variable as unresolved. -->
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="unknown-descriptor-field">
+            <output-dir compare="Text">unknown-descriptor-field</output-dir>
+            <expected-error>exposes only</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="bare-descriptor">
+            <output-dir compare="Text">bare-descriptor</output-dir>
+            <expected-error>exposes only</expected-error>
+        </compilation-unit>
+    </test-case>
+    <!-- Mixed widths and non-vector rows in one dataset, with membership written down. Declared Dimension
+         decides who takes part, so the same rows cluster one way at 2 and the opposite way at 3. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-mixed-dimensions">
+            <output-dir compare="Text">kmeans-mixed-dimensions</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The two shortfall reports are raised by different stages and say different things. RECLUSTER knows
+         the distinct-vector count and names it; Lloyd only knows what survived, so it names that instead.
+         init_mode "random" has no RECLUSTER at all, which is why the Lloyd backstop has to exist. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-random-init-short">
+            <output-dir compare="Text">kmeans-random-init-short</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- Initialization quality on structured data: four separable groups of unequal size must come back
+         with their exact sizes. Guards the oversampling factor, which an inertia sweep alone did not. -->
+</test-group>

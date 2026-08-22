@@ -63,6 +63,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -861,6 +862,21 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             if (op.hasExtraVariables()) {
                 writeArrayFieldOfNestedVariablesList("input-extra-variables", op.getAllInputsExtraVariables());
             }
+            return null;
+        } catch (IOException e) {
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
+        }
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, Void indent) throws AlgebricksException {
+        try {
+            jsonGenerator.writeStringField(OPERATOR_FIELD, "kmeans-stage");
+            jsonGenerator.writeStringField("candidate-variable", String.valueOf(op.getCandidateVariable()));
+            jsonGenerator.writeStringField("vector-variable", String.valueOf(op.getVectorVariable()));
+            jsonGenerator.writeStringField("pool-variable", String.valueOf(op.getPoolVariable()));
+            jsonGenerator.writeNumberField("top-count", op.getTopCount());
+            jsonGenerator.writeStringField("mode", op.getMode().getLabel());
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));

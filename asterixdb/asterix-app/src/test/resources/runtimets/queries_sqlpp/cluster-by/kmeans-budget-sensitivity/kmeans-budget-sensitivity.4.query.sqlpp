@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- Arm 2: the declared minimum, 128 KB = 4 frames.
+--
+-- That this query COMPLETES is the proof the spilling paths ran, and the arithmetic is checkable:
+--   candidate pool  = 2k * 5 rounds = 640 vectors * 128 dims * 8 B = 640 KB, five times the budget
+--   RECLUSTER partials = partitions * 640 tuples, ~2.6 MB at four partitions, twenty times the budget
+--   accumulator     = 640 slots against a 123-slot window, so six sweeps
+--   per-vector scan = 500 rows per partition against a 123-vector block, so five blocks
+-- None of that fits 128 KB. A build that held any of it resident would fail here rather than return a
+-- different answer, and a build that spilled it in a different ORDER would return a different answer
+-- rather than fail. Both failure modes are caught by comparing against arm 1.
+use test;
+
+set `compiler.clusterbymemory` "128KB";
+
+from Points as p
+cluster by p.vec as sc
+cluster as members
+with { "dimension": [128], "num_clusters": 64 }
+select (select value gi.p.id from members as gi order by gi.p.id) as ids,
+       array_count(members) as cnt,
+       sc.cluster_radius as radius
+order by ids;

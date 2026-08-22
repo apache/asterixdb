@@ -27,6 +27,9 @@ import java.util.Map;
 import org.apache.asterix.algebra.operators.physical.AssignBatchPOperator;
 import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
+import org.apache.asterix.algebra.operators.physical.KMeansLloydLoopPOperator;
+import org.apache.asterix.algebra.operators.physical.KMeansOversampleLoopPOperator;
+import org.apache.asterix.algebra.operators.physical.KMeansReclusterPOperator;
 import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.VectorSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -68,6 +71,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -122,6 +126,23 @@ public class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysicalOperat
             isBatchAssignEnabled = isBatchAssignEnabled(context);
             cboMode = physConfig.getCBOMode();
             cboTestMode = physConfig.getCBOTestMode();
+        }
+
+        @Override
+        public IPhysicalOperator visitKMeansStageOperator(KMeansStageOperator op, Boolean topLevelOp)
+                throws AlgebricksException {
+            // One physical class per stage; the mode is read here and nowhere else below it, as the join
+            // family reads its kind here and hands it to a per-strategy class.
+            switch (op.getMode()) {
+                case RECLUSTER:
+                    return new KMeansReclusterPOperator();
+                case OVERSAMPLE_LOOP:
+                    return new KMeansOversampleLoopPOperator();
+                case LLOYD_LOOP:
+                    return new KMeansLloydLoopPOperator();
+                default:
+                    throw new IllegalStateException("unexpected kmeans-stage mode: " + op.getMode());
+            }
         }
 
         protected Enum groupByAlgorithm(GroupByOperator gby, Boolean topLevelOp) {

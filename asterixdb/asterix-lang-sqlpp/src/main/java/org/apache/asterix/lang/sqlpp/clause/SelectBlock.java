@@ -36,6 +36,9 @@ public class SelectBlock extends AbstractClause {
     private final List<AbstractClause> letWhereClauses = new ArrayList<>();
     private GroupbyClause groupbyClause;
     private final List<AbstractClause> letHavingClausesAfterGby = new ArrayList<>();
+    // CLUSTER BY is mutually exclusisve with GROUP BY; set by the parser (not a constructor param
+    // to avoid touching the many existing SelectBlock construction sites).
+    private ClusterbyClause clusterByClause;
 
     public SelectBlock(SelectClause selectClause, FromClause fromClause, List<AbstractClause> letWhereClauses,
             GroupbyClause groupbyClause, List<AbstractClause> letHavingClausesAfterGby) {
@@ -108,9 +111,22 @@ public class SelectBlock extends AbstractClause {
         return !letHavingClausesAfterGby.isEmpty();
     }
 
+    public ClusterbyClause getClusterbyClause() {
+        return clusterByClause;
+    }
+
+    public void setClusterbyClause(ClusterbyClause clusterByClause) {
+        this.clusterByClause = clusterByClause;
+    }
+
+    public boolean hasClusterbyClause() {
+        return clusterByClause != null;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(fromClause, groupbyClause, letWhereClauses, letHavingClausesAfterGby, selectClause);
+        return Objects.hash(fromClause, groupbyClause, clusterByClause, letWhereClauses, letHavingClausesAfterGby,
+                selectClause);
     }
 
     @Override
@@ -124,6 +140,7 @@ public class SelectBlock extends AbstractClause {
         }
         SelectBlock target = (SelectBlock) object;
         return Objects.equals(fromClause, target.fromClause) && Objects.equals(groupbyClause, target.groupbyClause)
+                && Objects.equals(clusterByClause, target.clusterByClause)
                 && Objects.equals(letWhereClauses, target.letWhereClauses)
                 && Objects.equals(letHavingClausesAfterGby, target.letHavingClausesAfterGby)
                 && Objects.equals(selectClause, target.selectClause);

@@ -51,6 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -357,6 +358,27 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             }
         }
         buffer.append(']');
+        return null;
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, Integer indent) throws AlgebricksException {
+        AlgebricksStringBuilderWriter out = addIndent(indent).append("kmeans-stage ")
+                .append(str(op.getCandidateVariable())).append(" <- ").append(op.getMode().getLabel());
+        switch (op.getMode()) {
+            case RECLUSTER:
+                out.append(" pool ").append(str(op.getPoolVariable())).append(" to ")
+                        .append(String.valueOf(op.getTopCount())).append(" means");
+                break;
+            case OVERSAMPLE_LOOP:
+                out.append(' ').append(String.valueOf(op.getLoopRounds())).append(" rounds of ")
+                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()));
+                break;
+            default:
+                out.append(' ').append(str(op.getVectorVariable())).append(" vs pool ")
+                        .append(str(op.getPoolVariable()));
+                break;
+        }
         return null;
     }
 

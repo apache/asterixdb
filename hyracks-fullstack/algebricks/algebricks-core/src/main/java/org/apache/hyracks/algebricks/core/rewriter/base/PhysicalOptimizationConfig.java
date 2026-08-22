@@ -32,6 +32,7 @@ public class PhysicalOptimizationConfig {
 
     private static final String FRAMESIZE = "FRAMESIZE";
     private static final String MAX_FRAMES_EXTERNAL_SORT = "MAX_FRAMES_EXTERNAL_SORT";
+    private static final String MAX_FRAMES_FOR_CLUSTER_BY = "MAX_FRAMES_FOR_CLUSTER_BY";
     private static final String MAX_FRAMES_EXTERNAL_GROUP_BY = "MAX_FRAMES_EXTERNAL_GROUP_BY";
     private static final String MAX_FRAMES_FOR_JOIN_LEFT_INPUT = "MAX_FRAMES_FOR_JOIN_LEFT_INPUT";
     private static final String MAX_FRAMES_FOR_JOIN = "MAX_FRAMES_FOR_JOIN";
@@ -139,6 +140,19 @@ public class PhysicalOptimizationConfig {
 
     public void setMaxFramesExternalGroupBy(int frameLimit) {
         setInt(MAX_FRAMES_EXTERNAL_GROUP_BY, frameLimit);
+    }
+
+    /**
+     * The budget for one CLUSTER BY k-means operator instance in a partition. It bounds the block of vectors
+     * held while scoring, and the sort runs the merges spill through; the default matches group-by/window.
+     */
+    public int getMaxFramesForClusterBy() {
+        int frameSize = getFrameSize();
+        return getInt(MAX_FRAMES_FOR_CLUSTER_BY, (int) (((long) 32 * MB) / frameSize));
+    }
+
+    public void setMaxFramesForClusterBy(int frameLimit) {
+        setInt(MAX_FRAMES_FOR_CLUSTER_BY, frameLimit);
     }
 
     public int getMaxFramesExternalSort() {

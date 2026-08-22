@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -231,6 +232,12 @@ public class RequiredCapacityVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        visitInternal(op, true);
+        return null;
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
         visitInternal(op, true);
         return null;
     }

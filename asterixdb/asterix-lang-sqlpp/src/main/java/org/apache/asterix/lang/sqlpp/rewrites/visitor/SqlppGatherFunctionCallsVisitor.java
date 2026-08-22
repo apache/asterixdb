@@ -30,6 +30,7 @@ import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -91,6 +92,20 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
     @Override
     public Void visit(Projection projection, Void arg) throws CompilationException {
         return projection.hasExpression() ? projection.getExpression().accept(this, arg) : null;
+    }
+
+    @Override
+    public Void visit(ClusterbyClause cc, Void arg) throws CompilationException {
+        cc.getClusteringExpression().accept(this, arg);
+        if (cc.hasClusterFieldList()) {
+            for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
+                field.first.accept(this, arg);
+            }
+        }
+        if (cc.hasWithOptions()) {
+            cc.getWithOptions().accept(this, arg);
+        }
+        return null;
     }
 
     @Override

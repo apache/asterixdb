@@ -199,6 +199,7 @@ import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.lang.sqlpp.JoinClauseRightInput;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -258,6 +259,7 @@ import java.util.regex.Pattern;
 class SQLPPParser extends ScopeChecker implements IParser {
 
     // tokens parsed as identifiers
+    private static final String CLUSTER = "CLUSTER";
     private static final String CUBE = "CUBE";
     private static final String CURRENT = "CURRENT";
     private static final String DEFAULT = "DEFAULT";
@@ -5992,6 +5994,7 @@ SelectBlock SelectBlock() throws ParseException:
   WhereClause whereClause = null;
   List<AbstractClause> fromLetWhereClauses = new ArrayList<AbstractClause>();
   GroupbyClause groupbyClause = null;
+  ClusterbyClause clusterByClause = null;
   List<LetClause> gbyLetClauses = null;
   HavingClause havingClause = null;
   List<AbstractClause> gbyLetHavingClauses = new ArrayList<AbstractClause>();
@@ -6014,6 +6017,9 @@ SelectBlock SelectBlock() throws ParseException:
                 gbyLetClauses = LetClause()
             )?
             (havingClause = HavingClause())?
+          |
+            LOOKAHEAD({laIdentifier(CLUSTER) && laToken(2, BY)})
+            clusterByClause = ClusterbyClause()
           )?
         )
         |
@@ -6051,6 +6057,9 @@ SelectBlock SelectBlock() throws ParseException:
             gbyLetClauses = LetClause()
         )?
         (havingClause = HavingClause())?
+     |
+        LOOKAHEAD({laIdentifier(CLUSTER) && laToken(2, BY)})
+        clusterByClause = ClusterbyClause()
      )?
      selectClause = SelectClause()
     )
@@ -6071,6 +6080,7 @@ SelectBlock SelectBlock() throws ParseException:
     SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, fromLetWhereClauses, groupbyClause,
       gbyLetHavingClauses);
     selectBlock.setSourceLocation(startSrcLoc);
+    selectBlock.setClusterbyClause(clusterByClause);
     return selectBlock;
   }
 }
@@ -6586,6 +6596,40 @@ GroupbyClause GroupbyClause()throws ParseException :
       gbc.setGroupFieldList(groupFieldList);
       replaceCurrentScope(newScope);
       return addSourceLocation(gbc, startToken);
+    }
+}
+
+ClusterbyClause ClusterbyClause() throws ParseException:
+{
+    Token startToken = null;
+    Expression clusteringExpr = null;
+    VariableExpr descriptorVar = null;
+    VariableExpr membersVar = null;
+    List<Pair<Expression, Identifier>> clusterFieldList = null;
+    Pair<VariableExpr, List<Pair<Expression, Identifier>>> membersVarWithFieldList = null;
+    RecordConstructor withOptions = null;
+}
+{
+    {
+        Scope newScope = extendCurrentScopeNoPush(true);
+    }
+    <IDENTIFIER> {startToken = token; }
+    <BY> clusteringExpr = Expression()
+    <AS> descriptorVar = Variable()
+    (
+        LOOKAHEAD({laIdentifier(CLUSTER) && laToken(2, AS)})
+        <IDENTIFIER> <AS> membersVarWithFieldList = VariableWithFieldMap()
+        {
+            membersVar = membersVarWithFieldList.first;
+            clusterFieldList = membersVarWithFieldList.second;
+        }
+    )?
+    ( <WITH> withOptions = RecordConstructor() )?
+    {
+        ClusterbyClause cbc =
+            new ClusterbyClause(clusteringExpr, descriptorVar, membersVar, clusterFieldList, withOptions);
+        replaceCurrentScope(newScope);
+        return addSourceLocation(cbc, startToken);
     }
 }
 

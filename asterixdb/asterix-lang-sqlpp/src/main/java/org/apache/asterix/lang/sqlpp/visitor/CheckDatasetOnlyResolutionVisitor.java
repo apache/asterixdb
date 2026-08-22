@@ -45,6 +45,7 @@ import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -210,6 +211,11 @@ public final class CheckDatasetOnlyResolutionVisitor
 
     @Override
     public Boolean visit(GroupbyClause gc, VariableExpr arg) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ClusterbyClause cc, VariableExpr arg) throws CompilationException {
         return false;
     }
 

@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -217,6 +218,11 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
 
     @Override
     public Boolean visit(GroupbyClause gc, ILangExpression parentSelectBlock) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ClusterbyClause cc, ILangExpression arg) throws CompilationException {
         return false;
     }
 

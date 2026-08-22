@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
@@ -48,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -305,6 +307,22 @@ public class SubstituteVariableVisitor
                     substUsedVariables(op.getInputExtraVariables(i), pair.first, pair.second);
                 }
             }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        // vectorVariable is null only for RECLUSTER, the one mode without a vector input.
+        if (op.getVectorVariable() != null && op.getVectorVariable().equals(pair.first)) {
+            op.getVectorRef().setValue(new VariableReferenceExpression(pair.second));
+        }
+        if (op.getPoolVariable().equals(pair.first)) {
+            op.getPoolRef().setValue(new VariableReferenceExpression(pair.second));
+        }
+        if (op.getCandidateVariable().equals(pair.first)) {
+            op.setCandidateVariable(pair.second);
         }
         return null;
     }

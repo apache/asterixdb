@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -240,6 +241,12 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     public Void visitIntersectOperator(IntersectOperator op, ILogicalOperator arg) throws AlgebricksException {
         mapChildren(op, arg);
         mapVariablesForIntersect(op, arg);
+        return null;
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, ILogicalOperator arg) throws AlgebricksException {
+        mapVariablesStandard(op, arg);
         return null;
     }
 

@@ -68,6 +68,13 @@ public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingV
                     continue;
                 }
 
+                // A rewrite may mark a generated binding as not-to-be-inlined (compiled once and shared):
+                // inlining a multiply-referenced binding duplicates its subplan per reference, which grows the
+                // plan exponentially for chained bindings (e.g. the CLUSTER BY k-means centroid lists).
+                if (context.isNoInlineLetVar(letClause.getVarExpr().getVar())) {
+                    continue;
+                }
+
                 // Removes the WITH entry and adds variable-expr mapping into the varExprMap.
                 with.remove();
                 varExprMap.put(letClause.getVarExpr(), bindingExpr);

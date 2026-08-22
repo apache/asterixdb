@@ -19,6 +19,7 @@
  !-->
 <!DOCTYPE test-suite [
         <!ENTITY sqlpp_queries SYSTEM "sqlpp_queries.xml">
+        <!ENTITY ClusterByQueries SYSTEM "queries_sqlpp/cluster-by/ClusterByQueries.xml">
         ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="aws-s3-external-dataset">
@@ -126,4 +127,5 @@
     </test-case>
   </test-group>
   &sqlpp_queries;
+  &ClusterByQueries;
 </test-suite>

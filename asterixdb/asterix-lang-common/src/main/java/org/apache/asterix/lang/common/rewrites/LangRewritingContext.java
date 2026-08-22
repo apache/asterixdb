@@ -20,8 +20,10 @@ package org.apache.asterix.lang.common.rewrites;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
@@ -42,6 +44,23 @@ public class LangRewritingContext {
     private final Counter varCounter;
     private int systemVarCounter = 1;
     private final Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
+    private final Set<VarIdentifier> noInlineLetVars = new HashSet<>();
+
+    /**
+     * Marks a (generated) LET/WITH-bound variable whose binding must NOT be inlined per reference by
+     * {@code InlineWithExpressionVisitor}: it is compiled once and shared. Used by rewrites that emit
+     * small, multiply-referenced bindings (e.g. the CLUSTER BY k-means centroid lists), where inlining
+     * per reference would grow the plan exponentially.
+     */
+    @org.apache.hyracks.util.annotations.AiProvenance(agent = org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.ASSISTED)
+    public void markNoInlineLetVar(VarIdentifier var) {
+        noInlineLetVars.add(var);
+    }
+
+    @org.apache.hyracks.util.annotations.AiProvenance(agent = org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.ASSISTED)
+    public boolean isNoInlineLetVar(VarIdentifier var) {
+        return noInlineLetVars.contains(var);
+    }
 
     public LangRewritingContext(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions,
             List<ViewDecl> declaredViews, IWarningCollector warningCollector, List<DatasetDecl> declaredDatasets,

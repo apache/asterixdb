@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- The Lloyd backstop, which is the only check on this path. initMode "random" seeds Lloyd directly from k
+-- rows and never runs RECLUSTER, so the distinct-vector check that reports the shortfall for the default
+-- init mode does not exist here. Three rows, eight clusters asked for: the seed is short, and it is Lloyd
+-- that has to notice.
+
+from [{"v":[1.0,1.0]}, {"v":[5.0,5.0]}, {"v":[9.0,9.0]}] as p
+cluster by p.v as sc
+cluster as members
+with { "dimension": [2], "num_clusters": 8, "init_mode": "random" }
+select value sc.cluster_id
+order by sc.cluster_id;

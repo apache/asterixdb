@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -178,6 +179,9 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
                     letHavingClause.accept(this, step);
                 }
             }
+        }
+        if (selectBlock.hasClusterbyClause()) {
+            selectBlock.getClusterbyClause().accept(this, step);
         }
         return null;
     }
@@ -332,6 +336,26 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             }
         }
         out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(ClusterbyClause cc, Integer step) throws CompilationException {
+        out.println(skip(step) + "ClusterBy");
+        cc.getClusteringExpression().accept(this, step + 1);
+        out.println(skip(step + 1) + "AS");
+        cc.getClusterDescriptorVar().accept(this, step + 1);
+        if (cc.hasClusterMembersVar()) {
+            out.println(skip(step + 1) + "CLUSTER AS");
+            cc.getClusterMembersVar().accept(this, step + 1);
+            if (cc.hasClusterFieldList()) {
+                printFieldList(step + 1, cc.getClusterFieldList());
+            }
+        }
+        if (cc.hasWithOptions()) {
+            out.println(skip(step + 1) + "WITH");
+            cc.getWithOptions().accept(this, step + 1);
+        }
         return null;
     }
 

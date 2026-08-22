@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -345,5 +346,16 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
             }
         }
         return false;
+    }
+
+    @Override
+    public Boolean visit(ClusterbyClause cc, T arg) throws CompilationException {
+        if (visit(cc.getClusteringExpression(), arg)) {
+            return true;
+        }
+        if (cc.hasClusterFieldList() && visitFieldList(cc.getClusterFieldList(), arg)) {
+            return true;
+        }
+        return cc.hasWithOptions() && visit(cc.getWithOptions(), arg);
     }
 }

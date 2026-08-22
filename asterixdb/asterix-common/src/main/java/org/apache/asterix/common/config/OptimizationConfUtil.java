@@ -44,6 +44,11 @@ public class OptimizationConfUtil {
     public static final int MIN_FRAME_LIMIT_FOR_JOIN = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN;
     public static final int MIN_FRAME_LIMIT_FOR_WINDOW = WindowPOperator.MIN_FRAME_LIMIT_FOR_WINDOW;
     public static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = 5; // see InvertedIndexPOperator
+    // Declared here rather than on the POperator because asterix-common cannot see asterix-algebra. A CLUSTER BY
+    // stage needs a frame for the block it scores, frames for the sort runs its merges spill through (the merger
+    // uses framesLimit - 1 as its merge width), and one to write out. Four is the same floor external group-by
+    // enforces, and for the same reason.
+    public static final int MIN_FRAME_LIMIT_FOR_CLUSTER_BY = 4;
 
     private OptimizationConfUtil() {
     }
@@ -64,6 +69,9 @@ public class OptimizationConfUtil {
                 compilerProperties.getWindowMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_WINDOW, sourceLoc);
         int textSearchFrameLimit =
                 getTextSearchNumFrames(compilerProperties, frameSize, querySpecificConfig, sourceLoc);
+        int clusterByFrameLimit = getFrameLimit(CompilerProperties.COMPILER_CLUSTERBYMEMORY_KEY,
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_CLUSTERBYMEMORY_KEY),
+                compilerProperties.getClusterByMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_CLUSTER_BY, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
                 compilerProperties.getSortParallel());
@@ -118,6 +126,7 @@ public class OptimizationConfUtil {
         physOptConf.setMaxFramesForJoin(joinFrameLimit);
         physOptConf.setMaxFramesForWindow(windowFrameLimit);
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
+        physOptConf.setMaxFramesForClusterBy(clusterByFrameLimit);
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);

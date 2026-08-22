@@ -50,6 +50,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -300,6 +301,11 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
             return true;
         }
         return false;
+    }
+
+    @Override
+    public Boolean visit(ClusterbyClause cc, ILangExpression arg) throws CompilationException {
+        return visit(cc.getClusteringExpression(), arg);
     }
 
     @Override

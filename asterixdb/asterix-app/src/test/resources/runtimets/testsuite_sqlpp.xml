@@ -24,6 +24,7 @@
         <!ENTITY TemporalQueries SYSTEM "queries_sqlpp/temporal/TemporalQueries.xml">
         <!ENTITY CBOJoinQueries SYSTEM "queries_sqlpp/cbo-join/CBOJoinQueries.xml">
         <!ENTITY VectorQueries SYSTEM "queries_sqlpp/vector/VectorQueries.xml">
+        <!ENTITY ClusterByQueries SYSTEM "queries_sqlpp/cluster-by/ClusterByQueries.xml">
         ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
   &ObjectsQueries;
@@ -33,4 +34,5 @@
   &SqlppQueries;
   &CBOJoinQueries;
   &VectorQueries;
+  &ClusterByQueries;
 </test-suite>

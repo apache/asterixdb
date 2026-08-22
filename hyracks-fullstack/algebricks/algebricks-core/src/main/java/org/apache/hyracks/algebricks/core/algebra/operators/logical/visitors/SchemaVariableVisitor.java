@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -226,6 +227,15 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+        VariableUtilities.getProducedVariables(op, schemaVariables);
+        return null;
+    }
+
+    @Override
+    public Void visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
+        // Produced variables only: the operator consumes its input tuples and emits one new column, which is
+        // what recomputeSchema and the propagation policy both say. standardLayout would additionally report
+        // the inputs' live variables, which are gone by then. Same shape as visitAggregateOperator.
         VariableUtilities.getProducedVariables(op, schemaVariables);
         return null;
     }

@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -51,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -528,6 +530,24 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
 
         IntersectOperator opCopy = new IntersectOperator(outputCompareVarsCopy, outputExtraVarsCopy,
                 inputCompareVarsCopy, inputExtraVarsCopy, partitionsMapCopy);
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitKMeansStageOperator(KMeansStageOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        // vectorRef is null for the single-input merge modes (RECLUSTER/LLOYD).
+        Mutable<ILogicalExpression> vectorRefCopy = op.getVectorVariable() == null ? null
+                : new MutableObject<>(new VariableReferenceExpression(deepCopyVariable(op.getVectorVariable())));
+        KMeansStageOperator opCopy = new KMeansStageOperator(vectorRefCopy,
+                new MutableObject<ILogicalExpression>(
+                        new VariableReferenceExpression(deepCopyVariable(op.getPoolVariable()))),
+                deepCopyVariable(op.getCandidateVariable()), op.getCandidateVarType(), op.getTopCount());
+        opCopy.setMode(op.getMode());
+        opCopy.setSeed(op.getSeed());
+        opCopy.setLoopRounds(op.getLoopRounds());
+        opCopy.setDimension(op.getDimension());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

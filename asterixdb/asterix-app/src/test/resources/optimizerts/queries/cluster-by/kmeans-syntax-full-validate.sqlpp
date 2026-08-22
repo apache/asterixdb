@@ -1,0 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- CLUSTER BY syntax plan validation (full): the flagship APE 33 example — movies clustered by the
+-- embedding of their summarized reviews — exercising CLUSTER AS plus every WITH option. Desugars into
+-- the same distributed k-means shape as kmeans-full-validate (seed + 3 unrolled Lloyd iterations).
+drop dataverse clusterby_test if exists;
+create dataverse clusterby_test;
+use clusterby_test;
+
+create type clusterby_test.MovieType as closed {
+  movie_id : integer,
+  movie_year : integer,
+  reviewEmbedding : [double]
+};
+create dataset movies(MovieType) primary key movie_id;
+
+from movies as m
+where m.movie_year < 2020
+cluster by m.reviewEmbedding as sc
+cluster as movieCluster
+with {
+  "clustering_algorithm": "K-Means",
+  "dimension": [2], "num_clusters": 5,
+  "cross_pollination": false,
+  "similarity": "euclidean"
+}
+select sc.cluster_id as cid, array_count(movieCluster) as cnt, movieCluster;

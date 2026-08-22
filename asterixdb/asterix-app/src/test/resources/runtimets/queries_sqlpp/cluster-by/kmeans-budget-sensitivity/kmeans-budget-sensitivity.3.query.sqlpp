@@ -1,0 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- Arm 1: the default budget (32 MB = 1024 frames). A frame holds 123 vectors of this width, so the
+-- budget covers 31,655 -- more than the 640-candidate pool, the 640 accumulator slots and every sort,
+-- so nothing spills. This is the reference the other two arms must reproduce exactly.
+use test;
+
+from Points as p
+cluster by p.vec as sc
+cluster as members
+with { "dimension": [128], "num_clusters": 64 }
+select (select value gi.p.id from members as gi order by gi.p.id) as ids,
+       array_count(members) as cnt,
+       sc.cluster_radius as radius
+order by ids;

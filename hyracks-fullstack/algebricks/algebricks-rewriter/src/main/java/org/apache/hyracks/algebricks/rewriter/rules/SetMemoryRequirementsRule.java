@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
@@ -308,6 +309,15 @@ public class SetMemoryRequirementsRule implements IAlgebraicRewriteRule {
 
         @Override
         public Void visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
+            return null;
+        }
+
+        @Override
+        public Void visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
+            // The k-means stages hold a block of vectors while scoring and spill their merges through sort
+            // runs; both are sized from this budget. Without it the operator keeps fixedMemoryBudget(1) while
+            // the runtime allocates freely, which is how the pool came to be materialized unbounded.
+            setOperatorMemoryBudget(op, physConfig.getMaxFramesForClusterBy());
             return null;
         }
 

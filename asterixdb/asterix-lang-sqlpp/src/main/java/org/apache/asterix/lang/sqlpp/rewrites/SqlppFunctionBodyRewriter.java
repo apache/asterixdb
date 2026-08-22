@@ -88,6 +88,9 @@ public class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Generates column names.
         generateColumnNames();
 
+        // Cluster-by rewrites, before the group-by rewrites for the same reason as in SqlppQueryRewriter.
+        rewriteClusterBys();
+
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 

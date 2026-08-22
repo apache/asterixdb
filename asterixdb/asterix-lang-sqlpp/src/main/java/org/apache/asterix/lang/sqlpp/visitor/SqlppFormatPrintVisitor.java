@@ -31,8 +31,10 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.InsertStatement;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -52,6 +54,7 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlppVisitor<Void, Integer> {
 
@@ -172,6 +175,9 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 }
             }
         }
+        if (selectBlock.hasClusterbyClause()) {
+            selectBlock.getClusterbyClause().accept(this, step);
+        }
         return null;
     }
 
@@ -290,6 +296,35 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 out.print(")");
             }
             out.print(")");
+        }
+        out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(ClusterbyClause cc, Integer step) throws CompilationException {
+        out.print(skip(step) + "cluster by ");
+        cc.getClusteringExpression().accept(this, step + 2);
+        out.print(" as ");
+        cc.getClusterDescriptorVar().accept(this, step + 2);
+        if (cc.hasClusterMembersVar()) {
+            out.print(" cluster as ");
+            cc.getClusterMembersVar().accept(this, step + 2);
+            if (cc.hasClusterFieldList()) {
+                out.print("(");
+                String sep = "";
+                for (Pair<Expression, Identifier> field : cc.getClusterFieldList()) {
+                    out.print(sep);
+                    field.first.accept(this, step + 2);
+                    out.print(" as " + field.second.getValue());
+                    sep = COMMA;
+                }
+                out.print(")");
+            }
+        }
+        if (cc.hasWithOptions()) {
+            out.print(" with ");
+            cc.getWithOptions().accept(this, step + 2);
         }
         out.println();
         return null;

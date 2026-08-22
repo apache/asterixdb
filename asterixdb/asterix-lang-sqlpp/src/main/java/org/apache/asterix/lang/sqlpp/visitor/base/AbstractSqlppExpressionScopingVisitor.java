@@ -50,6 +50,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.JoinClause;
@@ -279,6 +280,28 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             gc.setWithVarMap(newWithMap);
         }
         // Replaces the current scope with the new scope.
+        scopeChecker.replaceCurrentScope(newScope);
+        return null;
+    }
+
+    @Override
+    public Expression visit(ClusterbyClause cc, ILangExpression arg) throws CompilationException {
+        // Resolve the clustering expression and any member-field expressions in the current (pre-cluster) scope.
+        cc.setClusteringExpression(visit(cc.getClusteringExpression(), cc));
+        if (cc.hasClusterFieldList()) {
+            for (Pair<Expression, Identifier> memberField : cc.getClusterFieldList()) {
+                memberField.first = visit(memberField.first, cc);
+            }
+        }
+        // After CLUSTER BY, the pre-cluster bindings are replaced by the descriptor (sc) and members (rvc) variables;
+        // variables defined before the current SELECT BLOCK (e.g., a WITH clause or outer scope) remain visible.
+        Scope newScope = new Scope(scopeChecker, scopeChecker.getPrecedingScope());
+        VariableExpr descriptorVar = cc.getClusterDescriptorVar();
+        addNewVarSymbolToScope(newScope, descriptorVar.getVar(), descriptorVar.getSourceLocation());
+        if (cc.hasClusterMembersVar()) {
+            VariableExpr membersVar = cc.getClusterMembersVar();
+            addNewVarSymbolToScope(newScope, membersVar.getVar(), membersVar.getSourceLocation());
+        }
         scopeChecker.replaceCurrentScope(newScope);
         return null;
     }

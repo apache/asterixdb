@@ -67,6 +67,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlCompatRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseAggregateExtractionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppChangeExprToSelectExprVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppClusterByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppFunctionCallResolverVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
@@ -158,6 +159,11 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Must run after generateColumnNames() because it might need to generate new column names
         // for the new projections that it introduces
         rewriteSqlCompat();
+
+        // Cluster-by rewrites: desugar CLUSTER BY into a k-means query (LET centroids + GROUP BY). Must run
+        // BEFORE substituteGroupbyKeyExpression()/rewriteGroupBys() so the emitted GROUP BY goes through the
+        // full group-by pipeline (key-var registration, group-var aggregation) exactly like a parsed one.
+        rewriteClusterBys();
 
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
@@ -330,6 +336,11 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteGroupBys() throws CompilationException {
         SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context);
         rewriteTopExpr(groupByVisitor, null);
+    }
+
+    protected void rewriteClusterBys() throws CompilationException {
+        SqlppClusterByVisitor clusterByVisitor = new SqlppClusterByVisitor(context);
+        rewriteTopExpr(clusterByVisitor, null);
     }
 
     protected void rewriteGroupingSets() throws CompilationException {

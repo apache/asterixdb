@@ -55,6 +55,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
@@ -184,6 +185,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
         selectClause = (SelectClause) selectBlock.getSelectClause().accept(this, arg);
         SelectBlock copy = new SelectBlock(selectClause, fromClause, letWhereClauses, gbyClause, gbyLetHavingClauses);
+        if (selectBlock.hasClusterbyClause()) {
+            copy.setClusterbyClause((ClusterbyClause) selectBlock.getClusterbyClause().accept(this, arg));
+        }
         copy.setSourceLocation(selectBlock.getSourceLocation());
         return copy;
     }
@@ -333,6 +337,21 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         GroupbyClause copy = new GroupbyClause(newGbyList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
         copy.setSourceLocation(gc.getSourceLocation());
+        return copy;
+    }
+
+    @Override
+    public ClusterbyClause visit(ClusterbyClause cc, Void arg) throws CompilationException {
+        Expression newExpr = (Expression) cc.getClusteringExpression().accept(this, arg);
+        VariableExpr newDescVar = (VariableExpr) cc.getClusterDescriptorVar().accept(this, arg);
+        VariableExpr newMembersVar =
+                cc.hasClusterMembersVar() ? (VariableExpr) cc.getClusterMembersVar().accept(this, arg) : null;
+        List<Pair<Expression, Identifier>> newClusterFieldList =
+                cc.hasClusterFieldList() ? copyFieldList(cc.getClusterFieldList(), arg) : null;
+        RecordConstructor newWith =
+                cc.hasWithOptions() ? (RecordConstructor) cc.getWithOptions().accept(this, arg) : null;
+        ClusterbyClause copy = new ClusterbyClause(newExpr, newDescVar, newMembersVar, newClusterFieldList, newWith);
+        copy.setSourceLocation(cc.getSourceLocation());
         return copy;
     }
 
