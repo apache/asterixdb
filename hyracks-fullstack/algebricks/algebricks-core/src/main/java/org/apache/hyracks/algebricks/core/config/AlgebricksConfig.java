@@ -37,6 +37,8 @@ public class AlgebricksConfig {
     public static final boolean ARRAY_INDEX_DEFAULT = true;
     public static final boolean CBO_DEFAULT = true;
     public static final boolean CBO_TEST_DEFAULT = false;
+    public static final int CBO_MAX_JOINS_DEFAULT = 15;
+    public static final int CBO_MAX_JOINS_UPPER_BOUND = 19;
     public static final boolean FORCE_JOIN_ORDER_DEFAULT = false;
     public static final boolean REWRITE_DISJUNCTION_DEFAULT = false;
     public static final boolean AGGREGATE_DISTINCT_HASH_DEFAULT = false;

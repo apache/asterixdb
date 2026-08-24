@@ -59,6 +59,7 @@ public class PhysicalOptimizationConfig {
     private static final String BATCH_LOOKUP = "BATCH_LOOKUP";
     private static final String CBO = "CBO";
     private static final String CBO_TEST = "CBO_TEST";
+    private static final String CBO_MAX_JOINS = "CBO_MAX_JOINS";
     private static final String FORCE_JOIN_ORDER = "FORCE_JOIN_ORDER";
     private static final String QUERY_PLAN_SHAPE = "QUERY_PLAN_SHAPE";
     private static final String COLUMN_FILTER = "COLUMN_FILTER";
@@ -394,6 +395,14 @@ public class PhysicalOptimizationConfig {
 
     public void setCBOTestMode(boolean cboTest) {
         setBoolean(CBO_TEST, cboTest);
+    }
+
+    public int getCBOMaxJoins() {
+        return getInt(CBO_MAX_JOINS, AlgebricksConfig.CBO_MAX_JOINS_DEFAULT);
+    }
+
+    public void setCBOMaxJoins(int cboMaxJoins) {
+        setInt(CBO_MAX_JOINS, cboMaxJoins);
     }
 
     public void setForceJoinOrderMode(boolean forceJoinOrder) {

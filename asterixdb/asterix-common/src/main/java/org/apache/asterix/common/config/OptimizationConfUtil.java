@@ -102,6 +102,7 @@ public class OptimizationConfUtil {
                 getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_KEY, compilerProperties.getCBOMode());
         boolean cboTest = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_TEST_KEY,
                 compilerProperties.getCBOTestMode());
+        int cboMaxJoins = getCBOMaxJoins(compilerProperties, querySpecificConfig, sourceLoc);
         boolean forceJoinOrder = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_FORCE_JOIN_ORDER_KEY,
                 compilerProperties.getForceJoinOrderMode());
         String queryPlanShape = getString(querySpecificConfig, CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY,
@@ -144,6 +145,7 @@ public class OptimizationConfUtil {
         physOptConf.setBatchLookup(batchLookup);
         physOptConf.setCBOMode(cbo);
         physOptConf.setCBOTestMode(cboTest);
+        physOptConf.setCBOMaxJoins(cboMaxJoins);
         physOptConf.setForceJoinOrderMode(forceJoinOrder);
         physOptConf.setQueryPlanShapeMode(queryPlanShape);
         physOptConf.setColumnFilter(columnFilter);
@@ -298,6 +300,21 @@ public class OptimizationConfUtil {
                     : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
         } catch (IllegalArgumentException e) {
             throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
+    }
+
+    private static int getCBOMaxJoins(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,
+            SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_CBO_MAXJOINS_KEY);
+        if (valueInQuery == null) {
+            return compilerProperties.getCBOMaxJoins();
+        }
+        @SuppressWarnings("unchecked")
+        IOptionType<Integer> type = CompilerProperties.Option.COMPILER_CBO_MAXJOINS.type();
+        try {
+            return type.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 

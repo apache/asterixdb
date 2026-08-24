@@ -143,6 +143,10 @@ public class CompilerProperties extends AbstractProperties {
                 "Enable/disable batch point-lookups when running queries with secondary indexes"),
         COMPILER_CBO(BOOLEAN, AlgebricksConfig.CBO_DEFAULT, "Set the mode for cost based optimization"),
         COMPILER_CBOTEST(BOOLEAN, AlgebricksConfig.CBO_TEST_DEFAULT, "Set the mode for cost based optimization"),
+        COMPILER_CBO_MAXJOINS(
+                getRangedIntegerType(1, AlgebricksConfig.CBO_MAX_JOINS_UPPER_BOUND),
+                AlgebricksConfig.CBO_MAX_JOINS_DEFAULT,
+                "The maximum number of joins for which cost based optimization enumerates join orders"),
         COMPILER_FORCEJOINORDER(
                 BOOLEAN,
                 AlgebricksConfig.FORCE_JOIN_ORDER_DEFAULT,
@@ -290,6 +294,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_CBO_TEST_KEY = Option.COMPILER_CBOTEST.ini();
 
+    public static final String COMPILER_CBO_MAXJOINS_KEY = Option.COMPILER_CBO_MAXJOINS.ini();
+
     public static final String COMPILER_FORCE_JOIN_ORDER_KEY = Option.COMPILER_FORCEJOINORDER.ini();
 
     public static final String COMPILER_QUERY_PLAN_SHAPE_KEY = Option.COMPILER_QUERYPLANSHAPE.ini();
@@ -436,6 +442,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean getCBOTestMode() {
         return accessor.getBoolean(Option.COMPILER_CBOTEST);
+    }
+
+    public int getCBOMaxJoins() {
+        return accessor.getInt(Option.COMPILER_CBO_MAXJOINS);
     }
 
     public boolean getForceJoinOrderMode() {

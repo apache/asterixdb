@@ -287,6 +287,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan2");
         numberOfFromTerms = leafInputs.size();
 
+        int numberOfJoins = numberOfFromTerms - 1;
+        int maxJoins = context.getPhysicalOptimizationConfig().getCBOMaxJoins();
+        if (numberOfJoins > maxJoins) {
+            // the memory needed to enumerate the join order grows as 2^numberOfFromTerms; leave the plan to the
+            // rule based optimizer instead.
+            LOGGER.info("Skipping CBO; number of joins {} exceeds the maximum of {}", numberOfJoins, maxJoins);
+            return cleanUp();
+        }
+
         if (LOGGER.isTraceEnabled()) {
             viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
             LOGGER.trace("viewInPlan");

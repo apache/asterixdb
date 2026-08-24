@@ -186,7 +186,7 @@ public class JoinEnum {
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
-        initCostHandleAndJoinNodes(context);
+        initCostHandle(context);
         this.allTabsJnNum = 1; // keeps track of where the final join Node will be. In case of bushy plans, this may not always be the last join nod     e.
         this.maxBits = 1;
         this.indexProvider = indexProvider;
@@ -194,10 +194,14 @@ public class JoinEnum {
         leafInputToJoinIndexMap = new HashMap<>();
     }
 
-    protected void initCostHandleAndJoinNodes(IOptimizationContext context) {
+    protected void initCostHandle(IOptimizationContext context) {
         this.cost = new Cost();
         this.costMethods = new CostMethods(context);
         this.stats = new Stats(optCtx, this);
+    }
+
+    // The join node array holds 2^numberOfTerms entries, so it is allocated only when enumeration actually starts.
+    private void initJoinNodes() {
         this.jnArraySize = (int) Math.pow(2.0, this.numberOfTerms);
         this.jnArray = new JoinNode[this.jnArraySize];
         // initialize all the join nodes
@@ -1349,6 +1353,7 @@ public class JoinEnum {
 
     // main entry point in this file
     protected AbstractPlanNode enumerateJoins() throws AlgebricksException {
+        initJoinNodes();
         // create a localJoinOp for use in calling existing nested loops code.
         InnerJoinOperator dummyInput = new InnerJoinOperator(null, null, null);
         localJoinOp = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
