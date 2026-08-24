@@ -1242,10 +1242,6 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("ann-distance", FunctionIdentifier.VARARGS);
     // CLUSTER BY: nearest_centroid(point, centroids) -> AINT32 index of the closest centroid.
     public static final FunctionIdentifier NEAREST_CENTROID = FunctionConstants.newAsterix("nearest-centroid", 2);
-    // CLUSTER BY: nearest_centroid_distance(point, centroids) -> ADOUBLE squared distance to the closest centroid
-    // (the k-means|| sampling score d2(x, C)).
-    public static final FunctionIdentifier NEAREST_CENTROID_DISTANCE =
-            FunctionConstants.newAsterix("nearest-centroid-distance", 2);
     // kmeans-recluster(partials, k): single-input merge — reduce partials, then weighted k-means++ to k (C0).
     public static final FunctionIdentifier KMEANS_RECLUSTER = FunctionConstants.newAsterix("kmeans-recluster", 2);
     // CLUSTER BY initMode "kmeansPP": the exact k-means|| oversampling init as one self-iterating
@@ -2016,7 +2012,6 @@ public class BuiltinFunctions {
         addFunction(ANN_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(NEAREST_CENTROID, AInt32TypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(NEAREST_CENTROID_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addPrivateFunction(KMEANS_RECLUSTER, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addPrivateFunction(KMEANS_OVERSAMPLE_LOOP, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addPrivateFunction(KMEANS_LLOYD_LOOP, OrderedListOfAnyTypeComputer.INSTANCE, true);

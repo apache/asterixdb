@@ -18,13 +18,12 @@
  */
 use test;
 -- CLUSTER BY syntax (desugared to distributed k-means). k=2 on the tiny 2-D dataset; the descriptor sc
--- (cluster_id, centroid, cluster_radius) and CLUSTER AS members are all exercised.
+-- (cluster_id, centroid) and CLUSTER AS members are all exercised.
 from Points as p
 cluster by p.vec as sc
 cluster as members
 with { "dimension": [2], "num_clusters": 2 }
 select sc.cluster_id as cid,
        array_count(members) as cnt,
-       array_count(sc.centroid) as dim,
-       sc.cluster_radius as radius
+       array_count(sc.centroid) as dim
 order by cid;

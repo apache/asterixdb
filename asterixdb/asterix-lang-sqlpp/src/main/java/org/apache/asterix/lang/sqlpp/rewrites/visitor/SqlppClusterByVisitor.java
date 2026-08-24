@@ -89,7 +89,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  *   FROM src AS t
  *   CLUSTER BY t.vec AS sc [CLUSTER AS members]
  *   WITH { "num_clusters": k, ... }
- *   SELECT ... sc.cluster_id ... sc.centroid ... sc.cluster_radius ... members ...
+ *   SELECT ... sc.cluster_id ... sc.centroid ... members ...
  * </pre>
  *
  * becomes (conceptually)
@@ -102,8 +102,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  *       C        = (FROM CFINAL AS c SELECT VALUE c ORDER BY c)   -- so cluster ids do not vary run to run
  *   FROM src AS t
  *   GROUP BY nearest_centroid(t.vec, C) AS $cid [GROUP AS members]
- *   SELECT ...   -- sc.cluster_id -&gt; nearest_centroid(t.vec, C), sc.centroid -&gt; centroid(t.vec),
- *                -- sc.cluster_radius -&gt; sqrt(max(nearest_centroid_distance(t.vec, C)))
+ *   SELECT ...   -- sc.cluster_id -&gt; nearest_centroid(t.vec, C), sc.centroid -&gt; centroid(t.vec)
  * </pre>
  *
  * {@code init_mode "random"} skips the oversampling/recluster init and seeds Lloyd from {@code k} vectors drawn
@@ -115,9 +114,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * GROUP BY it emits is desugared like a parsed one. The descriptor {@code sc} is never materialized: its field
  * accesses are substituted with their values.
  * <p>
- * {@code CLUSTER AS} members are {@code GROUP AS} members -- one field per FROM binding -- with one exception:
- * {@code sc.cluster_radius} aggregates a pre-group distance binding, and only group fields can be aggregated,
- * so a query reading the radius also sees {@code $__cbdist} in its members.
+ * {@code CLUSTER AS} members are {@code GROUP AS} members: one field per FROM binding, and nothing else.
  * <p>
  * Supports inner joins and UNNEST in the FROM clause (outer joins are refused), K-Means only,
  * Euclidean(-squared) distance, a fixed number of Lloyd iterations, and the two init modes above. The WITH
@@ -149,8 +146,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     // surviving reference to the descriptor means the query asked for something else -- see checkDescriptorFields.
     private static final String SC_CLUSTER_ID = "cluster_id";
     private static final String SC_CENTROID = "centroid";
-    private static final String SC_CLUSTER_RADIUS = "cluster_radius";
-    private static final String SC_FIELDS_DISPLAY = SC_CLUSTER_ID + ", " + SC_CENTROID + ", " + SC_CLUSTER_RADIUS;
+    private static final String SC_FIELDS_DISPLAY = SC_CLUSTER_ID + ", " + SC_CENTROID;
 
     // Seed-draw width guard function, by surface name (see callByName); resolves to the internal sql-count.
     private static final String ARRAY_COUNT_FN = "array_count";
@@ -269,22 +265,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         List<LetClause> centroidLets = new ArrayList<>();
         VarIdentifier finalCentroids = bindCentroidLets(centroidLets, cbc, vecsQuery, k, dimension, loc);
 
-        // Per-row distance to the assignment centroid, bound in the block before the GROUP BY so that the MAX
-        // behind cluster_radius stays a two-step local/global aggregate: an aggregate over C, a variable
-        // from outside the group, cannot decompose and would materialize every group. Only group fields can be
-        // aggregated, and group fields are what CLUSTER AS members are made of -- so this is bound only when
-        // the query reads cluster_radius, leaving members clean otherwise.
-        boolean usesRadius = readsDescriptorField(selectExpression, cbc.getClusterDescriptorVar(), SC_CLUSTER_RADIUS);
-        VariableExpr distVar = new VariableExpr(new VarIdentifier("$__cbdist"));
-        distVar.setSourceLocation(loc);
-        Expression distExpr = call(BuiltinFunctions.NEAREST_CENTROID_DISTANCE, loc, copy(clusteringExpr),
-                varRef(finalCentroids, loc));
-        LetClause distLet = new LetClause(distVar, distExpr);
-        distLet.setSourceLocation(loc);
         List<AbstractClause> letWhere = selectBlock.getLetWhereList();
-        if (usesRadius) {
-            letWhere.add(distLet);
-        }
 
         // Convert the block to: GROUP BY nearest_centroid(clusteringExpr, C) AS $cid [GROUP AS members]
         VariableExpr cidVar = newVar(loc);
@@ -295,16 +276,15 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         // those rows would group under a NULL key, handing back num_clusters + 1 clusters. The training side
         // already excludes them in the decoder; this is the same policy on the labeling side.
         //
-        // The predicate repeats the group-by key rather than binding it to a LET on purpose: a LET here would
-        // land in the CLUSTER AS members record for every query, the way $__cbdist does for the radius. The
-        // repeated call is common-subexpression-eliminated, so it costs no extra distance work.
+        // The predicate repeats the group-by key rather than binding it to a LET on purpose: a LET in this
+        // block would land in the CLUSTER AS members record for every query. The repeated call is
+        // common-subexpression-eliminated, so it costs no extra distance work.
         CallExpr labeled = call(BuiltinFunctions.IS_UNKNOWN, loc, copy(labelExpr));
         WhereClause labelable = new WhereClause(call(BuiltinFunctions.NOT, loc, labeled));
         labelable.setSourceLocation(loc);
         letWhere.add(labelable);
         // The field list mirrors SqlppGroupByVisitor.createGroupFieldList: the FROM bindings, which are the
-        // whole user-visible set since LET in a CLUSTER BY block is rejected, plus $__cbdist when the radius
-        // needs it as a group field.
+        // whole user-visible set since LET in a CLUSTER BY block is rejected.
         VariableExpr groupVar = cbc.hasClusterMembersVar() ? cbc.getClusterMembersVar() : null;
         List<Pair<Expression, Identifier>> groupFieldList = null;
         if (cbc.hasClusterFieldList()) {
@@ -314,9 +294,6 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
             for (VariableExpr fromVarExpr : SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause())) {
                 SqlppVariableUtil.addToFieldVariableList(fromVarExpr, groupFieldList);
             }
-            if (usesRadius) {
-                SqlppVariableUtil.addToFieldVariableList(distVar, groupFieldList);
-            }
         }
         GroupbyClause mainGby = groupBy(labelExpr, cidVar, groupVar, groupFieldList, loc);
 
@@ -325,7 +302,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         selectBlock.setClusterbyClause(null);
         selectBlock.setGroupbyClause(mainGby);
 
-        substituteDescriptorFields(selectExpression, cbc, clusteringExpr, labelExpr, distVar, usesRadius, loc);
+        substituteDescriptorFields(selectExpression, cbc, clusteringExpr, labelExpr, loc);
     }
 
     /**
@@ -473,36 +450,18 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
      * post-group descriptor field on the group-aggregation path.
      */
     private void substituteDescriptorFields(SelectExpression selectExpression, ClusterbyClause cbc,
-            Expression clusteringExpr, Expression labelExpr, VariableExpr distVar, boolean usesRadius,
-            SourceLocation loc) throws CompilationException {
+            Expression clusteringExpr, Expression labelExpr, SourceLocation loc) throws CompilationException {
         VariableExpr scVar = cbc.getClusterDescriptorVar();
         Map<Expression, Expression> scSubst = new HashMap<>();
         scSubst.put(fieldAccess(scVar, SC_CLUSTER_ID, loc), copy(labelExpr));
         scSubst.put(fieldAccess(scVar, SC_CENTROID, loc),
                 call(BuiltinFunctions.SCALAR_CENTROID, loc, copy(clusteringExpr)));
-        if (usesRadius) {
-            // cluster_radius = sqrt(MAX(distance)); MAX is emitted name-based so the aggregation sugar resolves
-            // it over the group. Measured to the ASSIGNMENT centroid, which may differ from the reported one.
-            CallExpr radiusMax = new CallExpr(new FunctionSignature(null, null, "max", 1),
-                    List.of(new VariableExpr(distVar.getVar())));
-            radiusMax.setSourceLocation(loc);
-            scSubst.put(fieldAccess(scVar, SC_CLUSTER_RADIUS, loc),
-                    call(BuiltinFunctions.NUMERIC_SQRT, loc, radiusMax));
-        }
         SqlppRewriteUtil.substituteExpression(selectExpression, scSubst, context);
         // Substitution replaced every field the descriptor actually has. Anything still referring to it is
         // either an unknown field or the descriptor used as a whole value, neither of which survives to
         // runtime -- and left alone both reach the user as a bare "unresolved identifier" naming a variable
         // the rewrite invented. Say what it is instead.
         checkDescriptorResolved(selectExpression, scVar, loc);
-    }
-
-    /** Whether the query reads {@code <descriptor>.<field>}, e.g. sc.cluster_radius. */
-    private static boolean readsDescriptorField(ILangExpression expr, VariableExpr descriptorVar, String field)
-            throws CompilationException {
-        DescriptorFieldFinder finder = new DescriptorFieldFinder(descriptorVar, field);
-        expr.accept(finder, null);
-        return finder.found;
     }
 
     /**
@@ -536,26 +495,6 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
                 found = true;
             }
             return super.visit(v, arg);
-        }
-    }
-
-    private static final class DescriptorFieldFinder extends AbstractSqlppSimpleExpressionVisitor {
-        private final VariableExpr descriptorVar;
-        private final String field;
-        private boolean found;
-
-        private DescriptorFieldFinder(VariableExpr descriptorVar, String field) {
-            this.descriptorVar = descriptorVar;
-            this.field = field;
-        }
-
-        @Override
-        public Expression visit(FieldAccessor fa, ILangExpression arg) throws CompilationException {
-            if (field.equals(fa.getIdent().getValue()) && fa.getExpr().getKind() == Expression.Kind.VARIABLE_EXPRESSION
-                    && descriptorVar.getVar().getValue().equals(((VariableExpr) fa.getExpr()).getVar().getValue())) {
-                found = true;
-            }
-            return super.visit(fa, arg);
         }
     }
 

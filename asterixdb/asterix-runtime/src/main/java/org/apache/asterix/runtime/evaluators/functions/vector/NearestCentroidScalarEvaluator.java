@@ -24,9 +24,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
@@ -47,9 +45,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
- * Runtime for {@code nearest_centroid(point, centroids)} and {@code nearest_centroid_distance(point, centroids)}:
- * finds the centroid closest to {@code point} under squared-Euclidean distance and returns either its 0-based index
- * (AINT32) or the squared distance to it (ADOUBLE, the k-means|| sampling score d2(x, C)), per {@code emitDistance}.
+ * Runtime for {@code nearest_centroid(point, centroids)}: finds the centroid closest to {@code point} under
+ * squared-Euclidean distance and returns its 0-based index (AINT32).
  * NULL on missing/invalid input. {@code point} is a list of doubles; {@code centroids} is a list of such lists.
  * Numeric elements are coerced to double; non-numeric elements decode to NaN and yield NULL.
  */
@@ -76,22 +73,16 @@ public class NearestCentroidScalarEvaluator implements IScalarEvaluator {
     private final AMutableInt32 aInt32 = new AMutableInt32(0);
     private final ISerializerDeserializer<AInt32> int32Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
-    private final AMutableDouble aDouble = new AMutableDouble(0.0d);
-    private final ISerializerDeserializer<ADouble> doubleSerde =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     private final IWarningCollector warningCollector;
     private final FunctionIdentifier funcId;
     private final SourceLocation sourceLoc;
-    // false: emit the argmin index (nearest_centroid); true: emit the min distance (nearest_centroid_distance).
-    private final boolean emitDistance;
 
     public NearestCentroidScalarEvaluator(IEvaluatorContext context, IScalarEvaluatorFactory[] args,
-            FunctionIdentifier funcId, SourceLocation sourceLoc, boolean emitDistance) throws HyracksDataException {
+            FunctionIdentifier funcId, SourceLocation sourceLoc) throws HyracksDataException {
         this.warningCollector = context.getWarningCollector();
         this.funcId = funcId;
         this.sourceLoc = sourceLoc;
-        this.emitDistance = emitDistance;
         this.decoder = new VectorListDecoder();
         this.pointEval = args[0].createScalarEvaluator(context);
         this.centroidsEval = args[1].createScalarEvaluator(context);
@@ -166,13 +157,8 @@ public class NearestCentroidScalarEvaluator implements IScalarEvaluator {
                 PointableHelper.setNull(result);
                 return;
             }
-            if (emitDistance) {
-                aDouble.setValue(bestDist);
-                doubleSerde.serialize(aDouble, dataOutput);
-            } else {
-                aInt32.setValue(bestIdx);
-                int32Serde.serialize(aInt32, dataOutput);
-            }
+            aInt32.setValue(bestIdx);
+            int32Serde.serialize(aInt32, dataOutput);
             result.set(resultStorage);
         } catch (IOException e) {
             warn(e.getMessage());

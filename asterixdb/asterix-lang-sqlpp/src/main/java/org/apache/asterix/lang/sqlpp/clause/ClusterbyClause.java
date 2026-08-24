@@ -40,7 +40,7 @@ public class ClusterbyClause extends AbstractClause {
 
     // The vector expression to cluster on.
     private Expression clusteringExpr;
-    // The cluster descriptor variable (AS sc): {cluster_id, centroid, cluster_radius}.
+    // The cluster descriptor variable (AS sc): {cluster_id, centroid}.
     private VariableExpr clusterDescriptorVar;
     // The cluster-members variable (CLUSTER AS <var>); null when CLUSTER AS is absent.
     private VariableExpr clusterMembersVar;

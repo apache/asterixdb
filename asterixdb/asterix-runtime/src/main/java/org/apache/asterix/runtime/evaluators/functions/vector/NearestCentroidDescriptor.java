@@ -49,7 +49,7 @@ public class NearestCentroidDescriptor extends AbstractScalarFunctionDynamicDesc
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new NearestCentroidScalarEvaluator(ctx, args, getIdentifier(), sourceLoc, false);
+                return new NearestCentroidScalarEvaluator(ctx, args, getIdentifier(), sourceLoc);
             }
         };
     }

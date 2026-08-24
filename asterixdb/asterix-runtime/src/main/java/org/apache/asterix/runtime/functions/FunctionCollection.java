@@ -665,7 +665,6 @@ import org.apache.asterix.runtime.evaluators.functions.vector.DotProductDescript
 import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanSquaredDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.NearestCentroidDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.vector.NearestCentroidDistanceDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.DenseRankRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.NtileRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.PercentRankRunningAggregateDescriptor;
@@ -1373,7 +1372,6 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(DotDistanceDescriptor.FACTORY);
 
         fc.add(NearestCentroidDescriptor.FACTORY);
-        fc.add(NearestCentroidDistanceDescriptor.FACTORY);
 
         // Type functions.
         fc.add(GetTypeDescriptor.FACTORY);
