@@ -178,7 +178,8 @@ public enum ErrorCode implements IError {
     CROSS_PRODUCT_JOIN(10007),
     GROUP_ALL_DECOR(10008),
     EXPRESSION_CANNOT_BE_CONSTANT(10009),
-    INDEX_ADVISOR_SAMPLE_NOT_FOUND(10010);
+    INDEX_ADVISOR_SAMPLE_NOT_FOUND(10010),
+    INDEX_ADVISOR_NOT_SUPPORTED_ON_EXTERNAL_COLLECTION(10011);
 
     private static final String RESOURCE_PATH = "errormsg/en.properties";
     public static final String HYRACKS = "HYR";

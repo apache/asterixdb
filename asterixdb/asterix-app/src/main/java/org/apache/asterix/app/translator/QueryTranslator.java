@@ -5488,7 +5488,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 validateDatasetState(metadataProvider, ds, sourceLoc);
             } else {
-                throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED, sourceLoc);
+                throw createAnalyzeNotSupportedException(ds, sourceLoc);
             }
 
             IndexType sampleIndexType = IndexType.SAMPLE;
@@ -5723,6 +5723,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    // ANALYZE only applies to internal datasets; external datasets do not support sample collection.
+    private static CompilationException createAnalyzeNotSupportedException(Dataset ds, SourceLocation sourceLoc) {
+        return ds.getDatasetType() == DatasetType.EXTERNAL
+                ? new CompilationException(ErrorCode.ANALYZE_NOT_SUPPORTED_ON_EXTERNAL_DATASET, sourceLoc,
+                        MetadataUtil.getQuotedFullyQualifiedDisplayName(ds.getDatabaseName(), ds.getDataverseName(),
+                                ds.getDatasetName()))
+                : new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED, sourceLoc);
+    }
+
     protected void handleAnalyzeDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParams) throws Exception {
         AnalyzeDropStatement analyzeDropStmt = (AnalyzeDropStatement) stmt;
@@ -5766,7 +5775,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             if (ds.getDatasetType() != DatasetType.INTERNAL) {
-                throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED, sourceLoc);
+                throw createAnalyzeNotSupportedException(ds, sourceLoc);
             }
             Index index1 =
                     MetadataManager.INSTANCE.getIndex(mdTxnCtx, databaseName, dataverseName, datasetName, indexName1);

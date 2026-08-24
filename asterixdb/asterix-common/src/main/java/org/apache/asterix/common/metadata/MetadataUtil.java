@@ -55,6 +55,38 @@ public class MetadataUtil {
         return databaseName + "." + dataverseName + "." + objectName;
     }
 
+    /**
+     * Returns the fully qualified name with every part quoted, so that it can be embedded in a statement.
+     *
+     * @param databaseName
+     * @param dataverseName
+     * @param objectName
+     */
+    public static String getQuotedFullyQualifiedDisplayName(String databaseName, DataverseName dataverseName,
+            String objectName) {
+        StringBuilder out = new StringBuilder();
+        appendQuoted(out, databaseName);
+        for (String dataversePart : dataverseName.getParts()) {
+            out.append(DataverseName.DISPLAY_FORM_SEPARATOR_CHAR);
+            appendQuoted(out, dataversePart);
+        }
+        out.append(DataverseName.DISPLAY_FORM_SEPARATOR_CHAR);
+        appendQuoted(out, objectName);
+        return out.toString();
+    }
+
+    private static void appendQuoted(StringBuilder out, String part) {
+        out.append(DataverseName.DISPLAY_FORM_QUOTE_CHAR);
+        for (int i = 0; i < part.length(); i++) {
+            char c = part.charAt(i);
+            if (c == DataverseName.DISPLAY_FORM_ESCAPE_CHAR || c == DataverseName.DISPLAY_FORM_QUOTE_CHAR) {
+                out.append(DataverseName.DISPLAY_FORM_ESCAPE_CHAR);
+            }
+            out.append(c);
+        }
+        out.append(DataverseName.DISPLAY_FORM_QUOTE_CHAR);
+    }
+
     public static String databaseFor(DataverseName dataverse) {
         if (dataverse == null) {
             return null;

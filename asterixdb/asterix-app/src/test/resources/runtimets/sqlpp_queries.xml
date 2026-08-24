@@ -4327,6 +4327,13 @@
         <output-dir compare="Text">analyze-dataset-with-indexes</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-external">
+        <output-dir compare="Text">analyze-dataset-external</output-dir>
+        <expected-error>ASX1263: ANALYZE is not supported on external collection `Default`.`test`.`ExternalUsers`</expected-error>
+        <expected-error>ASX1263: ANALYZE is not supported on external collection `Default`.`test`.`ExternalUsers`</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-1">
         <output-dir compare="Text">create-index-1</output-dir>

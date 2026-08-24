@@ -28,10 +28,13 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.CBOPlanStateTree;
@@ -1632,14 +1635,24 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (!(scanOperator.getDataSource() instanceof DatasetDataSource dataSource)) {
             return;
         }
-        DatasetFullyQualifiedName fullyQualifiedName = dataSource.getDataset().getDatasetFullyQualifiedName();
+        Dataset dataset = dataSource.getDataset();
+        DatasetFullyQualifiedName fullyQualifiedName = dataset.getDatasetFullyQualifiedName();
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            // samples cannot be collected on external collections, so suggesting ANALYZE would be misleading
+            throw new AlgebricksException(ErrorCode.INDEX_ADVISOR_NOT_SUPPORTED_ON_EXTERNAL_COLLECTION,
+                    scanOperator.getSourceLocation(), displayName(fullyQualifiedName));
+        }
         throw new AlgebricksException(ErrorCode.INDEX_ADVISOR_SAMPLE_NOT_FOUND,
                 createSampleStatement(fullyQualifiedName));
     }
 
     private static String createSampleStatement(DatasetFullyQualifiedName dqn) {
-        return "ANALYZE COLLECTION `" + dqn.getDatabaseName() + "`.`" + dqn.getDataverseName() + "`.`"
-                + dqn.getDatasetName() + "`;";
+        return "ANALYZE COLLECTION " + displayName(dqn) + ";";
+    }
+
+    private static String displayName(DatasetFullyQualifiedName dqn) {
+        return MetadataUtil.getQuotedFullyQualifiedDisplayName(dqn.getDatabaseName(), dqn.getDataverseName(),
+                dqn.getDatasetName());
     }
 
     public static DataSourceScanOperator findDataSourceScanOperator(ILogicalOperator op) {

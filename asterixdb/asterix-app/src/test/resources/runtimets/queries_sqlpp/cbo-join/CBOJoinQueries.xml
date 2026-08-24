@@ -106,4 +106,10 @@
             <output-dir compare="Text">both-unnest-join</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="cbo-join/index-advisor">
+        <compilation-unit name="external-collection-advise">
+            <output-dir compare="Text">external-collection-advise</output-dir>
+            <expected-error>HYR10011: Index advisor is not supported on external collection `Default`.`test`.`ExternalUsers`</expected-error>
+        </compilation-unit>
+    </test-case>
 </test-group>

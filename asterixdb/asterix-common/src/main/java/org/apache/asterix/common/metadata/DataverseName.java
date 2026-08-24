@@ -64,9 +64,9 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
 
     public static final char DISPLAY_FORM_SEPARATOR_CHAR = '.';
 
-    private static final char DISPLAY_FORM_QUOTE_CHAR = '`';
+    public static final char DISPLAY_FORM_QUOTE_CHAR = '`';
 
-    private static final char DISPLAY_FORM_ESCAPE_CHAR = '\\';
+    public static final char DISPLAY_FORM_ESCAPE_CHAR = '\\';
 
     private final String canonicalForm;
 
