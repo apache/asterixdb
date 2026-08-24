@@ -56,7 +56,8 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * oversampling round. It consumes each Sample (Op3) partition's drawn candidates plus a per-partition
  * {@link KMeansLoopIO#KIND_END} marker (delivered via a concurrent M-to-1), and once it has seen the end markers
  * from all {@code nParticipants} partitions for a round it emits that round's <b>global union</b> of draws in a
- * deterministic order (partition ASC, then per-partition draw sequence ASC), followed by one end marker
+ * deterministic order (by the drawing Sample's content hash of each vector, partition breaking ties),
+ * followed by one end marker
  * (broadcast to the Release operators, Op5).
  * <p>
  * The deterministic union order is what keeps every partition's pool run file byte-identical, so all partitions
@@ -101,7 +102,8 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             private final FrameTupleAccessor accessor = new FrameTupleAccessor(inRecDesc);
             private final FrameTupleReference tuple = new FrameTupleReference();
-            // Draws are ordered by (part, seq) before they are emitted: every downstream read of the pool is
+            // Draws are ordered by (content hash, part) before they are emitted: every downstream read of the
+            // pool is
             // positional -- ties in the nearest-candidate loops resolve to the first member, and RECLUSTER
             // numbers candidates by arrival -- so emitting in network-arrival order would make results depend
             // on timing. An external sort supplies that order without holding the round resident.
@@ -186,7 +188,8 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
             }
 
             /**
-             * Emits the round's draws in (part, seq) order. When they fit the budget the generator sorts in
+             * Emits the round's draws in (content hash, part) order. When they fit the budget the generator
+             * sorts in
              * place and produces no runs, so that case is flushed from the sorter -- merging an empty run list
              * would emit nothing and the round's draws would vanish from the pool.
              */

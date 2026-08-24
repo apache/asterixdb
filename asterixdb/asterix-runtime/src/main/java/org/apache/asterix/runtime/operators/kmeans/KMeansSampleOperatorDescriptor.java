@@ -122,7 +122,6 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
 
             private void sampleRound(int round, double phi) throws HyracksDataException {
                 final double l = oversamplingCount;
-                final int[] seq = { 0 };
                 if (phi > 0.0d) {
                     // Op1 already scored every vector against this exact pool in this exact round -- it is what
                     // phi was summed from -- so the distances are read rather than recomputed here, and the pool
@@ -140,7 +139,7 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
                             }
                             if (KMeansLoopIO.uniformDraw(KMeansLoopIO.fingerprint(vec), seedBase, round) < l * best
                                     / phi) {
-                                emitDraw(round, seq[0]++, vec);
+                                emitDraw(round, drawKey(vec), vec);
                             }
                         });
                     }
@@ -148,6 +147,22 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
                 emitEnd(round);
                 appender.write(writer, true);
                 writer.flush();
+            }
+
+            /**
+             * The draw's ordering key: a hash of the vector, NOT its position in this partition's scan.
+             * <p>
+             * PoolMerge orders each round's union by this key, and that order fixes every candidate's index in
+             * the pool -- which RECLUSTER then picks from by index. A positional counter made those indices a
+             * function of the order rows happened to be read in, so a pool holding exactly the same vectors
+             * could still seat them differently and yield different initial centroids run to run. Hashing the
+             * vector makes the pool's layout a property of the drawn set alone.
+             * <p>
+             * Truncating the 64-bit fingerprint to the int this column carries is fine: a collision only ties
+             * two candidates, and the partition breaks that tie (see DRAW_SORT_FIELDS).
+             */
+            private int drawKey(double[] vec) {
+                return (int) KMeansLoopIO.fingerprint(vec);
             }
 
             private void emitDraw(int round, int seq, double[] vec) throws HyracksDataException {

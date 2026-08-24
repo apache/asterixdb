@@ -138,8 +138,15 @@ public final class KMeansLoopIO {
     public static final IBinaryComparatorFactory[] PARTIAL_SORT_COMPARATORS =
             { IntegerBinaryComparatorFactory.INSTANCE, IntegerBinaryComparatorFactory.INSTANCE };
 
-    /** Sort keys for {@link #DRAW_RD}: (part, seq) — the order PoolMerge emits a round in. */
-    public static final int[] DRAW_SORT_FIELDS = { 1, 2 };
+    /**
+     * Sort keys for {@link #DRAW_RD}: (seq, part) — the order PoolMerge emits a round in, where {@code seq} is
+     * the drawing Sample's content hash of the vector rather than a positional counter. Ordering on content
+     * first makes the pool's layout -- and so every candidate's index, which RECLUSTER picks by -- a property
+     * of the drawn set alone, not of the order rows were read in or of which partition drew them. {@code part}
+     * only breaks ties between equal hashes, which are duplicate vectors or (vanishingly) a truncation clash;
+     * either way the candidates it separates are interchangeable.
+     */
+    public static final int[] DRAW_SORT_FIELDS = { 2, 1 };
 
     public static final IBinaryComparatorFactory[] DRAW_SORT_COMPARATORS =
             { IntegerBinaryComparatorFactory.INSTANCE, IntegerBinaryComparatorFactory.INSTANCE };
