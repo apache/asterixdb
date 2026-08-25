@@ -26,7 +26,6 @@ import java.io.Reader;
 import java.util.Arrays;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -46,7 +45,7 @@ public class WordTupleParserFactory implements ITupleParserFactory {
             @Override
             public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
                 try {
-                    FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+                    FrameTupleAppender appender = new FrameTupleAppender(ctx.allocateVSizeFrame());
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
                     DataOutput dos = tb.getDataOutput();
 

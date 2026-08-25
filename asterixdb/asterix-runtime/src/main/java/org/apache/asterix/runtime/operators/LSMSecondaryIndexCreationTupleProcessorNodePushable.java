@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.TypeTagUtil;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
@@ -128,7 +127,7 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
         try {
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+            appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

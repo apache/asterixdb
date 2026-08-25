@@ -99,7 +99,11 @@ public class VariableFrameMemoryManager implements IFrameBufferManager {
 
     @Override
     public int insertFrame(ByteBuffer frame) throws HyracksDataException {
-        int frameSize = frame.capacity();
+        // Use limit() rather than capacity() for the logical data size, because the buffer has
+        // been flip()'d by the IFrameReader (e.g. RunFileReader:92, FrameUtils:46) — making limit
+        // the actual data size — while capacity may be larger if the underlying frame retained a
+        // previous, bigger physical allocation.
+        int frameSize = frame.limit();
         int physicalFrameId = findAvailableFrame(frameSize);
         if (physicalFrameId < 0) {
             return -1;

@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
@@ -94,7 +93,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         accessor = new FrameTupleAccessor(inputRecDesc);
         builder = new ArrayTupleBuilder(outputRecDesc.getFieldCount());
         builderData = builder.getFieldData();
-        appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+        appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
     }
 
     @Override

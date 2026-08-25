@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -99,7 +98,7 @@ final class WindowPartitionWriter {
         } else if (writerFrameCount < writerFrames.length) {
             IFrame writerFrame = writerFrames[writerFrameCount];
             if (writerFrame == null) {
-                writerFrames[writerFrameCount] = writerFrame = new VSizeFrame(ctx);
+                writerFrames[writerFrameCount] = writerFrame = ctx.allocateVSizeFrame();
             }
             copyToFrame(frameBuffer, writerFrame);
         } else {
@@ -123,7 +122,7 @@ final class WindowPartitionWriter {
 
     private void allocateFrames(IFrame[] outFrames, int count) throws HyracksDataException {
         for (int i = 0; i < count; i++) {
-            outFrames[i] = new VSizeFrame(ctx);
+            outFrames[i] = ctx.allocateVSizeFrame();
         }
     }
 

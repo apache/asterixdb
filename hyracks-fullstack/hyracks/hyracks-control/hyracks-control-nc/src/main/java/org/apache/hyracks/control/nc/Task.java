@@ -62,6 +62,7 @@ import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -186,6 +187,16 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public int getInitialFrameSize() {
         return joblet.getInitialFrameSize();
+    }
+
+    @Override
+    public VSizeFrame allocateVSizeFrame() throws HyracksDataException {
+        return joblet.allocateVSizeFrame();
+    }
+
+    @Override
+    public IFrameProfiler getProfiler() {
+        return joblet.getProfiler();
     }
 
     @Override
@@ -422,7 +433,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 try {
                     try {
                         writer.open();
-                        VSizeFrame frame = new VSizeFrame(this);
+                        VSizeFrame frame = allocateVSizeFrame();
                         while (reader.nextFrame(frame)) {
                             if (aborted) {
                                 return;

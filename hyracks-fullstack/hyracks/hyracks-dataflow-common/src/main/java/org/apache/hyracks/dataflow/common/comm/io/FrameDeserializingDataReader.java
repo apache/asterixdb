@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.common.comm.io;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOpenableDataReader;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -39,7 +38,7 @@ public class FrameDeserializingDataReader implements IOpenableDataReader<Object[
 
     public FrameDeserializingDataReader(IHyracksTaskContext ctx, IFrameReader frameReader,
             RecordDescriptor recordDescriptor) throws HyracksDataException {
-        this.frame = new VSizeFrame(ctx);
+        this.frame = ctx.allocateVSizeFrame();
         this.frameReader = frameReader;
         this.frameDeserializer = new FrameDeserializer(recordDescriptor);
     }

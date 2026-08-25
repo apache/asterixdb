@@ -49,17 +49,22 @@ public class VSizeFrame implements IFrame {
     }
 
     @Override
-    public void ensureFrameSize(int newSize) throws HyracksDataException {
+    public boolean ensureFrameSize(int newSize) throws HyracksDataException {
         if (newSize > getFrameSize()) {
             buffer = ctx.reallocateFrame(buffer, newSize, true);
+            return true;
         }
+        return false;
     }
 
     @Override
-    public void resize(int frameSize) throws HyracksDataException {
-        if (getFrameSize() != frameSize) {
+    public boolean resize(int frameSize) throws HyracksDataException {
+        int beforeResize = getFrameSize();
+        if (beforeResize != frameSize) {
             buffer = ctx.reallocateFrame(buffer, frameSize, false);
+            return true;
         }
+        return false;
     }
 
     @Override

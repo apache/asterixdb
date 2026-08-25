@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
@@ -61,7 +60,7 @@ public class SortMergeFrameReader implements IFrameReader {
         if (maxConcurrentMerges >= nSenders) {
             List<IFrame> inFrames = new ArrayList<>(nSenders);
             for (int i = 0; i < nSenders; ++i) {
-                inFrames.add(new VSizeFrame(ctx));
+                inFrames.add(ctx.allocateVSizeFrame());
             }
             List<IFrameReader> batch = new ArrayList<IFrameReader>(nSenders);
             pbm.getNextBatch(batch, nSenders);

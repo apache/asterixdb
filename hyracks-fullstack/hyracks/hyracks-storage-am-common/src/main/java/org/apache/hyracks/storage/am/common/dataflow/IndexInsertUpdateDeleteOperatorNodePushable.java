@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -76,7 +75,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     @Override
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(inputRecDesc);
-        writeBuffer = new VSizeFrame(ctx);
+        writeBuffer = ctx.allocateVSizeFrame();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {

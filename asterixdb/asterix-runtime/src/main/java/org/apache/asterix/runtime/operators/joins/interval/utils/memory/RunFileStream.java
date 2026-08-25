@@ -24,7 +24,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -66,8 +65,8 @@ public class RunFileStream {
         this.key = key;
 
         // TODO make the stream only use one buffer.
-        runFileBuffer = new VSizeFrame(ctx);
-        runFileAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+        runFileBuffer = ctx.allocateVSizeFrame();
+        runFileAppender = new FrameTupleAppender(ctx.allocateVSizeFrame());
 
     }
 

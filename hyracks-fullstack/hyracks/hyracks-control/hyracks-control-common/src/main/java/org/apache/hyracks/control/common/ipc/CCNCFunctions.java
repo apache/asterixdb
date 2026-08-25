@@ -54,6 +54,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.result.IResultMetadata;
@@ -787,6 +788,9 @@ public class CCNCFunctions {
     public static class StartTasksFunction extends Function {
         private static final long serialVersionUID = 2L;
 
+        /** Sentinel value written when {@code jobKind} is {@code null}. */
+        private static final byte JOB_KIND_NULL = -1;
+
         private final DeploymentId deploymentId;
         private final JobId jobId;
         private final byte[] planBytes;
@@ -797,12 +801,13 @@ public class CCNCFunctions {
         private final DeployedJobSpecId deployedJobSpecId;
         private final long jobStartTime;
         private final String jobStartTimeZoneId;
+        private final JobKind jobKind;
 
         public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
                 List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, Set<JobFlag> flags,
                 Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime,
-                String jobStartTimeZoneId) {
+                String jobStartTimeZoneId, JobKind jobKind) {
             this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
@@ -813,6 +818,7 @@ public class CCNCFunctions {
             this.deployedJobSpecId = deployedJobSpecId;
             this.jobStartTime = jobStartTime;
             this.jobStartTimeZoneId = jobStartTimeZoneId;
+            this.jobKind = jobKind;
         }
 
         @Override
@@ -858,6 +864,10 @@ public class CCNCFunctions {
 
         public String getJobStartTimeZoneId() {
             return jobStartTimeZoneId;
+        }
+
+        public JobKind getJobKind() {
+            return jobKind;
         }
 
         public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
@@ -932,8 +942,17 @@ public class CCNCFunctions {
             long jobStartTime = dis.readLong();
             String jobStartTimeZoneId = dis.readUTF();
 
+            // read JobKind; absent when the sending CC predates it (mixed-mode rolling upgrade), in
+            // which case the stream is already exhausted and the kind is simply unknown. dis wraps a
+            // stream bounded by this function's framed length, so available() is exact here.
+            JobKind jobKind = null;
+            if (dis.available() > 0) {
+                int jobKindOrdinal = dis.readByte();
+                jobKind = jobKindOrdinal == JOB_KIND_NULL ? null : JobKind.values()[jobKindOrdinal];
+            }
+
             return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags,
-                    jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId);
+                    jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId, jobKind);
         }
 
         public static void serialize(OutputStream out, Object object) throws Exception {
@@ -942,7 +961,7 @@ public class CCNCFunctions {
 
             //write jobId and deploymentId
             fn.jobId.writeFields(dos);
-            dos.writeBoolean(fn.deploymentId == null ? false : true);
+            dos.writeBoolean(fn.deploymentId != null);
             if (fn.deploymentId != null) {
                 fn.deploymentId.writeFields(dos);
             }
@@ -993,6 +1012,8 @@ public class CCNCFunctions {
             //write job start timezone
             dos.writeUTF(fn.jobStartTimeZoneId);
 
+            // write JobKind
+            dos.writeByte(fn.jobKind == null ? JOB_KIND_NULL : fn.jobKind.ordinal());
         }
     }
 

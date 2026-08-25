@@ -23,6 +23,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
@@ -46,4 +47,6 @@ public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocat
     ClassLoader getClassLoader() throws HyracksException;
 
     long nextUniqueId();
+
+    JobKind getJobKind();
 }

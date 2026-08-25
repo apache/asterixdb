@@ -21,7 +21,6 @@ package org.apache.hyracks.dataflow.std.base;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
@@ -226,7 +225,7 @@ public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperat
                 public void initialize() throws HyracksDataException {
                     MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
-                    state.writeOut(writer, new VSizeFrame(ctx), false);
+                    state.writeOut(writer, ctx.allocateVSizeFrame(), false);
                 }
 
             };

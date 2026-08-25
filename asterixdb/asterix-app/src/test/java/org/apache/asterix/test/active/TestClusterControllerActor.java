@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
+import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.hyracks.api.job.JobId;
@@ -48,8 +49,7 @@ public class TestClusterControllerActor extends Actor {
             protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
                 // succeed
                 JobSpecification jobSpecification = Mockito.mock(JobSpecification.class);
-                Mockito.when(jobSpecification.getProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME))
-                        .thenReturn(entityId);
+                Mockito.when(jobSpecification.getProperty(AsterixJobProperty.ACTIVE_ENTITY)).thenReturn(entityId);
                 handler.notifyJobCreation(jobId, jobSpecification, IJobCapacityController.JobSubmissionStatus.EXECUTE);
                 handler.notifyJobStart(jobId, null);
             }

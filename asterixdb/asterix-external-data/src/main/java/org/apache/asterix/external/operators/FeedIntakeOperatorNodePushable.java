@@ -26,7 +26,6 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -76,7 +75,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
              * One use case is adapters which consume data sources that allow restartability. Such adapters
              * can propagate progress information through the ingestion pipeline to storage nodes
              */
-            IFrame message = new VSizeFrame(ctx);
+            IFrame message = ctx.allocateVSizeFrame();
             TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
             message.getBuffer().flip();

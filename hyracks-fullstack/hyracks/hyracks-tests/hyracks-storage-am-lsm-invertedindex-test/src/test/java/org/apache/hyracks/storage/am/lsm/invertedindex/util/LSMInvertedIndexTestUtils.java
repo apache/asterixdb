@@ -55,6 +55,7 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -697,6 +698,11 @@ public class LSMInvertedIndexTestUtils {
         public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData)
                 throws HyracksDataException {
             throw new HyracksDataException("TODO");
+        }
+
+        @Override
+        public IFrameProfiler getProfiler() {
+            return IFrameProfiler.NOOP_FRAME_PROFILER;
         }
 
         @Override

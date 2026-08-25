@@ -63,7 +63,7 @@ public class FrameSpiller {
 
     public FrameSpiller(IHyracksTaskContext ctx, String fileNamePrefix, long budgetInBytes)
             throws HyracksDataException {
-        this.frame = new VSizeFrame(ctx);
+        this.frame = ctx.allocateVSizeFrame();
         this.fileNamePrefix = fileNamePrefix;
         this.budget = (int) Math.min(budgetInBytes / ctx.getInitialFrameSize(), Integer.MAX_VALUE);
         if (budget <= 0) {

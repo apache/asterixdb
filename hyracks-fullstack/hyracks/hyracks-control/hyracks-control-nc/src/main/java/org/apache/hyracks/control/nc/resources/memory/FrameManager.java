@@ -20,18 +20,33 @@
 package org.apache.hyracks.control.nc.resources.memory;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import org.apache.hyracks.api.comm.FrameConstants;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
+import org.apache.hyracks.api.resources.memory.IFrameProfiler;
 
 public class FrameManager implements IHyracksFrameMgrContext {
 
     private final int minFrameSize;
+    private final JobId jobId;
+    private final JobKind jobKind;
+    private final IFrameProfiler profiler;
 
-    public FrameManager(int minFrameSize) {
+    public FrameManager(int minFrameSize, IFrameProfiler profiler, JobId jobId, JobKind jobKind) {
         this.minFrameSize = minFrameSize;
+        this.profiler = Objects.requireNonNull(profiler);
+        this.jobId = jobId; // may be null as we sometimes use frames outside the context of a job
+        this.jobKind = jobKind;
+    }
+
+    @Deprecated // this constructor will create a frame manager that is not profiled
+    public FrameManager(int minFrameSize) {
+        this(minFrameSize, IFrameProfiler.NOOP_FRAME_PROFILER, null, null);
     }
 
     @Override
@@ -46,6 +61,12 @@ public class FrameManager implements IHyracksFrameMgrContext {
 
     @Override
     public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        ByteBuffer buffer = allocateFrameOnly(bytes);
+        profiler.reportAllocate(bytes, jobId, jobKind);
+        return buffer;
+    }
+
+    private ByteBuffer allocateFrameOnly(int bytes) throws HyracksDataException {
         if (bytes % minFrameSize != 0) {
             throw new HyracksDataException("The size should be an integral multiple of the default frame size");
         }
@@ -55,7 +76,7 @@ public class FrameManager implements IHyracksFrameMgrContext {
         }
         ByteBuffer buffer = ByteBuffer.allocate(bytes);
         FrameHelper.serializeFrameSize(buffer, bytes / minFrameSize);
-        return (ByteBuffer) buffer.clear();
+        return buffer.clear();
     }
 
     @Override
@@ -69,7 +90,7 @@ public class FrameManager implements IHyracksFrameMgrContext {
                 throw new HyracksDataException(
                         "Unable to allocate frame of size bigger than: " + FrameConstants.MAX_FRAMESIZE + " bytes");
             }
-            ByteBuffer buffer = allocateFrame(newSizeInBytes);
+            ByteBuffer buffer = allocateFrameOnly(newSizeInBytes);
             int limit = Math.min(newSizeInBytes, tobeDeallocate.capacity());
             int pos = Math.min(limit, tobeDeallocate.position());
             tobeDeallocate.position(0);
@@ -78,8 +99,19 @@ public class FrameManager implements IHyracksFrameMgrContext {
             buffer.position(pos);
 
             FrameHelper.serializeFrameSize(buffer, newSizeInBytes / minFrameSize);
+            profiler.reportReallocate(limit, newSizeInBytes, jobId, jobKind);
             return buffer;
         }
+    }
+
+    @Override
+    public IFrameProfiler getProfiler() {
+        return profiler;
+    }
+
+    @Override
+    public JobKind getJobKind() {
+        return jobKind;
     }
 
     @Override

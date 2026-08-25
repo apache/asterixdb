@@ -22,6 +22,7 @@ import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement.FIELD_TYPE_STOPWORDS;
+import static org.apache.hyracks.api.job.HyracksJobProperty.JOB_KIND;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -255,6 +256,7 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.result.IResultSet;
@@ -3677,6 +3679,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             if (spec != null && !isCompileOnly()) {
+                spec.setProperty(JOB_KIND, JobKind.DML);
                 runJob(hcc, spec);
             }
         } catch (Exception e) {
@@ -3733,7 +3736,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqParams.getRequestReference().getUuid());
         if (stmtInsertUpsert.getReturnExpression() != null) {
             deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
-                    reqParams, false, clientRequest);
+                    reqParams, false, clientRequest, JobKind.DML);
         } else {
             locker.lock();
             try {
@@ -3741,6 +3744,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (jobSpec == null) {
                     return jobSpec;
                 }
+                jobSpec.setProperty(JOB_KIND, JobKind.DML);
                 runJob(hcc, jobSpec);
             } finally {
                 locker.unlock();
@@ -3774,6 +3778,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             bActiveTxn = false;
 
             if (jobSpec != null && !isCompileOnly()) {
+                jobSpec.setProperty(JOB_KIND, JobKind.DML);
                 runJob(hcc, jobSpec);
             }
             return jobSpec;
@@ -4736,19 +4741,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         };
         deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
-                requestParameters, true, clientRequest);
+                requestParameters, true, clientRequest, JobKind.USER_QUERY);
     }
 
     private void deliverResult(IHyracksClientConnection hcc, IResultSet resultSet, IStatementCompiler compiler,
             MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery,
             ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters, boolean cancellable,
-            ClientRequest clientRequest) throws Exception {
+            ClientRequest clientRequest, JobKind jobKind) throws Exception {
         final ResultSetId resultSetId = metadataProvider.getResultSetId();
         switch (resultDelivery) {
             case ASYNC:
                 MutableBoolean printed = new MutableBoolean(false);
                 executorService.submit(() -> asyncCreateAndRunJob(hcc, compiler, locker, resultDelivery,
-                        requestParameters, cancellable, resultSetId, printed, metadataProvider));
+                        requestParameters, cancellable, resultSetId, printed, metadataProvider, jobKind));
                 synchronized (printed) {
                     while (!printed.booleanValue()) {
                         printed.wait();
@@ -4762,7 +4767,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     responsePrinter.addResultPrinter(new ResultsPrinter(appCtx, resultReader,
                             metadataProvider.findOutputRecordType(), stats, sessionOutput));
                     responsePrinter.printResults();
-                }, requestParameters, cancellable, appCtx, metadataProvider);
+                }, requestParameters, cancellable, appCtx, metadataProvider, jobKind);
                 break;
             case DEFERRED:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
@@ -4774,7 +4779,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         outMetadata.getResultSets().add(org.apache.commons.lang3.tuple.Triple.of(id, resultSetId,
                                 metadataProvider.findOutputRecordType()));
                     }
-                }, requestParameters, cancellable, appCtx, metadataProvider);
+                }, requestParameters, cancellable, appCtx, metadataProvider, jobKind);
                 break;
             default:
                 break;
@@ -4802,7 +4807,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
             ResultDelivery resultDelivery, IRequestParameters requestParameters, boolean cancellable,
-            ResultSetId resultSetId, MutableBoolean printed, MetadataProvider metadataProvider) {
+            ResultSetId resultSetId, MutableBoolean printed, MetadataProvider metadataProvider, JobKind jobKind) {
         Mutable<JobId> jobId = new MutableObject<>(JobId.INVALID);
         try {
             createAndRunJob(hcc, jobFlags, jobId, compiler, locker, resultDelivery, id -> {
@@ -4814,7 +4819,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     printed.setTrue();
                     printed.notify();
                 }
-            }, requestParameters, cancellable, appCtx, metadataProvider);
+            }, requestParameters, cancellable, appCtx, metadataProvider, jobKind);
         } catch (Exception e) {
             if (Objects.equals(JobId.INVALID, jobId.getValue())) {
                 // compilation failed
@@ -4857,7 +4862,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private static void createAndRunJob(IHyracksClientConnection hcc, EnumSet<JobFlag> jobFlags, Mutable<JobId> jId,
             IStatementCompiler compiler, IMetadataLocker locker, ResultDelivery resultDelivery, IResultPrinter printer,
             IRequestParameters requestParameters, boolean cancellable, ICcApplicationContext appCtx,
-            MetadataProvider metadataProvider) throws Exception {
+            MetadataProvider metadataProvider, JobKind jobKind) throws Exception {
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
         final ClientRequest clientRequest =
                 (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
@@ -4876,6 +4881,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // ensure request not cancelled before running job
             ensureNotCancelled(clientRequest);
             jobSpec.setRequestId(clientRequest.getId());
+            jobSpec.setProperty(JOB_KIND, jobKind);
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Created job {} for query uuid:{}, clientContextID:{}", jobId,

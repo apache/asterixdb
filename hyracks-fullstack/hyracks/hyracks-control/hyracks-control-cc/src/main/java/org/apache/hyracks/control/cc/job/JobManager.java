@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.control.cc.job;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.ZoneId;
@@ -38,7 +39,9 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
+import org.apache.hyracks.api.job.HyracksJobProperty;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
@@ -75,6 +78,11 @@ public class JobManager implements IJobManager {
     private final AtomicLong totalFailedJobs;
     private final AtomicLong totalCancelledJobs;
     private final AtomicLong totalRejectedJobs;
+    private long queryJobs;
+    private long sysQueryJobs;
+    private long ddlJobs;
+    private long dmlJobs;
+    private long ingestionJobs;
     private IJobQueue jobQueue;
 
     public JobManager(CCConfig ccConfig, ClusterControllerService ccs, IJobCapacityController jobCapacityController) {
@@ -244,9 +252,9 @@ public class JobManager implements IJobManager {
         JobId jobId = run.getJobId();
         Throwable caughtException = null;
         CCServiceContext serviceCtx = ccs.getContext();
+        JobSpecification spec = run.getJobSpecification();
         try {
-            serviceCtx.notifyJobFinish(jobId, run.getJobSpecification(), run.getPendingStatus(),
-                    run.getPendingExceptions());
+            serviceCtx.notifyJobFinish(jobId, spec, run.getPendingStatus(), run.getPendingExceptions());
         } catch (Exception e) {
             LOGGER.error("Exception notifying job finish {}", jobId, e);
             caughtException = e;
@@ -254,6 +262,7 @@ public class JobManager implements IJobManager {
         run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
         run.setEndTime(System.currentTimeMillis());
         if (activeRunMap.remove(jobId) != null) {
+            updateActiveJobCounts(spec, -1);
             incrementJobCounters(run, successful);
 
             // non-active jobs have zero capacity
@@ -280,6 +289,31 @@ public class JobManager implements IJobManager {
         // throws caught exceptions if any
         if (caughtException != null) {
             throw HyracksException.wrapOrThrowUnchecked(caughtException);
+        }
+    }
+
+    private void updateActiveJobCounts(JobSpecification spec, int delta) {
+        Serializable property = spec.getProperty(HyracksJobProperty.JOB_KIND);
+        if (property instanceof JobKind) {
+            switch ((JobKind) property) {
+                case USER_QUERY:
+                    queryJobs += delta;
+                    break;
+                case SYS_QUERY:
+                    sysQueryJobs += delta;
+                    break;
+                case DDL:
+                    ddlJobs += delta;
+                    break;
+                case DML:
+                    dmlJobs += delta;
+                    break;
+                case INGESTION:
+                    ingestionJobs += delta;
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -394,6 +428,7 @@ public class JobManager implements IJobManager {
         run.setStartTimeZoneId(ZoneId.systemDefault().getId());
         JobId jobId = run.getJobId();
         logJobCapacity(run, "running", Level.INFO);
+        updateActiveJobCounts(run.getJobSpecification(), 1);
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
@@ -452,10 +487,10 @@ public class JobManager implements IJobManager {
         }
         IReadOnlyClusterCapacity clusterCapacity = jobCapacityController.getClusterCapacity();
         LOGGER.log(lvl,
-                "{} {}, job memory={}, cpu={}, (new) cluster memory={}, cpu={}, currently running={}, queued={}",
+                "{} {}, job memory={} & cpu={}, (new) cluster memory={}, cpu={}, queued={}, currently running={}, user queries={}, system queries={}, ddls={}, dmls={}, ingestions={}",
                 jobStateDesc, jobRun.getJobId(), requiredMemory, requiredCPUs,
-                clusterCapacity.getAggregatedMemoryByteSize(), clusterCapacity.getAggregatedCores(),
-                getRunningJobsCount(), jobQueue.size());
+                clusterCapacity.getAggregatedMemoryByteSize(), clusterCapacity.getAggregatedCores(), jobQueue.size(),
+                getRunningJobsCount(), queryJobs, sysQueryJobs, ddlJobs, dmlJobs, ingestionJobs);
     }
 
     private void handleException(HyracksException ex) {

@@ -28,7 +28,6 @@ import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallback;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -183,7 +182,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         lastFlushedTupleIdx = 0;
         flushedPartialTuples = false;
         accessor = new FrameTupleAccessor(inputRecDesc);
-        writeBuffer = new VSizeFrame(ctx);
+        writeBuffer = ctx.allocateVSizeFrame();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         IIndex indexForUniquessCheck;
@@ -203,7 +202,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             keySearchCmp =
                     BTreeUtils.getSearchMultiComparator(((ITreeIndex) index).getComparatorFactories(), frameTuple);
             searchPred = new RangePredicate(frameTuple, frameTuple, true, true, keySearchCmp, keySearchCmp, null, null);
-            appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+            appender = new FrameTupleAppender(ctx.allocateVSizeFrame(), true);
             modCallback =
                     modOpCallbackFactory.createModificationOperationCallback(indexHelper.getResource(), ctx, this);
             searchCallback = (LockThenSearchOperationCallback) searchCallbackFactory

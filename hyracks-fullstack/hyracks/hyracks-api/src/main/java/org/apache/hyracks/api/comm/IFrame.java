@@ -31,16 +31,19 @@ public interface IFrame {
      * Make sure the frameSize is bigger or equal to the given size
      *
      * @param frameSize
+     * @return <code>true</code> if the ensureFrameSize resulted in the buffer being reallocated
      * @throws HyracksDataException
      */
-    void ensureFrameSize(int frameSize) throws HyracksDataException;
+    boolean ensureFrameSize(int frameSize) throws HyracksDataException;
 
     /**
      *
      * Expand of shrink the inner buffer to make the size exactly equal to {@code frameSize}
+     *
      * @param frameSize
+     * @return <code>true</code> if the resize resulted in the buffer being reallocated
      */
-    void resize(int frameSize) throws HyracksDataException;
+    boolean resize(int frameSize) throws HyracksDataException;
 
     /**
      * Return the size of frame in bytes
