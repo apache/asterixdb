@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- The distances must differ within a cluster. The shared fixture puts every point the same 0.5 from its
+-- centroid, so a centroid read that returned one wrong-but-constant vector would still pass; here each
+-- member sits at its own distance. Two collinear groups, each of three points whose mean is exact in binary
+-- floating point: {0, 1, 5} averages 2 and {100, 101, 108} averages 103, so the distances within a cluster
+-- are 2, 1, 3 and 3, 2, 5 -- distinct, and exact.
+use test;
+
+from [
+  {"id": 1, "vec": [0.0, 0.0]},
+  {"id": 2, "vec": [1.0, 0.0]},
+  {"id": 3, "vec": [5.0, 0.0]},
+  {"id": 4, "vec": [100.0, 0.0]},
+  {"id": 5, "vec": [101.0, 0.0]},
+  {"id": 6, "vec": [108.0, 0.0]}
+] as p
+cluster by p.vec as sc
+cluster as members
+with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+select sc.cluster_id as cid,
+       sc.centroid as centroid,
+       (from members as m
+        select m.p.id as id, vector_distance(m.p.vec, sc.centroid, 'euclidean') as dist
+        order by m.p.id) as dists
+order by cid;

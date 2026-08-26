@@ -36,6 +36,13 @@
             <output-dir compare="Text">kmeans-in-view</output-dir>
         </compilation-unit>
     </test-case>
+    <!-- The cluster descriptor reads like an ordinary record: the whole value is the record of its fields, a
+         field it lacks is MISSING, and both hold with the CLUSTER AS members variable also referenced. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-descriptor">
+            <output-dir compare="Text">kmeans-descriptor</output-dir>
+        </compilation-unit>
+    </test-case>
     <!-- The default kmeansPP initialization on a fixture with enough clusters to expose a bad candidate-pool
          reduction; the shared 6-point k=2 dataset converges correctly from any seeding and so cannot. -->
     <test-case FilePath="cluster-by">
@@ -231,21 +238,6 @@
     <test-case FilePath="cluster-by">
         <compilation-unit name="kmeans-duplicate-points">
             <output-dir compare="Text">kmeans-duplicate-points</output-dir>
-        </compilation-unit>
-    </test-case>
-    <!-- The cluster descriptor exposes exactly three fields, and the rewrite substitutes each away. A
-         reference that survives is either an unknown field or the descriptor used whole; both must name the
-         fields that exist rather than surface the rewrite's own variable as unresolved. -->
-    <test-case FilePath="cluster-by/negative">
-        <compilation-unit name="unknown-descriptor-field">
-            <output-dir compare="Text">unknown-descriptor-field</output-dir>
-            <expected-error>exposes only</expected-error>
-        </compilation-unit>
-    </test-case>
-    <test-case FilePath="cluster-by/negative">
-        <compilation-unit name="bare-descriptor">
-            <output-dir compare="Text">bare-descriptor</output-dir>
-            <expected-error>exposes only</expected-error>
         </compilation-unit>
     </test-case>
     <!-- Mixed widths and non-vector rows in one dataset, with membership written down. Declared Dimension

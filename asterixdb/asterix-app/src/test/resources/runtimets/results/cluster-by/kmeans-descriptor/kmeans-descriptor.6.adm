@@ -1,0 +1,2 @@
+{ "cid": 0, "dists": [ { "id": 1, "dist": 0.5 }, { "id": 2, "dist": 0.5 } ] }
+{ "cid": 1, "dists": [ { "id": 3, "dist": 0.5 }, { "id": 4, "dist": 0.5 } ] }

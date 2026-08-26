@@ -1,0 +1,2 @@
+{ "cid": 0, "centroid": [ 2.0, 0.0 ], "dists": [ { "id": 1, "dist": 2.0 }, { "id": 2, "dist": 1.0 }, { "id": 3, "dist": 3.0 } ] }
+{ "cid": 1, "centroid": [ 103.0, 0.0 ], "dists": [ { "id": 4, "dist": 3.0 }, { "id": 5, "dist": 2.0 }, { "id": 6, "dist": 5.0 } ] }

@@ -16,11 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
--- The descriptor used as a whole value. It is not a record that survives to runtime, so it cannot be
--- selected -- same leftover reference, same reason to name it clearly.
+-- The same nesting in both forms the descriptor supports: the field on its own, and the whole value, which
+-- carries the field inside the record it stands for.
+use test;
 
-from [{"v": [1.0, 2.0]}, {"v": [3.0, 4.0]}] as p
-cluster by p.v as sc
+from Points as p
+cluster by p.vec as sc
 cluster as members
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
-select value sc;
+with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+select sc.cluster_id as cid,
+       (from members as m select value sc.centroid)[0] as centroid_nested,
+       array_count((from members as m select value sc)) as whole_reads
+order by cid;

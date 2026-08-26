@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- End to end in the shape the case came in as: a WITH feeding a CLUSTER BY block whose SELECT measures each
+-- member against its own cluster's centroid, and SELECT * over the result. The filter and the names are
+-- trimmed to the fixture; what is being exercised is the nesting -- a descriptor read inside a subquery over
+-- the CLUSTER AS members, two query levels down from where the clustering happens.
+use test;
+
+with subset as (
+  select p.id as id, p.vec as vec
+  from Points as p
+  where p.id > 0
+),
+clustered as (
+  select sc.cluster_id as cid,
+         array_count(members) as cnt,
+         (from members as m
+          select m.i.id as id, vector_distance(m.i.vec, sc.centroid, 'euclidean') as dist
+          order by m.i.id) as dists
+  from subset as i
+  cluster by i.vec as sc
+  cluster as members
+  with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+)
+select * from clustered
+order by clustered.cid;

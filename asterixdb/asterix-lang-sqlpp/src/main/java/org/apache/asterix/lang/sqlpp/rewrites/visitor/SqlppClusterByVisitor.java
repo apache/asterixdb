@@ -22,6 +22,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,12 +43,15 @@ import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
@@ -308,7 +312,17 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         selectBlock.setGroupbyClause(mainGby);
 
         if (cbc.hasClusterDescriptorVar()) {
-            substituteDescriptorFields(selectExpression, cbc, clusteringExpr, labelExpr, loc);
+            // The centroid is a SQL-92 aggregate, so substituting it in place puts one wherever the descriptor is
+            // read -- inside a subquery over the CLUSTER AS members that earns the subquery an implicit GROUP BY
+            // (SqlppGroupByVisitor#rewriteSelectWithoutGroupBy), which replaces its scope and leaves the
+            // subquery's own FROM binding undefined. Bound once here instead, so every read -- field access and
+            // whole-value record alike -- is a variable reference, safe at any depth. Post-group: an aggregate
+            // needs the grouping, and a PRE-group LET would reach the CLUSTER AS members record.
+            VarIdentifier centroidVar = context.newVariable();
+            selectBlock.getLetHavingListAfterGroupby().add(
+                    letClause(centroidVar, call(BuiltinFunctions.SCALAR_CENTROID, loc, copy(clusteringExpr)), loc));
+
+            substituteDescriptorFields(selectExpression, cbc, centroidVar, labelExpr, loc);
         }
     }
 
@@ -453,59 +467,36 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     }
 
     /**
-     * Replaces every {@code <descriptor>.<field>} read with the expression that computes it. The descriptor is
-     * substituted field by field rather than bound to a record: an OpenRecordConstructor here breaks type
-     * inference when the members variable is also referenced. For the same reason {@code sc.centroid} becomes
-     * {@code centroid(vec)} as a group aggregate rather than an index into the centroid list, keeping every
-     * post-group descriptor field on the group-aggregation path.
+     * Replaces every descriptor read with the expression that computes it: each {@code <descriptor>.<field>}
+     * by its own, and the descriptor read as a whole value by a record of them all. {@code sc.centroid}
+     * becomes {@code centroid(vec)} as a group aggregate, keeping it on the group-aggregation path.
+     * <p>
+     * One map covers both, so the descriptor reads like any other record: substitution matches
+     * outermost-first, so a known field access is replaced whole and an unknown one falls through to the bare
+     * variable inside it, becoming a field of the record -- MISSING, as {@code r.nosuchfield} is anywhere.
+     * The record is inlined at each use rather than bound to a LET, so it is the shape the group-by pipeline
+     * already handles (as TPCH Q1 writes {@code {"sum_qty": sum(quantity), ...}} under its own GROUP AS).
      */
     private void substituteDescriptorFields(SelectExpression selectExpression, ClusterbyClause cbc,
-            Expression clusteringExpr, Expression labelExpr, SourceLocation loc) throws CompilationException {
+            VarIdentifier centroidVar, Expression labelExpr, SourceLocation loc) throws CompilationException {
         VariableExpr scVar = cbc.getClusterDescriptorVar();
-        Map<Expression, Expression> scSubst = new HashMap<>();
-        scSubst.put(fieldAccess(scVar, SC_CLUSTER_ID, loc), copy(labelExpr));
-        scSubst.put(fieldAccess(scVar, SC_CENTROID, loc),
-                call(BuiltinFunctions.SCALAR_CENTROID, loc, copy(clusteringExpr)));
-        SqlppRewriteUtil.substituteExpression(selectExpression, scSubst, context);
-        // Substitution replaced every field the descriptor actually has. Anything still referring to it is
-        // either an unknown field or the descriptor used as a whole value, neither of which survives to
-        // runtime -- and left alone both reach the user as a bare "unresolved identifier" naming a variable
-        // the rewrite invented. Say what it is instead.
-        checkDescriptorResolved(selectExpression, scVar, loc);
-    }
+        // Named once, so a new field reaches both the field accesses and the whole-value record.
+        Map<String, Expression> fields = new LinkedHashMap<>();
+        fields.put(SC_CLUSTER_ID, copy(labelExpr));
+        fields.put(SC_CENTROID, varRef(centroidVar, loc));
 
-    /**
-     * Raises when the query still refers to the cluster descriptor after the rewrite substituted its fields
-     * away -- {@code sc.somethingElse}, or {@code sc} on its own. Without this the leftover variable reaches
-     * the resolver as an undefined identifier, which names the rewrite's own variable rather than telling the
-     * user which field they asked for.
-     */
-    private static void checkDescriptorResolved(ILangExpression expr, VariableExpr descriptorVar, SourceLocation loc)
-            throws CompilationException {
-        DescriptorLeftoverFinder finder = new DescriptorLeftoverFinder(descriptorVar);
-        expr.accept(finder, null);
-        if (finder.found) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                    "CLUSTER BY cluster descriptor '" + descriptorVar.getVar().getValue() + "' exposes only "
-                            + SC_FIELDS_DISPLAY + ", and cannot be referenced as a whole value.");
+        List<FieldBinding> fbList = new ArrayList<>(fields.size());
+        Map<Expression, Expression> subst = new HashMap<>();
+        for (Map.Entry<String, Expression> field : fields.entrySet()) {
+            subst.put(fieldAccess(scVar, field.getKey(), loc), field.getValue());
+            LiteralExpr nameLit = new LiteralExpr(new StringLiteral(field.getKey()));
+            nameLit.setSourceLocation(loc);
+            fbList.add(new FieldBinding(nameLit, copy(field.getValue())));
         }
-    }
-
-    private static final class DescriptorLeftoverFinder extends AbstractSqlppSimpleExpressionVisitor {
-        private final VariableExpr descriptorVar;
-        private boolean found;
-
-        private DescriptorLeftoverFinder(VariableExpr descriptorVar) {
-            this.descriptorVar = descriptorVar;
-        }
-
-        @Override
-        public Expression visit(VariableExpr v, ILangExpression arg) throws CompilationException {
-            if (descriptorVar.getVar().getValue().equals(v.getVar().getValue())) {
-                found = true;
-            }
-            return super.visit(v, arg);
-        }
+        RecordConstructor descriptorRecord = new RecordConstructor(fbList);
+        descriptorRecord.setSourceLocation(loc);
+        subst.put(new VariableExpr(scVar.getVar()), descriptorRecord);
+        SqlppRewriteUtil.substituteExpression(selectExpression, subst, context);
     }
 
     private FieldAccessor fieldAccess(VariableExpr recordVar, String field, SourceLocation loc) {

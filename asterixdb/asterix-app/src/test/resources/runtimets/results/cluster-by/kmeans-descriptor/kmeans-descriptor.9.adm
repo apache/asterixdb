@@ -1,0 +1,2 @@
+{ "clustered": { "cid": 0, "cnt": 2, "dists": [ { "id": 1, "dist": 0.5 }, { "id": 2, "dist": 0.5 } ] } }
+{ "clustered": { "cid": 1, "cnt": 2, "dists": [ { "id": 3, "dist": 0.5 }, { "id": 4, "dist": 0.5 } ] } }
