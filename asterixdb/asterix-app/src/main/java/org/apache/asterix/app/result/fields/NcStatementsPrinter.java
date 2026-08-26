@@ -19,6 +19,7 @@
 package org.apache.asterix.app.result.fields;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,6 +69,8 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
 
     /** Indent of a statement object's fields, one level deeper than the array itself. */
     private static final String FIELD_INDENT = "\t\t\t";
+
+    private static final String NESTED_SHIFT = "\t\t";
 
     /** One field of a statement object. Collected so that the separators cannot be got wrong. */
     private interface FieldEmitter {
@@ -136,32 +139,35 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
         // a statement that returns rows describes them, as the flat response does; the signature is the default one
         // unless the client asked for a typed one, exactly as SignaturePrinter.newInstance decides for a request
         if (printSignature && resultSetInfo != null) {
-            fields.add((plans == null ? SignaturePrinter.INSTANCE : SignaturePrinter.newInstance(plans))::print);
+            IResponseFieldPrinter signature =
+                    plans == null ? SignaturePrinter.INSTANCE : SignaturePrinter.newInstance(plans);
+            fields.add(w -> printNested(w, signature));
         }
         if (resultSetInfo != null) {
             if (delivery == ResultDelivery.IMMEDIATE) {
                 fields.add(w -> printRows(w, rows, resultSetInfo, stats));
             } else if (delivery == ResultDelivery.DEFERRED) {
                 // a handle per statement, each naming that statement's own job
-                fields.add(new ResultHandlePrinter(sessionOutput,
-                        new ResultHandle(resultSetInfo.getJobId(), resultSetInfo.getResultSetId(), requestId))::print);
+                fields.add(w -> printNested(w, new ResultHandlePrinter(sessionOutput,
+                        new ResultHandle(resultSetInfo.getJobId(), resultSetInfo.getResultSetId(), requestId))));
             }
         }
         if (plans != null) {
-            fields.add(new PlansPrinter(plans, sessionOutput.config().getPlanFormat())::print);
+            fields.add(w -> printNested(w, new PlansPrinter(plans, sessionOutput.config().getPlanFormat())));
         }
         fields.add(w -> printField(w, StatusPrinter.FIELD_NAME,
                 quoted((failed ? ResultStatus.FATAL : ResultStatus.SUCCESS).str())));
         if (failed) {
-            fields.add(errorsPrinter(statement.getError())::print);
+            fields.add(w -> printNested(w, errorsPrinter(statement.getError())));
         }
         if (!statement.getWarnings().isEmpty()) {
-            fields.add(warningsPrinter(statement.getWarnings())::print);
+            fields.add(w -> printNested(w, warningsPrinter(statement.getWarnings())));
         }
         // built when the field is printed, not now: the row count and size are only final once the rows are streamed
-        fields.add(w -> new MetricsPrinter(statementMetrics(stats, failed), resultCharset, STATEMENT_METRICS).print(w));
+        fields.add(w -> printNested(w,
+                new MetricsPrinter(statementMetrics(stats, failed), resultCharset, STATEMENT_METRICS)));
         if (stats.getJobProfile() != null) {
-            fields.add(new ProfilePrinter(stats.getJobProfile())::print);
+            fields.add(w -> printNested(w, new ProfilePrinter(stats.getJobProfile())));
         }
 
         if (separatorBefore) {
@@ -186,9 +192,28 @@ public class NcStatementsPrinter implements IResponseFieldPrinter {
         pw.print(FIELD_INDENT);
         pw.print(quoted(ResultsPrinter.FIELD_NAME));
         pw.print(": ");
+        PrintWriter rows = new PrintWriter(pw) {
+            @Override
+            public void println(String x) {
+                print(x);
+            }
+        };
         // no result decorators: this printer names the field itself, so the decorators that name and number it must not
-        SessionOutput undecorated = new SessionOutput(sessionOutput.config(), pw);
-        ResultUtil.printResults(appCtx, reader, undecorated, stats, resultSetInfo.getRecordType());
+        SessionOutput undecorated = new SessionOutput(sessionOutput.config(), rows);
+        try {
+            ResultUtil.printResults(appCtx, reader, undecorated, stats, resultSetInfo.getRecordType());
+        } finally {
+            rows.flush();
+        }
+    }
+
+    private static void printNested(PrintWriter pw, IResponseFieldPrinter printer) throws HyracksDataException {
+        StringWriter buffer = new StringWriter();
+        PrintWriter bufferedWriter = new PrintWriter(buffer);
+        printer.print(bufferedWriter);
+        bufferedWriter.flush();
+        pw.print(NESTED_SHIFT);
+        pw.print(buffer.toString().replace("\n", "\n" + NESTED_SHIFT));
     }
 
     /** The errors of a failed statement. Overridable for a deployment that represents errors in its own form. */
