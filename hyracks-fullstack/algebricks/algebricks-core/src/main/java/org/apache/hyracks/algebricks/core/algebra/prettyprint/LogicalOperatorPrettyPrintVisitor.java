@@ -368,11 +368,13 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         switch (op.getMode()) {
             case RECLUSTER:
                 out.append(" pool ").append(str(op.getPoolVariable())).append(" to ")
-                        .append(String.valueOf(op.getTopCount())).append(" means");
+                        .append(String.valueOf(op.getTopCount())).append(" means (seed ")
+                        .append(String.valueOf(op.getSeed())).append(')');
                 break;
             case OVERSAMPLE_LOOP:
                 out.append(' ').append(String.valueOf(op.getLoopRounds())).append(" rounds of ")
-                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()));
+                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()))
+                        .append(" (seed ").append(String.valueOf(op.getSeed())).append(')');
                 break;
             default:
                 out.append(' ').append(str(op.getVectorVariable())).append(" vs pool ")

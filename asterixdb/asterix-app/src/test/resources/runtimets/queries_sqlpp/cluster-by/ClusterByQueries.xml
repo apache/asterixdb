@@ -175,6 +175,31 @@
             <output-dir compare="Text">kmeans-budget-sensitivity</output-dir>
         </compilation-unit>
     </test-case>
+    <!-- The 'seed' option, over the structureless budget fixture: seed 42, a second seed that must land
+         elsewhere, and a negative seed. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-seed">
+            <output-dir compare="Text">kmeans-seed</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="seed-not-integer">
+            <output-dir compare="Text">seed-not-integer</output-dir>
+            <expected-error>CLUSTER BY 'seed' must be a 32-bit integer, but was: abc</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="seed-with-unsupported-algorithm">
+            <output-dir compare="Text">seed-with-unsupported-algorithm</output-dir>
+            <expected-error>Unsupported CLUSTER BY 'clustering_algorithm' 'DBSCAN'</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="seed-out-of-int-range">
+            <output-dir compare="Text">seed-out-of-int-range</output-dir>
+            <expected-error>CLUSTER BY 'seed' must be a 32-bit integer, but was: 2147483648</expected-error>
+        </compilation-unit>
+    </test-case>
     <!-- The budget knob is live: below the declared 4-frame minimum the query is rejected before it
          runs. This is what keeps kmeans-budget-sensitivity honest, since an unregistered or ignored
          `compiler.clusterbymemory` would leave every arm at the default budget, agreeing trivially. -->

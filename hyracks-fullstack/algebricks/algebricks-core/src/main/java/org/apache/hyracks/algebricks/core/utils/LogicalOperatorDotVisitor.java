@@ -354,11 +354,12 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         switch (op.getMode()) {
             case RECLUSTER:
                 stringBuilder.append(" pool ").append(str(op.getPoolVariable())).append(" to ").append(op.getTopCount())
-                        .append(" means");
+                        .append(" means (seed ").append(op.getSeed()).append(')');
                 break;
             case OVERSAMPLE_LOOP:
                 stringBuilder.append(' ').append(op.getLoopRounds()).append(" rounds of ")
-                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()));
+                        .append(str(op.getVectorVariable())).append(" vs seed ").append(str(op.getPoolVariable()))
+                        .append(" (seed ").append(op.getSeed()).append(')');
                 break;
             default:
                 stringBuilder.append(' ').append(str(op.getVectorVariable())).append(" vs pool ")

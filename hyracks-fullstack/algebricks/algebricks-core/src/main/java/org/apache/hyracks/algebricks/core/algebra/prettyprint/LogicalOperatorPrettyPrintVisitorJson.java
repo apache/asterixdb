@@ -877,6 +877,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField("pool-variable", String.valueOf(op.getPoolVariable()));
             jsonGenerator.writeNumberField("top-count", op.getTopCount());
             jsonGenerator.writeStringField("mode", op.getMode().getLabel());
+            jsonGenerator.writeNumberField("seed", op.getSeed());
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));

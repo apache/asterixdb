@@ -66,6 +66,9 @@ import org.junit.Test;
  */
 @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansReclusterOperatorTest {
+    // Same value as SqlppClusterByVisitor's RECLUSTER_SEED_DEFAULT, the seed used when a query sets none
+    // (mirrored here: this module cannot see that class). The expected picks below depend on it.
+    private static final long DEFAULT_RECLUSTER_SEED = 12345L;
 
     /** Enough frames for the partial sort to run in memory in this fixture. */
     private static final int TEST_FRAMES_LIMIT = 32;
@@ -108,8 +111,8 @@ public class KMeansReclusterOperatorTest {
     private static List<double[]> runRecluster(int k) throws Exception {
         IHyracksTaskContext ctx = TestUtils.create(32768);
         JobSpecification spec = new JobSpecification();
-        KMeansReclusterOperatorDescriptor op =
-                new KMeansReclusterOperatorDescriptor(spec, VEC_REC_DESC, k, 0, TEST_FRAMES_LIMIT);
+        KMeansReclusterOperatorDescriptor op = new KMeansReclusterOperatorDescriptor(spec, VEC_REC_DESC, k, 0,
+                TEST_FRAMES_LIMIT, DEFAULT_RECLUSTER_SEED);
 
         // Single-input merge — activities: StorePool (0), Score (1). No vector input.
         List<IActivity> activities = collectActivities(op);
@@ -286,7 +289,7 @@ public class KMeansReclusterOperatorTest {
         IHyracksTaskContext ctx = TestUtils.create(32768);
         JobSpecification spec = new JobSpecification();
         KMeansReclusterOperatorDescriptor op =
-                new KMeansReclusterOperatorDescriptor(spec, VEC_REC_DESC, 8, 0, framesLimit);
+                new KMeansReclusterOperatorDescriptor(spec, VEC_REC_DESC, 8, 0, framesLimit, DEFAULT_RECLUSTER_SEED);
         List<IActivity> activities = collectActivities(op);
         IRecordDescriptorProvider rdp = recordDescProvider();
         IOperatorNodePushable poolStore = activities.get(0).createPushRuntime(ctx, rdp, 0, 1);

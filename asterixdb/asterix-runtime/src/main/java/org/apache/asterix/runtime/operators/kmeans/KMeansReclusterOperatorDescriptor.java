@@ -63,14 +63,10 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
     private static final int STORE_POOL_ACTIVITY_ID = 0;
     private static final int SCORE_ACTIVITY_ID = 1;
 
-    // Seed for RECLUSTER's weighted k-means++ draw. The selection is randomized by nature, but CLUSTER BY
-    // promises that the same query over the same data returns the same clusters, so the draw must not vary
-    // between runs. A constant seed gives that: RECLUSTER runs on a single partition over one already-merged
-    // pool, so one generator sequence covers the whole decision. The value itself carries no meaning, with one
-    // constraint -- Random's constructor XORs the seed against its own multiplier (0x5DEECE66D), so that value
-    // would zero the initial state and make the first draw 0.0, which turns the first centre into a fixed
-    // choice of the lowest-indexed candidate rather than a weighted one.
-    private static final long RECLUSTER_SEED = 12345L;
+    // Seed for the weighted k-means++ draw, supplied by the plan. One seed covers the whole decision: this stage
+    // runs on a single partition over one already-merged pool. It does not on its own make the pick
+    // reproducible -- the draw walks a prefix sum in array order, so the pool's ORDER decides too.
+    private final long reclusterSeed;
 
     // How many centroids to keep. Non-negative.
     private final int count;
@@ -80,9 +76,10 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
     private final int framesLimit;
 
     public KMeansReclusterOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor vectorRecDesc,
-            int count, int poolColumn, int framesLimit) {
+            int count, int poolColumn, int framesLimit, long reclusterSeed) {
         // One input: the broadcast partials, which are always envelope rows (the oversampling loop's output).
         super(spec, 1, 1);
+        this.reclusterSeed = reclusterSeed;
         this.framesLimit = framesLimit;
         this.count = count;
         this.poolColumn = poolColumn;
@@ -166,7 +163,7 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
         final double[] nearest = new double[n]; // d^2 to the closest already-chosen centre
         Arrays.fill(nearest, Double.POSITIVE_INFINITY);
         final boolean[] taken = new boolean[n];
-        final Random rng = new Random(RECLUSTER_SEED);
+        final Random rng = new Random(reclusterSeed);
         final double[] score = new double[n];
         final int target = Math.min(count, n);
         int chosen = 0;

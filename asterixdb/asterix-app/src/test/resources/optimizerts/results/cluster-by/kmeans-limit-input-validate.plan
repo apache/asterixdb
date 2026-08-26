@@ -101,11 +101,11 @@ distribute result [$$244]
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                  kmeans-stage $$225 <- recluster pool $$223 to 2 means
+                                  kmeans-stage $$225 <- recluster pool $$223 to 2 means (seed 12345)
                                   -- KMEANS_RECLUSTER  |PARTITIONED|
                                     exchange
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                      kmeans-stage $$223 <- oversample-loop 5 rounds of $$208 vs seed $$214
+                                      kmeans-stage $$223 <- oversample-loop 5 rounds of $$208 vs seed $$214 (seed 1000003)
                                       -- KMEANS_OVERSAMPLE_LOOP  |PARTITIONED|
                                         exchange
                                         -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|

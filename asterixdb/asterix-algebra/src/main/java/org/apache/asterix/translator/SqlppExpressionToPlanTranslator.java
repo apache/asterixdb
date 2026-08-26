@@ -296,7 +296,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                     "not a CLUSTER BY stage marker: " + sig);
         }
         boolean merge = mode == KMeansStageOperator.Mode.RECLUSTER;
-        // Argument layout: merge = (pool, count); loop = (vectors, pool, count[, rounds, seedBase]).
+        // Argument layout: merge = (pool, count, seed); loop = (vectors, pool, count[, rounds, seedBase]).
         Pair<ILogicalOperator, LogicalVariable> vecBranch =
                 merge ? null : translateStreamBranch((SelectExpression) fcall.getExprList().get(0));
         Expression poolArg = fcall.getExprList().get(merge ? 0 : 1);
@@ -336,7 +336,13 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             kop.setLoopRounds((int) longArg(fcall, 3));
             kop.setDimension((int) longArg(fcall, 4));
         }
-        // RECLUSTER takes no width: it reads envelopes whose vectors the loop stages already decoded.
+        // RECLUSTER reads the oversampling loop's output rows -- [kind, partition, seq, score, vec] tuples whose
+        // vectors that loop already decoded and width-checked -- so unlike the loop stages it needs no declared
+        // dimension. Its 3rd argument is the seed for its weighted k-means++ draw, the last randomized choice in
+        // the initialization, and it lands on the same operator field OVERSAMPLE_LOOP sets above.
+        if (mode == KMeansStageOperator.Mode.RECLUSTER) {
+            kop.setSeed(longArg(fcall, 2));
+        }
         kop.setSourceLocation(loc);
         // Input order: loop = vectors (0) then pool (1); merge = pool only (0).
         if (vecBranch != null) {

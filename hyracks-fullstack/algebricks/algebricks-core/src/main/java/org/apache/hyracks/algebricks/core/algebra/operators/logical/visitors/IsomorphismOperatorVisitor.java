@@ -404,7 +404,11 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
         KMeansStageOperator other = (KMeansStageOperator) aop;
         // vectorVariable is null for the single-input merge modes (RECLUSTER/LLOYD).
+        // The seed, round count and vector width are part of the stage's properties, so equality
+        // compares them too.
         return op.getTopCount() == other.getTopCount() && op.getMode() == other.getMode()
+                && op.getSeed() == other.getSeed() && op.getLoopRounds() == other.getLoopRounds()
+                && op.getDimension() == other.getDimension()
                 && java.util.Objects.equals(op.getVectorVariable(), other.getVectorVariable())
                 && op.getPoolVariable().equals(other.getPoolVariable())
                 && op.getCandidateVariable().equals(other.getCandidateVariable());

@@ -1242,21 +1242,9 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("ann-distance", FunctionIdentifier.VARARGS);
     // CLUSTER BY: nearest_centroid(point, centroids) -> AINT32 index of the closest centroid.
     public static final FunctionIdentifier NEAREST_CENTROID = FunctionConstants.newAsterix("nearest-centroid", 2);
-    // kmeans-recluster(partials, k): single-input merge — reduce partials, then weighted k-means++ to k (C0).
-    public static final FunctionIdentifier KMEANS_RECLUSTER = FunctionConstants.newAsterix("kmeans-recluster", 2);
-    // CLUSTER BY initMode "kmeansPP": the exact k-means|| oversampling init as one self-iterating
-    // operator. kmeans-oversample-loop(vectors, seedPool, l, rounds, seedBase, dimension): runs the whole
-    // oversample loop internally, iterating `rounds` times and all-reducing the per-round global potential +
-    // draws across partitions; the physical operator realizes it as an injected pipelined systolic sub-graph.
-    // The final pool is weighed and emitted for kmeans-recluster. `dimension` is the declared vector width,
-    // enforced by the operator's decoder.
+    public static final FunctionIdentifier KMEANS_RECLUSTER = FunctionConstants.newAsterix("kmeans-recluster", 3);
     public static final FunctionIdentifier KMEANS_OVERSAMPLE_LOOP =
             FunctionConstants.newAsterix("kmeans-oversample-loop", 6);
-
-    // The Lloyd refinement as one self-iterating operator. kmeans-lloyd-loop(vectors, centroids, k,
-    // iterations, dimension): runs every refinement iteration internally, all-reducing each iteration's
-    // per-centroid (count, sum) partials into the next centroid set; the physical operator realizes it as an
-    // injected pipelined systolic sub-graph. Emits the final centroid set as plain vectors.
     public static final FunctionIdentifier KMEANS_LLOYD_LOOP = FunctionConstants.newAsterix("kmeans-lloyd-loop", 5);
 
     // Temporal functions

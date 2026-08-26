@@ -68,7 +68,7 @@ public class KMeansReclusterPOperator extends AbstractKMeansStagePOperator {
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         int poolColumn = resolveSingleColumn(inputSchemas[0], kop.getPoolVariable());
         KMeansReclusterOperatorDescriptor mergeDesc = new KMeansReclusterOperatorDescriptor(builder.getJobSpec(),
-                recDesc, kop.getTopCount(), poolColumn, framesLimit());
+                recDesc, kop.getTopCount(), poolColumn, framesLimit(), kop.getSeed());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, mergeDesc);
         builder.contributeGraphEdge(op.getInputs().get(0).getValue(), 0, op, 0);
     }

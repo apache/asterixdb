@@ -133,15 +133,18 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     private static final String OPT_CROSS_POLLINATION_RATIO = "cross_pollination_distance_ratio";
     private static final String OPT_INIT_MODE = "init_mode";
     private static final String OPT_DIMENSION = "dimension";
+    // K-Means only: pins every randomized choice in the initialization so a query reproduces. Guarded on the
+    // algorithm, because what it seeds is specific to this initialization -- a new one must re-admit it.
+    private static final String OPT_SEED = "seed";
 
     // cross_pollination_distance_ratio is deliberately NOT here: it was accepted but never read, so any value
     // -- negative, non-numeric -- passed silently. It comes back when cross-pollination itself does.
     private static final Set<String> KNOWN_OPTIONS = Set.of(OPT_ALGORITHM, OPT_NUM_CLUSTERS, OPT_SIMILARITY,
-            OPT_CROSS_POLLINATION, OPT_INIT_MODE, OPT_DIMENSION);
+            OPT_CROSS_POLLINATION, OPT_INIT_MODE, OPT_DIMENSION, OPT_SEED);
     // What an unknown-option error lists back to the user. Not printed from KNOWN_OPTIONS: Set.of iterates in
     // a per-JVM salted order, so the message would differ between runs.
     private static final String KNOWN_OPTIONS_DISPLAY =
-            "clustering_algorithm, num_clusters, dimension, similarity, cross_pollination, init_mode";
+            "clustering_algorithm, num_clusters, dimension, similarity, cross_pollination, init_mode, seed";
     // The fields the cluster descriptor exposes. Every one is substituted away during the rewrite, so a
     // surviving reference to the descriptor means the query asked for something else -- see checkDescriptorFields.
     private static final String SC_CLUSTER_ID = "cluster_id";
@@ -172,14 +175,12 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     private static final String INIT_MODE_RANDOM = "random";
     private static final Set<String> KNOWN_INIT_MODES =
             Set.of(INIT_MODE_KMEANS_PARALLEL, INIT_MODE_KMEANSPP_DEPRECATED, INIT_MODE_RANDOM);
-    // Base for the per-round sampling seed (seed_r = EXACT_SEED_BASE + r). Holding it fixed makes a run
-    // reproducible on a fixed topology; the descriptor mixes in the partition id.
-    //
-    // The value is the smallest prime above one million, chosen for the same reason the descriptor multiplies
-    // by it: a prime stride keeps (base + round) * prime + partition from colliding across neighbouring
-    // (round, partition) pairs, so adjacent partitions do not start from correlated generator states. Nothing
-    // depends on the magnitude -- any prime of this size would do.
+    // The oversampling draw seed when the query supplies none. A draw hashes (vector fingerprint, seed,
+    // round) through mix64 (see KMeansLoopIO.uniformDraw), so any fixed value works equally well; this one
+    // stays because every existing test suite result was generated under it.
     private static final int EXACT_SEED_BASE = 1_000_003;
+    // RECLUSTER's roulette seed when the query supplies none. The value carries no meaning.
+    private static final int RECLUSTER_SEED_DEFAULT = 12345;
 
     // Lloyd iterations, passed to the loop operator as an argument.
     private static final int LLOYD_ITERATIONS = 3;
@@ -392,7 +393,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
             LimitClause limitKInit = new LimitClause(intLit(k, loc), null);
             limitKInit.setSourceLocation(loc);
             return selectValueFrom(copy(vecsQuery), rv0, rv0, null, usableVectorGuard(rv0, dimension, loc),
-                    ascOrder(uniformRowKey(rv0, loc)), null, limitKInit, loc);
+                    ascOrder(uniformRowKey(rv0, loc, seedOption(cbc))), null, limitKInit, loc);
         }
         // The oversampling loop runs INIT_OVERSAMPLING_ROUNDS rounds internally, then weighs the vectors
         // against the final pool into the (count, sum) partials RECLUSTER reduces. The innermost pool is the
@@ -400,17 +401,20 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         // which would be a geometric extreme and bias every round measured from it.
         // Guarded: a rejected LIMIT 1 seed empties the pool outright -- and a row with no vector field makes
         // random(pv[0]) unknown, which orders FIRST, so the bad row was always the one drawn.
+        Integer seed = seedOption(cbc);
         VariableExpr pv = newVar(loc);
         LimitClause seedLimit = new LimitClause(intLit(1, loc), null);
         seedLimit.setSourceLocation(loc);
         Expression poolStream = selectValueFrom(copy(vecsQuery), pv, pv, null, usableVectorGuard(pv, dimension, loc),
-                ascOrder(uniformRowKey(pv, loc)), null, seedLimit, loc);
+                ascOrder(uniformRowKey(pv, loc, seed)), null, seedLimit, loc);
+        int drawSeed = seed == null ? EXACT_SEED_BASE : seed;
         Expression weighed = call(BuiltinFunctions.KMEANS_OVERSAMPLE_LOOP, loc, copy(vecsQuery), poolStream,
-                intLit(oversamplingFactor(k, loc), loc), intLit(INIT_OVERSAMPLING_ROUNDS, loc),
-                intLit(EXACT_SEED_BASE, loc), intLit(dimension, loc));
+                intLit(oversamplingFactor(k, loc), loc), intLit(INIT_OVERSAMPLING_ROUNDS, loc), intLit(drawSeed, loc),
+                intLit(dimension, loc));
         // RECLUSTER: single-input merge of the (broadcast) partials -- reduces the weighted candidates to at
         // most k initial centres with weighted k-means++.
-        return call(BuiltinFunctions.KMEANS_RECLUSTER, loc, weighed, intLit(k, loc));
+        return call(BuiltinFunctions.KMEANS_RECLUSTER, loc, weighed, intLit(k, loc),
+                intLit(seed == null ? RECLUSTER_SEED_DEFAULT : seed, loc));
     }
 
     /**
@@ -651,8 +655,13 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
      * The key costs nothing: {@code ORDER BY ... LIMIT n} still compiles to a streaming top-n that holds n
      * rows, and ranking one double is cheaper than ranking a vector element by element.
      */
-    private Expression uniformRowKey(VariableExpr rowVar, SourceLocation loc) {
-        return call(BuiltinFunctions.RANDOM_WITH_SEED, loc, elementAt(varRef(rowVar.getVar(), loc), 0, loc));
+    private Expression uniformRowKey(VariableExpr rowVar, SourceLocation loc, Integer seed) {
+        Expression rowSeed = elementAt(varRef(rowVar.getVar(), loc), 0, loc);
+        if (seed != null) {
+            // The offset does not make the key a pure function of the row -- see random(x) above.
+            rowSeed = binaryOp(OperatorType.PLUS, rowSeed, intLit(seed, loc), loc);
+        }
+        return call(BuiltinFunctions.RANDOM_WITH_SEED, loc, rowSeed);
     }
 
     /** {@code <left> <op> <right>} as an OperatorExpr. */
@@ -773,6 +782,21 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
                     "Unsupported CLUSTER BY 'clustering_algorithm' '" + algorithm + "'. Supported: K-Means.");
         }
+        // 'seed' is K-Means specific. Below the algorithm check, so an unsupported algorithm is reported as
+        // one; against getAlgorithm(), so both spellings pass. A new algorithm must re-admit the option.
+        String seed = opts.get(OPT_SEED);
+        if (seed != null) {
+            if (!ALGORITHM_KMEANS.equals(getAlgorithm(cbc))) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
+                        "CLUSTER BY 'seed' applies to K-Means only.");
+            }
+            try {
+                Integer.parseInt(seed.trim());
+            } catch (NumberFormatException e) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
+                        "CLUSTER BY 'seed' must be a 32-bit integer, but was: " + seed);
+            }
+        }
         // init_mode is optional but, if present, must be recognized.
         String initMode = opts.get(OPT_INIT_MODE);
         if (initMode != null && !KNOWN_INIT_MODES.contains(initMode.toLowerCase())) {
@@ -785,13 +809,13 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     }
 
     /**
-     * The validated clustering algorithm, defaulting to k-means. Resolved rather than merely validated because
-     * {@code Dimension}'s contract belongs to the algorithm: k-means needs one fixed vector width, and a future
-     * algorithm without fixed-width vectors must be able to state its own rule instead of inheriting this one.
+     * Both accepted spellings of k-means, and an absent option, yield {@link #ALGORITHM_KMEANS}; any other value
+     * yields itself, lowercased.
      */
     private String getAlgorithm(ClusterbyClause cbc) throws CompilationException {
         String algorithm = scalarOptions(cbc).get(OPT_ALGORITHM);
-        return algorithm == null ? ALGORITHM_KMEANS : algorithm.toLowerCase();
+        String lower = algorithm == null ? ALGORITHM_KMEANS : algorithm.toLowerCase();
+        return KNOWN_ALGORITHMS.contains(lower) ? ALGORITHM_KMEANS : lower;
     }
 
     /**
@@ -853,6 +877,16 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
                     "CLUSTER BY 'num_clusters' is too large: the oversampling factor " + OVERSAMPLING_FACTOR_PER_K
                             + " * " + k + " overflows a 32-bit integer.");
         }
+    }
+
+    /**
+     * The query's {@code seed}, or null when absent -- each caller turns null into its own built-in constant.
+     * Parses uncaught on purpose: {@link #validateWithOptionsAndGetK} has already rejected a non-int, so a
+     * failure here is a broken invariant and should surface as one.
+     */
+    private Integer seedOption(ClusterbyClause cbc) throws CompilationException {
+        String raw = scalarOptions(cbc).get(OPT_SEED);
+        return raw == null ? null : Integer.valueOf(raw.trim());
     }
 
     /** The validated init_mode, canonicalised ({@link #INIT_MODE_KMEANS_PARALLEL} default). */
