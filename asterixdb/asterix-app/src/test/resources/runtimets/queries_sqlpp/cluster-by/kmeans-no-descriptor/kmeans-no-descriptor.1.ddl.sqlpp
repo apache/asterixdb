@@ -17,7 +17,9 @@
  * under the License.
  */
 
-from [{"x": [1.0, 2.0]}] as r
-cluster by r.x as sc
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 0 }
-select sc.cluster_id;
+-- CLUSTER BY without AS: the clustering runs with no descriptor binding.
+drop dataverse test if exists;
+create dataverse test;
+use test;
+create type PointType as open { id: bigint };
+create dataset Points(PointType) primary key id;

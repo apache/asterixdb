@@ -343,7 +343,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public ClusterbyClause visit(ClusterbyClause cc, Void arg) throws CompilationException {
         Expression newExpr = (Expression) cc.getClusteringExpression().accept(this, arg);
-        VariableExpr newDescVar = (VariableExpr) cc.getClusterDescriptorVar().accept(this, arg);
+        VariableExpr newDescVar =
+                cc.hasClusterDescriptorVar() ? (VariableExpr) cc.getClusterDescriptorVar().accept(this, arg) : null;
         VariableExpr newMembersVar =
                 cc.hasClusterMembersVar() ? (VariableExpr) cc.getClusterMembersVar().accept(this, arg) : null;
         List<Pair<Expression, Identifier>> newClusterFieldList =

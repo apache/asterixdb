@@ -20,6 +20,6 @@
 use test;
 
 from Points as p cluster by p.vec as sc cluster as members
-with { "dimension": [2], "num_clusters": 10 }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 10 }
 select array_count(members) as cnt
 order by cnt;

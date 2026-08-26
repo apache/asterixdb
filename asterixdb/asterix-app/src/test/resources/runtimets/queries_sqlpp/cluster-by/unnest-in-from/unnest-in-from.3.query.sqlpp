@@ -27,7 +27,7 @@ from (
   where m.movie_year < 2020
   cluster by re.vec as sc
   cluster as members
-  with { "dimension": [2], "num_clusters": 4 }
+  with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 4 }
   select members
 ) as c
 order by cnt;

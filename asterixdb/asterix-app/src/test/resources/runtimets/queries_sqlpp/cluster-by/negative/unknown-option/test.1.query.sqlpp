@@ -19,5 +19,5 @@
 
 from [{"x": [1.0, 2.0]}] as r
 cluster by r.x as sc
-with { "dimension": [2], "num_clusters": 5, "NumCluster": 3 }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 5, "NumCluster": 3 }
 select sc.cluster_id;

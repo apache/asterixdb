@@ -22,6 +22,6 @@
 use test;
 
 from Points as p cluster by p.vec as sc cluster as members
-with { "dimension": [2], "num_clusters": 7 }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 7 }
 select value sc.cluster_id
 order by sc.cluster_id;

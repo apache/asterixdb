@@ -305,8 +305,10 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     public Void visit(ClusterbyClause cc, Integer step) throws CompilationException {
         out.print(skip(step) + "cluster by ");
         cc.getClusteringExpression().accept(this, step + 2);
-        out.print(" as ");
-        cc.getClusterDescriptorVar().accept(this, step + 2);
+        if (cc.hasClusterDescriptorVar()) {
+            out.print(" as ");
+            cc.getClusterDescriptorVar().accept(this, step + 2);
+        }
         if (cc.hasClusterMembersVar()) {
             out.print(" cluster as ");
             cc.getClusterMembersVar().accept(this, step + 2);

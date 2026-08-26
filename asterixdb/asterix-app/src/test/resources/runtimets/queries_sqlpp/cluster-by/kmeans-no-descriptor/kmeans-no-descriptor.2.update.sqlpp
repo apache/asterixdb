@@ -17,7 +17,10 @@
  * under the License.
  */
 
-from [{"x": [1.0, 2.0]}] as r
-cluster by r.x as sc
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 0 }
-select sc.cluster_id;
+use test;
+insert into Points ([
+  {"id": 1, "vec": [0.0, 0.0]},
+  {"id": 2, "vec": [1.0, 0.0]},
+  {"id": 3, "vec": [10.0, 10.0]},
+  {"id": 4, "vec": [11.0, 10.0]}
+]);

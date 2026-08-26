@@ -34,5 +34,5 @@ create dataset Reviews(ReviewType) primary key id;
 
 from (select value r from Reviews r order by r.id limit 100) as t
 cluster by t.reviewEmbedding as sc
-with { "dimension": [2], "num_clusters": 2 }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
 select sc.cluster_id as cid;

@@ -6629,7 +6629,7 @@ ClusterbyClause ClusterbyClause() throws ParseException:
     }
     <IDENTIFIER> {startToken = token; }
     <BY> clusteringExpr = Expression()
-    <AS> descriptorVar = Variable()
+    ( <AS> descriptorVar = Variable() )?
     (
         LOOKAHEAD({laIdentifier(CLUSTER) && laToken(2, AS)})
         <IDENTIFIER> <AS> membersVarWithFieldList = VariableWithFieldMap()

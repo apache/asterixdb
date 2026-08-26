@@ -40,7 +40,8 @@ public class ClusterbyClause extends AbstractClause {
 
     // The vector expression to cluster on.
     private Expression clusteringExpr;
-    // The cluster descriptor variable (AS sc): {cluster_id, centroid}.
+    // The cluster descriptor variable (AS sc): {cluster_id, centroid}; null when AS is absent -- the
+    // clustering still runs, readable through CLUSTER AS members and the SQL-92 aggregate sugar.
     private VariableExpr clusterDescriptorVar;
     // The cluster-members variable (CLUSTER AS <var>); null when CLUSTER AS is absent.
     private VariableExpr clusterMembersVar;
@@ -110,6 +111,10 @@ public class ClusterbyClause extends AbstractClause {
 
     public void setWithOptions(RecordConstructor withOptions) {
         this.withOptions = withOptions;
+    }
+
+    public boolean hasClusterDescriptorVar() {
+        return clusterDescriptorVar != null;
     }
 
     public boolean hasClusterMembersVar() {

@@ -21,5 +21,5 @@
 from [{"x": [1.0, 2.0]}] as r
 let y = r.x
 cluster by y as sc
-with { "dimension": [2], "num_clusters": 2 }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
 select sc.cluster_id;

@@ -269,7 +269,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ClusterbyClause cc,
             VariableSubstitutionEnvironment env) throws CompilationException {
         Expression newExpr = (Expression) cc.getClusteringExpression().accept(this, env).first;
-        VariableExpr newDescVar = generateNewVariable(context, cc.getClusterDescriptorVar());
+        VariableExpr newDescVar =
+                cc.hasClusterDescriptorVar() ? generateNewVariable(context, cc.getClusterDescriptorVar()) : null;
         VariableExpr newMembersVar =
                 cc.hasClusterMembersVar() ? generateNewVariable(context, cc.getClusterMembersVar()) : null;
         List<Pair<Expression, Identifier>> newClusterFieldList = cc.hasClusterFieldList()

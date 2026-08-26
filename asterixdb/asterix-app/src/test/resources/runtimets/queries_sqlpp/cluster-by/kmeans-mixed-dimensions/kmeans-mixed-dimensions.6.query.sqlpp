@@ -26,7 +26,7 @@ select ids from (
   from Points as p
   cluster by p.vec as sc
   cluster as members
-  with { "num_clusters": 2, "dimension": [2] }
+  with { "clustering_algorithm": "K-Means", "num_clusters": 2, "dimension": [2] }
   select array_sort((select value m.p.id from members as m)) as ids
 ) as c
 order by ids;

@@ -17,7 +17,10 @@
  * under the License.
  */
 
-from [{"x": [1.0, 2.0]}] as r
-cluster by r.x as sc
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 0 }
-select sc.cluster_id;
+-- The SQL-92 aggregate sugar needs no binding at all: one row per cluster, its size.
+use test;
+from Points as p
+cluster by p.vec
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
+select count(*) as size
+order by size;

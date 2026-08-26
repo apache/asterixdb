@@ -17,7 +17,11 @@
  * under the License.
  */
 
-from [{"x": [1.0, 2.0]}] as r
-cluster by r.x as sc
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 0 }
-select sc.cluster_id;
+-- The members alone are a complete answer: no descriptor is bound anywhere.
+use test;
+from Points as p
+cluster by p.vec
+cluster as members
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
+select value (from members as m select value m.p.id order by m.p.id)
+order by array_count(members), (from members as m select value m.p.id order by m.p.id)[0];

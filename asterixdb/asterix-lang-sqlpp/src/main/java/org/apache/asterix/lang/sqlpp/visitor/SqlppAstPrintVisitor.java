@@ -343,8 +343,10 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(ClusterbyClause cc, Integer step) throws CompilationException {
         out.println(skip(step) + "ClusterBy");
         cc.getClusteringExpression().accept(this, step + 1);
-        out.println(skip(step + 1) + "AS");
-        cc.getClusterDescriptorVar().accept(this, step + 1);
+        if (cc.hasClusterDescriptorVar()) {
+            out.println(skip(step + 1) + "AS");
+            cc.getClusterDescriptorVar().accept(this, step + 1);
+        }
         if (cc.hasClusterMembersVar()) {
             out.println(skip(step + 1) + "CLUSTER AS");
             cc.getClusterMembersVar().accept(this, step + 1);

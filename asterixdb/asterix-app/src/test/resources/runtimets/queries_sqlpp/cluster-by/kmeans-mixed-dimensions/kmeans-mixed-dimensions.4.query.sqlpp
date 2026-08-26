@@ -21,7 +21,7 @@
 use test;
 
 from Points as p cluster by p.vec as sc cluster as members
-with { "dimension": [3], "num_clusters": 1 }
+with { "clustering_algorithm": "K-Means", "dimension": [3], "num_clusters": 1 }
 select array_count(members) as cnt,
        (select value gi.p.id from members as gi order by gi.p.id) as ids
 order by ids;

@@ -26,7 +26,7 @@ from (
   from Points as p
   cluster by p.vec as sc
   cluster as members
-  with { "dimension": [2], "num_clusters": 4, "init_mode": "random" }
+  with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 4, "init_mode": "random" }
   select members
 ) as c
 order by cnt;

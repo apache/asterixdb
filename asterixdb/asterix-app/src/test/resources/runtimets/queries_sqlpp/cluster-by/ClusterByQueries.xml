@@ -20,6 +20,11 @@
     <!-- CLUSTER BY syntax end-to-end: the SqlppClusterByVisitor rewrite desugars CLUSTER BY (sc descriptor +
          CLUSTER AS members) into the distributed k-means query and runs it on the tiny 2-D dataset. -->
     <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-no-descriptor">
+            <output-dir compare="Text">kmeans-no-descriptor</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by">
         <compilation-unit name="kmeans-syntax">
             <output-dir compare="Text">kmeans-syntax</output-dir>
         </compilation-unit>
@@ -76,7 +81,7 @@
     <test-case FilePath="cluster-by/negative">
         <compilation-unit name="missing-numclusters">
             <output-dir compare="Text">missing-numclusters</output-dir>
-            <expected-error>CLUSTER BY requires the 'num_clusters' option.</expected-error>
+            <expected-error>CLUSTER BY with K-Means requires the 'num_clusters' option.</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by/negative">
@@ -86,9 +91,15 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="missing-algorithm">
+            <output-dir compare="Text">missing-algorithm</output-dir>
+            <expected-error>CLUSTER BY requires the 'clustering_algorithm' option. Supported: K-Means.</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
         <compilation-unit name="missing-dimension">
             <output-dir compare="Text">missing-dimension</output-dir>
-            <expected-error>CLUSTER BY with K-Means requires the 'dimension' option</expected-error>
+            <expected-error>CLUSTER BY requires the 'dimension' option</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by/negative">

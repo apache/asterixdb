@@ -121,21 +121,25 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * options are validated here.
  */
 @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Width enforcement moved from desugared WHERE to the runtime decoders; seed draws guarded with non-pushable predicates")
+@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
 public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     // WITH option keys, compared case-insensitively. Named as the vector index's WITH options are (see
     // VectorIndexDeclUtil): num_clusters, dimension and similarity mean the same things there.
+    //
+    // General, and both mandatory: the algorithm decides which of the options below a query may pass, and the
+    // dimension is a property of the data, so it is required whatever the algorithm turns out to be.
     private static final String OPT_ALGORITHM = "clustering_algorithm";
+    private static final String OPT_DIMENSION = "dimension";
+    // K-Means': admitted only because the algorithm above is K-Means, and a second algorithm re-admits what
+    // applies to it. num_clusters is mandatory; the rest are optional, and 'seed' pins every randomized choice
+    // in the initialization so that a query reproduces.
     private static final String OPT_NUM_CLUSTERS = "num_clusters";
+    private static final String OPT_INIT_MODE = "init_mode";
+    private static final String OPT_SEED = "seed";
     private static final String OPT_SIMILARITY = "similarity";
     private static final String OPT_CROSS_POLLINATION = "cross_pollination";
     private static final String OPT_CROSS_POLLINATION_RATIO = "cross_pollination_distance_ratio";
-    private static final String OPT_INIT_MODE = "init_mode";
-    private static final String OPT_DIMENSION = "dimension";
-    // K-Means only: pins every randomized choice in the initialization so a query reproduces. Guarded on the
-    // algorithm, because what it seeds is specific to this initialization -- a new one must re-admit it.
-    private static final String OPT_SEED = "seed";
 
     // cross_pollination_distance_ratio is deliberately NOT here: it was accepted but never read, so any value
     // -- negative, non-numeric -- passed silently. It comes back when cross-pollination itself does.
@@ -144,7 +148,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     // What an unknown-option error lists back to the user. Not printed from KNOWN_OPTIONS: Set.of iterates in
     // a per-JVM salted order, so the message would differ between runs.
     private static final String KNOWN_OPTIONS_DISPLAY =
-            "clustering_algorithm, num_clusters, dimension, similarity, cross_pollination, init_mode, seed";
+            "clustering_algorithm, dimension, num_clusters, init_mode, seed, similarity, cross_pollination";
     // The fields the cluster descriptor exposes. Every one is substituted away during the rewrite, so a
     // surviving reference to the descriptor means the query asked for something else -- see checkDescriptorFields.
     private static final String SC_CLUSTER_ID = "cluster_id";
@@ -303,7 +307,9 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         selectBlock.setClusterbyClause(null);
         selectBlock.setGroupbyClause(mainGby);
 
-        substituteDescriptorFields(selectExpression, cbc, clusteringExpr, labelExpr, loc);
+        if (cbc.hasClusterDescriptorVar()) {
+            substituteDescriptorFields(selectExpression, cbc, clusteringExpr, labelExpr, loc);
+        }
     }
 
     /**
@@ -733,11 +739,23 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
                         "Unknown CLUSTER BY option '" + key + "'. Known options: " + KNOWN_OPTIONS_DISPLAY);
             }
         }
-        // num_clusters is required and must be a positive integer.
+        // Resolved first because it decides which options below apply, so each of their errors names its own
+        // option rather than a misplaced one.
+        String algorithm = opts.get(OPT_ALGORITHM);
+        if (algorithm == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
+                    "CLUSTER BY requires the 'clustering_algorithm' option. Supported: K-Means.");
+        }
+        if (!KNOWN_ALGORITHMS.contains(algorithm.toLowerCase())) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
+                    "Unsupported CLUSTER BY 'clustering_algorithm' '" + algorithm + "'. Supported: K-Means.");
+        }
+        // Everything below is K-Means'. Reaching here means K-Means, so no option repeats that test; a second
+        // algorithm brings its own set and this is where the two part.
         String numClusters = opts.get(OPT_NUM_CLUSTERS);
         if (numClusters == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
-                    "CLUSTER BY requires the 'num_clusters' option.");
+                    "CLUSTER BY with K-Means requires the 'num_clusters' option.");
         }
         int k;
         try {
@@ -776,20 +794,8 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
                                 + SUPPORTED_METRICS_DISPLAY + ".");
             }
         }
-        // clustering_algorithm is optional but, if present, must be supported.
-        String algorithm = opts.get(OPT_ALGORITHM);
-        if (algorithm != null && !KNOWN_ALGORITHMS.contains(algorithm.toLowerCase())) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
-                    "Unsupported CLUSTER BY 'clustering_algorithm' '" + algorithm + "'. Supported: K-Means.");
-        }
-        // 'seed' is K-Means specific. Below the algorithm check, so an unsupported algorithm is reported as
-        // one; against getAlgorithm(), so both spellings pass. A new algorithm must re-admit the option.
         String seed = opts.get(OPT_SEED);
         if (seed != null) {
-            if (!ALGORITHM_KMEANS.equals(getAlgorithm(cbc))) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, cbc.getSourceLocation(),
-                        "CLUSTER BY 'seed' applies to K-Means only.");
-            }
             try {
                 Integer.parseInt(seed.trim());
             } catch (NumberFormatException e) {
@@ -809,33 +815,21 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     }
 
     /**
-     * Both accepted spellings of k-means, and an absent option, yield {@link #ALGORITHM_KMEANS}; any other value
-     * yields itself, lowercased.
-     */
-    private String getAlgorithm(ClusterbyClause cbc) throws CompilationException {
-        String algorithm = scalarOptions(cbc).get(OPT_ALGORITHM);
-        String lower = algorithm == null ? ALGORITHM_KMEANS : algorithm.toLowerCase();
-        return KNOWN_ALGORITHMS.contains(lower) ? ALGORITHM_KMEANS : lower;
-    }
-
-    /**
-     * The declared vector width. Required for k-means: an open-type dataset carries no schema to infer it from,
-     * and inferring it from the first row would make the plan depend on which row happened to arrive first.
+     * The declared vector width, required whatever the algorithm: an open-type dataset carries no schema to
+     * infer it from, and inferring it from the first row would make the plan depend on which row happened to
+     * arrive first.
      * <p>
-     * Typed as an array so that clustering on several fields can declare one width each; k-means clusters a
-     * single field (the grammar admits only one clustering expression), so exactly one element is allowed here.
+     * An array, so that clustering on several fields can declare one width each. How many it must hold is the
+     * algorithm's to say: k-means clusters a single field (the grammar admits only one clustering expression),
+     * so it allows exactly one.
      */
     private int validateDimensionAndGet(ClusterbyClause cbc) throws CompilationException {
         SourceLocation loc = cbc.getSourceLocation();
         IAdmNode node = dimensionNode(cbc);
-        String algorithm = getAlgorithm(cbc);
         if (node == null) {
-            if (KNOWN_ALGORITHMS.contains(algorithm)) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                        "CLUSTER BY with K-Means requires the 'dimension' option: the width of the clustering "
-                                + "vector, as a one-element array, e.g. \"Dimension\": [384].");
-            }
-            return -1; // no other algorithm exists yet; when one does, it states its own requirement here
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
+                    "CLUSTER BY requires the 'dimension' option: the width of each clustering vector, as an "
+                            + "array, e.g. \"dimension\": [384].");
         }
         if (node.getType() != ATypeTag.ARRAY) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,

@@ -27,6 +27,6 @@ from (
   from (select value p from Points p order by p.id limit 100) as t
   cluster by t.vec as sc
   cluster as members
-  with { "dimension": [2], "num_clusters": 2 }
+  with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2 }
   select array_count(members) as cnt
 ) as c;

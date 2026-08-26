@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-from [{"x": [1.0, 2.0]}] as r
-cluster by r.x as sc
-with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 0 }
-select sc.cluster_id;
+-- The algorithm is mandatory: it decides which of the other options apply, so it cannot be defaulted.
+from [{"v": [1.0, 2.0]}, {"v": [3.0, 4.0]}] as p
+cluster by p.v as sc
+cluster as members
+with { "dimension": [2], "num_clusters": 2 }
+select value sc.cluster_id;

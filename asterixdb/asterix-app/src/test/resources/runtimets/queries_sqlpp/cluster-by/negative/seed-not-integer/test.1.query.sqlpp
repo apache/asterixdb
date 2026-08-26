@@ -20,5 +20,5 @@
 from [{"v": [1.0, 2.0]}, {"v": [3.0, 4.0]}] as p
 cluster by p.v as sc
 cluster as members
-with { "dimension": [2], "num_clusters": 2, "seed": "abc" }
+with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 2, "seed": "abc" }
 select value sc.cluster_id;

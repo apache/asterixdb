@@ -296,8 +296,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // After CLUSTER BY, the pre-cluster bindings are replaced by the descriptor (sc) and members (rvc) variables;
         // variables defined before the current SELECT BLOCK (e.g., a WITH clause or outer scope) remain visible.
         Scope newScope = new Scope(scopeChecker, scopeChecker.getPrecedingScope());
-        VariableExpr descriptorVar = cc.getClusterDescriptorVar();
-        addNewVarSymbolToScope(newScope, descriptorVar.getVar(), descriptorVar.getSourceLocation());
+        if (cc.hasClusterDescriptorVar()) {
+            VariableExpr descriptorVar = cc.getClusterDescriptorVar();
+            addNewVarSymbolToScope(newScope, descriptorVar.getVar(), descriptorVar.getSourceLocation());
+        }
         if (cc.hasClusterMembersVar()) {
             VariableExpr membersVar = cc.getClusterMembersVar();
             addNewVarSymbolToScope(newScope, membersVar.getVar(), membersVar.getSourceLocation());
