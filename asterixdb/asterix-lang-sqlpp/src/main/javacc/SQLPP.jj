@@ -1704,40 +1704,54 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     )?
   )
   {
-      // Check if VECTOR field type annotation is present
+      // Check if a VECTOR field type annotation is present. Every element and every project is scanned,
+      // not just the first project of a lone element: a VECTOR that appears anywhere else must still
+      // reach the vector-index diagnostics below. Detecting only the single-element case let
+      // `(embedding VECTOR, year)` fall through to a regular index, where the marker was resolved as a
+      // type name and surfaced as "Cannot find datatype with name $$VECTOR_MARKER$$".
       boolean hasVectorField = false;
-      if (indexedElementList.size() == 1) {
-        CreateIndexStatement.IndexedElement field = indexedElementList.get(0);
+      for (CreateIndexStatement.IndexedElement field : indexedElementList) {
         List<Pair<List<String>, IndexedTypeExpression>> projectList = field.getProjectList();
-        if (projectList != null && !projectList.isEmpty()) {
-          IndexedTypeExpression typeExpr = projectList.get(0).second;
-          if (typeExpr != null) {
-            TypeExpression innerType = typeExpr.getType();
-            if (innerType != null && innerType instanceof TypeReferenceExpression) {
-              TypeReferenceExpression typeRef = (TypeReferenceExpression) innerType;
-              Pair<Namespace, Identifier> ident = typeRef.getIdent();
-              if (ident != null && ident.second != null &&
-                  "$$VECTOR_MARKER$$".equals(ident.second.getValue())) {
-                hasVectorField = true;
-              }
+        if (projectList == null) {
+          continue;
+        }
+        for (Pair<List<String>, IndexedTypeExpression> project : projectList) {
+          IndexedTypeExpression typeExpr = project.second;
+          if (typeExpr == null) {
+            continue;
+          }
+          TypeExpression innerType = typeExpr.getType();
+          if (innerType instanceof TypeReferenceExpression) {
+            Pair<Namespace, Identifier> ident = ((TypeReferenceExpression) innerType).getIdent();
+            if (ident != null && ident.second != null &&
+                "$$VECTOR_MARKER$$".equals(ident.second.getValue())) {
+              hasVectorField = true;
             }
           }
         }
       }
 
-      boolean isVTree = indexParams != null && indexParams.type == IndexType.VTREE;
+      boolean explicitVTree = indexParams != null && indexParams.type == IndexType.VTREE;
 
-      // Validate: VECTOR annotation requires TYPE VTREE
-      if (hasVectorField && !isVTree) {
+      // Validate: a VECTOR field is indexable only by a vector index, so an explicit type other than
+      // VTREE contradicts the annotation. TYPE may be omitted entirely -- see below.
+      if (hasVectorField && indexParams != null && !explicitVTree) {
         throw new SqlppParseException(getSourceLocation(startStmtToken),
-          "VECTOR field annotation requires TYPE VTREE. Expected syntax: CREATE INDEX ... (field VECTOR) TYPE VTREE WITH {...} EXCLUDE UNKNOWN KEY");
+          "VECTOR field annotation is not supported for TYPE " + indexParams.type
+            + ". Expected syntax: CREATE INDEX ... (field VECTOR) [TYPE VTREE] WITH {...} EXCLUDE UNKNOWN KEY");
       }
 
       // Validate: TYPE VTREE requires VECTOR annotation
-      if (isVTree && !hasVectorField) {
+      if (explicitVTree && !hasVectorField) {
         throw new SqlppParseException(getSourceLocation(startStmtToken),
           "TYPE VTREE requires VECTOR field annotation. Expected syntax: CREATE INDEX ... (field VECTOR) TYPE VTREE WITH {...} EXCLUDE UNKNOWN KEY");
       }
+
+      // TYPE VTREE is optional: no other index type accepts a VECTOR field, so the annotation alone
+      // determines the index type. The two checks above have already rejected every case where the
+      // annotation and an explicit type disagree, which is what leaves this equivalence exact -- a
+      // VECTOR field with no TYPE clause would otherwise fall through to the BTREE/ARRAY default.
+      boolean isVTree = hasVectorField;
 
       if (isVTree) {
         // Validate exactly one field for vector index

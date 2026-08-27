@@ -75,6 +75,23 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-no-type">
+            <output-dir compare="Clean-JSON">create-index-vtree-no-type</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-type-mismatch">
+            <output-dir compare="Text">create-index-vtree-type-mismatch</output-dir>
+            <expected-error>VECTOR field annotation is not supported for TYPE BTREE</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-multi-field">
+            <output-dir compare="Text">create-index-vtree-multi-field</output-dir>
+            <expected-error>Vector index requires exactly one field</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <!-- Either build job can report a wholly non-indexable sample: the quantization job names the
              declared and the found dimension, and the training job names the declared one among the causes
              of an empty parameter block. Which one arrives first is not deterministic, so match the phrase
