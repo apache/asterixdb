@@ -80,7 +80,7 @@ public class VectorIndexParametersTupleTranslatorTest {
         VectorIndexParameters written =
                 VectorIndexParameters.builder().setDimension(128).setSimilarity(VectorSimilarityMetric.EUCLIDEAN)
                         .setQuantization(VectorQuantization.SQ4).setTrainListFraction(0.375).setEpsilon(0.625)
-                        .setNumClusters(7).setCrossPollinationM(3).setRngFactor(1.5).build();
+                        .setNumClusters(7).setCrossPollinationM(3).setRngFactor(1.5).setSeed(-9876543210L).build();
 
         VectorIndexParameters readBack = roundTrip(written);
 
@@ -95,6 +95,9 @@ public class VectorIndexParametersTupleTranslatorTest {
         Assert.assertEquals(OptionalInt.of(7), readBack.getNumClusters());
         Assert.assertEquals(3, readBack.getCrossPollinationM());
         Assert.assertEquals(1.5, readBack.getRngFactor(), 0.0);
+        // A seed is a full 64-bit value, and a negative one is as valid as any other: storing it as an INTEGER
+        // or reading it back through an int would corrupt exactly the seeds the RNG is most likely to draw.
+        Assert.assertEquals(-9876543210L, readBack.getSeed());
     }
 
     /**
@@ -104,13 +107,16 @@ public class VectorIndexParametersTupleTranslatorTest {
      */
     @Test
     public void absentParametersReadBackAsDefaults() throws AlgebricksException, IOException {
-        VectorIndexParameters minimal =
-                VectorIndexParameters.builder().setDimension(4).setSimilarity(VectorSimilarityMetric.COSINE).build();
+        VectorIndexParameters minimal = VectorIndexParameters.builder().setDimension(4)
+                .setSimilarity(VectorSimilarityMetric.COSINE).setSeed(0L).build();
 
         VectorIndexParameters readBack = roundTrip(minimal);
 
         Assert.assertEquals(minimal, readBack);
         Assert.assertEquals(OptionalInt.empty(), readBack.getNumClusters());
+        // 0 is a seed like any other, not an "unset" marker: it must survive the round trip rather than being
+        // treated as absent and redrawn.
+        Assert.assertEquals(0L, readBack.getSeed());
         Assert.assertEquals(VectorIndexParameters.DEFAULT_TRAIN_LIST_FRACTION, readBack.getTrainListFraction(), 0.0);
         Assert.assertEquals(VectorIndexParameters.DEFAULT_EPSILON, readBack.getEpsilon(), 0.0);
         Assert.assertEquals(VectorIndexParameters.DEFAULT_CROSS_POLLINATION_M, readBack.getCrossPollinationM());
@@ -127,6 +133,30 @@ public class VectorIndexParametersTupleTranslatorTest {
         assertBuildRejected(VectorIndexParameters.builder().setSimilarity(VectorSimilarityMetric.EUCLIDEAN),
                 VectorIndexParameters.DIMENSION);
         assertBuildRejected(VectorIndexParameters.builder().setDimension(4), VectorIndexParameters.SIMILARITY);
+    }
+
+    /**
+     * seed is the one parameter with neither a constant default nor a mandatory-set check: an unset one is
+     * drawn, so a persisted record that lost the field still loads. Two seedless builders must not agree, or
+     * the "draw" is really a fixed default and every such index would share one seed.
+     */
+    @Test
+    public void unsetSeedIsDrawnRatherThanRejected() throws AlgebricksException {
+        // Independent draws collide with probability 2^-64.
+        Assert.assertNotEquals(seedlessBuilder().build().getSeed(), seedlessBuilder().build().getSeed());
+    }
+
+    /** Rebuilding one builder repeats its drawn seed, so two reads of the same record cannot disagree. */
+    @Test
+    public void aDrawnSeedIsStableAcrossRebuilds() throws AlgebricksException {
+        VectorIndexParameters.Builder builder = seedlessBuilder();
+
+        Assert.assertEquals(builder.build().getSeed(), builder.build().getSeed());
+        Assert.assertEquals(builder.build(), builder.build());
+    }
+
+    private static VectorIndexParameters.Builder seedlessBuilder() {
+        return VectorIndexParameters.builder().setDimension(4).setSimilarity(VectorSimilarityMetric.COSINE);
     }
 
     /**

@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -45,6 +46,8 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The validated configuration of a {@code CREATE INDEX ... TYPE VTREE} index: one typed field per accepted
@@ -71,6 +74,8 @@ public final class VectorIndexParameters implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static final String DIMENSION = "dimension";
     public static final String SIMILARITY = "similarity";
     public static final String QUANTIZATION = "quantization";
@@ -79,6 +84,7 @@ public final class VectorIndexParameters implements Serializable {
     public static final String NUM_CLUSTERS = "num_clusters";
     public static final String CROSS_POLLINATION_M = "cross_pollination_m";
     public static final String RNG_FACTOR = "rng_factor";
+    public static final String SEED = "seed";
 
     public static final VectorQuantization DEFAULT_QUANTIZATION = VectorQuantization.SQ8;
     public static final double DEFAULT_TRAIN_LIST_FRACTION = 0.1;
@@ -93,7 +99,7 @@ public final class VectorIndexParameters implements Serializable {
      * written for a given configuration are stable. Kept in step with the two serde methods by hand.
      */
     private static final List<String> NAMES = List.of(DIMENSION, SIMILARITY, QUANTIZATION, TRAIN_LIST_FRACTION, EPSILON,
-            NUM_CLUSTERS, CROSS_POLLINATION_M, RNG_FACTOR);
+            NUM_CLUSTERS, CROSS_POLLINATION_M, RNG_FACTOR, SEED);
 
     private final int dimension;
     private final VectorSimilarityMetric similarity;
@@ -104,6 +110,7 @@ public final class VectorIndexParameters implements Serializable {
     private final Integer numClusters;
     private final int crossPollinationM;
     private final double rngFactor;
+    private final long seed;
 
     private VectorIndexParameters(Builder builder) {
         this.dimension = builder.dimension;
@@ -114,6 +121,7 @@ public final class VectorIndexParameters implements Serializable {
         this.numClusters = builder.numClusters;
         this.crossPollinationM = builder.crossPollinationM;
         this.rngFactor = builder.rngFactor;
+        this.seed = builder.seed;
     }
 
     public static Builder builder() {
@@ -178,6 +186,19 @@ public final class VectorIndexParameters implements Serializable {
         return rngFactor;
     }
 
+    /**
+     * The seed shared by the train-list sample and the k-means RNG, so a build over the same data with the
+     * same partitioning and the same seed produces the same centroids.
+     * <p>
+     * Optional in the {@code WITH} clause but never absent from a configuration: {@code VectorIndexDeclUtil}
+     * draws one when the user does not give one, which is what lets the seed be persisted alongside the
+     * parameters the user did write, and {@link Builder#build()} draws one for the case that slips past even
+     * that. Every value is a legal seed, {@code 0} included.
+     */
+    public long getSeed() {
+        return seed;
+    }
+
     /** Every accepted parameter name, in persist order. */
     public static List<String> names() {
         return NAMES;
@@ -210,6 +231,7 @@ public final class VectorIndexParameters implements Serializable {
         }
         writer.writeInt(CROSS_POLLINATION_M, crossPollinationM);
         writer.writeDouble(RNG_FACTOR, rngFactor);
+        writer.writeLong(SEED, seed);
     }
 
     /**
@@ -271,6 +293,10 @@ public final class VectorIndexParameters implements Serializable {
         if (rngFactor != null) {
             builder.setRngFactor(rngFactor);
         }
+        Long seed = reader.readLong(SEED);
+        if (seed != null) {
+            builder.setSeed(seed);
+        }
         return builder.build();
     }
 
@@ -286,13 +312,14 @@ public final class VectorIndexParameters implements Serializable {
                 && Objects.equals(quantization, other.quantization)
                 && Double.compare(trainListFraction, other.trainListFraction) == 0
                 && Double.compare(epsilon, other.epsilon) == 0 && Objects.equals(numClusters, other.numClusters)
-                && crossPollinationM == other.crossPollinationM && Double.compare(rngFactor, other.rngFactor) == 0;
+                && crossPollinationM == other.crossPollinationM && Double.compare(rngFactor, other.rngFactor) == 0
+                && seed == other.seed;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(dimension, similarity, quantization, trainListFraction, epsilon, numClusters,
-                crossPollinationM, rngFactor);
+                crossPollinationM, rngFactor, seed);
     }
 
     @Override
@@ -308,13 +335,15 @@ public final class VectorIndexParameters implements Serializable {
         }
         sb.append(", ").append(CROSS_POLLINATION_M).append(": ").append(crossPollinationM);
         sb.append(", ").append(RNG_FACTOR).append(": ").append(rngFactor);
+        sb.append(", ").append(SEED).append(": ").append(seed);
         return sb.append(" }").toString();
     }
 
     /**
      * Collects parameter values and produces an immutable {@link VectorIndexParameters}. Unset optional
      * parameters take their declared default; {@code dimension} and {@code similarity} have no default and
-     * must be set, so a built instance is always a usable configuration.
+     * must be set, so a built instance is always a usable configuration. {@code seed} has no default either,
+     * but an unset one is drawn rather than rejected, so it is never the reason a build fails.
      */
     public static final class Builder {
 
@@ -326,6 +355,8 @@ public final class VectorIndexParameters implements Serializable {
         private Integer numClusters;
         private int crossPollinationM = DEFAULT_CROSS_POLLINATION_M;
         private double rngFactor = DEFAULT_RNG_FACTOR;
+        private long seed;
+        private boolean seedSet;
 
         private Builder() {
         }
@@ -370,12 +401,26 @@ public final class VectorIndexParameters implements Serializable {
             return this;
         }
 
+        public Builder setSeed(long seed) {
+            this.seed = seed;
+            this.seedSet = true;
+            return this;
+        }
+
         public boolean hasDimension() {
             return dimension > 0;
         }
 
         public boolean hasSimilarity() {
             return similarity != null;
+        }
+
+        /**
+         * Tracked by a flag rather than a sentinel value, because every {@code long} — {@code 0} included —
+         * is a seed a caller may legitimately have asked for, so no value can stand in for "unset".
+         */
+        private boolean hasSeed() {
+            return seedSet;
         }
 
         /**
@@ -390,6 +435,19 @@ public final class VectorIndexParameters implements Serializable {
             if (!hasSimilarity()) {
                 throw new AsterixException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
                         "Missing `" + SIMILARITY + "` parameter in the WITH clause");
+            }
+            if (!hasSeed()) {
+                // Unlike the two above, this is never the user's omission: DDL draws a seed when the WITH
+                // clause has none, so getting here means a persisted record that lost the field. Drawing a
+                // replacement keeps the index usable — nothing but reproducibility depends on the seed, and
+                // that is already gone, since the original is recoverable from nowhere else. Warn rather
+                // than fail, but do warn: silence would make a lost field indistinguishable from a build the
+                // user never pinned.
+                setSeed(ThreadLocalRandom.current().nextLong());
+                LOGGER.warn(
+                        "Vector index parameters carried no `{}`; drew {} instead. The seed of the "
+                                + "original build is unrecoverable, so rebuilding will not reproduce its centroids.",
+                        SEED, seed);
             }
             return new VectorIndexParameters(this);
         }
@@ -413,6 +471,9 @@ public final class VectorIndexParameters implements Serializable {
         private final ISerializerDeserializer<AInt32> int32Serde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
         @SuppressWarnings("unchecked")
+        private final ISerializerDeserializer<AInt64> int64Serde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+        @SuppressWarnings("unchecked")
         private final ISerializerDeserializer<ADouble> doubleSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
         private final ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
@@ -426,6 +487,13 @@ public final class VectorIndexParameters implements Serializable {
             writeName(name);
             fieldValue.reset();
             int32Serde.serialize(new AInt32(value), fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+        }
+
+        private void writeLong(String name, long value) throws HyracksDataException {
+            writeName(name);
+            fieldValue.reset();
+            int64Serde.serialize(new AInt64(value), fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
 
@@ -482,6 +550,12 @@ public final class VectorIndexParameters implements Serializable {
                 return null;
             }
             return longValue.intValue();
+        }
+
+        /** @return the value widened to {@code long}, or {@code null} when the field is absent or not numeric. */
+        private Long readLong(String name) {
+            IAObject value = read(name);
+            return value == null ? null : asLong(value.getType().getTypeTag(), value);
         }
 
         private Double readDouble(String name) {

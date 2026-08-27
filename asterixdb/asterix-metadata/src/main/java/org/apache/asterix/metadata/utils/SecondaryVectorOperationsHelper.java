@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
-import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
@@ -107,13 +106,9 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private RecordDescriptor recordDesc;
     private static final float DEFAULT_CONFIDENCE_INTERVAL = 0.99f;
     /** Minimum train-list sample size for static-structure build; below this after clamp → full scan. */
@@ -160,25 +155,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         return sampleSize < TRAIN_LIST_MIN_SAMPLE_SIZE;
     }
 
-    /**
-     * The seed shared by the train-list sample and the k-means RNG: the request-level
-     * {@code compiler.vector.trainseed} when set (so an index build is reproducible), otherwise a fresh
-     * {@code nanoTime()} seed.
-     */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
-    private long resolveTrainSeed() {
-        Object trainSeedCfg = metadataProvider.getConfig().get(CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY);
-        if (trainSeedCfg != null) {
-            try {
-                return Long.parseLong(String.valueOf(trainSeedCfg).trim());
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Invalid {} '{}', using a random seed", CompilerProperties.COMPILER_VECTOR_TRAINSEED_KEY,
-                        trainSeedCfg);
-            }
-        }
-        return System.nanoTime();
-    }
-
     @Override
     public JobSpecification buildStaticStructureJobSpec() throws AlgebricksException {
         IDataFormat format = metadataProvider.getDataFormat();
@@ -206,14 +182,12 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         // ============ SAMPLING OR FULL SCAN based on sampleSize threshold ============
         // Extract sampling parameters from WITH clause (train_list_fraction only; validated at compile time)
         double trainListFraction = indexDetails.getVectorParameters().getTrainListFraction();
-        // Seed for BOTH the train-list sample and the k-means RNG: overridable per request
-        // (SET `compiler.vector.trainseed` "42") so CI / regression tests get reproducible centroids, and a
-        // fresh random seed otherwise. The sample seed must honour the same override, otherwise a sampled
-        // train list (train_list_fraction < 1.0) makes the whole index build irreproducible no matter what
-        // the k-means seed is. sample_seed is not a supported WITH field
-        // (it is not declared in VectorIndexParameters), so this is the only channel.
-        long trainSeed = resolveTrainSeed();
-        long sampleSeed = trainSeed;
+        // One seed drives BOTH the train-list sample and the k-means RNG, so a build over the same data with
+        // the same partitioning and the same seed produces the same centroids. Seeding only k-means would
+        // leave a sampled train list (train_list_fraction < 1.0) irreproducible no matter what k-means got.
+        // The seed was materialized at DDL time, so it is already persisted in this index's metadata: the
+        // build is reproducible from what the catalog records, not just within a single request.
+        long seed = indexDetails.getVectorParameters().getSeed();
 
         // Retrieve cardinality from sample index metadata (needed for fraction-based sample size)
         Index sampleIndex = metadataProvider.findSampleIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
@@ -248,7 +222,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         } else {
             int sampleCardinalityPerPartition = Math.max(1, sampleSize / numPartitions);
             targetOp = DatasetUtil.createSampleScanOp(spec, metadataProvider, dataset, sampleCardinalityPerPartition,
-                    sampleSeed, projectorFactory);
+                    seed, projectorFactory);
         }
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
@@ -307,7 +281,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor candidates =
                 new HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(spec, hierarchicalRecDesc, secondaryRecDesc,
                         sampleUUID, tupleCountUUID, new ColumnAccessEvalFactory(0), K, maxScalableKmeansIter,
-                        distanceMetric, vectorDimension, trainSeed);
+                        distanceMetric, vectorDimension, seed);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, candidates,
                 primaryPartitionConstraint);
         targetOp = candidates;

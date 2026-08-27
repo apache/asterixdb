@@ -26,12 +26,14 @@ import static org.apache.asterix.om.vector.VectorIndexParameters.MAX_CROSS_POLLI
 import static org.apache.asterix.om.vector.VectorIndexParameters.NUM_CLUSTERS;
 import static org.apache.asterix.om.vector.VectorIndexParameters.QUANTIZATION;
 import static org.apache.asterix.om.vector.VectorIndexParameters.RNG_FACTOR;
+import static org.apache.asterix.om.vector.VectorIndexParameters.SEED;
 import static org.apache.asterix.om.vector.VectorIndexParameters.SIMILARITY;
 import static org.apache.asterix.om.vector.VectorIndexParameters.TRAIN_LIST_FRACTION;
 
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.OptionalInt;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -48,6 +50,7 @@ import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Validates the {@code WITH} clause of a {@code CREATE INDEX ... TYPE VTREE} statement and turns it into the
@@ -101,6 +104,7 @@ public class VectorIndexDeclUtil {
         validateNumClusters(node).ifPresent(builder::setNumClusters);
         builder.setCrossPollinationM(validateCrossPollinationM(node));
         builder.setRngFactor(validateRngFactor(node));
+        builder.setSeed(validateSeed(node));
         try {
             return builder.build();
         } catch (AsterixException e) {
@@ -274,6 +278,28 @@ public class VectorIndexDeclUtil {
                     "Invalid `rng_factor` parameter value. " + "It must be a positive finite number.");
         }
         return value;
+    }
+
+    /**
+     * Validates {@code seed}, shared by the train-list sample and the k-means RNG. Every {@code long} is a
+     * usable seed, so the only check is the type.
+     * <p>
+     * Unlike the other optional parameters this one has no constant default: when the user does not give a
+     * seed we draw one here and persist it, so the index records the seed its build actually used and can be
+     * rebuilt identically. Drawing it at DDL time rather than at job-generation time is what makes it
+     * persistable — the {@code Metadata.Index} record is written before the creation job is built.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static long validateSeed(AdmObjectNode node) throws CompilationException {
+        IAdmNode seedNode = node.get(SEED);
+        if (seedNode == null) {
+            return ThreadLocalRandom.current().nextLong();
+        }
+        if (seedNode.getType() != ATypeTag.BIGINT) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "Invalid `seed` parameter value. It must be an integer.");
+        }
+        return ((AdmBigIntNode) seedNode).get();
     }
 
     private static double parseDoubleOrBigInt(IAdmNode n, String errorMsg) throws CompilationException {

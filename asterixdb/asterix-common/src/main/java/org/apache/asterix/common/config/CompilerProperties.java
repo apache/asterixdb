@@ -309,8 +309,6 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_PARQUET_FILESPLITS_KEY = Option.COMPILER_PARQUET_FILESPLITS.ini();
     public static final String COMPILER_HDFS_SPLIT_PARALLELISM_KEY = Option.COMPILER_HDFS_SPLIT_PARALLELISM.ini();
     public static final String COMPILER_VECTOR_K_MULTIPLIER_KEY = "compiler.vector.kmultiplier";
-    // Seeds the k-means training RNG of vector index creation; set per request for deterministic tests.
-    public static final String COMPILER_VECTOR_TRAINSEED_KEY = "compiler.vector.trainseed";
 
     public CompilerProperties(PropertiesAccessor accessor) {
         super(accessor);

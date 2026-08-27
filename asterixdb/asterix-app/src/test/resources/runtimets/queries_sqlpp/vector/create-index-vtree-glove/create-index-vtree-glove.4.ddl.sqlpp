@@ -19,7 +19,6 @@
 
 
 USE testg;
-SET `compiler.vector.trainseed` "42";
 CREATE INDEX idx_emb ON GloveReal(embedding VECTOR) TYPE VTREE
-  WITH { "dimension": 100, "similarity": "cosine", "num_clusters": 4, "train_list_fraction": 1.0 }
+  WITH { "dimension": 100, "similarity": "cosine", "num_clusters": 4, "train_list_fraction": 1.0, "seed": 42 }
   EXCLUDE UNKNOWN KEY;

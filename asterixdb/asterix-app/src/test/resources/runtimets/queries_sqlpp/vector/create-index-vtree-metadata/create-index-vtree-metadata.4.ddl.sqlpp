@@ -19,8 +19,6 @@
 
 USE test;
 
-SET `compiler.vector.trainseed` "42";
-
 // Every WITH parameter is given a non-default value, and one INCLUDE path is nested, so the
 // expected record below shows the actual persisted value of each rather than a default that
 // would also be produced by dropping the field.
@@ -34,6 +32,7 @@ CREATE INDEX idx_emb
     "quantization": "SQ4",
     "num_clusters": 2,
     "train_list_fraction": 1.0,
+    "seed": 42,
     "epsilon": 0.5,
     "cross_pollination_m": 3,
     "rng_factor": 1.5
