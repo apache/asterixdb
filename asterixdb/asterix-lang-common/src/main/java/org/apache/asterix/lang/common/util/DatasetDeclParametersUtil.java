@@ -78,6 +78,7 @@ public class DatasetDeclParametersUtil {
      * ***********************************************
      */
     private static final ARecordType WITH_OBJECT_TYPE = getWithObjectType();
+    private static final ARecordType INDEX_WITH_OBJECT_TYPE = getIndexWithObjectType();
     static final AdmObjectNode EMPTY_WITH_OBJECT = new AdmObjectNode();
 
     private DatasetDeclParametersUtil() {
@@ -98,6 +99,27 @@ public class DatasetDeclParametersUtil {
         } else {
             return ExpressionUtils.toNode(withRecord);
         }
+    }
+
+    /**
+     * @return the compression scheme a secondary index's WITH clause names, or null where it names none. The scheme
+     *         is not checked against the registered ones here, which is left to the DDL, as for a dataset.
+     */
+    public static String validateAndGetIndexCompressionScheme(RecordConstructor withRecord)
+            throws CompilationException {
+        if (withRecord == null) {
+            return null;
+        }
+        AdmObjectNode node = ExpressionUtils.toNode(withRecord);
+        new ConfigurationTypeValidator().validateType(INDEX_WITH_OBJECT_TYPE, node);
+        AdmObjectNode storageBlockCompression = (AdmObjectNode) node.get(STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME);
+        return storageBlockCompression == null ? null
+                : storageBlockCompression.getOptionalString(STORAGE_BLOCK_COMPRESSION_SCHEME_PARAMETER_NAME);
+    }
+
+    private static ARecordType getIndexWithObjectType() {
+        return new ARecordType("withObject", new String[] { STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME },
+                new IAType[] { AUnionType.createUnknownableType(getStorageBlockCompressionType()) }, false);
     }
 
     private static ARecordType getWithObjectType() {

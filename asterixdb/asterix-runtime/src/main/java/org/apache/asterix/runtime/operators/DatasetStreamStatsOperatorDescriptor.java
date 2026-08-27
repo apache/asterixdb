@@ -44,6 +44,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -161,6 +162,14 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
                             long numPages = 0;
                             synchronized (indexInstance.getOperationTracker()) {
                                 for (ILSMDiskComponent component : indexInstance.getDiskComponents()) {
+                                    // the optimizer costs an index by its pages as read through the buffer cache,
+                                    // which a compressed file's on-disk size understates
+                                    if (component.getIndex() instanceof AbstractTreeIndex treeIndex
+                                            && treeIndex.getFileReference().isCompressed()) {
+                                        numPages += indexInstance.getBufferCache()
+                                                .getNumPagesOfFile(treeIndex.getFileId());
+                                        continue;
+                                    }
                                     long componentSize = component.getComponentSize();
                                     if (component instanceof AbstractLSMWithBloomFilterDiskComponent) {
                                         componentSize -= ((AbstractLSMWithBloomFilterDiskComponent) component)

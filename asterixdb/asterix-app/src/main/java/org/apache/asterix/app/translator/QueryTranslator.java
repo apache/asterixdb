@@ -254,6 +254,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.optimizer.rules.visitor.FunctionCardinalityInferenceVisitor;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.fulltext.AbstractFullTextFilterDescriptor;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 import org.apache.asterix.runtime.fulltext.StopwordsFullTextFilterDescriptor;
@@ -2003,8 +2004,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            // resolved now rather than when the index is built, so the catalog records what the index was built
+            // with even if the configured default changes later, as for a dataset
+            String compressionScheme = indexType == IndexType.BTREE || indexType == IndexType.ARRAY ? metadataProvider
+                    .getCompressionManager().getDdlOrDefaultCompressionScheme(stmtCreateIndex.getCompressionScheme())
+                    : CompressionManager.NONE;
             Index newIndex = new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails,
-                    stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);
+                    stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator, compressionScheme);
 
             bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
             EntityDetails entityDetails = EntityDetails.newIndex(databaseName, dataverseName, datasetName, indexName);
@@ -5927,7 +5933,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.addIndex(mdTxnCtx,
                     new Index(databaseName, dataverseName, datasetName, indexName, index.getIndexType(),
                             index.getIndexDetails(), index.isEnforced(), index.isPrimaryIndex(),
-                            MetadataUtil.PENDING_DROP_OP, index.getCreator()));
+                            MetadataUtil.PENDING_DROP_OP, index.getCreator(), index.getCompressionScheme()));
         }
     }
 

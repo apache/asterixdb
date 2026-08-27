@@ -33,6 +33,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.DatasetDeclParametersUtil;
 import org.apache.asterix.lang.common.util.VectorIndexDeclUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.om.vector.VectorIndexParameters;
@@ -60,6 +61,7 @@ public class CreateIndexStatement extends AbstractStatement {
 
     private final List<CreateIndexStatement.IndexedElement> includeElements;
     private final VectorIndexParameters vectorParameters;
+    private final String compressionScheme;
 
     public CreateIndexStatement(Namespace namespace, Identifier datasetName, Identifier indexName, IndexType indexType,
             List<IndexedElement> indexedElements, boolean enforced, int gramLength, String fullTextConfigName,
@@ -79,10 +81,12 @@ public class CreateIndexStatement extends AbstractStatement {
         this.castDefaultNull = OptionalBoolean.ofNullable(castDefaultNull);
         this.castConfig = castConfig == null ? Collections.emptyMap() : castConfig;
         this.includeElements = includeElements;
-        // The WITH clause is vector-index-only (the grammar rejects it on any other index type), and a
-        // vector index always has one, so this is non-null exactly for TYPE VTREE.
+        // A vector index always has a WITH clause, so this is non-null exactly for TYPE VTREE. On a BTREE or ARRAY
+        // index the clause carries the compression scheme only; the grammar rejects it on any other type.
         this.vectorParameters =
                 indexType == IndexType.VTREE ? VectorIndexDeclUtil.validateAndGetParameters(withObjectRecord) : null;
+        this.compressionScheme = indexType == IndexType.VTREE ? null
+                : DatasetDeclParametersUtil.validateAndGetIndexCompressionScheme(withObjectRecord);
     }
 
     public String getFullTextConfigName() {
@@ -149,9 +153,14 @@ public class CreateIndexStatement extends AbstractStatement {
         return castConfig;
     }
 
+    /** The compression scheme the statement names, or null where it names none. */
+    public String getCompressionScheme() {
+        return compressionScheme;
+    }
+
     /**
      * The validated {@code WITH} parameters of a {@code TYPE VTREE} index, never {@code null} for that index
-     * type; {@code null} for every other type, none of which accepts a {@code WITH} clause.
+     * type; {@code null} for every other type.
      */
     public VectorIndexParameters getVectorParameters() {
         return vectorParameters;

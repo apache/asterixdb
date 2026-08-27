@@ -42,6 +42,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.asterix.om.vector.VectorIndexParameters;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -70,10 +71,23 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
     private final Creator creator;
+    private final String compressionScheme;
 
     public Index(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
             IndexType indexType, IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
             Creator creator) {
+        this(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails, isEnforced, isPrimaryIndex,
+                pendingOp, creator, CompressionManager.NONE);
+    }
+
+    /**
+     * @param compressionScheme
+     *            the block compression scheme of a secondary index. A primary index is compressed with its
+     *            dataset's scheme and ignores this.
+     */
+    public Index(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
+            IndexType indexType, IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
+            Creator creator, String compressionScheme) {
         boolean categoryOk = (indexType == null && indexDetails == null) || (IndexCategory
                 .of(Objects.requireNonNull(indexType)) == ((AbstractIndexDetails) Objects.requireNonNull(indexDetails))
                         .getIndexCategory());
@@ -90,6 +104,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         this.isEnforced = isEnforced;
         this.pendingOp = pendingOp;
         this.creator = creator;
+        this.compressionScheme = Objects.requireNonNull(compressionScheme);
     }
 
     @Deprecated
@@ -162,6 +177,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     public Creator getCreator() {
         return creator;
+    }
+
+    public String getCompressionScheme() {
+        return compressionScheme;
     }
 
     public boolean isPrimaryKeyIndex() {

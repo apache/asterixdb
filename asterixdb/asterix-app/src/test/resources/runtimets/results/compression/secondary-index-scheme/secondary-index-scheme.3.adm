@@ -1,0 +1,5 @@
+{ "IndexName": "DS" }
+{ "IndexName": "idx_array", "BlockLevelStorageCompression": { "IndexCompressionScheme": "snappy" } }
+{ "IndexName": "idx_default", "BlockLevelStorageCompression": { "IndexCompressionScheme": "snappy" } }
+{ "IndexName": "idx_none" }
+{ "IndexName": "idx_snappy", "BlockLevelStorageCompression": { "IndexCompressionScheme": "snappy" } }

@@ -16136,6 +16136,32 @@
         <output-dir compare="Text">scheme-snappy</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="secondary-index-invalid-scheme">
+        <output-dir compare="Text">secondary-index-invalid-scheme</output-dir>
+        <expected-error>ASX1096: Unknown compression scheme zip. Supported schemes are [snappy,none]</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="secondary-index-scheme">
+        <output-dir compare="Text">secondary-index-scheme</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="secondary-index-unsupported-field">
+        <output-dir compare="Text">secondary-index-unsupported-field</output-dir>
+        <expected-error>ASX1059: Field(s) [merge-policy] unsupported in the with clause</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="secondary-index-unsupported-type">
+        <output-dir compare="Text">secondary-index-unsupported-type</output-dir>
+        <expected-error>WITH clause is only supported for BTREE, ARRAY and VTREE indexes</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="ddl-with-clause">
     <test-case FilePath="ddl-with-clause">

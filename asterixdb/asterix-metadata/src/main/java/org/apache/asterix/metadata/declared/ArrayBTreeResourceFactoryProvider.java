@@ -50,7 +50,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -87,13 +86,12 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
                 AsterixVirtualBufferCacheProvider vbcProvider =
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
 
-                final ICompressorDecompressorFactory compDecompFactory;
                 if (index.isPrimaryIndex()) {
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
                             "Array indexes cannot be " + "primary indexes.");
-                } else {
-                    compDecompFactory = NoOpCompressorDecompressorFactory.INSTANCE;
                 }
+                final ICompressorDecompressorFactory compDecompFactory =
+                        mdProvider.getCompressionManager().getFactory(index.getCompressionScheme());
 
                 return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,

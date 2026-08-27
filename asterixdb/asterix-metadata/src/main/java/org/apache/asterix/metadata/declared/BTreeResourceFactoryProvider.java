@@ -57,7 +57,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -95,13 +94,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 AsterixVirtualBufferCacheProvider vbcProvider =
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
 
-                final ICompressorDecompressorFactory compDecompFactory;
-                if (index.isPrimaryIndex()) {
-                    //Compress only primary index
-                    compDecompFactory = mdProvider.getCompressionManager().getFactory(dataset.getCompressionScheme());
-                } else {
-                    compDecompFactory = NoOpCompressorDecompressorFactory.INSTANCE;
-                }
+                final ICompressorDecompressorFactory compDecompFactory = mdProvider.getCompressionManager().getFactory(
+                        index.isPrimaryIndex() ? dataset.getCompressionScheme() : index.getCompressionScheme());
 
                 boolean isSecondaryNoIncrementalMaintenance = index.getIndexType() == DatasetConfig.IndexType.SAMPLE;
 

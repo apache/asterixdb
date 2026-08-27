@@ -42,6 +42,7 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.IndexEntity;
+import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.declared.MetadataManagerUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -62,6 +63,7 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -69,6 +71,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.vector.VectorIndexParameters;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -98,6 +101,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME = "SearchKeyElements";
     public static final String COMPLEXSEARCHKEY_UNNEST_FIELD_NAME = "UnnestList";
     public static final String COMPLEXSEARCHKEY_PROJECT_FIELD_NAME = "ProjectList";
+    public static final String INDEX_COMPRESSION_SCHEME_FIELD_NAME = "IndexCompressionScheme";
     public static final String SAMPLE_SEED = "SampleSeed";
     public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
     public static final String SOURCE_CARDINALITY = "SourceCardinality";
@@ -597,7 +601,20 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         Creator creator = Creator.createOrDefault(indexRecord);
 
         return new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
-                isPrimaryIndex, pendingOp, creator);
+                isPrimaryIndex, pendingOp, creator, getCompressionScheme(indexRecord));
+    }
+
+    /** Absent means uncompressed, which is what every secondary index created before this field existed is. */
+    private static String getCompressionScheme(ARecord indexRecord) {
+        ARecordType indexRecordType = indexRecord.getType();
+        int compressionPos = indexRecordType
+                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_BLOCK_LEVEL_STORAGE_COMPRESSION_FIELD_NAME);
+        if (compressionPos < 0) {
+            return CompressionManager.NONE;
+        }
+        ARecord compressionRecord = (ARecord) indexRecord.getValueByPos(compressionPos);
+        int schemePos = compressionRecord.getType().getFieldIndex(INDEX_COMPRESSION_SCHEME_FIELD_NAME);
+        return ((AString) compressionRecord.getValueByPos(schemePos)).getStringValue();
     }
 
     @Override
@@ -757,6 +774,29 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeCast(index);
         writeSampleDetails(index);
         writeIndexCreator(index);
+        writeBlockLevelStorageCompression(index);
+    }
+
+    private void writeBlockLevelStorageCompression(Index index) throws HyracksDataException {
+        if (index.isPrimaryIndex() || CompressionManager.NONE.equals(index.getCompressionScheme())) {
+            return;
+        }
+        RecordBuilder compressionObject = new RecordBuilder();
+        compressionObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        fieldName.reset();
+        aString.setValue(INDEX_COMPRESSION_SCHEME_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(index.getCompressionScheme());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        compressionObject.addField(fieldName, fieldValue);
+
+        fieldName.reset();
+        aString.setValue(MetadataRecordTypes.DATASET_ARECORD_BLOCK_LEVEL_STORAGE_COMPRESSION_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        compressionObject.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(fieldName, fieldValue);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
