@@ -43,6 +43,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.asterix.runtime.evaluators.functions.vector.VectorListDecoder;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -181,13 +182,15 @@ public abstract class AbstractCentroidAggregateFunction extends AbstractAggregat
                 listAccessor.getOrWriteItem(i, itemVal, itemStorage);
                 byte[] ib = itemVal.getByteArray();
                 int io = itemVal.getStartOffset();
-                if (EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(ib[io]) != ATypeTag.DOUBLE) {
+                ATypeTag itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(ib[io]);
+                double item = VectorListDecoder.getValueFromTag(itemTag, ib, io);
+                if (Double.isNaN(item)) {
                     // Nothing of this row has reached sum: a rejected row leaves the running sum untouched.
-                    warnOnce(ATypeTag.DOUBLE);
+                    warnOnce(itemTag);
                     processNull();
                     return;
                 }
-                scratch[i] = ADoubleSerializerDeserializer.getDouble(ib, io + 1);
+                scratch[i] = item;
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);

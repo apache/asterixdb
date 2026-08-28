@@ -311,6 +311,17 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                     FrameTupleAppender sigmaAppender = new FrameTupleAppender(new VSizeFrame(ctx));
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
                     MaterializerTaskState scoreState = null;
+                    // An empty pool[0] means the drawn seed did not decode: the draw filters on shape alone, and
+                    // its ORDER BY <key> LIMIT 1 has already discarded the rows that would have decoded. Scoring
+                    // then leaves every vector at +INF, so phi = 0, nothing is drawn, and a usable input answers
+                    // nothing. Identical on every partition: the seed is broadcast, later pools are Release's.
+                    boolean poolEmpty = isEmpty(poolState);
+                    if (poolEmpty && ctx.getWarningCollector().shouldWarn()) {
+                        ctx.getWarningCollector()
+                                .warn(Warning.of(null, ErrorCode.CLUSTER_BY_INVALID_INPUT,
+                                        "the CLUSTER BY seed was not a numeric array of the declared dimension; the "
+                                                + "initial candidates were sampled uniformly from the input instead"));
+                    }
                     try {
                         for (int r = 0; r < loopRounds; r++) {
                             // A fresh column per round; the previous one is dead once Op3 consumed it, which the
@@ -325,12 +336,21 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             final KMeansLoopIO.ScoreColumnWriter column =
                                     new KMeansLoopIO.ScoreColumnWriter(scoreState, ctx);
                             final double[] localSum = { 0.0d };
+                            // Nothing to measure against: score every vector 1 rather than +INF, so phi is the
+                            // vector count and Op3's l * 1 / phi draws l of them uniformly -- from vectors the
+                            // decoder already accepted, so this draw cannot fail the way the seed did. Re-tested
+                            // every round, not just the first: a uniform round can draw nothing (about e^-l).
+                            final boolean bootstrapRound = poolEmpty;
                             // Blocked against pool[r] rather than holding it: the pool is 2*k per round, so the
                             // resident form grew with the requested cluster count. Vectors still reach the sink in
                             // run-file order, so localSum adds its terms in the same order as before.
                             KMeansLoopIO.streamScoredAgainstPool(vectorState, poolState, ctx, framesLimit,
                                     (vecs, n, nearest, nearestIdx) -> {
                                         for (int i = 0; i < n; i++) {
+                                            if (bootstrapRound) {
+                                                // The column is built from this array: Op3 reads the same 1.
+                                                nearest[i] = 1.0d;
+                                            }
                                             double best = nearest[i];
                                             if (!Double.isNaN(best) && best != Double.POSITIVE_INFINITY) {
                                                 localSum[0] += best;
@@ -351,6 +371,9 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             sigmaWriter.flush(); // push this round's localSigma so PhiMerge can proceed
                             // Wait for Release to append round r's global draws (pool[r] -> pool[r+1]) and release.
                             control.awaitTurn("kmeans systolic loop");
+                            if (poolEmpty) {
+                                poolEmpty = isEmpty(poolState); // this round's draws may have ended the bootstrap
+                            }
                         }
                     } finally {
                         if (scoreState != null) {
@@ -358,6 +381,13 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             scoreState.deleteFile();
                         }
                     }
+                }
+
+                /** Whether a run file holds no vector. One pass, and pool[0] is a single vector. */
+                private boolean isEmpty(MaterializerTaskState state) throws HyracksDataException {
+                    final boolean[] any = { false };
+                    KMeansLoopIO.streamRawVectors(state, ctx, vec -> any[0] = true);
+                    return !any[0];
                 }
 
                 /**

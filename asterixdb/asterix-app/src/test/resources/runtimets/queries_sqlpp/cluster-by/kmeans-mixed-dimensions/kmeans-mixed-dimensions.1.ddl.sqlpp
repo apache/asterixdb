@@ -28,3 +28,4 @@ use test;
 
 create type PointType as open { id : integer };
 create dataset Points(PointType) primary key id;
+create dataset IntPoints(PointType) primary key id;

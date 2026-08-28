@@ -64,7 +64,7 @@ public final class VectorListDecoder {
         return getValueFromTag(typeTag, data, offset);
     }
 
-    private double getValueFromTag(ATypeTag typeTag, byte[] data, int offset) {
+    public static double getValueFromTag(ATypeTag typeTag, byte[] data, int offset) {
         return switch (typeTag) {
             case TINYINT -> AInt8SerializerDeserializer.getByte(data, offset + 1);
             case SMALLINT -> AInt16SerializerDeserializer.getShort(data, offset + 1);

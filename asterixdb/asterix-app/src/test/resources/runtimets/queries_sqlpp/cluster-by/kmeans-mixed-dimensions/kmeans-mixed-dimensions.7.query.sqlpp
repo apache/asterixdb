@@ -16,26 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
--- Six well-separated 2-D points, one 3-D point, and one row for each way a clustering expression can fail
--- to be a usable vector: null, absent, empty, non-numeric element, a string, and a bare number.
+-- Integer-written and mixed-tag vectors must produce a real centroid, not NULL. The CENTROID aggregate once
+-- accepted DOUBLE elements alone while every other reader of a vector took the whole numeric family, so
+-- these rows clustered and then had no centroid to show for it.
 use test;
 
-insert into Points ([
-  {"id":1,"vec":[1.0,1.0]},  {"id":2,"vec":[1.5,2.0]},  {"id":3,"vec":[1.0,0.5]},
-  {"id":4,"vec":[8.0,8.0]},  {"id":5,"vec":[9.0,9.0]},  {"id":6,"vec":[8.5,8.5]},
-  {"id":7,"vec":[1.0,1.0,1.0]},
-  {"id":8,"vec":null},
-  {"id":9},
-  {"id":10,"vec":[]},
-  {"id":11,"vec":[1.0,"x"]},
-  {"id":12,"vec":"nope"},
-  {"id":13,"vec":2.0}
-]);
-
-insert into IntPoints ([
-  {"id":1,"vec":[0,0]},
-  {"id":2,"vec":[2.0,0]},
-  {"id":3,"vec":[100,0.0]},
-  {"id":4,"vec":[102,0]},
-  {"id":5,"vec":[1,"x"]}
-]);
+from IntPoints as p
+cluster by p.vec as sc
+with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+select sc.cluster_id as cid, sc.centroid as centroid
+order by cid;
