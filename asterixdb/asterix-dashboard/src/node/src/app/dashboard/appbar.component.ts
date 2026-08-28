@@ -14,6 +14,7 @@ limitations under the License.
 import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as appActions from '../shared/actions/app.actions'
+import * as mcpActions from '../shared/actions/mcp.actions'
 
 @Component({
     standalone: false,
@@ -24,4 +25,9 @@ import * as appActions from '../shared/actions/app.actions'
 
 export class AppBarComponent {
     constructor(private store: Store <any> ) {}
+
+    /* Opens the MCP side panel (the gateway tool surface). */
+    openMCPPanel() {
+        this.store.dispatch(new mcpActions.TogglePanel(true));
+    }
 }
