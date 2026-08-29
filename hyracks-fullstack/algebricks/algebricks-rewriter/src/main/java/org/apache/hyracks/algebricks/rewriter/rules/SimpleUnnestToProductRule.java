@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
 
 public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
 
@@ -142,6 +143,8 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
         context.computeAndSetTypeEnvironmentForOperator(boundaryOperator);
         context.computeAndSetTypeEnvironmentForOperator(innerBranchOperator);
         context.computeAndSetTypeEnvironmentForOperator(join);
+        JoinUtils.warnIfCrossProduct(join.getCondition().getValue(),
+                innerBranchOperator.getSourceLocation(), context);
         return true;
     }
 
