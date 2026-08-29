@@ -159,10 +159,51 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     protected void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr)
             throws AlgebricksException {
         if (checkerVisitor.containsMultipleArrayPaths(paths.values())) {
-            // Cannot pushdown a filter with multiple unnest
-            // TODO allow rewindable column readers for filters
-            // TODO this is a bit conservative (maybe too conservative) as we can push part of expression down
-            return;
+            // Conservative fallback: attempt to push a subset of top-level AND operands
+            // that do not collectively introduce multiple array paths.
+            if (inlinedExpr instanceof AbstractFunctionCallExpression
+                    && BuiltinFunctions.AND.equals(((AbstractFunctionCallExpression) inlinedExpr).getFunctionIdentifier())) {
+                List<Mutable<ILogicalExpression>> args = ((AbstractFunctionCallExpression) inlinedExpr)
+                        .getArguments();
+                List<Mutable<ILogicalExpression>> selectedArgs = new ArrayList<>();
+                List<ARecordType> selectedPaths = new ArrayList<>();
+
+                for (Mutable<ILogicalExpression> argRef : args) {
+                    ILogicalExpression arg = argRef.getValue();
+                    List<ARecordType> argPaths = collectPathsForExpression(arg);
+                    // Test if adding this arg's paths would cause multiple array paths
+                    checkerVisitor.beforeVisit();
+                    List<ARecordType> merged = new ArrayList<>(selectedPaths);
+                    merged.addAll(argPaths);
+                    if (!checkerVisitor.containsMultipleArrayPaths(merged)) {
+                        selectedArgs.add(new MutableObject<>(arg));
+                        selectedPaths.addAll(argPaths);
+                    }
+                }
+
+                if (selectedArgs.isEmpty()) {
+                    // nothing pushable
+                    return;
+                }
+
+                // Build new inlined expression from selectedArgs
+                AbstractFunctionCallExpression newExpr;
+                if (selectedArgs.size() == 1) {
+                    // single argument
+                    ILogicalExpression single = selectedArgs.get(0).getValue();
+                    putFilterInformation(scanDefineDescriptor, single);
+                    return;
+                } else {
+                    IFunctionInfo fInfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
+                    newExpr = new ScalarFunctionCallExpression(fInfo, selectedArgs);
+                    inlinedExpr = newExpr;
+                }
+            } else {
+                // Cannot pushdown a filter with multiple unnest
+                // TODO allow rewindable column readers for filters
+                // TODO this is a bit conservative (maybe too conservative) as we can push part of expression down
+                return;
+            }
         }
 
         ILogicalExpression filterExpr = scanDefineDescriptor.getFilterExpression();
@@ -179,6 +220,25 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     @Override
     protected IExpectedSchemaNode getPathNode(AbstractFunctionCallExpression expression) throws AlgebricksException {
         return expression.accept(exprToNodeVisitor, null);
+    }
+
+    private List<ARecordType> collectPathsForExpression(ILogicalExpression expr) {
+        List<ARecordType> result = new ArrayList<>();
+        collectPathsForExpressionInternal(expr, result);
+        return result;
+    }
+
+    private void collectPathsForExpressionInternal(ILogicalExpression expr, List<ARecordType> out) {
+        if (expr instanceof AbstractFunctionCallExpression) {
+            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+            ARecordType t = paths.get(f);
+            if (t != null) {
+                out.add(t);
+            }
+            for (Mutable<ILogicalExpression> argRef : f.getArguments()) {
+                collectPathsForExpressionInternal(argRef.getValue(), out);
+            }
+        }
     }
 
     protected final AbstractFunctionCallExpression andExpression(ILogicalExpression filterExpr,
