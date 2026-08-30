@@ -103,8 +103,8 @@
     <azurecommonjavasdk.version>12.34.1</azurecommonjavasdk.version>
     <azureidentity.version>1.18.5</azureidentity.version>
     <azuredatalakejavasdk.version>12.28.1</azuredatalakejavasdk.version>
-    <azurecore.version>1.59.0</azurecore.version>
-    <azurecorehttpnetty.version>1.16.6</azurecorehttpnetty.version>
+    <azurecore.version>1.59.1</azurecore.version>
+    <azurecorehttpnetty.version>1.16.7</azurecorehttpnetty.version>
 
     <gcsjavasdk.version>2.72.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
