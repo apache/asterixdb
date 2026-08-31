@@ -69,13 +69,12 @@
     <test.includes>${global.test.includes}</test.includes>
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <!-- hadoop's S3A ChecksumSupport reads the awssdk it was built against: 3.4.3 wants
-         CHECKSUM_ALGORITHM CRC64_NVME, added in awssdk 2.30, and initialising that class
-         against an older SDK throws NoSuchFieldError on the thread compiling the query,
-         which halts the JVM. awssdk cannot move to 2.30+ while these tests run against
-         io.findify S3Mock, which mishandles the newer SDK's default upload checksums. -->
+    <!-- hadoop's S3A initialises against the awssdk it was built against (3.4.3 reads
+         ChecksumAlgorithm.CRC64_NVME, added in awssdk 2.30), so the two must move
+         together: advancing hadoop alone throws NoSuchFieldError on the thread
+         compiling the query, which halts the JVM. -->
     <!-- @pinned-with: ${awsjavasdk.version} -->
-    <hadoop.version>3.4.2</hadoop.version>
+    <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.5</log4j.version>
     <snappy.version>1.1.10.8</snappy.version>

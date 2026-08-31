@@ -64,6 +64,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import io.findify.s3mock.S3Mock;
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -200,7 +202,11 @@ public class AwsS3ExternalDatasetTest {
         S3ClientBuilder builder = S3Client.builder();
         URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
-                .endpointOverride(endpoint);
+                .endpointOverride(endpoint)
+                // the mock server does not understand the aws-chunked framing used when the sdk computes
+                // upload checksums (its default since 2.30); objects uploaded that way read back empty
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
         client = builder.build();
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_CONTAINER).build());

@@ -516,6 +516,12 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-aws</artifactId>
     </dependency>
+    <!-- hadoop-aws builds its sync client through software.amazon.awssdk.http.apache;
+         the sdk's own service modules no longer bring that adapter in -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>apache-client</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-azure</artifactId>
