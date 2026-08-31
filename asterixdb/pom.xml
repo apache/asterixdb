@@ -95,7 +95,7 @@
     <log4j.version>2.25.5</log4j.version>
     <awsjavasdk.version>2.54.7</awsjavasdk.version>
     <s3mock.version>5.2.0</s3mock.version>
-    <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <parquet.version>1.18.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <azureblobjavasdk.version>12.35.1</azureblobjavasdk.version>
@@ -1780,7 +1780,7 @@
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
-        <version>1.5.7-7</version>
+        <version>1.5.7-11</version>
       </dependency>
       <!-- @pinned-with: ${parquet.version} -->
       <dependency>
