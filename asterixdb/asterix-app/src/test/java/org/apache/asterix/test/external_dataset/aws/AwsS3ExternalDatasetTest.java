@@ -62,16 +62,17 @@ import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import io.findify.s3mock.S3Mock;
+import com.adobe.testing.s3mock.S3MockApplication;
+
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
-import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
-import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -110,7 +111,7 @@ public class AwsS3ExternalDatasetTest {
     private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
     private static final PutObjectRequest.Builder PUT_OBJECT_BUILDER = PutObjectRequest.builder();
 
-    private static S3Mock s3MockServer;
+    private static S3MockApplication s3MockServer;
     private static S3Client client;
 
     protected TestCaseContext tcCtx;
@@ -151,7 +152,7 @@ public class AwsS3ExternalDatasetTest {
             client.close();
         }
         if (s3MockServer != null) {
-            s3MockServer.shutdown();
+            s3MockServer.stop();
         }
         LOGGER.info("S3 mock down and client shut down successfully");
     }
@@ -193,8 +194,12 @@ public class AwsS3ExternalDatasetTest {
     private static void startAwsS3MockServer() {
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
-        s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withInMemoryBackend().build();
-        s3MockServer.start();
+        // start() mutates the map it is handed, so it cannot be an immutable one
+        Map<String, Object> mockProperties = new HashMap<>();
+        mockProperties.put(S3MockApplication.PROP_HTTP_PORT, MOCK_SERVER_PORT);
+        mockProperties.put(S3MockApplication.PROP_HTTPS_PORT, S3MockApplication.RANDOM_PORT);
+        mockProperties.put(S3MockApplication.PROP_SILENT, true);
+        s3MockServer = S3MockApplication.start(mockProperties);
         LOGGER.info("S3 mock server started successfully");
 
         // Create a client and add some files to the S3 mock server
@@ -202,11 +207,7 @@ public class AwsS3ExternalDatasetTest {
         S3ClientBuilder builder = S3Client.builder();
         URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
-                .endpointOverride(endpoint)
-                // the mock server does not understand the aws-chunked framing used when the sdk computes
-                // upload checksums (its default since 2.30); objects uploaded that way read back empty
-                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
-                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+                .endpointOverride(endpoint);
         client = builder.build();
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_CONTAINER).build());
@@ -298,6 +299,10 @@ public class AwsS3ExternalDatasetTest {
 
         LOGGER.info("Dropping bucket " + bucketName);
         try {
+            // the bucket has to be emptied first, a bucket with content cannot be deleted
+            client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucketName).build()).contents()
+                    .forEach(object -> client
+                            .deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(object.key()).build()));
             client.deleteBucket(DELETE_BUCKET_BUILDER.bucket(bucketName).build());
         } catch (NoSuchBucketException e) {
             // ignore

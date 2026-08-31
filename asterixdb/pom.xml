@@ -94,7 +94,7 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.5</log4j.version>
     <awsjavasdk.version>2.54.7</awsjavasdk.version>
-    <s3mock.version>0.2.6</s3mock.version>
+    <s3mock.version>5.2.0</s3mock.version>
     <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
@@ -1596,19 +1596,18 @@
       </dependency>
       <!-- Mock for AWS S3 -->
       <dependency>
-        <groupId>io.findify</groupId>
-        <artifactId>s3mock_2.12</artifactId>
+        <groupId>com.adobe.testing</groupId>
+        <artifactId>s3mock</artifactId>
         <version>${s3mock.version}</version>
-      </dependency>
-      <!-- Needed for the s3 mock -->
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-http-core_2.12</artifactId>
-        <!-- Must stay on the same akka-http line as the akka-http_2.12 that s3mock pulls in
-             (10.5.x makes S3Mock.bind() return null). Never advance past 10.1.x: 10.2+ is
-             BUSL-1.1 rather than Apache-2.0. -->
-        <!-- @pinned-with: ${s3mock.version} -->
-        <version>10.1.15</version>
+        <exclusions>
+          <!-- the mock is a spring boot application, and its starter brings logback and
+               log4j-to-slf4j along; both fight the log4j2 binding these tests run with,
+               and spring refuses to start when it finds logback behind another binding -->
+          <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- Azure Blob Storage start -->
       <dependency>
