@@ -78,14 +78,14 @@
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <!-- 4.2 is a new netty generation; stay on the 4.1.x line (patch updates only) -->
     <netty.version>4.1.137.Final</netty.version>
-    <netty.tcnative.version>2.0.81.Final</netty.tcnative.version>
+    <netty.tcnative.version>2.0.83.Final</netty.tcnative.version>
     <asm.version>9.10.1</asm.version>
     <awsjavasdk.version>2.50.3</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.72.0</google-cloud-storage.version>
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
-    <google-cloud-core.version>2.73.0</google-cloud-core.version>
+    <google-cloud-core.version>2.74.0</google-cloud-core.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
