@@ -98,6 +98,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -521,6 +523,10 @@ public class AwsS3ExternalDatasetTest {
     private static void createBucket(String bucketName) {
         LOGGER.info("Dropping bucket " + bucketName);
         try {
+            // the bucket has to be emptied first, a bucket with content cannot be deleted
+            client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucketName).build()).contents()
+                    .forEach(object -> client
+                            .deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(object.key()).build()));
             client.deleteBucket(DELETE_BUCKET_BUILDER.bucket(bucketName).build());
         } catch (NoSuchBucketException e) {
             // ignore
