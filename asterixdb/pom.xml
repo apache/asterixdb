@@ -85,26 +85,25 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.8.3-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.8.3-SNAPSHOT</hyracks.version>
-    <!-- hadoop's S3A ChecksumSupport reads the awssdk it was built against: 3.4.3 wants
-         CHECKSUM_ALGORITHM CRC64_NVME, added in awssdk 2.30, and initialising that class
-         against an older SDK throws NoSuchFieldError on the thread compiling the query,
-         which halts the JVM. awssdk cannot move to 2.30+ while these tests run against
-         io.findify S3Mock, which mishandles the newer SDK's default upload checksums. -->
+    <!-- hadoop's S3A initialises against the awssdk it was built against (3.4.3 reads
+         ChecksumAlgorithm.CRC64_NVME, added in awssdk 2.30), so the two must move
+         together: advancing hadoop alone throws NoSuchFieldError on the thread
+         compiling the query, which halts the JVM. -->
     <!-- @pinned-with: ${awsjavasdk.version} -->
-    <hadoop.version>3.4.2</hadoop.version>
+    <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.25.5</log4j.version>
-    <awsjavasdk.version>2.29.52</awsjavasdk.version>
-    <s3mock.version>0.2.6</s3mock.version>
-    <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <awsjavasdk.version>2.54.7</awsjavasdk.version>
+    <s3mock.version>5.2.0</s3mock.version>
+    <parquet.version>1.18.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <azureblobjavasdk.version>12.35.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.34.1</azurecommonjavasdk.version>
     <azureidentity.version>1.18.5</azureidentity.version>
     <azuredatalakejavasdk.version>12.28.1</azuredatalakejavasdk.version>
-    <azurecore.version>1.59.0</azurecore.version>
-    <azurecorehttpnetty.version>1.16.6</azurecorehttpnetty.version>
+    <azurecore.version>1.59.1</azurecore.version>
+    <azurecorehttpnetty.version>1.16.7</azurecorehttpnetty.version>
 
     <gcsjavasdk.version>2.72.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
@@ -1539,7 +1538,19 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-transport-classes-epoll</artifactId>
           </exclusion>
+          <!-- the service modules ship the apache5 adapter as their sync client, but
+               hadoop's S3A builds its client through software.amazon.awssdk.http.apache,
+               so apache-client below is the adapter that has to be on the classpath -->
+          <exclusion>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache5-client</artifactId>
+          </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>apache-client</artifactId>
+        <version>${awsjavasdk.version}</version>
       </dependency>
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
@@ -1585,19 +1596,18 @@
       </dependency>
       <!-- Mock for AWS S3 -->
       <dependency>
-        <groupId>io.findify</groupId>
-        <artifactId>s3mock_2.12</artifactId>
+        <groupId>com.adobe.testing</groupId>
+        <artifactId>s3mock</artifactId>
         <version>${s3mock.version}</version>
-      </dependency>
-      <!-- Needed for the s3 mock -->
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-http-core_2.12</artifactId>
-        <!-- Must stay on the same akka-http line as the akka-http_2.12 that s3mock pulls in
-             (10.5.x makes S3Mock.bind() return null). Never advance past 10.1.x: 10.2+ is
-             BUSL-1.1 rather than Apache-2.0. -->
-        <!-- @pinned-with: ${s3mock.version} -->
-        <version>10.1.15</version>
+        <exclusions>
+          <!-- the mock is a spring boot application, and its starter brings logback and
+               log4j-to-slf4j along; both fight the log4j2 binding these tests run with,
+               and spring refuses to start when it finds logback behind another binding -->
+          <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- Azure Blob Storage start -->
       <dependency>
@@ -1770,7 +1780,7 @@
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
-        <version>1.5.7-7</version>
+        <version>1.5.7-11</version>
       </dependency>
       <!-- @pinned-with: ${parquet.version} -->
       <dependency>
