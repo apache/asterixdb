@@ -103,7 +103,7 @@
     <test-case FilePath="api">
       <compilation-unit name="multi-statement">
         <output-dir compare="Text">multi-statement</output-dir>
-        <expected-error>ASX0035: Unsupported multiple statements</expected-error>
+        <expected-error>ASX0035: Multiple statements are not allowed when the request parameter 'multi-statement' is false</expected-error>
         <expected-error>ASX1259: async execution is not supported for a request with multiple statements</expected-error>
         <!-- both rejections are decisions about the request, so neither names a source location -->
         <source-location>false</source-location>
