@@ -101,7 +101,7 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <avro.version>1.12.2</avro.version>
-    <parquet.version>1.17.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <parquet.version>1.18.0</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <awsjavasdk.version>2.54.9</awsjavasdk.version>
