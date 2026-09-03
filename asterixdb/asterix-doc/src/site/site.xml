@@ -71,6 +71,7 @@
 
     <menu name = "AsterixDB Primer">
       <item name="Using SQL++" href="sqlpp/primer-sqlpp.html"/>
+      <item name="Using Cloud Mode" href="sqlpp/cloud-primer.html"/>
     </menu>
 
     <menu name="Data Model">

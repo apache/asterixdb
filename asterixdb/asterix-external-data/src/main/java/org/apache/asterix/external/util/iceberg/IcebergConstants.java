@@ -21,6 +21,7 @@ package org.apache.asterix.external.util.iceberg;
 import java.util.List;
 
 import org.apache.asterix.external.util.aws.AwsConstants;
+import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.google.GCSConstants;
 import org.apache.iceberg.aws.s3.S3FileIO;
@@ -87,9 +88,11 @@ public class IcebergConstants {
         public static final String ACCESS_DELEGATION_VENDED_CREDENTIALS = "vended-credentials";
     }
 
-    // we need to split the creds for the catalog from the iceberg table, we will prefix the
-    // catalog auths with ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL
-    public static final List<String> authParams =
-            java.util.stream.Stream.of(AwsConstants.authParams, GCSConstants.authParams, AzureConstants.authParams)
-                    .flatMap(java.util.Collection::stream).toList();
+    // Collection properties copied into the catalog's FileIO, which reads the table's metadata and data files.
+    // pathStyleAddressing is needed alongside the credentials: without it the client puts the bucket in the
+    // hostname, which a path-style-only S3-compatible endpoint (e.g. a local mock) cannot resolve.
+    public static final List<String> catalogFileIoParams = java.util.stream.Stream
+            .of(AwsConstants.authParams, GCSConstants.authParams, AzureConstants.authParams,
+                    List.of(S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME))
+            .flatMap(java.util.Collection::stream).toList();
 }

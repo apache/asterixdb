@@ -1,0 +1,396 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- The SQL++ examples from the cloud mode primer (cloud-primer.md), one request per example, in document order.
+-- Substitute the snapshot values printed by the Iceberg seeder for the <first-snapshot-...> placeholders.
+
+-- Create a Database, Namespace, and Native Collection
+
+DROP DATABASE CloudPrimer IF EXISTS;
+CREATE DATABASE CloudPrimer;
+CREATE DATAVERSE CloudPrimer.Sales;
+USE CloudPrimer.Sales;
+
+CREATE TYPE OrderType AS {
+  id: bigint,
+  customer: string,
+  region: string,
+  amount: double
+};
+
+CREATE COLLECTION Orders(OrderType) PRIMARY KEY id;
+CREATE INDEX OrdersByRegion ON Orders(region);
+CREATE COLLECTION ColumnOrders(OrderType) PRIMARY KEY id WITH {
+  "storage-format": {"format":"column"}
+};
+
+INSERT INTO Orders ([
+  {"id":1, "customer":"Ada", "region":"west", "amount":125.50},
+  {"id":2, "customer":"Linus", "region":"north", "amount":74.25},
+  {"id":3, "customer":"Grace", "region":"west", "amount":210.00},
+  {"id":4, "customer":"Edsger", "region":"east", "amount":95.00}
+]);
+
+INSERT INTO ColumnOrders (
+  SELECT VALUE o FROM Orders AS o
+);
+
+USE CloudPrimer.Sales;
+
+SELECT o.region,
+       count(*) AS orderCount,
+       round(sum(o.amount), 2) AS revenue
+FROM Orders AS o
+GROUP BY o.region
+ORDER BY o.region;
+
+-- Export with COPY TO
+
+USE CloudPrimer.Sales;
+
+COPY (
+  SELECT o.id, o.customer, o.region, o.amount
+  FROM Orders AS o
+  ORDER BY o.id
+) exported
+TO S3
+PATH ("primer", "orders-json")
+WITH {
+  "container":"asterixdb-test",
+  "serviceEndpoint":"http://storage:9090",
+  "region":"us-east-1",
+  "pathStyleAddressing":"true",
+  "format":"json"
+};
+
+USE CloudPrimer.Sales;
+
+COPY (
+  SELECT o.id, o.customer, o.region, o.amount
+  FROM Orders AS o
+) exported
+TO S3
+PATH ("primer", "orders-parquet")
+TYPE ({
+  id: bigint,
+  customer: string,
+  region: string,
+  amount: double
+})
+WITH {
+  "container":"asterixdb-test",
+  "serviceEndpoint":"http://storage:9090",
+  "region":"us-east-1",
+  "pathStyleAddressing":"true",
+  "format":"parquet"
+};
+
+-- CSV and partitioned lake-style output
+
+USE CloudPrimer.Sales;
+
+COPY (
+  SELECT o.id, o.customer, o.region, o.amount FROM Orders AS o ORDER BY o.id
+) exported
+TO S3
+PATH ("primer", "orders-csv")
+AS (id bigint, customer string, region string, amount double)
+WITH {
+  "container":"asterixdb-test",
+  "serviceEndpoint":"http://storage:9090",
+  "region":"us-east-1",
+  "pathStyleAddressing":"true",
+  "format":"csv",
+  "header":"true",
+  "delimiter":"|",
+  "max-objects-per-file":1000
+};
+
+USE CloudPrimer.Sales;
+
+COPY Orders AS o
+TO S3
+PATH ("primer", "orders-by-region", region)
+OVER (PARTITION BY o.region AS region)
+WITH {
+  "container":"asterixdb-test",
+  "serviceEndpoint":"http://storage:9090",
+  "region":"us-east-1",
+  "pathStyleAddressing":"true",
+  "format":"json",
+  "compression":"gzip"
+};
+
+-- Query User-Owned Objects as External Collections
+
+USE CloudPrimer.Sales;
+
+CREATE TYPE OpenOrderType AS {
+};
+
+CREATE EXTERNAL COLLECTION ExportedOrders(OpenOrderType) USING S3 (
+  ("container"="asterixdb-test"),
+  ("definition"="primer/orders-json"),
+  ("format"="json"),
+  ("serviceEndpoint"="http://storage:9090"),
+  ("region"="us-east-1"),
+  ("pathStyleAddressing"="true")
+);
+
+SELECT VALUE count(*) FROM ExportedOrders;
+
+USE CloudPrimer.Sales;
+
+CREATE EXTERNAL COLLECTION ExportedOrdersParquet(OpenOrderType) USING S3 (
+  ("container"="asterixdb-test"),
+  ("definition"="primer/orders-parquet"),
+  ("format"="parquet"),
+  ("serviceEndpoint"="http://storage:9090"),
+  ("region"="us-east-1"),
+  ("pathStyleAddressing"="true")
+);
+
+SELECT VALUE count(*) FROM ExportedOrdersParquet;
+
+USE CloudPrimer.Sales;
+
+CREATE EXTERNAL COLLECTION ExportedOrdersCsv(OrderType) USING S3 (
+  ("container"="asterixdb-test"),
+  ("definition"="primer/orders-csv"),
+  ("format"="csv"),
+  ("header"="true"),
+  ("delimiter"="|"),
+  ("serviceEndpoint"="http://storage:9090"),
+  ("region"="us-east-1"),
+  ("pathStyleAddressing"="true")
+);
+
+CREATE EXTERNAL COLLECTION PartitionedOrders(OpenOrderType) USING S3 (
+  ("container"="asterixdb-test"),
+  ("definition"="primer/orders-by-region"),
+  ("format"="json"),
+  ("serviceEndpoint"="http://storage:9090"),
+  ("region"="us-east-1"),
+  ("pathStyleAddressing"="true")
+);
+
+SELECT VALUE {
+  "csvRows": (SELECT VALUE count(*) FROM ExportedOrdersCsv)[0],
+  "partitionedRows": (SELECT VALUE count(*) FROM PartitionedOrders)[0]
+};
+
+-- Import with COPY FROM
+
+USE CloudPrimer.Sales;
+
+CREATE COLLECTION ImportedOrders(OrderType) PRIMARY KEY id;
+
+COPY ImportedOrders
+FROM S3
+PATH ("primer/orders-json")
+WITH {
+  "container":"asterixdb-test",
+  "serviceEndpoint":"http://storage:9090",
+  "region":"us-east-1",
+  "pathStyleAddressing":"true",
+  "format":"json"
+};
+
+SELECT VALUE count(*) FROM ImportedOrders;
+
+-- Inspect Native Storage Size
+
+SELECT s.size > 0 AS hasCloudStorage
+FROM storage_size("CloudPrimer", "Sales", "Orders") AS s;
+
+SELECT VALUE s.size
+FROM storage_size("CloudPrimer", "Sales", "Orders", "Orders") AS s;
+
+SET `import-private-functions` "true";
+
+SELECT VALUE count(*) > 0
+FROM storage_components("Sales", "Orders", "CloudPrimer") AS c;
+
+SET `import-private-functions` "true";
+
+SELECT VALUE {
+  "secondaryIndexEntries": (
+    SELECT VALUE count(*)
+    FROM dump_index("Sales", "Orders", "OrdersByRegion", "CloudPrimer") AS entry
+  )[0],
+  "partitionRows":
+      (SELECT VALUE count(*) FROM query_partition("CloudPrimer", "Sales", "Orders", 0) AS row)[0]
+    + (SELECT VALUE count(*) FROM query_partition("CloudPrimer", "Sales", "Orders", 1) AS row)[0]
+    + (SELECT VALUE count(*) FROM query_partition("CloudPrimer", "Sales", "Orders", 2) AS row)[0],
+  "columnEstimatePartitions": (
+    SELECT VALUE count(*)
+    FROM estimated_collection_column_count(
+      "CloudPrimer", "Sales", "ColumnOrders"
+    ) AS estimate
+  )[0]
+};
+
+-- Mutate Data and Exercise the Secondary Index
+
+USE CloudPrimer.Sales;
+
+UPSERT INTO Orders ([
+  {"id":2, "customer":"Linus", "region":"north", "amount":80.00},
+  {"id":5, "customer":"Margaret", "region":"north", "amount":150.00}
+]);
+
+DELETE FROM Orders AS o WHERE o.id = 4;
+
+SELECT VALUE o
+FROM Orders AS o
+WHERE o.region = "north"
+ORDER BY o.id;
+
+-- Iceberg
+
+USE CloudPrimer.Sales;
+
+CREATE CATALOG CloudPrimerIceberg
+TYPE Iceberg
+SOURCE NESSIE
+WITH {
+  "uri":"http://nessie:19120/api/v2",
+  "warehouse":"s3://iceberg-container/nessie/warehouse"
+};
+
+USE CloudPrimer.Sales;
+
+CREATE TYPE IcebergRow AS {
+};
+
+CREATE EXTERNAL COLLECTION IcebergLatest(IcebergRow) USING S3 (
+  ("accessKeyId"="dummyAccessKey"),
+  ("secretAccessKey"="dummySecretKey"),
+  ("region"="us-west-2"),
+  ("serviceEndpoint"="http://iceberg-storage:9090"),
+  ("pathStyleAddressing"="true"),
+  ("inputStreamType"="classic"),
+  ("changeDetectionMode"="none"),
+  ("table-format"="iceberg"),
+  ("namespace"="cloud_primer"),
+  ("tableName"="orders"),
+  ("catalogName"="CloudPrimerIceberg"),
+  ("format"="parquet"),
+  ("decimal-to-double"="true"),
+  ("date-to-int"="true"),
+  ("time-to-int"="true"),
+  ("timestamp-to-long"="true")
+);
+
+USE CloudPrimer.Sales;
+
+SELECT VALUE count(*) FROM IcebergLatest;
+
+USE CloudPrimer.Sales;
+
+SELECT i.region, count(*) AS orderCount, round(sum(i.amount), 2) AS revenue
+FROM IcebergLatest AS i
+WHERE i.amount >= 90
+GROUP BY i.region
+ORDER BY i.region;
+
+-- Snapshot selection and time travel
+
+USE CloudPrimer.Sales;
+
+CREATE EXTERNAL COLLECTION IcebergAtFirstSnapshot(IcebergRow) USING S3 (
+  ("accessKeyId"="dummyAccessKey"),
+  ("secretAccessKey"="dummySecretKey"),
+  ("region"="us-west-2"),
+  ("serviceEndpoint"="http://iceberg-storage:9090"),
+  ("pathStyleAddressing"="true"),
+  ("inputStreamType"="classic"),
+  ("changeDetectionMode"="none"),
+  ("table-format"="iceberg"),
+  ("namespace"="cloud_primer"),
+  ("tableName"="orders"),
+  ("catalogName"="CloudPrimerIceberg"),
+  ("format"="parquet"),
+  ("snapshotId"="<first-snapshot-id>"),
+  ("decimal-to-double"="true"),
+  ("date-to-int"="true"),
+  ("time-to-int"="true"),
+  ("timestamp-to-long"="true")
+);
+
+SELECT VALUE i FROM IcebergAtFirstSnapshot AS i ORDER BY i.id;
+
+USE CloudPrimer.Sales;
+
+SELECT VALUE i
+FROM IcebergLatest AS i AT snapshot "<first-snapshot-id>"
+ORDER BY i.id;
+
+USE CloudPrimer.Sales;
+
+SELECT VALUE i
+FROM IcebergLatest AS i AT timestamp "<first-snapshot-epoch-millis>"
+ORDER BY i.id;
+
+SELECT VALUE {
+  "catalogName": c.CatalogName,
+  "catalogType": c.CatalogType
+}
+FROM Metadata.Catalog AS c
+WHERE c.CatalogName = "CloudPrimerIceberg";
+
+-- Delta Lake
+
+USE CloudPrimer.Sales;
+
+CREATE TYPE DeltaRow AS {
+};
+
+CREATE EXTERNAL COLLECTION DeltaOrders(DeltaRow) USING S3 (
+  ("accessKeyId"="dummyAccessKey"),
+  ("secretAccessKey"="dummySecretKey"),
+  ("container"="iceberg-container"),
+  ("definition"="delta/orders"),
+  ("region"="us-west-2"),
+  ("serviceEndpoint"="http://iceberg-storage:9090"),
+  ("pathStyleAddressing"="true"),
+  ("table-format"="delta")
+);
+
+SELECT VALUE d FROM DeltaOrders AS d ORDER BY d.id;
+
+-- Prove Stop/Start Persistence
+-- First replace the AsterixDB container: docker compose stop asterix; docker compose rm -f asterix;
+-- docker compose up -d asterix.
+
+USE CloudPrimer.Sales;
+
+SELECT VALUE {
+  "nativeOrders": (SELECT VALUE count(*) FROM Orders)[0],
+  "nativeNorthOrders": (SELECT VALUE count(*) FROM Orders o WHERE o.region = "north")[0],
+  "nativeRevenue": (SELECT VALUE round(sum(o.amount), 2) FROM Orders o)[0],
+  "importedOrders": (SELECT VALUE count(*) FROM ImportedOrders)[0],
+  "externalOrders": (SELECT VALUE count(*) FROM ExportedOrders)[0],
+  "icebergRows": (SELECT VALUE count(*) FROM IcebergLatest)[0],
+  "firstIcebergSnapshotRows": (SELECT VALUE count(*) FROM IcebergAtFirstSnapshot)[0]
+};
+
+-- Cleanup and Troubleshooting
+
+DROP DATABASE CloudPrimer IF EXISTS;
