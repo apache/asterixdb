@@ -23,7 +23,7 @@ from Points as p
 let v = p.vec, n = p.id * 10
 where n > 0
 cluster by v as sc cluster as members
-with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2 }
+with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2, "seed": 10 }
 select sc.cluster_id as cid, count(*) as cnt, max(n) as max_n,
        (select value gi.v[0] from members as gi order by gi.p.id) as xs
 order by cid;

@@ -1233,6 +1233,7 @@ public class BuiltinFunctions {
     // CLUSTER BY: nearest_centroid(point, centroids[, metric]) -> AINT32 index of the closest centroid.
     public static final FunctionIdentifier NEAREST_CENTROID =
             FunctionConstants.newAsterix("nearest-centroid", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier VECTOR_SHUFFLE_KEY = FunctionConstants.newAsterix("vector-shuffle-key", 2);
     // Temporal functions
     public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS =
             FunctionConstants.newAsterix("unix-time-from-date-in-days", 1);
@@ -1985,6 +1986,9 @@ public class BuiltinFunctions {
         addFunction(ANN_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(NEAREST_CENTROID, AInt32TypeComputer.INSTANCE_NULLABLE, true);
+        // Non-functional, as random() is: the value is a pure hash, but the flag keeps the optimizer from moving or
+        // sharing the assign that computes it, which would rewire the hand-built REPLICATE the draw branch hangs off.
+        addPrivateFunction(VECTOR_SHUFFLE_KEY, AInt64TypeComputer.INSTANCE_NULLABLE, false);
         // Window functions
 
         addFunction(CUME_DIST, ADoubleTypeComputer.INSTANCE, false);

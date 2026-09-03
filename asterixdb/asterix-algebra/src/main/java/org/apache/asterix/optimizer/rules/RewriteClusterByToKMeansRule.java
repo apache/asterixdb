@@ -34,8 +34,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -92,11 +92,6 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
     /** Refinement iterations after seeding, when the query's 'num_iterations' names none. */
     private static final int LLOYD_ITERATIONS_DEFAULT = 3;
     private static final int LLOYD_ITERATIONS_MAX = 20;
-    // Base for the per-round sampling seed (seed_r = base + r); the descriptor mixes in the partition id.
-    // A prime, which keeps neighbouring (round, partition) pairs from starting correlated generator states.
-    private static final long SEED_BASE = 1_000_003L;
-    // RECLUSTER's roulette seed when the query supplies none. The value carries no meaning.
-    private static final long RECLUSTER_SEED_DEFAULT = 12345L;
 
     private static final String ALGORITHM_KMEANS = ClusterByOptions.ALGORITHM_KMEANS;
     private static final String INIT_MODE_RANDOM = ClusterByOptions.INIT_MODE_RANDOM;
@@ -211,6 +206,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         SourceLocation loc = cop.getSourceLocation();
         LogicalVariable vectorVar = cop.getVectorVariable();
         boolean forgy = INIT_MODE_RANDOM.equals(kmeans(cop).getInitMode());
+        long seed = kmeans(cop).getSeed();
 
         // One REPLICATE over the input, built as IntroduceSecondaryIndexInsertDeleteRule builds its fan-out;
         // the enforcer adds the exchanges and FixReplicateOperatorOutputsRule re-points the outputs before
@@ -235,13 +231,12 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
 
         // Forgy seeds with k centres and refines them directly; k-means|| grows a pool from one.
         Pair<Mutable<ILogicalOperator>, LogicalVariable> seedInput = branchOf(shared, vectorVar, context, loc);
-        Mutable<ILogicalOperator> centroidsIn =
-                seedOf(seedInput.getLeft(), seedInput.getRight(), forgy ? kmeans(cop).getNumClusters() : 1,
-                        options(cop).getDimension(), kmeans(cop).getSeed(), context, loc);
-        LogicalVariable centroidsVar = seedInput.getRight();
+        Mutable<ILogicalOperator> centroidsIn = seedOf(seedInput.first, seedInput.second,
+                forgy ? kmeans(cop).getNumClusters() : 1, options(cop).getDimension(), seed, context, loc);
+        LogicalVariable centroidsVar = seedInput.second;
         if (!forgy) {
             KMeansStageOperator recluster =
-                    oversampleAndRecluster(cop, shared, centroidsIn, centroidsVar, context, loc);
+                    oversampleAndRecluster(cop, shared, centroidsIn, centroidsVar, seed, context, loc);
             centroidsIn = new MutableObject<>(recluster);
             centroidsVar = recluster.getCandidateVariable();
         }
@@ -258,20 +253,18 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
 
     /** k-means||: oversample a pool from the seed, then reduce it to k centres. */
     private KMeansStageOperator oversampleAndRecluster(ClusterByOperator cop, ReplicateOperator shared,
-            Mutable<ILogicalOperator> seed, LogicalVariable seedVar, IOptimizationContext context, SourceLocation loc)
-            throws AlgebricksException {
+            Mutable<ILogicalOperator> seed, LogicalVariable seedVar, long seedValue, IOptimizationContext context,
+            SourceLocation loc) throws AlgebricksException {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
                 branchOf(shared, cop.getVectorVariable(), context, loc);
         KMeansStageOperator oversample = stage(cop, KMeansStageOperator.Mode.OVERSAMPLE_LOOP, context,
-                ref(input.getRight()), ref(seedVar), oversamplingWidth(cop),
-                kmeans(cop).getSeed() == null ? SEED_BASE : kmeans(cop).getSeed(), OVERSAMPLING_ROUNDS);
-        oversample.getInputs().add(input.getLeft());
+                ref(input.second), ref(seedVar), oversamplingWidth(cop), seedValue, OVERSAMPLING_ROUNDS);
+        oversample.getInputs().add(input.first);
         oversample.getInputs().add(seed);
         finish(oversample, context);
 
         KMeansStageOperator recluster = stage(cop, KMeansStageOperator.Mode.RECLUSTER, context, null,
-                ref(oversample.getCandidateVariable()), kmeans(cop).getNumClusters(),
-                kmeans(cop).getSeed() == null ? RECLUSTER_SEED_DEFAULT : kmeans(cop).getSeed(), 0);
+                ref(oversample.getCandidateVariable()), kmeans(cop).getNumClusters(), seedValue, 0);
         recluster.getInputs().add(new MutableObject<>(oversample));
         finish(recluster, context);
         return recluster;
@@ -283,9 +276,9 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
             SourceLocation loc) throws AlgebricksException {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
                 branchOf(shared, cop.getVectorVariable(), context, loc);
-        KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.getRight()),
+        KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.second),
                 ref(centroidsVar), kmeans(cop).getNumClusters(), 0L, lloydIterations(cop));
-        lloyd.getInputs().add(input.getLeft());
+        lloyd.getInputs().add(input.first);
         lloyd.getInputs().add(centroidsIn);
         // The execution mode is derived from the input, as GROUP BY's is: a partitioned input gives one loop
         // instance per partition, an unpartitioned input a single instance. The physical operators read it
@@ -304,7 +297,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         LogicalVariable centroidVar = lloyd.getCandidateVariable();
         OrderOperator byValue = new OrderOperator();
         byValue.setSourceLocation(loc);
-        byValue.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(centroidVar)));
+        byValue.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, ref(centroidVar)));
         byValue.getInputs().add(new MutableObject<>(lloyd));
         finish(byValue, context);
 
@@ -456,7 +449,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         gby.addGbyExpression(cop.getClusterIdVariable(), ref(rowCid).getValue());
         // The decorations ride on every labelled row; the GROUP BY carries them out as the operator promised.
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : cop.getDecorList()) {
-            gby.addDecorExpression(p.getLeft(), p.getRight().getValue().cloneExpression());
+            gby.addDecorExpression(p.first, p.second.getValue().cloneExpression());
         }
         gby.getInputs().add(new MutableObject<>(labelled));
 
@@ -524,16 +517,17 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
      * The {@code n} starting points, drawn uniformly from the vectors: order on a shuffle key and take the
      * first n.
      * <p>
-     * The key is {@code random(vec[0])}, since ordering by the vector's value would return the n most
-     * similar points and seat every centre in one corner of the data, a fixed point refinement cannot escape.
+     * The key is {@code vector-shuffle-key(vec, seed)}, a hash of every component mixed with the seed: equal vectors
+     * key equally on any partition or position and distinct vectors key distinctly, so the winner is fixed by the
+     * seed and the data alone. Ordering by the vector's value instead would return the n most similar points and
+     * seat every centre in one corner of the data, a fixed point refinement cannot escape.
      */
     private Mutable<ILogicalOperator> seedOf(Mutable<ILogicalOperator> vectors, LogicalVariable vectorVar, int n,
-            int dimension, Integer querySeed, IOptimizationContext context, SourceLocation loc)
-            throws AlgebricksException {
-        // Only usable vectors may be drawn, since a rejected draw loses the whole answer and a row with no
-        // vector makes random(v[0]) unknown, which orders first. The guard uses total functions the columnar
-        // filter pushdown refuses (is-array, sql-count), so no conjunct can be pushed into the scan where it
-        // would be evaluated per array element.
+            int dimension, long seed, IOptimizationContext context, SourceLocation loc) throws AlgebricksException {
+        // Only usable vectors may be drawn: a rejected draw loses the whole answer, and a row with no vector
+        // keys as NULL, which orders first. The guard uses total functions the columnar filter pushdown refuses
+        // (is-array, sql-count), so no conjunct can be pushed into the scan where it would be evaluated per
+        // array element.
         ScalarFunctionCallExpression isArray = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.IS_ARRAY), ref(vectorVar));
         isArray.setSourceLocation(loc);
@@ -553,21 +547,10 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         guard.getInputs().add(vectors);
         finish(guard, context);
 
-        ScalarFunctionCallExpression firstComponent = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.GET_ITEM), ref(vectorVar), constant(0L));
-        firstComponent.setSourceLocation(loc);
-        // A query seed shifts the draw key, so different seeds draw different rows from the same data.
-        ILogicalExpression keyArg = firstComponent;
-        if (querySeed != null) {
-            ScalarFunctionCallExpression shifted = new ScalarFunctionCallExpression(
-                    BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.NUMERIC_ADD),
-                    new MutableObject<>(firstComponent), constant(querySeed.longValue()));
-            shifted.setSourceLocation(loc);
-            keyArg = shifted;
-        }
+        // The seed is part of the key, so different seeds draw different rows from the same data.
         ScalarFunctionCallExpression key = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.RANDOM_WITH_SEED),
-                new MutableObject<>(keyArg));
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.VECTOR_SHUFFLE_KEY), ref(vectorVar),
+                constant(seed));
         key.setSourceLocation(loc);
 
         LogicalVariable keyVar = context.newVar();
@@ -579,7 +562,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         // A top-n sort: PushLimitIntoOrderByRule, which would fuse a sort and a limit, has already run.
         OrderOperator order = new OrderOperator(new ArrayList<>(), n);
         order.setSourceLocation(loc);
-        order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(keyVar)));
+        order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, ref(keyVar)));
         order.getInputs().add(new MutableObject<>(assign));
         // The pass that fuses a LIMIT into a top-n sort ran before this rule, so the bound is set here
         // directly, the way the labelling join sets its broadcast NLJ. Property enforcement then derives a
@@ -646,6 +629,6 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         thin.setSourceLocation(loc);
         thin.getInputs().add(new MutableObject<>(rename));
         finish(thin, context);
-        return Pair.of(new MutableObject<>(thin), branchVar);
+        return new Pair<>(new MutableObject<>(thin), branchVar);
     }
 }

@@ -24,7 +24,7 @@ select value (
     from Points as p
     let v = p.vec, n = p.id * 10
     cluster by v as sc cluster as members
-    with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2 }
+    with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2, "seed": 10 }
     select members
   ) as c
   unnest c.members as mem

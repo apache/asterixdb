@@ -36,7 +36,7 @@ clustered as (
   from subset as i
   cluster by i.vec as sc
   cluster as members
-  with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+  with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2, "seed": 10 }
 )
 select * from clustered
 order by clustered.cid;

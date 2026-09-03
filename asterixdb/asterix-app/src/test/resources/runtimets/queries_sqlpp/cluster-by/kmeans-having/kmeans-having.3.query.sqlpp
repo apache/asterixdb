@@ -19,6 +19,6 @@
 -- HAVING after CLUSTER BY filters clusters, as after GROUP BY: it may read the descriptor and CLUSTER AS.
 use test;
 from Points as p cluster by p.vec as sc cluster as members
-with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2 }
+with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2, "seed": 10 }
 having array_count(members) >= 3
 select sc.cluster_id as cid, array_count(members) as cnt order by cid;

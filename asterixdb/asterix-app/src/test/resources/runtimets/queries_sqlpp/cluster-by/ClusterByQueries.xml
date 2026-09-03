@@ -208,7 +208,7 @@
         </compilation-unit>
     </test-case>
     <!-- The 'seed' option, over the structureless budget fixture: seed 42, a second seed that must land
-         elsewhere, and a negative seed. -->
+         elsewhere, and a negative seed. Then no seed: one is drawn per CLUSTER BY, and its plan is not cached. -->
     <test-case FilePath="cluster-by">
         <compilation-unit name="kmeans-seed">
             <output-dir compare="Text">kmeans-seed</output-dir>

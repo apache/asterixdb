@@ -19,6 +19,6 @@
 -- An aggregate inside CASE, which the CASE-extraction pass lifts into a LET after the clause.
 use test;
 from Points as p cluster by p.vec as sc cluster as members
-with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2 }
+with {"clustering_algorithm": "K-Means",  "dimension": [2], "num_clusters": 2, "seed": 10 }
 select sc.cluster_id as cid, case when count(*) > 2 then "big" else "small" end as size
 order by cid;

@@ -28,12 +28,14 @@
 -- rather than fail. Both failure modes are caught by comparing against arm 1.
 use test;
 
+-- Headroom for the assertion's group-by; see the .3 query. Same in every arm, so the arms compare.
+set `compiler.groupmemory` "4MB";
 set `compiler.clusterbymemory` "128KB";
 
 from Points as p
 cluster by p.vec as sc
 cluster as members
-with { "clustering_algorithm": "K-Means", "dimension": [128], "num_clusters": 64 }
+with { "clustering_algorithm": "K-Means", "dimension": [128], "num_clusters": 64, "seed": 42 }
 select (select value gi.p.id from members as gi order by gi.p.id) as ids,
        array_count(members) as cnt
 order by ids;

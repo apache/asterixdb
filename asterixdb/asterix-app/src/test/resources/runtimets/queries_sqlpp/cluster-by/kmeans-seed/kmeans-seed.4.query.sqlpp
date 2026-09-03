@@ -19,6 +19,10 @@
 -- Seed 7 must not reproduce seed 42's result, or the seed is being accepted and ignored.
 use test;
 
+-- Headroom for the assertion's group-by, which is not what this test pins: a single group is capped
+-- at 96KB by default, and one cluster of 2000 x 128 doubles can exceed that at any k=64 seed.
+set `compiler.groupmemory` "4MB";
+
 from Points as p
 cluster by p.vec as sc
 cluster as members

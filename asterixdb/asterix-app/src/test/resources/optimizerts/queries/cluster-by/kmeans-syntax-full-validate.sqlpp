@@ -38,6 +38,7 @@ with {
   "clustering_algorithm": "K-Means",
   "dimension": [2], "num_clusters": 5,
   "cross_pollination": false,
-  "similarity": "euclidean"
+  "similarity": "euclidean",
+  "seed": 42
 }
 select sc.cluster_id as cid, array_count(movieCluster) as cnt, movieCluster;

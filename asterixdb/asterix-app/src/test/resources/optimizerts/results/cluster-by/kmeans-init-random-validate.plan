@@ -1,117 +1,117 @@
-distribute result [$$73]
+distribute result [$$73] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$73] <- [{"cid": $#1}] project: [$$73]
+    assign [$$73] <- [{"cid": $#1}] project: [$$73] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
-      exchange
+      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         group by ([$#1 := $$80]) decor ([]) {
                   aggregate [] <- [] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               }
+               } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_GROUP_BY[$$80]  |PARTITIONED|
-          exchange
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- HASH_PARTITION_EXCHANGE [$$80]  |PARTITIONED|
-            select (not(is-unknown($$80)))
+            select (not(is-unknown($$80))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$80] <- [nearest-centroid($$69, $$79, "euclidean_squared")] project: [$$80]
+              assign [$$80] <- [nearest-centroid($$69, $$79, "euclidean_squared")] project: [$$80] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
-                exchange
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (true)
+                  join (true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- NESTED_LOOP  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      replicate
+                      replicate [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                       -- REPLICATE  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          assign [$$69] <- [$$r.getField(1)] project: [$$69]
+                          assign [$$69] <- [$$r.getField(1)] project: [$$69] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                           -- ASSIGN  |PARTITIONED|
-                            project ([$$r])
+                            project ([$$r]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                             -- STREAM_PROJECT  |PARTITIONED|
-                              exchange
+                              exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$74, $$r] <- clusterby_test.Reviews
+                                data-scan []<-[$$74, $$r] <- clusterby_test.Reviews [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                 -- DATASOURCE_SCAN  |PARTITIONED|
-                                  exchange
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    empty-tuple-source
+                                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                      aggregate [$$79] <- [listify($$78)]
+                      aggregate [$$79] <- [listify($$78)] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                       -- AGGREGATE  |UNPARTITIONED|
-                        exchange
+                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                         -- SORT_MERGE_EXCHANGE [$$78(ASC) ]  |PARTITIONED|
-                          order (ASC, $$78)
+                          order (ASC, $$78) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                           -- STABLE_SORT [$$78(ASC)]  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              kmeans-stage $$78 <- lloyd-loop 3 iterations of $$77 vs pool $$75 by euclidean_squared
+                              kmeans-stage $$78 <- lloyd-loop 3 iterations of $$77 vs pool $$75 by euclidean_squared [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                               -- KMEANS_LLOYD_LOOP  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  assign [$$77] <- [$$69] project: [$$77]
+                                  assign [$$77] <- [$$69] project: [$$77] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                   -- ASSIGN  |PARTITIONED|
-                                    exchange
+                                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      replicate
+                                      replicate [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                       -- REPLICATE  |PARTITIONED|
-                                        exchange
+                                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          assign [$$69] <- [$$r.getField(1)] project: [$$69]
+                                          assign [$$69] <- [$$r.getField(1)] project: [$$69] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                           -- ASSIGN  |PARTITIONED|
-                                            project ([$$r])
+                                            project ([$$r]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                             -- STREAM_PROJECT  |PARTITIONED|
-                                              exchange
+                                              exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                data-scan []<-[$$74, $$r] <- clusterby_test.Reviews
+                                                data-scan []<-[$$74, $$r] <- clusterby_test.Reviews [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                 -- DATASOURCE_SCAN  |PARTITIONED|
-                                                  exchange
+                                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    empty-tuple-source
+                                                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                  limit 3
+                                  limit 3 [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_LIMIT  |UNPARTITIONED|
-                                    project ([$$75])
+                                    project ([$$75]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- STREAM_PROJECT  |PARTITIONED|
-                                      exchange
+                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- SORT_MERGE_EXCHANGE [$$76(ASC) ]  |PARTITIONED|
-                                        limit 3
+                                        limit 3 [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- STREAM_LIMIT  |PARTITIONED|
-                                          exchange
+                                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            order (ASC, $$76)
+                                            order (ASC, $$76) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
-                                              exchange
+                                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                assign [$$76] <- [random(get-item($$75, 0))]
+                                                assign [$$76] <- [vector-shuffle-key($$75, 42)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- ASSIGN  |PARTITIONED|
-                                                  select (and(is-array($$75), eq(sql-count($$75), 2)))
+                                                  select (and(is-array($$75), eq(sql-count($$75), 2))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- STREAM_SELECT  |PARTITIONED|
-                                                    assign [$$75] <- [$$69] project: [$$75]
+                                                    assign [$$75] <- [$$69] project: [$$75] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ASSIGN  |PARTITIONED|
-                                                      exchange
+                                                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        replicate
+                                                        replicate [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                         -- REPLICATE  |PARTITIONED|
-                                                          exchange
+                                                          exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            assign [$$69] <- [$$r.getField(1)] project: [$$69]
+                                                            assign [$$69] <- [$$r.getField(1)] project: [$$69] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                             -- ASSIGN  |PARTITIONED|
-                                                              project ([$$r])
+                                                              project ([$$r]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                               -- STREAM_PROJECT  |PARTITIONED|
-                                                                exchange
+                                                                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  data-scan []<-[$$74, $$r] <- clusterby_test.Reviews
+                                                                  data-scan []<-[$$74, $$r] <- clusterby_test.Reviews [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
-                                                                    exchange
+                                                                    exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      empty-tuple-source
+                                                                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

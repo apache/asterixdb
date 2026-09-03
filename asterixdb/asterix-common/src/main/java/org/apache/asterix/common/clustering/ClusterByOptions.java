@@ -92,15 +92,19 @@ public final class ClusterByOptions {
         private final int numClusters;
         private final String initMode;
         private final String metric;
-        // The query's seed, or null when absent; the expansion turns null into its own fixed defaults.
-        private final Integer seed;
+        // The query's seed, or one drawn at resolution time when the query names none.
+        private final int seed;
+        // True when drawn; such a plan is valid for this run only and is kept out of the plan cache.
+        private final boolean seedDrawn;
         private final Integer numIterations;
 
-        public KmeansOptions(int numClusters, String initMode, String metric, Integer seed, Integer numIterations) {
+        public KmeansOptions(int numClusters, String initMode, String metric, int seed, boolean seedDrawn,
+                Integer numIterations) {
             this.numClusters = numClusters;
             this.initMode = initMode;
             this.metric = metric;
             this.seed = seed;
+            this.seedDrawn = seedDrawn;
             this.numIterations = numIterations;
         }
 
@@ -116,7 +120,7 @@ public final class ClusterByOptions {
             return metric;
         }
 
-        public Integer getSeed() {
+        public int getSeed() {
             return seed;
         }
 
@@ -134,19 +138,19 @@ public final class ClusterByOptions {
             }
             KmeansOptions that = (KmeansOptions) o;
             return numClusters == that.numClusters && Objects.equals(initMode, that.initMode)
-                    && Objects.equals(metric, that.metric) && Objects.equals(seed, that.seed)
+                    && Objects.equals(metric, that.metric) && seed == that.seed && seedDrawn == that.seedDrawn
                     && Objects.equals(numIterations, that.numIterations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(numClusters, initMode, metric, seed, numIterations);
+            return Objects.hash(numClusters, initMode, metric, seed, seedDrawn, numIterations);
         }
 
         @Override
         public String toString() {
             return "kmeans: {num_clusters: " + numClusters + ", init_mode: " + initMode + ", metric: " + metric
-                    + ", seed: " + seed + ", num_iterations: " + numIterations + "}";
+                    + ", seed: " + seed + (seedDrawn ? " (drawn)" : "") + ", num_iterations: " + numIterations + "}";
         }
     }
 }

@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.clustering.ClusterByOptions;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
@@ -465,12 +467,14 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         int k = numClustersOf(opts, loc);
         rejectCrossPollination(opts, loc);
         String metric = metricOf(opts, loc);
-        Integer seed = seedOf(opts, loc);
+        Integer querySeed = seedOf(opts, loc);
+        boolean seedDrawn = querySeed == null;
+        int seed = seedDrawn ? drawSeed() : querySeed;
         Integer numIterations = numIterationsOf(opts, loc);
         String initMode = initModeOf(opts, loc);
         int dimension = dimensionOf(dimensionNode, loc);
         return new ClusterByOptions(ALGORITHM_KMEANS, dimension,
-                new ClusterByOptions.KmeansOptions(k, initMode, metric, seed, numIterations));
+                new ClusterByOptions.KmeansOptions(k, initMode, metric, seed, seedDrawn, numIterations));
     }
 
     /** {@code num_clusters}: mandatory for K-Means, a positive integer, at most {@link #MAX_NUM_CLUSTERS}. */
@@ -637,5 +641,16 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
                     "CLUSTER BY 'dimension' must be a positive integer, but was: " + dim + ".");
         }
         return (int) dim;
+    }
+
+    /**
+     * Draws the seed of a CLUSTER BY that names none, as the vector index does at DDL time. The plan is then
+     * valid for this run only, so it is kept out of the plan cache: the plan cache is turned off for this
+     * statement only (its MetadataProvider is per statement) and QueryTranslator re-checks it after compiling.
+     */
+    private int drawSeed() {
+        context.getMetadataProvider().setProperty(CompilerProperties.COMPILER_QUERY_PLAN_CACHE_KEY,
+                Boolean.FALSE.toString());
+        return ThreadLocalRandom.current().nextInt();
     }
 }

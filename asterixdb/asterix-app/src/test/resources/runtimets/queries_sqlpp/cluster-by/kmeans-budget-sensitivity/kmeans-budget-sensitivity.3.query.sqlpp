@@ -20,11 +20,14 @@
 -- budget covers 31,655 -- more than the 640-candidate pool, the 640 accumulator slots and every sort,
 -- so nothing spills. This is the reference the other two arms must reproduce exactly.
 use test;
+-- Not the budget under test: the group-by only carries the assertion. Its default leaves a single
+-- group 96KB, and one cluster of 2000 x 128 doubles can exceed that at any k=64 initialization.
+set `compiler.groupmemory` "4MB";
 
 from Points as p
 cluster by p.vec as sc
 cluster as members
-with { "clustering_algorithm": "K-Means", "dimension": [128], "num_clusters": 64 }
+with { "clustering_algorithm": "K-Means", "dimension": [128], "num_clusters": 64, "seed": 42 }
 select (select value gi.p.id from members as gi order by gi.p.id) as ids,
        array_count(members) as cnt
 order by ids;

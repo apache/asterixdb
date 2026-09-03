@@ -79,11 +79,11 @@ distribute result [$$73]
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                   exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                    kmeans-stage $$79 <- recluster pool $$78 to 2 means (seed 12345) by euclidean_squared
+                                    kmeans-stage $$79 <- recluster pool $$78 to 2 means (seed 42) by euclidean_squared
                                     -- KMEANS_RECLUSTER  |PARTITIONED|
                                       exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                        kmeans-stage $$78 <- oversample-loop 5 rounds of $$77 vs seed $$75 (seed 1000003) by euclidean_squared
+                                        kmeans-stage $$78 <- oversample-loop 5 rounds of $$77 vs seed $$75 (seed 42) by euclidean_squared
                                         -- KMEANS_OVERSAMPLE_LOOP  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -123,7 +123,7 @@ distribute result [$$73]
                                                       -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          assign [$$76] <- [random(get-item($$75, 0))]
+                                                          assign [$$76] <- [vector-shuffle-key($$75, 42)]
                                                           -- ASSIGN  |PARTITIONED|
                                                             select (and(is-array($$75), eq(sql-count($$75), 2)))
                                                             -- STREAM_SELECT  |PARTITIONED|

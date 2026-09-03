@@ -23,6 +23,6 @@ use test;
 
 from IntPoints as p
 cluster by p.vec as sc
-with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2 }
+with {"clustering_algorithm": "K-Means","dimension": [2], "num_clusters": 2, "seed": 10 }
 select sc.cluster_id as cid, sc.centroid as centroid
 order by cid;

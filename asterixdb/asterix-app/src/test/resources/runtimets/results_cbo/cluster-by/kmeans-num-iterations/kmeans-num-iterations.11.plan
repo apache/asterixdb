@@ -110,11 +110,11 @@ distribute result [$$92] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                    kmeans-stage $$117 <- recluster pool $$116 to 2 means (seed 12345) by euclidean_squared [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    kmeans-stage $$117 <- recluster pool $$116 to 2 means (seed 10) by euclidean_squared [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- KMEANS_RECLUSTER  |PARTITIONED|
                                                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                        kmeans-stage $$116 <- oversample-loop 5 rounds of $$115 vs seed $$113 (seed 1000003) by euclidean_squared [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        kmeans-stage $$116 <- oversample-loop 5 rounds of $$115 vs seed $$113 (seed 10) by euclidean_squared [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- KMEANS_OVERSAMPLE_LOOP  |PARTITIONED|
                                                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -154,7 +154,7 @@ distribute result [$$92] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                                                       -- STABLE_SORT [$$114(ASC)]  |PARTITIONED|
                                                                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          assign [$$114] <- [random(get-item($$113, 0))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          assign [$$114] <- [vector-shuffle-key($$113, 10)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                           -- ASSIGN  |PARTITIONED|
                                                                             select (and(is-array($$113), eq(sql-count($$113), 2))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                             -- STREAM_SELECT  |PARTITIONED|
