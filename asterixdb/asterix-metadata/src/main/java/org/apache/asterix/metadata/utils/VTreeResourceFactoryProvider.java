@@ -62,6 +62,7 @@ import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -71,6 +72,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Propagate the dataset's atomicity to the VTree resource")
     public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Dataset dataset, Index index,
             ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
@@ -162,11 +164,17 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
             // Distance-function factory — persisted on the resource so a restarted index reconstructs
             // the same distance implementation.
             VectorDistanceFunctionFactory distanceFunctionFactory = new VectorDistanceFunctionFactory(distanceMetric);
+            // Atomicity is a property of the dataset, so every index on it must report the same value --
+            // PrimaryIndexOperationTracker#flushIfRequested walks the partition's open indexes, and on one
+            // whose memory component still holds writers it returns quietly only if that index is atomic,
+            // and throws otherwise. Under an atomic statement those writers are the normal state, and the
+            // throw unwinds into GlobalVirtualBufferCache$FlushThread, which halts the JVM.
+            boolean atomic = dataset.isAtomic();
             return new LSMVTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                     filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory,
                     metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
                     mergePolicyProperties, true, vectorDimensions, vectorFields,
-                    typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, false,
+                    typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, atomic,
                     vectorAccessorFactory, numPrimaryKeys, numIncludeFields, dataTupleBuilderFactory,
                     distanceFunctionFactory, crossPollination);
         } else {
