@@ -319,7 +319,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.util.LogRedactionUtil;
-import org.apache.hyracks.util.OptionalBoolean;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1924,17 +1923,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
-                // excludeUnknownKey is a BTree/Array-index DDL option that does not apply to a vector index;
-                // the vector CREATE INDEX path never sets it, so it is always empty here.
                 // Fix the sizing before the record is written. num_clusters and train_list_fraction are
                 // derived from the per-partition cardinality when the user leaves them out, and the record is
                 // written before any build job runs, so deriving them later would leave the catalog silent
                 // about what the build actually used. Same reason the seed is drawn at DDL time.
                 VectorIndexParameters vectorParameters = VTreeParamsInference.infer(metadataProvider, ds,
                         stmtCreateIndex.getVectorParameters(), warningCollector, sourceLoc);
-                indexDetails =
-                        new Index.VectorIndexDetails(keyFieldNames, includeFieldNames, includeFieldSourceIndicators,
-                                includeFieldTypes, false, OptionalBoolean.empty(), vectorParameters);
+                indexDetails = new Index.VectorIndexDetails(keyFieldNames, includeFieldNames,
+                        includeFieldSourceIndicators, includeFieldTypes, false, vectorParameters);
 
                 Index newIndex = new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails,
                         stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);

@@ -468,7 +468,6 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                         searchElements.stream().map(Pair::getRight).map(List::getFirst).collect(Collectors.toList());
                 keyFieldTypes = searchKeyType.stream().map(List::getFirst).collect(Collectors.toList());
 
-                excludeUnknownKey = OptionalBoolean.empty();
                 castDefaultNull = OptionalBoolean.empty();
                 VectorIndexParameters vectorParameters = VectorIndexParameters.readFields(indexRecord);
 
@@ -499,8 +498,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 }
 
                 indexDetails = new Index.VectorIndexDetails(keyFieldNames.getFirst(), includeFieldNames,
-                        includeFieldSourceIndicators, includeFieldTypes, isOverridingKeyTypes, excludeUnknownKey,
-                        vectorParameters);
+                        includeFieldSourceIndicators, includeFieldTypes, isOverridingKeyTypes, vectorParameters);
                 break;
             case TEXT:
                 keyFieldNames =

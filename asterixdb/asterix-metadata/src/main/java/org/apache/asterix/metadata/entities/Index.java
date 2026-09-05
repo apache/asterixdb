@@ -464,17 +464,13 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         private final boolean overrideKeyFieldTypes;
 
-        private final Boolean excludeUnknownKey;
-
         private final VectorIndexParameters vectorParameters;
 
         public VectorIndexDetails(List<String> keyFieldNames, List<List<String>> includeFieldNames,
                 List<Integer> includeFieldSourceIndicators, List<IAType> includeFieldTypes,
-                boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey,
-                VectorIndexParameters vectorParameters) {
+                boolean overrideKeyFieldTypes, VectorIndexParameters vectorParameters) {
             this.keyFieldNames = keyFieldNames;
             this.overrideKeyFieldTypes = overrideKeyFieldTypes;
-            this.excludeUnknownKey = excludeUnknownKey.isEmpty() ? null : excludeUnknownKey.get();
             this.includeFieldNames = includeFieldNames;
             this.includeFieldTypes = includeFieldTypes;
             this.includeFieldSourceIndicators = includeFieldSourceIndicators;
@@ -499,10 +495,6 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         public List<IAType> getIncludeFieldTypes() {
             return includeFieldTypes;
-        }
-
-        public OptionalBoolean getExcludeUnknownKey() {
-            return OptionalBoolean.ofNullable(excludeUnknownKey);
         }
 
         /** The index's validated {@code WITH} parameters; never {@code null}. */

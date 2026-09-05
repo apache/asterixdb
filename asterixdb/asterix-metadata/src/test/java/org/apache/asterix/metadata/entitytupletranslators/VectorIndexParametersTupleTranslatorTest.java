@@ -57,7 +57,6 @@ import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.util.OptionalBoolean;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -204,7 +203,7 @@ public class VectorIndexParametersTupleTranslatorTest {
 
     private static Index.VectorIndexDetails vectorIndexDetails(VectorIndexParameters parameters) {
         return new Index.VectorIndexDetails(Collections.singletonList("embedding"), Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList(), false, OptionalBoolean.empty(), parameters);
+                Collections.emptyList(), Collections.emptyList(), false, parameters);
     }
 
     private static VectorIndexParameters roundTrip(VectorIndexParameters parameters)

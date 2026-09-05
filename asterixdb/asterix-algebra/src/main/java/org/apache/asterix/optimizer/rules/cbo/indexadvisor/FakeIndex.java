@@ -49,8 +49,7 @@ public class FakeIndex extends Index {
         super(databaseName, dataverseName, datasetName, indexName, DatasetConfig.IndexType.VTREE,
                 new VectorIndexDetails(vectorFieldName, includeFieldNames,
                         Collections.nCopies(includeFieldNames.size(), 0),
-                        Collections.nCopies(includeFieldNames.size(), BuiltinType.ANY), false, OptionalBoolean.empty(),
-                        vectorParameters),
+                        Collections.nCopies(includeFieldNames.size(), BuiltinType.ANY), false, vectorParameters),
                 false, false, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
     }
 
