@@ -211,11 +211,11 @@ public class VectorIndexDeclUtil {
         if (epsNode == null) {
             return VectorIndexParameters.DEFAULT_EPSILON;
         }
-        double value =
-                parseDoubleOrBigInt(epsNode, "Invalid `epsilon` parameter value. It must be in the range of [0,1]");
-        if (value < 0 || value > 1) {
+        double value = parseDoubleOrBigInt(epsNode,
+                "Invalid `epsilon` parameter value. It must be a finite number greater than 0");
+        if (!Double.isFinite(value) || value <= 0) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
-                    "Invalid `epsilon` parameter value. It must be in the range of [0,1]");
+                    "Invalid `epsilon` parameter value. It must be a finite number greater than 0");
         }
         return value;
     }
