@@ -36,6 +36,7 @@ import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -61,6 +62,8 @@ public class ClientRequest extends BaseClientRequest {
     private final List<RequestJob> jobs = new ArrayList<>();
     private final Object jobsLock = new Object();
     private volatile long compileTimeNanos;
+    private volatile int statementPosition;
+    private volatile boolean multiStatement;
 
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
@@ -103,7 +106,9 @@ public class ClientRequest extends BaseClientRequest {
         synchronized (jobsLock) {
             // registers the job as well, so that a handle of it is authorised whether or not the creation
             // notification has been delivered yet
-            jobStateOf(jobId).compileTimeNanos = compileTimeNanos;
+            RequestJob job = jobOf(jobId);
+            job.state.compileTimeNanos = compileTimeNanos;
+            job.statementPosition = statementPosition;
         }
         setRunning();
         return true;
@@ -232,6 +237,29 @@ public class ClientRequest extends BaseClientRequest {
         this.compileTimeNanos = compileTimeNanos;
     }
 
+    /**
+     * Staged and copied onto the job by {@link #addJob}, as the compile time is: it is set as each statement
+     * starts, so the value last staged is the submitting statement's.
+     *
+     * @param statementPosition the statement's position among the client's, counting from 1; 0 for a statement
+     *                          of the request's own, which is not the client's to see
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public void setStatementPosition(int statementPosition) {
+        this.statementPosition = statementPosition;
+    }
+
+    /**
+     * Recorded before the first statement runs, so that what the request reports as its own does not depend
+     * on how many jobs it happens to have created by the time it is read. See {@link #requestJob}.
+     *
+     * @param multiStatement whether the request carries more than one statement of the client's own
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public void setMultiStatement(boolean multiStatement) {
+        this.multiStatement = multiStatement;
+    }
+
     @Override
     public ObjectNode asJson() {
         ObjectNode json = super.asJson();
@@ -248,11 +276,9 @@ public class ClientRequest extends BaseClientRequest {
         putJobDetails(json, redact);
         json.put("statement", redact ? LogRedactionUtil.statement(statement) : statement);
         json.put("clientContextID", clientContextId);
-        // the flat plan describes the first job, as the flat job fields do
-        String plan;
-        synchronized (jobsLock) {
-            plan = jobs.isEmpty() ? null : jobs.getFirst().state.plan;
-        }
+        // the plan describes the request, so it is reported here only where the request has one of its own,
+        // by the same rule as the job id it belongs to; a statement's plan is reported on that statement's job
+        String plan = requestPlan();
         if (plan != null) {
             json.put("plan", redact ? LogRedactionUtil.userData(plan) : plan);
         }
@@ -298,12 +324,18 @@ public class ClientRequest extends BaseClientRequest {
 
     // must be called while holding jobsLock
     private JobState jobStateOf(JobId jobId) {
+        return jobOf(jobId).state;
+    }
+
+    /** @return this request's job of the given id, adopting it if it is not known here yet */
+    // must be called while holding jobsLock
+    private RequestJob jobOf(JobId jobId) {
         RequestJob job = findJob(jobId);
         if (job == null) {
             job = new RequestJob(jobId);
             jobs.add(job);
         }
-        return job.state;
+        return job;
     }
 
     // must be called while holding jobsLock
@@ -316,27 +348,31 @@ public class ClientRequest extends BaseClientRequest {
         return null;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private void putJobDetails(ObjectNode json, boolean redact) {
         try {
             List<RequestJob> requestJobs;
             synchronized (jobsLock) {
                 requestJobs = List.copyOf(jobs);
             }
-            // The flat fields describe the first job, so that they - and the flat plan with them - stop
-            // changing as the request moves from one statement to the next. What every statement did is in
-            // the jobs array, which is where a later statement's status and error are read.
-            RequestJob firstJob = requestJobs.isEmpty() ? null : requestJobs.get(0);
-            json.put("jobId", firstJob != null ? firstJob.jobId.toString() : null);
-            putJobState(json, firstJob != null ? firstJob.state : EMPTY_JOB_STATE, redact);
-            if (requestJobs.size() > 1) {
-                ArrayNode jobsJson = json.putArray("jobs");
-                for (RequestJob job : requestJobs) {
-                    ObjectNode jobJson = jobsJson.addObject();
-                    jobJson.put("jobId", job.jobId.toString());
-                    putJobState(jobJson, job.state, redact);
-                    if (job.state.plan != null) {
-                        jobJson.put("plan", redact ? LogRedactionUtil.userData(job.state.plan) : job.state.plan);
-                    }
+            // The flat fields describe the request as a whole: one job reports itself, as it always has, and
+            // several roll up - see rollUp. What each job did on its own is in the jobs array.
+            RequestJob requestJob = requestJob(requestJobs);
+            json.put("jobId", requestJob != null ? requestJob.jobId.toString() : null);
+            putJobState(json, rollUp(requestJobs), queueTimeMillis(requestJobs), redact);
+            // written for every request, one job or not, so that a reader has one place that is always right
+            ArrayNode jobsJson = json.putArray("jobs");
+            for (RequestJob job : requestJobs) {
+                ObjectNode jobJson = jobsJson.addObject();
+                // the statement that submitted the job, named as the response names it. Not every statement
+                // submits a job, so a job's position in this array does not identify the statement.
+                if (job.statementPosition > 0) {
+                    jobJson.put("statement", job.statementPosition);
+                }
+                jobJson.put("jobId", job.jobId.toString());
+                putJobState(jobJson, job.state, queueTimeMillis(job.state), redact);
+                if (job.state.plan != null) {
+                    jobJson.put("plan", redact ? LogRedactionUtil.userData(job.state.plan) : job.state.plan);
                 }
             }
         } catch (Throwable th) {
@@ -344,26 +380,166 @@ public class ClientRequest extends BaseClientRequest {
         }
     }
 
-    private static void putJobState(ObjectNode json, JobState state, boolean redact) {
+    /**
+     * The job that is this request, and whose id and plan the request reports as its own: the single job
+     * that a request of a single statement submits. A request of several statements has no such job - no one
+     * of its jobs is the request - and reports none for its whole life, rather than reporting its first
+     * job's id until a second statement submits a job and dropping it then. Null is what a request that
+     * created no job has always reported, and what the API documents.
+     *
+     * @return that job, or null where no one job is the request
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private RequestJob requestJob(List<RequestJob> requestJobs) {
+        return !multiStatement && requestJobs.size() == 1 ? requestJobs.get(0) : null;
+    }
+
+    /**
+     * What the flat fields report for the request as a whole. A request with a single job reports that job's
+     * state unchanged; several roll up to the first job's creation and start, the last job's end once they
+     * have all finished, the peak of what they required - they run one at a time - and the first error any of
+     * them reported, which for a request that stops at its first failing statement is that statement's.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static JobState rollUp(List<RequestJob> requestJobs) {
+        if (requestJobs.isEmpty()) {
+            return EMPTY_JOB_STATE;
+        }
+        if (requestJobs.size() == 1) {
+            return requestJobs.get(0).state;
+        }
+        JobState rolled = new JobState();
+        boolean allFinished = true;
+        for (RequestJob job : requestJobs) {
+            JobState state = job.state;
+            rolled.createTime = earlier(rolled.createTime, state.createTime);
+            rolled.startTime = earlier(rolled.startTime, state.startTime);
+            rolled.endTime = Math.max(rolled.endTime, state.endTime);
+            rolled.requiredCPUs = Math.max(rolled.requiredCPUs, state.requiredCPUs);
+            rolled.requiredMemoryInBytes = Math.max(rolled.requiredMemoryInBytes, state.requiredMemoryInBytes);
+            allFinished &= isTerminal(state.status);
+            if (rolled.errorMsg == null) {
+                rolled.errorMsg = state.errorMsg;
+            }
+        }
+        if (!allFinished) {
+            // a job of the request is still to end, so the end of the ones that have is not the request's
+            rolled.endTime = 0;
+        }
+        rolled.status = rollUpStatus(requestJobs);
+        return rolled;
+    }
+
+    /**
+     * The status of the request's jobs as one: the failure if any of them failed - the request stops at its
+     * first failing statement - and otherwise the least finished of them, so that a request still doing
+     * something does not report itself terminated. Null, as a single job's unreported status is, where a job
+     * has been submitted and its creation not yet notified.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static JobStatus rollUpStatus(List<RequestJob> requestJobs) {
+        JobStatus failure = null;
+        boolean running = false;
+        boolean pending = false;
+        boolean unreported = false;
+        for (RequestJob job : requestJobs) {
+            JobStatus status = job.state.status;
+            if (status == null) {
+                unreported = true;
+                continue;
+            }
+            switch (status) {
+                case FAILURE:
+                case FAILURE_BEFORE_EXECUTION:
+                    if (failure == null) {
+                        failure = status;
+                    }
+                    break;
+                case RUNNING:
+                    running = true;
+                    break;
+                case PENDING:
+                    pending = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (failure != null) {
+            return failure;
+        } else if (running) {
+            return JobStatus.RUNNING;
+        } else if (pending) {
+            return JobStatus.PENDING;
+        }
+        return unreported ? null : JobStatus.TERMINATED;
+    }
+
+    /** @return the earlier of two times, either of which may be unset */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static long earlier(long time, long otherTime) {
+        if (time == 0) {
+            return otherTime;
+        }
+        return otherTime == 0 ? time : Math.min(time, otherTime);
+    }
+
+    /**
+     * @return the plan of the request, where it has one of its own: the plan of the job that is the request,
+     *         as the reported id is that job's - see {@link #requestJob}. A request of several statements has
+     *         no plan of its own; each of their plans belongs to its statement, and is reported on that
+     *         statement's job.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private String requestPlan() {
+        RequestJob requestJob;
+        synchronized (jobsLock) {
+            requestJob = requestJob(jobs);
+        }
+        return requestJob != null ? requestJob.state.plan : null;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
+    private static void putJobState(ObjectNode json, JobState state, long queueTimeMillis, boolean redact) {
         AMutableDateTime dateTime = new AMutableDateTime(0);
         putTime(json, state.createTime, "jobCreateTime", dateTime);
         putTime(json, state.startTime, "jobStartTime", dateTime);
         putTime(json, state.endTime, "jobEndTime", dateTime);
-        long queueTime = 0;
-        if (state.createTime > 0) {
-            // startTime - createTime, if job has started
-            // endTime - createTime, if job has ended but not started (failed while in the queue, cancelled/timeout)
-            // currentTime - createTime, if job is still in the queue
-            queueTime = (state.startTime > 0 ? state.startTime
-                    : (state.endTime > 0 ? state.endTime : System.currentTimeMillis())) - state.createTime;
-        }
-        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
+        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTimeMillis));
         json.put("jobStatus", String.valueOf(state.status));
         json.put("jobRequiredCPUs", state.requiredCPUs);
         json.put("jobRequiredMemory", state.requiredMemoryInBytes);
         if (state.errorMsg != null) {
             json.put("error", redact ? LogRedactionUtil.userData(state.errorMsg) : state.errorMsg);
         }
+    }
+
+    /**
+     * @return the time the request spent queued: the sum over its jobs, whose queue intervals do not overlap,
+     *         its statements running one at a time
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static long queueTimeMillis(List<RequestJob> requestJobs) {
+        long queueTime = 0;
+        for (RequestJob job : requestJobs) {
+            queueTime += queueTimeMillis(job.state);
+        }
+        return queueTime;
+    }
+
+    /**
+     * @return startTime - createTime, if the job has started; endTime - createTime, if it ended without
+     *         starting (failed while in the queue, cancelled/timeout); currentTime - createTime, if it is
+     *         still in the queue
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static long queueTimeMillis(JobState state) {
+        if (state.createTime == 0) {
+            return 0;
+        }
+        long queuedUntil = state.startTime > 0 ? state.startTime
+                : (state.endTime > 0 ? state.endTime : System.currentTimeMillis());
+        return queuedUntil - state.createTime;
     }
 
     private static void putTime(ObjectNode json, long time, String label, AMutableDateTime dateTime) {
@@ -391,6 +567,8 @@ public class ClientRequest extends BaseClientRequest {
     private static class RequestJob {
         final JobId jobId;
         final JobState state = new JobState();
+        /** The position of the statement that submitted the job; 0 where it is not known. */
+        volatile int statementPosition;
 
         RequestJob(JobId jobId) {
             this.jobId = jobId;

@@ -44,6 +44,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -140,10 +141,65 @@ public class ClientRequestTest {
         assertEquals(1_000_000, request.getCompileTimeNanos(JOB_1));
         assertEquals(2_000_000, request.getCompileTimeNanos(JOB_2));
         assertEquals("a job of another request has none", 0, request.getCompileTimeNanos(JOB_3));
-        // the flat plan describes the first job, as the flat job fields do
-        assertEquals("plan of statement one", request.asJson().get("plan").asText());
+        // each plan belongs to its statement, so neither of them is the request's
+        assertNull("the request has no plan of its own", request.asJson().get("plan"));
         assertEquals("plan of statement one", request.asJson().get("jobs").get(0).get("plan").asText());
         assertEquals("plan of statement two", request.asJson().get("jobs").get(1).get("plan").asText());
+    }
+
+    /** The plan of the one job of a single statement is the request's own, as its id is. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void thePlanOfASingleStatementIsTheRequestsOwn() {
+        ClientRequest request = newRequest();
+        request.addJob(JOB_1);
+        request.setPlan(JOB_1, "plan of the only statement");
+
+        assertEquals("plan of the only statement", request.asJson().get("plan").asText());
+    }
+
+    /**
+     * A request of several statements has no plan of its own, whether or not one of them has yet produced a
+     * plan: the plan is reported on the statement's job, where it does not appear and then vanish as the
+     * next statement compiles its own.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void aMultiStatementRequestHasNoPlanOfItsOwn() {
+        ClientRequest request = newRequest();
+        request.setMultiStatement(true);
+        request.addJob(JOB_1);
+        request.setPlan(JOB_1, "plan of the first statement");
+
+        JsonNode json = request.asJson();
+        assertNull("the plan belongs to the statement, not to the request", json.get("plan"));
+        assertEquals("plan of the first statement", json.get("jobs").get(0).get("plan").asText());
+    }
+
+    /**
+     * What identifies a request does not change while a reader watches it: a request of several statements
+     * reports no jobId from the moment it is tracked, rather than reporting its first statement's job and
+     * dropping it when the second statement submits one.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void aMultiStatementRequestReportsNoJobIdWhileItsFirstStatementRuns() {
+        ClientRequest request = newRequest();
+        request.setMultiStatement(true);
+        assertTrue("no job has been created yet", request.asJson().get("jobId").isNull());
+
+        request.setStatementPosition(1);
+        request.addJob(JOB_1);
+        request.jobStarted(JOB_1);
+        JsonNode json = request.asJson();
+        assertTrue("no one job id is the id of a request of several statements", json.get("jobId").isNull());
+        assertEquals("the job the first statement submitted is in the array", JOB_1.toString(),
+                json.get("jobs").get(0).get("jobId").asText());
+
+        request.setStatementPosition(2);
+        request.addJob(JOB_2);
+        assertTrue("and it is still not reported once the second statement runs",
+                request.asJson().get("jobId").isNull());
     }
 
     @Test
@@ -166,20 +222,25 @@ public class ClientRequestTest {
         assertFalse(request.hasPendingResults());
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     @Test
-    public void aRequestWithOneJobReportsItFlat() {
+    public void aRequestWithOneJobReportsItFlatAndInTheArray() {
         ClientRequest request = newRequest();
         runJob(request, JOB_1, JobStatus.TERMINATED, null);
 
-        assertEquals(JOB_1.toString(), request.asJson().get("jobId").asText());
-        assertNull("a single job is reported flat, as it always was", request.asJson().get("jobs"));
+        JsonNode json = request.asJson();
+        assertEquals("the flat fields are the job's, as they always were", JOB_1.toString(),
+                json.get("jobId").asText());
+        assertEquals("every request reports its jobs, so a reader has one place", 1, json.get("jobs").size());
+        assertEquals(JOB_1.toString(), json.get("jobs").get(0).get("jobId").asText());
     }
 
     /**
      * A request with several jobs reports them in creation order, each entry carrying the fields the one
-     * flat job block carried and no others. The flat fields stay on the first job, so a later statement's
-     * failure is read from its own entry - the per-job compile time is not reported here, and was not.
+     * flat job block carried and no others - the per-job compile time is not reported here, and was not.
+     * The flat fields describe the request, so a later statement's failure is the request's failure.
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     @Test
     public void severalJobsAreReportedInOrderWithTheFieldsAJobAlwaysHad() {
         ClientRequest request = newRequest();
@@ -200,10 +261,91 @@ public class ClientRequestTest {
         failed.add("error");
         assertEquals(failed, fieldsOf(json.get("jobs").get(1)));
 
-        assertEquals(JOB_1.toString(), json.get("jobId").asText());
-        assertEquals(JobStatus.TERMINATED.name(), json.get("jobStatus").asText());
-        assertNull("the first statement did not fail", json.get("error"));
+        assertTrue("no one job id describes a request of several", json.get("jobId").isNull());
+        assertEquals("a request whose statement failed is a failed request", JobStatus.FAILURE.name(),
+                json.get("jobStatus").asText());
+        assertEquals("statement two failed", json.get("error").asText());
         assertEquals("statement two failed", json.get("jobs").get(1).get("error").asText());
+    }
+
+    /**
+     * The flat times span the request: the first job's creation and start, and the last job's end, so that a
+     * reader is not told the request ended when its first statement did.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void theFlatTimesSpanEveryJob() throws Exception {
+        ClientRequest request = newRequest();
+        runJob(request, JOB_1, JobStatus.TERMINATED, null);
+        // so that the two jobs cannot fall in the same millisecond, and the times can be told apart
+        Thread.sleep(2);
+        runJob(request, JOB_2, JobStatus.TERMINATED, null);
+
+        JsonNode json = request.asJson();
+        JsonNode firstJob = json.get("jobs").get(0);
+        JsonNode lastJob = json.get("jobs").get(1);
+        assertEquals(firstJob.get("jobCreateTime").asText(), json.get("jobCreateTime").asText());
+        assertEquals(firstJob.get("jobStartTime").asText(), json.get("jobStartTime").asText());
+        assertEquals(lastJob.get("jobEndTime").asText(), json.get("jobEndTime").asText());
+    }
+
+    /** A request one of whose jobs has not ended has not ended either, whatever the others did. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void theRequestDoesNotEndWhileAJobOfItsHasNot() {
+        ClientRequest request = newRequest();
+        runJob(request, JOB_1, JobStatus.TERMINATED, null);
+        request.addJob(JOB_2);
+        request.jobCreated(JOB_2, capacity(1, 172032L), IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        request.jobStarted(JOB_2);
+
+        JsonNode json = request.asJson();
+        assertEquals(JobStatus.RUNNING.name(), json.get("jobStatus").asText());
+        assertNull("a job of the request is still to end", json.get("jobEndTime"));
+        assertEquals("the job that did end reports its own end", JobStatus.TERMINATED.name(),
+                json.get("jobs").get(0).get("jobStatus").asText());
+    }
+
+    /** The jobs run one at a time, so what the request required is the peak of them, not their sum. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void theFlatRequirementIsThePeakOfTheJobs() {
+        ClientRequest request = newRequest();
+        runJob(request, JOB_1, capacity(1, 172032L), JobStatus.TERMINATED, null);
+        runJob(request, JOB_2, capacity(4, 688128L), JobStatus.TERMINATED, null);
+
+        JsonNode json = request.asJson();
+        assertEquals(4, json.get("jobRequiredCPUs").asInt());
+        assertEquals(688128L, json.get("jobRequiredMemory").asLong());
+    }
+
+    /**
+     * A job says which statement submitted it, as the response says of a statement's own report. Statements
+     * that submit no job leave a gap, so a job's position in the array does not identify its statement.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void aJobSaysWhichStatementSubmittedIt() {
+        ClientRequest request = newRequest();
+        request.setStatementPosition(1);
+        request.addJob(JOB_1);
+        // the statements in between submitted no job of their own
+        request.setStatementPosition(4);
+        request.addJob(JOB_2);
+
+        JsonNode jobs = request.asJson().get("jobs");
+        assertEquals(1, jobs.get(0).get("statement").asInt());
+        assertEquals(4, jobs.get(1).get("statement").asInt());
+    }
+
+    /** A job submitted by no statement of the client's - the request's own - says nothing of a statement. */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    @Test
+    public void aJobOfNoStatementOfTheClientsSaysNothing() {
+        ClientRequest request = newRequest();
+        request.addJob(JOB_1);
+
+        assertNull(request.asJson().get("jobs").get(0).get("statement"));
     }
 
     private static Set<String> fieldsOf(JsonNode node) {
@@ -214,13 +356,24 @@ public class ClientRequestTest {
 
     /** Takes a job through the lifecycle the cluster controller notifies, so every timing is set. */
     private static void runJob(ClientRequest request, JobId jobId, JobStatus status, List<Exception> exceptions) {
-        IReadOnlyClusterCapacity capacity = mock(IReadOnlyClusterCapacity.class);
-        when(capacity.getAggregatedCores()).thenReturn(1);
-        when(capacity.getAggregatedMemoryByteSize()).thenReturn(172032L);
+        runJob(request, jobId, capacity(1, 172032L), status, exceptions);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
+    private static void runJob(ClientRequest request, JobId jobId, IReadOnlyClusterCapacity capacity, JobStatus status,
+            List<Exception> exceptions) {
         request.addJob(jobId);
         request.jobCreated(jobId, capacity, IJobCapacityController.JobSubmissionStatus.EXECUTE);
         request.jobStarted(jobId);
         request.jobFinished(jobId, status, exceptions);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    private static IReadOnlyClusterCapacity capacity(int cores, long memoryByteSize) {
+        IReadOnlyClusterCapacity capacity = mock(IReadOnlyClusterCapacity.class);
+        when(capacity.getAggregatedCores()).thenReturn(cores);
+        when(capacity.getAggregatedMemoryByteSize()).thenReturn(memoryByteSize);
+        return capacity;
     }
 
     private static ClientRequest newRequest() {

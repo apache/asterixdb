@@ -422,6 +422,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // the client's statements are numbered from 1; the request's own dataverse declaration is not one
         int statementPosition = 0;
         final boolean multiStatementRequest = isMultiStatementRequest();
+        // recorded before any job is created, so that the request reports the same job id - its own job's,
+        // or none where it has several statements - from the first time it is read to the last
+        ((ClientRequest) clientRequest).setMultiStatement(multiStatementRequest);
         try {
             for (Statement stmt : statements) {
                 // each statement decides for itself whether it can be canceled
@@ -447,6 +450,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // recorded before the statement runs, so that a statement that fails is reported too
                 StatementInfo statementInfo =
                         beginStatement(outMetadata, synthetic ? 0 : statementPosition, stmt, multiStatementRequest);
+                // staged for the job this statement submits, so that the request's record says which
+                // statement each of its jobs ran
+                ((ClientRequest) clientRequest).setStatementPosition(synthetic ? 0 : statementPosition);
                 final Stats statsBeforeStatement = stats.snapshot();
                 try {
                     validateStatement(stmt, requestParameters);
