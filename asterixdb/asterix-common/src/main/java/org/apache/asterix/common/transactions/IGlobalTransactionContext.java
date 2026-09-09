@@ -28,6 +28,17 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 
 public interface IGlobalTransactionContext {
 
+    /**
+     * The round of acknowledgements the transaction is currently collecting. The transaction status cannot
+     * stand in for this: it reads {@code PREPARED} throughout both the commit and the rollback phase, so an
+     * acknowledgement belonging to an abandoned phase is otherwise indistinguishable from a current one.
+     */
+    enum TxnPhase {
+        PREPARE,
+        COMMIT,
+        ROLLBACK
+    }
+
     JobId getJobId();
 
     int incrementAndGetAcksReceived();
@@ -38,7 +49,17 @@ public interface IGlobalTransactionContext {
 
     int getNumPartitions();
 
-    void resetAcksReceived();
+    /**
+     * Opens a round of acknowledgements: records which phase is collecting them and how many it waits for,
+     * captured from the set of nodes actually messaged, and discards the previous phase's count. Must be
+     * called before the first message of the phase is sent, so that a straggler from the phase before is
+     * rejected rather than counted towards this one.
+     */
+    void beginPhase(TxnPhase phase, int expectedAcks);
+
+    TxnPhase getPhase();
+
+    int getExpectedAcks();
 
     void setTxnStatus(IGlobalTxManager.TransactionStatus status);
 
@@ -47,6 +68,15 @@ public interface IGlobalTransactionContext {
     List<Integer> getDatasetIds();
 
     Map<String, Map<String, ILSMComponentId>> getNodeResourceMap();
+
+    /**
+     * Records the resources a participating partition reported in its prepared message. Called concurrently,
+     * once per participating partition, so implementations must accumulate atomically.
+     *
+     * @param nodeId the node the prepared message came from
+     * @param componentIdMap the flushed component of each resource of the reporting partition; may be empty
+     */
+    void addPreparedNodeResources(String nodeId, Map<String, ILSMComponentId> componentIdMap);
 
     void persist(IOManager ioManager);
 

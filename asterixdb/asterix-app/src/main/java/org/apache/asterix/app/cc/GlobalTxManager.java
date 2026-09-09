@@ -20,10 +20,12 @@ package org.apache.asterix.app.cc;
 
 import static org.apache.hyracks.util.ExitUtil.EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.message.AtomicJobCommitMessage;
 import org.apache.asterix.app.message.AtomicJobRollbackMessage;
@@ -32,6 +34,7 @@ import org.apache.asterix.common.cluster.IGlobalTxManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.transactions.IGlobalTransactionContext;
+import org.apache.asterix.common.transactions.IGlobalTransactionContext.TxnPhase;
 import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTransactionContext;
@@ -44,10 +47,10 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -73,32 +76,50 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Guarded both waits against lost wakeups and failed the statement on a commit timeout")
     public void commitTransaction(JobId jobId) throws ACIDException {
         IGlobalTransactionContext context = getTransactionContext(jobId);
-        if (context.getAcksReceived() != context.getNumPartitions()) {
+        try {
+            // the predicate must be tested while holding the monitor; testing it outside loses a notifyAll
+            // issued between the test and the wait, which hangs the statement for good
+            // TODO: bound this wait. Unlike the commit phase below it waits forever, so a node that dies
+            // after reporting some of its partitions but not the rest hangs the statement indefinitely.
+            // Bounding it needs a decision on which timeout governs the prepare phase; reusing
+            // GLOBAL_TXN_COMMIT_TIMEOUT would silently repurpose an option named for the other phase.
             synchronized (context) {
-                try {
+                while (context.getAcksReceived() != context.getNumPartitions()) {
                     context.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ACIDException(e);
                 }
             }
-        }
-        context.setTxnStatus(TransactionStatus.PREPARED);
-        context.persist(ioManager);
-        context.resetAcksReceived();
-        sendJobCommitMessages(context);
+            context.setTxnStatus(TransactionStatus.PREPARED);
+            context.persist(ioManager);
 
-        synchronized (context) {
-            try {
-                CCConfig config = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig();
-                context.wait(config.getGlobalTxCommitTimeout());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new ACIDException(e);
+            // every participating node reports at least one partition, so anything less means a prepared
+            // message was dropped and committing now would leave the missing node's partitions behind
+            int preparedNodes = context.getNodeResourceMap().size();
+            if (preparedNodes < context.getNumNodes()) {
+                throw new ACIDException("Prepared resources of " + jobId + " cover " + preparedNodes + " node(s) but "
+                        + context.getNumNodes() + " node(s) participated in the job");
             }
+
+            sendJobCommitMessages(context);
+
+            long timeout = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig()
+                    .getGlobalTxCommitTimeout();
+            awaitStatus(context, TransactionStatus.COMMITTED, timeout);
+            if (context.getTxnStatus() != TransactionStatus.COMMITTED) {
+                throw new ACIDException("Timed out after " + timeout + "ms waiting for " + context.getExpectedAcks()
+                        + " node(s) to commit " + jobId + "; " + context.getAcksReceived()
+                        + " acknowledged. The transaction log is retained for rollback");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ACIDException(e);
         }
+        // deliberately not in a finally: on failure the context is handed to the caller, which aborts the
+        // transaction, and abortTransaction has to be able to look it up to roll the prepared nodes back.
+        // Removing it here would turn every failure into "Transaction for jobId ... does not exist" and skip
+        // the rollback, stranding the flushed components on the nodes.
         txnContextRepository.remove(jobId);
     }
 
@@ -112,6 +133,7 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Accumulate the reported resources atomically instead of racing on a plain map")
     public void handleJobPreparedMessage(JobId jobId, String nodeId, Map<String, ILSMComponentId> componentIdMap) {
         IGlobalTransactionContext context = txnContextRepository.get(jobId);
         if (context == null) {
@@ -119,11 +141,15 @@ public class GlobalTxManager implements IGlobalTxManager {
                     + ", which does not exist. The transaction for the job is already aborted");
             return;
         }
-        if (context.getNodeResourceMap().containsKey(nodeId)) {
-            context.getNodeResourceMap().get(nodeId).putAll(componentIdMap);
-        } else {
-            context.getNodeResourceMap().put(nodeId, componentIdMap);
+        if (context.getPhase() != TxnPhase.PREPARE) {
+            // the prepare phase ends only once every participating partition has reported, so anything
+            // arriving later is a duplicate. Accepting it would add to the map the next phase has already
+            // snapshotted and inflate the acknowledgement counter, acking that phase a node early.
+            LOGGER.warn("ignoring late JobPreparedMessage from {} for {}, which is in phase {}", nodeId, jobId,
+                    context.getPhase());
+            return;
         }
+        context.addPreparedNodeResources(nodeId, componentIdMap);
         if (context.incrementAndGetAcksReceived() == context.getNumPartitions()) {
             synchronized (context) {
                 context.notifyAll();
@@ -131,8 +157,12 @@ public class GlobalTxManager implements IGlobalTxManager {
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Send to a snapshot of the recipients and record how many acks that phase awaits")
     private void sendJobCommitMessages(IGlobalTransactionContext context) {
-        for (String nodeId : context.getNodeResourceMap().keySet()) {
+        // snapshot: the nodes messaged and the ack target taken from them must be one set, not two reads
+        List<String> nodeIds = new ArrayList<>(context.getNodeResourceMap().keySet());
+        context.beginPhase(TxnPhase.COMMIT, nodeIds.size());
+        for (String nodeId : nodeIds) {
             AtomicJobCommitMessage message = new AtomicJobCommitMessage(context.getJobId(), context.getDatasetIds());
             try {
                 ((ICCMessageBroker) serviceContext.getMessageBroker()).sendRealTimeApplicationMessageToNC(message,
@@ -144,9 +174,13 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Await the snapshot of nodes actually messaged rather than a live map or the job's node count")
     public void handleJobCompletionMessage(JobId jobId, String nodeId) {
         IGlobalTransactionContext context = getTransactionContext(jobId);
-        if (context.incrementAndGetAcksReceived() == context.getNumNodes()) {
+        if (rejectStrayAck(context, TxnPhase.COMMIT, jobId, nodeId, "JobCompletionMessage")) {
+            return;
+        }
+        if (context.incrementAndGetAcksReceived() == context.getExpectedAcks()) {
             context.delete(ioManager);
             context.setTxnStatus(TransactionStatus.COMMITTED);
             synchronized (context) {
@@ -157,9 +191,13 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Await the snapshot of nodes actually messaged rather than a live map or the job's node count")
     public void handleJobRollbackCompletionMessage(JobId jobId, String nodeId) {
         IGlobalTransactionContext context = getTransactionContext(jobId);
-        if (context.incrementAndGetAcksReceived() == context.getNumNodes()) {
+        if (rejectStrayAck(context, TxnPhase.ROLLBACK, jobId, nodeId, "JobRollbackCompletionMessage")) {
+            return;
+        }
+        if (context.incrementAndGetAcksReceived() == context.getExpectedAcks()) {
             context.setTxnStatus(TransactionStatus.ROLLBACK);
             context.delete(ioManager);
             synchronized (context) {
@@ -186,13 +224,18 @@ public class GlobalTxManager implements IGlobalTxManager {
     public void rollback() throws Exception {
         Set<FileReference> txnLogFileRefs = ioManager.list(ioManager.resolve(StorageConstants.GLOBAL_TXN_DIR_NAME));
         for (FileReference txnLogFileRef : txnLogFileRefs) {
+            IGlobalTransactionContext context = null;
             try {
-                IGlobalTransactionContext context = new GlobalTransactionContext(txnLogFileRef, ioManager);
+                context = new GlobalTransactionContext(txnLogFileRef, ioManager);
                 txnContextRepository.put(context.getJobId(), context);
                 sendJobRollbackMessages(context);
             } catch (Exception e) {
                 LOGGER.error("Error rolling back transaction for {}", txnLogFileRef, e);
                 cleanup(txnLogFileRef);
+            } finally {
+                if (context != null) {
+                    txnContextRepository.remove(context.getJobId());
+                }
             }
         }
     }
@@ -208,35 +251,57 @@ public class GlobalTxManager implements IGlobalTxManager {
         }
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Guarded the rollback wait with its predicate and reported the timeout instead of assuming success")
     private void sendJobRollbackMessages(IGlobalTransactionContext context) throws Exception {
         JobId jobId = context.getJobId();
-        for (String nodeId : context.getNodeResourceMap().keySet()) {
+        // snapshot: the nodes messaged and the ack target taken from them must be one set, not two reads
+        List<String> nodeIds = new ArrayList<>(context.getNodeResourceMap().keySet());
+        context.beginPhase(TxnPhase.ROLLBACK, nodeIds.size());
+        for (String nodeId : nodeIds) {
             AtomicJobRollbackMessage rollbackMessage = new AtomicJobRollbackMessage(jobId, context.getDatasetIds(),
                     context.getNodeResourceMap().get(nodeId));
             ((ICCMessageBroker) serviceContext.getMessageBroker()).sendRealTimeApplicationMessageToNC(rollbackMessage,
                     nodeId);
         }
-        synchronized (context) {
-            try {
-                CCConfig config = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig();
-                context.wait(config.getGlobalTxRollbackTimeout());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Error while rolling back atomic statement for {}, halting JVM", jobId);
-                ExitUtil.halt(EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT);
-            }
+        long timeout = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig()
+                .getGlobalTxRollbackTimeout();
+        try {
+            awaitStatus(context, TransactionStatus.ROLLBACK, timeout);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.error("Error while rolling back atomic statement for {}, halting JVM", jobId);
+            ExitUtil.halt(EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT);
         }
-        txnContextRepository.remove(jobId);
+        if (context.getTxnStatus() != TransactionStatus.ROLLBACK) {
+            // deliberately reported rather than rethrown: the caller in rollback() treats a failure here as a
+            // corrupted log and deletes it, which would discard the only record of what is left to undo
+            LOGGER.error(
+                    "Timed out after {}ms waiting for {} node(s) to roll back {}; {} acknowledged. The "
+                            + "transaction log is retained for recovery",
+                    timeout, context.getExpectedAcks(), jobId, context.getAcksReceived());
+        }
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Drop the context even when the rollback messages fail to go out")
     public void abortTransaction(JobId jobId) throws Exception {
-        IGlobalTransactionContext context = getTransactionContext(jobId);
-        context.resetAcksReceived();
-        if (context.getTxnStatus() == TransactionStatus.PREPARED) {
-            sendJobRollbackMessages(context);
+        try {
+            IGlobalTransactionContext context = getTransactionContext(jobId);
+            // the status cannot be the test here. The nodes flush their components and report them before
+            // commitTransaction moves the transaction to PREPARED, so a statement that fails in between - a
+            // cancellation between waitForCompletion and the commit, say - leaves a fully prepared
+            // transaction still reading ACTIVE, and a partially prepared one never reaches PREPARED at all.
+            // Either way the nodes are holding components that only a rollback message will discard, and the
+            // recorded resources are what say so. COMMITTED and ROLLBACK cannot be seen here: both paths
+            // remove the context, so the lookup above would have thrown first.
+            if (!context.getNodeResourceMap().isEmpty()) {
+                sendJobRollbackMessages(context);
+            }
+        } finally {
+            // nothing else ever removes it: the repository is filled from the job lifecycle but drained only
+            // from the statement path, so a throw on the way out would strand the entry for the CC's lifetime
+            txnContextRepository.remove(jobId);
         }
-        txnContextRepository.remove(jobId);
     }
 
     @Override
@@ -257,5 +322,38 @@ public class GlobalTxManager implements IGlobalTxManager {
     public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
 
+    }
+
+    /**
+     * An acknowledgement that belongs to a phase the transaction has already left must be dropped, not
+     * counted: the counter is shared across phases, so a straggler would push the current phase over its
+     * target early and declare it complete while a node has yet to answer.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Drop acknowledgements belonging to an abandoned phase")
+    private static boolean rejectStrayAck(IGlobalTransactionContext context, TxnPhase expected, JobId jobId,
+            String nodeId, String messageKind) {
+        if (context.getPhase() != expected) {
+            LOGGER.warn("ignoring {} from {} for {}: expected phase {} but the transaction is in phase {}", messageKind,
+                    nodeId, jobId, expected, context.getPhase());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Waits until the acknowledgements of every messaged node have moved the transaction to {@code target}, or
+     * the timeout expires. The caller must re-read the status to tell those two outcomes apart.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Deadline-bounded, predicate-guarded wait shared by the commit and rollback phases")
+    private static void awaitStatus(IGlobalTransactionContext context, TransactionStatus target, long timeoutMillis)
+            throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        synchronized (context) {
+            long remaining = timeoutMillis;
+            while (context.getTxnStatus() != target && remaining > 0) {
+                context.wait(remaining);
+                remaining = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
+            }
+        }
     }
 }
