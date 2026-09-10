@@ -21,15 +21,17 @@ package org.apache.hyracks.storage.am.vector.impls;
 
 import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeMetadataFrame;
@@ -71,15 +73,12 @@ class VTreePageMutator {
     private final IBufferCache bufferCache;
     private final IPageManager freePageManager;
     private final ITreeIndexFrameFactory metadataFrameFactory;
-    /** Fixes the data-tuple layout, and with it which field the primary key starts at. */
-    private final boolean quantized;
 
     VTreePageMutator(IBufferCache bufferCache, IPageManager freePageManager,
-            ITreeIndexFrameFactory metadataFrameFactory, boolean quantized) {
+            ITreeIndexFrameFactory metadataFrameFactory) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
         this.metadataFrameFactory = metadataFrameFactory;
-        this.quantized = quantized;
     }
 
     /**
@@ -89,21 +88,11 @@ class VTreePageMutator {
     void insertIntoDataPages(long metadataPageId, double[] vector, double distance, int centroidId,
             ITupleReference originalTuple, VTreeOpContext ctx, int fileId) throws HyracksDataException {
 
-        // Traverse through all linked directory (metadata) pages to find the appropriate data page.
-        // Guard against a corrupted next-page chain that loops back on itself by tracking the page
-        // ids already visited; a repeat is a genuine cycle, not just a long-but-valid chain.
-        //
-        // Concurrency: this is a forward-only walk that write-latches one directory page at a time and
-        // releases it before pinning the next (it does not hold the whole chain). That is safe because
-        // the directory chain is globally max_distance-ascending and only ever grows by in-place split
-        // (VTreeMetadataFrame keeps entries sorted; handleMetadataPageOverflow moves the upper entries to
-        // a new page linked *after* the current one — pages are never removed or reordered). Each page is
-        // read under its own latch, so the walker sees a consistent snapshot per page. Since this walker
-        // advanced past page N only because the record's distance exceeded every entry on N, a concurrent
-        // split of N (which can only relocate entries <= N's max to a new page inserted between N and its
-        // old successor) cannot hold this record's band — so following N's already-read successor pointer
-        // never skips the correct page. The walker therefore always converges on the right band by moving
-        // forward. tryPhysicalDelete relies on the same invariant.
+        // A forward walk that write-latches one directory page at a time. A concurrent split of a page
+        // moves only entries at or below its maximum to a new page linked after it, so a page the walk
+        // has passed can never come to hold this key. Visited ids catch a chain corrupted into a cycle.
+        ITupleReference key = ctx.getDataTupleBuilder().buildKeyTuple(distance, originalTuple);
+
         long currentMetadataPageId = metadataPageId;
         Set<Long> visitedMetadataPageIds = new HashSet<>();
 
@@ -122,31 +111,22 @@ class VTreePageMutator {
                 latched = true;
                 ctx.getMetadataFrame().setPage(metadataPage);
 
-                // Determine if this is the last directory page in the chain
                 int nextMetadataPageId = ctx.getMetadataFrame().getNextPage();
                 boolean isLastInChain = (nextMetadataPageId == VTreeDataTupleAccessor.NO_NEXT_PAGE);
 
-                // Try to find appropriate data page based on distance.
-                // Only uses catch-all (last data page) on the last directory page;
-                // otherwise returns -1 so we traverse to the next directory page.
-                long targetDataPageId = findDataPageInMetadataPage(ctx.getMetadataFrame(), distance, isLastInChain);
+                long targetDataPageId = selectDataPageForKey(ctx.getMetadataFrame(), key, isLastInChain);
 
                 if (targetDataPageId != -1) {
-                    // Found appropriate data page - insert into it. insertIntoDataPage() either inserts
-                    // directly, compacts and inserts, or splits the page; it never reports "no room".
                     insertIntoDataPage(targetDataPageId, vector, distance, centroidId, originalTuple, ctx, fileId);
                     return;
                 }
 
-                // No match on this directory page
                 if (isLastInChain) {
-                    // Last page in chain - create new data page
                     handleDataPageOverflow(currentMetadataPageId, vector, distance, centroidId, originalTuple, ctx,
                             fileId);
                     return;
                 }
 
-                // Traverse to next directory page
                 currentMetadataPageId = nextMetadataPageId;
 
             } finally {
@@ -159,53 +139,24 @@ class VTreePageMutator {
     }
 
     /**
-     * Find the appropriate data page in a specific metadata page based on distance. This searches for a data page that
-     * can accommodate the given distance.
-     * <p>
-     * Returns last data page as catch-all when distance > all max_distance values.
-     * This is needed for BOTH insertion and deletion:
-     * - Matter insertion: Vectors with distance > all max values go into last page (catch-all)
-     * - Delete-marker tuple insertion: Same as matter insertion - uses last page as catch-all
-     * - Physical deletion: To find those vectors, we must check the last page (same catch-all)
-     * <p>
-     * The last page dynamically expands and metadata max_distance is updated automatically
-     * via updateMetadataMaxDistanceIfNeeded() in the insertion path.
-     *
-     * @param metadataFrame The metadata frame to search
-     * @param distance The distance to search for
-     * @return Data page ID, or -1 if metadata is empty
+     * The data page of this directory page that {@code key} belongs in, or {@code -1} to carry on to
+     * the next directory page. A separator carries the whole key of its page's last record, and keys
+     * are unique within a component, so the first entry whose separator is {@code >=} the key is the
+     * only page that can hold it. No tie to resolve and no page to probe.
      */
-    private long findDataPageInMetadataPage(IVTreeMetadataFrame metadataFrame, double distance, boolean isLastInChain)
+    private long selectDataPageForKey(IVTreeMetadataFrame metadataFrame, ITupleReference key, boolean isLastInChain)
             throws HyracksDataException {
-
         int tupleCount = metadataFrame.getTupleCount();
-
-        // Entries are kept sorted by max_distance ascending (VTreeMetadataFrame invariant, maintained
-        // by findInsertPosition on every metadata insert). Binary-search the first entry whose
-        // max_distance >= distance (i.e. the first data page whose range covers this distance) instead
-        // of an O(n) scan. This matches the previous linear "first distance <= maxDistance" result.
-        int lo = 0;
-        int hi = tupleCount; // half-open [lo, hi)
-        while (lo < hi) {
-            int mid = (lo + hi) >>> 1;
-            if (metadataFrame.getMaxDistance(mid) >= distance) {
-                hi = mid;
-            } else {
-                lo = mid + 1;
-            }
-        }
+        int lo = metadataFrame.findInsertPosition(key);
         if (lo < tupleCount) {
             return metadataFrame.getDataPagePointer(lo);
         }
 
-        // Only use catch-all (last data page) on the last directory page in the chain.
-        // For non-last pages, return -1 so the caller traverses to the next directory page.
         if (isLastInChain && tupleCount > 0) {
             return metadataFrame.getDataPagePointer(tupleCount - 1);
         }
 
         return -1; // No match on this page (or empty)
-
     }
 
     /**
@@ -225,13 +176,23 @@ class VTreePageMutator {
             latched = true;
             ctx.getDataFrame().setPage(dataPage);
 
-            // Create data tuple: <distance, centroidId, vector, PK>
-            // Pass context so buildDataTuple can check operation type and encode a delete-polarity tuple
-            // if DELETE (the encoding is decided by the caller-supplied frame's tuple writer)
             ITupleReference dataTuple =
                     ctx.getDataTupleBuilder().buildDataTuple(vector, distance, centroidId, originalTuple);
+            requireFits(ctx.getDataFrame(), dataTuple);
 
-            // Check if there's space for the tuple
+            // A component holds at most one entry per key, so the entry being replaced goes before the
+            // page decides whether the new one fits; a split must never see the key twice.
+            VTreeDataFrame dataFrame = (VTreeDataFrame) ctx.getDataFrame();
+            int existing = dataFrame.findTupleByKey(dataFrame.keyOf(dataTuple));
+            if (existing >= 0) {
+                if (!dataFrame.isReplaceable(existing)) {
+                    throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                            "A tuple with this ordering key is already present in the data page and is "
+                                    + "not overwritable; refusing to append a duplicate key");
+                }
+                dataFrame.delete(dataTuple, existing);
+            }
+
             FrameOpSpaceStatus spaceStatus = ctx.getDataFrame().hasSpaceInsert(dataTuple);
 
             switch (spaceStatus) {
@@ -239,17 +200,13 @@ class VTreePageMutator {
                     insertSortedIntoDataPage(dataTuple, distance, dataPageId, originalTuple, ctx);
                     return;
                 case SUFFICIENT_SPACE:
-                    // Fix bug-vtree-delete-frame-corruption: reclaimable space exists but is fragmented
-                    // (FREE_SPACE_OFFSET has been pushed past the slot region by prior inserts whose
-                    // deletes only updated TOTAL_FREE_SPACE_OFFSET). Compact first to reset
-                    // FREE_SPACE_OFFSET to a safe high-water mark, then insert. Matches the canonical
-                    // BTreeNSMLeafFrame pattern (BTree.java:309-315).
+                    // Free bytes exist but are fragmented: a delete returns space to the total without
+                    // moving FREE_SPACE_OFFSET back. Compact first, as BTreeNSMLeafFrame does.
                     ctx.getDataFrame().compact();
                     insertSortedIntoDataPage(dataTuple, distance, dataPageId, originalTuple, ctx);
                     return;
                 case INSUFFICIENT_SPACE:
-                    // Handle overflow by splitting the data page (split recomputes the insertion index
-                    // in whichever half the tuple lands, so no position needs to be passed in).
+                    // The split recomputes the insertion index in whichever half the tuple lands.
                     splitDataPageMaintainOrder(ctx.getMetadataPageId(), dataPageId, dataTuple, ctx, fileId);
                     return;
 
@@ -267,18 +224,31 @@ class VTreePageMutator {
     }
 
     /**
-     * Insert a data tuple into the currently-latched data frame at its distance-sorted position, fire the
-     * modification callback, bump the page LSN, and grow the catch-all page's metadata max_distance if this
-     * distance is a new maximum. Shared by the contiguous-space and post-compaction insert paths in
-     * {@link #insertIntoDataPage}.
+     * Refuse a tuple wider than half a page. A full page splits in halves before the tuple is placed,
+     * so this is the widest tuple the write path can ever fit, as {@code BTree.maxTupleSize} is.
+     */
+    private void requireFits(ITreeIndexFrame frame, ITupleReference dataTuple) throws HyracksDataException {
+        int bytes = frame.getBytesRequiredToWriteTuple(dataTuple);
+        int max = frame.getMaxTupleSize(bufferCache.getPageSize());
+        if (bytes > max) {
+            throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, bytes, max);
+        }
+    }
+
+    /**
+     * Insert a data tuple into the currently-latched data frame at its key-sorted position, fire the
+     * modification callback and bump the page LSN. Shared by the contiguous-space and post-compaction
+     * insert paths in {@link #insertIntoDataPage}, which has already removed any entry the tuple replaces.
      */
     private void insertSortedIntoDataPage(ITupleReference dataTuple, double distance, long dataPageId,
             ITupleReference originalTuple, VTreeOpContext ctx) throws HyracksDataException {
-        int insertIndex = ((VTreeDataFrame) ctx.getDataFrame()).findInsertPosition(distance);
-        ctx.getDataFrame().insert(dataTuple, insertIndex);
+        VTreeDataFrame dataFrame = (VTreeDataFrame) ctx.getDataFrame();
+        dataFrame.insert(dataTuple, dataFrame.findInsertPosition(dataFrame.keyOf(dataTuple)));
         ctx.getModificationCallback().found(null, originalTuple);
         ctx.getDataFrame().setPageLsn(ctx.getDataFrame().getPageLsn() + 1);
-        updateMetadataMaxDistanceIfNeeded(ctx.getMetadataPageId(), dataPageId, distance, ctx);
+        // No separator to maintain: a key past the page's maximum was routed here by the catch-all, so a
+        // lagging separator costs nothing, as a BTree reaches its rightmost child without one. A split
+        // restores exact separators.
     }
 
     /**
@@ -287,7 +257,6 @@ class VTreePageMutator {
     private void splitDataPageMaintainOrder(long metadataPageId, long dataPageId, ITupleReference newTuple,
             VTreeOpContext ctx, int fileId) throws HyracksDataException {
 
-        // Create new data page for split
         int newDataPageId = freePageManager.takePage(ctx.getMetaFrame());
         ICachedPage newDataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newDataPageId), NEW);
 
@@ -299,23 +268,17 @@ class VTreePageMutator {
             newFrame.setPage(newDataPage);
             newFrame.initBuffer((byte) 0);
 
-            // Use the frame's split method (following BTree pattern)
             ctx.getDataFrame().split(newFrame, newTuple);
 
-            // Update page links (maintain linked list structure)
             int originalNextPage = ctx.getDataFrame().getNextPage();
             ctx.getDataFrame().setNextPage(newDataPageId);
             newFrame.setNextPage(originalNextPage);
 
-            // Bump both pages past the source page's prior LSN. Page LSNs are not currently
-            // consulted for recovery on these LSM-component pages (no readers in this codebase),
-            // but keeping the value monotonic mirrors the increment pattern used elsewhere in
-            // this class and avoids the non-monotonicity of System.currentTimeMillis().
+            // Page LSNs are not consulted for recovery here; keep them monotonic as the rest of this class does.
             long currentLsn = ctx.getDataFrame().getPageLsn() + 1;
             ctx.getDataFrame().setPageLsn(currentLsn);
             newFrame.setPageLsn(currentLsn);
 
-            // Update metadata to reflect the split
             updateMetadataAfterDataSplit(metadataPageId, dataPageId, newDataPageId, ctx, fileId);
 
         } finally {
@@ -327,8 +290,9 @@ class VTreePageMutator {
     }
 
     /**
-     * Update metadata page after data page split.
-     * Updates BOTH original page's maxDistance and adds new page's entry.
+     * Record a data page split in the directory: lower the original page's separator to its new maximum
+     * and add the new page. Both separators go through one insert path, so a directory split forced by
+     * either of them routes the other to the half whose key range covers it.
      */
     private void updateMetadataAfterDataSplit(long targetMetadataPageId, long originalDataPageId, int newDataPageId,
             VTreeOpContext ctx, int fileId) throws HyracksDataException {
@@ -338,23 +302,42 @@ class VTreePageMutator {
                             + originalDataPageId + ")");
         }
 
-        // Read each page's post-split max distance (original shrank, new page is the spilled-off tail).
-        double originalPageMaxDistance = readMaxDistanceInDataPage(originalDataPageId, ctx, fileId);
-        double newPageMaxDistance = readMaxDistanceInDataPage(newDataPageId, ctx, fileId);
+        ITupleReference originalPageMaxKey = readMaxKeyInDataPage(originalDataPageId, ctx, fileId);
+        ITupleReference newPageMaxKey = readMaxKeyInDataPage(newDataPageId, ctx, fileId);
+        if (newPageMaxKey == null) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "Data page " + newDataPageId
+                    + " is empty immediately after a split, so it has no key to record in the directory");
+        }
+        ITupleReference newPageEntry = VTreeMetadataTupleAccessor.createMetadataTuple(newPageMaxKey, newDataPageId);
 
-        // Update ORIGINAL page's maxDistance in metadata (decreased after split)
-        forceUpdateMetadataMaxDistance(targetMetadataPageId, originalDataPageId, originalPageMaxDistance, ctx);
+        // A one-tuple page splits into an empty original with no maximum: leave its separator alone, and
+        // the next key routed to it restores an exact bound.
+        if (originalPageMaxKey == null) {
+            insertSeparators(targetMetadataPageId, ctx, fileId, newPageEntry);
+            return;
+        }
 
-        // Add NEW page's metadata entry
-        updateMetadataWithNewDataPage(targetMetadataPageId, newDataPageId, newPageMaxDistance, ctx, fileId);
+        // The original page's separator only lowers and stays above its predecessor, so its slot holds
+        // unless the replacement is wider than the page can absorb.
+        VTreeMetadataFrame metadataFrame = requireLatchedMetadataFrame(targetMetadataPageId, ctx);
+        int slot = findSeparatorSlot(metadataFrame, originalDataPageId);
+        if (slot < 0 || metadataFrame.replaceSeparator(slot, originalPageMaxKey, (int) originalDataPageId)) {
+            insertSeparators(targetMetadataPageId, ctx, fileId, newPageEntry);
+            return;
+        }
+        metadataFrame.deleteSeparator(slot);
+        insertSeparators(targetMetadataPageId, ctx, fileId,
+                VTreeMetadataTupleAccessor.createMetadataTuple(originalPageMaxKey, (int) originalDataPageId),
+                newPageEntry);
     }
 
     /**
-     * Read the maximum distance-to-centroid stored in a data page. Data-page tuples are kept sorted by
-     * distance ascending, so the last tuple carries the page's max; an empty page reports {@code 0.0}.
-     * Pins and read-latches the page for the duration.
+     * Read the maximum ordering key stored in a data page. Tuples are kept key-ascending, so the last
+     * one carries the page's maximum; an empty page has no key and reports {@code null}. The result is
+     * copied, since the page is unlatched before the caller uses it. Pins and read-latches for the
+     * duration.
      */
-    private double readMaxDistanceInDataPage(long dataPageId, VTreeOpContext ctx, int fileId)
+    private ITupleReference readMaxKeyInDataPage(long dataPageId, VTreeOpContext ctx, int fileId)
             throws HyracksDataException {
         ICachedPage dataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, (int) dataPageId));
         boolean latched = false;
@@ -364,7 +347,7 @@ class VTreePageMutator {
             IVTreeDataFrame dataFrame = (IVTreeDataFrame) ctx.getDataFrameFactory().createFrame();
             dataFrame.setPage(dataPage);
             int tupleCount = dataFrame.getTupleCount();
-            return tupleCount > 0 ? dataFrame.getDistanceToCentroid(tupleCount - 1) : 0.0;
+            return tupleCount > 0 ? TupleUtils.copyTuple(dataFrame.keyAt(tupleCount - 1)) : null;
         } finally {
             if (latched) {
                 dataPage.releaseReadLatch();
@@ -378,12 +361,14 @@ class VTreePageMutator {
      * pages to find the tuple and delete it. Returns true if found and deleted,
      * false if not found (caller should insert a delete-marker tuple).
      * <p>
-     * Uses binary comparison for primary key matching - no type assumption.
+     * The key is matched with the index's own comparators, over every key field of
+     * {@code originalTuple}, so no field type is assumed and no field is skipped.
      */
-    boolean tryPhysicalDelete(long metadataPageId, double distance, byte[] primaryKey, ITupleReference originalTuple,
-            VTreeOpContext ctx, int fileId) throws HyracksDataException {
+    boolean tryPhysicalDelete(long metadataPageId, double distance, ITupleReference originalTuple, VTreeOpContext ctx,
+            int fileId) throws HyracksDataException {
 
-        // Traverse through all linked directory (metadata) pages
+        ITupleReference key = ctx.getDataTupleBuilder().buildKeyTuple(distance, originalTuple);
+
         long currentMetadataPageId = metadataPageId;
 
         while (currentMetadataPageId != -1) {
@@ -396,15 +381,12 @@ class VTreePageMutator {
                 metadataLatched = true;
                 ctx.getMetadataFrame().setPage(metadataPage);
 
-                // Determine if this is the last directory page in the chain
                 int nextMetadataPageId = ctx.getMetadataFrame().getNextPage();
                 boolean isLastInChain = (nextMetadataPageId == VTreeDataTupleAccessor.NO_NEXT_PAGE);
 
-                // Find appropriate data page based on distance
-                long targetDataPageId = findDataPageInMetadataPage(ctx.getMetadataFrame(), distance, isLastInChain);
+                long targetDataPageId = selectDataPageForKey(ctx.getMetadataFrame(), key, isLastInChain);
 
                 if (targetDataPageId != -1) {
-                    // Try physical deletion in this data page
                     ICachedPage dataPage =
                             bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, (int) targetDataPageId));
 
@@ -414,20 +396,19 @@ class VTreePageMutator {
                         dataLatched = true;
                         ctx.getDataFrame().setPage(dataPage);
 
-                        // Search for tuple by distance + PK (uses binary comparison internally)
-                        int pkFieldIndex = VTreeDataTupleAccessor.getPkStartField(quantized);
-                        int tupleIndex = ((VTreeDataFrame) ctx.getDataFrame())
-                                .findTupleByDistanceAndPrimaryKey(distance, primaryKey, pkFieldIndex);
+                        VTreeDataFrame dataFrame = (VTreeDataFrame) ctx.getDataFrame();
+                        int tupleIndex = dataFrame.findTupleByKey(key);
 
                         if (tupleIndex >= 0) {
-                            // Found: findTupleByDistanceAndPrimaryKey only returns an index whose PK equals
-                            // primaryKey (binary compare), and the data page stays write-latched here, so the
-                            // match cannot change under us — no re-check is needed. Physically delete it.
+                            // A delete marker means the record is already deleted here, and removing
+                            // it would unsuppress an older component's matter.
+                            if (dataFrame.isReplaceable(tupleIndex)) {
+                                return true;
+                            }
                             ctx.getDataFrame().delete(originalTuple, tupleIndex);
                             return true;
                         }
 
-                        // Not found in this data page
                     } finally {
                         if (dataLatched) {
                             dataPage.releaseWriteLatch(true);
@@ -436,7 +417,6 @@ class VTreePageMutator {
                     }
                 }
 
-                // No match or not found - check next directory page
                 if (isLastInChain) {
                     break; // End of chain
                 }
@@ -455,13 +435,9 @@ class VTreePageMutator {
 
     private void handleDataPageOverflow(long metadataPageId, double[] vector, double distance, int centroidId,
             ITupleReference originalTuple, VTreeOpContext ctx, int fileId) throws HyracksDataException {
-        // This method creates the FIRST data page of a directory page and therefore leaves the data-page
-        // chain's next-page pointers alone: with no existing entry there is no predecessor to link from, and
-        // the search cursor reaches data pages only by starting at directory entry 0 and following the chain.
-        // Its single caller reaches it exactly when the directory page has no entries (a page with entries
-        // always yields either a covering entry or the catch-all last entry). Enforce that here rather than
-        // in prose: if this ever runs against a populated directory the new page would be registered in the
-        // directory but unreachable from the chain, i.e. silently invisible to search.
+        // Creates a directory page's first data page, so there is no predecessor to chain from and the
+        // data-page chain is left alone. On a populated directory the page would be reachable through
+        // the directory but not the chain, so refuse that.
         VTreeMetadataFrame directoryFrame = requireLatchedMetadataFrame(metadataPageId, ctx);
         if (directoryFrame.getTupleCount() != 0) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
@@ -470,11 +446,9 @@ class VTreePageMutator {
                             + " entries): the new data page would not be linked into the data-page chain");
         }
 
-        // Use the frame factories and page manager to handle overflow
         IVTreeDataFrame dataFrame = (IVTreeDataFrame) ctx.getDataFrameFactory().createFrame();
         IPageManager pageManager = ctx.getFreePageManager();
 
-        // Create a new data page for overflow
         int newDataPageId = pageManager.takePage(ctx.getMetaFrame());
         ICachedPage newPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newDataPageId), NEW);
 
@@ -482,19 +456,18 @@ class VTreePageMutator {
         try {
             newPage.acquireWriteLatch();
             latched = true;
-            // Initialize the new data frame
             dataFrame.setPage(newPage);
             dataFrame.initBuffer((byte) 0);
 
-            // Create data tuple for the new vector
             ITupleReference dataTuple =
                     ctx.getDataTupleBuilder().buildDataTuple(vector, distance, centroidId, originalTuple);
+            requireFits(dataFrame, dataTuple);
 
-            // Insert the tuple into the new page
             dataFrame.insert(dataTuple, 0);
 
-            // Update metadata page to include the new data page
-            updateMetadataWithNewDataPage(metadataPageId, newDataPageId, distance, ctx, fileId);
+            // The new page holds exactly this one tuple, so its maximum key is that tuple's key.
+            insertSeparators(metadataPageId, ctx, fileId,
+                    VTreeMetadataTupleAccessor.createMetadataTuple(dataFrame.keyOf(dataTuple), newDataPageId));
 
         } finally {
             if (latched) {
@@ -504,85 +477,45 @@ class VTreePageMutator {
         }
     }
 
-    /**
-     * Update metadata maxDistance if the new distance exceeds the current maxDistance.
-     * This is needed when inserting into the last data page with a distance greater than
-     * the current maxDistance - the last page acts as a catch-all that dynamically expands.
-     */
-    private void updateMetadataMaxDistanceIfNeeded(long metadataPageId, long dataPageId, double newDistance,
-            VTreeOpContext ctx) throws HyracksDataException {
-
-        VTreeMetadataFrame metadataFrame = requireLatchedMetadataFrame(metadataPageId, ctx);
-
-        // Find the metadata entry for this data page
+    /** The slot of {@code dataPageId}'s separator on the latched directory page, or {@code -1}. */
+    private static int findSeparatorSlot(VTreeMetadataFrame metadataFrame, long dataPageId)
+            throws HyracksDataException {
         int tupleCount = metadataFrame.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
-            long pagePtr = metadataFrame.getDataPagePointer(i);
-
-            if (pagePtr == dataPageId) {
-                double currentMaxDistance = metadataFrame.getMaxDistance(i);
-
-                // Only update if new distance is larger
-                if (newDistance > currentMaxDistance) {
-                    metadataFrame.updateMaxDistance(i, newDistance);
-                }
-                break;
+            if (metadataFrame.getDataPagePointer(i) == dataPageId) {
+                return i;
             }
         }
+        return -1;
     }
 
     /**
-     * Force update metadata maxDistance to a specific value (regardless of increase/decrease).
-     * This is needed after data page splits where the original page's maxDistance decreases.
+     * Insert separators into the latched directory page at their sorted positions, splitting the page
+     * at most once. The entries that follow a split are routed by key to whichever half covers them
+     * while both halves are still latched.
      */
-    private void forceUpdateMetadataMaxDistance(long metadataPageId, long dataPageId, double newMaxDistance,
-            VTreeOpContext ctx) throws HyracksDataException {
+    private void insertSeparators(long metadataPageId, VTreeOpContext ctx, int fileId, ITupleReference... entries)
+            throws HyracksDataException {
 
         VTreeMetadataFrame metadataFrame = requireLatchedMetadataFrame(metadataPageId, ctx);
 
-        // Find the metadata entry for this data page
-        int tupleCount = metadataFrame.getTupleCount();
-        for (int i = 0; i < tupleCount; i++) {
-            long pagePtr = metadataFrame.getDataPagePointer(i);
-
-            if (pagePtr == dataPageId) {
-                metadataFrame.updateMaxDistance(i, newMaxDistance);
-                break;
+        for (int i = 0; i < entries.length; i++) {
+            // Ask the frame rather than getTotalFreeSpace(): a delete returns bytes to that total without
+            // moving FREE_SPACE_OFFSET back, so the total overstates the contiguous room.
+            FrameOpSpaceStatus spaceStatus = metadataFrame.hasSpaceInsert(entries[i]);
+            if (spaceStatus == FrameOpSpaceStatus.SUFFICIENT_SPACE) {
+                metadataFrame.compact();
+                spaceStatus = metadataFrame.hasSpaceInsert(entries[i]);
             }
-        }
-    }
 
-    /**
-     * Update metadata page to include a new data page. Handles metadata page overflow by splitting when necessary.
-     */
-    private void updateMetadataWithNewDataPage(long metadataPageId, int newDataPageId, double maxDistance,
-            VTreeOpContext ctx, int fileId) throws HyracksDataException {
-
-        VTreeMetadataFrame metadataFrame = requireLatchedMetadataFrame(metadataPageId, ctx);
-
-        // Create metadata tuple for new data page
-        ITupleReference metadataTuple = VTreeMetadataTupleAccessor.createMetadataTuple(maxDistance, newDataPageId);
-        ITreeIndexTupleWriter metadataFrameTupleWriter = metadataFrame.getTupleWriter();
-        int slotSize = metadataFrame.getSlotSize();
-
-        // Check if there's space for the new metadata entry
-        // Check if directory page has space
-        int spaceNeeded = metadataFrameTupleWriter.bytesRequired(metadataTuple) + slotSize;
-        int spaceAvailable = metadataFrame.getTotalFreeSpace();
-
-        if (spaceNeeded > spaceAvailable) {
-            // Insufficient space - need to split metadata page
-            handleMetadataPageOverflow(metadataTuple, ctx, fileId);
-        } else {
-            // Insert the new data-page entry in its sorted position by max_distance, preserving the
-            // directory's max_distance-ascending invariant (see VTreeMetadataFrame javadoc) that
-            // findDataPageInMetadataPage() relies on for correct distance-based routing. Appending at
-            // getTupleCount() here corrupted that invariant after a non-last data-page split (the new
-            // page's max_distance falls between existing entries), which mis-routed subsequent inserts,
-            // produced overlapping data-page distance ranges, and broke the sorted-stream precondition
-            // of the search-side merge and the matter/delete-marker reconciliation done in the LSM layer.
-            int insertPos = metadataFrame.findInsertPosition(maxDistance);
-            metadataFrame.insert(metadataTuple, insertPos);
+            if (spaceStatus != FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+                handleMetadataPageOverflow(ctx, fileId, Arrays.copyOfRange(entries, i, entries.length));
+                return;
+            }
+            // Insert at the sorted position: after a non-last data-page split the new page's key falls
+            // between existing entries, and selectDataPageForKey relies on the directory staying
+            // key-ascending.
+            metadataFrame.insert(entries[i], metadataFrame.findInsertPosition(entries[i]));
         }
     }
 
@@ -590,8 +523,8 @@ class VTreePageMutator {
      * Return the shared metadata frame that the caller already holds pinned and write-latched for
      * {@code metadataPageId}.
      * <p>
-     * All metadata-mutation helpers ({@link #updateMetadataMaxDistanceIfNeeded},
-     * {@link #forceUpdateMetadataMaxDistance}, {@link #updateMetadataWithNewDataPage}) run only from
+     * All metadata-mutation helpers ({@link #updateMetadataAfterDataSplit},
+     * {@link #insertSeparators}) run only from
      * inside {@link #insertIntoDataPages}, which pins the current directory page, write-latches it, sets
      * {@code ctx.getMetadataFrame()} to it, and releases the latch (marking the page dirty) in its own
      * {@code finally}. Operating on that already-latched frame here — instead of re-pinning and
@@ -606,12 +539,12 @@ class VTreePageMutator {
     }
 
     /**
-     * Handle metadata page overflow by splitting the page and distributing tuples.
+     * Split the latched directory page and insert {@code entries} into whichever halves cover their keys.
+     * Two halves of a full page each have room for a few separators, so every entry fits.
      */
-    private void handleMetadataPageOverflow(ITupleReference newTuple, VTreeOpContext ctx, int fileId)
+    private void handleMetadataPageOverflow(VTreeOpContext ctx, int fileId, ITupleReference... entries)
             throws HyracksDataException {
 
-        // Allocate a new metadata page
         int newMetadataPageId = freePageManager.takePage(ctx.getMetaFrame());
         ICachedPage newMetadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newMetadataPageId), NEW);
 
@@ -620,27 +553,22 @@ class VTreePageMutator {
             newMetadataPage.acquireWriteLatch();
             latched = true;
 
-            // Create new metadata frame for the split page
             IVTreeMetadataFrame rightFrame = (IVTreeMetadataFrame) metadataFrameFactory.createFrame();
             rightFrame.setPage(newMetadataPage);
             rightFrame.initBuffer((byte) 0);
 
-            // Capture the split page's successor BEFORE splitting: split() re-initializes both halves, which
-            // resets their next-page pointers to the end-of-chain sentinel. The directory page being split is
-            // not necessarily the last in its chain (this method runs on whichever page the insert walk landed
-            // on), so terminating the right half unconditionally would orphan every page after it — making
-            // their data pages unreachable to both the insert walk and tryPhysicalDelete. Splice the new page
-            // in: left -> new -> original successor, mirroring splitDataPageMaintainOrder().
+            // split() resets both halves' next pointers and the page being split need not be last in its
+            // chain: capture its successor first and splice left -> new -> successor.
             int originalNextPage = ctx.getMetadataFrame().getNextPage();
 
-            // Split the current metadata page using the correct method from VTreeMetadataFrame
-            ((VTreeMetadataFrame) ctx.getMetadataFrame()).split(rightFrame, newTuple);
+            VTreeMetadataFrame leftFrame = (VTreeMetadataFrame) ctx.getMetadataFrame();
+            leftFrame.split(rightFrame, entries[0]);
+            for (int i = 1; i < entries.length; i++) {
+                leftFrame.insertIntoHalf(rightFrame, entries[i]);
+            }
 
-            // Update the next page pointer in the original metadata page
-            ctx.getMetadataFrame().setNextPage(newMetadataPageId);
+            leftFrame.setNextPage(newMetadataPageId);
 
-            // The new (right) page inherits the split page's successor, which is the end-of-chain sentinel
-            // exactly when the split page was itself last in the chain.
             rightFrame.setNextPage(originalNextPage);
 
         } finally {

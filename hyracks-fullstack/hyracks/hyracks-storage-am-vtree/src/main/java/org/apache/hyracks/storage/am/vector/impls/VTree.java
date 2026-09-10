@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
@@ -47,7 +48,6 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
-import org.apache.hyracks.storage.am.vector.tuples.VTreeTupleUtils;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.am.vector.utils.RngAcceptanceFilter;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataKeys;
@@ -74,7 +74,7 @@ import org.apache.logging.log4j.Logger;
  * centroids and child page pointers
  * - Leaf frames: Store cluster centroids and metadata page pointers
  * - Metadata frames: Store max distances and data page pointers
- * - Data frames: Store distances, primary keys
+ * - Data frames: Store distances and the caller's key and value fields
  */
 public class VTree extends AbstractTreeIndex {
 
@@ -97,7 +97,7 @@ public class VTree extends AbstractTreeIndex {
     private final CrossPollinationConfig crossPollination;
     /**
      * Directory- and data-page mutation, which needs nothing from this class but its buffer cache, file
-     * id, page manager, directory frame factory and tuple layout. See {@link VTreePageMutator}.
+     * id, page manager and directory frame factory. See {@link VTreePageMutator}.
      */
     private final VTreePageMutator pageMutator;
 
@@ -140,8 +140,7 @@ public class VTree extends AbstractTreeIndex {
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.distanceFunction = distanceFunctionFactory.createDistanceFunction();
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
-        this.pageMutator =
-                new VTreePageMutator(bufferCache, freePageManager, metadataFrameFactory, quantizationParams != null);
+        this.pageMutator = new VTreePageMutator(bufferCache, freePageManager, metadataFrameFactory);
     }
 
     /**
@@ -214,18 +213,14 @@ public class VTree extends AbstractTreeIndex {
      * [additional_fields]>
      */
     private void insertVector(ITupleReference tuple, VTreeOpContext ctx) throws HyracksDataException {
-        double[] vector = VTreeTupleUtils.extractVectorFromTuple(tuple, 0, vectorAccessorFactory);
-        if (vector == null) {
-            // A tuple with no extractable vector is corrupt/unexpected; ILLEGAL_STATE carries the message.
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "Failed to extract vector from tuple");
-        }
+        double[] vector = ctx.decodeVector(tuple, 0);
 
         // Cross-pollination: write one replica per accepted cluster (M=1 = single closest cluster).
         for (ClusterSearchResult clusterResult : findReplicaClusters(vector)) {
             try (ClusterAccessResult accessResult = prepareClusterAccess(clusterResult, ctx)) {
                 // Distance is to THIS cluster's centroid so each replica's stored key is self-consistent.
-                double distance = distanceFunction.apply(vector, clusterResult.centroid);
-                pageMutator.insertIntoDataPages(accessResult.metadataPageId(), vector, distance,
+                // Navigation already computed it and bulk-load stores the same field, so reuse it.
+                pageMutator.insertIntoDataPages(accessResult.metadataPageId(), vector, clusterResult.distance,
                         clusterResult.centroidId, tuple, ctx, getFileId());
             }
         }
@@ -243,9 +238,8 @@ public class VTree extends AbstractTreeIndex {
      */
     private void deleteVector(ITupleReference tuple, VTreeOpContext ctx) throws HyracksDataException {
 
-        // Extract vector and primary key (binary format - no type assumption)
-        double[] vector = VTreeTupleUtils.extractVectorFromTuple(tuple, 0, vectorAccessorFactory);
-        byte[] primaryKey = VTreeTupleUtils.extractPrimaryKeyFromTuple(tuple);
+        // The key fields stay in the tuple; the page-level lookup reads them from its trailing fields.
+        double[] vector = ctx.decodeVector(tuple, 0);
 
         // Cross-pollination: the record was replicated into every accepted cluster at insert/bulk-load
         // time, so a delete must reconcile in EVERY one of them — otherwise the non-cancelled replicas
@@ -253,11 +247,12 @@ public class VTree extends AbstractTreeIndex {
         // eps/M/rng on the immutable static structure), so each replica is matched in its own cluster.
         for (ClusterSearchResult clusterResult : findReplicaClusters(vector)) {
             try (ClusterAccessResult accessResult = prepareClusterAccess(clusterResult, ctx)) {
-                double distance = distanceFunction.apply(vector, clusterResult.centroid);
+                // The navigation-computed distance the matching write stored in field 0.
+                double distance = clusterResult.distance;
 
                 // Try to find and physically delete tuple from data pages (Scenarios 2 & 3)
-                boolean foundAndDeleted = pageMutator.tryPhysicalDelete(accessResult.metadataPageId(), distance,
-                        primaryKey, tuple, ctx, getFileId());
+                boolean foundAndDeleted =
+                        pageMutator.tryPhysicalDelete(accessResult.metadataPageId(), distance, tuple, ctx, getFileId());
 
                 if (!foundAndDeleted) {
                     // Scenario 1: Tuple not found in this cluster → Insert a delete-marker tuple via
@@ -609,11 +604,11 @@ public class VTree extends AbstractTreeIndex {
         private boolean destroyed = false;
         // The IAP map and the tree's quantization params are fixed for the accessor's lifetime, so these are
         // resolved once at construction and read as fixed fields during search. queryDistanceFunctionFactory
-        // is the optional query-time factory (null → fall back to the index's own); binaryAccessorFactory
+        // is the optional query-time factory (null → fall back to the index's own); queryVectorAccessor
         // decodes the query tuple; quantizerFactory / injectedQuantizer are the production and test quantizer
         // seams. Only the quantizer instance is built per search (it depends on the predicate's distance metric).
         private final IVTreeDistanceFunctionFactory queryDistanceFunctionFactory;
-        private final IVTreeBinaryAccessorFactory binaryAccessorFactory;
+        private final IVTreeBinaryAccessor queryVectorAccessor;
         private final IVTreeQuantizerFactory quantizerFactory;
         private final IVTreeQuantizer injectedQuantizer;
         private final VTreeQuantizationParams quantizationParams;
@@ -623,11 +618,12 @@ public class VTree extends AbstractTreeIndex {
             this.ctx = new VTreeOpContext(this, tree.interiorFrameFactory, tree.leafFrameFactory,
                     tree.metadataFrameFactory, tree.dataFrameFactory, tree.freePageManager, tree.cmpFactories,
                     tree.vectorDimensions, iap.getModificationCallback(), iap.getSearchOperationCallback(),
-                    tree.dataTupleBuilderFactory, tree.quantizationParams);
+                    tree.dataTupleBuilderFactory, tree.quantizationParams, tree.vectorAccessorFactory);
             this.queryDistanceFunctionFactory =
                     (IVTreeDistanceFunctionFactory) iap.getParameters().get(IVTreeDistanceFunctionFactory.IAP_KEY);
-            this.binaryAccessorFactory =
+            IVTreeBinaryAccessorFactory queryAccessorFactory =
                     (IVTreeBinaryAccessorFactory) iap.getParameters().get(IVTreeBinaryAccessorFactory.IAP_KEY);
+            this.queryVectorAccessor = queryAccessorFactory == null ? null : queryAccessorFactory.createAccessor();
             this.quantizerFactory = (IVTreeQuantizerFactory) iap.getParameters().get(IVTreeQuantizerFactory.IAP_KEY);
             this.injectedQuantizer = (IVTreeQuantizer) iap.getParameters().get(IVTreeQuantizer.IAP_KEY);
             this.quantizationParams = tree.getQuantizationParams();
@@ -717,12 +713,15 @@ public class VTree extends AbstractTreeIndex {
             vectorCursor.open(initialState, searchPred);
         }
 
-        /** Decode the query vector from the predicate's tuple via the IAP accessor factory (null if none). */
+        /** The query vector from the predicate's tuple, or null when there is no query tuple or no accessor. */
         private double[] extractQueryVector(ISearchPredicate searchPred) throws HyracksDataException {
-            if (searchPred instanceof VTreeSearchPredicate vectorPred && vectorPred.getQueryTuple() != null) {
-                // binaryAccessorFactory was resolved from the IAP at accessor construction.
-                return VTreeTupleUtils.extractVectorFromTuple(vectorPred.getQueryTuple(),
-                        vectorPred.getQueryFieldIndex(), binaryAccessorFactory);
+            if (queryVectorAccessor != null && searchPred instanceof VTreeSearchPredicate vectorPred
+                    && vectorPred.getQueryTuple() != null) {
+                ITupleReference queryTuple = vectorPred.getQueryTuple();
+                int field = vectorPred.getQueryFieldIndex();
+                queryVectorAccessor.reset(queryTuple.getFieldData(field), queryTuple.getFieldStart(field),
+                        queryTuple.getFieldLength(field));
+                return queryVectorAccessor.getVector();
             }
             return null;
         }

@@ -228,7 +228,8 @@ public class LSMVTreeDiskComponent extends AbstractLSMDiskComponent {
         LSMVTreeDataTupleWriterFactory tupleWriterFactory =
                 (LSMVTreeDataTupleWriterFactory) dataFrameFactory.getTupleWriterFactory();
         return new VTreeDataFrameFactory(tupleWriterFactory.createCopyWriterFactory(),
-                dataFrameFactory.getVectorDimensions());
+                dataFrameFactory.getVectorDimensions(), dataFrameFactory.getComparatorFields(),
+                dataFrameFactory.getKeyCmpFactories(), dataFrameFactory.getReplaceAcceptor());
     }
 
     static IMetadataPageManager getMetadataPageManager(VTree vTree) {

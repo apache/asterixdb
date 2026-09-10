@@ -34,16 +34,23 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 /**
  * Transforms input tuples from operator format to VTree data page storage format.
  *
- * Input tuple format: [vector, include_fields..., pk]
+ * Input tuple format: [vector, value_fields..., key_fields...]
  *
- * Non-quantized output: [distance, centroidId, pk, include_fields...]
- * Quantized output:     [distance, centroidId, quantized_distance, quantized_embedding, pk, include_fields...]
+ * Non-quantized output: [distance, centroidId, key_fields..., value_fields...]
+ * Quantized output:     [distance, centroidId, quantized_distance, quantized_embedding, key_fields..., value_fields...]
  *
  * The returned ITupleReference is valid until the next call to {@link #buildDataTuple}.
  */
 public class VTreeDataTupleBuilder implements IVTreeDataTupleBuilder {
 
     private final int numIncludeFields;
+
+    /**
+     * How many trailing input fields complete the ordering key. Supplied by the same caller that
+     * derives {@code comparatorFields}, so the tuple this builder writes and the key the frames compare
+     * cannot disagree on their count.
+     */
+    private final int numKeyFields;
 
     private final boolean isQuantized;
     private final VTreeQuantizationParams quantizationParams;
@@ -56,16 +63,47 @@ public class VTreeDataTupleBuilder implements IVTreeDataTupleBuilder {
     private byte[] quantizeScratch;
     private ByteBuffer fallbackBuf;
 
-    public VTreeDataTupleBuilder(int numIncludeFields, boolean isQuantized,
+    /** Assembles just the ordering key {@code <distance, key fields...>} for a lookup. */
+    private final ArrayTupleBuilder keyBuilder;
+    private final ArrayTupleReference keyRef;
+
+    public VTreeDataTupleBuilder(int numIncludeFields, int numKeyFields, boolean isQuantized,
             VTreeQuantizationParams quantizationParams) {
         this.numIncludeFields = numIncludeFields;
+        this.numKeyFields = numKeyFields;
         this.isQuantized = isQuantized;
         this.quantizationParams = quantizationParams;
-        // Field order and count are owned by VTreeDataTupleAccessor: [secondary fields][1 PK][includes].
-        int fieldCount = new VTreeDataTupleAccessor(isQuantized).numSecondaryFields() + 1 + numIncludeFields;
+        // Field order and count are owned by VTreeDataTupleAccessor: [own fields][key fields][values].
+        int fieldCount = new VTreeDataTupleAccessor(isQuantized).numSecondaryFields() + numKeyFields + numIncludeFields;
 
         this.tupleBuilder = new ArrayTupleBuilder(fieldCount);
         this.tupleRef = new ArrayTupleReference();
+        this.keyBuilder = new ArrayTupleBuilder(1 + numKeyFields);
+        this.keyRef = new ArrayTupleReference();
+    }
+
+    /**
+     * Builds the ordering key of the record {@code originalTuple} would store at {@code distance}, in
+     * the layout the data and directory frames compare: the distance, then the input's trailing key
+     * fields. Lets the delete path look a record up without a data tuple. Valid until the next call.
+     */
+    @Override
+    public ITupleReference buildKeyTuple(double distance, ITupleReference originalTuple) throws HyracksDataException {
+        try {
+            keyBuilder.reset();
+            keyBuilder.getDataOutput().writeDouble(distance);
+            keyBuilder.addFieldEndOffset();
+            int keyStart = 1 + numIncludeFields;
+            for (int i = 0; i < numKeyFields; i++) {
+                int src = keyStart + i;
+                keyBuilder.addField(originalTuple.getFieldData(src), originalTuple.getFieldStart(src),
+                        originalTuple.getFieldLength(src));
+            }
+            keyRef.reset(keyBuilder.getFieldEndOffsets(), keyBuilder.getByteArray());
+            return keyRef;
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
@@ -87,10 +125,13 @@ public class VTreeDataTupleBuilder implements IVTreeDataTupleBuilder {
                 writeQuantizedFields(dos, vector, distance);
             }
 
-            // PK field (at position 1 + numIncludeFields in input)
-            int pkFieldIndex = 1 + numIncludeFields;
-            tupleBuilder.addField(originalTuple.getFieldData(pkFieldIndex), originalTuple.getFieldStart(pkFieldIndex),
-                    originalTuple.getFieldLength(pkFieldIndex));
+            // Key fields (the input's trailing fields, from position 1 + numIncludeFields)
+            int keyStart = 1 + numIncludeFields;
+            for (int i = 0; i < numKeyFields; i++) {
+                int src = keyStart + i;
+                tupleBuilder.addField(originalTuple.getFieldData(src), originalTuple.getFieldStart(src),
+                        originalTuple.getFieldLength(src));
+            }
 
             // Include fields (from input fields 1..numIncludeFields)
             for (int i = 0; i < numIncludeFields; i++) {

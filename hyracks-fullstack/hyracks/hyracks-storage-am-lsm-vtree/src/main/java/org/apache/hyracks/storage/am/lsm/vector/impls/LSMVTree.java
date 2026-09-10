@@ -111,13 +111,15 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     protected final int vectorDimensions;
     protected final IVTreeBinaryAccessorFactory vectorAccessorFactory;
 
-    // Data tuple format depends on quantization (see VTreeDataTupleBuilder):
-    //   non-quantized: [distance, centroidId, primary_keys..., include_fields...]   (pkStartField=2)
-    //   quantized:     [distance, centroidId, quantized_distance, quantized_embedding,
-    //                   primary_keys..., include_fields...]                          (pkStartField=4)
-    // Quantization is enforced at index creation in this build, so the quantized form is the default.
-    protected final int numPrimaryKeyFields;
-    protected final int numIncludeFields;
+    /**
+     * The ordering key as stored-tuple field indexes, distance first, with an index-aligned comparator
+     * array. Computed once by {@code LSMVTreeUtils}, shared with the data frames, and handed to the
+     * search cursors so no reader re-derives where the key fields sit. Mirrors {@code LSMRTreeUtils}'s
+     * comparatorFields and linearizerArray.
+     */
+    protected final int[] comparatorFields;
+    protected final IBinaryComparatorFactory[] keyCmpFactories;
+
     protected final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
 
     // Raw quantization params for lazy quantizer creation at query time (null = non-quantized path)
@@ -140,10 +142,10 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int vectorDimensions, int[] vectorFields, int[] filterFields, boolean durable, boolean atomic,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int numPrimaryKeyFields, int numIncludeFields,
-            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
-            throws HyracksDataException {
+            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] comparatorFields,
+            IBinaryComparatorFactory[] keyCmpFactories, IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
+            VTreeQuantizationParams quantizationParams, IVTreeDistanceFunctionFactory distanceFunctionFactory,
+            CrossPollinationConfig crossPollination) throws HyracksDataException {
 
         super(storageConfig, ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
@@ -157,8 +159,8 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.vectorDimensions = vectorDimensions;
         this.vectorAccessorFactory = vectorAccessorFactory;
-        this.numPrimaryKeyFields = numPrimaryKeyFields;
-        this.numIncludeFields = numIncludeFields;
+        this.comparatorFields = comparatorFields;
+        this.keyCmpFactories = keyCmpFactories;
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
@@ -322,7 +324,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     /**
-     * Whether this index stores data tuples in the quantized layout (pkStartField=4). Production
+     * Whether this index stores data tuples in the quantized layout. Production
      * quantized indexes carry non-null {@code quantizationParams}; test fixtures may select the
      * quantized layout purely through the data-tuple-creator factory.
      */
@@ -331,8 +333,14 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         return quantizationParams != null || dataTupleBuilderFactory.isQuantized();
     }
 
-    public int getNumPrimaryKeyFields() {
-        return numPrimaryKeyFields;
+    /** Stored-tuple fields forming the ordering key, distance first. */
+    public int[] getComparatorFields() {
+        return comparatorFields;
+    }
+
+    /** Comparators for {@link #getComparatorFields()}, index-aligned with it. */
+    public IBinaryComparatorFactory[] getKeyCmpFactories() {
+        return keyCmpFactories;
     }
 
     @Override
@@ -469,11 +477,10 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
                 // SequentialClusterSelectionStrategy to iterate clusters in order.
                 VTreeSearchPredicate mergePred = new VTreeSearchPredicate();
                 mergePred.setEpsilon(0.0);
-                // The merge cursor (LSMVTreeSearchCursor) derives pkStartField from the index's
-                // isQuantized flag, so its reconciliation key is <distance (field 0), PK...> — quantized
-                // layouts correctly skip the quantized_distance/quantized_embedding fields. (Getting this
-                // wrong would pull field 2, whose write semantics differ between bulk load and DML, into
-                // the key and break matter/antimatter cancellation during COMPACT.)
+                // The merge cursor (LSMVTreeSearchCursor) reconciles on this index's comparatorFields,
+                // the same array the data frames order pages by, so it skips the quantized fields by
+                // construction. (Including field 2, whose write semantics differ between bulk load and
+                // DML, would break matter/antimatter cancellation during COMPACT.)
 
                 // Cursor was already created in full-scan mode by createMergeOperation()
                 search(mergeOp.getAccessor().getOpContext(), cursor, mergePred);

@@ -23,14 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -47,6 +44,7 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeMetadataFrame;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.am.vector.utils.VTreeLeafNeighborList;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataKeys;
+import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataTupleAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.ISketchSampler;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -219,16 +217,14 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
             loadToNextLeafCluster(targetClusterIndex);
         }
         try {
-            int spaceNeeded = dataFrameTupleWriter.bytesRequired(tuple) + slotSize;
+            int spaceNeeded = currentDataFrame.getBytesRequiredToWriteTuple(tuple);
             int spaceAvailable = currentDataFrame.getTotalFreeSpace();
 
-            // A tuple larger than a fresh empty data page's usable space (pageSize - pageHeaderSize -
-            // slotSize) can never fit; reject it here instead of looping/overrunning at insertSorted().
-            int maxUsableTupleBytes = bufferCache.getPageSize() - currentDataFrame.getPageHeaderSize() - slotSize;
-            int tupleBytes = dataFrameTupleWriter.bytesRequired(tuple);
-            if (tupleBytes > maxUsableTupleBytes) {
-                throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RECORD_IS_TOO_LARGE,
-                        tupleBytes, maxUsableTupleBytes);
+            // The bound the incremental path enforces, so a record admitted at build is also admitted
+            // by a later insert into a page that splits in halves.
+            int maxTupleBytes = currentDataFrame.getMaxTupleSize(bufferCache.getPageSize());
+            if (spaceNeeded > maxTupleBytes) {
+                throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, spaceNeeded, maxTupleBytes);
             }
 
             if (spaceNeeded > spaceAvailable) {
@@ -313,7 +309,8 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
             return;
         }
 
-        double maxDistance = ((IVTreeDataFrame) currentDataFrame).getDistanceToCentroid(tupleCount - 1);
+        // Copy before the page is written and released: keyAt returns a view over the frame.
+        ITupleReference maxKey = TupleUtils.copyTuple(((IVTreeDataFrame) currentDataFrame).keyAt(tupleCount - 1));
         int writtenDataPageId = currentDataPageId;
 
         if (lastPage) {
@@ -344,18 +341,18 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
         }
 
         // Add directory entry for the written data page
-        addDirectoryEntry(maxDistance, writtenDataPageId);
+        addDirectoryEntry(maxKey, writtenDataPageId);
     }
 
     /**
-     * Add a directory entry <maxDistance, dataPageId> to the current directory page.
-     * If the directory page is full, move it to the pending list and create a new overflow.
+     * Add a directory entry {@code <maxKey..., dataPageId>} to the current directory page. If the
+     * directory page is full, move it to the pending list and create a new overflow.
+     * <p>
+     * Built through {@link VTreeMetadataTupleAccessor}, so this writer follows the entry layout it defines.
      */
-    private void addDirectoryEntry(double maxDistance, int dataPageId) throws HyracksDataException {
+    private void addDirectoryEntry(ITupleReference maxKey, int dataPageId) throws HyracksDataException {
         try {
-            ITupleReference directoryEntry =
-                    TupleUtils.createTuple(new ISerializerDeserializer[] { DoubleSerializerDeserializer.INSTANCE,
-                            IntegerSerializerDeserializer.INSTANCE }, maxDistance, dataPageId);
+            ITupleReference directoryEntry = VTreeMetadataTupleAccessor.createMetadataTuple(maxKey, dataPageId);
 
             // Check if directory page has space
             int spaceNeeded = directoryFrameTupleWriter.bytesRequired(directoryEntry) + slotSize;
@@ -372,8 +369,8 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
 
             ((IVTreeFrame) currentDirectoryFrame).insertSorted(directoryEntry);
 
-            LOGGER.log(Level.TRACE, "Added directory entry for data page {} (maxDist={}) to directory, cluster {}",
-                    dataPageId, maxDistance, currentLeafClusterIndex);
+            LOGGER.log(Level.TRACE, "Added directory entry for data page {} to directory, cluster {}", dataPageId,
+                    currentLeafClusterIndex);
 
         } catch (HyracksDataException e) {
             throw e;

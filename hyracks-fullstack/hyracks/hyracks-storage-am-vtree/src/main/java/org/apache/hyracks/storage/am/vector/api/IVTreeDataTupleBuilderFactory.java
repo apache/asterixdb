@@ -28,7 +28,8 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * <p>
  * {@link Serializable} so it can travel on {@code LSMVTreeLocalResourceFactory} in the Java-serialized
  * index-creation job. Not {@code IJsonSerializable}: {@code LSMVTreeLocalResource.fromJson} rebuilds it
- * from primitives ({@code numIncludeFields}, {@code isQuantized}) rather than serializing it as JSON.
+ * from primitives ({@code numIncludeFields}, {@code numKeyFields}, {@code isQuantized}) rather than
+ * serializing it as JSON.
  */
 public interface IVTreeDataTupleBuilderFactory extends Serializable {
 
@@ -43,9 +44,9 @@ public interface IVTreeDataTupleBuilderFactory extends Serializable {
 
     /**
      * Whether the tuples produced by this factory use the quantized data-tuple layout
-     * {@code [distance, centroidId, quantized_distance, quantized_embedding, PK..., includes...]}
-     * (pkStartField=4) rather than the non-quantized {@code [distance, centroidId, PK...,
-     * includes...]} layout (pkStartField=2).
+     * {@code [distance, centroidId, quantized_distance, quantized_embedding, key..., value...]}, whose
+     * key fields start at 4, rather than the non-quantized
+     * {@code [distance, centroidId, key..., value...]} layout, whose key fields start at 2.
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     boolean isQuantized();

@@ -133,11 +133,15 @@ public class LSMVTreeMergeTest extends VectorIndexTestDriver {
 
             VectorTestStructure struct = VectorTestStructure.threeDim3Level();
             List<List<ITupleReference>> insertRecords = struct.generateInsertRecords(INSERT_RECORDS_PER_CLUSTER);
-            int insertedCount = testUtils.insertRecordsIntoMemoryComponent(ctx, insertRecords);
-            LOGGER.info("Inserted {} records into memory component", insertedCount);
-
+            // Two flushed components, each well inside the memory budget, so the count below does not
+            // depend on whether the inserts happen to overflow the memory component.
+            int half = insertRecords.size() / 2;
+            int insertedCount = testUtils.insertRecordsIntoMemoryComponent(ctx, insertRecords.subList(0, half));
             flush(ctx);
-            LOGGER.info("Flushed memory component to disk");
+            insertedCount +=
+                    testUtils.insertRecordsIntoMemoryComponent(ctx, insertRecords.subList(half, insertRecords.size()));
+            flush(ctx);
+            LOGGER.info("Inserted {} records and flushed twice", insertedCount);
             assertEquals("Should have 3 disk components after flush", 3, lsmvTree.getDiskComponents().size());
 
             ILSMIndexAccessor lsmAccessor =

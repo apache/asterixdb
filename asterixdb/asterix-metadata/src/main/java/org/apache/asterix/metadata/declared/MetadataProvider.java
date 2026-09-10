@@ -856,8 +856,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         VectorIndexParameters vectorParameters = vectorIndexDetails.getVectorParameters();
         double indexEpsilon = vectorParameters.getEpsilon();
         boolean isQuantized = vectorParameters.isQuantized();
-        int numSecondaryKeys = isQuantized ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
-                : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
+        // The search emits the identity fields only, so the embedding never reaches an output frame.
+        int[] projectedFields = VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys);
 
         AOrderedListVectorBinaryAccessorFactory vectorAccessorFactory = new AOrderedListVectorBinaryAccessorFactory();
         // The distance metric is fixed at index creation and baked into the factories the search operator
@@ -870,8 +870,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int[][] partitionsMap = partitioningProperties.getComputeStorageMap();
         VTreeSearchOperatorDescriptor vectorSearchOp = new VTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                 queryFields, indexDataflowHelperFactory, retainInput, searchCallbackFactory, vectorAccessorFactory,
-                distanceFunctionFactory, quantizerFactory, partitionsMap, numPrimaryKeys, numSecondaryKeys,
-                tupleFilterFactory, includeFilterFields, indexEpsilon, indexOnly);
+                distanceFunctionFactory, quantizerFactory, partitionsMap, projectedFields, tupleFilterFactory,
+                includeFilterFields, indexEpsilon, indexOnly);
 
         return new Pair<>(vectorSearchOp, partitioningProperties.getConstraints());
     }

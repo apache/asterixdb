@@ -113,6 +113,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.vector.dataflow.QuantizedIndexBuilderFactory;
 import org.apache.hyracks.storage.am.lsm.vector.dataflow.QuantizedIndexCreateOperatorDescriptor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
@@ -367,7 +368,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         // Quantized: [distance, centroidId, quantized_distance, quantized_embedding, pk..., includes...] → 4
         // IMPORTANT: centroidId MUST be field 1 in both cases so that sortFields={1,0}
         // and extractCentroidId(field[1]) work unchanged for quantized and non-quantized.
-        int numOutputSecondaryFields = isQuantized ? 4 : 2;
+        int numOutputSecondaryFields = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
 
         ISerializerDeserializer[] outputRecFields =
                 new ISerializerDeserializer[numOutputSecondaryFields + numPrimaryKeys + numIncludeFieldsForOutput];
@@ -442,12 +443,22 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
         // - Non-quantized: outputRecDesc has 2 secondary fields (distance, centroidId) then PKs, includes.
         // - Quantized:    outputRecDesc has 4 secondary fields (distance, centroidId, quantized_distance,
         //                 quantized_embedding) then PKs, includes.
-        // Sort keys are always field 1 (centroidId) and field 0 (distance), so no branch on isQuantized is needed.
-        int[] sortFields = { 1, 0 };
-        assert sortFields[0] == 1 && sortFields[1] == 0;
-        IBinaryComparatorFactory[] sortComparatorFactories = { IntegerBinaryComparatorFactory.INSTANCE, // centroidId (raw int)
-                DoubleBinaryComparatorFactory.INSTANCE // distance (raw double)
-        };
+        // Sort by <centroidId, distance, primary key>. A bulk-loaded component inherits the sort order
+        // and its pages are ordered by <distance, PK>, so the primary key belongs in the sort key.
+        // The primary-key fields follow the secondary fields in outputRecDesc.
+        int pkStartField = isQuantized ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
+                : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
+        int[] sortFields = new int[2 + numPrimaryKeys];
+        IBinaryComparatorFactory[] sortComparatorFactories = new IBinaryComparatorFactory[2 + numPrimaryKeys];
+        sortFields[0] = 1; // centroidId (raw int)
+        sortComparatorFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
+        sortFields[1] = 0; // distance (raw double)
+        sortComparatorFactories[1] = DoubleBinaryComparatorFactory.INSTANCE;
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            sortFields[2 + i] = pkStartField + i;
+            // The comparators the index and its merge cursor use, so all three orders agree.
+            sortComparatorFactories[2 + i] = primaryComparatorFactories[i];
+        }
         // Ensure minimum frames for sort operator (must be > 1)
         int sortFrames = Math.max(sortNumFrames, 2);
         ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec, sortFrames, sortFields,
@@ -897,7 +908,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
      */
     private static void assertBulkLoadOutputLayout(RecordDescriptor outputRecDesc, boolean isQuantized,
             int numPrimaryKeys, int numIncludeFieldsForOutput) {
-        int numOutputSecondaryFields = isQuantized ? 4 : 2;
+        int numOutputSecondaryFields = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
         int expectedFields = numOutputSecondaryFields + numPrimaryKeys + numIncludeFieldsForOutput;
         assert outputRecDesc.getFieldCount() == expectedFields;
         assert outputRecDesc.getTypeTraits()[0] instanceof FixedLengthTypeTrait

@@ -19,20 +19,16 @@
 
 package org.apache.hyracks.storage.am.vector.frames;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataFrame;
 
 /**
- * Factory for {@link VTreeDataFrame} instances. Data frames hold tuples sorted by
- * {@code distance_to_centroid} ascending; the exact tuple shape depends on whether the index is
- * quantized:
- * <ul>
- *   <li>Non-quantized: {@code <distance_to_centroid, centroid_id, primary_key, included_fields>}</li>
- *   <li>Quantized:     {@code <distance_to_centroid, centroid_id, quantized_distance,
- *       quantized_embedding, primary_key, included_fields>} (the default in this build, since
- *       quantization is enforced at index creation; pkStartField=4 vs 2)</li>
- * </ul>
+ * Factory for {@link VTreeDataFrame} instances. Frames are told their ordering key as
+ * {@code comparatorFields} plus the comparators for those fields, so neither this class nor the frames
+ * it builds interpret what the caller put there. See {@code VTreeDataTupleAccessor} for the layout.
  */
 public class VTreeDataFrameFactory implements ITreeIndexFrameFactory {
 
@@ -40,14 +36,31 @@ public class VTreeDataFrameFactory implements ITreeIndexFrameFactory {
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
     private final int vectorDimensions;
 
-    public VTreeDataFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int vectorDimensions) {
+    /** Stored-tuple fields forming the ordering key, in key order, the distance first. */
+    private final int[] comparatorFields;
+
+    /**
+     * Comparators for {@link #comparatorFields}, index-aligned, sliced from the same array the index
+     * and its merge cursor are built with so that all three order the key identically.
+     */
+    private final IBinaryComparatorFactory[] keyCmpFactories;
+
+    /** Injected from the LSM layer; decides which stored tuples a same-key write may overwrite. */
+    private final ITupleAcceptor replaceAcceptor;
+
+    public VTreeDataFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int vectorDimensions,
+            int[] comparatorFields, IBinaryComparatorFactory[] keyCmpFactories, ITupleAcceptor replaceAcceptor) {
         this.tupleWriterFactory = tupleWriterFactory;
         this.vectorDimensions = vectorDimensions;
+        this.comparatorFields = comparatorFields;
+        this.keyCmpFactories = keyCmpFactories;
+        this.replaceAcceptor = replaceAcceptor;
     }
 
     @Override
     public IVTreeDataFrame createFrame() {
-        return new VTreeDataFrame(tupleWriterFactory.createTupleWriter());
+        return new VTreeDataFrame(tupleWriterFactory.createTupleWriter(), comparatorFields, keyCmpFactories,
+                replaceAcceptor);
     }
 
     @Override
@@ -57,5 +70,17 @@ public class VTreeDataFrameFactory implements ITreeIndexFrameFactory {
 
     public int getVectorDimensions() {
         return vectorDimensions;
+    }
+
+    public int[] getComparatorFields() {
+        return comparatorFields;
+    }
+
+    public IBinaryComparatorFactory[] getKeyCmpFactories() {
+        return keyCmpFactories;
+    }
+
+    public ITupleAcceptor getReplaceAcceptor() {
+        return replaceAcceptor;
     }
 }

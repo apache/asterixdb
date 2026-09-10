@@ -19,29 +19,35 @@
 
 package org.apache.hyracks.storage.am.vector.frames;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.frames.OrderedSlotManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.vector.api.IVTreeMetadataFrame;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataTupleAccessor;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
  * VTree metadata frame.
  * <p>
  * Page layout: base header (from {@link VTreeNSMFrame}) followed by a 4-byte next-metadata-page pointer
- * (sentinel {@code -1}). Tuples have the format {@code <max_distance, data_page_pointer>} and are kept sorted
- * by {@code max_distance} ascending so that {@code findInsertPosition} and bounded scans can use binary search.
+ * (sentinel {@code -1}). Entries are {@code <key fields..., data_page_pointer>} and are kept sorted by
+ * the key ascending, so a search compares a key tuple against an entry's leading fields with the same
+ * comparator that orders data pages and the trailing pointer is never visited.
  */
 public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataFrame {
 
     // Offset (bytes from page start) of the 4-byte next-metadata-page pointer.
     private static final int NEXT_PAGE_OFFSET = CENTROID_ID_OFFSET + Integer.BYTES;
 
-    public VTreeMetadataFrame(ITreeIndexTupleWriter tupleWriter) {
+    public VTreeMetadataFrame(ITreeIndexTupleWriter tupleWriter, IBinaryComparatorFactory[] keyCmpFactories) {
         super(tupleWriter, new OrderedSlotManager());
+        // Same comparators the data frames order pages by, so a separator and the page it describes
+        // cannot be ordered differently.
+        setMultiComparator(MultiComparator.create(keyCmpFactories));
     }
 
     @Override
@@ -65,10 +71,17 @@ public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataF
         return buf.getInt(NEXT_PAGE_OFFSET);
     }
 
+    /**
+     * Compares the separator at {@code tupleIndex} against {@code key}. The separator's leading fields
+     * are the key of the last record on the page it points at, so the comparator reads those and stops.
+     *
+     * @return negative if that page's range sorts entirely before the key, positive if after, zero if
+     *         the key is exactly that page's maximum
+     */
     @Override
-    public double getMaxDistance(int tupleIndex) throws HyracksDataException {
+    public int compareSeparatorToKey(int tupleIndex, ITupleReference key) throws HyracksDataException {
         frameTuple.resetByTupleIndex(this, tupleIndex);
-        return VTreeMetadataTupleAccessor.getMaxDistance(frameTuple);
+        return cmp.compare(frameTuple, key);
     }
 
     @Override
@@ -78,25 +91,45 @@ public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataF
     }
 
     /**
-     * Overwrite the {@code max_distance} field of an existing tuple in place. Caller must preserve the
-     * sort invariant on {@code max_distance}.
+     * Replaces the separator at {@code tupleIndex} with one carrying {@code key}, keeping its position,
+     * and reports whether it fitted. A full-width separator is variable length, so a replacement can be
+     * wider than what it replaces and a nearly-full page cannot always absorb it; on {@code false}
+     * nothing has been touched and the caller must make room. Position is the caller's to justify: a
+     * post-split lowering stays above its predecessor.
      */
-    public void updateMaxDistance(int tupleIndex, double newMaxDistance) throws HyracksDataException {
+    @Override
+    public boolean replaceSeparator(int tupleIndex, ITupleReference key, int dataPageId) throws HyracksDataException {
+        ITupleReference entry = VTreeMetadataTupleAccessor.createMetadataTuple(key, dataPageId);
         frameTuple.resetByTupleIndex(this, tupleIndex);
-        int f = VTreeMetadataTupleAccessor.MAX_DISTANCE_FIELD;
-        DoublePointable.setDouble(frameTuple.getFieldData(f), frameTuple.getFieldStart(f), newMaxDistance);
+        int reclaimed = tupleWriter.bytesRequired(frameTuple);
+        if (tupleWriter.bytesRequired(entry) > getTotalFreeSpace() + reclaimed) {
+            return false;
+        }
+        delete(entry, tupleIndex);
+        // delete() returns the bytes to the free-space total without moving FREE_SPACE_OFFSET back, so
+        // the reclaimed run is fragmented; compact before writing a replacement that may be wider.
+        if (hasSpaceInsert(entry) != FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE) {
+            compact();
+        }
+        insert(entry, tupleIndex);
+        return true;
     }
 
-    /**
-     * Binary-search the leftmost insertion index that keeps {@code max_distance} sorted ascending.
-     */
-    public int findInsertPosition(double maxDistance) throws HyracksDataException {
+    /** Removes the separator at {@code tupleIndex}, freeing its bytes. */
+    @Override
+    public void deleteSeparator(int tupleIndex) throws HyracksDataException {
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        delete(frameTuple, tupleIndex);
+    }
+
+    /** Binary-search the leftmost insertion index that keeps the entries key-ascending. */
+    @Override
+    public int findInsertPosition(ITupleReference key) throws HyracksDataException {
         int left = 0;
         int right = getTupleCount();
         while (left < right) {
-            int mid = (left + right) / 2;
-            double midMaxDistance = getMaxDistance(mid);
-            if (midMaxDistance < maxDistance) {
+            int mid = (left + right) >>> 1;
+            if (compareSeparatorToKey(mid, key) < 0) {
                 left = mid + 1;
             } else {
                 right = mid;
@@ -145,17 +178,27 @@ public class VTreeMetadataFrame extends VTreeNSMFrame implements IVTreeMetadataF
             rightFrame.insert(rightTuples[i], i);
         }
 
-        // Route the new tuple to the side whose range covers its max_distance.
-        double newMaxDistance = extractMaxDistanceFromTuple(tuple);
-        if (getTupleCount() == 0 || newMaxDistance <= getMaxDistance(getTupleCount() - 1)) {
-            insert(tuple, findInsertPosition(newMaxDistance));
+        insertIntoHalf(rightFrame, tuple);
+    }
+
+    /**
+     * Insert {@code tuple} into this frame or {@code rightFrame}, whichever half's key range covers it.
+     * Valid only after {@link #split} while both halves are still latched.
+     */
+    public void insertIntoHalf(IVTreeMetadataFrame rightFrame, ITupleReference tuple) throws HyracksDataException {
+        // Both sides are separators, so the key comparator reads their leading fields and ignores the
+        // trailing pointers.
+        if (getTupleCount() == 0 || cmp.compare(tuple, getSeparator(getTupleCount() - 1)) <= 0) {
+            insert(tuple, findInsertPosition(tuple));
         } else {
-            rightFrame.insert(tuple, ((VTreeMetadataFrame) rightFrame).findInsertPosition(newMaxDistance));
+            rightFrame.insert(tuple, ((VTreeMetadataFrame) rightFrame).findInsertPosition(tuple));
         }
     }
 
-    private double extractMaxDistanceFromTuple(ITupleReference tuple) {
-        return VTreeMetadataTupleAccessor.getMaxDistance(tuple);
+    /** The separator at {@code tupleIndex}; the view is valid until the next call on this frame. */
+    private ITupleReference getSeparator(int tupleIndex) throws HyracksDataException {
+        frameTuple.resetByTupleIndex(this, tupleIndex);
+        return frameTuple;
     }
 
     @Override

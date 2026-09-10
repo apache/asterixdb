@@ -48,7 +48,7 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
     protected final int[] vectorFields;
     protected final boolean atomic;
     protected final IVTreeBinaryAccessorFactory vectorAccessorFactory;
-    protected final int numPrimaryKeyFields;
+    protected final int[] identityFields;
     protected final int numIncludeFields;
     protected final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
 
@@ -67,7 +67,7 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int vectorDimensions, int[] vectorFields,
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int numPrimaryKeyFields, int numIncludeFields,
+            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
@@ -80,7 +80,7 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.vectorAccessorFactory = vectorAccessorFactory;
-        this.numPrimaryKeyFields = numPrimaryKeyFields;
+        this.identityFields = identityFields;
         this.numIncludeFields = numIncludeFields;
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
     }
@@ -91,7 +91,7 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerProvider, ioOpCallbackFactory,
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable, vectorDimensions, vectorFields, nullTypeTraits,
-                nullIntrospector, atomic, vectorAccessorFactory, numPrimaryKeyFields, numIncludeFields,
+                nullIntrospector, atomic, vectorAccessorFactory, identityFields, numIncludeFields,
                 dataTupleBuilderFactory, distanceFunctionFactory, null, null, null, null, null, null, crossPollination);
     }
 }

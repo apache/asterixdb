@@ -38,7 +38,9 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
 import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
+import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
@@ -184,6 +186,59 @@ public class LSMVTreeOversizedTupleTest {
         IIndexBulkLoader bulkLoader = lsmvTree.createBulkLoader(1.0f, false, 1, parameters);
         bulkLoader.add(record);
         bulkLoader.end();
+    }
+
+    /**
+     * The incremental write path splits a full page in halves, so a tuple wider than half a page can never
+     * be placed; it is refused before any page is touched.
+     */
+    @Test
+    public void oversizedIncrementalInsertThrows() throws Exception {
+        ISerializerDeserializer[] includeSerdes = { new UTF8StringSerializerDeserializer() };
+        VectorTestStructure struct = VectorTestStructure.threeDim3Level().withIncludeFields(includeSerdes,
+                (centroidId, recordIndex) -> new Object[] { "s" });
+        VectorTestStructure.BulkLoadRecordFormat format = VectorTestStructure.BulkLoadRecordFormat.NAIVE_WITH_INCLUDES;
+        AbstractVectorTreeTestContext ctx = LSMVTreeTestContext.create(harness.getNcConfig(), harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(),
+                struct.getDataRecordSerdes(format), struct.getVectorDimension(), harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), includeSerdes.length);
+        ctx.setStaticStructureCentroids(struct.buildCentroidTuples());
+        ctx.setNumClustersPerLevel(struct.getNumClustersPerLevel());
+        ctx.setNumCentroidsPerLevel(struct.getCentroidsPerCluster());
+        ctx.setDataRecords(struct.generateBulkLoadRecords(format, 1));
+        VectorTreeTestUtils testUtils = new VectorTreeTestUtils();
+        ctx.getIndex().create();
+        ctx.getIndex().activate();
+        try {
+            testUtils.buildStaticStructure(ctx);
+            // Over half of a 512-byte page, under a whole one: the case a split cannot place.
+            ITupleReference record = inputRecord(new double[] { 20.2, 30.0, 20.0 }, "g".repeat(300), "pk_wide");
+            HyracksDataException thrown = Assert.assertThrows(HyracksDataException.class,
+                    () -> testUtils.insertRecordsIntoMemoryComponent(ctx, List.of(List.of(record))));
+            Assert.assertEquals(ErrorCode.RECORD_IS_TOO_LARGE, errorCodeOf(thrown));
+        } finally {
+            ctx.getIndex().deactivate();
+        }
+    }
+
+    /** An input tuple: the vector, then the string fields in the input layout's order. */
+    private static ITupleReference inputRecord(double[] vector, String... fields) throws HyracksDataException {
+        try {
+            ArrayTupleBuilder builder = new ArrayTupleBuilder(1 + fields.length);
+            DoubleArraySerializerDeserializer.INSTANCE.serialize(vector, builder.getDataOutput());
+            builder.addFieldEndOffset();
+            UTF8StringSerializerDeserializer strings = new UTF8StringSerializerDeserializer();
+            for (String field : fields) {
+                strings.serialize(field, builder.getDataOutput());
+                builder.addFieldEndOffset();
+            }
+            ArrayTupleReference ref = new ArrayTupleReference();
+            ref.reset(builder.getFieldEndOffsets(), builder.getByteArray());
+            return ref;
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     /** Unwrap the underlying {@link ErrorCode} regardless of whether the throw was wrapped in end(). */

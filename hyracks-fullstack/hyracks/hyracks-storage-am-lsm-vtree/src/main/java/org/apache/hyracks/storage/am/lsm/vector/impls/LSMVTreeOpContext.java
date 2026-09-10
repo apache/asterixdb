@@ -102,6 +102,7 @@ public class LSMVTreeOpContext extends AbstractLSMIndexOperationContext {
         // Search state defaults to insert-mode data frame; switched on delete/upsert path
         this.searchInitialState = new LSMVTreeCursorInitialState(lsmTree.getInteriorFrameFactory(),
                 lsmTree.getLeafFrameFactory(), lsmTree.getMetadataFrameFactory(), insertDataFrameFactory, cmp,
+                lsmTree.getComparatorFields(), lsmTree.getKeyCmpFactories(), lsmTree.isQuantized(),
                 lsmTree.getHarness(), null, searchCallback, componentHolder);
     }
 

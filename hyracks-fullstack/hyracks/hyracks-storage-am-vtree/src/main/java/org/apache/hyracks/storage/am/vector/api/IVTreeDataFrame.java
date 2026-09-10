@@ -23,15 +23,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
- * Interface for VTree data frames. Data frames contain vector records sorted by
- * {@code distance_to_centroid} ascending; the exact tuple shape depends on whether the index is
- * quantized:
- * <ul>
- *   <li>Non-quantized: {@code <distance_to_centroid, centroid_id, PK, include_fields>}</li>
- *   <li>Quantized:     {@code <distance_to_centroid, centroid_id, quantized_distance,
- *       quantized_embedding, PK, include_fields>} (the default in this build, since
- *       quantization is enforced at index creation; pkStartField=4 vs 2)</li>
- * </ul>
+ * Interface for VTree data frames. Tuples are kept sorted by the ordering key, whose fields the caller
+ * names when the frame is built; field 0 is the {@code distance_to_centroid} this frame reports. See
+ * {@code VTreeDataTupleAccessor} for the tuple shape.
  * <p>
  * Not thread-safe: an instance wraps one pinned page and is confined to a single operation context.
  */
@@ -47,9 +41,9 @@ public interface IVTreeDataFrame extends IVTreeFrame {
     double getDistanceToCentroid(int tupleIndex) throws HyracksDataException;
 
     /**
-     * Inserts {@code tuple} at slot {@code tupleIndex}, shifting existing tuples right. The caller
-     * must supply an index that preserves the {@code distance_to_centroid}-ascending ordering (see
-     * {@link #findInsertPosition(double)}) and must have ensured the page has room.
+     * Inserts {@code tuple} at slot {@code tupleIndex}, shifting existing tuples right. The caller must
+     * supply an index that preserves the key-ascending ordering (see {@link #findInsertPosition}) and
+     * must have ensured the page has room.
      */
     @Override
     void insert(ITupleReference tuple, int tupleIndex);
@@ -57,17 +51,29 @@ public interface IVTreeDataFrame extends IVTreeFrame {
     /**
      * Splits this (full) page, moving the upper half of its tuples into {@code rightFrame} and then
      * inserting {@code tuple} into whichever half keeps the ascending order. The insertion index is
-     * recomputed from the tuple's distance in the chosen half. On return both halves remain sorted by
-     * {@code distance_to_centroid}.
+     * recomputed from the tuple's full key in the chosen half. On return both halves remain sorted.
      */
     void split(IVTreeDataFrame rightFrame, ITupleReference tuple) throws HyracksDataException;
 
     /**
-     * Returns the slot at which a tuple with the given {@code distance} would be inserted to keep
-     * the page sorted by {@code distance_to_centroid} ascending: the index of the first tuple whose
-     * distance is strictly {@code > distance} (so equal distances are inserted after existing ones),
-     * or the tuple count if none.
+     * Returns the slot at which {@code key} belongs, that is the index of the first stored tuple whose
+     * key is {@code >=} it, or the tuple count if none. The ordering key extends past the distance so
+     * that a component's tuple stream is ordered by the same key the LSM merge cursor reconciles on,
+     * which keeps versions of one record adjacent when unrelated records tie on distance.
+     *
+     * @param key the search key, in key layout: the fields named by {@code comparatorFields}, in order
      */
+    int findInsertPosition(ITupleReference key) throws HyracksDataException;
 
-    int findInsertPosition(double distance) throws HyracksDataException;
+    /**
+     * Projects a stored-layout tuple onto the ordering key, so a caller holding a data tuple can obtain
+     * a search key without knowing which fields form it. The view is valid until the next call.
+     */
+    ITupleReference keyOf(ITupleReference storedTuple);
+
+    /**
+     * The ordering key of the tuple at {@code tupleIndex}. The view is valid until the next call on
+     * this frame; a caller keeping it past that must copy it.
+     */
+    ITupleReference keyAt(int tupleIndex) throws HyracksDataException;
 }

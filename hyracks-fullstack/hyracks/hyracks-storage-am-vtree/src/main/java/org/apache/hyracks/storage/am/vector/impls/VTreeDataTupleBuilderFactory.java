@@ -26,7 +26,7 @@ import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 /**
  * Factory for creating {@link VTreeDataTupleBuilder} instances.
  *
- * Carries the tuple layout context (numIncludeFields, isQuantized) determined
+ * Carries the tuple layout context (numIncludeFields, numKeyFields, isQuantized) determined
  * at index creation time. Quantization parameters are supplied at creator
  * construction time since they are loaded from LSMVTreeLocalResource metadata at index
  * activation, after this factory has been persisted.
@@ -36,16 +36,18 @@ public class VTreeDataTupleBuilderFactory implements IVTreeDataTupleBuilderFacto
     private static final long serialVersionUID = 2L;
 
     private final int numIncludeFields;
+    private final int numKeyFields;
     private final boolean isQuantized;
 
-    public VTreeDataTupleBuilderFactory(int numIncludeFields, boolean isQuantized) {
+    public VTreeDataTupleBuilderFactory(int numIncludeFields, int numKeyFields, boolean isQuantized) {
         this.numIncludeFields = numIncludeFields;
+        this.numKeyFields = numKeyFields;
         this.isQuantized = isQuantized;
     }
 
     @Override
     public IVTreeDataTupleBuilder createDataTupleBuilder(VTreeQuantizationParams quantizationParams) {
-        return new VTreeDataTupleBuilder(numIncludeFields, isQuantized, quantizationParams);
+        return new VTreeDataTupleBuilder(numIncludeFields, numKeyFields, isQuantized, quantizationParams);
     }
 
     @Override

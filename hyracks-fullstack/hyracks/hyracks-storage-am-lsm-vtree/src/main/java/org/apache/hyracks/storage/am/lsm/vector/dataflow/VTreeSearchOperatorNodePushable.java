@@ -103,7 +103,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
      * index-only write path to know where the projector's PK bytes end before appending the
      * distance field.
      */
-    protected final int numPrimaryKeys;
+    protected final int numProjectedFields;
 
     /**
      * Physical field indexes, in output order, of the INCLUDE columns the pushed filter reads. The cursor
@@ -117,7 +117,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     /**
      * Index-only ANN flag. When true the pushable emits {@code [pk..., D(q,x)]} per candidate by
      * stashing the active cursor and reaching into {@link IVectorSearchCursor} for the per-tuple
-     * distance, then appending it as an ADOUBLE after the PK bytes the existing PKOnlyTupleProjector
+     * distance, then appending it as an ADOUBLE after the bytes the configured projector
      * writes. When false the pushable behaves exactly as before.
      */
     protected final boolean indexOnly;
@@ -133,7 +133,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             ISearchOperationCallbackFactory searchCallbackFactory, ITupleProjectorFactory projectorFactory,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDistanceFunctionFactory distanceFunctionFactory,
             IVTreeQuantizerFactory quantizerFactory, int[][] partitionsMap, ITupleFilterFactory tupleFilterFactory,
-            int[] includeFilterFields, double indexEpsilon, int numPrimaryKeys, boolean indexOnly)
+            int[] includeFilterFields, double indexEpsilon, int numProjectedFields, boolean indexOnly)
             throws HyracksDataException {
         // Vector search does its filtering in the cursor, so the operator passes no filter fields,
         // tuple filter, output limit, or search-callback proceed result (see the args below).
@@ -148,7 +148,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
                 false, // appendOpCallbackProceedResult
                 null, // searchCallbackProceedResultFalseValue
                 null, // searchCallbackProceedResultTrueValue
-                projectorFactory, // ← PKOnlyTupleProjectorFactory (extracts only PK fields)
+                projectorFactory, // ← FieldSubsetTupleProjectorFactory (emits the chosen fields)
                 null, // tuplePartitionerFactory
                 partitionsMap);
 
@@ -159,7 +159,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         this.tupleFilterFactory = tupleFilterFactory;
         this.includeFilterFields = includeFilterFields;
         this.indexEpsilon = indexEpsilon;
-        this.numPrimaryKeys = numPrimaryKeys;
+        this.numProjectedFields = numProjectedFields;
         this.indexOnly = indexOnly;
 
         // Setup permuting tuple reference to extract query parameters
@@ -305,11 +305,11 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
     @Override
     protected int getFieldCount(IIndex index) {
-        // numPrimaryKeys is supplied by the descriptor from dataset metadata (no more hardcoded 1).
+        // The descriptor derives the projected-field count from dataset metadata.
         // Index-only mode appends one extra ADOUBLE field per emitted tuple (the per-candidate
         // D(q,x) read from the cursor in writeTupleToOutput), and a pushed filter appends the
         // INCLUDE columns it reads.
-        return numPrimaryKeys + (indexOnly ? 1 : 0) + includeFilterFields.length;
+        return numProjectedFields + (indexOnly ? 1 : 0) + includeFilterFields.length;
     }
 
     /**
@@ -330,7 +330,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     /**
      * Three responsibilities:
      * <ol>
-     *   <li>Always run the configured projector (the {@code PKOnlyTupleProjector}) so the PK bytes
+     *   <li>Always run the configured projector ({@code FieldSubsetTupleProjector}) so its bytes
      *       from the cursor tuple land in {@code tb} exactly as in the legacy path.</li>
      *   <li>In index-only mode, append the distance field after the PK bytes by reading
      *       {@code D(q,x)} from {@link #activeCursor} via {@link IVectorSearchCursor}. The distance

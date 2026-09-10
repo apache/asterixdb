@@ -26,11 +26,14 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
+import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilder;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
@@ -64,6 +67,7 @@ public class VTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     private final ITreeIndexMetadataFrame metaFrame;
     private final int vectorDimensions;
     private final IVTreeDataTupleBuilder dataTupleBuilder;
+    private final IVTreeBinaryAccessor vectorAccessor;
 
     private IVTreeInteriorFrame interiorFrame;
     private IVTreeLeafFrame leafFrame;
@@ -85,7 +89,8 @@ public class VTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             ITreeIndexFrameFactory dataFrameFactory, IPageManager freePageManager,
             IBinaryComparatorFactory[] cmpFactories, int vectorDimensions,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams) {
+            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
+            IVTreeBinaryAccessorFactory vectorAccessorFactory) {
         this.accessor = accessor;
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
@@ -96,6 +101,7 @@ public class VTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
         this.dataTupleBuilder = dataTupleBuilderFactory.createDataTupleBuilder(quantizationParams);
+        this.vectorAccessor = vectorAccessorFactory.createAccessor();
 
         // A null / empty cmpFactories array (or a null first entry) means "no comparator" for this
         // context; guard the [0] access so a missing array does not surface as an obscure NPE/AIOOBE.
@@ -196,6 +202,12 @@ public class VTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     public IVTreeDataTupleBuilder getDataTupleBuilder() {
         return dataTupleBuilder;
+    }
+
+    /** Decodes the vector stored at {@code field} of {@code tuple} with this context's accessor. */
+    public double[] decodeVector(ITupleReference tuple, int field) throws HyracksDataException {
+        vectorAccessor.reset(tuple.getFieldData(field), tuple.getFieldStart(field), tuple.getFieldLength(field));
+        return vectorAccessor.getVector();
     }
 
     public IModificationOperationCallback getModificationCallback() {

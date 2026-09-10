@@ -33,13 +33,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentTy
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
-import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.impls.ClusterSearchResult;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.impls.VTree.VTreeAccessor;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchCursor;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
-import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
@@ -130,16 +128,13 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
     // false = query mode (level-wise + DFS, nprobe/K-based early termination)
     private final boolean fullScanMode;
 
-    // Field index where primary keys start in the data tuple
-    // Non-quantized format: 2 (distance, centroidId, PK...)
-    // Quantized format: 4 (distance, centroidId, quantized_distance, quantized_embedding, PK...)
-    private int pkStartField;
-
-    // Number of primary key fields (from the index). The reconciliation/ordering key is exactly
-    // <distance (field 0), PK fields> — secondary fields between them (centroidId, and for
-    // quantized layouts quantized_distance/quantized_embedding) AND trailing INCLUDE fields are
-    // excluded, since they may legitimately differ between matter/antimatter twins.
-    private int numPrimaryKeyFields;
+    // The reconciliation and ordering key, as stored-tuple field indexes with an index-aligned
+    // comparator. Taken from the index, which is where the data frames get it too, so the write order
+    // and the read order cannot disagree. Fields between and after the key -- centroidId, the quantized
+    // fields, the trailing value fields -- are excluded: they may legitimately differ between a delete
+    // marker and its live twin.
+    private int[] comparatorFields;
+    private MultiComparator keyCmp;
 
     public LSMVTreeSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false, false, NoOpIndexCursorStats.INSTANCE);
@@ -162,12 +157,8 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
         // Extract K from search predicate for cluster advancement decisions
         this.K = extractK(searchPred);
 
-        // Field layout depends only on whether the index is quantized; derive pkStartField from that
-        // single source (VTreeDataTupleAccessor) rather than a predicate value set at a distance.
-        this.pkStartField = new VTreeDataTupleAccessor(((LSMVTree) opCtx.getIndex()).isQuantized()).pkStartField();
-
-        // The comparison key ends after the primary keys (INCLUDE fields are not part of it)
-        this.numPrimaryKeyFields = ((LSMVTree) opCtx.getIndex()).getNumPrimaryKeyFields();
+        this.comparatorFields = lsmInitialState.getComparatorFields();
+        this.keyCmp = lsmInitialState.getKeyCmp();
 
         // Extract minProbeFraction and epsilon from search predicate
         double minProbeFraction = extractMinProbeFraction(searchPred);
@@ -200,7 +191,6 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
 
         // Set up comparator and operational components
         cmp = lsmInitialState.getOriginalKeyComparator();
-        LSMVTreeUtils.validateKeyComparators(cmp, pkStartField, numPrimaryKeyFields);
         operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
 
@@ -258,7 +248,8 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
         // Open all cursors with the search predicate
         IndexCursorUtils.open(vTreeAccessors, rangeCursors, searchPred);
 
-        LOGGER.trace("doOpen: numComponents={}, K={}, nprobe={}, pkStartField={}", numVTrees, K, nprobe, pkStartField);
+        LOGGER.trace("doOpen: numComponents={}, K={}, nprobe={}, keyFields={}", numVTrees, K, nprobe,
+                comparatorFields.length);
 
         // Initialize strategy and set up DFS fallback
         if (numVTrees > 0) {
@@ -718,18 +709,12 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
 
     @Override
     protected void setPriorityQueueComparator() {
-        // For vector index: sort by distance (field 0), then primary key (field pkStartField+)
-        // Skip secondary fields between distance and PKs (centroidId, and optionally quantized fields)
         if (pqCmp == null || pqCmp.getMultiComparator() != cmp) {
             pqCmp = new VectorPriorityQueueComparator(cmp);
         }
     }
 
-    /**
-     * Custom priority queue comparator for vector index tuples.
-     * Compares field 0 (distance) then fields from pkStartField onward (PKs + includes),
-     * skipping secondary fields (centroidId, and optionally quantized_distance/quantized_embedding).
-     */
+    /** Orders the merge on the index's ordering key, ignoring the fields outside it. */
     private class VectorPriorityQueueComparator extends PriorityQueueComparator {
 
         public VectorPriorityQueueComparator(MultiComparator cmp) {
@@ -779,47 +764,15 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
     }
 
     /**
-     * The <distance, PK> key shared by antimatter cancellation
+     * The ordering key shared by antimatter cancellation
      * ({@link #compare(MultiComparator, ITupleReference, ITupleReference)}) and merge ordering
      * ({@link VectorPriorityQueueComparator#compare}). Both must define the exact same key, otherwise a
-     * delete marker and its live twin could sort apart and fail to cancel.
-     *
-     * <p>Tuple format (non-quantized): {@code [distance, centroidId, PKs..., includes...]};
-     * quantized: {@code [distance, centroidId, quantized_distance, quantized_embedding, PKs..., includes...]}.
-     * The key is exactly {@code <distance (field 0), PK fields>}: secondary fields (centroidId, and for
-     * quantized layouts quantized_distance/quantized_embedding) and trailing INCLUDE fields are excluded —
-     * they may differ between matter/antimatter twins.
+     * delete marker and its live twin could sort apart and fail to cancel. Both call this method, and this
+     * method uses the {@code comparatorFields} the data frames order pages by.
      */
     private int compareKey(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB)
             throws HyracksDataException {
-        // Compare field 0 (distance) using ADM-aware comparator 0
-        int result = cmp.getComparators()[0].compare(tupleA.getFieldData(0), tupleA.getFieldStart(0),
-                tupleA.getFieldLength(0), tupleB.getFieldData(0), tupleB.getFieldStart(0), tupleB.getFieldLength(0));
-
-        if (result != 0) {
-            return result;
-        }
-
-        // Compare the PK fields starting at pkStartField
-        int numRemainingFields = Math.min(cmp.getComparators().length - pkStartField, numPrimaryKeyFields);
-        for (int i = 0; i < numRemainingFields; i++) {
-            int fieldIdx = pkStartField + i;
-            int cmpIdx = pkStartField + i;
-
-            // Check if field exists in tuple before comparing
-            if (fieldIdx >= tupleA.getFieldCount() || fieldIdx >= tupleB.getFieldCount()) {
-                break;
-            }
-
-            result = cmp.getComparators()[cmpIdx].compare(tupleA.getFieldData(fieldIdx), tupleA.getFieldStart(fieldIdx),
-                    tupleA.getFieldLength(fieldIdx), tupleB.getFieldData(fieldIdx), tupleB.getFieldStart(fieldIdx),
-                    tupleB.getFieldLength(fieldIdx));
-            if (result != 0) {
-                return result;
-            }
-        }
-
-        return 0;
+        return keyCmp.selectiveFieldCompare(tupleA, tupleB, comparatorFields);
     }
 
     @Override

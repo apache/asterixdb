@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.vector.frames;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -42,16 +43,21 @@ public class VTreeMetadataFrameFactory implements ITreeIndexFrameFactory {
     private final ITreeIndexTupleWriter tupleWriter;
     private final int centroidDimensions;
 
-    public VTreeMetadataFrameFactory(int centroidDimensions, ITypeTraits nullTypeTraits,
+    /** Comparators for the leading key fields of a directory entry, index-aligned with them. */
+    private final IBinaryComparatorFactory[] keyCmpFactories;
+
+    public VTreeMetadataFrameFactory(int centroidDimensions, ITypeTraits[] keyTypeTraits,
+            IBinaryComparatorFactory[] keyCmpFactories, ITypeTraits nullTypeTraits,
             INullIntrospector nullIntrospector) {
         this.centroidDimensions = centroidDimensions;
-        this.tupleWriter = new TypeAwareTupleWriterFactory(VTreeMetadataTupleAccessor.typeTraits(), nullTypeTraits,
-                nullIntrospector).createTupleWriter();
+        this.keyCmpFactories = keyCmpFactories;
+        this.tupleWriter = new TypeAwareTupleWriterFactory(VTreeMetadataTupleAccessor.typeTraits(keyTypeTraits),
+                nullTypeTraits, nullIntrospector).createTupleWriter();
     }
 
     @Override
     public IVTreeMetadataFrame createFrame() {
-        return new VTreeMetadataFrame(tupleWriter);
+        return new VTreeMetadataFrame(tupleWriter, keyCmpFactories);
     }
 
     @Override

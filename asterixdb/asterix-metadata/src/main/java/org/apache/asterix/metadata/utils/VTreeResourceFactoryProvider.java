@@ -60,6 +60,7 @@ import org.apache.hyracks.storage.am.lsm.vector.dataflow.LSMVTreeLocalResourceFa
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.util.annotations.AiProvenance;
@@ -94,17 +95,18 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
         List<List<String>> includeFieldNames = vectorIndexDetails.getIncludeFieldNames();
         int numIncludeFields = (includeFieldNames != null) ? includeFieldNames.size() : 0;
 
-        // Determine data tuple creator factory based on whether the index is quantized
+        List<List<String>> primaryKeyFields = dataset.getPrimaryKeys();
+        int numPrimaryKeys = primaryKeyFields.size();
+
+        // Determine data tuple creator factory based on whether the index is quantized. The primary key
+        // is what completes the storage layer's ordering key, so its field count is handed over here.
         boolean isQuantized = vectorParameters.isQuantized();
         IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
         if (isQuantized) {
-            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, true);
+            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, numPrimaryKeys, true);
         } else {
-            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, false);
+            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, numPrimaryKeys, false);
         }
-
-        List<List<String>> primaryKeyFields = dataset.getPrimaryKeys();
-        int numPrimaryKeys = primaryKeyFields.size();
 
         IStorageComponentProvider storageComponentProvider = mdProvider.getStorageComponentProvider();
         ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
@@ -184,8 +186,8 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
                     mergePolicyProperties, true, vectorDimensions, vectorFields,
                     typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, atomic,
-                    vectorAccessorFactory, numPrimaryKeys, numIncludeFields, dataTupleBuilderFactory,
-                    distanceFunctionFactory, crossPollination);
+                    vectorAccessorFactory, VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys),
+                    numIncludeFields, dataTupleBuilderFactory, distanceFunctionFactory, crossPollination);
         } else {
             return null;
         }
@@ -205,7 +207,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
         // Data frame tuple format depends on quantization:
         // Non-quantized: [distance, centroidId, primary_keys..., include_fields...]
         // Quantized:     [distance, centroidId, quantized_distance, quantized_embedding, primary_keys..., include_fields...]
-        int numSecondaryFields = isQuantized ? 4 : 2;
+        int numSecondaryFields = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
         int totalFields = numSecondaryFields + numPrimaryKeys + numIncludeFields;
         ITypeTraits[] typeTraits = new ITypeTraits[totalFields];
 
@@ -281,7 +283,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
         // Data frame comparators depend on quantization:
         // Non-quantized: [distance, centroidId, primary_keys..., include_fields...]
         // Quantized:     [distance, centroidId, quantized_distance, quantized_embedding, primary_keys..., include_fields...]
-        int numSecondaryFields = isQuantized ? 4 : 2;
+        int numSecondaryFields = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
         int totalFields = numSecondaryFields + numPrimaryKeys + numIncludeFields;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[totalFields];
 

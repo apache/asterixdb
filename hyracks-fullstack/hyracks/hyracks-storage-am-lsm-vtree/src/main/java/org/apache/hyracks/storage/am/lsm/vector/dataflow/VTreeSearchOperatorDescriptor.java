@@ -28,7 +28,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.vector.impls.PKOnlyTupleProjectorFactory;
+import org.apache.hyracks.storage.am.common.impls.FieldSubsetTupleProjectorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
@@ -58,11 +58,10 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     // Partition mapping (compute nodes to storage nodes)
     protected final int[][] partitionsMap;
 
-    // Number of primary and secondary keys for tuple projection
-    protected final int numPrimaryKeys;
-    protected final int numSecondaryKeys;
+    // Data-tuple fields the search emits, in output order
+    protected final int[] projectedFields;
 
-    // Tuple projector factory (extracts only PKs from index results)
+    // Tuple projector factory (emits only the projected fields from index results)
     protected final ITupleProjectorFactory tupleProjectorFactory;
 
     // Factory for creating vector binary accessors (for extracting AOrderedList<ADouble>)
@@ -100,7 +99,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
             int[] queryFields, IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput,
             ISearchOperationCallbackFactory searchCallbackFactory, IVTreeBinaryAccessorFactory vectorAccessorFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
-            int[][] partitionsMap, int numPrimaryKeys, int numSecondaryKeys, ITupleFilterFactory tupleFilterFactory,
+            int[][] partitionsMap, int[] projectedFields, ITupleFilterFactory tupleFilterFactory,
             int[] includeFilterFields, double indexEpsilon, boolean indexOnly) {
         super(spec, 1, 1); // 1 input, 1 output
         this.queryFields = queryFields;
@@ -111,17 +110,16 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.quantizerFactory = quantizerFactory;
         this.partitionsMap = partitionsMap;
-        this.numPrimaryKeys = numPrimaryKeys;
-        this.numSecondaryKeys = numSecondaryKeys;
+        this.projectedFields = projectedFields;
         this.tupleFilterFactory = tupleFilterFactory;
         this.includeFilterFields = includeFilterFields;
         this.indexEpsilon = indexEpsilon;
         this.indexOnly = indexOnly;
         this.outRecDescs[0] = outRecDesc;
 
-        // Create tuple projector factory that extracts only PK fields
-        // This avoids writing large embedding vectors (4KB-16KB) to output frames
-        this.tupleProjectorFactory = new PKOnlyTupleProjectorFactory(numSecondaryKeys, numPrimaryKeys);
+        // Emit only the projected fields so the embedding (4KB-16KB per tuple) never reaches an output
+        // frame. The caller names them, since it is the layer that knows the data-tuple layout.
+        this.tupleProjectorFactory = new FieldSubsetTupleProjectorFactory(projectedFields);
     }
 
     @Override
@@ -131,6 +129,6 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), queryFields, indexHelperFactory,
                 retainInput, searchCallbackFactory, tupleProjectorFactory, vectorAccessorFactory,
                 distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, includeFilterFields,
-                indexEpsilon, numPrimaryKeys, indexOnly);
+                indexEpsilon, projectedFields.length, indexOnly);
     }
 }

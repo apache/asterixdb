@@ -19,63 +19,72 @@
 
 package org.apache.hyracks.storage.am.vector.utils;
 
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import java.io.DataOutput;
+
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 
 /**
  * Single authority for the VTree per-cluster directory ("metadata") tuple layout
- * {@code [max_distance : double, data_page_pointer : int]}, mirroring {@code VTreeDataTupleAccessor}
- * and {@code VTreeStaticTupleAccessor}. Owns the field indices, the {@link ITypeTraits} schema (so the
- * frame factory reads it from here), and the typed field reads, so no other class hardcodes a position.
+ * {@code [key fields..., data_page_pointer : int]}, mirroring {@code VTreeDataTupleAccessor}.
+ * <p>
+ * A separator carries the <em>whole</em> ordering key of the last record on the data page it points
+ * at, not just that key's leading distance. The key therefore occupies the entry's leading fields and
+ * the pointer trails them, which is {@code BTreeNSMLeafFrame.split}'s convention: a directory search
+ * compares a key tuple against a separator with the same comparator that orders data pages, and the
+ * trailing pointer is simply not visited.
+ * <p>
+ * A separator holding only the distance would be a strict prefix of the key: a page whose records share
+ * one distance would split into entries that cover a search key equally, and the router could not tell
+ * which page the key belongs in.
+ *
+ * @see org.apache.hyracks.storage.am.vector.frames.VTreeMetadataFrame
  */
 public final class VTreeMetadataTupleAccessor {
-
-    /** Max distance-to-centroid of the data page this directory entry points at (field 0, raw double). */
-    public static final int MAX_DISTANCE_FIELD = 0;
-
-    /** Pointer to the data page (field 1, raw int). */
-    public static final int DATA_PAGE_POINTER_FIELD = 1;
-
-    /** Serializers for building a metadata tuple, in {@link #typeTraits()} field order. */
-    @SuppressWarnings("rawtypes")
-    public static final ISerializerDeserializer[] SERDES =
-            { DoubleSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
     private VTreeMetadataTupleAccessor() {
     }
 
     /**
-     * Build a metadata entry tuple {@code <maxDistance:double, dataPageId:int>} for a directory frame,
-     * in {@link #typeTraits()} field order.
+     * Builds a directory entry from {@code key} and the page it points at. Key fields are copied
+     * byte-for-byte, so the entry's leading fields are encoded exactly as the data page encodes them.
      */
-    public static ITupleReference createMetadataTuple(double maxDistance, int dataPageId) throws HyracksDataException {
-        return TupleUtils.createTuple(SERDES, maxDistance, dataPageId);
+    public static ITupleReference createMetadataTuple(ITupleReference key, int dataPageId) throws HyracksDataException {
+        try {
+            int numKeyFields = key.getFieldCount();
+            ArrayTupleBuilder builder = new ArrayTupleBuilder(numKeyFields + 1);
+            for (int i = 0; i < numKeyFields; i++) {
+                builder.addField(key.getFieldData(i), key.getFieldStart(i), key.getFieldLength(i));
+            }
+            DataOutput out = builder.getDataOutput();
+            out.writeInt(dataPageId);
+            builder.addFieldEndOffset();
+            ArrayTupleReference entry = new ArrayTupleReference();
+            entry.reset(builder.getFieldEndOffsets(), builder.getByteArray());
+            return entry;
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
-    /** Tuple schema {@code [max_distance : double, data_page_pointer : int]}. */
-    public static ITypeTraits[] typeTraits() {
-        ITypeTraits[] schema = new ITypeTraits[DATA_PAGE_POINTER_FIELD + 1];
-        schema[MAX_DISTANCE_FIELD] = DoublePointable.TYPE_TRAITS;
-        schema[DATA_PAGE_POINTER_FIELD] = IntegerPointable.TYPE_TRAITS;
+    /** Tuple schema {@code [key fields..., data_page_pointer : int]}. */
+    public static ITypeTraits[] typeTraits(ITypeTraits[] keyTypeTraits) {
+        ITypeTraits[] schema = new ITypeTraits[keyTypeTraits.length + 1];
+        System.arraycopy(keyTypeTraits, 0, schema, 0, keyTypeTraits.length);
+        schema[keyTypeTraits.length] = IntegerPointable.TYPE_TRAITS;
         return schema;
     }
 
-    /** Max distance in field 0 (raw big-endian double, no type tag). */
-    public static double getMaxDistance(ITupleReference tuple) {
-        return DoublePointable.getDouble(tuple.getFieldData(MAX_DISTANCE_FIELD),
-                tuple.getFieldStart(MAX_DISTANCE_FIELD));
-    }
-
-    /** Data-page pointer in field 1 (raw big-endian int, no type tag). */
+    /**
+     * Data-page pointer in the entry's last field (raw big-endian int, no type tag). Read from the
+     * tuple's own field count so this holds for any key width.
+     */
     public static int getDataPagePointer(ITupleReference tuple) {
-        return IntegerPointable.getInteger(tuple.getFieldData(DATA_PAGE_POINTER_FIELD),
-                tuple.getFieldStart(DATA_PAGE_POINTER_FIELD));
+        int f = tuple.getFieldCount() - 1;
+        return IntegerPointable.getInteger(tuple.getFieldData(f), tuple.getFieldStart(f));
     }
 }

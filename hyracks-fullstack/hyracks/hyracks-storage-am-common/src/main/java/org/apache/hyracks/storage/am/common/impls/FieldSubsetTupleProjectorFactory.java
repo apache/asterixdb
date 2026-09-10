@@ -16,34 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.vector.impls;
+package org.apache.hyracks.storage.am.common.impls;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.projection.ITupleProjector;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
-/**
- * Factory for creating PKOnlyTupleProjector instances.
- *
- * Used by vector index search operators to create projectors that extract only
- * primary key fields from vector index search results, skipping secondary key fields
- * (distance, cosine similarity, embedding vector).
- */
-public class PKOnlyTupleProjectorFactory implements ITupleProjectorFactory {
+/** Factory for {@link FieldSubsetTupleProjector}; the caller names the fields to emit. */
+public class FieldSubsetTupleProjectorFactory implements ITupleProjectorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final int numSecondaryKeys; // Number of fields to skip
-    private final int numPrimaryKeys; // Number of PK fields to write
+    private final int[] projectedFields;
 
-    public PKOnlyTupleProjectorFactory(int numSecondaryKeys, int numPrimaryKeys) {
-        this.numSecondaryKeys = numSecondaryKeys;
-        this.numPrimaryKeys = numPrimaryKeys;
+    public FieldSubsetTupleProjectorFactory(int[] projectedFields) {
+        this.projectedFields = projectedFields;
     }
 
     @Override
     public ITupleProjector createTupleProjector(IHyracksTaskContext context) throws HyracksDataException {
-        return new PKOnlyTupleProjector(numSecondaryKeys, numPrimaryKeys);
+        return new FieldSubsetTupleProjector(projectedFields);
     }
 }

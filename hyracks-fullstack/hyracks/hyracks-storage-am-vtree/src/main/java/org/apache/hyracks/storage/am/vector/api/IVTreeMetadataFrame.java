@@ -25,7 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 /**
  * Interface for VTree metadata/directory frames.
  * Metadata frames contain entries: <max_distance, pointer_to_data_page>, sorted by
- * {@code max_distance} ascending.
+ * the key ascending.
  * <p>
  * Not thread-safe: an instance wraps one pinned page and is confined to a single operation context.
  */
@@ -37,15 +37,32 @@ public interface IVTreeMetadataFrame extends IVTreeFrame {
     /** Returns the forward chain pointer, or {@code -1} if this is the last directory page. */
     int getNextPage();
 
-    /** Returns the {@code max_distance} of the entry at {@code tupleIndex}. */
-    double getMaxDistance(int tupleIndex) throws HyracksDataException;
+    /**
+     * Compares the separator at {@code tupleIndex} against {@code key}: negative if the page it points
+     * at sorts entirely before the key, positive if after, zero if the key is that page's maximum.
+     */
+    int compareSeparatorToKey(int tupleIndex, ITupleReference key) throws HyracksDataException;
+
+    /** Leftmost index at which an entry carrying {@code key} keeps the page key-ascending. */
+    int findInsertPosition(ITupleReference key) throws HyracksDataException;
+
+    /**
+     * Replaces the separator at {@code tupleIndex} with one carrying {@code key}, keeping its position,
+     * and reports whether it fitted. A full-width separator is variable length, so a replacement can be
+     * wider than what it replaces; on {@code false} the page is untouched and the caller must make room.
+     * The caller must have established that the position still holds.
+     */
+    boolean replaceSeparator(int tupleIndex, ITupleReference key, int dataPageId) throws HyracksDataException;
+
+    /** Removes the separator at {@code tupleIndex}, freeing its bytes. */
+    void deleteSeparator(int tupleIndex) throws HyracksDataException;
 
     /** Returns the data-page pointer of the entry at {@code tupleIndex}. */
     int getDataPagePointer(int tupleIndex) throws HyracksDataException;
 
     /**
      * Inserts {@code tuple} at slot {@code tupleIndex}, shifting existing entries right. The caller
-     * must supply an index that preserves the {@code max_distance}-ascending ordering.
+     * must supply an index that preserves the key-ascending ordering.
      */
     void insert(ITupleReference tuple, int tupleIndex);
 }

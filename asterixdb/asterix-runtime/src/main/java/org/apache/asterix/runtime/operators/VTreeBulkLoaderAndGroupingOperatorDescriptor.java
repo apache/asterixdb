@@ -68,6 +68,7 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 import org.apache.hyracks.storage.am.vector.impls.ClusterSearchResult;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.utils.RngAcceptanceFilter;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IResource;
@@ -211,7 +212,7 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
             ISerializerDeserializer<?>[] originalFieldSerdes = inputRecDesc.getFields();
 
             // Number of secondary fields depends on quantization
-            int numSecondaryFields = isQuantized ? 4 : 2;
+            int numSecondaryFields = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
             int totalFields = numSecondaryFields + numPrimaryKeys + numIncludeFields;
 
             // Get output serializers

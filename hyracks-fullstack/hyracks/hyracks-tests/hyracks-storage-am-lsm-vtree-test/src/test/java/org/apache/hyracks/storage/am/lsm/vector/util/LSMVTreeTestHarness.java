@@ -104,7 +104,7 @@ public class LSMVTreeTestHarness {
         this.ioOpCallbackFactory = new CountingIoOperationCallbackFactory();
         this.pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
         this.ncConfig = new NCConfig(null);
-        this.dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(0, true);
+        this.dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(0, 1, true);
     }
 
     public void setUp() throws HyracksDataException {

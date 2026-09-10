@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -47,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeFileManager;
 import org.apache.hyracks.storage.am.lsm.vector.impls.VTreeFactory;
+import org.apache.hyracks.storage.am.lsm.vector.tuples.LSMVTreeAntimatterTupleAcceptor;
 import org.apache.hyracks.storage.am.lsm.vector.tuples.LSMVTreeDataTupleWriterFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
@@ -57,9 +59,8 @@ import org.apache.hyracks.storage.am.vector.frames.VTreeInteriorFrameFactory;
 import org.apache.hyracks.storage.am.vector.frames.VTreeLeafFrameFactory;
 import org.apache.hyracks.storage.am.vector.frames.VTreeMetadataFrameFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
-import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Factory helper that wires the four frame factories, the {@link VTreeFactory}, and the LSM glue
@@ -74,31 +75,6 @@ public final class LSMVTreeUtils {
     private static final int TREE_INDEX_FIELD_COUNT = 4;
 
     private LSMVTreeUtils() {
-    }
-
-    /**
-     * Assert that the search key comparators cover {@code <distance, PK…>} — i.e. that there is a comparator
-     * for field 0 and for each of the {@code numPrimaryKeyFields} fields starting at {@code pkStartField}.
-     * <p>
-     * Both vector search cursors build their ordering / antimatter-cancellation key from exactly those
-     * positions, and both derive "how many PK fields can I compare" as
-     * {@code min(comparators.length - pkStartField, numPrimaryKeyFields)}. A short comparator array therefore
-     * does not fail — it silently shortens the key, and a zero-length key is worse than an error:
-     * ordering collapses to distance-only (so pairwise antimatter cancellation can fire against an unrelated
-     * same-distance row) and "same primary key" becomes universally true (so group reconciliation keeps only
-     * the newest tuple of an equal-distance group and drops the rest). Production wiring satisfies the
-     * precondition; this turns a future mis-wiring into a hard failure instead of wrong results.
-     */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
-    public static void validateKeyComparators(MultiComparator cmp, int pkStartField, int numPrimaryKeyFields)
-            throws HyracksDataException {
-        int available = cmp == null ? 0 : cmp.getComparators().length;
-        if (available < pkStartField + numPrimaryKeyFields) {
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "VTree search key comparators too few: " + available + " comparators, but the <distance, PK> key "
-                            + "needs " + (pkStartField + numPrimaryKeyFields) + " (pkStartField=" + pkStartField
-                            + ", numPrimaryKeyFields=" + numPrimaryKeyFields + ")");
-        }
     }
 
     /**
@@ -127,7 +103,7 @@ public final class LSMVTreeUtils {
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             IComponentFilterHelper filterHelper, boolean durable,
             IMetadataPageManagerFactory metadataPageManagerFactory, boolean atomic, RecordDescriptor inputRecDesc,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int numPrimaryKeyFields, int numIncludeFields,
+            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
             throws HyracksDataException {
@@ -150,23 +126,49 @@ public final class LSMVTreeUtils {
                 new VTreeInteriorFrameFactory(vectorDimensions, nullTypeTraits, nullIntrospector);
         ITreeIndexFrameFactory leafFrameFactory =
                 new VTreeLeafFrameFactory(vectorDimensions, quantized, nullTypeTraits, nullIntrospector);
-        ITreeIndexFrameFactory metadataFrameFactory =
-                new VTreeMetadataFrameFactory(vectorDimensions, nullTypeTraits, nullIntrospector);
 
         // Data frames are caller-parameterized: typeTraits carries the ADM-tagged type traits for
         // all data-row fields (computed by VTreeResourceFactoryProvider in production, by the test
-        // harness for fixtures). Production quantized layout:
-        //   [distance, qDist, qEmbed, centroidId, pk, include_fields...]
+        // harness for fixtures). Production quantized layout, per VTreeDataTupleAccessor:
+        //   [distance, centroidId, qDist, qEmbed, key..., value...]
         // INSERT operations use matter tuples, DELETE operations use antimatter tuples (LSMBTree
         // pattern). Disk components are immutable and only ever take insert tuples.
         LSMVTreeDataTupleWriterFactory insertDataTupleWriterFactory =
                 new LSMVTreeDataTupleWriterFactory(typeTraits, false, nullTypeTraits, nullIntrospector);
         LSMVTreeDataTupleWriterFactory deleteDataTupleWriterFactory =
                 new LSMVTreeDataTupleWriterFactory(typeTraits, true, nullTypeTraits, nullIntrospector);
-        ITreeIndexFrameFactory insertDataFrameFactory =
-                new VTreeDataFrameFactory(insertDataTupleWriterFactory, vectorDimensions);
-        ITreeIndexFrameFactory deleteDataFrameFactory =
-                new VTreeDataFrameFactory(deleteDataTupleWriterFactory, vectorDimensions);
+        // Distance leads the ordering key and identityFields names the rest, so nothing here re-derives
+        // where those fields sit. Gathering a caller-supplied index array follows LSMRTreeUtils.
+        for (int field : identityFields) {
+            if (field < 0 || field >= cmpFactories.length || field >= typeTraits.length) {
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "VTree identity field " + field + " is outside the data tuple: " + typeTraits.length
+                                + " type trait(s), " + cmpFactories.length + " comparator(s)");
+            }
+        }
+        int[] comparatorFields = new int[1 + identityFields.length];
+        IBinaryComparatorFactory[] keyCmpFactories = new IBinaryComparatorFactory[comparatorFields.length];
+        comparatorFields[0] = VTreeDataTupleAccessor.DISTANCE_FIELD;
+        // Field 0 is a raw double, and DoubleBinaryComparatorFactory's comparator is DoublePointable's,
+        // which decodes both sides -- the same ordering the search cursors apply to that field.
+        keyCmpFactories[0] = DoubleBinaryComparatorFactory.INSTANCE;
+        for (int i = 0; i < identityFields.length; i++) {
+            comparatorFields[1 + i] = identityFields[i];
+            keyCmpFactories[1 + i] = cmpFactories[identityFields[i]];
+        }
+        // A directory separator carries the whole key, so the directory frame needs the key's schema and
+        // its comparators: the same arrays, sliced from the same source as the data frames'.
+        ITypeTraits[] keyTypeTraits = new ITypeTraits[comparatorFields.length];
+        for (int i = 0; i < comparatorFields.length; i++) {
+            keyTypeTraits[i] = typeTraits[comparatorFields[i]];
+        }
+        ITreeIndexFrameFactory metadataFrameFactory = new VTreeMetadataFrameFactory(vectorDimensions, keyTypeTraits,
+                keyCmpFactories, nullTypeTraits, nullIntrospector);
+
+        ITreeIndexFrameFactory insertDataFrameFactory = new VTreeDataFrameFactory(insertDataTupleWriterFactory,
+                vectorDimensions, comparatorFields, keyCmpFactories, LSMVTreeAntimatterTupleAcceptor.INSTANCE);
+        ITreeIndexFrameFactory deleteDataFrameFactory = new VTreeDataFrameFactory(deleteDataTupleWriterFactory,
+                vectorDimensions, comparatorFields, keyCmpFactories, LSMVTreeAntimatterTupleAcceptor.INSTANCE);
 
         VTreeFactory vtreeFactory = new VTreeFactory(ioManager, diskBufferCache, metadataPageManagerFactory,
                 interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
@@ -180,8 +182,8 @@ public final class LSMVTreeUtils {
                 componentFactory, componentFactory, filterHelper, filterFrameFactory, filterManager,
                 bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 pageWriteCallbackFactory, vectorDimensions, vectorFields, filterFields, durable, atomic,
-                vectorAccessorFactory, numPrimaryKeyFields, numIncludeFields, dataTupleBuilderFactory,
-                quantizationParams, distanceFunctionFactory, crossPollination);
+                vectorAccessorFactory, comparatorFields, keyCmpFactories, dataTupleBuilderFactory, quantizationParams,
+                distanceFunctionFactory, crossPollination);
     }
 
 }

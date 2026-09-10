@@ -60,6 +60,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
+import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
@@ -157,7 +158,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
                 jobGenParams.getDatasetName(), jobGenParams.getIndexName());
         Index.VectorIndexDetails vectorDetails = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
         boolean isQuantized = vectorDetails.getVectorParameters().isQuantized();
-        int numSecondaryKeys = isQuantized ? 4 : 2;
+        int numSecondaryKeys = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
 
         // Create tuple filter factory if selectCondition is present (for INCLUDE field filtering)
         // The opSchema only has [pk] because INCLUDE fields are only used for filtering.

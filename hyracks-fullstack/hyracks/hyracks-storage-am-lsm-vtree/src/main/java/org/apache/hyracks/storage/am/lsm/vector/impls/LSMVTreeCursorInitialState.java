@@ -19,8 +19,10 @@
 
 package org.apache.hyracks.storage.am.lsm.vector.impls;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
@@ -44,6 +46,17 @@ public class LSMVTreeCursorInitialState implements ICursorInitialState {
     private final ITreeIndexFrameFactory metadataFrameFactory;
     private final ITreeIndexFrameFactory dataFrameFactory;
     private final MultiComparator cmp;
+    /**
+     * The ordering key as the index defines it, distance first: stored-tuple field indexes with an
+     * index-aligned comparator, handed to the cursors so no reader re-derives where the key fields sit.
+     */
+    private final int[] comparatorFields;
+    private final MultiComparator keyCmp;
+    /** The tail of the ordering key: the fields that identify one record independent of its distance. */
+    private final int[] identityFields;
+    private final MultiComparator identityCmp;
+    /** Whether the index stores data tuples in the quantized layout. */
+    private final boolean quantized;
     private final ILSMHarness lsmHarness;
     private ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
@@ -52,7 +65,8 @@ public class LSMVTreeCursorInitialState implements ICursorInitialState {
 
     public LSMVTreeCursorInitialState(ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory metadataFrameFactory,
-            ITreeIndexFrameFactory dataFrameFactory, MultiComparator cmp, ILSMHarness lsmHarness,
+            ITreeIndexFrameFactory dataFrameFactory, MultiComparator cmp, int[] comparatorFields,
+            IBinaryComparatorFactory[] keyCmpFactories, boolean quantized, ILSMHarness lsmHarness,
             ISearchPredicate predicate, ISearchOperationCallback searchCallback,
             List<ILSMComponent> operationalComponents) {
         this.interiorFrameFactory = interiorFrameFactory;
@@ -60,6 +74,11 @@ public class LSMVTreeCursorInitialState implements ICursorInitialState {
         this.metadataFrameFactory = metadataFrameFactory;
         this.dataFrameFactory = dataFrameFactory;
         this.cmp = cmp;
+        this.comparatorFields = comparatorFields;
+        this.keyCmp = MultiComparator.create(keyCmpFactories);
+        this.identityFields = Arrays.copyOfRange(comparatorFields, 1, comparatorFields.length);
+        this.identityCmp = MultiComparator.create(Arrays.copyOfRange(keyCmpFactories, 1, keyCmpFactories.length));
+        this.quantized = quantized;
         this.lsmHarness = lsmHarness;
         this.predicate = predicate;
         this.searchCallback = searchCallback;
@@ -91,6 +110,26 @@ public class LSMVTreeCursorInitialState implements ICursorInitialState {
     public void setOriginialKeyComparator(MultiComparator originalCmp) {
         // Intentionally inert: the comparator is supplied via the constructor (getOriginalKeyComparator);
         // the VTree cursors never re-set it through the ICursorInitialState interface.
+    }
+
+    public int[] getComparatorFields() {
+        return comparatorFields;
+    }
+
+    public MultiComparator getKeyCmp() {
+        return keyCmp;
+    }
+
+    public int[] getIdentityFields() {
+        return identityFields;
+    }
+
+    public MultiComparator getIdentityCmp() {
+        return identityCmp;
+    }
+
+    public boolean isQuantized() {
+        return quantized;
     }
 
     public ILSMHarness getLSMHarness() {

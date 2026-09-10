@@ -86,7 +86,9 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     protected final int[] filterFields;
     protected final boolean atomic;
     protected final IVTreeBinaryAccessorFactory vectorAccessorFactory;
-    protected final int numPrimaryKeyFields;
+    /** Positions of the identity fields within a data tuple; the ordering key is distance plus these. */
+    protected final int[] identityFields;
+    /** How many INCLUDE fields the *input* tuple carries; an input-layout fact, used by the tuple builder. */
     protected final int numIncludeFields;
     protected final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
 
@@ -120,7 +122,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int vectorDimensions, int[] vectorFields,
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int numPrimaryKeyFields, int numIncludeFields,
+            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, Float confidenceInterval, Float minQuantile,
             Float maxQuantile, Float alpha, Integer bits, Integer sampleCount,
@@ -142,7 +144,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.bits = bits;
         this.sampleCount = sampleCount;
         this.vectorAccessorFactory = vectorAccessorFactory;
-        this.numPrimaryKeyFields = numPrimaryKeyFields;
+        this.identityFields = identityFields;
         this.numIncludeFields = numIncludeFields;
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
     }
@@ -150,7 +152,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     protected LSMVTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int vectorDimensions,
             int[] vectorFields, int[] filterFields, boolean atomic, Float confidenceInterval, Float minQuantile,
             Float maxQuantile, Float alpha, Integer bits, Integer sampleCount,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int numPrimaryKeyFields, int numIncludeFields,
+            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
             throws HyracksDataException {
@@ -168,7 +170,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.bits = bits;
         this.sampleCount = sampleCount;
         this.vectorAccessorFactory = vectorAccessorFactory;
-        this.numPrimaryKeyFields = numPrimaryKeyFields;
+        this.identityFields = identityFields;
         this.numIncludeFields = numIncludeFields;
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
     }
@@ -213,9 +215,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
                 vectorDimensions, vectorFields, filterFields, null, // filterFrameFactory
                 null, // filterManager
                 null, // filterHelper
-                durable, metadataPageManagerFactory, atomic, null, vectorAccessorFactory, numPrimaryKeyFields,
-                numIncludeFields, dataTupleBuilderFactory, quantizationParams, distanceFunctionFactory,
-                crossPollination);
+                durable, metadataPageManagerFactory, atomic, null, vectorAccessorFactory, identityFields,
+                dataTupleBuilderFactory, quantizationParams, distanceFunctionFactory, crossPollination);
     }
 
     @Override
@@ -260,7 +261,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         putIfNotNull(json, KEY_ALPHA, alpha);
         putIfNotNull(json, KEY_BITS, bits);
         putIfNotNull(json, KEY_SAMPLE_COUNT, sampleCount);
-        json.put("numPrimaryKeyFields", numPrimaryKeyFields);
+        json.putPOJO("identityFields", identityFields);
         json.put("numIncludeFields", numIncludeFields);
     }
 
@@ -268,16 +269,20 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
             + "literals that can disagree with the WITH-clause defaults")
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
             throws HyracksDataException {
-        // appendToJson always writes vectorDimensions, so its absence (or a non-positive value) means the
-        // resource is corrupt/foreign. Fail fast with a clear message instead of carrying -1 into deeper,
-        // less obvious failures. (numPrimaryKeyFields/numIncludeFields keep plausible back-compat defaults.)
+        // appendToJson always writes vectorDimensions and the field layout, so a missing one means the
+        // resource is corrupt. Reject it here rather than let a default silently mis-key the index.
         if (!json.has("vectorDimensions") || json.get("vectorDimensions").asInt() <= 0) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
                     "LSMVTreeLocalResource is missing or has a non-positive vectorDimensions; resource is corrupt");
         }
         int vectorDimensions = json.get("vectorDimensions").asInt();
-        int numPrimaryKeyFields = json.has("numPrimaryKeyFields") ? json.get("numPrimaryKeyFields").asInt() : 1;
-        int numIncludeFields = json.has("numIncludeFields") ? json.get("numIncludeFields").asInt() : 0;
+        if (!json.has("identityFields") || !json.has("numIncludeFields")) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "LSMVTreeLocalResource is missing its field layout (identityFields, numIncludeFields); "
+                            + "resource is corrupt");
+        }
+        int[] identityFields = OBJECT_MAPPER.convertValue(json.get("identityFields"), int[].class);
+        int numIncludeFields = json.get("numIncludeFields").asInt();
         int[] vectorFields =
                 json.has("vectorFields") ? OBJECT_MAPPER.convertValue(json.get("vectorFields"), int[].class) : null;
         int[] filterFields =
@@ -305,7 +310,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         // Determine quantized vs non-quantized based on presence of quantization parameters
         boolean isQuantized = (minQuantile != null);
         IVTreeDataTupleBuilderFactory dataTupleBuilderFactory =
-                new VTreeDataTupleBuilderFactory(numIncludeFields, isQuantized);
+                new VTreeDataTupleBuilderFactory(numIncludeFields, identityFields.length, isQuantized);
 
         // Cross-pollination params. appendToJson writes all three unconditionally, so their absence means
         // the resource is corrupt or foreign — fail fast, exactly as vectorDimensions and the two factories
@@ -323,8 +328,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
 
         return new LSMVTreeLocalResource(registry, json, vectorDimensions, vectorFields, filterFields, atomic,
                 confidenceInterval, minQuantile, maxQuantile, alpha, bits, sampleCount, vectorAccessorFactory,
-                numPrimaryKeyFields, numIncludeFields, dataTupleBuilderFactory, distanceFunctionFactory,
-                crossPollination);
+                identityFields, numIncludeFields, dataTupleBuilderFactory, distanceFunctionFactory, crossPollination);
     }
 
     /** Read an optional float field from JSON; returns {@code null} if the field is missing or null. */

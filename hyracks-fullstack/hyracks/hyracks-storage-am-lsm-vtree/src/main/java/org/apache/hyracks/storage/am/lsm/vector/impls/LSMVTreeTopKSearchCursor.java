@@ -39,7 +39,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
-import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
@@ -71,8 +70,8 @@ import org.apache.logging.log4j.Logger;
  * drain that buffer in approximate-distance ascending order.
  * <p>
  * This cursor is for quantized indexes: the tuple format is
- * {@code [distance, centroidId, quantized_distance, quantized_embedding, PKs..., includes...]}
- * (pkStartField=4). Reranking against the unquantized vector is the caller's responsibility.
+ * {@code [distance, centroidId, quantized_distance, quantized_embedding, key..., value...]}.
+ * Reranking against the unquantized vector is the caller's responsibility.
  */
 public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVectorSearchCursor {
 
@@ -107,8 +106,14 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     // Antimatter reconciliation: stable COPIES of matters that survived reconciliation of the current
     // equal-distance group, buffered for emission one at a time. See getNextValidTuple.
     private final ArrayDeque<ITupleReference> readyMatters = new ArrayDeque<>();
-    // Number of primary-key fields (INCLUDE fields excluded) — the reconciliation key.
-    private int numPrimaryKeyFields;
+    // The ordering key as stored-tuple field indexes with an index-aligned comparator, taken from the
+    // index so the data frames and this cursor cannot disagree, plus its tail: the fields that identify
+    // one record independent of its distance. Cross-pollination replicas of a record sit at different
+    // distances, so "same record?" has to ask the tail alone.
+    private int[] comparatorFields;
+    private int[] identityFields;
+    private MultiComparator keyCmp;
+    private MultiComparator identityCmp;
 
     // Spillable top-K buffer: frame-backed in-memory heap with disk spill on budget exceeded.
     // Encapsulates MaxHeap + VariableDeletableTupleMemoryManager + RunFileWriter spill.
@@ -149,9 +154,6 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     private ITupleFilter tupleFilter;
     private ReferenceFrameTupleReference referenceFilterTuple;
 
-    // Field index where primary keys start in the data tuple
-    private int pkStartField;
-
     // Statistics
     private int totalTuplesProcessed;
     private int nextCallCount;
@@ -185,21 +187,20 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
         int mult = vectorPred.getKMultiplier();
         this.candidateLimit = K * Math.max(1, mult); // Send K*kMultiplier to PK for reranking
         this.epsilon = vectorPred.getEpsilon();
-        this.pkStartField = dataAccessor.pkStartField();
-        this.numPrimaryKeyFields = ((LSMVTree) opCtx.getIndex()).getNumPrimaryKeyFields();
+        this.comparatorFields = lsmInitialState.getComparatorFields();
+        this.keyCmp = lsmInitialState.getKeyCmp();
+        this.identityFields = lsmInitialState.getIdentityFields();
+        this.identityCmp = lsmInitialState.getIdentityCmp();
 
         // This cursor is quantized-only: dataAccessor is fixed to the quantized layout, so it reads field 3
-        // as the quantized embedding and locates the PKs at pkStartField = 4. It is selected purely by the
-        // USE_TOPK_SEARCH access parameter, which is independent of the index's quantization — so check the
-        // assumption instead of inheriting it. On a non-quantized index field 3 is a PK/INCLUDE field and the
-        // whole read would be silent garbage.
-        if (!((LSMVTree) opCtx.getIndex()).isQuantized()) {
+        // as the quantized embedding. It is selected purely by the USE_TOPK_SEARCH access parameter, which
+        // is independent of the index's quantization — so check the assumption instead of inheriting it. On
+        // a non-quantized index field 3 is a key or value field and the whole read would be silent garbage.
+        if (!lsmInitialState.isQuantized()) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
                     "LSMVTreeTopKSearchCursor requires a quantized VTree index (USE_TOPK_SEARCH was requested for a "
                             + "non-quantized index)");
         }
-        LSMVTreeUtils.validateKeyComparators(cmp, pkStartField, numPrimaryKeyFields);
-
         // Extract tuple filter from search predicate for INCLUDE field predicates
         this.tupleFilter = vectorPred.getTupleFilter();
         if (this.tupleFilter != null) {
@@ -470,27 +471,26 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
                 group.add(new ReconcileEntry(TupleUtils.copyTuple(e.tuple), e.componentId, isAntimatter(e.tuple)));
                 pushIntoQueueAndAdvanceClusterIfNeeded(e);
             }
-            reconcileGroupByPrimaryKey(group);
+            reconcileGroupByKey(group);
         }
     }
 
     /**
-     * Reconcile one equal-distance group by primary key using LSM newest-wins semantics: for each PK, the
-     * entry from the newest component (lowest componentId) determines presence — if it is matter it is
-     * emitted once, if it is a delete marker the record is suppressed and no older matter for that PK
-     * survives. Surviving matters are appended to {@link #readyMatters}.
+     * Reconcile one equal-distance group by identity, newest component wins. A matter is emitted once
+     * unless a newer entry for the same identity shadows it, and a delete marker suppresses every older
+     * matter for that identity. Survivors are appended to {@link #readyMatters}.
      */
-    private void reconcileGroupByPrimaryKey(List<ReconcileEntry> group) throws HyracksDataException {
+    private void reconcileGroupByKey(List<ReconcileEntry> group) throws HyracksDataException {
         for (ReconcileEntry e : group) {
-            boolean newestForPk = true;
+            boolean newestForKey = true;
             for (ReconcileEntry other : group) {
-                if (other != e && other.componentId < e.componentId && samePrimaryKey(e.tuple, other.tuple)) {
-                    newestForPk = false;
+                if (other != e && other.componentId < e.componentId && sameRecord(e.tuple, other.tuple)) {
+                    newestForKey = false;
                     break;
                 }
             }
-            if (!newestForPk) {
-                continue; // shadowed by a newer tuple for the same PK
+            if (!newestForKey) {
+                continue; // shadowed by a newer tuple for the same identity
             }
             if (e.antimatter) {
                 antimatterCancellations++; // newest is a delete marker → record is absent
@@ -520,24 +520,12 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     }
 
     /**
-     * True iff two tuples carry the same primary key. Only the {@code numPrimaryKeyFields} PK fields are
-     * compared — trailing INCLUDE fields are excluded, since a delete marker and its live twin may differ
-     * in INCLUDE values and must still reconcile.
+     * True iff two tuples identify the same record. Compares the ordering key's tail only, so the fields
+     * outside it are excluded: a delete marker and its live twin may differ in their value fields and
+     * must still reconcile.
      */
-    private boolean samePrimaryKey(ITupleReference a, ITupleReference b) throws HyracksDataException {
-        int numPkFields = Math.min(cmp.getComparators().length - pkStartField, numPrimaryKeyFields);
-        for (int i = 0; i < numPkFields; i++) {
-            int fieldIdx = pkStartField + i;
-            if (fieldIdx >= a.getFieldCount() || fieldIdx >= b.getFieldCount()) {
-                return false;
-            }
-            if (cmp.getComparators()[fieldIdx].compare(a.getFieldData(fieldIdx), a.getFieldStart(fieldIdx),
-                    a.getFieldLength(fieldIdx), b.getFieldData(fieldIdx), b.getFieldStart(fieldIdx),
-                    b.getFieldLength(fieldIdx)) != 0) {
-                return false;
-            }
-        }
-        return true;
+    private boolean sameRecord(ITupleReference a, ITupleReference b) throws HyracksDataException {
+        return identityCmp.selectiveFieldCompare(a, b, identityFields) == 0;
     }
 
     /**
@@ -681,9 +669,9 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
      * Compute approximate distance D(q, x) using quantized embedding.
      *
      * This cursor is dedicated for quantized vector indexes.
-     * Quantized data tuple format (pkStartField=4):
+     * Quantized data tuple format:
      *   Field 0: distance_to_centroid, Field 1: centroidId,
-     *   Field 2: quantized_distance, Field 3: quantized_embedding, Field 4+: PKs
+     *   Field 2: quantized_distance, Field 3: quantized_embedding, Field 4+: key and value fields
      *
      * Dequantizes the stored embedding bytes (field 3) and computes distance
      * against the quantized query vector.
@@ -816,7 +804,7 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
 
     /**
      * Priority queue comparator for merging results from multiple components.
-     * Compares by distance (field 0), then PK fields, then component ID.
+     * Compares on the index's ordering key, then component ID.
      */
     private class NaivePriorityQueueComparator implements Comparator<PriorityQueueElement> {
         @Override
@@ -825,28 +813,11 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
             ITupleReference tupleB = b.tuple;
 
             try {
-                int result = cmp.getComparators()[0].compare(tupleA.getFieldData(0), tupleA.getFieldStart(0),
-                        tupleA.getFieldLength(0), tupleB.getFieldData(0), tupleB.getFieldStart(0),
-                        tupleB.getFieldLength(0));
+                // The ordering key only; the fields outside it are excluded so a delete marker and its
+                // live twin, which may differ in their value fields, order together.
+                int result = keyCmp.selectiveFieldCompare(tupleA, tupleB, comparatorFields);
                 if (result != 0) {
                     return result;
-                }
-
-                // Cap at the PK fields; trailing INCLUDE fields are excluded from the ordering key so a
-                // delete marker and its live twin (which may differ in INCLUDE values) order together.
-                int numRemainingFields = Math.min(cmp.getComparators().length - pkStartField, numPrimaryKeyFields);
-                for (int i = 0; i < numRemainingFields; i++) {
-                    int fieldIdx = pkStartField + i;
-                    if (fieldIdx >= tupleA.getFieldCount() || fieldIdx >= tupleB.getFieldCount()) {
-                        break;
-                    }
-                    result = cmp.getComparators()[pkStartField + i].compare(tupleA.getFieldData(fieldIdx),
-                            tupleA.getFieldStart(fieldIdx), tupleA.getFieldLength(fieldIdx),
-                            tupleB.getFieldData(fieldIdx), tupleB.getFieldStart(fieldIdx),
-                            tupleB.getFieldLength(fieldIdx));
-                    if (result != 0) {
-                        return result;
-                    }
                 }
             } catch (Throwable e) {
                 // Matches the LSMIndexSearchCursor / LSMRTree / LSMBTree comparator idiom: Comparator.compare
