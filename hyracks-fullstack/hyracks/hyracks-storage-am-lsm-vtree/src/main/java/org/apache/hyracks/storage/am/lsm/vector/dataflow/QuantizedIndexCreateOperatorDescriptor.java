@@ -193,7 +193,8 @@ public class QuantizedIndexCreateOperatorDescriptor extends AbstractSingleActivi
                         "The sampled records yielded no usable vector for the indexed field: it may be missing, "
                                 + "null or not a list in every sampled record, the dataset may be empty, or no "
                                 + "sampled vector may match the dimension the index declares. Run "
-                                + "SELECT COUNT(*) FROM <collection> WHERE NOT isvector(<field>, <dimension>) "
+                                + "SELECT COUNT(*) FROM <collection> WHERE NOT "
+                                + "if_missing_or_null(isvector(<field>, <dimension>), false) "
                                 + "to count the records that cannot be indexed, and "
                                 + "SELECT DISTINCT array_count(<field>) FROM <collection> to see which "
                                 + "dimensions the data actually holds.");

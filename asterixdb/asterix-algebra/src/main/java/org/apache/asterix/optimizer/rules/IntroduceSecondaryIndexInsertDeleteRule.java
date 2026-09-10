@@ -1146,10 +1146,34 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 boolean excludeUnknown = indexDetails.getExcludeUnknownKey().getOrElse(false);
                 return createAllUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter, excludeUnknown);
             }
+        } else if (indexType == IndexType.VTREE) {
+            return createUsableVectorFilterExpression(index, secondaryKeyVars);
         } else {
             // inverted index && array index
             return createAnyUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter);
         }
+    }
+
+    /**
+     * Builds {@code is-vector(vector, dimension)} over a VTREE index's vector key. A record that fails it
+     * is left out of that index and stays in the collection.
+     */
+    private Mutable<ILogicalExpression> createUsableVectorFilterExpression(Index index,
+            List<LogicalVariable> secondaryKeyVars) {
+        if (secondaryKeyVars.isEmpty()) {
+            return null;
+        }
+        // Element 0 is the vector and the rest are INCLUDE fields, which the index stores
+        // unconstrained and this predicate therefore ignores.
+        VariableReferenceExpression vectorVarRef = new VariableReferenceExpression(secondaryKeyVars.get(0));
+        vectorVarRef.setSourceLocation(sourceLoc);
+        int dimension = ((Index.VectorIndexDetails) index.getIndexDetails()).getVectorParameters().getDimension();
+        ScalarFunctionCallExpression isVectorFuncExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_VECTOR_WITH_DIMENSION),
+                new MutableObject<ILogicalExpression>(vectorVarRef), new MutableObject<ILogicalExpression>(
+                        new ConstantExpression(new AsterixConstantValue(new AInt32(dimension)))));
+        isVectorFuncExpr.setSourceLocation(sourceLoc);
+        return new MutableObject<>(isVectorFuncExpr);
     }
 
     private Mutable<ILogicalExpression> createAnyUnknownFilterExpression(List<LogicalVariable> secondaryKeyVars,

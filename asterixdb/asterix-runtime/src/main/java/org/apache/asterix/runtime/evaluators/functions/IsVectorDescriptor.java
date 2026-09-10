@@ -47,11 +47,12 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@code isvector(field, dimension)} is true. That lets a user account for what was skipped:
  *
  * <pre>
- * SELECT COUNT(*) FROM ds WHERE NOT isvector(ds.emb, 384);
+ * SELECT COUNT(*) FROM ds WHERE NOT if_missing_or_null(isvector(ds.emb, 384), false);
  * </pre>
  * <p>
  * Null and missing propagate as for {@code is_array} and the rest of the {@code is_*} family, so
- * {@code isvector(null)} is {@code null} rather than {@code false}.
+ * {@code isvector(null)} is {@code null} rather than {@code false}. Negating the call alone would
+ * therefore leave out the rows whose field is null or absent, which the index skips too.
  * <p>
  * The function is <b>total</b> since {@link VectorValidator} never throws, which CLUSTER BY's usable-vector
  * guard relies on.

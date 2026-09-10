@@ -1669,13 +1669,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, database, dataverseName, datasetName);
         int numKeys = primaryKeys.size() + secondaryKeys.size();
 
-        // Vector indexes do not support tuple filters; drop any factories supplied by the caller, and do NOT
-        // append a filter column to the permutation either — a filter field the index never reads would still
-        // cost bytes in every data tuple (VTree.getNumOfFilterFields() is 0 on the storage side). CREATE INDEX
+        // The permutation carries no filter column: a filter field the index never reads would still cost
+        // bytes in every data tuple (VTree.getNumOfFilterFields() is 0 on the storage side). CREATE INDEX
         // rejects a vector index on a filtered dataset (see QueryTranslator), so this is belt-and-braces for
         // an index created before that check existed.
-        filterFactory = null;
-        prevFilterFactory = null;
 
         // Field permutation layout: <secondary keys (vector + include fields), primary keys>
         int[] fieldPermutation = new int[numKeys];

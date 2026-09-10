@@ -160,6 +160,45 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <!-- The DML counterpart of create-index-vtree-dimension-mismatch. The build applies
+             isvector(field, dimension) to decide what the index holds, so INSERT, UPSERT and DELETE
+             must apply it too. An unusable embedding stays in the collection and out of the index:
+             steps 08 and 12 read the collection, steps 06/10/14/16 read the index, and step 17 pins
+             the plan so those reads cannot silently become a full scan. -->
+        <compilation-unit name="vtree-dml-dimension-mismatch">
+            <output-dir compare="Clean-JSON">vtree-dml-dimension-mismatch</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <!-- Embeddings the index cannot represent, arriving after the build on an open type so the
+             variable is typed ANY: null, a list holding a string, a non-list, and no field at all.
+             Each row stays in the collection and out of the index, and the accounting query from
+             isvector's contract names exactly those rows. -->
+        <compilation-unit name="vtree-dml-unusable-embedding">
+            <output-dir compare="Clean-JSON">vtree-dml-unusable-embedding</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <!-- An INCLUDE field that is null, absent, or known, on an open type. Membership is decided
+             by the embedding alone, so all three shapes must be in the index; and each predicate is
+             asked again with the index dropped against the same golden, so a pushed-down filter that
+             disagreed with a full scan would show up as a mismatch rather than as a plausible
+             answer. No existing test can hold an unknown include value: every INCLUDE test in this
+             suite declares a closed non-optional field. -->
+        <compilation-unit name="vtree-include-unknown">
+            <output-dir compare="Clean-JSON">vtree-include-unknown</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <!-- DML against a vector index whose dataset has a composite primary key. The maintenance
+             path must write every key field: writing only the first produces a tuple with fewer
+             fields than the type traits the resource layer sizes from the dataset's primary keys,
+             which asserts under -ea and silently corrupts the frame without it. -->
+        <compilation-unit name="vtree-dml-composite-pk">
+            <output-dir compare="Clean-JSON">vtree-dml-composite-pk</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-composite-pk">
             <output-dir compare="Clean-JSON">create-index-vtree-composite-pk</output-dir>
         </compilation-unit>
