@@ -196,7 +196,8 @@ public final class KMeansLoopIO {
     /**
      * Hashes the contents of a vector into 64 bits, over each component's bit pattern
      * ({@link Double#doubleToLongBits}). Equal vectors hash equally on any partition or position, so
-     * {@link #uniformDraw} can use the hash as randomness that is independent of the partition layout.
+     * {@link #uniformDraw} can use the hash as randomness that is independent of the partition layout, and SAMPLE
+     * can order its draws by it so the pool's layout is a property of the drawn set alone.
      */
     public static long fingerprint(double[] v) {
         long h = mix64(0x9E3779B97F4A7C15L ^ v.length);
@@ -215,18 +216,17 @@ public final class KMeansLoopIO {
 
     /**
      * Returns the random number in {@code [0, 1)} that SAMPLE compares against the draw probability
-     * {@code l * d^2(x, pool) / phi} of one vector in one round.
+     * {@code l * d^2(x, pool) / phi} of one row in one round.
      * <p>
-     * The number is computed from the vector hash ({@link #fingerprint}), the query seed and the round. It does
-     * not depend on the partition the vector is in or on its position in the run file. So the same vector is
-     * drawn or not drawn on every topology. This replaces a per-partition {@code java.util.Random} stream whose
-     * n-th value depended on the position n.
-     * <p>
-     * Duplicate vectors get the same number and are drawn together. RECLUSTER weighs duplicates so this is
-     * harmless.
+     * The number is computed from the vector hash ({@link #fingerprint}), the query seed, the round and
+     * {@code copy}, the number of rows with this same vector that the partition's scan met before this one. It does
+     * not depend on the partition the row is in or on its position in the run file, so a vector is drawn or not
+     * drawn on every topology and in every arrival order. Duplicate vectors get different numbers -- copy 0, copy 1,
+     * ... -- so each row is its own trial: a number from the hash alone made a point duplicated c times one trial
+     * instead of c, and it could then sit out every round.
      */
-    public static double uniformDraw(long fingerprint, long seedBase, int round) {
-        long z = mix64(fingerprint ^ mix64(seedBase * 0x9E3779B97F4A7C15L + round));
+    public static double uniformDraw(long fingerprint, long seedBase, int round, int copy) {
+        long z = mix64(fingerprint ^ mix64(seedBase * 0x9E3779B97F4A7C15L + round) ^ mix64(copy * 0xBF58476D1CE4E5B9L));
         return (z >>> 11) * 0x1.0p-53;
     }
 

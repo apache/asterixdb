@@ -115,16 +115,15 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
             });
             means.seal();
 
-            // Fewer means than requested says the input holds fewer distinct vectors. This stage alone can
-            // tell that apart from a cluster emptying during refinement, so it is the one that names it. A
+            // Fewer means than requested: the pool holds fewer distinct candidates than k, because the input has
+            // fewer distinct vectors or because the oversampling rounds never drew some of them. This stage alone
+            // can tell that apart from a cluster emptying during refinement, so it is the one that names it. A
             // warning and not a failure, since the groups that exist are a usable answer.
             if (meanCount[0] < count && ctx.getWarningCollector().shouldWarn()) {
-                ctx.getWarningCollector()
-                        .warn(Warning.of(null, ErrorCode.CLUSTER_BY_INVALID_INPUT,
-                                "NumClusters is " + count + " but only " + meanCount[0]
-                                        + " distinct vector(s) were found in the input"
-                                        + (meanCount[0] == 0 ? " -- no row matched the declared Dimension"
-                                                : ", so only " + meanCount[0] + " cluster(s) are returned")));
+                ctx.getWarningCollector().warn(Warning.of(null, ErrorCode.CLUSTER_BY_INVALID_INPUT,
+                        "NumClusters is " + count + " but only " + meanCount[0] + " distinct candidate(s) were found"
+                                + (meanCount[0] == 0 ? " -- no row matched the declared Dimension"
+                                        : ", so only " + meanCount[0] + " cluster(s) are returned")));
             }
             // A shortfall is not topped up from the candidate pool: a candidate that took no rows is by
             // construction a duplicate of one that did, so it stands for a position already covered.

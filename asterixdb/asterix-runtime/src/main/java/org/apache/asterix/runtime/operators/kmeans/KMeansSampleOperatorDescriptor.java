@@ -39,14 +39,19 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op3 Sample</b>: the per-partition Bernoulli draw of
  * one oversampling round. Driven by the {@code {round, phi}} frames broadcast from PhiMerge (Op2). For each round
  * it streams the shared resident-vector run file alongside the score column Op1 wrote while computing this
  * round's local sigma, drawing each vector x independently with probability
  * {@code p_x = l * d^2(x, pool) / phi}. The random number of a draw comes from {@link KMeansLoopIO#uniformDraw}
- * and depends only on the vector contents, the query seed and the round. Which vectors are drawn therefore does
- * not depend on how the input was partitioned.
+ * and depends on the vector contents, the query seed, the round and which copy of the vector the row is: the
+ * n-th row of one vector met in this partition's scan is copy n. Each row is therefore its own Bernoulli trial
+ * (a number from the contents alone made a point duplicated c times one trial instead of c, and it could sit out
+ * every round), and the set of numbers a vector's copies receive is fixed by how many copies the partition holds,
+ * not by the order they were read in. Which vectors are drawn does not depend on the arrival order of the rows.
  * Survivors are emitted as {@link KMeansLoopIO#KIND_DRAW} frames {@code {round, part, seq, vec}}
  * to PoolMerge (Op4), followed by one {@link KMeansLoopIO#KIND_END} marker so Op4's per-round barrier
  * can fire.
@@ -86,6 +91,8 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
             private final ArrayTupleBuilder tb = new ArrayTupleBuilder(5);
             private FrameTupleAppender appender;
             private MaterializerTaskState vectorState;
+            /** Copies of each vector met so far in this round's scan, by fingerprint. Cleared per round. */
+            private final Long2IntOpenHashMap copies = new Long2IntOpenHashMap();
 
             @Override
             public void open() throws HyracksDataException {
@@ -121,8 +128,9 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
                 final double l = oversamplingCount;
                 if (phi > 0.0d) {
                     // Op1 already scored every vector against this exact pool in this round, which is what phi
-                    // was summed from, so the distances are read back and the pool is never opened. A draw's
-                    // random number depends only on the vector, so visit order does not matter.
+                    // was summed from, so the distances are read back and the pool is never opened. The copy
+                    // count restarts per round: the run file is replayed whole, so copy n is the same row each round.
+                    copies.clear();
                     MaterializerTaskState scoreState = (MaterializerTaskState) LoopControlState.required(ctx,
                             LoopControlState.scoreStateId(loopKey, partition));
                     try (KMeansLoopIO.ScoreColumnReader scores = new KMeansLoopIO.ScoreColumnReader(scoreState, ctx)) {
@@ -133,9 +141,10 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
                             if (Double.isNaN(best) || best == Double.POSITIVE_INFINITY || best <= 0.0d) {
                                 return;
                             }
-                            if (KMeansLoopIO.uniformDraw(KMeansLoopIO.fingerprint(vec), seedBase, round) < l * best
-                                    / phi) {
-                                emitDraw(round, drawKey(vec), vec);
+                            long fingerprint = KMeansLoopIO.fingerprint(vec);
+                            int copy = copies.addTo(fingerprint, 1);
+                            if (KMeansLoopIO.uniformDraw(fingerprint, seedBase, round, copy) < l * best / phi) {
+                                emitDraw(round, drawKey(fingerprint), vec);
                             }
                         });
                     }
@@ -157,8 +166,8 @@ public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperat
              * Truncating the 64-bit fingerprint to the int this column carries is fine: a collision only ties
              * two candidates, and the partition breaks that tie (see DRAW_SORT_FIELDS).
              */
-            private int drawKey(double[] vec) {
-                return (int) KMeansLoopIO.fingerprint(vec);
+            private int drawKey(long fingerprint) {
+                return (int) fingerprint;
             }
 
             private void emitDraw(int round, int seq, double[] vec) throws HyracksDataException {

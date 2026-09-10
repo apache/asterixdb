@@ -254,6 +254,13 @@
             <output-dir compare="Text">kmeans-duplicate-points</output-dir>
         </compilation-unit>
     </test-case>
+    <!-- Copies of one vector are many rows, not one: k-means|| draws each copy independently, so two duplicated
+         points always yield two clusters. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-duplicate-init">
+            <output-dir compare="Text">kmeans-duplicate-init</output-dir>
+        </compilation-unit>
+    </test-case>
     <!-- Mixed widths and non-vector rows in one dataset, with membership written down. Declared Dimension
          decides who takes part, so the same rows cluster one way at 2 and the opposite way at 3. -->
     <test-case FilePath="cluster-by">
