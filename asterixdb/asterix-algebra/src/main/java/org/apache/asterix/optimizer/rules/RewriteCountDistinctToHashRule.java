@@ -48,8 +48,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * <li>when a top-level aggregate operator also holds two-step aggregates, since local aggregation is pushed
  * only if every function in the operator is two-step. Aggregates in a nested plan are exempt: they are
  * combined by the group-by combiner instead, and that is the case the hash aggregate is meant for.</li>
- * <li>when any aggregate in the operator takes more than one argument, since the rewrite and the shared-DISTINCT
- * check above only handle single-argument aggregates.</li>
+ * <li>when any aggregate in the operator does not take exactly one argument, since the rewrite and the
+ * shared-DISTINCT check above only handle single-argument aggregates.</li>
  * </ul>
  */
 public class RewriteCountDistinctToHashRule implements IAlgebraicRewriteRule {
@@ -93,8 +93,8 @@ public class RewriteCountDistinctToHashRule implements IAlgebraicRewriteRule {
         boolean canLoseLocalPhase = !isInNestedPlan(op);
 
         // Collect the arguments already deduplicated by a distinct aggregate this rule leaves alone. Bail out
-        // if any aggregate here takes more than one argument, or if one would lose its partition-local phase,
-        // which local aggregation only keeps when every function in the operator is two-step.
+        // if any aggregate here does not take exactly one argument, or if one would lose its partition-local
+        // phase, which local aggregation only keeps when every function in the operator is two-step.
         Set<ILogicalExpression> sharedArgs = new HashSet<>();
         for (Mutable<ILogicalExpression> exprRef : aggExprs) {
             ILogicalExpression expr = exprRef.getValue();
@@ -102,7 +102,7 @@ public class RewriteCountDistinctToHashRule implements IAlgebraicRewriteRule {
                 continue;
             }
             AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
-            if (callExpr instanceof AggregateFunctionCallExpression && callExpr.getArguments().size() > 1) {
+            if (callExpr instanceof AggregateFunctionCallExpression && callExpr.getArguments().size() != 1) {
                 return false;
             }
             FunctionIdentifier fn = callExpr.getFunctionIdentifier();
@@ -113,7 +113,7 @@ public class RewriteCountDistinctToHashRule implements IAlgebraicRewriteRule {
                     && ((AggregateFunctionCallExpression) callExpr).isTwoStep()) {
                 return false;
             }
-            if (BuiltinFunctions.getAggregateFunctionForDistinct(fn) != null && !callExpr.getArguments().isEmpty()) {
+            if (BuiltinFunctions.getAggregateFunctionForDistinct(fn) != null) {
                 sharedArgs.add(callExpr.getArguments().get(0).getValue());
             }
         }

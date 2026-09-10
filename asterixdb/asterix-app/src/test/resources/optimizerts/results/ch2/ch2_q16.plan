@@ -11,18 +11,10 @@ distribute result [$$149]
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$i_name := $$150; $#1 := $$151; $$i_price := $$152]) decor ([]) {
-                      aggregate [$$160] <- [agg-sql-count($$171)]
+                      aggregate [$$160] <- [agg-sql-count-distinct-hash(numeric-mod(numeric-multiply($$164, $$165), 10000))]
                       -- AGGREGATE  |LOCAL|
-                        distinct ([$$171])
-                        -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                          order (ASC, $$171)
-                          -- MICRO_STABLE_SORT [$$171(ASC)]  |LOCAL|
-                            assign [$$171] <- [numeric-mod(numeric-multiply($$164, $$165), 10000)] project: [$$171]
-                            -- ASSIGN  |LOCAL|
-                              project ([$$164, $$165])
-                              -- STREAM_PROJECT  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        nested tuple source
+                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
             -- PRE_CLUSTERED_GROUP_BY[$$150, $$151, $$152]  |PARTITIONED|
               exchange

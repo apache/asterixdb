@@ -11,34 +11,10 @@ distribute result [$$188]
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$r_name := $$189; $$su_nationkey := $$192]) decor ([]) {
-                      aggregate [$$200] <- [agg-sql-sum($$175)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      aggregate [$$200, $$201, $$202] <- [agg-sql-sum($$175), agg-sql-count-distinct-hash($$191), agg-sql-count-distinct-hash($$186)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   }
-                   {
-                      aggregate [$$201] <- [agg-sql-count($$191)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- AGGREGATE  |LOCAL|
-                        distinct ([$$191]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                          order (ASC, $$191) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- MICRO_STABLE_SORT [$$191(ASC)]  |LOCAL|
-                            project ([$$191]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- STREAM_PROJECT  |LOCAL|
-                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   }
-                   {
-                      aggregate [$$202] <- [agg-sql-count($$186)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- AGGREGATE  |LOCAL|
-                        distinct ([$$186]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                          order (ASC, $$186) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- MICRO_STABLE_SORT [$$186(ASC)]  |LOCAL|
-                            project ([$$186]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- STREAM_PROJECT  |LOCAL|
-                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
             -- PRE_CLUSTERED_GROUP_BY[$$189, $$192]  |PARTITIONED|
               exchange
