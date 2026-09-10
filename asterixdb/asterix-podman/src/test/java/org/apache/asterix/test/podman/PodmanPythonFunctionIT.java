@@ -19,6 +19,9 @@
 package org.apache.asterix.test.podman;
 
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +34,6 @@ import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -44,22 +46,52 @@ import org.testcontainers.utility.DockerImageName;
 import com.github.dockerjava.api.DockerClient;
 
 /**
- * Runs the Python UDF tests within a container using domain sockets.
+ * Runs the Python UDF tests across two containers: one running AsterixDB, and a separate, fenced
+ * one running only the s6-ipcserver-wrapped UDF interpreter. The two only ever share a UDF domain
+ * socket and the installed-library directory, both bind-mounted from the host - the sandbox
+ * container never sees AsterixDB's storage, transaction log, or credentials, and AsterixDB never
+ * runs a line of the UDF code itself.
  */
 @RunWith(Parameterized.class)
 public class PodmanPythonFunctionIT {
     public static final DockerImageName ASTERIX_IMAGE = DockerImageName.parse("asterixdb/socktest");
-    @ClassRule
-    public static GenericContainer<?> asterix = new GenericContainer(ASTERIX_IMAGE).withExposedPorts(19004, 5006, 19002)
-            .withFileSystemBind("../asterix-app/", "/var/tmp/asterix-app/", BindMode.READ_WRITE);
+    public static final DockerImageName SANDBOX_IMAGE = DockerImageName.parse("asterixdb/udf-sandbox");
+
+    // host directories bind-mounted into both containers: only the UDF socket and the installed
+    // library code cross the boundary between them
+    private static final Path SHARED_SOCK_DIR = Path.of("target/podman-shared/sock");
+    private static final Path SHARED_APPS_DIR = Path.of("target/podman-shared/applications");
+
+    public static GenericContainer<?> sandbox;
+    public static GenericContainer<?> asterix;
+
     protected static final String TEST_CONFIG_FILE_NAME = "../asterix-app/src/test/resources/cc.conf";
     private static final boolean cleanupOnStop = true;
 
     @BeforeClass
     public static void setUp() throws Exception {
+        Files.createDirectories(SHARED_SOCK_DIR);
+        Files.createDirectories(SHARED_APPS_DIR);
+
+        sandbox = new GenericContainer(SANDBOX_IMAGE)
+                .withFileSystemBind(SHARED_SOCK_DIR.toString(), "/mnt/udfsock", BindMode.READ_WRITE)
+                .withFileSystemBind(SHARED_APPS_DIR.toString(), "/opt/apache-asterixdb/data/applications",
+                        BindMode.READ_WRITE)
+                .withFileSystemBind("../asterix-app/", "/var/tmp/asterix-app/", BindMode.READ_WRITE);
+        sandbox.start();
+
+        asterix = new GenericContainer(ASTERIX_IMAGE).withExposedPorts(19004, 5006, 19002)
+                .withStartupTimeout(Duration.ofMinutes(2))
+                .withFileSystemBind(SHARED_SOCK_DIR.toString(), "/mnt/udfsock", BindMode.READ_WRITE)
+                .withFileSystemBind(SHARED_APPS_DIR.toString(), "/opt/apache-asterixdb/data/applications",
+                        BindMode.READ_WRITE)
+                .withFileSystemBind("../asterix-app/", "/var/tmp/asterix-app/", BindMode.READ_WRITE);
+        asterix.start();
+
         final TestExecutor testExecutor = new TestExecutor(
                 List.of(InetSocketAddress.createUnresolved(asterix.getHost(), asterix.getMappedPort(19002))));
-        asterix.execInContainer("/opt/setup.sh");
+        sandbox.execInContainer("/opt/setup-python.sh");
+        asterix.execInContainer("/opt/setup-data.sh");
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor, false, true, new PodmanUDFLibrarian(asterix));
         setEndpoints(testExecutor);
         testExecutor.waitForClusterActive(60, TimeUnit.SECONDS);
@@ -70,8 +102,15 @@ public class PodmanPythonFunctionIT {
         try {
         } finally {
             ExecutionTestUtil.tearDown(cleanupOnStop);
+            if (asterix != null) {
+                asterix.stop();
+            }
+            if (sandbox != null) {
+                sandbox.stop();
+            }
             DockerClient dc = DockerClientFactory.instance().client();
             dc.removeImageCmd(ASTERIX_IMAGE.asCanonicalNameString()).withForce(true).exec();
+            dc.removeImageCmd(SANDBOX_IMAGE.asCanonicalNameString()).withForce(true).exec();
         }
     }
 

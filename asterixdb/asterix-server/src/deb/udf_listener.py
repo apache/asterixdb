@@ -17,8 +17,8 @@
 # under the License.
 
 import sys
-from systemd.daemon import listen_fds
 from os import chdir
+from os import environ
 from os import getcwd
 from os import getpid
 from struct import *
@@ -86,6 +86,8 @@ class Wrapper(object):
         if class_name is not None:
             self.wrapped_class = getattr(
                 import_module(module_name), class_name)()
+        else:
+            self.wrapped_class = None
         if self.wrapped_class is not None:
             wrapped_fn = getattr(self.wrapped_class, fn_name)
         else:
@@ -154,9 +156,11 @@ class Wrapper(object):
     def handle_init(self):
         self.flag = MessageFlags.NORMAL
         self.response_buf.seek(0)
+        # PythonMessageBuilder#init always appends a trailing "batched" flag, so the args are
+        # [module, fn, batched] with no class, or [module, clazz, fn, batched] with one.
         args = self.unpacked_msg[1]
         module = args[0]
-        if len(args) == 3:
+        if len(args) == 4:
             clazz = args[1]
             fn = args[2]
         else:
@@ -224,7 +228,14 @@ class Wrapper(object):
     }
 
     def connect_sock(self):
-        self.sock = socket.fromfd(listen_fds()[0], socket.AF_UNIX, socket.SOCK_STREAM)
+        # systemd socket activation (Accept=true) hands us the accepted connection as fd 3 and
+        # tells us so via LISTEN_PID/LISTEN_FDS; a ucspi-style superserver such as s6-ipcserverd
+        # instead dups the accepted connection directly onto our stdin/stdout (fd 0).
+        if environ.get('LISTEN_PID') == str(getpid()) and int(environ.get('LISTEN_FDS', '0')) > 0:
+            fd = 3
+        else:
+            fd = 0
+        self.sock = socket.fromfd(fd, socket.AF_UNIX, socket.SOCK_STREAM)
 
     def disconnect_sock(self, *args):
         self.sock.shutdown(socket.SHUT_RDWR)

@@ -58,7 +58,7 @@
     </test-case>
     <test-case FilePath="external-library">
       <compilation-unit name="mysentiment_twitter">
-        <output-dir compare="Text">mysentiment_twitter</output-dir>
+        <output-dir compare="Clean-JSON">mysentiment_twitter</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">

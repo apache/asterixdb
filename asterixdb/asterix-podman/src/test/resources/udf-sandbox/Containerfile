@@ -1,0 +1,27 @@
+FROM ubuntu:22.04
+
+# This is the fenced side of the fenced-UDF split: it never has AsterixDB itself, only the
+# interpreter and the s6-ipcserver superserver that spawns udf_listener.py per connection - the
+# same "one interpreter per accepted connection" contract systemd's Accept=true sockets give the
+# packaged deb. It only ever sees the shared UDF socket and the installed-library directory it is
+# handed below, both bind-mounted in by the test - never the AsterixDB container's own storage,
+# transaction log, or credentials.
+RUN apt -y update && \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt -y install python3-pip python3-venv s6 && \
+    pip3 install --no-cache-dir shiv msgpack
+
+# fixture env vars read back by the py_function_error test's env_test() UDF calls
+ENV FOO="BAR=BAZ"
+ENV BAR="BAZ"
+
+COPY target/udf_listener.py /opt/udf_listener.py
+COPY src/test/resources/udf-sandbox/entrypoint.sh /entrypoint.sh
+COPY src/test/resources/udf-sandbox/setup-python.sh /opt/setup-python.sh
+RUN chmod +x /entrypoint.sh /opt/setup-python.sh /opt/udf_listener.py
+
+# mount points for what the test bind-mounts in: the socket directory shared with the AsterixDB
+# container, and that container's library-storage directory (matched at the identical absolute
+# path, since the NC tells us where to look for installed library code by that same path)
+RUN mkdir -p /mnt/udfsock /opt/apache-asterixdb/data/applications
+
+CMD ["/entrypoint.sh"]

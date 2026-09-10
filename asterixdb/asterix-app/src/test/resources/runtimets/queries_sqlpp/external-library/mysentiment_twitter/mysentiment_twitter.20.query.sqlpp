@@ -18,8 +18,13 @@
  */
 USE externallibtest;
 
+/* wrapped as a single array value (rather than one row per result) so the whole result set is
+ * one JSON document; TestExecutor's regexjson comparison then compares it structurally, which
+ * makes the comparison insensitive to the per-environment field order open records serialize in */
+select value [(
 select t.id as id, length(roundtrip(t.text)[0]) as len, sentiment(t.text) as sent
 from Tweet t
 order by id DESC
-limit 100;
+limit 100
+)][0];
 

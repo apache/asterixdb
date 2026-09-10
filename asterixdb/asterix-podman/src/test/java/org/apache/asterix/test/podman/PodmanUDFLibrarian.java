@@ -73,7 +73,9 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
 
     @Override
     public SocketType getSocketType() {
-        return SocketType.LOOPBACK;
+        // install()/uninstall() build their own "http://localhost:19004" + path URL for curl to run
+        // inside the container, so TestExecutor must hand us the bare path, not a fully-qualified URI.
+        return SocketType.DOMAIN;
     }
 
     private void handleResponse(Container.ExecResult result) throws AsterixException, JsonProcessingException {

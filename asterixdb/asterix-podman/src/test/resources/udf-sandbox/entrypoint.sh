@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,11 +15,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+set -e
 
-import os
+UDF_SOCKET=/mnt/udfsock/pyudf.socket
 
-
-class TweetSent(object):
-
-    def crash(self):
-        os._exit(1)
+rm -f "$UDF_SOCKET"
+exec s6-ipcserver "$UDF_SOCKET" /opt/udf_listener.py

@@ -20,8 +20,13 @@ use externallibtest;
 
 set `rewrite_attempt_batch_assign` "false";
 
+/* wrapped as a single array value (rather than one row per result) so the whole result set is
+ * one JSON document; TestExecutor's regexjson comparison then compares it structurally, which
+ * makes the comparison insensitive to the per-environment field order open records serialize in */
+select value [(
 select sentiment(t.text) as sent, length(t.text) as text
 from Tweet t
 order by t.id
-limit 100;
+limit 100
+)][0];
 

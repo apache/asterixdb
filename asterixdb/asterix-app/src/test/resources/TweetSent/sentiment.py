@@ -15,25 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import math,sys
-import pickle;
-import sklearn;
-import os;
+import numpy as np
+
+# A toy, deterministic lexicon classifier: no trained model to go stale, no compiled
+# dependencies (scikit-learn/scipy) whose ABI can drift out from under a pickled model.
+_POSITIVE = np.array(["good", "great", "love", "happy", "awesome", "best", "nice", "thanks", "lol", "haha"])
+_NEGATIVE = np.array(["bad", "hate", "sad", "worst", "sucks", "angry", "terrible", "stupid", "ugh", "kill"])
+
+
 class TweetSent(object):
 
-    def __init__(self):
-
-        pickle_path = os.path.join(os.path.dirname(__file__), 'sentiment_pipeline3')
-        f = open(pickle_path,'rb')
-        self.pipeline = pickle.load(f)
-        f.close()
+    def _score(self, text):
+        words = np.array(str(text).lower().split())
+        if words.size == 0:
+            return 0
+        pos = np.isin(words, _POSITIVE).sum()
+        neg = np.isin(words, _NEGATIVE).sum()
+        return int(pos > neg)
 
     def sentiment(self, args):
         if args is None:
             return 2
-        return self.pipeline.predict([args])[0].item()
+        return self._score(args)
 
     def sentiment_batch(self, args):
         if args is None:
             return 2
-        return self.pipeline.predict(args).tolist()
+        return [self._score(a) for a in args]

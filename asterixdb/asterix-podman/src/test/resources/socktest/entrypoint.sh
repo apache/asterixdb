@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,11 +15,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+set -e
 
-import os
+ASTERIX_DIR=${ASTERIX_DIR:-/opt/apache-asterixdb}
 
+# tests load fixture data via paths relative to this directory
+cd "$ASTERIX_DIR"
 
-class TweetSent(object):
+# asterixccnc runs CC and NC in one JVM, so cc.conf's [nc] jvm.args is never applied to it;
+# open the debug port here instead so it matches what the test container exposes.
+export JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006"
 
-    def crash(self):
-        os._exit(1)
+exec "$ASTERIX_DIR/bin/asterixccnc" -config-file "$ASTERIX_DIR/cc.conf" --nc -node-id asterix_nc1 -cluster-address 127.0.0.1

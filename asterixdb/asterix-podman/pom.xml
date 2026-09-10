@@ -78,10 +78,11 @@
                <artifactId>apache-rat-plugin</artifactId>
                <configuration>
                    <excludes combine.children="append">
-                       <exclude>src/test/resources/setup.sh</exclude>
+                       <exclude>src/test/resources/setup-data.sh</exclude>
                        <exclude>src/test/resources/passwd</exclude>
                        <exclude>src/test/resources/socktest/Containerfile</exclude>
-                       <exclude>src/test/resources/testenv.conf</exclude>
+                       <exclude>src/test/resources/udf-sandbox/Containerfile</exclude>
+                       <exclude>src/test/resources/udf-sandbox/setup-python.sh</exclude>
                    </excludes>
                </configuration>
            </plugin>
@@ -126,9 +127,17 @@
                                 <image>
                                     <name>asterixdb/socktest</name>
                                     <build>
-                                        <pull>false</pull>
+                                        <pullPolicy>FALSE</pullPolicy>
                                         <createLatestTag>true</createLatestTag>
                                         <containerFileDir>src/test/resources/socktest</containerFileDir>
+                                    </build>
+                                </image>
+                                <image>
+                                    <name>asterixdb/udf-sandbox</name>
+                                    <build>
+                                        <pullPolicy>FALSE</pullPolicy>
+                                        <createLatestTag>true</createLatestTag>
+                                        <containerFileDir>src/test/resources/udf-sandbox</containerFileDir>
                                     </build>
                                 </image>
                             </images>
@@ -151,6 +160,13 @@
                                             <directory>../asterix-server/target</directory>
                                             <includes>
                                                 <include>asterix-server*.deb</include>
+                                                <include>asterix-server-*-binary-assembly.tar.bz2</include>
+                                            </includes>
+                                        </resource>
+                                        <resource>
+                                            <directory>../asterix-server/src/deb</directory>
+                                            <includes>
+                                                <include>udf_listener.py</include>
                                             </includes>
                                         </resource>
                                     </resources>
@@ -183,7 +199,7 @@
                                 <image>
                                     <name>apache/asterixdb</name>
                                     <build>
-                                        <pull>true</pull>
+                                        <pullPolicy>TRUE</pullPolicy>
                                         <createLatestTag>true</createLatestTag>
                                         <containerFileDir>src/main/resources</containerFileDir>
                                     </build>

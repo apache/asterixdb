@@ -284,12 +284,8 @@
                 <argument>--site-packages</argument>
                 <argument>${project.build.directory}${file.separator}..${file.separator}src${file.separator}test${file.separator}resources${file.separator}TweetSent</argument>
                 <argument>--prefer-binary</argument>
-                <argument>scikit-learn</argument>
-                <!-- msgpack travels with the library so entrypoint.py can import it from
-                     contents/site-packages. The cloud deploy path does not extract the bundled
-                     msgpack into contents/ipc the way the on-prem shiv() path does, so relying on
-                     that copy leaves every cloud-mode Python UDF test unable to start. -->
                 <argument>msgpack</argument>
+                <argument>numpy</argument>
               </arguments>
               <environmentVariables>
                 <VIRTUALENV>${project.build.directory}</VIRTUALENV>

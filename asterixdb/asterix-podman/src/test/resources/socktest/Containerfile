@@ -1,26 +1,24 @@
 FROM eclipse-temurin:21-jre-jammy
 ENV ASTERIX_DIR=/opt/apache-asterixdb
 
-RUN apt -y update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt -y install systemd unzip wget curl python3-pip python3-venv python3-systemd
-RUN pip3 install shiv msgpack
+# curl is used from the host side (PodmanUDFLibrarian execs it in this container) to drive the
+# UDF-install REST API; the UDF code itself never runs here - see ../udf-sandbox/Containerfile.
+RUN apt -y update && \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt -y install lbzip2 curl
+
 # --- Add and unpack the Asterix tarball ---
 COPY target/asterix-server-*-binary-assembly.tar.bz2 /asterix.tar.bz2
 RUN mkdir -p $ASTERIX_DIR && \
     tar -xf /asterix.tar.bz2 --strip-components=1 -C $ASTERIX_DIR
 
-# --- Config and credential setup ---
+# --- Config and credentials ---
 COPY src/test/resources/cc.conf $ASTERIX_DIR/cc.conf
 COPY src/test/resources/passwd $ASTERIX_DIR/etc/passwd
-COPY src/test/resources/testenv.conf /etc/systemd/system/pyudf@.service.d/
-COPY src/test/resources/setup.sh /opt
-RUN chmod +x /opt/setup.sh
-
-# --- Enable services for test environment ---
-RUN systemctl enable asterix-nc asterix-cc pyudf.socket
+COPY src/test/resources/socktest/entrypoint.sh /entrypoint.sh
+COPY src/test/resources/setup-data.sh /opt/setup-data.sh
+RUN chmod +x /entrypoint.sh /opt/setup-data.sh
 
 # --- Expose necessary ports ---
 EXPOSE 19001 19002 19004 19006 19007 1098 1099
 
-# --- Run systemd as PID 1 ---
-CMD ["/lib/systemd/systemd"]
+CMD ["/entrypoint.sh"]
