@@ -125,6 +125,17 @@
 
     <icebergjavasdk.version>1.11.0</icebergjavasdk.version>
 
+    <!-- The org.apache.iceberg.gcp.gcs package is forked into asterix-external-data,
+         under util/google/iceberg/fileio. This records the release those files were
+         copied from, and asterix-external-data enforces that the two agree, so an
+         iceberg upgrade cannot silently leave the copy behind. To advance: re-copy the
+         package from the iceberg-gcp sources jar at the new version, re-apply the local
+         differences each file documents in its javadoc, then move this.
+         The marker below is a one-line comment adjacent to the property on purpose:
+         the updater looks only one line back for it. -->
+    <!-- @pinned-with: ${icebergjavasdk.version} -->
+    <iceberg-gcs-fork.version>1.11.0</iceberg-gcs-fork.version>
+
     <!-- @derived-from: org.apache.iceberg:iceberg-nessie:${icebergjavasdk.version}#dep:nessie-client -->
     <nessieproject.version>0.107.5</nessieproject.version>
 

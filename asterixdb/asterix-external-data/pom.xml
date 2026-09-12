@@ -40,6 +40,32 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ensure-forked-gcs-package-matches-iceberg</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <evaluateBeanshell>
+                  <condition>"${icebergjavasdk.version}".equals("${iceberg-gcs-fork.version}")</condition>
+                  <message>#### The org.apache.iceberg.gcp.gcs package forked under
+                    src/main/java/org/apache/asterix/external/util/google/iceberg/fileio was copied
+                    from iceberg ${iceberg-gcs-fork.version}, but this build resolves iceberg
+                    ${icebergjavasdk.version}. Re-copy the package from the iceberg-gcp sources jar
+                    at ${icebergjavasdk.version}, re-apply the local differences each file documents
+                    in its javadoc, then set iceberg-gcs-fork.version to match.</message>
+                </evaluateBeanshell>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.asterix</groupId>
         <artifactId>lexer-generator-maven-plugin</artifactId>
         <version>${lexer-generator-maven-plugin.version}</version>
