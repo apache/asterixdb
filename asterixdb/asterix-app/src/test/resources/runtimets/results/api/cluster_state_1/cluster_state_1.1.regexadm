@@ -66,6 +66,7 @@
     "compiler\.groupmemory" : 163840,
     "compiler\.hdfs\.split\.parallelism" : 4,
     "compiler\.index.covering" : true,
+    "compiler.index.vector.max.num.clusters" : 65536,
     "compiler\.internal\.sanitycheck" : true,
     "compiler\.joinmemory" : 262144,
     "compiler\.max\.variable\.occurrences\.inlining" : 128,

@@ -152,10 +152,13 @@ public final class VTreeParamsInference {
         }
         int numPartitions = metadataProvider.getPartitioningProperties(dataset).getNumberOfPartitions();
         final long d = perPartitionCardinality(cardinality, numPartitions);
-        int recommendedClusters = defaultNumClusters(d);
+        int maxClusters =
+                metadataProvider.getApplicationContext().getCompilerProperties().getVectorIndexMaxNumClusters();
+        // The ceiling binds the derived count too, so no path can size a build above it.
+        int recommendedClusters = Math.min(defaultNumClusters(d), maxClusters);
         int numClusters = params.getNumClusters().orElse(recommendedClusters);
         if (params.getNumClusters().isPresent()) {
-            validateNumClusters(numClusters, recommendedClusters, d, warningCollector, sourceLoc);
+            validateNumClusters(numClusters, recommendedClusters, d, maxClusters, warningCollector, sourceLoc);
         }
         OptionalDouble requested = params.getTrainListFractionOpt();
         long size = requested.isPresent() ? trainListSizeForFraction(requested.getAsDouble(), d)
@@ -167,17 +170,24 @@ public final class VTreeParamsInference {
     }
 
     /**
-     * Case 2 of the model. More clusters than rows cannot be built, because the padding path would invent
-     * the shortfall as perturbed duplicates of real centroids, so that is an error. Otherwise a value far from
-     * what the collection suggests is only a warning: it is legal, and the user may know something the
-     * cardinality does not say.
+     * Case 2 of the model, under the configured ceiling. The ceiling is checked first because it bounds the
+     * memory a build may take whatever the collection holds, so it is not for the data to overrule.
+     * <p>
+     * More clusters than rows cannot be built, because the padding path would invent the shortfall as
+     * perturbed duplicates of real centroids, so that is an error. Otherwise a value far from what the
+     * collection suggests is only a warning: it is legal, and the user may know something the cardinality
+     * does not say.
      * <p>
      * The recommendation is whatever {@link #defaultNumClusters} would have chosen, not {@code sqrt(D)}
      * unconditionally. On a small collection those differ, and recommending {@code sqrt(D)} there would warn
      * about the value this same code picks when the user says nothing.
      */
-    static void validateNumClusters(int numClusters, int recommended, long d, IWarningCollector warningCollector,
-            SourceLocation sourceLoc) throws CompilationException {
+    static void validateNumClusters(int numClusters, int recommended, long d, int maxNumClusters,
+            IWarningCollector warningCollector, SourceLocation sourceLoc) throws CompilationException {
+        if (numClusters > maxNumClusters) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, sourceLoc,
+                    "num_clusters " + numClusters + " exceeds the configured maximum of " + maxNumClusters + ".");
+        }
         if (numClusters > d) {
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, sourceLoc,
                     "num_clusters " + numClusters + " exceeds the " + d

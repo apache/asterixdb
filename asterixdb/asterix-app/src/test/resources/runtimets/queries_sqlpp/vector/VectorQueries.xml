@@ -91,6 +91,12 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-clusters-exceed-max">
+            <output-dir compare="Text">create-index-vtree-clusters-exceed-max</output-dir>
+            <expected-error>num_clusters 70000 exceeds the configured maximum of 65536</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-train-list-too-small">
             <output-dir compare="Text">create-index-vtree-train-list-too-small</output-dir>
             <expected-error>fewer than the 2 clusters to be built</expected-error>

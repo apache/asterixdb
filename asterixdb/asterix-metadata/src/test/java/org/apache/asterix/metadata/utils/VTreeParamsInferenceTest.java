@@ -39,6 +39,9 @@ import org.junit.Test;
 @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class VTreeParamsInferenceTest {
 
+    /** A ceiling nothing in these cases can reach, so each one exercises the rule it is named for. */
+    private static final int NO_CEILING = Integer.MAX_VALUE;
+
     /** D = 900: 9 clusters. The design's small-data example. */
     @Test
     public void smallDataUsesHundredRowClusters() {
@@ -122,13 +125,29 @@ public class VTreeParamsInferenceTest {
         assertFalse("D=" + d + " should sample, not full scan", VTreeParamsInference.useFullScan(size, d));
     }
 
+    /**
+     * The ceiling is enforced ahead of every data-relative rule, so a value above it fails the same way on
+     * any collection.
+     */
+    @Test
+    public void clustersAboveTheCeilingIsAnError() throws Exception {
+        CollectingWarnings warnings = new CollectingWarnings();
+        try {
+            VTreeParamsInference.validateNumClusters(2000, 1000, 1_000_000, 1024, warnings, null);
+            fail("expected a compilation error");
+        } catch (CompilationException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("exceeds the configured maximum of 1024"));
+        }
+        assertTrue("an error must not also warn", warnings.messages.isEmpty());
+    }
+
     /** Case 2: more clusters than rows cannot be built, so it is an error rather than a warning. */
     @Test
     public void moreClustersThanRowsIsAnError() throws Exception {
         CollectingWarnings warnings = new CollectingWarnings();
         try {
-            VTreeParamsInference.validateNumClusters(5000, VTreeParamsInference.defaultNumClusters(30), 30, warnings,
-                    null);
+            VTreeParamsInference.validateNumClusters(5000, VTreeParamsInference.defaultNumClusters(30), 30, NO_CEILING,
+                    warnings, null);
             fail("expected a compilation error");
         } catch (CompilationException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("records per storage partition available to train on"));
@@ -140,7 +159,8 @@ public class VTreeParamsInferenceTest {
     @Test
     public void clustersFarFromRecommendedWarns() throws Exception {
         CollectingWarnings warnings = new CollectingWarnings();
-        VTreeParamsInference.validateNumClusters(3, VTreeParamsInference.defaultNumClusters(30), 30, warnings, null);
+        VTreeParamsInference.validateNumClusters(3, VTreeParamsInference.defaultNumClusters(30), 30, NO_CEILING,
+                warnings, null);
         assertEquals(1, warnings.messages.size());
     }
 
@@ -149,8 +169,9 @@ public class VTreeParamsInferenceTest {
     public void clustersNearRecommendedAreSilent() throws Exception {
         CollectingWarnings warnings = new CollectingWarnings();
         int recommended = VTreeParamsInference.defaultNumClusters(1_000_000);
-        VTreeParamsInference.validateNumClusters(recommended, recommended, 1_000_000, warnings, null);
-        VTreeParamsInference.validateNumClusters((int) (recommended * 1.05), recommended, 1_000_000, warnings, null);
+        VTreeParamsInference.validateNumClusters(recommended, recommended, 1_000_000, NO_CEILING, warnings, null);
+        VTreeParamsInference.validateNumClusters((int) (recommended * 1.05), recommended, 1_000_000, NO_CEILING,
+                warnings, null);
         assertTrue(warnings.messages.toString(), warnings.messages.isEmpty());
     }
 

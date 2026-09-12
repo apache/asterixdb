@@ -55,4 +55,10 @@ public class AlgebricksConfig {
     public static final int COMMON_EXPRESSION_LIMIT_DEFAULT = 100;
     public static final int HDFS_SPLIT_PARALLEL_DEFAULT = Runtime.getRuntime().availableProcessors();
     public static final boolean QUERY_PLAN_CACHE_DEFAULT = true;
+    /**
+     * Ceiling on {@code num_clusters}: the k-means that trains the index holds every centroid in memory,
+     * so the cluster count is what bounds the memory a build takes. A backstop rather than a
+     * recommendation — a build normally uses sqrt(rows per storage partition), far below this.
+     */
+    public static final int DEFAULT_VECTOR_INDEX_MAX_NUM_CLUSTERS = 65536;
 }

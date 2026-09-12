@@ -39,6 +39,7 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class CompilerProperties extends AbstractProperties {
 
@@ -196,7 +197,11 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_QUERY_PLAN_CACHE(
                 BOOLEAN,
                 AlgebricksConfig.QUERY_PLAN_CACHE_DEFAULT,
-                "Enable/disable using the query plan cache.");
+                "Enable/disable using the query plan cache."),
+        COMPILER_INDEX_VECTOR_MAX_NUM_CLUSTERS(
+                POSITIVE_INTEGER,
+                AlgebricksConfig.DEFAULT_VECTOR_INDEX_MAX_NUM_CLUSTERS,
+                "The maximum `num_clusters` a vector index may be created with.");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -489,5 +494,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean isQueryPlanCacheEnabled() {
         return accessor.getBoolean(Option.COMPILER_QUERY_PLAN_CACHE);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "MB-73613")
+    public int getVectorIndexMaxNumClusters() {
+        return accessor.getInt(Option.COMPILER_INDEX_VECTOR_MAX_NUM_CLUSTERS);
     }
 }
