@@ -24,10 +24,12 @@ import java.util.ArrayList;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender;
 import org.apache.hyracks.dataflow.std.sort.util.IAppendDeletableFrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -73,6 +75,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Fail on an undersized frame, and report no space rather than index with -1, in place of two ineffective assertions")
     public boolean insertTuple(IFrameTupleAccessor fta, int idx, TuplePointer tuplePointer)
             throws HyracksDataException {
         int requiredFreeSpace = calculatePhysicalSpace(fta, idx);
@@ -86,11 +89,19 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
                 return false;
             }
         }
-        assert frameId >= 0;
+        if (frameId < 0) {
+            return false;
+        }
         accessor.reset(frames.get(frameId));
-        assert accessor.getContiguousFreeSpace() >= requiredFreeSpace;
+        if (accessor.getContiguousFreeSpace() < requiredFreeSpace) {
+            // the appender writes this tuple's slot over the tuple's own data if this does not hold.
+            // returning false would be wrong: the caller reads that as "out of memory"
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "a frame with " + accessor.getContiguousFreeSpace()
+                            + " bytes of contiguous free space cannot hold a tuple requiring " + requiredFreeSpace
+                            + " bytes");
+        }
         int tid = accessor.append(fta, idx);
-        assert tid >= 0;
         tuplePointer.reset(frameId, tid);
         if (accessor.getContiguousFreeSpace() > minFreeSpace) {
             policy.pushNewFrame(frameId, accessor.getContiguousFreeSpace());
@@ -134,8 +145,10 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
         return -1;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Account for the frame's trailing bookkeeping when sizing a frame for a tuple")
     private static int calculateMinFrameSizeToPlaceTuple(int requiredFreeSpace, int minFrameSize) {
-        return (1 + (requiredFreeSpace + 4 - 1) / minFrameSize) * minFrameSize;
+        return (1 + (requiredFreeSpace + DeletableFrameTupleAppender.FRAME_META_SIZE - 1) / minFrameSize)
+                * minFrameSize;
     }
 
     private static int calculatePhysicalSpace(IFrameTupleAccessor fta, int idx) {

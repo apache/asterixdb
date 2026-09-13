@@ -104,7 +104,7 @@
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <awsjavasdk.version>2.54.13</awsjavasdk.version>
+    <awsjavasdk.version>2.54.14</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.4</awsjavasdk.crt.version>
 
@@ -384,7 +384,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.15.0</version>
+          <version>3.16.0</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>

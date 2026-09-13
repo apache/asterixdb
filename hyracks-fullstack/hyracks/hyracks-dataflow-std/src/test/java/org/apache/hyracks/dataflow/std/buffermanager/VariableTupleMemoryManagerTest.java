@@ -19,9 +19,11 @@
 
 package org.apache.hyracks.dataflow.std.buffermanager;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,8 +31,11 @@ import java.util.Map;
 import org.apache.hyracks.api.comm.FixedSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.std.sort.Utility;
+import org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.util.IntSerDeUtils;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -105,6 +110,43 @@ public class VariableTupleMemoryManagerTest extends AbstractTupleMemoryManagerTe
         Map<Integer, Integer> map = prepareVariableSizeTuples();
         Map<TuplePointer, Integer> mapInserted = insertInFTAToBufferCouldFailForLargerTuples(map);
         assertEachTupleInFTAIsInBuffer(map, mapInserted);
+    }
+
+    /**
+     * A tuple whose size leaves only the frame's own trailing bookkeeping unused must still be
+     * stored intact. Sizing a fresh frame from the tuple alone leaves it up to
+     * {@link DeletableFrameTupleAppender#FRAME_META_SIZE} bytes short, and the appender then writes
+     * the tuple's end offset over the tail of the tuple it has just copied in -- silently changing
+     * the last bytes of the last field. Sweeping the tuple size over a whole frame's worth of
+     * lengths covers every such boundary regardless of the frame size.
+     */
+    @Test
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
+    public void testTupleEndingAtFrameBoundaryIsStoredIntact() throws HyracksDataException {
+        for (int charCount = 0; charCount < Common.MIN_FRAME_SIZE; charCount++) {
+            tupleMemoryManager.reset();
+            ByteBuffer buffer = ByteBuffer.allocate(Common.BUDGET);
+            FrameTupleAppender appender = new FrameTupleAppender();
+            appender.reset(new FixedSizeFrame(buffer), true);
+            tupleBuilder.reset();
+            tupleBuilder.addField(fieldsSerDer[0], charCount);
+            tupleBuilder.addField(fieldsSerDer[1], Utility.repeatString('a', charCount));
+            assertTrue(appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                    tupleBuilder.getSize()));
+            inFTA.reset(buffer);
+
+            TuplePointer tuplePointer = new TuplePointer();
+            assertTrue("insert failed for a tuple of " + charCount + " chars",
+                    tupleMemoryManager.insertTuple(inFTA, 0, tuplePointer));
+
+            ITuplePointerAccessor accessor = tupleMemoryManager.createTuplePointerAccessor();
+            accessor.reset(tuplePointer);
+            byte[] expected = Arrays.copyOfRange(inFTA.getBuffer().array(), inFTA.getTupleStartOffset(0),
+                    inFTA.getTupleEndOffset(0));
+            byte[] actual = Arrays.copyOfRange(accessor.getBuffer().array(), accessor.getTupleStartOffset(),
+                    accessor.getTupleStartOffset() + accessor.getTupleLength());
+            assertArrayEquals("tuple of " + charCount + " chars was altered in the buffer", expected, actual);
+        }
     }
 
     @Override
