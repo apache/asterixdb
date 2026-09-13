@@ -77,11 +77,11 @@
     <jackson-annotations.version>2.22</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <!-- 4.2 is a new netty generation; stay on the 4.1.x line (patch updates only) -->
-    <netty.version>4.1.137.Final</netty.version>
-    <netty.tcnative.version>2.0.83.Final</netty.tcnative.version>
+    <netty.version>4.1.138.Final</netty.version>
+    <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
     <asm.version>9.10.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.54.14</awsjavasdk.version>
+    <awsjavasdk.version>2.54.17</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.73.0</google-cloud-storage.version>

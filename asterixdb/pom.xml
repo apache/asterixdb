@@ -105,7 +105,7 @@
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <awsjavasdk.version>2.54.14</awsjavasdk.version>
+    <awsjavasdk.version>2.54.17</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.4</awsjavasdk.crt.version>
 
