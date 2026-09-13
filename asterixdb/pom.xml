@@ -94,7 +94,7 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <awsjavasdk.version>2.54.17</awsjavasdk.version>
-    <s3mock.version>5.2.0</s3mock.version>
+    <s3mock.version>5.2.2</s3mock.version>
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
@@ -486,7 +486,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.21.0</version>
+          <version>2.22.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -533,7 +533,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.6.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
