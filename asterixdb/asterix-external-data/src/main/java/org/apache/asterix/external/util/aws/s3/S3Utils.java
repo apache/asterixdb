@@ -75,7 +75,10 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_FABLE_5_1;
 import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
+import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
+import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
 import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 
 import java.io.ByteArrayInputStream;
@@ -589,36 +592,22 @@ public class S3Utils {
      * @param prefix                definition prefix
      * @param includeExcludeMatcher include/exclude matchers to apply
      */
+    @AiProvenance(agent = CLAUDE_FABLE_5_1, tool = CLAUDE_CODE_UI, contributionKind = REFACTORED, notes = "Paginate with the SDK ListObjectsV2 iterable instead of a manual continuation-token loop")
     private static List<S3Object> listS3Objects(S3Client s3Client, String container, String prefix,
             AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
             ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
             IWarningCollector warningCollector) throws HyracksDataException {
-        String newMarker = null;
         List<S3Object> filesOnly = new ArrayList<>();
+        ListObjectsV2Request listObjectsRequest =
+                ListObjectsV2Request.builder().bucket(container).prefix(prefix).build();
 
-        ListObjectsV2Response listObjectsResponse;
-        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
-        listObjectsBuilder.prefix(prefix);
-
-        while (true) {
-            // List the objects from the start, or from the last marker in case of truncated result
-            if (newMarker == null) {
-                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
-            } else {
-                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
-            }
-
+        // the iterable requests the next page with the previous page's continuation token until the result is complete
+        ListObjectsV2Iterable listObjectsIterable = s3Client.listObjectsV2Paginator(listObjectsRequest);
+        for (ListObjectsV2Response listObjectsResponse : listObjectsIterable) {
             // Collect the paths to files only
             collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
                     includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator,
                     warningCollector);
-
-            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-            if (listObjectsResponse.isTruncated() != null && listObjectsResponse.isTruncated()) {
-                newMarker = listObjectsResponse.nextContinuationToken();
-            } else {
-                break;
-            }
         }
 
         return filesOnly;

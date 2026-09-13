@@ -156,6 +156,10 @@
             <artifactId>hyracks-cloud</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>hyracks-util</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
             <version>${project.version}</version>
