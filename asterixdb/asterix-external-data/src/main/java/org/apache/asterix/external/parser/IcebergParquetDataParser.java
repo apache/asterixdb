@@ -25,15 +25,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.zone.ZoneOffsetTransition;
-import java.time.zone.ZoneRules;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +44,8 @@ import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.aws.iceberg.converter.IcebergConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.TimestampZoneProjector;
+import org.apache.asterix.external.util.TimestampZoneProjector.TimestampUnit;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -77,7 +75,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
 
     public IcebergParquetDataParser(IExternalDataRuntimeContext context, Map<String, String> conf,
             Schema projectedSchema) {
-        parserContext = new IcebergConverterContext(conf);
+        parserContext = new IcebergConverterContext(conf, context.getTaskContext().getWarningCollector());
         valueEmbedder = context.getValueEmbedder();
         this.projectedSchema = projectedSchema;
         timestampZoneProjector = new TimestampZoneProjector(parserContext.getTimeZoneId());
@@ -328,19 +326,13 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             case TIMESTAMPTZ:
             case TIMESTAMPNTZ: {
                 long epochMicros = (Long) variantValue.asPrimitive().get();
-                if (physicalType == PhysicalType.TIMESTAMPTZ) {
-                    epochMicros = timestampZoneProjector.projectEpochValue(epochMicros, TimestampUnit.MICROS);
-                }
-                serializeTimestampMicros(epochMicros, out);
+                serializeTimestampMicros(epochMicros, physicalType == PhysicalType.TIMESTAMPTZ, out);
                 return;
             }
             case TIMESTAMPTZ_NANOS:
             case TIMESTAMPNTZ_NANOS: {
                 long epochNanos = (Long) variantValue.asPrimitive().get();
-                if (physicalType == PhysicalType.TIMESTAMPTZ_NANOS) {
-                    epochNanos = timestampZoneProjector.projectEpochValue(epochNanos, TimestampUnit.NANOS);
-                }
-                serializeTimestampNanos(epochNanos, out);
+                serializeTimestampNanos(epochNanos, physicalType == PhysicalType.TIMESTAMPTZ_NANOS, out);
                 return;
             }
             case UUID:
@@ -520,9 +512,9 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         long epochSecond = localDateTime.toEpochSecond(ZoneOffset.UTC);
         int nano = localDateTime.getNano();
         if (isTimestampNano(type)) {
-            serializeTimestampNanos(toNanos(epochSecond, nano), output);
+            serializeTimestampNanos(toNanos(epochSecond, nano), false, output);
         } else {
-            serializeTimestampMicros(toMicros(epochSecond, nano), output);
+            serializeTimestampMicros(toMicros(epochSecond, nano), false, output);
         }
     }
 
@@ -531,30 +523,42 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         long epochSecond = offsetDateTime.toEpochSecond();
         int nano = offsetDateTime.getNano();
         if (isTimestampNano(type)) {
-            serializeTimestampNanos(
-                    timestampZoneProjector.projectEpochValue(toNanos(epochSecond, nano), TimestampUnit.NANOS), output);
+            serializeTimestampNanos(toNanos(epochSecond, nano), true, output);
         } else {
-            serializeTimestampMicros(
-                    timestampZoneProjector.projectEpochValue(toMicros(epochSecond, nano), TimestampUnit.MICROS),
-                    output);
+            serializeTimestampMicros(toMicros(epochSecond, nano), true, output);
         }
     }
 
+    /**
+     * The configured timezone is a <em>rendering</em> choice, so it is applied only when rendering. A
+     * {@code datetime} is a zone-less wall-clock reading and takes the shift; an epoch {@code long} is an absolute
+     * instant -- the same one in every zone -- and never does: shifting it would yield the epoch value of a different
+     * instant, indistinguishable from a real one. Wall-clock sources ({@code utcAdjusted == false}) are never shifted
+     * on either path; they were never instants to begin with.
+     */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Handles isTimestampAsLong flag for microsecond-precision timestamps; shared by Iceberg TIMESTAMP and Variant TIMESTAMPTZ/TIMESTAMPNTZ")
-    private void serializeTimestampMicros(long epochMicros, DataOutput out) throws HyracksDataException {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Timezone projection moved inside the datetime branch so the epoch long is emitted unshifted; callers pass whether the value is UTC-adjusted instead of pre-projecting")
+    private void serializeTimestampMicros(long epochMicros, boolean utcAdjusted, DataOutput out)
+            throws HyracksDataException {
         if (parserContext.isTimestampAsLong()) {
             serializeLong(epochMicros, out);
         } else {
-            serializeDatetimeMillis(TimeUnit.MICROSECONDS.toMillis(epochMicros), out);
+            long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochMicros, TimestampUnit.MICROS)
+                    : epochMicros;
+            serializeDatetimeMillis(TimeUnit.MICROSECONDS.toMillis(shifted), out);
         }
     }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Handles isTimestampAsLong flag for nanosecond-precision timestamps; shared by Iceberg TIMESTAMP_NANO and Variant TIMESTAMPTZ_NANOS/TIMESTAMPNTZ_NANOS")
-    private void serializeTimestampNanos(long epochNanos, DataOutput out) throws HyracksDataException {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Same reshaping as serializeTimestampMicros: the projection lives in the datetime branch only")
+    private void serializeTimestampNanos(long epochNanos, boolean utcAdjusted, DataOutput out)
+            throws HyracksDataException {
         if (parserContext.isTimestampAsLong()) {
             serializeLong(epochNanos, out);
         } else {
-            serializeDatetimeMillis(TimeUnit.NANOSECONDS.toMillis(epochNanos), out);
+            long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochNanos, TimestampUnit.NANOS)
+                    : epochNanos;
+            serializeDatetimeMillis(TimeUnit.NANOSECONDS.toMillis(shifted), out);
         }
     }
 
@@ -691,92 +695,4 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         };
     }
 
-    private enum TimestampUnit {
-        MICROS,
-        NANOS
-    }
-
-    // Not thread-safe by design: one instance per parser, parsers are per-task/per-thread.
-    private static final class TimestampZoneProjector {
-        private static final long MICROS_PER_SECOND = 1_000_000L;
-        private static final long NANOS_PER_SECOND = 1_000_000_000L;
-
-        private final boolean enabled;
-        private final ZoneRules zoneRules;
-        private final boolean fixedOffsetZone;
-        private final int fixedOffsetSeconds;
-
-        private long validFromEpochSecond = Long.MIN_VALUE;
-        private long validUntilEpochSecond = Long.MIN_VALUE;
-        private int cachedOffsetSeconds;
-
-        private TimestampZoneProjector(ZoneId zoneId) {
-            enabled = zoneId != null;
-
-            if (enabled) {
-                zoneRules = zoneId.getRules();
-                fixedOffsetZone = zoneRules.isFixedOffset();
-                fixedOffsetSeconds = fixedOffsetZone ? zoneRules.getOffset(Instant.EPOCH).getTotalSeconds() : 0;
-            } else {
-                zoneRules = null;
-                fixedOffsetZone = true;
-                fixedOffsetSeconds = 0;
-            }
-        }
-
-        private long projectEpochValue(long epochValue, TimestampUnit unit) throws HyracksDataException {
-            if (!enabled) {
-                return epochValue;
-            }
-
-            int offsetSeconds = getOffsetSeconds(epochValue, unit);
-
-            try {
-                return switch (unit) {
-                    case MICROS -> Math.addExact(epochValue, offsetSeconds * MICROS_PER_SECOND);
-                    case NANOS -> Math.addExact(epochValue, offsetSeconds * NANOS_PER_SECOND);
-                };
-            } catch (ArithmeticException ex) {
-                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex,
-                        "timestamp value overflows long representation after applying timezone configuration");
-            }
-        }
-
-        private int getOffsetSeconds(long epochValue, TimestampUnit unit) {
-            if (fixedOffsetZone) {
-                return fixedOffsetSeconds;
-            }
-
-            long epochSecond = toEpochSecond(epochValue, unit);
-
-            if (epochSecond >= validFromEpochSecond && epochSecond < validUntilEpochSecond) {
-                return cachedOffsetSeconds;
-            }
-
-            return refreshOffsetCache(epochSecond);
-        }
-
-        private int refreshOffsetCache(long epochSecond) {
-            Instant instant = Instant.ofEpochSecond(epochSecond);
-
-            ZoneOffset offset = zoneRules.getOffset(instant);
-            // Use epochSecond + 1ns so that if the record falls exactly on a transition boundary,
-            // previousTransition captures that transition as the start of the current offset period.
-            ZoneOffsetTransition previous = zoneRules.previousTransition(Instant.ofEpochSecond(epochSecond, 1L));
-            ZoneOffsetTransition next = zoneRules.nextTransition(instant);
-
-            validFromEpochSecond = previous == null ? Long.MIN_VALUE : previous.getInstant().getEpochSecond();
-            validUntilEpochSecond = next == null ? Long.MAX_VALUE : next.getInstant().getEpochSecond();
-            cachedOffsetSeconds = offset.getTotalSeconds();
-
-            return cachedOffsetSeconds;
-        }
-
-        private static long toEpochSecond(long epochValue, TimestampUnit unit) {
-            return switch (unit) {
-                case MICROS -> Math.floorDiv(epochValue, MICROS_PER_SECOND);
-                case NANOS -> Math.floorDiv(epochValue, NANOS_PER_SECOND);
-            };
-        }
-    }
 }

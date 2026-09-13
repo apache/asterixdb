@@ -77,8 +77,8 @@ USING S3
 
 -- Coverage for isTimestampAsLong() on the Variant path: with timestamp-to-long=true a Variant
 -- TIMESTAMPTZ/NTZ (and their _NANOS forms) must serialize as raw epoch micros/nanos (bigint), not
--- datetime. timezone is kept so we also prove zone projection still runs before long serialization
--- for the TZ (zoned) forms.
+-- datetime. timezone is kept to prove it does NOT touch the long: an epoch value is an absolute
+-- instant, so the zoned (TZ) forms come back unshifted, identical to what the zone-less forms show.
 DROP COLLECTION allTypesVariantTsAsLong IF EXISTS;
 DROP TYPE allTypesVariantTsAsLong IF EXISTS;
 

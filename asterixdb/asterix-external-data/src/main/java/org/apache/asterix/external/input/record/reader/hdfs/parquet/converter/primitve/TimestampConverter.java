@@ -34,14 +34,15 @@ class TimestampConverter extends GenericPrimitiveConverter {
     private static final long NANOS_PER_MILLIS = 1000000L;
 
     private final LogicalTypeAnnotation.TimeUnit timeUnit;
-    private final int timeZoneOffset;
+    // Only a UTC-adjusted timestamp may be shifted; an INT96 or a local timestamp carries no zone.
+    private final boolean adjustedToUtc;
 
     TimestampConverter(AbstractComplexConverter parent, String stringFieldName, int index,
-            ParquetConverterContext context, LogicalTypeAnnotation.TimeUnit timeUnit, int timeZoneOffset)
+            ParquetConverterContext context, LogicalTypeAnnotation.TimeUnit timeUnit, boolean adjustedToUtc)
             throws IOException {
         super(ATypeTag.DATETIME, parent, stringFieldName, index, context);
         this.timeUnit = timeUnit;
-        this.timeZoneOffset = timeZoneOffset;
+        this.adjustedToUtc = adjustedToUtc;
     }
 
     /**
@@ -67,7 +68,10 @@ class TimestampConverter extends GenericPrimitiveConverter {
     @Override
     public void addLong(long value) {
         long convertedTime = TimeConverter.getConvertedTime(timeUnit, value);
-        context.serializeDateTime(convertedTime + timeZoneOffset, parent.getDataOutput());
+        if (adjustedToUtc) {
+            convertedTime = context.applyTimeZone(convertedTime);
+        }
+        context.serializeDateTime(convertedTime, parent.getDataOutput());
         parent.addValue(this);
     }
 

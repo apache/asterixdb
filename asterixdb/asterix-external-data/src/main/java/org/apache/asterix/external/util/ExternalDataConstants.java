@@ -90,6 +90,7 @@ public class ExternalDataConstants {
     public static final String KEY_EXPRESSION = "expression";
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
+    public static final String KEY_TIMEZONE = "timezone";
     public static final String KEY_SCHEMA = "schema";
     public static final String KEY_PARQUET_ROW_GROUP_SIZE = "row-group-size";
     public static final String PARQUET_DEFAULT_ROW_GROUP_SIZE = "10MB";
@@ -428,7 +429,6 @@ public class ExternalDataConstants {
         public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
         public static final String UUID_AS_STRING = "uuid-to-string";
         public static final String DATE_AS_INT = "date-to-int";
-        public static final String TIMEZONE = "timezone";
         public static final String TIME_AS_LONG = "time-to-long";
         public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
     }
@@ -440,7 +440,6 @@ public class ExternalDataConstants {
         public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
         public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
         public static final String DATE_AS_INT = "date-to-int";
-        public static final String TIMEZONE = "timezone";
     }
 
     public static class IcebergOptions {
@@ -451,7 +450,6 @@ public class ExternalDataConstants {
         public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
         public static final String TIME_AS_INT = "time-to-int";
         public static final String DATE_AS_INT = "date-to-int";
-        public static final String TIMEZONE = "timezone";
         @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause option controlling IcebergParquetDataParser's Variant nesting depth guard")
         public static final String VARIANT_DEPTH = "variantDepth";
         // Bounds and default kept alongside VARIANT_DEPTH itself (rather than split across IcebergUtils'
@@ -507,7 +505,6 @@ public class ExternalDataConstants {
          * Note: If a UTC adjusted time and/or timestamp exist in the parquet file, and no time zone id is provided,
          * then we will return the UTC time and issue a warning about that.
          */
-        public static final String TIMEZONE = "timezone";
-        public static final String HADOOP_TIMEZONE = ASTERIX_HADOOP_PREFIX + TIMEZONE;
+        public static final String HADOOP_TIMEZONE = ASTERIX_HADOOP_PREFIX + KEY_TIMEZONE;
     }
 }

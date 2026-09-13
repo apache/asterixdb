@@ -25,6 +25,9 @@ import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.TimestampZoneProjector;
+import org.apache.asterix.external.util.TimestampZoneProjector.TimestampUnit;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
@@ -46,7 +49,7 @@ public class DeltaConverterContext extends ParserContext {
     private final boolean timestampAsLong;
     private final boolean dateAsInt;
 
-    private final int timeZoneOffset;
+    private final TimestampZoneProjector timeZoneProjector;
     private final AMutableDate mutableDate = new AMutableDate(0);
     private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
     private final List<Warning> warnings;
@@ -59,12 +62,9 @@ public class DeltaConverterContext extends ParserContext {
                 .getOrDefault(ExternalDataConstants.DeltaOptions.TIMESTAMP_AS_LONG, ExternalDataConstants.TRUE));
         dateAsInt = Boolean.parseBoolean(
                 configuration.getOrDefault(ExternalDataConstants.DeltaOptions.DATE_AS_INT, ExternalDataConstants.TRUE));
-        String configuredTimeZoneId = configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE);
-        if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
-            timeZoneOffset = TimeZone.getTimeZone(configuredTimeZoneId).getRawOffset();
-        } else {
-            timeZoneOffset = 0;
-        }
+        TimeZone timeZone = ExternalDataUtils
+                .resolveTimeZoneOrWarn(configuration.get(ExternalDataConstants.KEY_TIMEZONE), warnings::add);
+        timeZoneProjector = new TimestampZoneProjector(timeZone == null ? null : timeZone.toZoneId());
     }
 
     public void serializeDate(int value, DataOutput output) {
@@ -89,8 +89,16 @@ public class DeltaConverterContext extends ParserContext {
         return decimalToDouble;
     }
 
-    public int getTimeZoneOffset() {
-        return timeZoneOffset;
+    /**
+     * Shifts a UTC-adjusted epoch-millisecond value into the configured time zone, using the offset in effect
+     * at that instant rather than the zone's standard offset -- so values on either side of a daylight-saving
+     * transition each get the right one. A wall-clock value must not be passed here; it carries no zone.
+     *
+     * @param epochMillis epoch milliseconds of a UTC-adjusted value
+     * @return the shifted value, unchanged when no time zone was configured
+     */
+    public long applyTimeZone(long epochMillis) throws HyracksDataException {
+        return timeZoneProjector.projectEpochValue(epochMillis, TimestampUnit.MILLIS);
     }
 
     public boolean isTimestampAsLong() {

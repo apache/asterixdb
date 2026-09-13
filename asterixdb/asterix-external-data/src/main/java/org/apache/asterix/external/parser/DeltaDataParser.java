@@ -225,11 +225,11 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
             }
         } else if (schema instanceof TimestampType) {
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(row.getLong(index));
-            int offset = parserContext.getTimeZoneOffset();
+            // timezone is a rendering choice: shift the datetime, never the epoch long (see AvroDataParser)
             if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis + offset, out);
+                serializeLong(timeStampInMillis, out);
             } else {
-                parserContext.serializeDateTime(timeStampInMillis + offset, out);
+                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
             }
         } else if (schema instanceof TimestampNTZType) {
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(row.getLong(index));
@@ -276,11 +276,11 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
             }
         } else if (schema instanceof TimestampType) {
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(column.getLong(index));
-            int offset = parserContext.getTimeZoneOffset();
+            // timezone is a rendering choice: shift the datetime, never the epoch long (see AvroDataParser)
             if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis + offset, out);
+                serializeLong(timeStampInMillis, out);
             } else {
-                parserContext.serializeDateTime(timeStampInMillis + offset, out);
+                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
             }
         } else if (schema instanceof TimestampNTZType) {
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(column.getLong(index));

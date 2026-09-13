@@ -114,10 +114,10 @@ public class PrimitiveConverterProvider {
             String stringFieldName, int index, ParquetConverterContext context) throws IOException {
         TimestampLogicalTypeAnnotation tsType = (TimestampLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         if (tsType != null) {
-            int offset = tsType.isAdjustedToUTC() ? context.getTimeZoneOffset() : 0;
-            return new TimestampConverter(parent, stringFieldName, index, context, tsType.getUnit(), offset);
+            return new TimestampConverter(parent, stringFieldName, index, context, tsType.getUnit(),
+                    tsType.isAdjustedToUTC());
         }
         //INT96: the converter will convert the value to millis
-        return new TimestampConverter(parent, stringFieldName, index, context, TimeUnit.MILLIS, 0);
+        return new TimestampConverter(parent, stringFieldName, index, context, TimeUnit.MILLIS, false);
     }
 }

@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.DecimalConverter;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -318,7 +319,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
             SourceLocation sourceLocation, boolean adjustedToUTC) {
         if (adjustedToUTC && context.getTimeZoneId().isEmpty()) {
             Warning warning = Warning.of(sourceLocation, ErrorCode.PARQUET_TIME_ZONE_ID_IS_NOT_SET, ATypeTag.DATETIME,
-                    ParquetOptions.TIMEZONE);
+                    ExternalDataConstants.KEY_TIMEZONE);
             context.getWarnings().add(warning);
         }
     }

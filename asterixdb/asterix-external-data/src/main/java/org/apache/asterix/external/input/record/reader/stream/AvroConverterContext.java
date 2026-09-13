@@ -23,12 +23,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.TimestampZoneProjector;
+import org.apache.asterix.external.util.TimestampZoneProjector.TimestampUnit;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
@@ -43,6 +45,7 @@ import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public class AvroConverterContext extends ParserContext {
@@ -65,16 +68,16 @@ public class AvroConverterContext extends ParserContext {
     private final boolean timeAsLong;
     private final boolean uuidAsString;
 
-    private final int timeZoneOffset;
+    private final TimestampZoneProjector timeZoneProjector;
     private final AMutableDate mutableDate = new AMutableDate(0);
     private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
     private final AMutableDouble mutableDouble = new AMutableDouble(0.0);
     private final AMutableTime mutableTime = new AMutableTime(0);
     protected AMutableUUID aUUID = new AMutableUUID();
-    private final List<Warning> warnings;
+    private final IWarningCollector warningCollector;
 
-    public AvroConverterContext(Map<String, String> configuration, List<Warning> warnings) {
-        this.warnings = warnings;
+    public AvroConverterContext(Map<String, String> configuration, IWarningCollector warningCollector) {
+        this.warningCollector = warningCollector;
         decimalToDouble = Boolean.parseBoolean(configuration
                 .getOrDefault(ExternalDataConstants.AvroOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
         timestampAsLong = Boolean.parseBoolean(configuration
@@ -85,12 +88,9 @@ public class AvroConverterContext extends ParserContext {
                 configuration.getOrDefault(ExternalDataConstants.AvroOptions.TIME_AS_LONG, ExternalDataConstants.TRUE));
         uuidAsString = Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.AvroOptions.UUID_AS_STRING,
                 ExternalDataConstants.TRUE));
-        String configuredTimeZoneId = configuration.get(ExternalDataConstants.AvroOptions.TIMEZONE);
-        if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
-            timeZoneOffset = TimeZone.getTimeZone(configuredTimeZoneId).getRawOffset();
-        } else {
-            timeZoneOffset = 0;
-        }
+        TimeZone timeZone = ExternalDataUtils
+                .resolveTimeZoneOrWarn(configuration.get(ExternalDataConstants.KEY_TIMEZONE), this::warn);
+        timeZoneProjector = new TimestampZoneProjector(timeZone == null ? null : timeZone.toZoneId());
     }
 
     public void serializeDate(Object value, DataOutput output) {
@@ -155,8 +155,16 @@ public class AvroConverterContext extends ParserContext {
         return decimalToDouble;
     }
 
-    public int getTimeZoneOffset() {
-        return timeZoneOffset;
+    /**
+     * Shifts a UTC-adjusted epoch-millisecond value into the configured time zone, using the offset in effect
+     * at that instant rather than the zone's standard offset -- so values on either side of a daylight-saving
+     * transition each get the right one. A wall-clock value must not be passed here; it carries no zone.
+     *
+     * @param epochMillis epoch milliseconds of a UTC-adjusted value
+     * @return the shifted value, unchanged when no time zone was configured
+     */
+    public long applyTimeZone(long epochMillis) throws HyracksDataException {
+        return timeZoneProjector.projectEpochValue(epochMillis, TimestampUnit.MILLIS);
     }
 
     public boolean isTimestampAsLong() {
@@ -175,7 +183,9 @@ public class AvroConverterContext extends ParserContext {
         return timeAsLong;
     }
 
-    public List<Warning> getWarnings() {
-        return warnings;
+    private void warn(Warning warning) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(warning);
+        }
     }
 }

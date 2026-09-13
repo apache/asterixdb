@@ -56,6 +56,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -93,7 +95,6 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.external.library.msgpack.MessagePackUtils;
-import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
@@ -123,6 +124,7 @@ import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -558,9 +560,9 @@ public class ExternalDataUtils {
             throw new CompilationException(ErrorCode.INVALID_DELTA_TABLE_FORMAT,
                     configuration.get(ExternalDataConstants.KEY_FORMAT));
         }
-        if (configuration.containsKey(ExternalDataConstants.DeltaOptions.TIMEZONE)) {
-            String resolved = resolveTimeZone(configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE));
-            configuration.put(ExternalDataConstants.DeltaOptions.TIMEZONE, resolved);
+        if (configuration.containsKey(ExternalDataConstants.KEY_TIMEZONE)) {
+            String resolved = resolveTimeZone(configuration.get(ExternalDataConstants.KEY_TIMEZONE));
+            configuration.put(ExternalDataConstants.KEY_TIMEZONE, resolved);
         }
     }
 
@@ -1045,9 +1047,86 @@ public class ExternalDataUtils {
             return canonical;
         }
         try {
-            return ZoneId.of(timeZoneId).getId();
+            return parseOffsetZoneId(timeZoneId).getId();
         } catch (Exception e) {
             throw CompilationException.create(ErrorCode.INVALID_TIMEZONE, e, timeZoneId);
+        }
+    }
+
+    /**
+     * The {@link ZoneId#of} step shared by {@link #resolveTimeZone} and {@link #resolveTimeZoneOrUnset} -- one
+     * helper so the two cannot drift. Only offset forms ({@code GMT+05:30}, {@code UTC-8}, {@code +05:30},
+     * {@code Z}) reach here: every region and legacy short id is caught by the canonical lookup before it.
+     * <p>
+     * Retried upper-cased so the offset forms are accepted case-insensitively, the way region ids already are;
+     * {@code gmt+05:30} means exactly what {@code GMT+05:30} means. The as-is attempt runs first, so nothing that
+     * resolves today resolves differently. Upper-casing cannot mis-resolve anything: no region id survives the
+     * canonical lookup to get here, and case carries no meaning in an offset.
+     *
+     * @throws DateTimeException when neither spelling is a zone id
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Case-insensitive offset forms via an upper-cased retry, shared by the DDL and read resolvers")
+    private static ZoneId parseOffsetZoneId(String timeZoneId) {
+        try {
+            return ZoneId.of(timeZoneId);
+        } catch (DateTimeException e) {
+            return ZoneId.of(timeZoneId.toUpperCase(Locale.ROOT));
+        }
+    }
+
+    /**
+     * Resolves a configured timezone id on the read path, in the same order {@link #resolveTimeZone} validates
+     * it: a canonical id matched case-insensitively, then an offset form {@link ZoneId} understands. Keep the
+     * two in step -- an id accepted at DDL time that resolves differently here is silently wrong data.
+     * <p>
+     * Widens, never narrows. Every id {@code TimeZone.getTimeZone} resolves today is matched by the first step
+     * and keeps its exact offset, including the short ids ({@code EST}, {@code IST}, ...) that {@code
+     * ZoneId.of} rejects outright. What changes is only what previously fell through to GMT: case variants and
+     * the bare-offset forms.
+     * <p>
+     * Returns {@code null} for an unrecognised id rather than throwing -- read as "unset", which is the offset
+     * those ids already got. A collection created before the DDL-time check existed must keep reading.
+     *
+     * @param timeZoneId configured id, possibly null or empty
+     * @return the resolved zone, or {@code null} when unset or unrecognised
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Read-path timezone resolution shared by the avro, delta, parquet and iceberg converter "
+            + "contexts, which each resolved with TimeZone.getTimeZone and so read an accepted id as GMT "
+            + "whenever it was not spelled canonically")
+    /**
+     * Resolves a configured timezone for the read path and reports it when it cannot be resolved, so a
+     * collection whose timezone is being ignored says so instead of silently reading UTC-adjusted values with no
+     * offset. An absent or empty id is not reported: it means no timezone was asked for.
+     *
+     * @param timeZoneId  configured id, possibly null or empty
+     * @param warningSink where to deliver the warning; readers differ in how theirs reaches the user
+     * @return the resolved zone, or {@code null} when unset or unresolvable
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reports a configured timezone that cannot be resolved, shared by the avro, delta, parquet and "
+            + "iceberg readers")
+    public static TimeZone resolveTimeZoneOrWarn(String timeZoneId, Consumer<Warning> warningSink) {
+        TimeZone resolved = resolveTimeZoneOrUnset(timeZoneId);
+        // This warning is for collections that pre-existed before the DDL check, so they continue reading. But all
+        // new collections will fail at creation time if an invalid timezone is used.
+        if (resolved == null && timeZoneId != null && !timeZoneId.isEmpty()) {
+            warningSink.accept(
+                    Warning.of(null, ErrorCode.TIME_ZONE_ID_IGNORED, timeZoneId, ExternalDataConstants.KEY_TIMEZONE));
+        }
+        return resolved;
+    }
+
+    public static TimeZone resolveTimeZoneOrUnset(String timeZoneId) {
+        if (timeZoneId == null || timeZoneId.isEmpty()) {
+            return null;
+        }
+        String canonical = validTimeZonesMap.get(timeZoneId.toLowerCase(Locale.ROOT));
+        if (canonical != null) {
+            return TimeZone.getTimeZone(canonical);
+        }
+        try {
+            return TimeZone.getTimeZone(parseOffsetZoneId(timeZoneId));
+        } catch (DateTimeException e) {
+            return null;
         }
     }
 
@@ -1056,9 +1135,9 @@ public class ExternalDataUtils {
         if (isParquetFormat(properties)) {
             if (datasetRecordType.getFieldTypes().length != 0) {
                 throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
-            } else if (properties.containsKey(ParquetOptions.TIMEZONE)) {
-                String resolved = resolveTimeZone(properties.get(ParquetOptions.TIMEZONE));
-                properties.put(ParquetOptions.TIMEZONE, resolved);
+            } else if (properties.containsKey(ExternalDataConstants.KEY_TIMEZONE)) {
+                String resolved = resolveTimeZone(properties.get(ExternalDataConstants.KEY_TIMEZONE));
+                properties.put(ExternalDataConstants.KEY_TIMEZONE, resolved);
             }
         }
     }
@@ -1070,11 +1149,19 @@ public class ExternalDataUtils {
                 || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Rejects an invalid timezone at DDL time and stores the canonical id, matching the parquet, "
+            + "delta and iceberg validators. Avro previously accepted any string here")
     public static void validateAvroTypeAndConfiguration(Map<String, String> properties, ARecordType datasetRecordType)
             throws CompilationException {
         if (isAvroFormat(properties)) {
             if (datasetRecordType.getFieldTypes().length != 0) {
                 throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_AVRO, datasetRecordType.getTypeName());
+            }
+            String timeZoneId = properties.get(ExternalDataConstants.KEY_TIMEZONE);
+            // An empty value means "unset", as AvroConverterContext also treats it, so it is left alone rather
+            // than rejected. The resolved id is stored back to match the parquet and delta validators.
+            if (timeZoneId != null && !timeZoneId.isEmpty()) {
+                properties.put(ExternalDataConstants.KEY_TIMEZONE, resolveTimeZone(timeZoneId));
             }
         }
     }

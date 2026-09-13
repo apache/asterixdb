@@ -24,7 +24,6 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,6 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.annotations.AiProvenance;
@@ -62,8 +60,7 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
     private final IExternalFilterValueEmbedder valueEmbedder;
 
     public AvroDataParser(IExternalDataRuntimeContext context, Map<String, String> conf) {
-        List<Warning> warnings = new ArrayList<>();
-        parserContext = new AvroConverterContext(conf, warnings);
+        parserContext = new AvroConverterContext(conf, context.getTaskContext().getWarningCollector());
         valueEmbedder = context.getValueEmbedder();
     }
 
@@ -317,22 +314,20 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             }
         } else if (logicalType instanceof LogicalTypes.TimestampMicros) {
             long timeStampInMicros = ((Number) value).longValue();
-            int offset = parserContext.getTimeZoneOffset();
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
-            timeStampInMillis = timeStampInMillis + offset;
+            // The configured timezone is a rendering choice, so it applies only when rendering: a datetime is a
+            // zone-less wall-clock reading and takes the shift; an epoch long is an absolute instant and never does.
             if (parserContext.isTimestampAsLong()) {
                 serializeLong(timeStampInMillis, out);
             } else {
-                parserContext.serializeDateTime(timeStampInMillis, out);
+                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
             }
         } else if (logicalType instanceof LogicalTypes.TimestampMillis) {
             long timeStampInMillis = ((Number) value).longValue();
-            int offset = parserContext.getTimeZoneOffset();
-            timeStampInMillis = timeStampInMillis + offset;
             if (parserContext.isTimestampAsLong()) {
                 serializeLong(timeStampInMillis, out);
             } else {
-                parserContext.serializeDateTime(timeStampInMillis, out);
+                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
             }
         } else if (logicalType instanceof LogicalTypes.LocalTimestampMicros) {
             // local-timestamp-micros is already wall-clock time with no associated timezone;

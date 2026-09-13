@@ -32,6 +32,9 @@ import java.util.TimeZone;
 
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class IcebergConverterContext extends ParserContext {
@@ -42,9 +45,11 @@ public class IcebergConverterContext extends ParserContext {
     private final boolean timestampAsLong;
     private final ZoneId timeZoneId;
     private final int maxVariantDepth;
+    private final IWarningCollector warningCollector;
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Reads the variantDepth WITH-clause option (default 500), used by IcebergParquetDataParser's Variant nesting depth guard. Mirrors the timezone handling below: an empty value is treated as absent and falls back to the default, since Map.getOrDefault only falls back on an absent key, not an empty value")
-    public IcebergConverterContext(Map<String, String> configuration) {
+    public IcebergConverterContext(Map<String, String> configuration, IWarningCollector warningCollector) {
+        this.warningCollector = warningCollector;
         decimalToDouble = Boolean.parseBoolean(configuration.getOrDefault(DECIMAL_TO_DOUBLE, FALSE));
         dateAsInt = Boolean.parseBoolean(configuration.getOrDefault(DATE_AS_INT, FALSE));
         timeAsInt = Boolean.parseBoolean(configuration.getOrDefault(TIME_AS_INT, FALSE));
@@ -54,16 +59,19 @@ public class IcebergConverterContext extends ParserContext {
         maxVariantDepth = (configuredVariantDepth != null && !configuredVariantDepth.isEmpty())
                 ? Integer.parseInt(configuredVariantDepth) : DEFAULT_VARIANT_DEPTH;
 
-        String configuredTimeZoneId = configuration.get(ExternalDataConstants.IcebergOptions.TIMEZONE);
-        if (configuredTimeZoneId != null && !configuredTimeZoneId.isEmpty()) {
-            timeZoneId = TimeZone.getTimeZone(configuredTimeZoneId).toZoneId();
-        } else {
-            timeZoneId = null;
-        }
+        TimeZone timeZone = ExternalDataUtils
+                .resolveTimeZoneOrWarn(configuration.get(ExternalDataConstants.KEY_TIMEZONE), this::warn);
+        timeZoneId = timeZone == null ? null : timeZone.toZoneId();
     }
 
     public boolean isDecimalToDoubleEnabled() {
         return decimalToDouble;
+    }
+
+    private void warn(Warning warning) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(warning);
+        }
     }
 
     public ZoneId getTimeZoneId() {

@@ -463,7 +463,7 @@ public class HDFSUtils {
         conf.set(ParquetOptions.HADOOP_DECIMAL_TO_DOUBLE,
                 configuration.getOrDefault(ParquetOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
         //Re-adjust the time zone for UTC-adjusted values
-        conf.set(ParquetOptions.HADOOP_TIMEZONE, configuration.getOrDefault(ParquetOptions.TIMEZONE, ""));
+        conf.set(ParquetOptions.HADOOP_TIMEZONE, configuration.getOrDefault(ExternalDataConstants.KEY_TIMEZONE, ""));
 
     }
 

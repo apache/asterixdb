@@ -249,7 +249,7 @@ public class IcebergUtils {
         }
 
         // if timezone is provided, validate it
-        String timezone = properties.get(ExternalDataConstants.ParquetOptions.TIMEZONE);
+        String timezone = properties.get(ExternalDataConstants.KEY_TIMEZONE);
         if (timezone != null && !timezone.isEmpty()) {
             ExternalDataUtils.resolveTimeZone(timezone);
         }

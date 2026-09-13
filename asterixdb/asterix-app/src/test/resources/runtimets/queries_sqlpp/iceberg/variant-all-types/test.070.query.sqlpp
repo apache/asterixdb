@@ -19,8 +19,8 @@
 
 -- Same variant timestamp fields as test.050, but read through a collection with
 -- timestamp-to-long=true, so they must come back as raw epoch micros/nanos (bigint)
--- rather than datetime. The GMT+01:00 offset is still applied to the zoned (TZ) forms
--- before serialization.
+-- rather than datetime. The collection's GMT+01:00 is NOT applied to them: an epoch
+-- value is an absolute instant, so the zoned (TZ) forms are emitted unshifted.
 SELECT variant_field.timestamptzValue AS timestamptzValue,
        variant_field.timestampntzValue AS timestampntzValue,
        variant_field.timestamptzNanosValue AS timestamptzNanosValue,

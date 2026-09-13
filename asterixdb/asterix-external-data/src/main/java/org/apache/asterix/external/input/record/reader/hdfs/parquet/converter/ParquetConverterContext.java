@@ -30,6 +30,9 @@ import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmb
 import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8OutputStream;
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
+import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.TimestampZoneProjector;
+import org.apache.asterix.external.util.TimestampZoneProjector.TimestampUnit;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.asterix.om.base.ABoolean;
@@ -130,7 +133,7 @@ public class ParquetConverterContext extends ParserContext {
      * ************************************************************************
      */
     private final String timeZoneId;
-    private final int timeZoneOffset;
+    private final TimestampZoneProjector timeZoneProjector;
 
     /*
      * ************************************************************************
@@ -154,13 +157,11 @@ public class ParquetConverterContext extends ParserContext {
         decimalToDouble = configuration.getBoolean(ParquetOptions.HADOOP_DECIMAL_TO_DOUBLE, false);
 
         String configuredTimeZoneId = configuration.get(ParquetOptions.HADOOP_TIMEZONE);
-        if (!configuredTimeZoneId.isEmpty()) {
-            timeZoneId = configuredTimeZoneId;
-            timeZoneOffset = TimeZone.getTimeZone(timeZoneId).getRawOffset();
-        } else {
-            timeZoneId = "";
-            timeZoneOffset = 0;
-        }
+        TimeZone timeZone = ExternalDataUtils.resolveTimeZoneOrWarn(configuredTimeZoneId, warnings::add);
+        // kept verbatim rather than canonicalised: AsterixTypeToParquetTypeVisitor only asks whether it is
+        // empty, to decide the "UTC-adjusted value read without a timezone" warning
+        timeZoneId = configuredTimeZoneId == null ? "" : configuredTimeZoneId;
+        timeZoneProjector = new TimestampZoneProjector(timeZone == null ? null : timeZone.toZoneId());
     }
 
     public IExternalFilterValueEmbedder getValueEmbedder() {
@@ -183,8 +184,24 @@ public class ParquetConverterContext extends ParserContext {
         return timeZoneId;
     }
 
-    public int getTimeZoneOffset() {
-        return timeZoneOffset;
+    /**
+     * Shifts a UTC-adjusted epoch-millisecond value into the configured time zone, using the offset in effect
+     * at that instant rather than the zone's standard offset. Only call this for a value whose parquet
+     * annotation says {@code isAdjustedToUTC}; an INT96 or local timestamp carries no zone.
+     * <p>
+     * Wraps the overflow failure as unchecked, because the parquet converter callbacks that reach this cannot
+     * declare a checked exception -- the same thing {@link #serializeDateTime} does with a serialization
+     * failure.
+     *
+     * @param epochMillis epoch milliseconds of a UTC-adjusted value
+     * @return the shifted value, unchanged when no time zone was configured
+     */
+    public long applyTimeZone(long epochMillis) {
+        try {
+            return timeZoneProjector.projectEpochValue(epochMillis, TimestampUnit.MILLIS);
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /*
