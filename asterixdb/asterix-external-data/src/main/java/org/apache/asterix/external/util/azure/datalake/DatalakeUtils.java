@@ -37,7 +37,6 @@ import static org.apache.asterix.external.util.azure.AzureConstants.TENANT_ID_FI
 import static org.apache.asterix.external.util.azure.AzureConstants.TOKEN_REQUEST_CONTEXT_SCOPE;
 import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.DEFAULT_RECUSRIVE_VALUE;
 import static org.apache.asterix.external.util.azure.datalake.DatalakeConstants.RECURSIVE_FIELD_NAME;
-import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.util.ArrayList;
@@ -61,6 +60,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.azure.AzureProperties;
 
 import com.azure.core.credential.AccessToken;
@@ -345,18 +345,18 @@ public class DatalakeUtils {
                 || adapter.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS);
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Read the collection properties once instead of prefixing each lookup")
     public static void setIcebergAdlsAuthParams(Map<String, String> properties) throws CompilationException {
-        String managedIdentity =
-                properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + MANAGED_IDENTITY_FIELD_NAME);
-        String accountName = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + ACCOUNT_NAME_FIELD_NAME);
-        String accountKey = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + ACCOUNT_KEY_FIELD_NAME);
-        String sharedAccessSignature =
-                properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + SHARED_ACCESS_SIGNATURE_FIELD_NAME);
-        String tenantId = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + TENANT_ID_FIELD_NAME);
-        String clientId = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + CLIENT_ID_FIELD_NAME);
-        String clientSecret = properties.get(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + CLIENT_SECRET_FIELD_NAME);
-
+        // the collection's own credentials, with the prefix already stripped
         Map<String, String> collectionProperties = IcebergUtils.filterCollectionProperties(properties);
+        String managedIdentity = collectionProperties.get(MANAGED_IDENTITY_FIELD_NAME);
+        String accountName = collectionProperties.get(ACCOUNT_NAME_FIELD_NAME);
+        String accountKey = collectionProperties.get(ACCOUNT_KEY_FIELD_NAME);
+        String sharedAccessSignature = collectionProperties.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+        String tenantId = collectionProperties.get(TENANT_ID_FIELD_NAME);
+        String clientId = collectionProperties.get(CLIENT_ID_FIELD_NAME);
+        String clientSecret = collectionProperties.get(CLIENT_SECRET_FIELD_NAME);
+
         DataLakeServiceClient dataLakeServiceClient = DatalakeUtils.buildClient(null, collectionProperties);
         String endpoint = AzureUtils.extractEndPoint(dataLakeServiceClient.getAccountUrl());
 

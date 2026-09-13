@@ -34,10 +34,10 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.iceberg.glue.GlueUtils;
-import org.apache.asterix.external.util.google.iceberg.fileio.GCSFileIO;
 import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.aws.AwsProperties;
+import org.apache.iceberg.gcp.gcs.GCSFileIO;
 import org.junit.Test;
 
 /**
