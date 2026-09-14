@@ -436,7 +436,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
     /**
      * Resolves the WITH record into the finished {@link ClusterByOptions}: one walk collects the raw values,
      * rejecting unknown keys, then each option is validated in an order that lets every error name its own
-     * option. {@code dimension} stays a raw node (it is an array); the scalar options flatten to strings.
+     * option. {@code dimension} stays a raw node (it may be an array); the scalar options flatten to strings.
      */
     private ClusterByOptions resolveOptions(ClusterbyClause cbc) throws CompilationException {
         SourceLocation loc = cbc.getSourceLocation();
@@ -606,30 +606,37 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
      * <p>
      * An array, so that clustering on several fields can declare one width each. How many it must hold is the
      * algorithm's to say: k-means clusters a single field (the grammar admits only one clustering expression),
-     * so it allows exactly one.
+     * so it allows exactly one. Since that array always holds exactly one element, a plain positive integer is
+     * accepted as well and means the same thing: {@code "dimension": 384} is {@code "dimension": [384]}.
      */
     private static int dimensionOf(IAdmNode node, SourceLocation loc) throws CompilationException {
         if (node == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                    "CLUSTER BY requires the 'dimension' option: the width of each clustering vector, as an "
-                            + "array, e.g. \"dimension\": [384].");
+                    "CLUSTER BY requires the 'dimension' option: the width of each clustering vector, as a "
+                            + "positive integer or a one-element array, e.g. \"dimension\": 384.");
         }
-        if (node.getType() != ATypeTag.ARRAY) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                    "CLUSTER BY 'dimension' must be an array of positive integers, e.g. [384].");
+        IAdmNode dimNode;
+        if (node.getType() == ATypeTag.ARRAY) {
+            AdmArrayNode dims = (AdmArrayNode) node;
+            if (dims.size() != 1) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
+                        "CLUSTER BY with K-Means clusters a single field, so 'dimension' must hold exactly one "
+                                + "element, but held " + dims.size() + ".");
+            }
+            dimNode = dims.get(0);
+            if (dimNode.getType() != ATypeTag.BIGINT) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
+                        "CLUSTER BY 'dimension' must contain integers, but contained " + dimNode.getType() + ".");
+            }
+        } else {
+            dimNode = node;
+            if (dimNode.getType() != ATypeTag.BIGINT) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
+                        "CLUSTER BY 'dimension' must be a positive integer or an array of positive integers, "
+                                + "e.g. 384 or [384], but was: " + dimNode.getType() + ".");
+            }
         }
-        AdmArrayNode dims = (AdmArrayNode) node;
-        if (dims.size() != 1) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                    "CLUSTER BY with K-Means clusters a single field, so 'dimension' must hold exactly one "
-                            + "element, but held " + dims.size() + ".");
-        }
-        IAdmNode first = dims.get(0);
-        if (first.getType() != ATypeTag.BIGINT) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
-                    "CLUSTER BY 'dimension' must contain integers, but contained " + first.getType() + ".");
-        }
-        long dim = ((AdmBigIntNode) first).get();
+        long dim = ((AdmBigIntNode) dimNode).get();
         if (dim <= 0 || dim > Integer.MAX_VALUE) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
                     "CLUSTER BY 'dimension' must be a positive integer, but was: " + dim + ".");

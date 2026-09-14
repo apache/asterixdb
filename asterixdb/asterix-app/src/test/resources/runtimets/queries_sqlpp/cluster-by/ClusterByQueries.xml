@@ -133,9 +133,9 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by/negative">
-        <compilation-unit name="dimension-not-array">
-            <output-dir compare="Text">dimension-not-array</output-dir>
-            <expected-error>CLUSTER BY 'dimension' must be an array of positive integers</expected-error>
+        <compilation-unit name="dimension-wrong-type">
+            <output-dir compare="Text">dimension-wrong-type</output-dir>
+            <expected-error>CLUSTER BY 'dimension' must be a positive integer or an array of positive integers</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by/negative">
