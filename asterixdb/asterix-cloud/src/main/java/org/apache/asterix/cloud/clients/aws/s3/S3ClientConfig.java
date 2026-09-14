@@ -163,11 +163,6 @@ public final class S3ClientConfig {
         return prefix;
     }
 
-    public boolean isLocalS3Provider() {
-        // to workaround https://github.com/findify/s3mock/issues/187 in our S3Mock, we encode/decode keys
-        return false; //isS3Mock();
-    }
-
     public AwsCredentialsProvider createCredentialsProvider() {
         if (anonymousAuth) {
             return AnonymousCredentialsProvider.create();

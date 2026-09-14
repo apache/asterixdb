@@ -94,10 +94,7 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         CLOUD_STORAGE_FORCE_PATH_STYLE(BOOLEAN, false),
         CLOUD_STORAGE_DISABLE_SSL_VERIFY(BOOLEAN, false),
         CLOUD_STORAGE_S3_CLIENT_READ_TIMEOUT(INTEGER, -1),
-        CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, (Function<IApplicationConfig, String>) app -> {
-            String endpoint = app.getString(CLOUD_STORAGE_ENDPOINT);
-            return (endpoint == null || endpoint.isEmpty()) ? "crt" : "async";
-        }),
+        CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE(STRING, "crt"),
         CLOUD_STORAGE_S3_USE_ROUND_ROBIN_DNS_RESOLVER(BOOLEAN, false),
         CLOUD_STORAGE_S3_ACCESS_KEY_ID(STRING, (String) null),
         CLOUD_STORAGE_S3_SECRET_ACCESS_KEY(STRING, (String) null),
@@ -261,14 +258,6 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         @Override
         public Object defaultValue() {
             return defaultValue;
-        }
-
-        @Override
-        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
-            if (this == CLOUD_STORAGE_S3_PARALLEL_DOWNLOADER_CLIENT_TYPE) {
-                return "crt if no custom endpoint is set; async otherwise";
-            }
-            return IOption.super.usageDefaultOverride(accessor, optionPrinter);
         }
 
         @Override

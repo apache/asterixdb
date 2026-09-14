@@ -36,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -67,6 +68,8 @@ import software.amazon.awssdk.utils.AttributeMap;
 @ThreadSafe
 class S3ParallelDownloader extends AbstractParallelDownloader {
     private static final Logger LOGGER = LogManager.getLogger();
+    static final String CRT_CERTIFICATES_MESSAGE =
+            "The crt S3 parallel downloader client cannot use custom certificates; use the async or sync client type";
     private final String bucket;
     private final IOManager ioManager;
     private final S3AsyncClient s3AsyncClient;
@@ -192,7 +195,6 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
     }
 
     private static S3AsyncClient createAsyncClient(S3ClientConfig config) {
-        // CRT client is not supported by all local S3 providers, but provides a better performance with AWS S3
         S3ClientConfig.S3ParallelDownloaderClientType parallelDownloaderClientType =
                 config.getParallelDownloaderClientType();
         if (parallelDownloaderClientType == S3ClientConfig.S3ParallelDownloaderClientType.CRT) {
@@ -258,11 +260,12 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         return builder.build();
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "reject custom certificates instead of warning and building a client that cannot trust them")
     private static S3AsyncClient createS3CrtAsyncClient(S3ClientConfig config) {
         if (!config.getCertificates().isEmpty()) {
-            LOGGER.warn("Custom CA certificate is not supported with the CRT S3 client. "
-                    + "The certificate will be ignored for parallel downloads. "
-                    + "Consider using the 'async' parallel downloader client type instead.");
+            // the CRT client has no hook for a custom trust store, so a client built here would fail every TLS
+            // handshake against the endpoint the certificates were configured for; refuse rather than warn
+            throw new IllegalArgumentException(CRT_CERTIFICATES_MESSAGE);
         }
         S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder();
         builder.credentialsProvider(config.createCredentialsProvider());

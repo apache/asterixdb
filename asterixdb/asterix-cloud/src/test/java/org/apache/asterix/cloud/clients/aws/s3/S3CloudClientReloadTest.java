@@ -112,7 +112,7 @@ public class S3CloudClientReloadTest {
 
     /**
      * The client type is read from the same field, so the reload has to be able to change which downloader
-     * implementation is built -- an endpoint change is exactly what moves the default off {@code crt}.
+     * implementation is built -- it is one of the settings an operator can change at runtime.
      */
     @Test
     public void reloadChangesTheDownloaderImplementation() throws Exception {

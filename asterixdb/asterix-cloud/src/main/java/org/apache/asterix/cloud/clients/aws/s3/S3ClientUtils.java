@@ -23,10 +23,6 @@ import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.
 import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -68,21 +64,6 @@ public class S3ClientUtils {
         List<S3Object> files = s3Client.listObjectsV2(listObjectsBuilder.build()).contents();
 
         return isEmptyFolder(files, path);
-    }
-
-    public static String encodeURI(String path) {
-        if (path.isEmpty()) {
-            return path;
-        }
-        try {
-            return new URI("s3", "//", path).getRawFragment();
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    public static String decodeURI(String path) {
-        return URLDecoder.decode(path, Charset.defaultCharset());
     }
 
     private static String toCloudPrefix(String path) {

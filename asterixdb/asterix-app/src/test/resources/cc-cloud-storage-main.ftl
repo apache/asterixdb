@@ -69,6 +69,9 @@ cloud.storage.scheme=s3
 cloud.storage.bucket=cloud-storage-container
 cloud.storage.region=us-west-2
 cloud.storage.endpoint=${cloudUrl}
+# keep these suites on the async client they have always run with; whether the in-process
+# S3 mock serves the CRT client has not been verified here
+cloud.storage.s3.parallel.downloader.client.type=async
 cloud.storage.anonymous.auth=true
 cloud.storage.cache.policy=selective
 cloud.max.write.requests.per.second=2000

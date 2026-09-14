@@ -19,7 +19,6 @@
 package org.apache.asterix.cloud.clients.aws.s3;
 
 import static org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig.DELETE_BATCH_SIZE;
-import static org.apache.asterix.cloud.clients.aws.s3.S3ClientUtils.encodeURI;
 import static org.apache.asterix.cloud.clients.aws.s3.S3ClientUtils.listS3Objects;
 
 import java.io.FilenameFilter;
@@ -145,7 +144,6 @@ public final class S3CloudClient implements ICloudClient {
     public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
         guardian.checkReadAccess(bucket, path);
         profiler.objectsList();
-        path = config.isLocalS3Provider() ? encodeURI(path) : path;
         return ensureListConsistent(filterAndGet(listS3Objects(s3Client, bucket, config.getPrefix() + path), filter),
                 bucket, CloudFile::getPath);
     }
@@ -225,7 +223,6 @@ public final class S3CloudClient implements ICloudClient {
     public void copy(String bucket, String srcPath, FileReference destPath) {
         guardian.checkReadAccess(bucket, srcPath);
         srcPath = config.getPrefix() + srcPath;
-        srcPath = config.isLocalS3Provider() ? encodeURI(srcPath) : srcPath;
         List<S3Object> objects = listS3Objects(s3Client, bucket, srcPath);
 
         profiler.objectsList();
@@ -444,7 +441,7 @@ public final class S3CloudClient implements ICloudClient {
     private Set<CloudFile> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
         Set<CloudFile> files = new HashSet<>();
         for (S3Object s3Object : contents) {
-            String path = config.isLocalS3Provider() ? S3ClientUtils.decodeURI(s3Object.key()) : s3Object.key();
+            String path = s3Object.key();
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
                 path = path.substring(config.getPrefix().length());
                 files.add(CloudFile.of(path, s3Object.size()));
