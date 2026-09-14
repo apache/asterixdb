@@ -149,7 +149,6 @@ public class KMeansPhiMergeOperatorDescriptor extends AbstractSingleActivityOper
                     if (allReported(sigmas)) {
                         sigmasByRound.remove(round); // retired: what is left at close never completed
                         emitPhi(round, reduceInPartitionOrder(sigmas));
-                        sigmasByRound.remove(round);
                     }
                 }
             }

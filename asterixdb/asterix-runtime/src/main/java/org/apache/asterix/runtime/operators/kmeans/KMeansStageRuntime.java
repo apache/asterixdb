@@ -307,17 +307,6 @@ final class KMeansStageRuntime {
         }
     }
 
-    private double[] decodeVector(FrameTupleReference tuple, int col) throws HyracksDataException {
-        try {
-            fieldPtr.set(tuple.getFieldData(col), tuple.getFieldStart(col), tuple.getFieldLength(col));
-            listAccessor.reset(fieldPtr.getByteArray(), fieldPtr.getStartOffset());
-            double[] arr = new double[listAccessor.size()];
-            return decoder.createArrayFromList(listAccessor, arr);
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
-        }
-    }
-
     private Row decodeEnvelope(FrameTupleReference tuple, int col) throws HyracksDataException {
         try {
             fieldPtr.set(tuple.getFieldData(col), tuple.getFieldStart(col), tuple.getFieldLength(col));

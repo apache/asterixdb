@@ -504,9 +504,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
     }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Scoped substitution support for CLUSTER BY centroid decorrelation")
-    private static java.util.List<Mutable<ILogicalExpression>> collectExpressions(ILogicalOperator op)
+    private static List<Mutable<ILogicalExpression>> collectExpressions(ILogicalOperator op)
             throws AlgebricksException {
-        java.util.List<Mutable<ILogicalExpression>> refs = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> refs = new ArrayList<>();
         ((AbstractLogicalOperator) op).acceptExpressionTransform(ref -> {
             refs.add(ref);
             return false;

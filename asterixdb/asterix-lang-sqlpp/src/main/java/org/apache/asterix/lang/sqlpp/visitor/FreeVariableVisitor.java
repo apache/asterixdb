@@ -202,11 +202,15 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         Collection<VariableExpr> gbyBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause());
         Collection<VariableExpr> gbyLetsBindingVars =
                 SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby());
+        // The CLUSTER BY clause binds in the same position GROUP BY does: its descriptor, members, cluster-id,
+        // centroid and decoration variables are this block's, not an enclosing query's.
+        Collection<VariableExpr> clusterByBindingVars =
+                SqlppVariableUtil.getBindingVariables(selectBlock.getClusterbyClause());
 
         selectBlock.getSelectClause().accept(this, selectFreeVars);
-        // Removes group-by, from, let, and gby-let binding vars.
+        // Removes group-by, cluster-by, from, let, and gby-let binding vars.
         removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
-                gbyLetsBindingVars);
+                gbyLetsBindingVars, clusterByBindingVars);
 
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, fromFreeVars);
@@ -234,12 +238,21 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             clusterByFreeVars.removeAll(fromBindingVars);
             clusterByFreeVars.removeAll(letsBindingVars);
             freeVars.addAll(clusterByFreeVars);
+            // A LET or HAVING after CLUSTER BY parses into the same list as one after GROUP BY, so it has to be
+            // traversed here too: skipping it hides a read of an enclosing query's variable from every caller
+            // of getFreeVariables(), including the CLUSTER BY correlation check.
+            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                visitLetWhereClauses(selectBlock.getLetHavingListAfterGroupby(), gbyLetHavingsFreeVars);
+                gbyLetHavingsFreeVars.removeAll(fromBindingVars);
+                gbyLetHavingsFreeVars.removeAll(letsBindingVars);
+                gbyLetHavingsFreeVars.removeAll(clusterByBindingVars);
+            }
         }
 
         // Removes all binding vars from <code>freeVars</code>, which contains the free
         // vars in the order-by and limit.
         removeAllBindingVarsInSelectBlock(freeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
-                gbyLetsBindingVars);
+                gbyLetsBindingVars, clusterByBindingVars);
 
         // Adds all free vars.
         freeVars.addAll(selectFreeVars);
@@ -598,13 +611,16 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
      * @param letsBindingVars,   binding variables defined in the let clauses of the select block.
      * @param gbyBindingVars     binding variables defined in the groupby clauses of the select block
      * @param gbyLetsBindingVars binding variables defined in the let clauses after groupby of the select block.
+     * @param clusterByBindingVars binding variables defined in the cluster-by clause of the select block.
      */
     private void removeAllBindingVarsInSelectBlock(Collection<VariableExpr> selectFreeVars,
             Collection<VariableExpr> fromBindingVars, Collection<VariableExpr> letsBindingVars,
-            Collection<VariableExpr> gbyBindingVars, Collection<VariableExpr> gbyLetsBindingVars) {
+            Collection<VariableExpr> gbyBindingVars, Collection<VariableExpr> gbyLetsBindingVars,
+            Collection<VariableExpr> clusterByBindingVars) {
         selectFreeVars.removeAll(fromBindingVars);
         selectFreeVars.removeAll(letsBindingVars);
         selectFreeVars.removeAll(gbyBindingVars);
         selectFreeVars.removeAll(gbyLetsBindingVars);
+        selectFreeVars.removeAll(clusterByBindingVars);
     }
 }

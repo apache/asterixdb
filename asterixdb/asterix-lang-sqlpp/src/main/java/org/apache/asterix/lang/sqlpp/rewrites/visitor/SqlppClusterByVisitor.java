@@ -21,7 +21,6 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -195,9 +194,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
         }
         addNames(blockVars, SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby()));
         if (selectBlock.hasClusterbyClause()) {
-            ClusterbyClause cbc = selectBlock.getClusterbyClause();
-            addNames(blockVars, Arrays.asList(cbc.getClusterDescriptorVar(), cbc.getClusterMembersVar(),
-                    cbc.getClusterIdVar(), cbc.getCentroidVar()));
+            addNames(blockVars, SqlppVariableUtil.getBindingVariables(selectBlock.getClusterbyClause()));
         }
         enclosingBindings.push(blockVars);
         try {

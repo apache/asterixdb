@@ -162,7 +162,8 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
-        // vectorRef is null only for RECLUSTER, the one mode with a pool input and no vector input.
+        // memberRecordRef is bound after construction (setMemberRecordRef), so a rule can reach this
+        // operator before it exists.
         boolean changed = vectorRef != null && visitor.transform(vectorRef);
         changed |= memberRecordRef != null && visitor.transform(memberRecordRef);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
@@ -204,7 +205,7 @@ public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
                 : membersTypeComputer.membersType(memberRecordRef.getValue(), inputEnv, ctx);
     }
 
-    /** The vector input variable, or null for RECLUSTER, the only mode without a vector input. */
+    /** The input's vector-valued variable. */
     public LogicalVariable getVectorVariable() {
         return vectorRef == null ? null : ((VariableReferenceExpression) vectorRef.getValue()).getVariableReference();
     }

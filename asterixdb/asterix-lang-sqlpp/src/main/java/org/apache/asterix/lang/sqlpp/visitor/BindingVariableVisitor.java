@@ -31,9 +31,11 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class BindingVariableVisitor extends AbstractSqlppAstVisitor<Void, Collection<VariableExpr>> {
     @Override
@@ -83,6 +85,31 @@ public class BindingVariableVisitor extends AbstractSqlppAstVisitor<Void, Collec
         }
         bindingVars.add(groupbyClause.getGroupVar());
         return null;
+    }
+
+    @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "CLUSTER BY binding variables, so callers stop listing them by hand")
+    public Void visit(ClusterbyClause clusterbyClause, Collection<VariableExpr> bindingVars)
+            throws CompilationException {
+        // The clause binds its descriptor and members variables where the query named them, plus the
+        // cluster-id and centroid variables the rewrite derives from the descriptor.
+        //
+        // The decorations are deliberately NOT reported, unlike GROUP BY's. They are drawn from the scope's
+        // live variables (SqlppGroupByAggregationSugarVisitor), and Scope.liveSymbols walks into enclosing
+        // scopes, so a decoration can name an enclosing query's variable. Everything a decoration can
+        // legitimately name in this block is already a FROM or LET binding of it, so reporting them would add
+        // nothing and would let the CLUSTER BY correlation check subtract the very variable it exists to find.
+        addIfPresent(bindingVars, clusterbyClause.getClusterDescriptorVar());
+        addIfPresent(bindingVars, clusterbyClause.getClusterMembersVar());
+        addIfPresent(bindingVars, clusterbyClause.getClusterIdVar());
+        addIfPresent(bindingVars, clusterbyClause.getCentroidVar());
+        return null;
+    }
+
+    private static void addIfPresent(Collection<VariableExpr> bindingVars, VariableExpr var) {
+        if (var != null) {
+            bindingVars.add(var);
+        }
     }
 
     @Override

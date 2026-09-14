@@ -279,6 +279,11 @@
             <output-dir compare="Text">kmeans-having</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-shadowed-name">
+            <output-dir compare="Text">kmeans-shadowed-name</output-dir>
+        </compilation-unit>
+    </test-case>
     <test-case FilePath="cluster-by/negative">
         <compilation-unit name="outer-variable-after-clusterby">
             <output-dir compare="Text">outer-variable-after-clusterby</output-dir>
@@ -293,6 +298,13 @@
             <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier p</expected-error>
             <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier v</expected-error>
             <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier p</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="cluster-by/negative">
+        <compilation-unit name="enclosing-variable-after-clusterby-having">
+            <output-dir compare="Text">enclosing-variable-after-clusterby-having</output-dir>
+            <expected-error>CLUSTER BY: 'o' belongs to an enclosing query</expected-error>
+            <expected-error>CLUSTER BY: 'o' belongs to an enclosing query</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="cluster-by">

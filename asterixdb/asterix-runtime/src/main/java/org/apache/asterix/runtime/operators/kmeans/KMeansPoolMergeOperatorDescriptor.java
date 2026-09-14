@@ -61,9 +61,9 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * (broadcast to the Release operators, Op5).
  * <p>
  * The deterministic union order is what keeps every partition's pool run file byte-identical, so all partitions
- * agree on phi and the draws each subsequent round. Draw vectors are decoded and buffered as {@code double[]}
- * (the input frame buffers are transient), then re-emitted. Because the loop is globally serialized, at most one
- * round is live in the accumulator at a time (emitted and removed before the next round arrives).
+ * agree on phi and the draws each subsequent round. Draws are copied field for field into an external sort, which
+ * supplies that order without holding the round resident. Because the loop is globally serialized, at most one
+ * round is live in the sort at a time (emitted and closed before the next round arrives).
  */
 @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
@@ -80,19 +80,6 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
         this.nParticipants = nParticipants;
         this.framesLimit = framesLimit;
         outRecDescs[0] = recDesc; // DRAW_RD shape, in == out
-    }
-
-    /** One buffered draw awaiting the round's barrier: its origin partition, per-partition seq, and vector. */
-    private static final class Draw {
-        private final int part;
-        private final int seq;
-        private final double[] vec;
-
-        private Draw(int part, int seq, double[] vec) {
-            this.part = part;
-            this.seq = seq;
-            this.vec = vec;
-        }
     }
 
     @Override
@@ -129,8 +116,6 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
                 for (int i = 0; i < tupleCount; i++) {
                     tuple.reset(accessor, i);
                     int round = IntegerPointable.getInteger(tuple.getFieldData(0), tuple.getFieldStart(0));
-                    int part = IntegerPointable.getInteger(tuple.getFieldData(1), tuple.getFieldStart(1));
-                    int seq = IntegerPointable.getInteger(tuple.getFieldData(2), tuple.getFieldStart(2));
                     int kind = IntegerPointable.getInteger(tuple.getFieldData(3), tuple.getFieldStart(3));
                     if (kind == KMeansLoopIO.KIND_END) {
                         int ends = endsByRound.merge(round, 1, Integer::sum);
@@ -139,8 +124,6 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
                             endsByRound.remove(round);
                         }
                     } else {
-                        double[] vec = KMeansLoopIO.readRawVector(tuple.getFieldData(4), tuple.getFieldStart(4),
-                                tuple.getFieldLength(4));
                         ensureSort();
                         sortTb.reset();
                         for (int f = 0; f < 5; f++) {
@@ -161,9 +144,9 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
             }
 
             private void emitUnion(int round) throws HyracksDataException {
-                // A round may draw nothing (e.g. the pool already covers every point -> phi = 0): still emit the
-                // end marker so Release wakes Cost for the next round. (getOrDefault(List.of()) would be immutable
-                // -> sort throws; guard on null instead.)
+                // A round may draw nothing (e.g. the pool already covers every point -> phi = 0), in which case
+                // no sort was ever opened; the end marker still has to go out so Release wakes Cost for the next
+                // round.
                 if (drawSort != null) {
                     if (sortAppender.getTupleCount() > 0) {
                         drawSort.nextFrame(sortFrame.getBuffer());
