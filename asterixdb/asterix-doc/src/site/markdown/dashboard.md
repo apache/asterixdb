@@ -28,7 +28,7 @@
  * [Exporting Data](#exporting)
  * [Development](#development)
  
-## <a id="basics">Basic Usage</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="basics">Basic Usage</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 Executing a query is easy. Type your query into the query input box, select your run configurations, and then click the 
 green play button to run the query. The output will appear below in the “Output” section.
@@ -61,7 +61,7 @@ The dashboard also now supports autocomplete of SQL++ keywords. Use `CTRL+Space`
 ![Figure 2: Autocomplete](../resources/images/dashboard_screenshots/autocomplete.png)\
 Figure 2: Example of autocomplete
 
-## <a id="qnav">Query Navigation</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="qnav">Query Navigation</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 This console supports query history and has two different ways of navigating the query history. On the input bar there 
 is a section for `QUERY HISTORY` and there are also two arrows (`<` and `>`).
@@ -75,7 +75,7 @@ When executing a query, this query will be counted as a new query if it is diffe
 (comparison is purely based on the query text, not the results) from the most recent query. 
 It will subsequently be added to the front of the query history.
 
-## <a id="metadatainspector">Metadata Inspector</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="metadatainspector">Metadata Inspector</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 The metadata inspector is the column on the right side of the console (see Figure 3). The `Refresh` button is used to 
 update the current metadata. When a user creates or drops a dataverse, dataset, datatype, user-defined function, or index, 
@@ -141,7 +141,7 @@ user-defined function.
 * `Parameters` - the name of the parameters
 * `Definition` - the definition of the UDF
 
-## <a id="planviewer">Interactive Plan Viewer</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="planviewer">Interactive Plan Viewer</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 To view the interactive plan viewer, either execute a query and switch to the `PLAN` tab in the output section or `EXPLAIN` 
 the query and it will default to the `PLAN` view.
@@ -194,7 +194,7 @@ Unfortunately, at this time, regular expression search is not supported.
 
 Clicking `Clear` will reset the query plan graph and focus the viewer on the first node in the plan.
 
-## <a id="exporting">Exporting Data</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="exporting">Exporting Data</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 Exporting data is a key part of the console’s functionality. Users can select from JSON, JSONL, CSV (no header), 
 and CSV (header) as data types for the output.
@@ -263,7 +263,7 @@ and `senderLocation` (see Figure 5).
 ![Figure 5: Sample CSV Header Output](../resources/images/dashboard_screenshots/csv_header_sample_output.png)\
 Figure 5: CSV (header) sample output
 
-## <a id="development">Development</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="development">Development</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 To start the development server, run `ng serve` or `npm start`. Navigate to `http://localhost:4200/`. 
 The app will automatically reload if you change any of the source files.

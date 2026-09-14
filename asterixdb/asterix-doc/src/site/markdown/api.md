@@ -26,7 +26,7 @@
 * [Query Result API](#queryresult)
 * [Plan Cache API](#plancache)
 
-## <a id="queryservice">POST /query/service</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="queryservice">POST /query/service</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 __Description__ Returns result for query as JSON.
   The response is a JSON object that contains some result metadata along with either an embedded result or an opaque
@@ -159,7 +159,7 @@ __Sample response__
     }
 
 
-## <a id="querystatus">GET /query/service/status</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="querystatus">GET /query/service/status</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 __Description__ Returns status of an `async` query request.
   The response is a JSON object that has a similar structure to the responses for the <a
@@ -193,7 +193,7 @@ __Sample response__
         "handle": "http://localhost:19002/query/service/result/9-0"
     }
 
-## <a id="queryresult">GET /query/service/result</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="queryresult">GET /query/service/result</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 __Description__ Returns result set for an `async` or `deferred` query request.
   The response is a plain result without a wrapping JSON object.
@@ -223,7 +223,7 @@ __Sample response__
     [ { "$1": 1 }
      ]
 
-## <a id="plancache">DELETE /admin/plancache</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
+## <a id="plancache">DELETE /admin/plancache</a><span style="font-size: medium"> <a href="#toc">[Back to TOC]</a></span>
 
 __Description__ Clears all entries in the query plan cache.
 The response is a JSON object that describes the number of entries that were cleared from the query plan cache.

@@ -28,7 +28,7 @@
 * [Complex Indexing Examples](#ComplexIndexingExamples)
 
 
-## <a id="Overview">Overview</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Overview">Overview</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Array indexes are used in applications where users want to accelerate a query that involves some array-valued or multiset-valued field.
 This enables fast evaluation of predicates in queries involving arrays or multisets in datasets.
@@ -44,7 +44,7 @@ In fact due to AsterixDB's record-level locking, index-only plans involving mult
 Instead, array indexes are simply meant to accelerate queries involving multi-valued fields.
 
 
-## <a id="QuantificationQueries">Quantification Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="QuantificationQueries">Quantification Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 A common use-case for array indexes involves quantifying some or all elements within an array.
 Quantification queries have two variants: existential and universal.
@@ -100,7 +100,7 @@ Take note of the `SOME AND EVERY` quantifier instead of the `EVERY` quantifier.
 Array indexes cannot be used for queries with potentially empty arrays.
 
 
-## <a id="ExplicitUnnestQueries">Explicit Unnesting Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="ExplicitUnnestQueries">Explicit Unnesting Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Array indexes can also be used to accelerate queries that involve the explicit unnesting of array fields.
 We can express the same membership / existential example above using an explicit `UNNEST` query.
@@ -118,7 +118,7 @@ The following query will utilize the `oItemsQtyPriceIdx` we created, using only 
     WHERE i.qty > 100;
 
 
-## <a id="JoinQueries">Join Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="JoinQueries">Join Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Finally, array indexes can also be used for index nested-loop joins if the field being joined is located within an array.
 Let us create another index on the `items` array of the `orders` dataset, this time on the `productno` field.
@@ -135,7 +135,7 @@ Note that we must specify the `indexnl` join hint to tell AsterixDB that we want
           SOME i IN o.items SATISFIES i.productno /*+ indexnl */ = p.productno;
 
 
-## <a id="ComplexIndexingExamples">Complex Indexing Examples</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="ComplexIndexingExamples">Complex Indexing Examples</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 ### Open Indexes
 

@@ -124,7 +124,7 @@ result:
 { "Polygon": "POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))", "Area": 675.0 }
 ```
 
-## <a id="query2">Spatial aggregate example</a>
+## <a id="aggre">Spatial aggregate example</a>
  
 `st_union` function has been implemented both as a normal and an aggregate function. The following query shows how to query the aggregate version of this function:
  

@@ -27,13 +27,13 @@
 * [Type Compatibility](#TypeCompatibility)
 * [Parquet Type Flags](#ParquetTypeFlags)
 
-## <a id="Overview">Overview</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Overview">Overview</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 [Apache Parquet](https://parquet.apache.org/) is a columnar file format for storing semi-structured data (like JSON).
 Apache AsterixDB supports running queries against Parquet files that are stored in Amazon S3 and Microsoft Azure Blob
 Storage as [External Datasets](../aql/externaldata.html).
 
-## <a id="DDL">DDL</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="DDL">DDL</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 To start, an end-user needs to create a type as follows:
 
@@ -91,7 +91,7 @@ Next, the user can create an external dataset - using the declared type - as fol
 
 <i><b>Additional setting/properties could be set as detailed later in [Parquet Type Flags](#ParquetTypeFlags)</b></i>
 
-## <a id="QueryParquetFiles">Query Parquet Files</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="QueryParquetFiles">Query Parquet Files</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 To query the data stored in Parquet files, one can simply write a query against the created External Dataset. For
 example:
@@ -105,7 +105,7 @@ Another example:
     FROM ParquetDataset pd
     GROUP BY pd.age;
 
-## <a id="TypeCompatibility">Type Compatibility</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="TypeCompatibility">Type Compatibility</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 AsterixDB supports Parquet's generic types such `STRING`, `INT` and `DOUBLE`. However, Parquet files could
 contain [additional types](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md) such as `DATE` and
@@ -289,7 +289,7 @@ contain [additional types](https://github.com/apache/parquet-format/blob/master/
     </tbody>
 </table>
 
-## <a id="ParquetTypeFlags">Parquet Type Flags</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="ParquetTypeFlags">Parquet Type Flags</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 The table in [Type Compatibility](#TypeCompatibility) shows the type mapping between Parquet and AsterixDB. Some of the
 Parquet types are not parsed by default as those type are not natively supported in AsterixDB. However, the user can set

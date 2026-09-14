@@ -25,7 +25,7 @@
 * [Syntax](#Syntax)
 * [Creating and utilizing a Full-text index](#FulltextIndex)
 
-## <a id="Motivation">Motivation</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Motivation">Motivation</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Full-Text Search (FTS) queries are widely used in applications where users need to find records that satisfy
 an FTS predicate, i.e., where simple string-based matching is not sufficient. These queries are important when
@@ -36,7 +36,7 @@ returns a document when it contains “rain” as a word. However, a substring-m
 whenever it contains “rain” as a substring, for instance, a document with “brain” or “training” would be
 returned as well.
 
-## <a id="Syntax">Syntax</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Syntax">Syntax</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 The syntax of AsterixDB FTS follows a portion of the XQuery FullText Search syntax.
 Two basic forms are as follows:
@@ -101,7 +101,7 @@ or “sound is not clear. You may need to install a new system.”
        ... where ftcontains(msg.messageText, ["sound", "system"])
 
 
-## <a id="FulltextIndex">Creating and utilizing a Full-text index</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="FulltextIndex">Creating and utilizing a Full-text index</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 When there is a full-text index on the field that is being searched, rather than scanning all records,
 AsterixDB can utilize that index to expedite the execution of a FTS query. To create a full-text index,

@@ -30,13 +30,13 @@
 * [External Data Snapshots](#ExternalDataSnapshot)
 * [Frequently Asked Questions](#FAQ)
 
-## <a id="Introduction">Introduction</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Introduction">Introduction</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 Data that needs to be processed by AsterixDB could be residing outside AsterixDB storage. Examples include data files on a distributed file system such as HDFS or on the local file system of a machine that is part of an AsterixDB cluster. For AsterixDB to process such data, an end-user may create a regular dataset in AsterixDB (a.k.a. an internal dataset) and load the dataset with the data. AsterixDB also supports ‘‘external datasets’’ so that it is not necessary to “load” all data prior to using it. This also avoids creating multiple copies of data and the need to keep the copies in sync.
 
-### <a id="IntroductionAdapterForAnExternalDataset">Adapter for an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+### <a id="IntroductionAdapterForAnExternalDataset">Adapter for an External Dataset</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ###
 External data is accessed using wrappers (adapters in AsterixDB) that abstract away the mechanism of connecting with an external service, receiving its data and transforming the data into ADM objects that are understood by AsterixDB. AsterixDB comes with built-in adapters for common storage systems such as HDFS or the local file system.
 
-### <a id="BuiltinAdapters">Builtin Adapters</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+### <a id="BuiltinAdapters">Builtin Adapters</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ###
 AsterixDB offers a set of builtin adapters that can be used to query external data or for loading data into an internal dataset using a load statement or a data feed. Each adapter requires specifying the `format` of the data in order to be able to parse objects correctly. Using adapters with feeds, the parameter `output-type` must also be specified.
 
 Following is a listing of existing built-in adapters and their configuration parameters:
@@ -72,7 +72,7 @@ Following is a listing of existing built-in adapters and their configuration par
      * `url`: a comma separated list of RSS urls
 
 
-### <a id="IntroductionCreatingAnExternalDataset">Creating an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+### <a id="IntroductionCreatingAnExternalDataset">Creating an External Dataset</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ###
 As an example we consider the Lineitem dataset from the [TPCH schema](http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql).
 We assume that you have successfully created an AsterixDB instance following the instructions at [Installing AsterixDB Using Managix](../install.html). _For constructing an example, we assume a single machine setup.._
 
@@ -125,9 +125,9 @@ Above, the definition is not complete as we need to provide a set of parameters 
 </tr>
 <tr>
   <td> path </td>
-  <td> A fully qualified path of the form <tt>host://&lt;absolute path&gt;</tt>.
+  <td> A fully qualified path of the form <code>host://&lt;absolute path&gt;</code>.
   Use a comma separated list if there are multiple files.
-  E.g. <tt>host1://&lt;absolute path&gt;</tt>, <tt>host2://&lt;absolute path&gt;</tt> and so forth. </td>
+  E.g. <code>host1://&lt;absolute path&gt;</code>, <code>host2://&lt;absolute path&gt;</code> and so forth. </td>
 </tr>
 <tr>
   <td> format </td>
@@ -306,7 +306,7 @@ if a user wants to create an external dataset that uses hive-parser to parse HDF
         create external dataset Lineitem('LineitemType)
         using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/RCLineitem.tbl"),("input-format"="rc-input-format"),("format"="binary"),("parser"="hive-parser"),("hive- serde"="org.apache.hadoop.hive.serde2.columnar.ColumnarSerde"));
 
-## <a id="WritingQueriesAgainstAnExternalDataset">Writing Queries against an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="WritingQueriesAgainstAnExternalDataset">Writing Queries against an External Dataset</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 You may write AQL queries against an external dataset in exactly the same way that queries are written against internal datasets. The following is an example of an AQL query that applies a filter and returns an ordered result.
 
 
@@ -317,7 +317,7 @@ You may write AQL queries against an external dataset in exactly the same way th
         order by $c.l_orderkey, $c.l_linenumber
         return $c
 
-## <a id="BuildingIndexesOverExternalDatasets">Building Indexes over External Datasets</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="BuildingIndexesOverExternalDatasets">Building Indexes over External Datasets</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 AsterixDB supports building B-Tree and R-Tree indexes over static data stored in the Hadoop Distributed File System.
 To create an index, first create an external dataset over the data as follows
 
@@ -335,7 +335,7 @@ You could also create an R-Tree index as follows:
 After building the indexes, the AsterixDB query compiler can use them to access the dataset and answer queries in a more cost effective manner.
 AsterixDB can read all HDFS input formats, but indexes over external datasets can currently be built only for HDFS datasets with 'text-input-format', 'sequence-input-format' or 'rc-input-format'.
 
-## <a id="ExternalDataSnapshots">External Data Snapshots</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="ExternalDataSnapshots">External Data Snapshots</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 An external data snapshot represents the status of a dataset's files in HDFS at a point in time. Upon creating the first index over an external dataset, AsterixDB captures and stores a snapshot of the dataset in HDFS. Only objects present at the snapshot capture time are indexed, and any additional indexes created afterwards will only contain data that was present at the snapshot capture time thus preserving consistency across all indexes of a dataset.
 To update all indexes of an external dataset and advance the snapshot time to be the present time, a user can use the refresh external dataset command as follows:
 
@@ -343,7 +343,7 @@ To update all indexes of an external dataset and advance the snapshot time to be
 
 After a refresh operation commits, all of the dataset's indexes will reflect the status of the data as of the new snapshot capture time.
 
-## <a id="FAQ">Frequently Asked Questions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="FAQ">Frequently Asked Questions</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Q. I added data to my dataset in HDFS, Will the dataset indexes in AsterixDB be updated automatically?
 

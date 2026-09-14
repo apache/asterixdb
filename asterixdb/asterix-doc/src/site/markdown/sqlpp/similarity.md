@@ -27,7 +27,7 @@
 * [Similarity Join Queries](#SimilarityJoinQueries)
 * [Using Indexes to Support Similarity Queries](#UsingIndexesToSupportSimilarityQueries)
 
-## <a id="Motivation">Motivation</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Motivation">Motivation</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 Similarity queries are widely used in applications where users need to
 find objects that satisfy a similarity predicate, while exact matching
@@ -40,7 +40,7 @@ politics :-)). As another example, we want to find all the Facebook
 users who have similar friends. To meet this type of needs, AsterixDB
 supports similarity queries using efficient indexes and algorithms.
 
-## <a id="DataTypesAndSimilarityFunctions">Data Types and Similarity Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="DataTypesAndSimilarityFunctions">Data Types and Similarity Functions</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and
 [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets).  For
@@ -59,7 +59,7 @@ AsterixDB provides
 to convert strings to sets, and the
 [similarity functions](../sqlpp/builtins.html#Similarity_Functions).
 
-## <a id="SimilaritySelectionQueries">Similarity Selection Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="SimilaritySelectionQueries">Similarity Selection Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 The following query
 asks for all the Gleambook users whose name is similar to
@@ -99,7 +99,7 @@ In this query, we first declare Jaccard as the similarity function
 using `simfunction` and then specify the threshold `0.6f` using
 `simthreshold`.
 
-## <a id="SimilarityJoinQueries">Similarity Join Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="SimilarityJoinQueries">Similarity Join Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 AsterixDB supports fuzzy joins between two sets. The following
 [query](../sqlpp/primer-sqlpp.html#Query_5_-_Fuzzy_Join)
@@ -116,7 +116,7 @@ similar to their name based on the edit distance.
                                   where cu.name ~= gbu.name) as similar_users
         from GleambookUsers gbu;
 
-## <a id="UsingIndexesToSupportSimilarityQueries">Using Indexes to Support Similarity Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="UsingIndexesToSupportSimilarityQueries">Using Indexes to Support Similarity Queries</a> <span style="font-size: medium"><a href="#toc">[Back to TOC]</a></span> ##
 
 AsterixDB uses two types of indexes to support similarity queries, namely
 "ngram index" and "keyword index".
