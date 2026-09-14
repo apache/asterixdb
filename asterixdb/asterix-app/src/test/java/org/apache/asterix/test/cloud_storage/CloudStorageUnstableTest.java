@@ -30,6 +30,7 @@ import java.util.Random;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -79,6 +80,10 @@ public class CloudStorageUnstableTest {
         S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
                 CONFIG_FILE_NAME);
+        // the mock listens on a random published port; without this the %template% placeholder falls back to the
+        // fixed default endpoint (port 8001), where nothing is listening
+        System.setProperty(TestConstants.S3_SERVICE_ENDPOINT_KEY,
+                MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort());
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
