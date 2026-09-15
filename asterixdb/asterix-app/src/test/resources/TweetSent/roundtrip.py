@@ -28,6 +28,9 @@ class Tests(object):
     def roundstr(self, arg):
         return arg
 
+    def codepoints(self, arg):
+        return [ord(c) for c in arg]
+
     def warning(self):
         raise ArithmeticError("oof")
 

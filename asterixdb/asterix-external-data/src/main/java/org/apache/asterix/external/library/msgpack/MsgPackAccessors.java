@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.library.msgpack;
 
-import static org.apache.hyracks.util.string.UTF8StringUtil.getUTFLength;
 import static org.msgpack.core.MessagePack.Code.ARRAY32;
 import static org.msgpack.core.MessagePack.Code.FALSE;
 import static org.msgpack.core.MessagePack.Code.FLOAT32;
@@ -59,6 +58,7 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class MsgPackAccessors {
@@ -172,11 +172,14 @@ public class MsgPackAccessors {
     }
 
     public static class MsgPackStringAccessor {
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Declare the UTF-8 length rather than the stored modified-UTF8 length")
         public static Void apply(IPointable pointable, DataOutput out) throws IOException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
             out.writeByte(STR32);
-            final int calculatedLength = getUTFLength(b, s + 1);
+            // msgpack strings are standard UTF-8, in which a supplementary character occupies 4 bytes rather than
+            // the 6 it takes as a modified-UTF8 surrogate pair, so the stored length would overstate the payload
+            final int calculatedLength = PrintTools.getUTF8StringRawLength(b, s + 1);
             out.writeInt(calculatedLength);
             PrintTools.writeUTF8StringRaw(b, s + 1, calculatedLength, out);
             return null;

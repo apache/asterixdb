@@ -46,6 +46,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="py_utf8">
+        <output-dir compare="Clean-JSON">py_utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="python_open_type_validation">
         <output-dir compare="Clean-JSON">python_open_type_validation</output-dir>
       </compilation-unit>
