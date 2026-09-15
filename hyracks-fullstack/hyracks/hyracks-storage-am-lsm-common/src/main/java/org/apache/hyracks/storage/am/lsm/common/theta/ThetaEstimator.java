@@ -41,10 +41,14 @@ public class ThetaEstimator {
         }
 
         public double getTheta() {
-            if (insertSamples.length < K) {
+            return Math.min(thetaOf(insertSamples), thetaOf(deleteSamples));
+        }
+
+        private double thetaOf(long[] samples) {
+            if (samples.length < K) {
                 return 1.0;
             }
-            return (double) insertSamples[insertSamples.length - 1] / (double) Long.MAX_VALUE;
+            return (double) samples[samples.length - 1] / (double) Long.MAX_VALUE;
         }
 
         public long estimateLiveCardinality() {
