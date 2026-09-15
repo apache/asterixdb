@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -68,14 +69,11 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  */
 public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-
     private static final int STORE_VECTORS_ACTIVITY_ID = 0;
     private static final int STORE_CENTROIDS_ACTIVITY_ID = 1;
     private static final int LLOYD_LOOP_ACTIVITY_ID = 2;
-
     private static final int OUT_CENTROIDS = 0; // the final centroid set (plain vectors), downstream
     private static final int OUT_PARTIALS = 1; // per-iteration (count, sum) partials -> CentroidMerge
-
     private final String loopKey;
     private final int vectorColumn; // vector column in input 0
     private final int centroidColumn; // vector column in input 1 (the initial centroids)
@@ -85,7 +83,6 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
     private final int framesLimit; // budget for the scan block, the slot window and the centroid stream
     // The declared Dimension, enforced by the decoders (see KMeansVectorCodec.ListVectorDecoder).
     private final int dimension;
-
     // The metric every distance in this stage is measured with. Validation refuses the metrics with no usable
     // centroid update, so only ones the algorithm can converge under reach here.
     private final VectorSimilarityMetric metric;
@@ -112,7 +109,6 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
         StoreCentroidsActivity storeCentroids =
                 new StoreCentroidsActivity(new ActivityId(odId, STORE_CENTROIDS_ACTIVITY_ID));
         LloydLoopActivity loop = new LloydLoopActivity(new ActivityId(odId, LLOYD_LOOP_ACTIVITY_ID));
-
         builder.addActivity(this, storeVectors);
         builder.addSourceEdge(0, storeVectors, 0);
         builder.addActivity(this, storeCentroids);
@@ -120,7 +116,6 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
         builder.addActivity(this, loop);
         builder.addTargetEdge(OUT_CENTROIDS, loop, OUT_CENTROIDS);
         builder.addTargetEdge(OUT_PARTIALS, loop, OUT_PARTIALS);
-
         builder.addBlockingEdge(storeVectors, loop);
         builder.addBlockingEdge(storeCentroids, loop);
     }
@@ -273,6 +268,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 public void close() throws HyracksDataException {
                     // No end marker here -- close IS the end of the seed set. An empty seed still publishes,
                     // as an empty set, which is what the loop's first iteration then reads.
+                    if (control == null) {
+                        return; // open() threw; no seed set to publish
+                    }
                     CentroidStore store = control.getCentroids();
                     if (!building) {
                         store.beginPut(ctx);
@@ -284,7 +282,10 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 @Override
                 public void fail() throws HyracksDataException {
                     // The seed set never lands, so the loop body cannot run and the tail will never release.
-                    control.abort();
+                    // Guarded like close(): both still run after an open() that threw.
+                    if (control != null) {
+                        control.abort();
+                    }
                 }
             };
         }
@@ -469,5 +470,4 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
             };
         }
     }
-
 }

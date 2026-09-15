@@ -110,14 +110,15 @@ public class KMeansLloydReleaseOperatorDescriptor extends AbstractSingleActivity
 
             @Override
             public void fail() throws HyracksDataException {
-                // Loop tail: if it dies, the Controller's turn never arrives. Abort closes the gap until the
-                // job-level abort interrupts the head, and makes it raise (see LoopControlState#abort).
-                if (ctl != null) {
-                    ctl.abort();
+                // Loop tail: if it dies, the Controller's turn never arrives (see LoopControlState#abort). The
+                // head parks in iteration 0, before this tail's first frame, so ensureState() may not have run;
+                // a local keeps ctl paired with store as ensureState() leaves them.
+                LoopControlState control = ctl != null ? ctl
+                        : LoopControlState.lookupControl(ctx, LoopControlState.controlStateId(loopKey, partition));
+                if (control != null) {
+                    control.abort();
                 }
-                if (store != null) {
-                    store.destroy();
-                }
+                // The store is the Controller's to destroy; doing it here deletes the file under its final read.
             }
 
             @Override

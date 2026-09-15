@@ -240,12 +240,17 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.close();
-                    ctx.setStateObject(state);
+                    // state can be null if open() failed; close() is called either way.
+                    if (state != null) {
+                        state.close();
+                        ctx.setStateObject(state);
+                    }
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    // Nothing to do: close() always follows and closes the run file. (The oversampling pool
+                    // store closes here instead, because its writer stays open across the loop.)
                 }
             };
         }

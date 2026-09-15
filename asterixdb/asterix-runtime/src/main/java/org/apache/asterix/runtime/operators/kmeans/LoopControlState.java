@@ -160,4 +160,13 @@ public final class LoopControlState extends AbstractStateObject {
         }
         return state;
     }
+
+    /**
+     * As {@link #required}, but for a {@code fail()} that can run before the head registered anything: a miss
+     * means the head never started, so nothing is parked to wake. Not resolvable in {@code open()} -- Hyracks
+     * gives no ordering between the head's {@code open()} and the tail's.
+     */
+    public static LoopControlState lookupControl(IHyracksTaskContext ctx, Object id) {
+        return (LoopControlState) ctx.getStateObject(id);
+    }
 }

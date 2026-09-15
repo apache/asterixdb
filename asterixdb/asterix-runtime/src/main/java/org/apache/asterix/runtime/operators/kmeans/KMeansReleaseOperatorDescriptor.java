@@ -134,10 +134,13 @@ public class KMeansReleaseOperatorDescriptor extends AbstractSingleActivityOpera
 
             @Override
             public void fail() throws HyracksDataException {
-                // Loop tail: if it dies, Cost's turn never arrives. Abort closes the gap until the job-level
-                // abort interrupts the head, and makes it raise. See LoopControlState#abort.
-                if (ctl != null) {
-                    ctl.abort();
+                // Loop tail: if it dies, Cost's turn never arrives (see LoopControlState#abort). The head parks
+                // before this tail's first frame, so ensureState() may not have run; a local keeps ctl paired
+                // with pool as ensureState() leaves them.
+                LoopControlState control = ctl != null ? ctl
+                        : LoopControlState.lookupControl(ctx, LoopControlState.controlStateId(loopKey, partition));
+                if (control != null) {
+                    control.abort();
                 }
             }
 
