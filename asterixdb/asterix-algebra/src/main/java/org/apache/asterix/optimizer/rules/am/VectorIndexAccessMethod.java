@@ -73,6 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Access method for vector indexes.
@@ -236,9 +237,8 @@ public class VectorIndexAccessMethod implements IAccessMethod {
 
         // The desugared ann_distance call is <distance-builtin>(vectorField, queryVector) carrying an
         // AnnSearchPreferenceAnnotation with {metric, min_probe_fraction, k_multiplier}.
-        // arg0 = vectorField (variable reference), arg1 = queryVector (constant or variable).
         AnnSearchPreferenceAnnotation annHint = annDistanceExpr.getAnnotation(AnnSearchPreferenceAnnotation.class);
-        ILogicalExpression queryVectorExpr = annDistanceExpr.getArguments().get(1).getValue();
+        ILogicalExpression queryVectorExpr = getQueryVectorExpr(annDistanceExpr, analysisCtx);
 
         // Extract k value from LIMIT operator
         LimitOperator limitOp = (LimitOperator) limitRef.getValue();
@@ -526,6 +526,30 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         }
 
         return topOfIndexPlan;
+    }
+
+    /**
+     * Returns the query vector of {@code annDistanceExpr}: whichever argument the matcher did not take as
+     * the indexed field. A distance is symmetric in its two vectors, so the field may be written on either
+     * side, and reading argument 1 positionally picks the field itself in the swapped form.
+     *
+     * @param annDistanceExpr the desugared 2-arg ann_distance call
+     * @param analysisCtx the analysis context the matcher populated for that call
+     * @return the query vector expression
+     * @throws CompilationException if the call has no matched function expression in {@code analysisCtx}
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Resolve the ann_distance query vector by matched argument rather than by position")
+    private static ILogicalExpression getQueryVectorExpr(AbstractFunctionCallExpression annDistanceExpr,
+            AccessMethodAnalysisContext analysisCtx) throws CompilationException {
+        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
+            if (optFuncExpr.getFuncExpr() == annDistanceExpr) {
+                return optFuncExpr.getConstantExpr(0);
+            }
+        }
+        // The index was chosen from this very analysis context, so the call is always among its matched
+        // expressions; a miss is a broken invariant, not a plan shape we can decline.
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, annDistanceExpr.getSourceLocation(),
+                "no matched function expression for the ann_distance call");
     }
 
     /**
