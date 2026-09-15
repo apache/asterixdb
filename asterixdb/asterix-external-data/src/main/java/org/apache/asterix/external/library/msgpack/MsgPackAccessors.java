@@ -19,6 +19,7 @@
 package org.apache.asterix.external.library.msgpack;
 
 import static org.msgpack.core.MessagePack.Code.ARRAY32;
+import static org.msgpack.core.MessagePack.Code.BIN32;
 import static org.msgpack.core.MessagePack.Code.FALSE;
 import static org.msgpack.core.MessagePack.Code.FLOAT32;
 import static org.msgpack.core.MessagePack.Code.FLOAT64;
@@ -38,6 +39,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -66,6 +68,7 @@ public class MsgPackAccessors {
     private MsgPackAccessors() {
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Added the BINARY case so binary arguments reach Python as bytes")
     public static IMsgPackAccessor<IPointable, DataOutput, Void> createFlatMsgPackAccessor(ATypeTag aTypeTag)
             throws HyracksDataException {
         switch (aTypeTag) {
@@ -85,6 +88,8 @@ public class MsgPackAccessors {
                 return MsgPackDoubleAccessor::apply;
             case STRING:
                 return MsgPackStringAccessor::apply;
+            case BINARY:
+                return MsgPackBinaryAccessor::apply;
             case MISSING:
             case NULL:
                 return MsgPackNullAccessor::apply;
@@ -185,6 +190,19 @@ public class MsgPackAccessors {
             return null;
         }
 
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Packs ADM binary as a msgpack bin32, which msgpack-python unpacks as bytes")
+    public static class MsgPackBinaryAccessor {
+        public static Void apply(IPointable pointable, DataOutput out) throws IOException {
+            byte[] b = pointable.getByteArray();
+            int s = pointable.getStartOffset();
+            int contentLength = ABinarySerializerDeserializer.getContentLength(b, s + 1);
+            out.writeByte(BIN32);
+            out.writeInt(contentLength);
+            out.write(b, s + 1 + ABinarySerializerDeserializer.getMetaLength(contentLength), contentLength);
+            return null;
+        }
     }
 
     public static class MsgPackBooleanAccessor {

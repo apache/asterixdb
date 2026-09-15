@@ -55,6 +55,11 @@
         <output-dir compare="Clean-JSON">python_open_type_validation</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="python_binary">
+        <output-dir compare="Clean-JSON">python_binary</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-library" check-warnings="true">
       <compilation-unit name="py_function_error">
         <output-dir compare="Clean-JSON">py_function_error</output-dir>

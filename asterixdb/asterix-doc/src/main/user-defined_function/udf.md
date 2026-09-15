@@ -168,6 +168,7 @@ Currently only a subset of AsterixDB types are supported in Python UDFs. The sup
 - Integer types (int8,16,32,64)
 - Floating point types (float, double)
 - String
+- Binary (cast to bytes)
 - Boolean
 - Arrays, Sets (cast to lists)
 - Objects (cast to dict)
