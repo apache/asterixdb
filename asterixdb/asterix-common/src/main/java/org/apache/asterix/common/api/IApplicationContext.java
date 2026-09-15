@@ -91,7 +91,7 @@ public interface IApplicationContext {
      *
      * @return the extension manager instance
      */
-    Object getExtensionManager();
+    IExtensionManager getExtensionManager();
 
     /**
      * @return true if running in cloud deployment, false otherwise.

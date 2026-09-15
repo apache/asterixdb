@@ -49,6 +49,7 @@ public class NCExtensionManager implements INCExtensionManager {
     private final MetadataTupleTranslatorProvider tupleTranslatorProvider;
     private final MetadataIndexesProvider metadataIndexesProvider;
     private final List<IMetadataExtension> mdExtensions;
+    private boolean hasExtensions;
 
     /**
      * Initialize {@code CCExtensionManager} from configuration
@@ -68,6 +69,7 @@ public class NCExtensionManager implements INCExtensionManager {
         mdExtensions = new ArrayList<>();
         MetadataIndexesProvider mdIndexesProvider = new MetadataIndexesProvider(usingDatabase);
         if (list != null) {
+            hasExtensions = !list.isEmpty();
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
                 extension.configure(extensionConf.getArgs(), ncServiceCtx);
@@ -143,5 +145,10 @@ public class NCExtensionManager implements INCExtensionManager {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean hasExtensions() {
+        return hasExtensions;
     }
 }

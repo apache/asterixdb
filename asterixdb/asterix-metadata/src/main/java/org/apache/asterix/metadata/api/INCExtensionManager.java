@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.metadata.api;
 
+import org.apache.asterix.common.api.IExtensionManager;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 
-public interface INCExtensionManager {
+public interface INCExtensionManager extends IExtensionManager {
     /**
      * @return the metadata tuple translator provider
      */

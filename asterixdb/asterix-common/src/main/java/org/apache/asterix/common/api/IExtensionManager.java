@@ -16,20 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.api;
 
-package org.apache.asterix.metadata.api;
-
-import java.util.function.Function;
-
-import org.apache.asterix.common.api.IExtensionManager;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.om.functions.IFunctionExtensionManager;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-
-public interface ICCExtensionManager extends IFunctionExtensionManager, IExtensionManager {
-    /**
-     * Returns a factory for {@link org.apache.asterix.metadata.declared.MetadataProvider}
-     * or {@code null} if the default implementation should be used.
-     */
-    Function<ICcApplicationContext, IMetadataProvider<?, ?>> getMetadataProviderFactory();
+public interface IExtensionManager {
+    boolean hasExtensions();
 }

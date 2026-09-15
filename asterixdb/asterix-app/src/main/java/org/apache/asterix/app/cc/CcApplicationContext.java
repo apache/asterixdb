@@ -30,6 +30,7 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
+import org.apache.asterix.common.api.IExtensionManager;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.api.INamespaceResolver;
@@ -113,7 +114,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private volatile HyracksConnection hcc;
     private volatile ResultSet resultSet;
-    private final Object extensionManager;
+    private final IExtensionManager extensionManager;
     private final INcLifecycleCoordinator ftStrategy;
     private final IJobLifecycleListener activeLifeCycleListener;
     private final IMetadataLockManager mdLockManager;
@@ -140,7 +141,7 @@ public class CcApplicationContext implements ICcApplicationContext {
             INcLifecycleCoordinator ftStrategy, IJobLifecycleListener activeLifeCycleListener,
             IStorageComponentProvider storageComponentProvider, IMetadataLockManager mdLockManager,
             IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
-            IConfigValidatorFactory configValidatorFactory, Object extensionManager,
+            IConfigValidatorFactory configValidatorFactory, IExtensionManager extensionManager,
             IAdapterFactoryService adapterFactoryService, IGlobalTxManager globalTxManager, IOManager ioManager,
             CloudProperties cloudProperties, INamespaceResolver namespaceResolver,
             INamespacePathResolver namespacePathResolver) throws AlgebricksException, IOException {
@@ -287,7 +288,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     }
 
     @Override
-    public Object getExtensionManager() {
+    public IExtensionManager getExtensionManager() {
         return extensionManager;
     }
 

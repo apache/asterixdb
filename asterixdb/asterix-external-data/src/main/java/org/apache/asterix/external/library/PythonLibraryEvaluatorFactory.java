@@ -61,9 +61,11 @@ public class PythonLibraryEvaluatorFactory {
         String dsPath =
                 ctx.getJobletContext().getServiceContext().getAppConfig().getString(NCConfig.Option.PYTHON_DS_PATH);
         config(dsPath == null ? null : Path.of(dsPath));
-        libraryManager = ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
-                .getLibraryManager();
-        if (!domainSockEnable) {
+        INcApplicationContext appCtx =
+                ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext());
+        libraryManager = appCtx.getLibraryManager();
+        boolean extensionsPresent = appCtx.getExtensionManager().hasExtensions();
+        if (!extensionsPresent && !domainSockEnable) {
             router = libraryManager.getRouter();
             ipcSys = libraryManager.getIPCI();
             IApplicationConfig appCfg = ctx.getJobletContext().getServiceContext().getAppConfig();

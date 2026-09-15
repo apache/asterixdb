@@ -64,6 +64,7 @@ public class CCExtensionManager implements ICCExtensionManager {
     private final IGlobalRecoveryExtension globalRecoveryExtension;
     private final Function<ICcApplicationContext, IMetadataProvider<?, ?>> metadataProviderFactory;
     private IStatementExecutorFactory statementExecutorFactory;
+    private boolean hasExtensions = false;
 
     /**
      * Initialize {@link org.apache.asterix.app.cc.CCExtensionManager} from configuration
@@ -85,6 +86,7 @@ public class CCExtensionManager implements ICCExtensionManager {
         IGlobalRecoveryExtension gre = null;
         IMetadataExtension mpfe = null;
         if (list != null) {
+            hasExtensions = !list.isEmpty();
             Set<ExtensionId> extensionIds = new HashSet<>();
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
@@ -161,5 +163,10 @@ public class CCExtensionManager implements ICCExtensionManager {
     @Override
     public Function<ICcApplicationContext, IMetadataProvider<?, ?>> getMetadataProviderFactory() {
         return metadataProviderFactory;
+    }
+
+    @Override
+    public boolean hasExtensions() {
+        return hasExtensions;
     }
 }
