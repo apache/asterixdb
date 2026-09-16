@@ -61,8 +61,12 @@ public class LSMVTreeChainOrderTest {
     private final LSMVTreeTestHarness harness = new LSMVTreeTestHarness();
     private final VectorTreeTestUtils testUtils = new VectorTreeTestUtils();
 
-    /** Records per cluster in the bulk-loaded component; the ties are built by insert, not by load. */
-    private static final int BULK_RECORDS_PER_CLUSTER = 8;
+    /**
+     * Records per cluster in the bulk-loaded component; the ties are built by insert, not by load.
+     * Past ten, so the generated keys cross the point where their string order stops agreeing with the
+     * order they are numbered in — which is where a load that is not sorted on the full key shows up.
+     */
+    private static final int BULK_RECORDS_PER_CLUSTER = 14;
 
     /** Every tied record carries this vector, so all of them sit at one distance from their centroid. */
     private static final double[] TIE_VECTOR = { 20.2, 30.0, 20.0 };
@@ -168,6 +172,9 @@ public class LSMVTreeChainOrderTest {
     @Test
     public void everyDiskWriterLeavesTheChainSorted() throws Exception {
         withIndex(newContext(false), (ctx, tree) -> {
+            // The records have to actually be loaded for this first assertion to say anything: without
+            // it the tree holds only the static structure and there is no chain to be out of order.
+            testUtils.bulkLoadRecords(ctx);
             assertChainSorted("after the bulk load", tree);
 
             testUtils.insertRecordsIntoMemoryComponent(ctx, List.of(tiedRecords()));

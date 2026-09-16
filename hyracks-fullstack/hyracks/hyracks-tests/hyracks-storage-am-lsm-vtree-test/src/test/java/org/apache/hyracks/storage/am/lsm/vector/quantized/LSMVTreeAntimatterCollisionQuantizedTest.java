@@ -84,10 +84,11 @@ public class LSMVTreeAntimatterCollisionQuantizedTest {
                 "pk_filler_3"));
         cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(4.0, 0, new double[] { 4, 0, 0 },
                 "pk_filler_4"));
-        cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(5.0, 0, new double[] { 0, 5, 0 },
-                "pk_collide_B"));
+        // The tie is listed in primary-key order: the bulk loader takes its input as the stored order.
         cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(5.0, 0, new double[] { 5, 0, 0 },
                 "pk_collide_A"));
+        cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(5.0, 0, new double[] { 0, 5, 0 },
+                "pk_collide_B"));
         cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(6.0, 0, new double[] { 6, 0, 0 },
                 "pk_filler_6"));
         cluster.add(QuantizedSearchTestDriver.createOptimizedSearchRecordTuple(7.0, 0, new double[] { 7, 0, 0 },

@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.vector.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -380,7 +381,11 @@ public class VectorTestStructure {
         List<List<ITupleReference>> allRecords = new ArrayList<>();
 
         for (int centroidIndex = 0; centroidIndex < leafCentroids.length; centroidIndex++) {
-            List<ITupleReference> clusterRecords = new ArrayList<>();
+            // Generated, then sorted before it is handed over: the bulk loader takes its input as the
+            // stored order, and in production the job feeding it sorts on <centroidId, distance, PK>.
+            // Generation order is neither — a ring puts records at one distance, and their keys are
+            // compared as strings, so record 10 sorts before record 9.
+            List<GeneratedRecord> generated = new ArrayList<>();
             int centroidId = firstLeafCentroidId + centroidIndex;
             double[] centroid = leafCentroids[centroidIndex];
 
@@ -403,9 +408,10 @@ public class VectorTestStructure {
                     double[] vector = addVectors(centroid, offset);
                     double actualDistance = computeEuclideanDistance(vector, centroid);
 
+                    ITupleReference record;
                     switch (format) {
                         case NAIVE:
-                            clusterRecords.add(createNaiveBulkLoadRecord(actualDistance, centroidId, primaryKey));
+                            record = createNaiveBulkLoadRecord(actualDistance, centroidId, primaryKey);
                             break;
                         case NAIVE_WITH_INCLUDES:
                             if (includeFieldSerdes == null || includeFieldValueGenerator == null) {
@@ -413,26 +419,46 @@ public class VectorTestStructure {
                                         "NAIVE_WITH_INCLUDES requires include fields configured via withIncludeFields()");
                             }
                             Object[] includeValues = includeFieldValueGenerator.generate(centroidId, recordCount);
-                            clusterRecords.add(createNaiveWithIncludesBulkLoadRecord(actualDistance, centroidId,
-                                    primaryKey, includeFieldSerdes, includeValues));
+                            record = createNaiveWithIncludesBulkLoadRecord(actualDistance, centroidId, primaryKey,
+                                    includeFieldSerdes, includeValues);
                             break;
                         case QUANTIZED:
-                            clusterRecords
-                                    .add(createQuantizedBulkLoadRecord(actualDistance, centroidId, vector, primaryKey));
+                            record = createQuantizedBulkLoadRecord(actualDistance, centroidId, vector, primaryKey);
                             break;
                         default:
                             throw new UnsupportedOperationException("Format not yet supported: " + format);
                     }
+                    generated.add(new GeneratedRecord(actualDistance, primaryKey, record));
                     recordCount++;
                 }
 
                 baseDistance += 0.2;
             }
 
+            // Primary keys are ASCII here, so string order is their comparator order.
+            generated.sort(
+                    Comparator.<GeneratedRecord> comparingDouble(r -> r.distance).thenComparing(r -> r.primaryKey));
+            List<ITupleReference> clusterRecords = new ArrayList<>(generated.size());
+            for (GeneratedRecord r : generated) {
+                clusterRecords.add(r.record);
+            }
             allRecords.add(clusterRecords);
         }
 
         return allRecords;
+    }
+
+    /** A generated record with the two values its stored order is decided by. */
+    private static final class GeneratedRecord {
+        private final double distance;
+        private final String primaryKey;
+        private final ITupleReference record;
+
+        private GeneratedRecord(double distance, String primaryKey, ITupleReference record) {
+            this.distance = distance;
+            this.primaryKey = primaryKey;
+            this.record = record;
+        }
     }
 
     // ===== Insert Record Generation =====
