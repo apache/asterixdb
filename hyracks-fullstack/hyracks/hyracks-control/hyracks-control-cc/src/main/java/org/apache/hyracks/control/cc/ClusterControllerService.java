@@ -571,7 +571,8 @@ public class ClusterControllerService implements IControllerService {
 
     protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig, IApplication app)
             throws Exception {
-        return new NetworkSecurityManager(NetworkSecurityConfig.of(ccConfig.isSslEnabled(), ccConfig.getKeyStorePath(),
-                ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath()));
+        return new NetworkSecurityManager(NetworkSecurityConfig.of(ccConfig.isSslEnabled(),
+                ccConfig.isSslClusterVerifyPeerIdentity(), ccConfig.isSslRmiVerifyPeerIdentity(),
+                ccConfig.getKeyStorePath(), ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath()));
     }
 }

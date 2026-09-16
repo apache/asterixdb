@@ -50,7 +50,24 @@ public class ControllerConfig implements Serializable {
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs"),
                 "The directory where logs for this node are written"),
-        SSL_ENABLED(BOOLEAN, false, "A flag indicating if cluster communications should use secured connections");
+        SSL_ENABLED(BOOLEAN, false, "A flag indicating if cluster communications should use secured connections"),
+        SSL_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                true,
+                "A flag indicating if the certificate a peer presents on a secured connection must identify the"
+                        + " address it was reached at. Disabling this accepts any certificate the trust store"
+                        + " validates, whichever host presents it. This is the default for each of the connections"
+                        + " below, which may also be set on their own"),
+        SSL_CLUSTER_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                SSL_VERIFY_PEER_IDENTITY,
+                "A flag indicating if the certificate a peer presents on a secured cluster connection must identify"
+                        + " the address that peer was reached at"),
+        SSL_RMI_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                SSL_VERIFY_PEER_IDENTITY,
+                "A flag indicating if the certificate presented on a secured RMI connection must identify the"
+                        + " address it was reached at");
 
         private final IOptionType type;
         private final String description;
@@ -65,6 +82,12 @@ public class ControllerConfig implements Serializable {
         <T> Option(IOptionType<T> type, Function<IApplicationConfig, T> defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
+        }
+
+        <T> Option(IOptionType<T> type, Option defaultOption, String description) {
+            this.type = type;
+            this.defaultValue = defaultOption;
             this.description = description;
         }
 
@@ -133,4 +156,15 @@ public class ControllerConfig implements Serializable {
         return getAppConfig().getBoolean(Option.SSL_ENABLED);
     }
 
+    public boolean isSslVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_VERIFY_PEER_IDENTITY);
+    }
+
+    public boolean isSslClusterVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_CLUSTER_VERIFY_PEER_IDENTITY);
+    }
+
+    public boolean isSslRmiVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_RMI_VERIFY_PEER_IDENTITY);
+    }
 }

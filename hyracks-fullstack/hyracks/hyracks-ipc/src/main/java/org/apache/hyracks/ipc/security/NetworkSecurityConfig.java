@@ -36,15 +36,20 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     private static final long serialVersionUID = 2L;
     private static final char[] INTEGRITY_PASSWORD = NetworkSecurityConfig.class.getName().toCharArray();
     private final boolean sslEnabled;
+    private final boolean verifyPeerIdentity;
+    private final boolean verifyRmiPeerIdentity;
     private final File keyStoreFile;
     private final File trustStoreFile;
     private final String keyStorePassword;
     private transient KeyStore keyStore;
     private transient KeyStore trustStore;
 
-    private NetworkSecurityConfig(boolean sslEnabled, String keyStoreFile, String keyStorePassword,
-            String trustStoreFile, KeyStore keyStore, KeyStore trustStore) {
+    private NetworkSecurityConfig(boolean sslEnabled, boolean verifyPeerIdentity, boolean verifyRmiPeerIdentity,
+            String keyStoreFile, String keyStorePassword, String trustStoreFile, KeyStore keyStore,
+            KeyStore trustStore) {
         this.sslEnabled = sslEnabled;
+        this.verifyPeerIdentity = verifyPeerIdentity;
+        this.verifyRmiPeerIdentity = verifyRmiPeerIdentity;
         this.keyStoreFile = keyStoreFile != null ? new File(keyStoreFile) : null;
         this.keyStorePassword = keyStorePassword;
         this.trustStoreFile = trustStoreFile != null ? new File(trustStoreFile) : null;
@@ -54,17 +59,39 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
 
     public static NetworkSecurityConfig of(boolean sslEnabled, String keyStoreFile, String keyStorePassword,
             String trustStoreFile) {
-        return new NetworkSecurityConfig(sslEnabled, keyStoreFile, keyStorePassword, trustStoreFile, null, null);
+        return of(sslEnabled, true, true, keyStoreFile, keyStorePassword, trustStoreFile);
+    }
+
+    public static NetworkSecurityConfig of(boolean sslEnabled, boolean verifyPeerIdentity,
+            boolean verifyRmiPeerIdentity, String keyStoreFile, String keyStorePassword, String trustStoreFile) {
+        return new NetworkSecurityConfig(sslEnabled, verifyPeerIdentity, verifyRmiPeerIdentity, keyStoreFile,
+                keyStorePassword, trustStoreFile, null, null);
     }
 
     public static NetworkSecurityConfig of(boolean sslEnabled, KeyStore keyStore, String keyStorePassword,
             KeyStore trustStore) {
-        return new NetworkSecurityConfig(sslEnabled, null, keyStorePassword, null, keyStore, trustStore);
+        return of(sslEnabled, true, true, keyStore, keyStorePassword, trustStore);
+    }
+
+    public static NetworkSecurityConfig of(boolean sslEnabled, boolean verifyPeerIdentity,
+            boolean verifyRmiPeerIdentity, KeyStore keyStore, String keyStorePassword, KeyStore trustStore) {
+        return new NetworkSecurityConfig(sslEnabled, verifyPeerIdentity, verifyRmiPeerIdentity, null, keyStorePassword,
+                null, keyStore, trustStore);
     }
 
     @Override
     public boolean isSslEnabled() {
         return sslEnabled;
+    }
+
+    @Override
+    public boolean verifyPeerIdentity() {
+        return verifyPeerIdentity;
+    }
+
+    @Override
+    public boolean verifyRmiPeerIdentity() {
+        return verifyRmiPeerIdentity;
     }
 
     @Override

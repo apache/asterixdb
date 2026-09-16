@@ -19,12 +19,14 @@
 package org.apache.hyracks.ipc.security;
 
 import java.io.FileInputStream;
+import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
@@ -38,6 +40,7 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     private volatile INetworkSecurityConfig config;
     protected final ISocketChannelFactory sslSocketFactory;
     public static final String TSL_VERSION = "TLSv1.2";
+    public static final String ENDPOINT_IDENTIFICATION_ALGORITHM = "HTTPS";
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
         this.config = config;
@@ -50,10 +53,29 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     }
 
     @Override
-    public SSLEngine newSSLEngine() {
+    public SSLEngine newServerSSLEngine() {
         try {
-            SSLContext ctx = newSSLContext();
-            return ctx.createSSLEngine();
+            SSLEngine sslEngine = newSSLContext().createSSLEngine();
+            sslEngine.setUseClientMode(false);
+            return sslEngine;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to create SSLEngine", ex);
+        }
+    }
+
+    @Override
+    public SSLEngine newClientSSLEngine(InetSocketAddress peer) {
+        try {
+            // the peer host is the name matched against the certificate, so an engine created without it cannot
+            // identify anything- the handshake then fails outright rather than skipping the check
+            SSLEngine sslEngine = newSSLContext().createSSLEngine(peer.getHostString(), peer.getPort());
+            sslEngine.setUseClientMode(true);
+            if (config.verifyPeerIdentity()) {
+                SSLParameters sslParameters = sslEngine.getSSLParameters();
+                sslParameters.setEndpointIdentificationAlgorithm(ENDPOINT_IDENTIFICATION_ALGORITHM);
+                sslEngine.setSSLParameters(sslParameters);
+            }
+            return sslEngine;
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to create SSLEngine", ex);
         }

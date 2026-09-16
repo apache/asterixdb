@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.network;
 
+import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
@@ -31,11 +33,23 @@ public interface INetworkSecurityManager {
     SSLContext newSSLContext();
 
     /**
-     * Creates a new ssl engine based on the current configuration of this {@link INetworkSecurityManager}
+     * Creates a new server-mode ssl engine based on the current configuration of this
+     * {@link INetworkSecurityManager}
      *
      * @return a new ssl engine
      */
-    SSLEngine newSSLEngine();
+    SSLEngine newServerSSLEngine();
+
+    /**
+     * Creates a new client-mode ssl engine based on the current configuration of this
+     * {@link INetworkSecurityManager}. The engine verifies that the certificate the peer presents identifies
+     * {@code peer}; validating the chain against the trust store on its own leaves any holder of a trusted
+     * certificate able to answer in place of the node that was dialled.
+     *
+     * @param peer the address this connection was made to
+     * @return a new ssl engine
+     */
+    SSLEngine newClientSSLEngine(InetSocketAddress peer);
 
     /**
      * Sets the configuration to be used for this {@link INetworkSecurityManager}
