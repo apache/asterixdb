@@ -88,6 +88,7 @@ import org.apache.hyracks.ipc.security.NetworkSecurityConfig;
 import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -569,9 +570,11 @@ public class ClusterControllerService implements IControllerService {
         return networkSecurityManager;
     }
 
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "ASTERIXDB-3851: pass the peer identity flags")
     protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig, IApplication app)
             throws Exception {
-        return new NetworkSecurityManager(NetworkSecurityConfig.of(ccConfig.isSslEnabled(), ccConfig.getKeyStorePath(),
-                ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath()));
+        return new NetworkSecurityManager(NetworkSecurityConfig.of(ccConfig.isSslEnabled(),
+                ccConfig.isSslClusterVerifyPeerIdentity(), ccConfig.isSslRmiVerifyPeerIdentity(),
+                ccConfig.getKeyStorePath(), ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath()));
     }
 }

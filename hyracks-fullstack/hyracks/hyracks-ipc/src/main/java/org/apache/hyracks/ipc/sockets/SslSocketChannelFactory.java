@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.ipc.sockets;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 
 import javax.net.ssl.SSLEngine;
@@ -25,6 +29,7 @@ import javax.net.ssl.SSLEngine;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class SslSocketChannelFactory implements ISocketChannelFactory {
 
@@ -36,13 +41,34 @@ public class SslSocketChannelFactory implements ISocketChannelFactory {
 
     @Override
     public ISocketChannel createServerChannel(SocketChannel socketChannel) {
-        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine(false);
+        final SSLEngine sslEngine = networkSecurityManager.newServerSSLEngine();
         return new SslSocketChannel(socketChannel, sslEngine);
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "ASTERIXDB-3851: pass the dialled peer to the engine")
     public ISocketChannel createClientChannel(SocketChannel socketChannel) {
-        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine(true);
+        final SSLEngine sslEngine = networkSecurityManager.newClientSSLEngine(peerOf(socketChannel));
         return new SslSocketChannel(socketChannel, sslEngine);
+    }
+
+    /**
+     * The address the channel was connected to, which is the name the peer's certificate has to identify. This is
+     * the address passed to {@link SocketChannel#connect}, not a re-resolution of it, so a peer dialled by hostname
+     * is identified by that hostname.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    private static InetSocketAddress peerOf(SocketChannel socketChannel) {
+        final SocketAddress remoteAddress;
+        try {
+            remoteAddress = socketChannel.getRemoteAddress();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (!(remoteAddress instanceof InetSocketAddress)) {
+            // null when the channel is not connected; a client channel is only created once it is
+            throw new IllegalStateException("cannot secure a client channel with remote address " + remoteAddress);
+        }
+        return (InetSocketAddress) remoteAddress;
     }
 }

@@ -20,12 +20,14 @@ package org.apache.hyracks.ipc.security;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
@@ -33,12 +35,14 @@ import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.ipc.sockets.SslSocketChannelFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class NetworkSecurityManager implements INetworkSecurityManager {
 
     private volatile INetworkSecurityConfig config;
     protected final ISocketChannelFactory sslSocketFactory;
     public static final String TLS_VERSION = "TLSv1.2";
+    public static final String ENDPOINT_IDENTIFICATION_ALGORITHM = "HTTPS";
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
         this.config = config;
@@ -51,11 +55,31 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     }
 
     @Override
-    public SSLEngine newSSLEngine(boolean clientMode) {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851: split from newSSLEngine(clientMode)")
+    public SSLEngine newServerSSLEngine() {
         try {
-            boolean useClientCerts = clientMode && config.useMutualAuth();
-            SSLEngine sslEngine = newSSLContext(useClientCerts).createSSLEngine();
-            sslEngine.setUseClientMode(clientMode);
+            SSLEngine sslEngine = newSSLContext(false).createSSLEngine();
+            sslEngine.setUseClientMode(false);
+            return sslEngine;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to create SSLEngine", ex);
+        }
+    }
+
+    @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851: identify the peer against the certificate it presents")
+    public SSLEngine newClientSSLEngine(InetSocketAddress peer) {
+        try {
+            // the peer host is the name matched against the certificate, so an engine created without it cannot
+            // identify anything- the handshake then fails outright rather than skipping the check
+            SSLEngine sslEngine =
+                    newSSLContext(config.useMutualAuth()).createSSLEngine(peer.getHostString(), peer.getPort());
+            sslEngine.setUseClientMode(true);
+            if (config.verifyPeerIdentity()) {
+                SSLParameters sslParameters = sslEngine.getSSLParameters();
+                sslParameters.setEndpointIdentificationAlgorithm(ENDPOINT_IDENTIFICATION_ALGORITHM);
+                sslEngine.setSSLParameters(sslParameters);
+            }
             return sslEngine;
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to create SSLEngine", ex);

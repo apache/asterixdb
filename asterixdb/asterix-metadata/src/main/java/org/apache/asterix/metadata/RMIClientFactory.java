@@ -26,11 +26,14 @@ import java.net.Socket;
 import java.rmi.server.RMIClientSocketFactory;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.ipc.security.NetworkSecurityManager;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
 
@@ -66,30 +69,49 @@ public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
     private static class RMITrustedClientSSLSocketFactory extends SSLSocketFactory {
 
         protected SSLSocketFactory factory;
+        private final boolean verifyPeerIdentity;
 
         public RMITrustedClientSSLSocketFactory(INetworkSecurityConfig config) {
             this.factory = NetworkSecurityManager.newSSLContext(config, false).getSocketFactory();
+            this.verifyPeerIdentity = config.verifyRmiPeerIdentity();
         }
 
         public Socket createSocket(InetAddress host, int port) throws IOException {
-            return this.factory.createSocket(host, port);
+            return identifyPeer(this.factory.createSocket(host, port));
         }
 
         public Socket createSocket(String host, int port) throws IOException {
-            return this.factory.createSocket(host, port);
+            return identifyPeer(this.factory.createSocket(host, port));
         }
 
         public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-            return this.factory.createSocket(host, port, localHost, localPort);
+            return identifyPeer(this.factory.createSocket(host, port, localHost, localPort));
         }
 
         public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
                 throws IOException {
-            return this.factory.createSocket(address, port, localAddress, localPort);
+            return identifyPeer(this.factory.createSocket(address, port, localAddress, localPort));
         }
 
         public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException {
-            return this.factory.createSocket(socket, host, port, autoClose);
+            return identifyPeer(this.factory.createSocket(socket, host, port, autoClose));
+        }
+
+        /**
+         * Requires the certificate the peer presents to identify the host this socket was opened to. An
+         * {@link SSLSocket} performs no such check unless it is asked to, leaving any holder of a certificate the
+         * trust store chains to able to answer in place of the metadata node.
+         */
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+        private Socket identifyPeer(Socket socket) {
+            if (!verifyPeerIdentity) {
+                return socket;
+            }
+            SSLSocket sslSocket = (SSLSocket) socket;
+            SSLParameters sslParameters = sslSocket.getSSLParameters();
+            sslParameters.setEndpointIdentificationAlgorithm(NetworkSecurityManager.ENDPOINT_IDENTIFICATION_ALGORITHM);
+            sslSocket.setSSLParameters(sslParameters);
+            return sslSocket;
         }
 
         public String[] getDefaultCipherSuites() {

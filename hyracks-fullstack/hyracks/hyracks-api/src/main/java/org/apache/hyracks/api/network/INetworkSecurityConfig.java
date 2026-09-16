@@ -24,6 +24,8 @@ import java.net.InetAddress;
 import java.security.KeyStore;
 import java.util.Optional;
 
+import org.apache.hyracks.util.annotations.AiProvenance;
+
 import io.netty.handler.ssl.ClientAuth;
 
 public interface INetworkSecurityConfig extends Serializable {
@@ -41,6 +43,30 @@ public interface INetworkSecurityConfig extends Serializable {
      * @return true if mutual auth should be used. Otherwise false.
      */
     boolean useMutualAuth();
+
+    /**
+     * Indicates if the certificate a peer presents on a secured cluster connection must identify the address that
+     * peer was reached at. When this is false the peer's chain is still validated against the trust store, but any
+     * host holding a certificate it validates is accepted in place of the node that was dialled.
+     *
+     * @return true if the peer's identity should be verified. Otherwise false.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    default boolean verifyPeerIdentity() {
+        return true;
+    }
+
+    /**
+     * As {@link #verifyPeerIdentity()}, for RMI connections. These are separate because RMI reaches a node by the
+     * host recorded in the exported stub ({@code java.rmi.server.hostname}), which is configured independently of
+     * the address the cluster's own connections use and so may be covered by a different name, or none.
+     *
+     * @return true if the peer's identity should be verified on RMI connections. Otherwise false.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    default boolean verifyRmiPeerIdentity() {
+        return true;
+    }
 
     /**
      * Indicates how to handle client authentication when ssl is enabled

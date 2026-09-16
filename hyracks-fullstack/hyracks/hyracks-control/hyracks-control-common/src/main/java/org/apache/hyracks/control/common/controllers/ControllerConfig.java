@@ -32,6 +32,7 @@ import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.OptionTypes;
 import org.apache.hyracks.control.common.utils.ConfigurationUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.file.FileUtil;
 
 public class ControllerConfig implements Serializable {
@@ -51,6 +52,23 @@ public class ControllerConfig implements Serializable {
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs"),
                 "The directory where logs for this node are written"),
         SSL_ENABLED(BOOLEAN, false, "A flag indicating if cluster communications should use secured connections"),
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851") SSL_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                true,
+                "A flag indicating if the certificate a peer presents on a secured connection must identify the"
+                        + " address it was reached at. Disabling this accepts any certificate the trust store"
+                        + " validates, whichever host presents it. This is the default for each of the connections"
+                        + " below, which may also be set on their own"),
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851") SSL_CLUSTER_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                SSL_VERIFY_PEER_IDENTITY,
+                "A flag indicating if the certificate a peer presents on a secured cluster connection must identify"
+                        + " the address that peer was reached at"),
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851") SSL_RMI_VERIFY_PEER_IDENTITY(
+                BOOLEAN,
+                SSL_VERIFY_PEER_IDENTITY,
+                "A flag indicating if the certificate presented on a secured RMI connection must identify the"
+                        + " address it was reached at"),
         CLOUD_DEPLOYMENT(BOOLEAN, false, "A flag indicating if the cluster is deployed in a cloud environment"),;
 
         private final IOptionType type;
@@ -66,6 +84,13 @@ public class ControllerConfig implements Serializable {
         <T> Option(IOptionType<T> type, Function<IApplicationConfig, T> defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
+        }
+
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851: default one option from another")
+        <T> Option(IOptionType<T> type, Option defaultOption, String description) {
+            this.type = type;
+            this.defaultValue = defaultOption;
             this.description = description;
         }
 
@@ -132,6 +157,21 @@ public class ControllerConfig implements Serializable {
 
     public boolean isSslEnabled() {
         return getAppConfig().getBoolean(Option.SSL_ENABLED);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    public boolean isSslVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_VERIFY_PEER_IDENTITY);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    public boolean isSslClusterVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_CLUSTER_VERIFY_PEER_IDENTITY);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
+    public boolean isSslRmiVerifyPeerIdentity() {
+        return getAppConfig().getBoolean(Option.SSL_RMI_VERIFY_PEER_IDENTITY);
     }
 
     public boolean isCloudDeployment() {
