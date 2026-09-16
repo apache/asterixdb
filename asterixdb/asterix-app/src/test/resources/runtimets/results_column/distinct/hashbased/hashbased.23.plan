@@ -7,13 +7,7 @@ distribute result [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$dept(ASC) ]  |PARTITIONED|
         group by ([$$dept := $$83]) decor ([]) {
-                  aggregate [$$86, $$87, $$89] <- [agg-sql-count-distinct-hash($$67), agg-sql-count-distinct-hash($$85), agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- AGGREGATE  |LOCAL|
-                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-               }
-               {
-                  aggregate [$$88] <- [agg-sql-sum($$67)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  aggregate [$$86, $$88] <- [agg-sql-count($$67), agg-sql-sum($$67)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     distinct ([$$67]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
@@ -23,6 +17,12 @@ distribute result [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                         -- STREAM_PROJECT  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
+               }
+               {
+                  aggregate [$$87, $$89] <- [agg-sql-count-distinct-hash($$85), agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- AGGREGATE  |LOCAL|
+                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- PRE_CLUSTERED_GROUP_BY[$$83]  |PARTITIONED|
           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

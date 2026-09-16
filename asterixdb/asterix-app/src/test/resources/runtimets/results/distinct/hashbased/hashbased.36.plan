@@ -1,41 +1,41 @@
-distribute result [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$74] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$82] <- [{"dept": $$dept, "distinct_salaries": $$86, "distinct_ids": $$87, "sum_distinct_salary": $$88, "cnt": $$89}] project: [$$82] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$74] <- [{"dept": $$dept, "distinct_salaries": $$78, "sum_distinct_salary": $$79, "distinct_ids": $$80}] project: [$$74] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$dept(ASC) ]  |PARTITIONED|
-        group by ([$$dept := $$83]) decor ([]) {
-                  aggregate [$$86, $$88] <- [agg-sql-count($$67), agg-sql-sum($$67)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+        group by ([$$dept := $$75]) decor ([]) {
+                  aggregate [$$78, $$79] <- [agg-sql-count($$62), agg-sql-sum($$62)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
-                    distinct ([$$67]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    distinct ([$$62]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                      order (ASC, $$67) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- MICRO_STABLE_SORT [$$67(ASC)]  |LOCAL|
-                        project ([$$67]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      order (ASC, $$62) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- MICRO_STABLE_SORT [$$62(ASC)]  |LOCAL|
+                        project ([$$62]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |LOCAL|
                           nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
                {
-                  aggregate [$$87, $$89] <- [agg-sql-count-distinct-hash($$85), agg-sql-count(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  aggregate [$$80] <- [agg-sql-count-distinct-hash($$77)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- PRE_CLUSTERED_GROUP_BY[$$83]  |PARTITIONED|
+        -- PRE_CLUSTERED_GROUP_BY[$$75]  |PARTITIONED|
           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            order (ASC, $$83) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- STABLE_SORT [$$83(ASC)]  |PARTITIONED|
+            order (ASC, $$75) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$75(ASC)]  |PARTITIONED|
               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-              -- HASH_PARTITION_EXCHANGE [$$83]  |PARTITIONED|
-                assign [$$67, $$83] <- [$$emp.getField(2), $$emp.getField(1)] project: [$$67, $$85, $$83] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- HASH_PARTITION_EXCHANGE [$$75]  |PARTITIONED|
+                assign [$$62, $$75] <- [$$emp.getField(2), $$emp.getField(1)] project: [$$62, $$77, $$75] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$85, $$emp] <- test.emp [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    data-scan []<-[$$77, $$emp] <- test.emp [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

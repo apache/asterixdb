@@ -18,18 +18,20 @@
  */
 
 /*
- * Plan for the mixed aggregate with the hash aggregate enabled (flag true). The hash aggregate is not
- * two-step, and local aggregation is pushed only when every function in the operator is, so rewriting
- * here would cost COUNT(salary)/SUM(salary) their partition-local phase. The rewrite is therefore
- * skipped and the plan matches the flag-false plan of hashbased.30, keeping agg-local-sql-sum.
+ * Distinct and non-distinct aggregates on different columns with the hash aggregate enabled (flag true).
+ * COUNT(DISTINCT id) is not shared with any other distinct aggregate, so it is rewritten to
+ * agg-sql-count-distinct-hash, while COUNT(DISTINCT salary) keeps the DISTINCT it shares with
+ * SUM(DISTINCT salary).
  */
 
 use test;
 
-SET `compiler.aggregate.distinct.hash` "true";
+SET `compiler.aggregate.distinct.hash` "false";
 
-explain SELECT COUNT(DISTINCT salary) AS distinct_salaries,
-       COUNT(DISTINCT id) AS distinct_ids,
-       COUNT(salary) AS salaries,
-       SUM(salary) AS sum_salary
-FROM emp;
+explain SELECT dept,
+       COUNT(DISTINCT salary) AS distinct_salaries,
+       SUM(DISTINCT salary) AS sum_distinct_salary,
+       COUNT(DISTINCT id) AS distinct_ids
+FROM emp
+GROUP BY dept
+ORDER BY dept;
