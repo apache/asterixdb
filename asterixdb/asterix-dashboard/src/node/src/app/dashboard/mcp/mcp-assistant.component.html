@@ -1,0 +1,204 @@
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -->
+<div class="mcp-assistant">
+    <!-- Runtime LLM credentials: entered here, never baked into the bundle. -->
+    <section class="mcp-llm-setup" *ngIf="!mcp.llmReady">
+        <p class="mcp-hint">Pick a provider and add an API key to enable the assistant.
+            The key stays in memory and drives only the gateway's read-only tools.</p>
+        <label class="mcp-field">
+            <span>Provider</span>
+            <select [(ngModel)]="provider" (ngModelChange)="onProviderChange()">
+                <option *ngFor="let preset of presets" [value]="preset.id">{{ preset.label }}</option>
+            </select>
+        </label>
+        <label class="mcp-field">
+            <span>Endpoint</span>
+            <input type="text" [(ngModel)]="baseUrl" placeholder="https://..." />
+        </label>
+        <label class="mcp-field">
+            <span>Model</span>
+            <input type="text" [(ngModel)]="model" />
+        </label>
+        <label class="mcp-field">
+            <span>API key</span>
+            <input type="password" [(ngModel)]="apiKey" placeholder="api key" />
+        </label>
+        <button mat-raised-button color="primary" (click)="configure()">Enable assistant</button>
+    </section>
+
+    <!-- Chat thread + inline tool-call trace (Claude / ChatGPT style). -->
+    <section class="mcp-thread" *ngIf="mcp.llmReady">
+
+        <!-- History toolbar: new chat, dataverse ("project") scope, revisit drawer. -->
+        <div class="mcp-chat-bar">
+            <button mat-button class="mcp-chat-bar-btn" (click)="newChat()" [disabled]="mcp.chatting">
+                <mat-icon>add</mat-icon> New
+            </button>
+            <label class="mcp-scope">
+                <mat-icon>folder</mat-icon>
+                <select [ngModel]="mcp.activeDataverse" (ngModelChange)="onDataverseChange($event)">
+                    <option *ngFor="let dv of mcp.dataverses" [value]="dv">{{ dv }}</option>
+                </select>
+            </label>
+            <span class="flex-spacer"></span>
+            <button mat-button class="mcp-chat-bar-btn" [class.mcp-active]="showHistory"
+                    (click)="toggleHistory()">
+                <mat-icon>history</mat-icon> {{ scopedConversations.length }}
+            </button>
+        </div>
+
+        <!-- Revisit drawer: saved conversations in this dataverse. -->
+        <div class="mcp-history-drawer" *ngIf="showHistory">
+            <p class="mcp-history-empty" *ngIf="scopedConversations.length === 0">
+                No saved conversations in <strong>{{ mcp.activeDataverse }}</strong> yet.
+            </p>
+            <button type="button" class="mcp-history-item"
+                    *ngFor="let conversation of scopedConversations"
+                    [class.mcp-history-active]="conversation.id === mcp.activeConversationId"
+                    (click)="openConversation(conversation.id)">
+                <mat-icon class="mcp-history-icon">chat_bubble_outline</mat-icon>
+                <span class="mcp-history-title">{{ conversation.title }}</span>
+                <button type="button" class="mcp-history-del"
+                        (click)="deleteConversation(conversation.id, $event)" aria-label="Delete conversation">
+                    <mat-icon>delete_outline</mat-icon>
+                </button>
+            </button>
+        </div>
+
+        <div class="mcp-thread-scroll">
+
+            <!-- Empty-state guide: shown before the first turn. Teaches the / and @ hotkeys. -->
+            <div class="mcp-empty" *ngIf="mcp.messages.length === 0 && !mcp.chatting">
+                <h3 class="mcp-empty-title">Ask about your database</h3>
+                <p class="mcp-empty-sub">Natural-language questions run read-only against the cluster.</p>
+
+                <div class="mcp-empty-hotkeys">
+                    <div class="mcp-empty-key">
+                        <code class="mcp-empty-sigil">/</code>
+                        <div class="mcp-empty-keytext">
+                            <span class="mcp-empty-keytitle">Prompts</span>
+                            <span class="mcp-empty-keydesc">Insert a ready-made template.
+                                e.g. <em>/explain_schema</em></span>
+                        </div>
+                    </div>
+                    <div class="mcp-empty-key">
+                        <code class="mcp-empty-sigil">&#64;</code>
+                        <div class="mcp-empty-keytext">
+                            <span class="mcp-empty-keytitle">Resources</span>
+                            <span class="mcp-empty-keydesc">Attach live data as context.
+                                e.g. <em>&#64;dataverses</em></span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mcp-empty-foot">Try: <em>“List my datasets and their row counts”</em></p>
+            </div>
+
+            <div *ngFor="let message of mcp.messages; trackBy: trackByIndex" class="mcp-turn">
+
+                <!-- User: compact bubble aligned right. -->
+                <div class="mcp-user-row" *ngIf="isUser(message)">
+                    <div class="mcp-user-bubble">{{ message.text }}</div>
+                </div>
+
+                <!-- Assistant: full-width rendered markdown with avatar. -->
+                <div class="mcp-assistant-row" *ngIf="isAssistant(message)">
+                    <div class="mcp-avatar">✦</div>
+                    <div class="mcp-md" [innerHTML]="message.text | markdown"></div>
+                </div>
+
+                <!-- Tool-call trace card. -->
+                <div class="mcp-assistant-row" *ngIf="isTool(message)">
+                    <div class="mcp-avatar mcp-avatar-tool">
+                        <mat-icon [ngSwitch]="message.tool?.status">
+                            <ng-container *ngSwitchCase="'running'"><span class="mcp-spin">autorenew</span></ng-container>
+                            <ng-container *ngSwitchCase="'ok'">bolt</ng-container>
+                            <ng-container *ngSwitchCase="'error'">error_outline</ng-container>
+                        </mat-icon>
+                    </div>
+                    <mat-expansion-panel class="mcp-trace"
+                                         [class.mcp-trace-error]="message.tool?.status === 'error'">
+                        <mat-expansion-panel-header collapsedHeight="40px" expandedHeight="40px">
+                            <mat-panel-title>
+                                <span class="mcp-trace-verb">{{ message.tool?.status === 'running' ? 'Calling' : 'Called' }}</span>
+                                <code class="mcp-trace-name">{{ message.tool?.name }}</code>
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <div class="mcp-trace-body">
+                            <div class="mcp-trace-label">Arguments</div>
+                            <pre>{{ message.tool?.args | json }}</pre>
+                            <ng-container *ngIf="message.tool?.status !== 'running'">
+                                <div class="mcp-trace-label">Result</div>
+                                <pre>{{ message.tool?.result | json }}</pre>
+                            </ng-container>
+                        </div>
+                    </mat-expansion-panel>
+                </div>
+            </div>
+
+            <div class="mcp-assistant-row mcp-thinking" *ngIf="mcp.chatting">
+                <div class="mcp-avatar"><span class="mcp-spin">✦</span></div>
+                <div class="mcp-typing"><span></span><span></span><span></span></div>
+            </div>
+            <p class="mcp-error" *ngIf="mcp.chatError">{{ mcp.chatError }}</p>
+        </div>
+
+        <!-- Composer: rounded input with inline send, Enter to send.
+             Type "/" for a prompt template, "@" to attach a resource. -->
+        <div class="mcp-composer">
+            <!-- / (prompts) and @ (resources) autocomplete popup. -->
+            <div class="mcp-mention-menu" *ngIf="menuKind && menuItems.length">
+                <div class="mcp-mention-head">
+                    {{ menuKind === 'prompts' ? 'Prompts' : 'Resources' }}
+                    <span class="mcp-mention-busy" *ngIf="menuBusy">…</span>
+                </div>
+                <button type="button" class="mcp-mention-item"
+                        *ngFor="let item of menuItems; let i = index"
+                        [class.mcp-mention-active]="i === menuActive"
+                        (mousedown)="$event.preventDefault(); selectMenuItem(item)">
+                    <span class="mcp-mention-label">
+                        <span class="mcp-mention-sigil">{{ menuKind === 'prompts' ? '/' : '@' }}</span>
+                        {{ item.label }}
+                    </span>
+                    <span class="mcp-mention-detail" *ngIf="item.detail">{{ item.detail }}</span>
+                </button>
+            </div>
+
+            <!-- Attached resources ride along with the next turn. -->
+            <div class="mcp-attachments" *ngIf="attachments.length">
+                <span class="mcp-chip" *ngFor="let attachment of attachments; let i = index">
+                    <mat-icon class="mcp-chip-icon">description</mat-icon>
+                    {{ attachment.name }}
+                    <button type="button" class="mcp-chip-remove" (click)="removeAttachment(i)"
+                            aria-label="Remove attachment">×</button>
+                </span>
+            </div>
+
+            <div class="mcp-input-wrap" [class.mcp-input-focus]="false">
+                <textarea rows="1" [(ngModel)]="draft" placeholder="Ask about the database…  / for prompts, @ for resources"
+                          (ngModelChange)="onDraftChange()"
+                          (keydown)="onComposerKeydown($event)"></textarea>
+                <button class="mcp-send" (click)="send()"
+                        [disabled]="!canSend" aria-label="Send">
+                    <mat-icon>arrow_upward</mat-icon>
+                </button>
+            </div>
+            <div class="mcp-composer-foot">
+                <button mat-button class="mcp-clear" (click)="clear()" [disabled]="mcp.chatting">
+                    Clear chat
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

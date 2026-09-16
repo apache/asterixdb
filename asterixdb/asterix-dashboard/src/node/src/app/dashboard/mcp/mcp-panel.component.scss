@@ -1,0 +1,190 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+// In-flow side panel: fills the bounded app-body height beside the content (it
+// does not float over it). Width is driven by the component and adjusted by
+// dragging the left edge.
+:host {
+    display: block;
+    height: 100%;
+    align-self: stretch;
+}
+
+.mcp-panel {
+    position: relative;
+    height: 100%;
+    width: 0;
+    background: #ffffff;
+    box-shadow: none;
+    transition: width 0.18s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    &.mcp-open {
+        border: 1px solid #e6e8eb;
+        border-radius: 12px;
+        margin: 5px 8px 8px 8px;
+        height: calc(100% - 13px);
+    }
+
+    // No width animation while actively dragging the handle.
+    &.mcp-resizing {
+        transition: none;
+    }
+}
+
+// Draggable resize handle on the left edge of the panel.
+.mcp-resize {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: col-resize;
+    z-index: 20;
+
+    &:hover {
+        background: rgba(37, 66, 141, 0.25);
+    }
+}
+
+// Keep panel content clear of the resize handle.
+.mcp-header,
+.mcp-viewbar {
+    padding-left: 14px;
+}
+
+.mcp-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 8px 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mcp-title {
+    font-weight: 600;
+}
+
+.mcp-disconnect {
+    min-width: 0;
+    font-size: 12.5px;
+    color: #6b7280;
+    margin-right: 2px;
+}
+
+.flex-spacer {
+    flex: 1 1 auto;
+}
+
+.mcp-connect,
+.mcp-body {
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.mcp-hint,
+.mcp-desc {
+    color: #555;
+    font-size: 13px;
+}
+
+.mcp-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+
+    span {
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 4px;
+    }
+
+    input,
+    textarea {
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+    textarea {
+        font-family: monospace;
+        resize: vertical;
+    }
+}
+
+.mcp-viewbar {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-bottom: 1px solid #e0e0e0;
+
+    .mcp-active {
+        font-weight: 600;
+        color: #25428d;
+    }
+}
+
+awc-mcp-assistant {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+
+.mcp-toolbar {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.mcp-tool-list {
+    max-height: 30vh;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.mcp-tool-name {
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.mcp-selected {
+    background: #e3f2fd;
+}
+
+.mcp-error {
+    color: #c62828;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.mcp-result {
+    margin-top: 16px;
+
+    pre {
+        background: #f5f5f5;
+        padding: 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        max-height: 40vh;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+}
