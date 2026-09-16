@@ -44,6 +44,7 @@ import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.aws.iceberg.converter.IcebergConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.MillisecondChronon;
 import org.apache.asterix.external.util.TimestampZoneProjector;
 import org.apache.asterix.external.util.TimestampZoneProjector.TimestampUnit;
 import org.apache.asterix.om.base.ABoolean;
@@ -479,7 +480,8 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     }
 
     private void serializeTime(Object value, DataOutput output) throws HyracksDataException {
-        serializeTimeMillis((int) TimeUnit.NANOSECONDS.toMillis(((LocalTime) value).toNanoOfDay()), output);
+        serializeTimeMillis((int) MillisecondChronon.narrow(((LocalTime) value).toNanoOfDay(), TimeUnit.NANOSECONDS),
+                output);
     }
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Core time serializer accepting milliseconds-of-day; shared by serializeTime and serializeTimeMicros")
@@ -494,7 +496,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Converts Variant TIME (microseconds-of-day) to milliseconds and delegates to serializeTimeMillis")
     private void serializeTimeMicros(long timeMicros, DataOutput out) throws HyracksDataException {
-        serializeTimeMillis((int) TimeUnit.MICROSECONDS.toMillis(timeMicros), out);
+        serializeTimeMillis((int) MillisecondChronon.narrow(timeMicros, TimeUnit.MICROSECONDS), out);
     }
 
     private void serializeTimestamp(Type type, Object value, DataOutput output) throws HyracksDataException {
@@ -543,9 +545,12 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         if (parserContext.isTimestampAsLong()) {
             serializeLong(epochMicros, out);
         } else {
+            // Shift before narrowing, not after: a zone offset is a whole number of seconds, so it moves the value
+            // by whole milliseconds and the chronon boundary is the same either way -- but only this order leaves
+            // the offset exact when the value is later widened back to a millisecond span.
             long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochMicros, TimestampUnit.MICROS)
                     : epochMicros;
-            serializeDatetimeMillis(TimeUnit.MICROSECONDS.toMillis(shifted), out);
+            serializeDatetimeMillis(MillisecondChronon.narrow(shifted, TimeUnit.MICROSECONDS), out);
         }
     }
 
@@ -558,7 +563,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         } else {
             long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochNanos, TimestampUnit.NANOS)
                     : epochNanos;
-            serializeDatetimeMillis(TimeUnit.NANOSECONDS.toMillis(shifted), out);
+            serializeDatetimeMillis(MillisecondChronon.narrow(shifted, TimeUnit.NANOSECONDS), out);
         }
     }
 

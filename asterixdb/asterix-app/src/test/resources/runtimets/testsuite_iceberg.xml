@@ -84,6 +84,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
       <compilation-unit name="variant-nested-in-struct">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-nested-in-struct</output-dir>

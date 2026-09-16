@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -161,6 +162,10 @@ public class IcebergTest {
     private static final TableIdentifier DEPTH_TEST_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "depthTestVariant");
     private static final TableIdentifier SHREDDED_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "shreddedVariant");
+    private static final TableIdentifier TEMPORAL_PRECISION_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "temporalPrecision");
+    private static final TableIdentifier TEMPORAL_EQ_DELETE_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "temporalEqDelete");
     private static final TableIdentifier MANY_FILES_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "manyFilesVariant");
     private static final TableIdentifier DOTTED_FIELD_NAME_VARIANT_TABLE_ID =
@@ -312,6 +317,8 @@ public class IcebergTest {
             writeDeletesVariantTable(catalog);
             writeDeletionVectorVariantTable(catalog);
             writeManyRowGroupsVariantTable(catalog);
+            writeTemporalPrecisionTable(catalog);
+            writeTemporalEqDeleteTable(catalog);
             writeNestedVariantInStructTable(catalog);
             writePartitionedVariantTable(catalog);
             writeTwoVariantsTable(catalog);
@@ -1368,6 +1375,111 @@ public class IcebergTest {
 
     private static PartitionSpec buildPartitionSpec(Schema schema) {
         return PartitionSpec.builderFor(schema).identity("country").build();
+    }
+
+    /** Iceberg stores microseconds; {@code ADateTime} holds milliseconds. This is the value before truncation. */
+    private static OffsetDateTime utcMicros(long micros) {
+        return Instant.EPOCH.plus(micros, ChronoUnit.MICROS).atOffset(ZoneOffset.UTC);
+    }
+
+    private static Schema temporalSchema() {
+        return new Schema(Types.NestedField.optional(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "ts", Types.TimestampType.withZone()),
+                Types.NestedField.optional(3, "tsn", Types.TimestampType.withoutZone()));
+    }
+
+    /** Appends one single-row data file, so the row is simultaneously its file's minimum and maximum. */
+    private static void appendOneRowFile(Table table, AppendFiles append, String prefix, int id, long micros)
+            throws Exception {
+        GenericRecord rec = GenericRecord.create(table.schema());
+        rec.setField("id", id);
+        rec.setField("ts", utcMicros(micros));
+        rec.setField("tsn", utcMicros(micros).toLocalDateTime());
+        String path = table.location() + "/data/" + prefix + id + ".parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer =
+                Parquet.write(out).forTable(table).createWriterFunc(GenericParquetWriter::create).build()) {
+            writer.add(rec);
+        }
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                .withFileSizeInBytes(out.toInputFile().getLength()).withMetrics(metrics).build());
+    }
+
+    /**
+     * Sub-millisecond timestamps, <b>one row per data file</b>, so every row is its own file's minimum — the shape
+     * where an un-widened pushed predicate drops it.
+     * <p>
+     * Analytics reads these through {@code ADateTime}, which holds milliseconds, so ids 1-3 all read back as
+     * {@code 09:00:00.123} and a query for that millisecond must return all three. Ids 5 and 6 straddle the epoch,
+     * where {@code MICROSECONDS.toMillis} truncates <em>toward zero</em> and the {@code 0ms} bucket is therefore
+     * double width: both {@code +456us} and {@code -500us} read back as the epoch. Id 7 sits one bucket below it.
+     * <p>
+     * A wrong answer here is a short result, never an error: if {@code = .123} returns only id 2, the pushed
+     * predicate is comparing the literal against untruncated microseconds again.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Single-row files with sub-millisecond timestamps spanning one millisecond and the epoch "
+            + "boundary, so predicate widening is exercised where every row is its file's own bound")
+    private static void writeTemporalPrecisionTable(NessieCatalog catalog) throws Exception {
+        Table table =
+                createTable(catalog, TEMPORAL_PRECISION_TABLE_ID, temporalSchema(), PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        // id -> stored microseconds; the comment is the millisecond Analytics will see
+        long[][] rows = { { 1, 1773565200123456L }, // 2026-03-15T09:00:00.123
+                { 2, 1773565200123000L }, // .123  (exactly on the millisecond)
+                { 3, 1773565200123999L }, // .123  (last microsecond of it)
+                { 4, 1773565200124000L }, // .124  (the next millisecond)
+                { 5, 456L }, //              epoch
+                { 6, -500L }, //             epoch, from below - truncation toward zero
+                { 7, -1500L } }; //         -1ms
+        AppendFiles append = table.newAppend();
+        for (long[] row : rows) {
+            appendOneRowFile(table, append, "tp-", (int) row[0], row[1]);
+        }
+        append.commit();
+        LOGGER.info("[WRITE] temporalPrecision committed with {} single-row files", rows.length);
+    }
+
+    /**
+     * One data file whose rows share a millisecond, plus an <b>equality delete</b> naming a single microsecond value.
+     * <p>
+     * The delete file carries its own bounds, so it is pruned by the same pushed predicate as a data file. With an
+     * un-widened predicate the delete file is discarded and the deleted row <b>comes back</b> — the failure inverts,
+     * and a filter makes more rows appear rather than fewer. Unfiltered the row is correctly gone, so only a query
+     * with a predicate on the deleted column shows it.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI,
+            contributionKind = AiProvenance.ContributionKind.TEST_GENERATED,
+            notes = "Equality delete on a sub-millisecond timestamp, so a pruned delete file resurrects the deleted "
+                    + "row unless the pushed predicate covers the whole millisecond")
+    private static void writeTemporalEqDeleteTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, TEMPORAL_EQ_DELETE_TABLE_ID, temporalSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        long deletedMicros = 1773565200123456L;
+        long[][] rows =
+                { { 1, 1773565200123000L }, { 2, deletedMicros }, { 3, 1773565200123999L }, { 4, 1773565200500000L } };
+        AppendFiles append = table.newAppend();
+        for (long[] row : rows) {
+            appendOneRowFile(table, append, "ted-", (int) row[0], row[1]);
+        }
+        append.commit();
+
+        String delPath = table.location() + "/deletes/delete-ts.parquet";
+        OutputFile delOut = table.io().newOutputFile(delPath);
+        EqualityDeleteWriter<Record> delWriter = Parquet.writeDeletes(delOut).forTable(table)
+                .rowSchema(table.schema()).withSpec(table.spec()).equalityFieldIds(Collections.singletonList(2))
+                .createWriterFunc(GenericParquetWriter::create).buildEqualityWriter();
+        try (delWriter) {
+            GenericRecord d = GenericRecord.create(table.schema());
+            d.setField("ts", utcMicros(deletedMicros));
+            delWriter.write(d);
+        }
+        RowDelta rowDelta = table.newRowDelta();
+        rowDelta.addDeletes(delWriter.toDeleteFile());
+        rowDelta.commit();
+        LOGGER.info("[WRITE] temporalEqDelete committed: {} rows, equality delete on ts={}us", rows.length,
+                deletedMicros);
     }
 
     private static Table createTable(org.apache.iceberg.nessie.NessieCatalog catalog, TableIdentifier id, Schema schema,
