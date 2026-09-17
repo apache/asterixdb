@@ -469,6 +469,14 @@ public class ExternalDataConstants {
         public static final String VARIANT_STATS_PUSHDOWN = "variantStatsPushdown";
         public static final boolean DEFAULT_VARIANT_STATS_PUSHDOWN = true;
 
+        // Splitting changes neither which rows are returned nor which files are read -- only how the same work is
+        // divided across partitions -- so unlike the two flags above it cannot drop a row. It still gets a switch
+        // because it changes the shape of every Iceberg scan: an unsplit large file occupies one reader while the
+        // rest of the cluster idles, and the off path is the differential-test oracle (same rows, fewer tasks).
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating splitting of data files across scan tasks. Default on; a break-glass off-switch since releases rather than patches are shipped, and the off path is a differential-test oracle: same rows, one task per data file")
+        public static final String SPLIT_SCAN_TASKS = "splitScanTasks";
+        public static final boolean DEFAULT_SPLIT_SCAN_TASKS = true;
+
         static {
             if (DEFAULT_VARIANT_DEPTH < 1 || DEFAULT_VARIANT_DEPTH > MAX_VARIANT_DEPTH) {
                 throw new IllegalStateException(

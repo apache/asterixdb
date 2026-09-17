@@ -260,25 +260,41 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             return;
         }
 
+        iterable = openStandardRead(tableFileIo, inFile, task, schemaAtSnapshot, projectedSchema);
+        recordsIterator = iterable.iterator();
+    }
+
+    /**
+     * Iceberg's standard read of one task over its split range, with the task's deletes applied when it has any.
+     * <p>
+     * Both branches read only the row groups whose midpoint falls in {@code [start, start + length)}, so the splits of
+     * one file partition its row groups between them. With position deletes the rows are matched by their absolute
+     * position in the file, which Iceberg's Parquet reader takes from the footer's row-index offsets rather than by
+     * counting the rows it has read, so a split that starts mid-file still drops exactly the deleted rows.
+     * <p>
+     * Static and package-private so a test can drive the exact call the reader makes over generated split tasks.
+     *
+     * @return the rows of the task; closing it closes the underlying file read
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted the standard (non-pruned) per-task read, with and without deletes, so the split-range read is testable in isolation")
+    static CloseableIterable<Record> openStandardRead(FileIO io, InputFile inFile, FileScanTask task,
+            Schema schemaAtSnapshot, Schema projectedSchema) {
         int deletesCount = (task.deletes() == null) ? 0 : task.deletes().size();
         if (deletesCount == 0) {
             // No deletes: read only projected schema
-            iterable = Parquet.read(inFile).project(projectedSchema).filter(task.residual())
+            return Parquet.read(inFile).project(projectedSchema).filter(task.residual())
                     .split(task.start(), task.length())
                     .createReaderFunc(fs -> GenericParquetReaders.buildReader(projectedSchema, fs)).build();
-            recordsIterator = iterable.iterator();
-            return;
         }
 
         // Has deletes: read required schema, then apply delete filter
-        GenericDeleteFilter deleteFilter =
-                new GenericDeleteFilter(tableFileIo, task, schemaAtSnapshot, projectedSchema);
+        GenericDeleteFilter deleteFilter = new GenericDeleteFilter(io, task, schemaAtSnapshot, projectedSchema);
 
         Schema requiredSchema = deleteFilter.requiredSchema();
-        iterable =
+        CloseableIterable<Record> rows =
                 Parquet.read(inFile).project(requiredSchema).filter(task.residual()).split(task.start(), task.length())
                         .createReaderFunc(fs -> GenericParquetReaders.buildReader(requiredSchema, fs)).build();
-        recordsIterator = deleteFilter.filter(iterable).iterator();
+        return deleteFilter.filter(rows);
     }
 
     /**

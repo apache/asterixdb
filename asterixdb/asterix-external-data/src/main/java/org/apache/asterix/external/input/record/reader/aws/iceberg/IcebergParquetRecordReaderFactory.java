@@ -72,10 +72,14 @@ import org.apache.iceberg.expressions.Binder;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.iceberg.io.CloseableIterable;
+import org.apache.iceberg.util.TableScanUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFactory<Record> {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> RECORD_READER_NAMES = Arrays.asList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3,
             ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB, ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE,
             ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
@@ -303,14 +307,20 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             // manifest (wrong byte order; apache/iceberg PR #15384).
             VariantBoundsEvaluator variantEvaluator = variantFilter == null ? null
                     : new VariantBoundsEvaluator(schemaAtSnapshot, variantFilter, warningCollector);
+            List<FileScanTask> plannedTasks = new ArrayList<>();
             try (CloseableIterable<FileScanTask> tasks = scan.planFiles()) {
                 for (FileScanTask task : tasks) {
                     if (variantEvaluator == null || variantEvaluator.mightMatch(task.file())) {
-                        fileScanTasks.add(task);
+                        plannedTasks.add(task);
                     }
                 }
             }
-            distributeWorkLoad(fileScanTasks, getPartitionsCount());
+            // Split after the bounds check, so each file's manifest bounds are evaluated once rather than once per
+            // split; the split tasks share their file's residual and deletes, so nothing is lost by splitting later.
+            fileScanTasks.addAll(planScanTasks(plannedTasks, scan.targetSplitSize(), originalConfiguration));
+            partitionWorkLoadsBasedOnSize.addAll(distributeWorkLoad(fileScanTasks, getPartitionsCount()));
+            LOGGER.info("iceberg scan of {}: {} data files planned into {} tasks over {} partitions, target split {}",
+                    tableName, plannedTasks.size(), fileScanTasks.size(), getPartitionsCount(), scan.targetSplitSize());
         } catch (CompilationException ex) {
             throwable = ex;
             throw ex;
@@ -330,7 +340,104 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         }
     }
 
-    private void distributeWorkLoad(List<FileScanTask> fileScanTasks, int partitionsCount) {
+    /**
+     * Whether a data file may be split across scan tasks. Default on; the off switch exists because this ships in
+     * releases rather than patches, and because the off path is a useful oracle -- the same query must return the
+     * same rows from the same files, just one task per file.
+     * <p>
+     * Unlike the two variant pushdown flags this one cannot change which rows are returned: splitting only divides
+     * the same bytes differently across partitions. What it changes is how much of the cluster a scan can use.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the splitScanTasks WITH-clause flag (default on) gating splitting of data files across scan tasks")
+    /**
+     * The scan's tasks for {@code plannedTasks}: split at {@code targetSplitSize}, or Iceberg's own one-task-per-file
+     * planning when {@code splitScanTasks} is off.
+     * <p>
+     * The gate and the splitting live together here on purpose. Tested apart they pass independently while nothing
+     * checks that the flag reaches the decision, so dropping the gate would leave every test green.
+     *
+     * @param plannedTasks Iceberg's planned tasks, one per data file
+     * @param targetSplitSize {@link TableScan#targetSplitSize()}
+     * @param configuration the collection's configuration, read for the {@code splitScanTasks} flag
+     * @return the tasks to distribute across partitions
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Joins the splitScanTasks gate to the split itself so a test can assert the flag controls planning")
+    static List<FileScanTask> planScanTasks(List<FileScanTask> plannedTasks, long targetSplitSize,
+            Map<String, String> configuration) {
+        return isSplitScanTasksEnabled(configuration) ? splitTasks(plannedTasks, targetSplitSize) : plannedTasks;
+    }
+
+    static boolean isSplitScanTasksEnabled(Map<String, String> configuration) {
+        return Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.SPLIT_SCAN_TASKS,
+                Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_SPLIT_SCAN_TASKS)));
+    }
+
+    /**
+     * Splits each planned task at {@code targetSplitSize} so a large data file is read by several partitions instead
+     * of one. Without this the scan's wall-clock is floored at the largest single file however many partitions there
+     * are; distributing whole files differently cannot lower that floor, only splitting can.
+     * <p>
+     * Tasks carrying deletes are split like any other, as Iceberg core, Spark, Flink and Trino do. Each split then
+     * reads the file's delete files again, a cost {@link FileScanTask#sizeBytes()} includes and
+     * {@link #distributeWorkLoad} weighs by. A file at or under the target size comes back as one task covering all
+     * of it, so small-file tables see no change.
+     * <p>
+     * Split boundaries follow the data file's recorded split offsets, the row-group starts, when the manifest has
+     * them, and fall back to fixed byte ranges otherwise; in both cases the readers select row groups by midpoint, so
+     * every row group belongs to exactly one split. With offsets, Iceberg's {@code FileScanTask.split} yields one
+     * piece per row group and ignores the target, relying on its {@code planTasks} bin-packing to merge them back.
+     * That merge is done here instead, per file: adjacent pieces are coalesced while they fit the target, exactly as
+     * {@code planTasks} does through {@link TableScanUtil#mergeTasks}. Without it a file of many small row groups
+     * would become one task per row group, each opening the file and reading its footer. A single row group larger
+     * than the target stays its own split, since a row group cannot be divided.
+     *
+     * @param tasks the tasks planned for the scan, already filtered
+     * @param targetSplitSize {@link TableScan#targetSplitSize()}: the table's {@code read.split.target-size}, or the
+     *            Iceberg default of 128 MB
+     * @return the split tasks, in planning order
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Splits planned data files into row-group-aligned sub-tasks and coalesces adjacent pieces up to the table's target split size, so one large file no longer floors the scan's wall-clock")
+    static List<FileScanTask> splitTasks(List<FileScanTask> tasks, long targetSplitSize) {
+        // The table's read.split.target-size reaches here through Long.parseLong with no range check, so the value
+        // is the user's to set, and a non-positive one is destructive: Iceberg's fixed-size split iterator advances
+        // by min(size, remaining), so zero never advances and builds empty tasks until the heap is gone, while a
+        // negative size yields one task of negative length that silently reads nothing. Files that record split
+        // offsets take the offsets-aware iterator and are unaffected, which is why this cannot be left to chance.
+        // TableScanUtil.splitFiles rejects the same values for the same reason.
+        if (targetSplitSize <= 0) {
+            throw new IllegalArgumentException("Split size must be > 0: " + targetSplitSize);
+        }
+        List<FileScanTask> splitTasks = new ArrayList<>();
+        for (FileScanTask task : tasks) {
+            List<FileScanTask> chunk = new ArrayList<>();
+            long chunkLength = 0;
+            for (FileScanTask piece : task.split(targetSplitSize)) {
+                if (!chunk.isEmpty() && chunkLength + piece.length() > targetSplitSize) {
+                    splitTasks.addAll(TableScanUtil.mergeTasks(chunk));
+                    chunk = new ArrayList<>();
+                    chunkLength = 0;
+                }
+                chunk.add(piece);
+                chunkLength += piece.length();
+            }
+            if (!chunk.isEmpty()) {
+                splitTasks.addAll(TableScanUtil.mergeTasks(chunk));
+            }
+        }
+        return splitTasks;
+    }
+
+    /**
+     * Least-loaded-first packing of tasks onto partitions.
+     * <p>
+     * The weight is {@link FileScanTask#sizeBytes()}, not {@link FileScanTask#length()}: it adds the size of the
+     * task's delete files, which every split of a file reads in full to build its delete index. Weighing by length
+     * alone would pack a split with a large deletion vector as if it were free. This is the same weight Iceberg's own
+     * {@code TableScanUtil.planTasks} uses.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Weighs tasks by sizeBytes (data bytes plus attached delete files) instead of length, and returns the workloads so the packing is testable in isolation")
+    static List<PartitionWorkLoadBasedOnSize> distributeWorkLoad(List<FileScanTask> fileScanTasks,
+            int partitionsCount) {
         PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
                 Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
 
@@ -341,10 +448,10 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
 
         for (FileScanTask fileScanTask : fileScanTasks) {
             PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
-            workload.addFileScanTask(fileScanTask, fileScanTask.length());
+            workload.addFileScanTask(fileScanTask, fileScanTask.sizeBytes());
             workloadQueue.add(workload);
         }
-        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
+        return new ArrayList<>(workloadQueue);
     }
 
     @Override
