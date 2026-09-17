@@ -136,6 +136,9 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     // SELECT operator info for filter pushdown
     protected SelectOperator selectOp = null;
     protected Set<List<String>> filterFieldNames = null; // Field names referenced in WHERE clause
+    // Set when the WHERE reads a field no INCLUDE list can cover. An access on the meta record resolves to
+    // a bare leaf name, which would otherwise be matched against the data record's INCLUDE fields.
+    protected boolean filterReadsUncoverableField = false;
 
     /**
      * Master switch for the index-only ANN plan optimization. Enabled by default: when the projection above
@@ -456,6 +459,13 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             // Check if this is a field access function (e.g., field-access-by-name)
             if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)
                     || funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
+                if (isMetaRecordAccess(funcExpr)) {
+                    // Record that the filter cannot be covered rather than its name: the name belongs to the
+                    // meta record, and adding it would be matched against the data record's INCLUDE list --
+                    // `meta(m).expiration` would read the record's `expiration` column.
+                    filterReadsUncoverableField = true;
+                    return;
+                }
                 // Extract field name from field access function
                 List<String> fieldPath = extractFieldPathFromFieldAccess(funcExpr);
                 if (fieldPath != null && !fieldPath.isEmpty()) {
@@ -529,6 +539,25 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             currentOp = currentOp.getInputs().get(0).getValue();
         }
         return false;
+    }
+
+    /**
+     * Whether {@code funcExpr} is a field access rooted at this subtree's meta record rather than its data
+     * record. The two are told apart by the subtree's own key-source mapping, the same way
+     * {@link #isProjectionPkOnly} separates a meta-sourced primary key from a record field of that name.
+     */
+    private boolean isMetaRecordAccess(AbstractFunctionCallExpression funcExpr) {
+        ILogicalExpression base = funcExpr.getArguments().isEmpty() ? null : funcExpr.getArguments().get(0).getValue();
+        while (base != null && base.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            List<Mutable<ILogicalExpression>> baseArgs = ((AbstractFunctionCallExpression) base).getArguments();
+            base = baseArgs.isEmpty() ? null : baseArgs.get(0).getValue();
+        }
+        if (base == null || base.getExpressionTag() != LogicalExpressionTag.VARIABLE || subTree == null) {
+            return false;
+        }
+        LogicalVariable baseVar = ((VariableReferenceExpression) base).getVariableReference();
+        OptimizableOperatorSubTree.RecordTypeSource varType = subTree.getRecordTypeFor(baseVar);
+        return varType != null && varType.sourceIndicator == 1;
     }
 
     /**
@@ -767,6 +796,15 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(VectorIndexAccessMethod.INSTANCE);
         if (analysisCtx == null) {
+            return;
+        }
+
+        // A filter no INCLUDE list can cover makes the vector index a liability: the predicate would have to
+        // run above the search, after k has been counted, so LIMIT k could return fewer than k rows. Decline
+        // the index and let the exact scan answer it, as an uncovered record field already does. Note this
+        // cannot be folded into the hasFilter test below -- such a field contributes no name, so a predicate
+        // reading nothing else leaves filterFieldNames empty and would read as "no filter at all".
+        if (filterReadsUncoverableField) {
             return;
         }
 
@@ -1099,10 +1137,23 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         if (dsVars.size() <= numPK) {
             return null;
         }
+        // On a collection with a meta part the scan produces [pk..., record, meta]. Only the record is a
+        // pushdown base: the analysis resolves a field access against the record type, so admitting the meta
+        // variable would let `WHERE meta(m).year > 0` bind to the record's INCLUDE column of the same name.
+        Set<LogicalVariable> recordVars = new HashSet<>();
+        for (LogicalVariable dsVar : dsVars.subList(numPK, dsVars.size())) {
+            OptimizableOperatorSubTree.RecordTypeSource varType = subTree.getRecordTypeFor(dsVar);
+            if (varType != null && varType.sourceIndicator == 0) {
+                recordVars.add(dsVar);
+            }
+        }
+        if (recordVars.isEmpty()) {
+            return null;
+        }
+
         Index.VectorIndexDetails details = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
         return new VectorIncludeFilterPushdown.IndexContext(details.getIncludeFieldNames(), subTree.getRecordType(),
-                details.getVectorParameters().isQuantized(), numPK,
-                new HashSet<>(dsVars.subList(numPK, dsVars.size())));
+                details.getVectorParameters().isQuantized(), numPK, recordVars);
     }
 
     /**
@@ -1271,6 +1322,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         queryKMultiplier = 0;
         selectOp = null;
         filterFieldNames = null;
+        filterReadsUncoverableField = false;
         aboveLimitOps.clear();
         subTree.reset();
     }

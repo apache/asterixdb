@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -143,8 +144,9 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
      * Information about a vector index search found in the plan.
      *
      * @param recordVars the variables produced between the SELECT and the vector search — i.e. the record
-     *                   (and PK) variables of THIS search's primary-index lookup. A field access must be
-     *                   rooted at one of these to be a candidate for pushdown.
+     *                   (and PK) variables of THIS search's primary-index lookup, excluding its meta
+     *                   record. A field access must be rooted at one of these to be a candidate for
+     *                   pushdown.
      */
     private record VectorSearchInfo(UnnestMapOperator vectorUnnest, List<List<String>> includeFieldNames,
             ARecordType recordType, boolean isQuantized, int numPrimaryKeys, Set<LogicalVariable> recordVars) {
@@ -159,16 +161,17 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         while (current.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             current = current.getInputs().get(0).getValue();
         }
-        return searchForVectorUnnest(current, context, new HashSet<>());
+        return searchForVectorUnnest(current, context, new ArrayList<>());
     }
 
     /**
-     * Recursively searches for a VECTOR_INDEX_UNNEST under the given operator, accumulating on the way down
-     * the variables produced by the non-vector unnest-maps it passes through — the primary-index lookup that
-     * materializes the dataset record the filter reads.
+     * Recursively searches for a VECTOR_INDEX_UNNEST under the given operator, collecting on the way down
+     * the non-vector unnest-maps it passes through — the primary-index lookup that materializes the dataset
+     * record the filter reads. Their variables become the pushdown bases in {@link #buildSearchInfo}, which
+     * is where the dataset is known and the meta record can be told apart from the record.
      */
     private VectorSearchInfo searchForVectorUnnest(ILogicalOperator op, IOptimizationContext context,
-            Set<LogicalVariable> recordVars) throws AlgebricksException {
+            List<UnnestMapOperator> recordSources) throws AlgebricksException {
 
         if (op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
             UnnestMapOperator unnest = (UnnestMapOperator) op;
@@ -185,15 +188,15 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
                         if (unnest.getSelectCondition() != null) {
                             return null;
                         }
-                        return buildSearchInfo(unnest, params, context, recordVars);
+                        return buildSearchInfo(unnest, params, context, recordSources);
                     }
                 }
             }
-            recordVars.addAll(unnest.getVariables());
+            recordSources.add(unnest);
         }
 
         for (Mutable<ILogicalOperator> inputRef : op.getInputs()) {
-            VectorSearchInfo result = searchForVectorUnnest(inputRef.getValue(), context, recordVars);
+            VectorSearchInfo result = searchForVectorUnnest(inputRef.getValue(), context, recordSources);
             if (result != null) {
                 return result;
             }
@@ -207,7 +210,7 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private VectorSearchInfo buildSearchInfo(UnnestMapOperator unnest, AccessMethodJobGenParams params,
-            IOptimizationContext context, Set<LogicalVariable> recordVars) throws AlgebricksException {
+            IOptimizationContext context, List<UnnestMapOperator> recordSources) throws AlgebricksException {
 
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
 
@@ -226,6 +229,16 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
 
         ARecordType recordType = (ARecordType) mp.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+
+        // A primary-index lookup on a collection with a meta part produces [pk..., record, meta]. Drop the
+        // meta variable: resolveFieldPath resolves a field access against the dataset's record type, so
+        // admitting it would let `WHERE meta(m).year > 0` bind to the record's INCLUDE column of the same
+        // name and filter on the wrong value.
+        Set<LogicalVariable> recordVars = new HashSet<>();
+        for (UnnestMapOperator lookup : recordSources) {
+            List<LogicalVariable> vars = lookup.getVariables();
+            recordVars.addAll(vars.subList(0, dataset.hasMetaPart() ? vars.size() - 1 : vars.size()));
+        }
 
         return new VectorSearchInfo(unnest, details.getIncludeFieldNames(), recordType,
                 details.getVectorParameters().isQuantized(), dataset.getPrimaryKeys().size(), recordVars);
