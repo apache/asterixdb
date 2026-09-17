@@ -24,6 +24,7 @@ import java.nio.ByteOrder;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.util.TimestampZoneProjector;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
@@ -68,7 +69,8 @@ class TimestampConverter extends GenericPrimitiveConverter {
     @Override
     public void addLong(long value) {
         long convertedTime = TimeConverter.getConvertedTime(timeUnit, value);
-        if (adjustedToUtc) {
+        // Plain parquet has no timestamp-to-long option, so every timestamp is emitted as a datetime.
+        if (TimestampZoneProjector.isShiftedOnRead(adjustedToUtc, false)) {
             convertedTime = context.applyTimeZone(convertedTime);
         }
         context.serializeDateTime(convertedTime, parent.getDataOutput());

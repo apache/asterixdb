@@ -43,6 +43,15 @@ public class TimestampZoneProjectorTest {
     private static final long JAN = Instant.parse("2024-01-15T12:00:00Z").toEpochMilli();
     private static final long JUL = Instant.parse("2024-07-15T12:00:00Z").toEpochMilli();
 
+    /** Only a UTC-adjusted value rendered as a datetime is shifted; readers and pushdown both rely on this. */
+    @Test
+    public void testIsShiftedOnRead() {
+        assertEquals(true, TimestampZoneProjector.isShiftedOnRead(true, false));
+        assertEquals(false, TimestampZoneProjector.isShiftedOnRead(true, true));
+        assertEquals(false, TimestampZoneProjector.isShiftedOnRead(false, false));
+        assertEquals(false, TimestampZoneProjector.isShiftedOnRead(false, true));
+    }
+
     /**
      * The defect itself. Standard offset is -5h all year; the July value is really -4h. A fixed-offset
      * implementation returns -5h here and is wrong by an hour for half the year.

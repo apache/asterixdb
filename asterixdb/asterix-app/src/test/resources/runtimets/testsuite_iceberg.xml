@@ -216,5 +216,65 @@
         <expected-error>ASX0047: Invalid value for parameter 'variantStatsPushdown': 1</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-d">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-d</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-t">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-t</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-tsz">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-tsz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-tsz-long">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-tsz-long</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-tsn">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-tsn</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-tsnz">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-tsnz</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-tsnn">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-tsnn</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-overlap">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-overlap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-gap">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-gap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="temporal-zone-boundary">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">temporal-zone-boundary</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

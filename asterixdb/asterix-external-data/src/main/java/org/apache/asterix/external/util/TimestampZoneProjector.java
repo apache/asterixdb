@@ -85,6 +85,22 @@ public final class TimestampZoneProjector {
         }
     }
 
+    /**
+     * The single rule for which timestamps the configured zone shifts on read. Every reader applies it, and so does
+     * predicate pushdown, which has to convert a literal back only for the values the reader shifted — two copies
+     * of this rule drifting apart is how a pushed predicate ends up in a different frame from the value it tests.
+     * <p>
+     * A wall-clock value has no zone to shift out of, and {@code timestamp-to-long} emits the epoch value itself,
+     * an absolute instant the zone is a rendering choice for.
+     *
+     * @param utcAdjusted     whether the source type is adjusted to UTC
+     * @param timestampAsLong whether the value is emitted as its epoch long rather than as a datetime
+     * @return whether {@link #projectEpochValue} applies to the value
+     */
+    public static boolean isShiftedOnRead(boolean utcAdjusted, boolean timestampAsLong) {
+        return utcAdjusted && !timestampAsLong;
+    }
+
     /** @return whether a time zone was configured; when false {@link #projectEpochValue} is a no-op. */
     public boolean isEnabled() {
         return enabled;

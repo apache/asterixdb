@@ -165,6 +165,7 @@ public class IcebergTest {
             TableIdentifier.of(NAMESPACE, "temporalPrecision");
     private static final TableIdentifier TEMPORAL_EQ_DELETE_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "temporalEqDelete");
+    private static final TableIdentifier TEMPORAL_ZONE_TABLE_ID = TableIdentifier.of(NAMESPACE, "temporalZone");
     private static final TableIdentifier MANY_FILES_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "manyFilesVariant");
     private static final TableIdentifier DOTTED_FIELD_NAME_VARIANT_TABLE_ID =
@@ -317,6 +318,7 @@ public class IcebergTest {
             writeManyRowGroupsVariantTable(catalog);
             writeTemporalPrecisionTable(catalog);
             writeTemporalEqDeleteTable(catalog);
+            writeTemporalZoneTable(catalog);
             writeNestedVariantInStructTable(catalog);
             writePartitionedVariantTable(catalog);
             writeTwoVariantsTable(catalog);
@@ -1347,6 +1349,71 @@ public class IcebergTest {
     /** Iceberg stores microseconds; {@code ADateTime} holds milliseconds. This is the value before truncation. */
     private static OffsetDateTime utcMicros(long micros) {
         return Instant.EPOCH.plus(micros, ChronoUnit.MICROS).atOffset(ZoneOffset.UTC);
+    }
+
+    /**
+     * Every temporal type Iceberg has, so a predicate can be aimed at each one separately: {@code date} and
+     * {@code time} carry no zone at all, the two {@code *tz} columns are UTC-adjusted and therefore shifted when read
+     * through a collection with a timezone, and the two without a zone are wall-clock readings that are never
+     * shifted. The point of the table is that the four timestamp columns hold the <em>same instant</em>, so any
+     * difference in behaviour between them is the zone handling and nothing else.
+     */
+    private static Schema temporalZoneSchema() {
+        return new Schema(Types.NestedField.optional(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "d", Types.DateType.get()),
+                Types.NestedField.optional(3, "t", Types.TimeType.get()),
+                Types.NestedField.optional(4, "tsz", Types.TimestampType.withZone()),
+                Types.NestedField.optional(5, "tsn", Types.TimestampType.withoutZone()),
+                Types.NestedField.optional(6, "tsnz", Types.TimestampNanoType.withZone()),
+                Types.NestedField.optional(7, "tsnn", Types.TimestampNanoType.withoutZone()));
+    }
+
+    /**
+     * One row per data file, so every row is its own file's bound and a mis-framed predicate prunes it outright
+     * rather than merely over-reading.
+     */
+    private static void writeTemporalZoneTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, TEMPORAL_ZONE_TABLE_ID, temporalZoneSchema(), PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        // 2026-03-15T09:00, 03-16T10:00 and 03-17T11:00, all at .123456 UTC. March is PDT (UTC-7) in
+        // America/Los_Angeles, so a zone-adjusted column reads back seven hours earlier while a wall-clock column
+        // does not. Every row differs in date AND in time of day on purpose: with a shared time of day a predicate
+        // on the time column matches all three rows and can no longer tell pruning from no pruning.
+        // Rows 4 and 5 are the daylight-saving fall-back of 1 Nov 2026, when 01:00-01:59 local happens twice: row 4
+        // is the first pass (PDT, UTC-7) and row 5 the second (PST, UTC-8). Both read back as 01:30:00.123, so a
+        // literal naming that reading matches two different stored instants and the display-to-stored mapping is not
+        // invertible. The rewrite gives such a predicate up rather than guess, and these two rows are how that is
+        // checked end to end.
+        // Row 6 is the last millisecond that exists before the spring-forward gap of 8 Mar 2026: it displays as
+        // 01:59:59.999, while the widening's upper bound for that literal (02:00:00.000 local) falls in the hour the
+        // zone skips. That is the one shape where the two bounds of a single predicate can resolve to different
+        // offsets and inverting them would prune everything, so it is pinned rather than reasoned about.
+        long[] instants = { 1773565200123456L, 1773655200123456L, 1773745200123456L, 1793521800123456L,
+                1793525400123456L, 1772963999999000L };
+        AppendFiles append = table.newAppend();
+        for (int i = 0; i < instants.length; i++) {
+            long micros = instants[i];
+            GenericRecord rec = GenericRecord.create(table.schema());
+            OffsetDateTime odt = utcMicros(micros);
+            rec.setField("id", i + 1);
+            rec.setField("d", odt.toLocalDate());
+            rec.setField("t", odt.toLocalTime());
+            rec.setField("tsz", odt);
+            rec.setField("tsn", odt.toLocalDateTime());
+            rec.setField("tsnz", odt);
+            rec.setField("tsnn", odt.toLocalDateTime());
+            String path = table.location() + "/data/tz-" + (i + 1) + ".parquet";
+            OutputFile out = table.io().newOutputFile(path);
+            try (FileAppender<Record> writer =
+                    Parquet.write(out).forTable(table).createWriterFunc(GenericParquetWriter::create).build()) {
+                writer.add(rec);
+            }
+            Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+            append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                    .withFileSizeInBytes(out.toInputFile().getLength()).withMetrics(metrics).build());
+        }
+        append.commit();
+        LOGGER.info("[WRITE] temporalZone committed with {} single-row files", instants.length);
     }
 
     private static Schema temporalSchema() {

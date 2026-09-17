@@ -528,26 +528,28 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
      */
     private void serializeTimestampMicros(long epochMicros, boolean utcAdjusted, DataOutput out)
             throws HyracksDataException {
-        if (parserContext.isTimestampAsLong()) {
-            serializeLong(epochMicros, out);
+        boolean asLong = parserContext.isTimestampAsLong();
+        // Shift before narrowing, not after: a zone offset is a whole number of seconds, so it moves the value by
+        // whole milliseconds and the chronon boundary is the same either way -- but only this order leaves the
+        // offset exact when the value is later widened back to a millisecond span.
+        long value = TimestampZoneProjector.isShiftedOnRead(utcAdjusted, asLong)
+                ? timestampZoneProjector.projectEpochValue(epochMicros, TimestampUnit.MICROS) : epochMicros;
+        if (asLong) {
+            serializeLong(value, out);
         } else {
-            // Shift before narrowing, not after: a zone offset is a whole number of seconds, so it moves the value
-            // by whole milliseconds and the chronon boundary is the same either way -- but only this order leaves
-            // the offset exact when the value is later widened back to a millisecond span.
-            long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochMicros, TimestampUnit.MICROS)
-                    : epochMicros;
-            serializeDatetimeMillis(MillisecondChronon.narrow(shifted, TimeUnit.MICROSECONDS), out);
+            serializeDatetimeMillis(MillisecondChronon.narrow(value, TimeUnit.MICROSECONDS), out);
         }
     }
 
     private void serializeTimestampNanos(long epochNanos, boolean utcAdjusted, DataOutput out)
             throws HyracksDataException {
-        if (parserContext.isTimestampAsLong()) {
-            serializeLong(epochNanos, out);
+        boolean asLong = parserContext.isTimestampAsLong();
+        long value = TimestampZoneProjector.isShiftedOnRead(utcAdjusted, asLong)
+                ? timestampZoneProjector.projectEpochValue(epochNanos, TimestampUnit.NANOS) : epochNanos;
+        if (asLong) {
+            serializeLong(value, out);
         } else {
-            long shifted = utcAdjusted ? timestampZoneProjector.projectEpochValue(epochNanos, TimestampUnit.NANOS)
-                    : epochNanos;
-            serializeDatetimeMillis(MillisecondChronon.narrow(shifted, TimeUnit.NANOSECONDS), out);
+            serializeDatetimeMillis(MillisecondChronon.narrow(value, TimeUnit.NANOSECONDS), out);
         }
     }
 

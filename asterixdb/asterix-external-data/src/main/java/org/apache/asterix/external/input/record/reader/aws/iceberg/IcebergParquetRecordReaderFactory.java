@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -46,9 +47,11 @@ import org.apache.asterix.external.api.IIcebergRecordReaderFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.filter.IcebergTableFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
+import org.apache.asterix.external.util.iceberg.TimestampZonePredicateRewriter;
 import org.apache.asterix.external.util.iceberg.VariantBoundsEvaluator;
 import org.apache.asterix.external.util.iceberg.VariantPredicateRewriter;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -143,6 +146,11 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         return Boolean.parseBoolean(
                 originalConfiguration.getOrDefault(ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN,
                         Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_VARIANT_STATS_PUSHDOWN)));
+    }
+
+    private boolean isTimestampAsLong() {
+        return Boolean.parseBoolean(originalConfiguration
+                .getOrDefault(ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG, ExternalDataConstants.FALSE));
     }
 
     /**
@@ -251,6 +259,14 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
                     ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
             Expression variantFilter = null;
             if (filterExpression != null) {
+                // A configured timezone makes the read path shift every UTC-adjusted timestamp, so the value the
+                // engine compares is not the value the manifest holds. Convert the pushed literals back into the
+                // stored frame first — before any other rewrite — or Iceberg prunes on a comparison the engine never
+                // makes. Without this the error is the whole offset, not a rounding edge: every file is pruned.
+                TimeZone timeZone = ExternalDataUtils.resolveTimeZoneOrWarn(
+                        configuration.get(ExternalDataConstants.KEY_TIMEZONE), warningCollector::warn);
+                filterExpression = TimestampZonePredicateRewriter.rewrite(filterExpression, schemaAtSnapshot,
+                        timeZone == null ? null : timeZone.toZoneId(), isTimestampAsLong());
                 // Predicates on a shredded VARIANT sub-field arrive as a dotted reference (variant_field.status),
                 // which cannot bind against the schema because a variant is one opaque VariantType. Rewrite those
                 // into Iceberg extract terms here — the first point where the Iceberg schema is known — so the

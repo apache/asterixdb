@@ -39,6 +39,7 @@ import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.stream.AvroConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.TimestampZoneProjector;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -307,39 +308,21 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         } else if (logicalType instanceof LogicalTypes.TimestampMicros) {
             long timeStampInMicros = ((Number) value).longValue();
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
-            // The configured timezone is a rendering choice, so it applies only when rendering: a datetime is a
-            // zone-less wall-clock reading and takes the shift; an epoch long is an absolute instant and never does.
-            if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis, out);
-            } else {
-                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
-            }
+            serializeTimestampMillis(timeStampInMillis, true, out);
         } else if (logicalType instanceof LogicalTypes.TimestampMillis) {
             long timeStampInMillis = ((Number) value).longValue();
-            if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis, out);
-            } else {
-                parserContext.serializeDateTime(parserContext.applyTimeZone(timeStampInMillis), out);
-            }
+            serializeTimestampMillis(timeStampInMillis, true, out);
         } else if (logicalType instanceof LogicalTypes.LocalTimestampMicros) {
             // local-timestamp-micros is already wall-clock time with no associated timezone;
             // unlike timestamp-micros (a UTC instant), it must not be shifted by the configured offset.
             long timeStampInMicros = ((Number) value).longValue();
             long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
-            if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis, out);
-            } else {
-                parserContext.serializeDateTime(timeStampInMillis, out);
-            }
+            serializeTimestampMillis(timeStampInMillis, false, out);
         } else if (logicalType instanceof LogicalTypes.LocalTimestampMillis) {
             // local-timestamp-millis is already wall-clock time with no associated timezone;
             // unlike timestamp-millis (a UTC instant), it must not be shifted by the configured offset.
             long timeStampInMillis = ((Number) value).longValue();
-            if (parserContext.isTimestampAsLong()) {
-                serializeLong(timeStampInMillis, out);
-            } else {
-                parserContext.serializeDateTime(timeStampInMillis, out);
-            }
+            serializeTimestampMillis(timeStampInMillis, false, out);
         } else {
             throw createUnsupportedException(logicalType.getName());
         }
@@ -436,4 +419,22 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Avro Parser, Invalid Logical Type: ", logicalType);
     }
 
+    /**
+     * The configured timezone is a rendering choice, so only a datetime takes the shift; an epoch long is an
+     * absolute instant and never does. {@link TimestampZoneProjector#isShiftedOnRead} owns that rule, so pushdown
+     * sees the same one.
+     *
+     * @param utcAdjusted whether the source type is a UTC instant rather than a wall-clock reading
+     */
+    private void serializeTimestampMillis(long epochMillis, boolean utcAdjusted, DataOutput out)
+            throws HyracksDataException {
+        boolean asLong = parserContext.isTimestampAsLong();
+        long value = TimestampZoneProjector.isShiftedOnRead(utcAdjusted, asLong)
+                ? parserContext.applyTimeZone(epochMillis) : epochMillis;
+        if (asLong) {
+            serializeLong(value, out);
+        } else {
+            parserContext.serializeDateTime(value, out);
+        }
+    }
 }
