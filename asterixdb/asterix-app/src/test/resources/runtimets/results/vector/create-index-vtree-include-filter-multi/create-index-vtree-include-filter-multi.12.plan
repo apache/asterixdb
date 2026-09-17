@@ -1,0 +1,45 @@
+distribute result [$$37]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 3
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$37])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$41(ASC) ]  |PARTITIONED|
+          limit 3
+          -- STREAM_LIMIT  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 3) (ASC, $$41)
+              -- STABLE_SORT [topK: 3] [$$41(ASC)]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$41, $$37] <- [euclidean-distance($$45, array: [ 0.0, 0.0, 0.0, 0.0 ]), {"id": $$42, "sub": $$36}] project: [$$37, $$41]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$45, $$42, $$36])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      subplan {
+                                aggregate [$$36] <- [listify($$35)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- AGGREGATE  |LOCAL|
+                                  assign [$$35] <- [$$t.getField(0)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ASSIGN  |LOCAL|
+                                    unnest $$t <- scan-collection(ordered-list-constructor({"v": $$43})) project: [$$t] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- UNNEST  |LOCAL|
+                                      project ([$$43]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                             }
+                      -- SUBPLAN  |PARTITIONED|
+                        assign [$$45, $$43] <- [$$m.getField(5), $$m.getField(2)] project: [$$45, $$42, $$43]
+                        -- ASSIGN  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$42, $$m] <- test.MovieMulti
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

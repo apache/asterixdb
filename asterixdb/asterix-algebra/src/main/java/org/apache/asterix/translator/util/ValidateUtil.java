@@ -279,16 +279,19 @@ public class ValidateUtil {
                     case DAYTIMEDURATION:
                         break;
                     case ANY:
+                        // ANY is allowed for BTREE and VTREE (include fields) indexes
                         if (indexType == IndexType.BTREE || indexType == IndexType.VTREE) {
-                            // ANY is allowed for BTREE and VECTOR (include fields) indexes
                             break;
                         }
+                        throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
+                    case BOOLEAN:
+                        // for VTREE INCLUDE fields, the storage layer has a type trait and comparator for them
+                        if (indexType == IndexType.VTREE) {
+                            break;
+                        }
+                        throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
                     default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field '"
-                                        + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                        + "' which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the BTree index.");
+                        throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
                 }
                 break;
             case RTREE:
@@ -301,61 +304,52 @@ public class ValidateUtil {
                     case GEOMETRY:
                         break;
                     default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field '"
-                                        + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                        + "' which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the RTree index.");
+                        throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
                 }
                 break;
-            case LENGTH_PARTITIONED_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX, SINGLE_PARTITION_NGRAM_INVIX:
                 if (fieldType.getTypeTag() != ATypeTag.STRING) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "The field '" + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                    + "' which is of type " + fieldType.getTypeTag()
-                                    + " cannot be indexed using the Length Partitioned N-Gram index.");
+                    throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
                 }
                 break;
-            case LENGTH_PARTITIONED_WORD_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX, SINGLE_PARTITION_WORD_INVIX:
                 switch (fieldType.getTypeTag()) {
                     case STRING:
                     case MULTISET:
                     case ARRAY:
                         break;
                     default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field '"
-                                        + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                        + "' which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the Length Partitioned Keyword index.");
-                }
-                break;
-            case SINGLE_PARTITION_NGRAM_INVIX:
-                if (fieldType.getTypeTag() != ATypeTag.STRING) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "The field '" + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                    + "' which is of type " + fieldType.getTypeTag()
-                                    + " cannot be indexed using the N-Gram index.");
-                }
-                break;
-            case SINGLE_PARTITION_WORD_INVIX:
-                switch (fieldType.getTypeTag()) {
-                    case STRING:
-                    case MULTISET:
-                    case ARRAY:
-                        break;
-                    default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field '"
-                                        + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                        + "' which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the Keyword index.");
+                        throw illegalIndexFieldType(indexType, fieldType, displayFieldName, sourceLoc);
                 }
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, sourceLoc,
                         String.valueOf(indexType));
         }
+    }
+
+    private static CompilationException illegalIndexFieldType(IndexType indexType, IAType fieldType,
+            List<String> displayFieldName, SourceLocation sourceLoc) {
+        String fieldName = LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName));
+        String rejection = indexType == IndexType.VTREE ? "used as an INCLUDE field of a vector index"
+                : "indexed using the " + indexTypeDisplayName(indexType) + " index";
+        return new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "The field '" + fieldName
+                + "' which is of type " + fieldType.getTypeTag() + " cannot be " + rejection + ".");
+    }
+
+    /** The index type as it is written in user-facing messages. */
+    private static String indexTypeDisplayName(IndexType indexType) {
+        return switch (indexType) {
+            case BTREE -> "BTree";
+            case RTREE -> "RTree";
+            case ARRAY -> "Array";
+            case VTREE -> "Vector";
+            case LENGTH_PARTITIONED_NGRAM_INVIX -> "Length Partitioned N-Gram";
+            case LENGTH_PARTITIONED_WORD_INVIX -> "Length Partitioned Keyword";
+            case SINGLE_PARTITION_NGRAM_INVIX -> "N-Gram";
+            case SINGLE_PARTITION_WORD_INVIX -> "Keyword";
+            default -> String.valueOf(indexType);
+        };
     }
 
     /**

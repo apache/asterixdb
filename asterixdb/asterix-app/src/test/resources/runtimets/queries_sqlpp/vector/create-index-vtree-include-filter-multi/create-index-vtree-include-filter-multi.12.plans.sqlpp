@@ -1,0 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- param compile-only:string=true
+-- param optimized-logical-plan:string=true
+SET `compiler.cbo` "false";
+
+// A correlated subquery over a non-PK field puts a SUBPLAN between the ORDER and the data source. The
+// variables it reads are invisible to collectSelectConditionVars/collectAssignBindings, which walk only
+// getInputs() and not nested plans -- but that is unreachable rather than unhandled: the subtree pattern
+// is SELECT* (ASSIGN|UNNEST)* DATASOURCE, so a SUBPLAN there stops initFromSubTree and no vector index is
+// chosen at all. Asserted here so that widening the subtree pattern later cannot silently start feeding
+// nested-plan variables to a scan that never emits them.
+SELECT m.id, (SELECT VALUE t.v FROM [{"v": m.rating}] t) AS sub
+FROM test.MovieMulti m
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
+LIMIT 3;

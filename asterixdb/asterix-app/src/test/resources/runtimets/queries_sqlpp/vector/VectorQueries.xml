@@ -48,6 +48,17 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-include-typed">
+            <output-dir compare="Text">create-index-vtree-include-typed</output-dir>
+            <expected-error>Cannot specify the type of the INCLUDE field 'year' of a vector index (TYPE VTREE)</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-include-filter-multi">
+            <output-dir compare="Clean-JSON">create-index-vtree-include-filter-multi</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-include-nested">
             <output-dir compare="Clean-JSON">create-index-vtree-include-nested</output-dir>
         </compilation-unit>

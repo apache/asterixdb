@@ -44,6 +44,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.cost.VectorIndexGeometry;
+import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -84,6 +85,34 @@ import org.apache.logging.log4j.Logger;
  *   → Falls back to exact KNN search (exhaustive distance computation on all tuples)
  *
  * The ORDER BY ANN_DISTANCE operator handles distance computation in both cases.
+ *
+ * <h2>Why this rule does not push the WHERE into the index search</h2>
+ *
+ * A {@code WHERE} over the index's {@code INCLUDE} columns is evaluated by the vector cursor itself, which
+ * reads it from the unnest-map's {@code selectCondition}. This rule never sets that condition, even for the
+ * index-only plan, which it could: it stops at rebinding the predicate and leaves it in its {@code SELECT}
+ * for {@link org.apache.asterix.optimizer.rules.PushFilterIntoVectorSearchRule} to move in during
+ * {@code physicalRewritesTopLevel}. That split is deliberate.
+ * <p>
+ * A {@code selectCondition} is the one expression on an operator that reads variables the operator
+ * <em>produces</em> rather than variables from its input. Rules that walk an operator's expressions
+ * reasonably type them against the input environment, so a condition present while the logical rewrites are
+ * still running breaks them. Two rules in {@code buildPlanCleanupRuleCollection} — which runs immediately
+ * after this one — do exactly that and fail on it:
+ * {@code SetClosedRecordConstructorsRule} ("Could not infer type for variable") and
+ * {@code InjectTypeCastForFunctionArgumentsRule} (NPE in the type computer, for a predicate containing
+ * {@code switch-case} or one of the {@code if-missing}/{@code if-null} family). Both are latent rather than
+ * broken today precisely because every producer of a {@code selectCondition} —
+ * {@code PushFilterIntoVectorSearchRule} and {@code PushLimitIntoPrimarySearchRule} — runs in the physical
+ * rewrites, after the last rule that would trip over one.
+ * <p>
+ * What this rule must still do early is rebind the predicate. The index-only branch drops the primary
+ * lookup, so the record variable the {@code WHERE} reads ceases to exist and
+ * {@code VectorIndexAccessMethod#neutralizeDanglingExpressions} would collapse the predicate to
+ * {@code select(missing)} and drop every row. So the branch declares the {@code INCLUDE} columns as outputs
+ * of the index-search unnest-map and rewrites the predicate to read those variables instead — after which
+ * it is an ordinary predicate over ordinary variables, in an ordinary {@code SELECT}, and every rule between
+ * here and the physical rewrites sees a plan it already understands.
  */
 public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethodRule {
 
@@ -852,9 +881,12 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // The search collects this many candidates either way; an index-only plan then reads the distance
         // off the cursor rather than fetching and reranking them.
         double candidateCard = (double) topK * queryKMultiplier;
-        double fetchedCard = isProjectionPkOnly() ? 0 : candidateCard;
 
         for (Pair<IAccessMethod, Index> candidate : chosenIndexes) {
+            // Whether the primary lookup is skipped is per-index: two indexes can differ in whether their
+            // INCLUDE list covers this query's WHERE, and that is the difference between fetching every
+            // candidate and fetching none.
+            double fetchedCard = isProjectionPkOnly(candidate.second, context) ? 0 : candidateCard;
             Index.VectorIndexDetails details = (Index.VectorIndexDetails) candidate.second.getIndexDetails();
             VectorIndexGeometry geometry = new VectorIndexGeometry(details.getVectorParameters(),
                     details.getIncludeFieldTypes(), primaryKeyTypes, datasetCardinality, numPartitions, pageSize,
@@ -896,7 +928,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // when every variable consumed above the LIMIT is PK-derived, the assembled record from the
         // primary BTree lookup is never needed, so the vector index emits (pk, dist) and the plan
         // skips the lookup + rerank entirely.
-        boolean indexOnly = isProjectionPkOnly();
+        boolean indexOnly = isProjectionPkOnly(vectorIndex, context);
 
         // Build the index-search subplan (UNNEST-MAP over vector index). selectOp is passed so the
         // access method can attach a selectCondition for filter pushdown when applicable.
@@ -937,7 +969,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      * <p>Conservatively returns {@code false} for composite or nested PK paths, external data sources, or
      * unfamiliar plan shapes.
      */
-    protected boolean isProjectionPkOnly() {
+    protected boolean isProjectionPkOnly(Index vectorIndex, IOptimizationContext context) throws AlgebricksException {
         // Index-only skips the primary BTree lookup and emits (pk, dist) straight from the secondary VTree.
         // Correct even with deletes: the VTree search cursor reconciles anti-matter (delete) tuples itself,
         // so a PK-only ANN query over a dataset with deletes returns no deleted PKs. Enabled by default; the
@@ -1009,22 +1041,68 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             }
         }
 
-        // A WHERE below the LIMIT that needs a non-PK record field (e.g. an INCLUDE-field filter such as
-        // WHERE m.year > 2000) cannot be served by the index-only plan: the record variable is dead, so
-        // VectorIndexAccessMethod#neutralizeDanglingExpressions collapses the predicate to select(missing)
-        // and drops every row. The liveOut scan above only covers the projection above the LIMIT, so a
-        // SELECT below the LIMIT is invisible to it. Require every SELECT-condition variable in the subtree
-        // to be PK-safe; otherwise fall back to lookup-and-rerank, which materializes the record and lets
-        // PushFilterIntoVectorSearchRule push the INCLUDE filter into the vector cursor correctly.
+        // A WHERE below the LIMIT is invisible to the liveOut scan above, which only covers the projection
+        // above the LIMIT. It can still be served index-only in two ways: its variables are PK-derived, or
+        // the predicate reads nothing but INCLUDE columns of the chosen index, in which case the index-only
+        // branch rebinds it onto those columns instead of leaving a SELECT above a dead record variable
+        // (which VectorIndexAccessMethod#neutralizeDanglingExpressions would collapse to select(missing),
+        // dropping every row). Anything else falls back to lookup-and-rerank.
         Set<LogicalVariable> filterVars = new HashSet<>();
         collectSelectConditionVars(subTree.getRoot(), filterVars);
         for (LogicalVariable v : filterVars) {
             if (!isVarPkSafe(v, bindings, pkCtx, visiting)) {
-                LOGGER.trace("isProjectionPkOnly: WHERE condition var {} is not PK-safe; not index-only", v);
+                if (isFilterPushableToInclude(vectorIndex, context)) {
+                    return true;
+                }
+                LOGGER.trace("isProjectionPkOnly: WHERE condition var {} is neither PK-safe nor an INCLUDE "
+                        + "field of {}; not index-only", v, vectorIndex.getIndexName());
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Whether this subtree's {@code SELECT} predicate can be evaluated entirely from {@code vectorIndex}'s
+     * INCLUDE columns, and can therefore be rebound onto them by the index-only branch.
+     * <p>
+     * The verdict must match what {@code VectorIndexAccessMethod} will actually manage, because by the time
+     * that branch runs {@code indexOnly} has already been serialized into the index-search arguments and
+     * cannot be withdrawn. Both go through {@link VectorIncludeFilterPushdown} for exactly that reason; this
+     * call allocates no variables.
+     */
+    protected boolean isFilterPushableToInclude(Index vectorIndex, IOptimizationContext context)
+            throws AlgebricksException {
+        if (selectOp == null || vectorIndex == null || vectorIndex.getIndexType() != IndexType.VTREE) {
+            return false;
+        }
+        VectorIncludeFilterPushdown.IndexContext idx = buildIncludeFilterContext(vectorIndex);
+        return idx != null
+                && VectorIncludeFilterPushdown.isPushable(selectOp.getCondition().getValue(), selectOp, idx, context);
+    }
+
+    /**
+     * Assembles the INCLUDE-pushdown inputs from this subtree: the chosen index's INCLUDE list and
+     * quantization, the dataset record type, and the record variable(s) the {@code DataSourceScan}
+     * produces — the only bases a pushable field access may be rooted at.
+     */
+    protected VectorIncludeFilterPushdown.IndexContext buildIncludeFilterContext(Index vectorIndex) {
+        if (subTree == null || subTree.getDataset() == null || subTree.getDataSourceRef() == null) {
+            return null;
+        }
+        ILogicalOperator dataSourceOpRaw = subTree.getDataSourceRef().getValue();
+        if (!(dataSourceOpRaw instanceof AbstractScanOperator)) {
+            return null;
+        }
+        List<LogicalVariable> dsVars = ((AbstractScanOperator) dataSourceOpRaw).getVariables();
+        int numPK = subTree.getDataset().getPrimaryKeys().size();
+        if (dsVars.size() <= numPK) {
+            return null;
+        }
+        Index.VectorIndexDetails details = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
+        return new VectorIncludeFilterPushdown.IndexContext(details.getIncludeFieldNames(), subTree.getRecordType(),
+                details.getVectorParameters().isQuantized(), numPK,
+                new HashSet<>(dsVars.subList(numPK, dsVars.size())));
     }
 
     /**

@@ -48,6 +48,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -362,6 +363,11 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 VariableReferenceExpression distVarRef = new VariableReferenceExpression(distVar);
                 distVarRef.setSourceLocation(orderOp.getSourceLocation());
                 orderOp.getOrderExpressions().get(0).second.setValue(distVarRef);
+
+                // Rebind the WHERE onto the index's INCLUDE columns. There is no primary lookup here to
+                // evaluate it against, and the record variable is about to be neutralized, so a predicate
+                // left reading the record would collapse to select(missing) and drop every row.
+                bindIncludeFilterToSearch(unnestMap, selectOp, chosenIndex, dataset, recordType, dataSourceOp, context);
 
                 // Build the variable substitution map: old PK vars → new PK vars. The secondary
                 // UnnestMap allocates fresh context.newVar() PK variables, so anything that
@@ -718,6 +724,53 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
             rewriteRecordFieldAccessExpr(arg, recVar, pkFieldToVar);
         }
+    }
+
+    /**
+     * Bind a {@code WHERE} over the index's {@code INCLUDE} columns to the vector search of an index-only
+     * plan: declare the columns it reads as outputs of the index-search unnest-map and rewrite the
+     * predicate to read them, so the cursor can filter candidates itself and no primary lookup is needed to
+     * evaluate it. The predicate stays in its {@code SELECT} until the physical rewrites.
+     * <p>
+     * A no-op when the query has no {@code WHERE}. Otherwise the predicate must be fully bindable:
+     * {@code IntroduceTopKAccessMethodRule.isProjectionPkOnly} only admits the index-only plan when
+     * {@link VectorIncludeFilterPushdown} says it is, and by the time we get here {@code indexOnly} has
+     * already been serialized into the index-search arguments and cannot be withdrawn. A decline at this
+     * point is therefore the two having drifted apart, which is a broken invariant rather than an
+     * unsupported plan shape — fail loudly instead of emitting a plan that silently drops every row.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Index-only ANN plans bind their INCLUDE-field predicate")
+    private static void bindIncludeFilterToSearch(UnnestMapOperator unnestMap, SelectOperator selectOp,
+            Index chosenIndex, Dataset dataset, ARecordType recordType, AbstractDataSourceOperator dataSourceOp,
+            IOptimizationContext context) throws AlgebricksException {
+        if (selectOp == null) {
+            return;
+        }
+        Index.VectorIndexDetails details = (Index.VectorIndexDetails) chosenIndex.getIndexDetails();
+        int numPK = dataset.getPrimaryKeys().size();
+        List<LogicalVariable> dsVars = dataSourceOp.getVariables();
+        // Everything after the primary keys is the dataset record and, when present, the meta record: the
+        // only bases a pushable field access may be rooted at.
+        Set<LogicalVariable> recordVars = new HashSet<>(dsVars.subList(Math.min(numPK, dsVars.size()), dsVars.size()));
+
+        VectorIncludeFilterPushdown.IndexContext idx =
+                new VectorIncludeFilterPushdown.IndexContext(details.getIncludeFieldNames(), recordType,
+                        details.getVectorParameters().isQuantized(), numPK, recordVars);
+        VectorIncludeFilterPushdown.PushedIncludeFilter pushed = VectorIncludeFilterPushdown
+                .analyze(selectOp.getCondition().getValue(), selectOp, idx, context, context::newVar);
+        if (pushed == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                    "the vector index-only plan was chosen for a WHERE that cannot be pushed into the "
+                            + "INCLUDE fields of index " + chosenIndex.getIndexName());
+        }
+        VectorIncludeFilterPushdown.declareFilterVariables(unnestMap, pushed);
+        // Rebind the SELECT to the INCLUDE columns instead of moving the predicate into the unnest-map's
+        // select condition. The record variable it used to read is about to be neutralized, so it cannot
+        // stay as it is -- but once it reads variables the unnest-map produces it is an ordinary predicate
+        // over ordinary variables, which every rule between here and the physical rewrites can handle.
+        // PushFilterIntoVectorSearchRule moves it into the select condition at the same point it does for
+        // the lookup-and-rerank plan.
+        selectOp.getCondition().setValue(pushed.condition());
     }
 
     /**

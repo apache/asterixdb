@@ -32,7 +32,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.optimizer.rules.PushFilterIntoVectorSearchRule;
+import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.asterix.optimizer.rules.am.VectorJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -166,12 +166,12 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
                 // Get filter variable to physical field index mapping from annotation
                 @SuppressWarnings("unchecked")
                 Map<LogicalVariable, Integer> filterVarToFieldIndex = (Map<LogicalVariable, Integer>) unnestMapOp
-                        .getAnnotations().get(PushFilterIntoVectorSearchRule.VECTOR_FILTER_VAR_MAPPING);
+                        .getAnnotations().get(VectorIncludeFilterPushdown.VECTOR_FILTER_VAR_MAPPING);
 
                 // Get filter variable types from annotation
                 @SuppressWarnings("unchecked")
                 Map<LogicalVariable, IAType> filterVarTypes = (Map<LogicalVariable, IAType>) unnestMapOp
-                        .getAnnotations().get(PushFilterIntoVectorSearchRule.VECTOR_FILTER_VAR_TYPES);
+                        .getAnnotations().get(VectorIncludeFilterPushdown.VECTOR_FILTER_VAR_TYPES);
 
                 // Create filter schema with direct mapping for filter-only variables
                 // numSecondaryKeys: offset from physical tuple start to PK field
@@ -185,6 +185,16 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
 
                 tupleFilterFactory = mp.createTupleFilterFactory(new IOperatorSchema[] { filterSchema }, filterTypeEnv,
                         unnestMapOp.getSelectCondition().getValue(), context);
+            } else if (VectorIncludeFilterPushdown.hasDeclaredFilterVariables(unnestMapOp)) {
+                // The index-only plan declares the INCLUDE columns its predicate reads as outputs of this
+                // unnest-map while leaving the predicate in a SELECT above, for PushFilterIntoVectorSearchRule
+                // to move into the select condition. Reaching job generation with the columns declared but no
+                // condition means that never happened -- something relocated or consumed the SELECT. The
+                // runtime emits only [pk..., dist], so the declared columns would be read as fields that were
+                // never written. Fail here rather than emit that.
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
+                        "the vector index-only plan declared INCLUDE filter columns on the index search of "
+                                + jobGenParams.getIndexName() + " but no filter condition reached it");
             }
         }
 

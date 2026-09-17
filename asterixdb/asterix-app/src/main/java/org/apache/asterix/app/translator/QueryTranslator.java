@@ -1735,6 +1735,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         fieldTypeMissable = projectTypeMissable;
                     } else {
                         // the type of the indexed field is explicitly specified in the DDL
+                        if (indexType == IndexType.VTREE) {
+                            // INCLUDE fields types comes from the schema (or is ANY for an undeclared field)
+                            // so DDL should not declare any type
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                    indexedElement.getSourceLocation(),
+                                    "Cannot specify the type of the INCLUDE field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(projectPath))
+                                            + "' of a vector index (TYPE VTREE)");
+                        }
                         Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(databaseName, dataverseName,
                                 indexName, projectTypeExpr.getType(), databaseName, dataverseName, mdTxnCtx);
                         TypeSignature typeSignature = new TypeSignature(databaseName, dataverseName, indexName);
