@@ -47,7 +47,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -63,10 +63,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     private IBufferCache bufferCache;
     private int fileId;
     private int rootPageId;
-    private ITreeIndexFrameFactory interiorFrameFactory;
-    private ITreeIndexFrameFactory leafFrameFactory;
-    private ITreeIndexFrameFactory metadataFrameFactory;
-    private ITreeIndexFrameFactory dataFrameFactory;
+    private final ITreeIndexFrameFactory interiorFrameFactory;
+    private final ITreeIndexFrameFactory leafFrameFactory;
 
     // Data access fields (for memory components: VBC; for disk: same as bufferCache)
     private IBufferCache dataBufferCache;
@@ -90,8 +88,11 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     private boolean isOpen;
     private ITupleReference currentTuple;
     private ICachedPage currentPage;
-    private IVTreeDataFrame dataFrame;
-    private ITreeIndexTupleReference frameTuple;
+    private final IVTreeInteriorFrame interiorFrame;
+    private final IVTreeLeafFrame leafFrame;
+    private final IVTreeDataFrame dataFrame;
+    private final IVTreeMetadataFrame metadataFrame;
+    private final ITreeIndexTupleReference frameTuple;
     /* Position in current data page (0-based, next tuple to read) */
     private int currentTupleIndex;
     /* Total tuples in current data page */
@@ -138,7 +139,15 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     private double[] quantizedQueryVector; // Quantized query vector (null = non-quantized)
     private IVTreeQuantizer quantizer; // Quantizer instance (null = non-quantized)
 
-    public VTreeSearchCursor() {
+    public VTreeSearchCursor(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            ITreeIndexFrameFactory dataFrameFactory, ITreeIndexFrameFactory metadataFrameFactory) {
+        this.interiorFrameFactory = interiorFrameFactory;
+        this.leafFrameFactory = leafFrameFactory;
+        this.interiorFrame = (IVTreeInteriorFrame) interiorFrameFactory.createFrame();
+        this.leafFrame = (IVTreeLeafFrame) leafFrameFactory.createFrame();
+        this.dataFrame = (IVTreeDataFrame) dataFrameFactory.createFrame();
+        this.metadataFrame = (IVTreeMetadataFrame) metadataFrameFactory.createFrame();
+        this.frameTuple = dataFrame.createTupleReference();
         this.isOpen = false;
         this.currentTupleIndex = 0;
         this.tupleCount = 0;
@@ -190,14 +199,6 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
 
     public void setRootPageId(int rootPageId) {
         this.rootPageId = rootPageId;
-    }
-
-    public void setFrameFactories(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
-            ITreeIndexFrameFactory metadataFrameFactory, ITreeIndexFrameFactory dataFrameFactory) {
-        this.interiorFrameFactory = interiorFrameFactory;
-        this.leafFrameFactory = leafFrameFactory;
-        this.metadataFrameFactory = metadataFrameFactory;
-        this.dataFrameFactory = dataFrameFactory;
     }
 
     public void setQueryVector(double[] queryVector) {
@@ -380,8 +381,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             throw HyracksDataException.create(new IllegalStateException("No more tuples"));
         }
 
-        // Position on next tuple using frameTuple
-        if (this.dataFrame != null && this.frameTuple != null) {
+        if (this.currentPage != null) {
             this.frameTuple.resetByTupleIndex(this.dataFrame, currentTupleIndex);
             this.currentTuple = this.frameTuple;
         }
@@ -437,7 +437,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
 
         // Step 4: Open cluster 0
         this.currentSequentialClusterIndex = 0;
-        openClusterByDirectoryPage(this.firstDirectoryPageId);
+        openClusterByDirectoryPage(this.firstDirectoryPageId, 0);
         this.clustersProbed = 1;
 
         // Create ClusterSearchResult for first cluster (for LSM layer to access)
@@ -463,7 +463,6 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
             try {
                 page.acquireReadLatch();
-                IVTreeInteriorFrame interiorFrame = createInteriorFrame();
                 interiorFrame.setPage(page);
 
                 if (interiorFrame.getLevel() == 0) {
@@ -499,7 +498,6 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             ICachedPage leafPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafPageId));
             try {
                 leafPage.acquireReadLatch();
-                IVTreeLeafFrame leafFrame = createLeafFrame();
                 leafFrame.setPage(leafPage);
 
                 int tupleCount = leafFrame.getTupleCount();
@@ -528,20 +526,17 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      * Open a cluster by its directory (metadata) page ID.
      * Used by full-scan mode for sequential cluster iteration.
      */
-    private void openClusterByDirectoryPage(long directoryPageId) throws HyracksDataException {
+    private void openClusterByDirectoryPage(long directoryPageId, int centroidId) throws HyracksDataException {
         // Log previous cluster summary if we have data
         this.targetMetadataPageId = directoryPageId;
 
-        // Guard: directoryPageId=-1 means empty cluster (no data assigned during bulk loading)
+        // A bulk load leaves the directory pointer unassigned on a leaf cluster that received no record.
         if (directoryPageId == -1) {
             if (!fullScanMode) {
-                // In query mode a -1 sentinel usually means the directory page could not be
-                // resolved in this component (e.g., a corrupt/wrong component root made the
-                // cluster unreachable) — flag it instead of silently yielding an empty cluster.
-                // Merge (full-scan) mode legitimately sees -1 for empty clusters, so stay quiet there.
                 emptyClustersInQueryMode++;
-                LOGGER.warn("VTreeSearchCursor: -1 directory page sentinel in query mode (fileId={}, rootPageId={}); "
-                        + "treating cluster as empty", fileId, rootPageId);
+                LOGGER.log(Level.TRACE,
+                        "cluster {} has no directory page: no record was loaded into it (fileId={}, rootPageId={})",
+                        centroidId, fileId, rootPageId);
             }
             markCurrentClusterEmpty();
             return;
@@ -551,21 +546,16 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         ICachedPage dirPage = dataBufferCache.pin(BufferedFileHandle.getDiskPageId(dataFileId, (int) directoryPageId));
         try {
             dirPage.acquireReadLatch();
-            IVTreeMetadataFrame metadataFrame = createMetadataFrame();
             metadataFrame.setPage(dirPage);
 
             int metadataTupleCount = metadataFrame.getTupleCount();
+            // A memory component pre-allocates one directory page per cluster and a flush copies it as is,
+            // so a cluster with no inserts has a directory page with no entries.
             if (metadataTupleCount == 0) {
                 if (!fullScanMode) {
-                    // The directory page resolved but has no data-page entries. In query mode that is a
-                    // recall hole (an expected-non-empty cluster yields nothing) and a sign of an
-                    // inconsistent component; surface it consistently with the -1 case above instead of
-                    // returning empty silently.
                     emptyClustersInQueryMode++;
-                    LOGGER.warn(
-                            "VTreeSearchCursor: directory page {} has no metadata entries in query mode "
-                                    + "(fileId={}, rootPageId={}); treating cluster as empty",
-                            directoryPageId, fileId, rootPageId);
+                    LOGGER.log(Level.TRACE, "cluster {} directory page {} has no data pages (fileId={}, rootPageId={})",
+                            centroidId, directoryPageId, fileId, rootPageId);
                 }
                 markCurrentClusterEmpty();
                 return;
@@ -610,7 +600,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             }
 
             long nextDirectoryPageId = allDirectoryPageIds.get(currentSequentialClusterIndex);
-            openClusterByDirectoryPage(nextDirectoryPageId);
+            openClusterByDirectoryPage(nextDirectoryPageId, currentSequentialClusterIndex);
 
             // Create ClusterSearchResult for this sequential cluster
             // In full-scan mode, we don't have centroid info, but we have the directory page
@@ -674,7 +664,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         // getMetadataPageIdFromCluster handles both memory (centroidDirPageMap)
         // and disk (leaf page traversal) correctly.
         long localDirPageId = getMetadataPageIdFromCluster(cluster);
-        openClusterByDirectoryPage(localDirPageId);
+        openClusterByDirectoryPage(localDirPageId, cluster.centroidId);
         this.currentClusterResult = cluster;
         this.clustersProbed++;
 
@@ -718,7 +708,6 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
                 dataBufferCache.pin(BufferedFileHandle.getDiskPageId(dataFileId, (int) targetMetadataPageId));
         try {
             metadataPage.acquireReadLatch();
-            IVTreeMetadataFrame metadataFrame = createMetadataFrame();
             metadataFrame.setPage(metadataPage);
 
             int tupleCount = metadataFrame.getTupleCount();
@@ -750,10 +739,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             page.acquireReadLatch();
             latched = true;
 
-            // Initialize data frame
-            this.dataFrame = createDataFrame();
             this.dataFrame.setPage(page);
-            this.frameTuple = this.dataFrame.createTupleReference();
             this.tupleCount = this.dataFrame.getTupleCount();
             this.currentTupleIndex = 0;
             this.currentPage = page;
@@ -773,7 +759,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      * @return true if successfully moved to next page, false if no more pages
      */
     private boolean moveToNextDataPage() throws HyracksDataException {
-        if (dataFrame == null) {
+        if (currentPage == null) {
             return false;
         }
 
@@ -813,21 +799,12 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     }
 
     /**
-     * Position the cursor on an empty cluster: release the page of the cluster being abandoned and drop the
-     * frame that was reading it.
-     * <p>
-     * Clearing {@code dataFrame}/{@code frameTuple} is what makes this safe. Leaving them pointing at the
-     * previous cluster's page lets the next {@code hasNext()} fall into {@link #moveToNextDataPage()}, which
-     * reads {@code dataFrame.getNextPage()} off that stale frame and silently resumes the abandoned cluster's
-     * data-page chain. That is reachable in practice because the LSM layer re-points this cursor mid-cluster
-     * during cross-component cluster synchronization ({@code openClusterByResult}), so a cluster is not
-     * necessarily drained to the end of its chain before the next one is opened.
+     * Position the cursor on an empty cluster. {@code currentPage} is the only sign of an open page, so once
+     * it is closed neither {@code hasNext()} nor {@link #moveToNextDataPage()} can follow the abandoned
+     * cluster's data-page chain through the frame that last read it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private void markCurrentClusterEmpty() throws HyracksDataException {
         closeCurrentPage();
-        this.dataFrame = null;
-        this.frameTuple = null;
         this.currentDataPageId = -1;
         this.tupleCount = 0;
         this.currentTupleIndex = 0;
@@ -859,28 +836,6 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             // Empty cluster
             markCurrentClusterEmpty();
         }
-    }
-
-    /**
-     * Create a metadata frame instance using the frame factory.
-     */
-    private IVTreeMetadataFrame createMetadataFrame() {
-        if (metadataFrameFactory == null) {
-            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
-            throw new IllegalStateException("Metadata frame factory not set");
-        }
-        return (IVTreeMetadataFrame) metadataFrameFactory.createFrame();
-    }
-
-    /**
-     * Create a data frame instance using the frame factory.
-     */
-    private IVTreeDataFrame createDataFrame() {
-        if (dataFrameFactory == null) {
-            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
-            throw new IllegalStateException("Data frame factory not set");
-        }
-        return (IVTreeDataFrame) dataFrameFactory.createFrame();
     }
 
     /**
@@ -958,8 +913,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             try {
                 page.acquireReadLatch();
 
-                // Use leaf frame to check page level (isLeaf works on any page type)
-                IVTreeLeafFrame lf = createLeafFrame();
+                // isLeaf reads the page level, which every page type carries.
+                IVTreeLeafFrame lf = leafFrame;
                 lf.setPage(page);
 
                 if (lf.isLeaf()) {
@@ -978,8 +933,7 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
                         }
                     }
                 } else {
-                    // Interior page: enqueue all children
-                    IVTreeInteriorFrame intFrame = createInteriorFrame();
+                    IVTreeInteriorFrame intFrame = interiorFrame;
                     intFrame.setPage(page);
 
                     int tc = intFrame.getTupleCount();
@@ -1001,33 +955,10 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
         }
     }
 
-    /**
-     * Create frame instances.
-     */
-    private IVTreeInteriorFrame createInteriorFrame() {
-        if (interiorFrameFactory == null) {
-            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
-            throw new IllegalStateException("Interior frame factory not set");
-        }
-        return (IVTreeInteriorFrame) interiorFrameFactory.createFrame();
-    }
-
-    private IVTreeLeafFrame createLeafFrame() {
-        if (leafFrameFactory == null) {
-            // TODO(vector-errors): uncoded IllegalStateException -> reaches the user as "Internal error".
-            throw new IllegalStateException("Leaf frame factory not set");
-        }
-        return (IVTreeLeafFrame) leafFrameFactory.createFrame();
-    }
-
     @Override
     protected void doClose() throws HyracksDataException {
         if (isOpen && emptyClustersInQueryMode > 0) {
-            // Aggregate recall-hole summary for this search: how many probed clusters yielded nothing in
-            // query mode. Non-zero here means candidates were missed (usually an inconsistent component).
-            LOGGER.warn(
-                    "VTreeSearchCursor: {} of {} probed clusters were empty in query mode "
-                            + "(fileId={}, rootPageId={})",
+            LOGGER.log(Level.TRACE, "{} of {} probed clusters were empty (fileId={}, rootPageId={})",
                     emptyClustersInQueryMode, clustersProbed, fileId, rootPageId);
         }
         if (isOpen) {

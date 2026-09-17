@@ -137,6 +137,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                 private IPointable clusterIdVal;
                 private IPointable centroidIdVal;
                 private Map<Integer, Integer> levelDistribution = null;
+                private final Map<Integer, Integer> lastParentByLevel = new HashMap<>();
                 private Map<String, Map<Integer, Integer>> clusterDistribution = null;
 
                 // Quantization-related instance variables
@@ -283,6 +284,7 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                         }
 
                         levelDistribution.put(level, levelDistribution.getOrDefault(level, 0) + 1);
+                        checkGroupedByParent(level, clusterId, lastParentByLevel);
 
                         String levelKey = "Level_" + level;
                         Map<Integer, Integer> levelClusters =
@@ -691,4 +693,21 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
         }
     }
 
+    /**
+     * The static-structure builder attaches each level's runs of children to the parents by position, so
+     * the tuples of a level must arrive grouped by parent in ascending parent order. Root tuples have no
+     * parent (-1) and are not checked.
+     */
+    static void checkGroupedByParent(int level, int parentClusterId, Map<Integer, Integer> lastParentByLevel)
+            throws HyracksDataException {
+        if (parentClusterId < 0) {
+            return;
+        }
+        Integer last = lastParentByLevel.put(level, parentClusterId);
+        // A tripwire on the producer's contract; the builder itself cannot check it.
+        if (last != null && parentClusterId < last) {
+            throw HyracksDataException.create(ILLEGAL_STATE, "Centroid tuples of level " + level
+                    + " are not grouped by parent: parent " + parentClusterId + " arrived after parent " + last);
+        }
+    }
 }

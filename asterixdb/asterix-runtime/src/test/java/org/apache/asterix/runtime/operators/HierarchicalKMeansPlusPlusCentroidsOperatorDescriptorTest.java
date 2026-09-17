@@ -255,6 +255,54 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
         }
     }
 
+    /**
+     * The static-structure creator derives per-parent counts from the stream and the builder files leaves
+     * into parents positionally, so within a level the tuples must arrive grouped by parent, parents in
+     * ascending order.
+     */
+    @Test
+    public void testEachLevelArrivesGroupedByParent() throws Exception {
+        List<CentroidTuple> tuples = parseAll(runOperator(7L, 36, 512, twoClusterVectors(40)));
+        Map<Integer, List<Integer>> parentsByLevel = new HashMap<>();
+        for (CentroidTuple t : tuples) {
+            if (t.treeLevel > 0) {
+                parentsByLevel.computeIfAbsent(t.treeLevel, k -> new java.util.ArrayList<>()).add(t.parentClusterId);
+            }
+        }
+        Assert.assertFalse("expected at least one non-root level", parentsByLevel.isEmpty());
+        for (Map.Entry<Integer, List<Integer>> e : parentsByLevel.entrySet()) {
+            List<Integer> parents = e.getValue();
+            for (int i = 1; i < parents.size(); i++) {
+                Assert.assertTrue(
+                        "level " + e.getKey() + " tuples arrive with parents " + parents + ", not grouped by parent",
+                        parents.get(i) >= parents.get(i - 1));
+            }
+        }
+    }
+
+    /**
+     * Reordering a level moves its tuples, so the level below must reference the parents' emission
+     * positions, not their k-means indices. Three levels: a root of two, a middle of three, six leaves.
+     */
+    @Test
+    public void testGroupByParentRemapsParentsToEmissionPositions() {
+        int[][] parentByLevel = { { 2, 0, 1, 2, 0, 1 }, { 1, 0, 1 }, { -1, -1 } };
+        HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor.LevelOrder levelOrder =
+                HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor.LevelOrder.groupByParent(parentByLevel);
+
+        Assert.assertArrayEquals(new int[] { 0, 1 }, levelOrder.order[2]);
+        // Middle: the child of root 0 first, then the two children of root 1 in k-means order.
+        Assert.assertArrayEquals(new int[] { 1, 0, 2 }, levelOrder.order[1]);
+        Assert.assertArrayEquals(new int[] { 1, 0, 2 }, levelOrder.position[1]);
+        // Leaves: grouped by the middle tuples' emission positions (old 1 -> 0, old 0 -> 1, old 2 -> 2).
+        Assert.assertArrayEquals(new int[] { 2, 5, 1, 4, 0, 3 }, levelOrder.order[0]);
+        int[] emittedParents = new int[6];
+        for (int k = 0; k < 6; k++) {
+            emittedParents[k] = levelOrder.position[1][parentByLevel[0][levelOrder.order[0][k]]];
+        }
+        Assert.assertArrayEquals(new int[] { 0, 0, 1, 1, 2, 2 }, emittedParents);
+    }
+
     @Test
     public void testClusteringSanityTwoSeparatedGroups() throws Exception {
         List<double[]> vectors = twoClusterVectors(20);

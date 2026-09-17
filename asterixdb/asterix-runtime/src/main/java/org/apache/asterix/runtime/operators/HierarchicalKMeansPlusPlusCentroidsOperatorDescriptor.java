@@ -1565,6 +1565,17 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                 idOffset[L] = idOffset[L + 1] + sizeAbove;
             }
 
+            int[][] parentByLevel = new int[maxLevel + 1][];
+            for (int L = 0; L <= maxLevel; L++) {
+                List<CentroidInfo> levelInfo = levelCentroids.get(L);
+                int size = levelInfo == null ? 0 : levelInfo.size();
+                parentByLevel[L] = new int[size];
+                for (int i = 0; i < size; i++) {
+                    parentByLevel[L][i] = levelInfo.get(i).parentClusterId;
+                }
+            }
+            LevelOrder levelOrder = LevelOrder.groupByParent(parentByLevel);
+
             // Walk levels bottom-up: levelCentroids key 0 (leaves) → key maxLevel (root).
             // The tuple's treeLevel field keeps the existing convention: root = 0, leaf = maxLevel.
             for (int L = 0; L <= maxLevel; L++) {
@@ -1573,11 +1584,12 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                     continue;
                 }
                 int treeLevel = maxLevel - L;
-                int globalCentroidId = idOffset[L];
-                for (CentroidInfo centroid : levelInfo) {
-                    createHierarchicalTuple(treeLevel, globalCentroidId, centroid.parentClusterId, centroid.embedding,
-                            appender, writer, ctx);
-                    globalCentroidId++;
+                int[] order = levelOrder.order[L];
+                for (int k = 0; k < order.length; k++) {
+                    CentroidInfo centroid = levelInfo.get(order[k]);
+                    int parent = L == maxLevel ? -1 : levelOrder.position[L + 1][centroid.parentClusterId];
+                    createHierarchicalTuple(treeLevel, idOffset[L] + k, parent, centroid.embedding, appender, writer,
+                            ctx);
                 }
             }
         }
@@ -1701,4 +1713,53 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
         }
     }
 
+    /**
+     * The emission order of every level, grouped by parent. The static-structure builder attaches each
+     * level's runs of children to the parents by position, so a level must be emitted with the children
+     * of parent 0 first, then parent 1, and so on, where "parent k" means the k-th emitted tuple of the
+     * level above. Ties keep the k-means order.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    static final class LevelOrder {
+        /** {@code order[L][k]} is the list index of the k-th emitted tuple of level {@code L}. */
+        final int[][] order;
+        /** {@code position[L][i]} is the emission position of list index {@code i} of level {@code L}. */
+        final int[][] position;
+
+        private LevelOrder(int[][] order, int[][] position) {
+            this.order = order;
+            this.position = position;
+        }
+
+        /**
+         * @param parentByLevel {@code parentByLevel[L][i]} is the list index in level {@code L + 1} of the
+         *                      parent of tuple {@code i} of level {@code L}; the last level is the root and
+         *                      its entries are ignored.
+         */
+        static LevelOrder groupByParent(int[][] parentByLevel) {
+            int levels = parentByLevel.length;
+            int[][] order = new int[levels][];
+            int[][] position = new int[levels][];
+            for (int L = levels - 1; L >= 0; L--) {
+                int size = parentByLevel[L].length;
+                Integer[] indices = new Integer[size];
+                for (int i = 0; i < size; i++) {
+                    indices[i] = i;
+                }
+                if (L < levels - 1) {
+                    int[] parentPosition = position[L + 1];
+                    int[] parentOf = parentByLevel[L];
+                    Arrays.sort(indices,
+                            (a, b) -> Integer.compare(parentPosition[parentOf[a]], parentPosition[parentOf[b]]));
+                }
+                order[L] = new int[size];
+                position[L] = new int[size];
+                for (int k = 0; k < size; k++) {
+                    order[L][k] = indices[k];
+                    position[L][indices[k]] = k;
+                }
+            }
+            return new LevelOrder(order, position);
+        }
+    }
 }

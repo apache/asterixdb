@@ -672,7 +672,8 @@ public class VTree extends AbstractTreeIndex {
          * @return Configured search cursor
          */
         public IIndexCursor createSearchCursor(boolean exclusive, boolean fullScanMode) throws HyracksDataException {
-            VTreeSearchCursor cursor = new VTreeSearchCursor();
+            VTreeSearchCursor cursor = new VTreeSearchCursor(tree.interiorFrameFactory, tree.leafFrameFactory,
+                    tree.dataFrameFactory, tree.metadataFrameFactory);
             configureCursor(cursor);
             cursor.setFullScanMode(fullScanMode);
             return cursor;
@@ -691,8 +692,6 @@ public class VTree extends AbstractTreeIndex {
                 cursor.setRootPageId(tree.rootPage);
                 cursor.setDataBufferCache(tree.bufferCache, tree.getFileId());
             }
-            cursor.setFrameFactories(tree.interiorFrameFactory, tree.leafFrameFactory, tree.metadataFrameFactory,
-                    tree.dataFrameFactory);
         }
 
         public VTree getIndex() {
