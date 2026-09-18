@@ -66,11 +66,14 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
 
     /**
-     * Placement for the fixtures: one cluster per record, canonical RNG factor, and one candidate window
-     * used by every path. Stated explicitly because {@code CrossPollinationConfig} intentionally has no
-     * default — the value must be the one records were placed by, so it is never implied.
+     * Placement for the fixtures: one cluster per record and the canonical RNG factor. Stated explicitly
+     * because {@code CrossPollinationConfig} intentionally has no default — the value must be the one
+     * records were placed by, so it is never implied.
      */
-    private static final CrossPollinationConfig SINGLE_CLOSEST = new CrossPollinationConfig(1, 1.0, 0.25);
+    private static final CrossPollinationConfig SINGLE_CLOSEST = new CrossPollinationConfig(1, 1.0);
+
+    /** The candidate window the fixtures descend with; explicit for the same reason. */
+    private static final double EPSILON = 0.25;
 
     /** The fixtures declare one identity field; its position follows the builder's quantization mode. */
     private static final int NUM_KEY_FIELDS = 1;
@@ -190,7 +193,7 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 VTreeDataTupleAccessor.identityFields(effectiveFactory.isQuantized(), NUM_KEY_FIELDS), effectiveFactory,
                 (VTreeQuantizationParams) null, // builderFactory, quantizer
                 TestVTreeDistanceFunctionFactory.INSTANCE, // distanceFunctionFactory (test fixture)
-                SINGLE_CLOSEST); // crossPollination
+                SINGLE_CLOSEST, EPSILON);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }
@@ -232,7 +235,7 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 true, metadataPageManagerFactory, false, (RecordDescriptor) null,
                 TestDoubleArrayVectorAccessor.Factory.INSTANCE,
                 VTreeDataTupleAccessor.identityFields(effectiveFactory.isQuantized(), NUM_KEY_FIELDS), effectiveFactory,
-                quantizationParams, TestVTreeDistanceFunctionFactory.INSTANCE, SINGLE_CLOSEST);
+                quantizationParams, TestVTreeDistanceFunctionFactory.INSTANCE, SINGLE_CLOSEST, EPSILON);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }

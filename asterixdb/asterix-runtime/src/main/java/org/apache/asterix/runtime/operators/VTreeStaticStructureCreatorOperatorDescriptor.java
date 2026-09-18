@@ -71,6 +71,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.vector.dataflow.LSMVTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
+import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IResource;
@@ -200,40 +201,17 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                                 DatasetLocalResource datasetResource = (DatasetLocalResource) resource;
                                 IResource delegate = datasetResource.getResource();
                                 if (delegate instanceof LSMVTreeLocalResource) {
-                                    LSMVTreeLocalResource vcTreeResource = (LSMVTreeLocalResource) delegate;
-
-                                    // Read quantization parameters with defaults
-                                    Integer bits = vcTreeResource.getBits();
-                                    if (bits != null) {
-                                        quantizationBits = bits;
+                                    VTreeQuantizationParams params =
+                                            ((LSMVTreeLocalResource) delegate).getQuantizationParams();
+                                    if (params != null) {
+                                        quantizationBits = params.bits();
+                                        confidenceInterval = params.confidenceInterval();
+                                        minQuantile = params.minQuantile();
+                                        maxQuantile = params.maxQuantile();
+                                        alpha = params.alpha();
+                                        sampleCount = params.sampleCount();
+                                        quantizationParamsLoaded = true;
                                     }
-
-                                    Float ci = vcTreeResource.getConfidenceInterval();
-                                    if (ci != null) {
-                                        confidenceInterval = ci;
-                                    }
-
-                                    Float minQ = vcTreeResource.getMinQuantile();
-                                    if (minQ != null) {
-                                        minQuantile = minQ;
-                                    }
-
-                                    Float maxQ = vcTreeResource.getMaxQuantile();
-                                    if (maxQ != null) {
-                                        maxQuantile = maxQ;
-                                    }
-
-                                    Float a = vcTreeResource.getAlpha();
-                                    if (a != null) {
-                                        alpha = a;
-                                    }
-
-                                    Integer sc = vcTreeResource.getSampleCount();
-                                    if (sc != null) {
-                                        sampleCount = sc;
-                                    }
-
-                                    quantizationParamsLoaded = vcTreeResource.hasQuantizationParams();
                                 }
                             }
                         }

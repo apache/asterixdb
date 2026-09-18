@@ -93,6 +93,7 @@ public final class LSMVTreeUtils {
      *                           has to be the one bulk-load placed the records by, and a default here
      *                           would be a second source of truth for it. Callers that do not care
      *                           about replication pass an explicit single-closest config.
+     * @param epsilon            level-wise candidate window from the index DDL, for the same reason.
      */
     public static LSMVTree createLSMTree(NCConfig storageConfig, IIOManager ioManager,
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
@@ -105,8 +106,8 @@ public final class LSMVTreeUtils {
             IMetadataPageManagerFactory metadataPageManagerFactory, boolean atomic, RecordDescriptor inputRecDesc,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
-            throws HyracksDataException {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
+            double epsilon) throws HyracksDataException {
 
         // VTree tuples contain no field that is both fixed-length AND nullable, so the null bitmap is never
         // load-bearing and no INullIntrospector is needed (unlike BTree/RTree secondary keys):
@@ -173,7 +174,7 @@ public final class LSMVTreeUtils {
         VTreeFactory vtreeFactory = new VTreeFactory(ioManager, diskBufferCache, metadataPageManagerFactory,
                 interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
                 TREE_INDEX_FIELD_COUNT, vectorDimensions, vectorAccessorFactory, dataTupleBuilderFactory,
-                quantizationParams, distanceFunctionFactory, crossPollination);
+                quantizationParams, distanceFunctionFactory, crossPollination, epsilon);
         ILSMIndexFileManager fileManager = new LSMVTreeFileManager(ioManager, file, vtreeFactory);
         ILSMDiskComponentFactory componentFactory = new LSMVTreeDiskComponentFactory(vtreeFactory, filterHelper);
 
@@ -183,7 +184,7 @@ public final class LSMVTreeUtils {
                 bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 pageWriteCallbackFactory, vectorDimensions, vectorFields, filterFields, durable, atomic,
                 vectorAccessorFactory, comparatorFields, keyCmpFactories, dataTupleBuilderFactory, quantizationParams,
-                distanceFunctionFactory, crossPollination);
+                distanceFunctionFactory, crossPollination, epsilon);
     }
 
 }

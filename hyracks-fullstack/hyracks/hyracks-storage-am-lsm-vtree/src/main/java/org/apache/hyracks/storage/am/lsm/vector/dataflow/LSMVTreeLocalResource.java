@@ -46,14 +46,12 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.api.IQuantizedResource;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -62,56 +60,56 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
 
     private static final long serialVersionUID = 2L;
 
-    // Persisted/wire key names for quantization parameters. Shared with QuantizedIndexCreate so
-    // the producer and the persisted resource agree on the vocabulary.
-    public static final String KEY_MIN_QUANTILE = "minQuantile";
-    public static final String KEY_MAX_QUANTILE = "maxQuantile";
-    public static final String KEY_ALPHA = "alpha";
-    public static final String KEY_BITS = "bits";
-    public static final String KEY_CONFIDENCE_INTERVAL = "confidenceInterval";
-    public static final String KEY_SAMPLE_COUNT = "sampleCount";
-
     private static final double BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
-    /** JSON key under which the vector accessor factory is persisted. */
+
+    private static final String KEY_VECTOR_DIMENSIONS = "vectorDimensions";
+    private static final String KEY_VECTOR_FIELDS = "vectorFields";
+    private static final String KEY_ATOMIC = "atomic";
+    private static final String KEY_IDENTITY_FIELDS = "identityFields";
+    private static final String KEY_NUM_INCLUDE_FIELDS = "numIncludeFields";
     private static final String KEY_VECTOR_ACCESSOR_FACTORY = "vectorAccessorFactory";
-    /** JSON key under which the distance-function factory is persisted. */
     private static final String KEY_DISTANCE_FUNCTION_FACTORY = "distanceFunctionFactory";
-    /** JSON keys for the cross-pollination placement parameters (see {@link CrossPollinationConfig}). */
     private static final String KEY_CROSS_POLLINATION_M = "crossPollinationM";
     private static final String KEY_RNG_FACTOR = "rngFactor";
     private static final String KEY_EPSILON = "epsilon";
+    private static final String KEY_QUANTIZATION = "quantization";
+    private static final String KEY_MIN_QUANTILE = "minQuantile";
+    private static final String KEY_MAX_QUANTILE = "maxQuantile";
+    private static final String KEY_ALPHA = "alpha";
+    private static final String KEY_CONFIDENCE_INTERVAL = "confidenceInterval";
+    private static final String KEY_BITS = "bits";
+    private static final String KEY_SAMPLE_COUNT = "sampleCount";
 
     protected final int vectorDimensions;
     protected final int[] vectorFields;
-    protected final int[] filterFields;
     protected final boolean atomic;
     protected final IVTreeBinaryAccessorFactory vectorAccessorFactory;
     /** Positions of the identity fields within a data tuple; the ordering key is distance plus these. */
     protected final int[] identityFields;
-    /** How many INCLUDE fields the *input* tuple carries; an input-layout fact, used by the tuple builder. */
+    /** How many INCLUDE fields the <em>input</em> tuple carries; an input-layout fact for the tuple builder. */
     protected final int numIncludeFields;
-    protected final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
 
     /**
-     * Distance-function factory supplied at DDL time. Persisted via the resource registry so a
-     * restarted index reconstructs the same distance implementation.
+     * Distance-function factory supplied at DDL time. Persisted so a restarted index reconstructs the
+     * same distance implementation.
      */
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
 
     /**
-     * Cross-pollination placement config supplied at DDL time; never {@code null}. All three values are
-     * persisted to JSON — at every {@code M}, not only when replication is on — so that incremental
-     * insert/delete on a restarted index resolve the same leaf clusters bulk-load used.
+     * Cross-pollination placement config supplied at DDL time; never {@code null}. Persisted so that
+     * incremental insert and delete on a restarted index resolve the leaf clusters bulk-load used.
      */
     protected final CrossPollinationConfig crossPollination;
 
-    // Quantization parameters (optional, set by QuantizedIndexCreate during index creation)
-    protected Float confidenceInterval;
-    protected Float minQuantile;
-    protected Float maxQuantile;
-    protected Float alpha;
-    protected Integer bits;
-    protected Integer sampleCount;
+    /** Level-wise candidate window from the DDL; persisted for the same reason as {@link #crossPollination}. */
+    protected final double epsilon;
+
+    /**
+     * Scalar-quantization calibration, or {@code null} for a non-quantized index. Written once by
+     * {@link QuantizedIndexBuilder} between resource creation and the first {@link #createInstance}, so
+     * its presence is the single answer to whether this index is quantized.
+     */
+    protected VTreeQuantizationParams quantization;
 
     public LSMVTreeLocalResource(String path, IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -123,56 +121,39 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
             Map<String, String> mergePolicyProperties, boolean durable, int vectorDimensions, int[] vectorFields,
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
-            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, Float confidenceInterval, Float minQuantile,
-            Float maxQuantile, Float alpha, Integer bits, Integer sampleCount,
-            CrossPollinationConfig crossPollination) {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
+            double epsilon) {
         super(path, storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
                 nullIntrospector);
         this.vectorDimensions = vectorDimensions;
         this.vectorFields = vectorFields;
-        this.filterFields = filterFields;
         this.atomic = atomic;
-        this.distanceFunctionFactory = distanceFunctionFactory;
-        this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
-        this.confidenceInterval = confidenceInterval;
-        this.minQuantile = minQuantile;
-        this.maxQuantile = maxQuantile;
-        this.alpha = alpha;
-        this.bits = bits;
-        this.sampleCount = sampleCount;
-        this.vectorAccessorFactory = vectorAccessorFactory;
-        this.identityFields = identityFields;
+        this.vectorAccessorFactory = Objects.requireNonNull(vectorAccessorFactory, "vectorAccessorFactory");
+        this.identityFields = Objects.requireNonNull(identityFields, "identityFields");
         this.numIncludeFields = numIncludeFields;
-        this.dataTupleBuilderFactory = dataTupleBuilderFactory;
+        this.distanceFunctionFactory = Objects.requireNonNull(distanceFunctionFactory, "distanceFunctionFactory");
+        this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
+        this.epsilon = epsilon;
     }
 
     protected LSMVTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int vectorDimensions,
-            int[] vectorFields, int[] filterFields, boolean atomic, Float confidenceInterval, Float minQuantile,
-            Float maxQuantile, Float alpha, Integer bits, Integer sampleCount,
-            IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
-            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
+            int[] vectorFields, boolean atomic, IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
+            int numIncludeFields, IVTreeDistanceFunctionFactory distanceFunctionFactory,
+            CrossPollinationConfig crossPollination, double epsilon, VTreeQuantizationParams quantization)
             throws HyracksDataException {
         super(registry, json);
         this.vectorDimensions = vectorDimensions;
         this.vectorFields = vectorFields;
-        this.filterFields = filterFields;
         this.atomic = atomic;
-        this.distanceFunctionFactory = distanceFunctionFactory;
-        this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
-        this.confidenceInterval = confidenceInterval;
-        this.minQuantile = minQuantile;
-        this.maxQuantile = maxQuantile;
-        this.alpha = alpha;
-        this.bits = bits;
-        this.sampleCount = sampleCount;
-        this.vectorAccessorFactory = vectorAccessorFactory;
-        this.identityFields = identityFields;
+        this.vectorAccessorFactory = Objects.requireNonNull(vectorAccessorFactory, "vectorAccessorFactory");
+        this.identityFields = Objects.requireNonNull(identityFields, "identityFields");
         this.numIncludeFields = numIncludeFields;
-        this.dataTupleBuilderFactory = dataTupleBuilderFactory;
+        this.distanceFunctionFactory = Objects.requireNonNull(distanceFunctionFactory, "distanceFunctionFactory");
+        this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
+        this.epsilon = epsilon;
+        this.quantization = quantization;
     }
 
     @Override
@@ -185,226 +166,109 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         ioOpCallbackFactory.initialize(ncServiceCtx, this);
         pageWriteCallbackFactory.initialize(ncServiceCtx, this);
 
-        // Construction-time invariant: vectorAccessorFactory is always supplied — by
-        // VTreeResourceFactoryProvider in production and by the test harness in tests, and round-
-        // tripped through the resource registry on JSON read. A null here indicates a corrupted
-        // resource (e.g., a JSON file with the {@link #KEY_VECTOR_ACCESSOR_FACTORY} key missing).
-        if (vectorAccessorFactory == null) {
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "The vector accessor factory is missing from the resource at " + path);
-        }
-        // Distance-function factory is always supplied at DDL and round-tripped through the registry;
-        // a null indicates a corrupted or unsupported-version resource.
-        if (distanceFunctionFactory == null) {
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "The distance-function factory is missing from the resource at " + path);
-        }
+        // The tuple layout follows from the persisted facts, so it is rebuilt here rather than carried as a
+        // second copy of them.
+        VTreeDataTupleBuilderFactory dataTupleBuilderFactory =
+                new VTreeDataTupleBuilderFactory(numIncludeFields, identityFields.length, quantization != null);
 
-        // Quantization params for lazy quantizer creation at query time
-        VTreeQuantizationParams quantizationParams = null;
-        if (hasQuantizationParams()) {
-            quantizationParams =
-                    new VTreeQuantizationParams(minQuantile, maxQuantile, alpha, confidenceInterval, bits, sampleCount);
-        }
-
+        // A VTree has no LSM component filter; the base carries the filter traits only because every
+        // LsmResource does.
         return LSMVTreeUtils.createLSMTree(storageConfig, ioManager, virtualBufferCaches, fileRef,
                 storageManager.getBufferCache(ncServiceCtx), typeTraits, cmpFactories, BLOOM_FILTER_FALSE_POSITIVE_RATE,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
                 opTrackerProvider.getOperationTracker(ncServiceCtx, this),
                 ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, pageWriteCallbackFactory,
-                vectorDimensions, vectorFields, filterFields, null, // filterFrameFactory
-                null, // filterManager
-                null, // filterHelper
-                durable, metadataPageManagerFactory, atomic, null, vectorAccessorFactory, identityFields,
-                dataTupleBuilderFactory, quantizationParams, distanceFunctionFactory, crossPollination);
+                vectorDimensions, vectorFields, filterFields, null, null, null, durable, metadataPageManagerFactory,
+                atomic, null, vectorAccessorFactory, identityFields, dataTupleBuilderFactory, quantization,
+                distanceFunctionFactory, crossPollination, epsilon);
     }
 
     @Override
     public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
         ObjectNode jsonObject = registry.getClassIdentifier(getClass(), serialVersionUID);
-        appendToJson(jsonObject, registry); // Call this.appendToJson() to include quantization params
+        appendToJson(jsonObject, registry);
         return jsonObject;
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Persist the cross-pollination params at every M, so a restarted NC reconstructs the "
-            + "window the index was bulk-loaded with")
     protected void appendToJson(final ObjectNode json, IPersistedResourceRegistry registry)
             throws HyracksDataException {
         super.appendToJson(json, registry);
-        json.put("vectorDimensions", vectorDimensions);
-        json.putPOJO("vectorFields", vectorFields);
-        json.putPOJO("filterFields", filterFields);
-        json.put("atomic", atomic);
-        // Cross-pollination placement params — always persisted, including at M == 1, and read back with
-        // no default (see fromJson). epsilon prunes the level-wise descent at every M, so writing these
-        // only when replication was on left a restarted NC reconstructing the index with a different
-        // window than it was bulk-loaded with, which leaks deletes.
+        json.put(KEY_VECTOR_DIMENSIONS, vectorDimensions);
+        json.putPOJO(KEY_VECTOR_FIELDS, vectorFields);
+        json.put(KEY_ATOMIC, atomic);
+        json.putPOJO(KEY_IDENTITY_FIELDS, identityFields);
+        json.put(KEY_NUM_INCLUDE_FIELDS, numIncludeFields);
+        // The placement parameters are written at every M. A restarted NC that reconstructed the index with
+        // a different window than bulk-load used would resolve a delete to another leaf cluster and leak it.
+        json.put(KEY_EPSILON, epsilon);
         json.put(KEY_CROSS_POLLINATION_M, crossPollination.m());
         json.put(KEY_RNG_FACTOR, crossPollination.rngFactor());
-        json.put(KEY_EPSILON, crossPollination.epsilon());
-        // Vector accessor factory — round-tripped via IPersistedResourceRegistry. The factory
-        // implementation (AOrderedListVectorBinaryAccessorFactory) must be registered with the
-        // registry; see PersistedResourceRegistry#registerClasses.
-        if (vectorAccessorFactory != null) {
-            json.set(KEY_VECTOR_ACCESSOR_FACTORY, vectorAccessorFactory.toJson(registry));
+        // Both factories round-trip through the registry, so their implementations must be registered there;
+        // see PersistedResourceRegistry#registerClasses.
+        json.set(KEY_VECTOR_ACCESSOR_FACTORY, vectorAccessorFactory.toJson(registry));
+        json.set(KEY_DISTANCE_FUNCTION_FACTORY, distanceFunctionFactory.toJson(registry));
+        if (quantization != null) {
+            ObjectNode quantizationNode = OBJECT_MAPPER.createObjectNode();
+            quantizationNode.put(KEY_MIN_QUANTILE, quantization.minQuantile());
+            quantizationNode.put(KEY_MAX_QUANTILE, quantization.maxQuantile());
+            quantizationNode.put(KEY_ALPHA, quantization.alpha());
+            quantizationNode.put(KEY_CONFIDENCE_INTERVAL, quantization.confidenceInterval());
+            quantizationNode.put(KEY_BITS, quantization.bits());
+            quantizationNode.put(KEY_SAMPLE_COUNT, quantization.sampleCount());
+            json.set(KEY_QUANTIZATION, quantizationNode);
         }
-        // Distance-function factory — round-tripped via the registry (implementation must be
-        // registered; see PersistedResourceRegistry#registerClasses).
-        if (distanceFunctionFactory != null) {
-            json.set(KEY_DISTANCE_FUNCTION_FACTORY, distanceFunctionFactory.toJson(registry));
-        }
-        // Write quantization parameters only when set (a non-quantized index has none).
-        putIfNotNull(json, KEY_CONFIDENCE_INTERVAL, confidenceInterval);
-        putIfNotNull(json, KEY_MIN_QUANTILE, minQuantile);
-        putIfNotNull(json, KEY_MAX_QUANTILE, maxQuantile);
-        putIfNotNull(json, KEY_ALPHA, alpha);
-        putIfNotNull(json, KEY_BITS, bits);
-        putIfNotNull(json, KEY_SAMPLE_COUNT, sampleCount);
-        json.putPOJO("identityFields", identityFields);
-        json.put("numIncludeFields", numIncludeFields);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Fall back to CrossPollinationConfig's shared placement defaults rather than local "
-            + "literals that can disagree with the WITH-clause defaults")
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
             throws HyracksDataException {
-        // appendToJson always writes vectorDimensions and the field layout, so a missing one means the
-        // resource is corrupt. Reject it here rather than let a default silently mis-key the index.
-        if (!json.has("vectorDimensions") || json.get("vectorDimensions").asInt() <= 0) {
+        int vectorDimensions = require(json, KEY_VECTOR_DIMENSIONS).asInt();
+        if (vectorDimensions <= 0) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "LSMVTreeLocalResource is missing or has a non-positive vectorDimensions; resource is corrupt");
+                    "LSMVTreeLocalResource carries a non-positive " + KEY_VECTOR_DIMENSIONS + "; resource is corrupt");
         }
-        int vectorDimensions = json.get("vectorDimensions").asInt();
-        if (!json.has("identityFields") || !json.has("numIncludeFields")) {
+        int[] identityFields = OBJECT_MAPPER.convertValue(require(json, KEY_IDENTITY_FIELDS), int[].class);
+        int numIncludeFields = require(json, KEY_NUM_INCLUDE_FIELDS).asInt();
+        int[] vectorFields = OBJECT_MAPPER.convertValue(require(json, KEY_VECTOR_FIELDS), int[].class);
+        boolean atomic = json.has(KEY_ATOMIC) && json.get(KEY_ATOMIC).asBoolean();
+        IVTreeBinaryAccessorFactory vectorAccessorFactory =
+                (IVTreeBinaryAccessorFactory) registry.deserialize(require(json, KEY_VECTOR_ACCESSOR_FACTORY));
+        IVTreeDistanceFunctionFactory distanceFunctionFactory =
+                (IVTreeDistanceFunctionFactory) registry.deserialize(require(json, KEY_DISTANCE_FUNCTION_FACTORY));
+        double epsilon = require(json, KEY_EPSILON).asDouble();
+        CrossPollinationConfig crossPollination = new CrossPollinationConfig(
+                require(json, KEY_CROSS_POLLINATION_M).asInt(), require(json, KEY_RNG_FACTOR).asDouble());
+
+        VTreeQuantizationParams quantization = null;
+        if (json.has(KEY_QUANTIZATION)) {
+            JsonNode node = json.get(KEY_QUANTIZATION);
+            quantization = new VTreeQuantizationParams((float) require(node, KEY_MIN_QUANTILE).asDouble(),
+                    (float) require(node, KEY_MAX_QUANTILE).asDouble(), (float) require(node, KEY_ALPHA).asDouble(),
+                    (float) require(node, KEY_CONFIDENCE_INTERVAL).asDouble(), require(node, KEY_BITS).asInt(),
+                    require(node, KEY_SAMPLE_COUNT).asInt());
+        }
+        return new LSMVTreeLocalResource(registry, json, vectorDimensions, vectorFields, atomic, vectorAccessorFactory,
+                identityFields, numIncludeFields, distanceFunctionFactory, crossPollination, epsilon, quantization);
+    }
+
+    /**
+     * Read a key {@link #appendToJson} always writes. Its absence means the file was written by another
+     * class or truncated, and substituting a default would silently mis-key the index.
+     *
+     * @throws HyracksDataException if the key is missing or null.
+     */
+    private static JsonNode require(JsonNode json, String key) throws HyracksDataException {
+        JsonNode node = json.get(key);
+        if (node == null || node.isNull()) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "LSMVTreeLocalResource is missing its field layout (identityFields, numIncludeFields); "
-                            + "resource is corrupt");
+                    "LSMVTreeLocalResource is missing `" + key + "`; resource is corrupt");
         }
-        int[] identityFields = OBJECT_MAPPER.convertValue(json.get("identityFields"), int[].class);
-        int numIncludeFields = json.get("numIncludeFields").asInt();
-        int[] vectorFields =
-                json.has("vectorFields") ? OBJECT_MAPPER.convertValue(json.get("vectorFields"), int[].class) : null;
-        int[] filterFields =
-                json.has("filterFields") ? OBJECT_MAPPER.convertValue(json.get("filterFields"), int[].class) : null;
-        boolean atomic = json.has("atomic") && json.get("atomic").asBoolean();
-
-        // Vector accessor factory — required on read; createInstance() throws if absent. New
-        // resources always carry it (see appendToJson). A missing key indicates a corrupted or
-        // unsupported-version JSON file.
-        IVTreeBinaryAccessorFactory vectorAccessorFactory = json.has(KEY_VECTOR_ACCESSOR_FACTORY)
-                ? (IVTreeBinaryAccessorFactory) registry.deserialize(json.get(KEY_VECTOR_ACCESSOR_FACTORY)) : null;
-
-        // Distance-function factory — required on read; createInstance() throws if absent. New resources
-        // always carry it. Missing key => corrupted or unsupported-version JSON.
-        IVTreeDistanceFunctionFactory distanceFunctionFactory = json.has(KEY_DISTANCE_FUNCTION_FACTORY)
-                ? (IVTreeDistanceFunctionFactory) registry.deserialize(json.get(KEY_DISTANCE_FUNCTION_FACTORY)) : null;
-
-        // Read quantization parameters with backward compatibility (missing → null).
-        Float confidenceInterval = readOptionalFloat(json, KEY_CONFIDENCE_INTERVAL);
-        Float minQuantile = readOptionalFloat(json, KEY_MIN_QUANTILE);
-        Float maxQuantile = readOptionalFloat(json, KEY_MAX_QUANTILE);
-        Float alpha = readOptionalFloat(json, KEY_ALPHA);
-        Integer bits = readOptionalInt(json, KEY_BITS);
-        Integer sampleCount = readOptionalInt(json, KEY_SAMPLE_COUNT);
-        // Determine quantized vs non-quantized based on presence of quantization parameters
-        boolean isQuantized = (minQuantile != null);
-        IVTreeDataTupleBuilderFactory dataTupleBuilderFactory =
-                new VTreeDataTupleBuilderFactory(numIncludeFields, identityFields.length, isQuantized);
-
-        // Cross-pollination params. appendToJson writes all three unconditionally, so their absence means
-        // the resource is corrupt or foreign — fail fast, exactly as vectorDimensions and the two factories
-        // above do. Substituting a default here would make this a second source of truth for a value that
-        // must agree with what bulk-load placed the records by, and the delete path would silently resolve
-        // a different leaf cluster than the matter it has to cancel.
-        if (!json.has(KEY_CROSS_POLLINATION_M) || !json.has(KEY_RNG_FACTOR) || !json.has(KEY_EPSILON)) {
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "LSMVTreeLocalResource is missing its cross-pollination placement parameters ("
-                            + KEY_CROSS_POLLINATION_M + ", " + KEY_RNG_FACTOR + ", " + KEY_EPSILON
-                            + "); resource is corrupt");
-        }
-        CrossPollinationConfig crossPollination = new CrossPollinationConfig(json.get(KEY_CROSS_POLLINATION_M).asInt(),
-                json.get(KEY_RNG_FACTOR).asDouble(), json.get(KEY_EPSILON).asDouble());
-
-        return new LSMVTreeLocalResource(registry, json, vectorDimensions, vectorFields, filterFields, atomic,
-                confidenceInterval, minQuantile, maxQuantile, alpha, bits, sampleCount, vectorAccessorFactory,
-                identityFields, numIncludeFields, dataTupleBuilderFactory, distanceFunctionFactory, crossPollination);
+        return node;
     }
 
-    /** Read an optional float field from JSON; returns {@code null} if the field is missing or null. */
-    private static Float readOptionalFloat(JsonNode json, String fieldName) {
-        if (!json.has(fieldName)) {
-            return null;
-        }
-        JsonNode node = json.get(fieldName);
-        return node.isNull() ? null : (float) node.asDouble();
-    }
-
-    /** Read an optional int field from JSON; returns {@code null} if the field is missing or null. */
-    private static Integer readOptionalInt(JsonNode json, String fieldName) {
-        if (!json.has(fieldName)) {
-            return null;
-        }
-        JsonNode node = json.get(fieldName);
-        return node.isNull() ? null : node.asInt();
-    }
-
-    private static void putIfNotNull(ObjectNode json, String fieldName, Float value) {
-        if (value != null) {
-            json.put(fieldName, value);
-        }
-    }
-
-    private static void putIfNotNull(ObjectNode json, String fieldName, Integer value) {
-        if (value != null) {
-            json.put(fieldName, value);
-        }
-    }
-
-    public Float getConfidenceInterval() {
-        return confidenceInterval;
-    }
-
-    public Float getMinQuantile() {
-        return minQuantile;
-    }
-
-    public Float getMaxQuantile() {
-        return maxQuantile;
-    }
-
-    public Float getAlpha() {
-        return alpha;
-    }
-
-    public Integer getBits() {
-        return bits;
-    }
-
-    public Integer getSampleCount() {
-        return sampleCount;
-    }
-
-    public int getVectorDimensions() {
-        return vectorDimensions;
-    }
-
-    public int[] getVectorFields() {
-        return vectorFields;
-    }
-
-    public int[] getFilterFields() {
-        return filterFields;
-    }
-
-    public boolean isAtomic() {
-        return atomic;
-    }
-
-    /** @return true iff all required quantization parameters are present. */
-    public boolean hasQuantizationParams() {
-        return bits != null && confidenceInterval != null && minQuantile != null && maxQuantile != null
-                && alpha != null;
+    /** @return the scalar-quantization calibration, or {@code null} for a non-quantized index. */
+    public VTreeQuantizationParams getQuantizationParams() {
+        return quantization;
     }
 
     @Override
@@ -412,11 +276,6 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         if (parameters == null) {
             return;
         }
-        this.minQuantile = parameters.minQuantile();
-        this.maxQuantile = parameters.maxQuantile();
-        this.alpha = parameters.alpha();
-        this.bits = parameters.bits();
-        this.confidenceInterval = parameters.confidenceInterval();
-        this.sampleCount = parameters.sampleCount();
+        this.quantization = parameters;
     }
 }

@@ -95,6 +95,9 @@ public class VTree extends AbstractTreeIndex {
     // Cross-pollination placement parameters (M=1 = legacy single-closest). Threaded from the index
     // WITH clause so incremental insert/delete replicate into the same leaf clusters as bulk-load.
     private final CrossPollinationConfig crossPollination;
+    // Level-wise candidate window used to gather centroids before RNG thinning. Bulk-load, insert and
+    // delete must descend with the same value or they resolve different leaf clusters for one record.
+    private final double epsilon;
     /**
      * Directory- and data-page mutation, which needs nothing from this class but its buffer cache, file
      * id, page manager and directory frame factory. See {@link VTreePageMutator}.
@@ -128,8 +131,8 @@ public class VTree extends AbstractTreeIndex {
             ITreeIndexFrameFactory dataFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
             int vectorDimensions, FileReference file, IVTreeBinaryAccessorFactory vectorAccessorFactory,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination)
-            throws HyracksDataException {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
+            double epsilon) throws HyracksDataException {
         super(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
         this.vectorDimensions = vectorDimensions;
         this.metadataFrameFactory = metadataFrameFactory;
@@ -140,6 +143,11 @@ public class VTree extends AbstractTreeIndex {
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.distanceFunction = distanceFunctionFactory.createDistanceFunction();
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
+        // A negative window would shrink rather than widen the candidate set, which no caller means.
+        if (epsilon < 0.0) {
+            throw new IllegalArgumentException("epsilon must be >= 0, got " + epsilon);
+        }
+        this.epsilon = epsilon;
         this.pageMutator = new VTreePageMutator(bufferCache, freePageManager, metadataFrameFactory);
     }
 
@@ -548,7 +556,7 @@ public class VTree extends AbstractTreeIndex {
         // results (~66% of bulk-loaded deletes at some k-means seeds). One routing function across bulk-load,
         // insert and delete guarantees matter and antimatter always agree on cluster and distance-to-centroid.
         List<ClusterSearchResult> candidates =
-                findCloseCentroidsLevelWiseGlobalSortFromRoot(vector, distanceFunction, crossPollination.epsilon());
+                findCloseCentroidsLevelWiseGlobalSortFromRoot(vector, distanceFunction, epsilon);
         List<ClusterSearchResult> accepted = RngAcceptanceFilter.accept(candidates, distanceFunction,
                 crossPollination.rngFactor(), crossPollination.m(), null);
         if (accepted.isEmpty()) {

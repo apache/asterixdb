@@ -126,6 +126,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     protected final VTreeQuantizationParams quantizationParams;
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
     protected final CrossPollinationConfig crossPollination;
+    protected final double epsilon;
 
     // volatile: written under synchronized setStaticStructure/activation but read unsynchronized on the
     // search/flush path; the volatile publishes the reference safely to those readers.
@@ -145,7 +146,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] comparatorFields,
             IBinaryComparatorFactory[] keyCmpFactories, IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             VTreeQuantizationParams quantizationParams, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            CrossPollinationConfig crossPollination) throws HyracksDataException {
+            CrossPollinationConfig crossPollination, double epsilon) throws HyracksDataException {
 
         super(storageConfig, ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
@@ -165,6 +166,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
+        this.epsilon = epsilon;
 
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
@@ -174,7 +176,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
             VTree vTree = new VTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
                     interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
                     1, vectorDimensions, virtualFileRef, vectorAccessorFactory, dataTupleBuilderFactory,
-                    quantizationParams, this.distanceFunctionFactory, this.crossPollination);
+                    quantizationParams, this.distanceFunctionFactory, this.crossPollination, this.epsilon);
             LSMVTreeMemoryComponent mutableComponent = new LSMVTreeMemoryComponent(this, vTree, virtualBufferCache,
                     filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);

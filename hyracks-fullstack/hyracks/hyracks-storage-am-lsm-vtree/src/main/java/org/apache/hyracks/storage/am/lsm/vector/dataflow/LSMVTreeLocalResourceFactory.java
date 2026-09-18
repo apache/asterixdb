@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResourceFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IResource;
@@ -50,13 +49,14 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
     protected final IVTreeBinaryAccessorFactory vectorAccessorFactory;
     protected final int[] identityFields;
     protected final int numIncludeFields;
-    protected final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
 
     /** Distance-function factory supplied at DDL time; threaded onto {@link LSMVTreeLocalResource} for persistence. */
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
 
     /** Cross-pollination placement config supplied at DDL time; threaded onto {@link LSMVTreeLocalResource}. */
     protected final CrossPollinationConfig crossPollination;
+    /** Level-wise candidate window supplied at DDL time; threaded onto {@link LSMVTreeLocalResource}. */
+    protected final double epsilon;
 
     public LSMVTreeLocalResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -68,8 +68,8 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
             Map<String, String> mergePolicyProperties, boolean durable, int vectorDimensions, int[] vectorFields,
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
-            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination) {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
+            double epsilon) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -79,10 +79,10 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
         this.atomic = atomic;
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
+        this.epsilon = epsilon;
         this.vectorAccessorFactory = vectorAccessorFactory;
         this.identityFields = identityFields;
         this.numIncludeFields = numIncludeFields;
-        this.dataTupleBuilderFactory = dataTupleBuilderFactory;
     }
 
     @Override
@@ -92,6 +92,6 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable, vectorDimensions, vectorFields, nullTypeTraits,
                 nullIntrospector, atomic, vectorAccessorFactory, identityFields, numIncludeFields,
-                dataTupleBuilderFactory, distanceFunctionFactory, null, null, null, null, null, null, crossPollination);
+                distanceFunctionFactory, crossPollination, epsilon);
     }
 }

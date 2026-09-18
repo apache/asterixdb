@@ -57,8 +57,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.vector.dataflow.LSMVTreeLocalResourceFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
-import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -98,15 +96,9 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
         List<List<String>> primaryKeyFields = dataset.getPrimaryKeys();
         int numPrimaryKeys = primaryKeyFields.size();
 
-        // Determine data tuple creator factory based on whether the index is quantized. The primary key
-        // is what completes the storage layer's ordering key, so its field count is handed over here.
+        // The primary key is what completes the storage layer's ordering key, so a quantized index lays its
+        // data tuples out differently and the identity-field positions shift.
         boolean isQuantized = vectorParameters.isQuantized();
-        IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
-        if (isQuantized) {
-            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, numPrimaryKeys, true);
-        } else {
-            dataTupleBuilderFactory = new VTreeDataTupleBuilderFactory(numIncludeFields, numPrimaryKeys, false);
-        }
 
         IStorageComponentProvider storageComponentProvider = mdProvider.getStorageComponentProvider();
         ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
@@ -151,23 +143,13 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
             // after the resource is reconstituted from JSON (e.g., after NC restart).
             VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
 
-            // Cross-pollination placement: read the SAME WITH-clause params (with the SAME defaults) that
-            // the bulk-load job uses in SecondaryVectorOperationsHelper#buildLoadingJobSpec, so incremental
-            // insert/delete resolve the identical M leaf clusters per record. Drift here would let a delete
-            // miss replicas (leaked deletes) — keep these three reads in lock-step with the bulk-load helper.
-            //
-            // All three are read unconditionally, at every M. This used to be gated on M > 1, falling back
-            // to a shared default config otherwise — exactly the drift this comment warns about, because
-            // epsilon prunes the level-wise descent at every M (VTree#findReplicaClusters runs the same
-            // navigation for M == 1, it does not shortcut) and that default's epsilon differed from the
-            // DDL's. An index created with the default M == 1 was therefore bulk-loaded with one window and
-            // had its deletes resolved with another, letting antimatter land in a different leaf cluster
-            // than the matter it had to cancel. CrossPollinationConfig now has no default at all, so the
-            // DDL is the only source; VTree#findReplicaClusters records the same failure from its earlier
-            // cause.
-            CrossPollinationConfig crossPollination =
-                    new CrossPollinationConfig(vectorParameters.getCrossPollinationM(), vectorParameters.getRngFactor(),
-                            vectorParameters.getEpsilon());
+            // Placement parameters: read the same WITH-clause values, at every M, that the bulk-load job
+            // reads in SecondaryVectorOperationsHelper#buildLoadingJobSpec, so incremental insert and delete
+            // resolve the leaf clusters bulk-load placed the records in. Keep the reads in lock-step with
+            // that helper; drift here lets a delete miss replicas.
+            CrossPollinationConfig crossPollination = new CrossPollinationConfig(
+                    vectorParameters.getCrossPollinationM(), vectorParameters.getRngFactor());
+            double epsilon = vectorParameters.getEpsilon();
 
             // Create vector accessor factory for extracting vectors from ADM ordered lists
             AOrderedListVectorBinaryAccessorFactory vectorAccessorFactory =
@@ -187,7 +169,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     mergePolicyProperties, true, vectorDimensions, vectorFields,
                     typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, atomic,
                     vectorAccessorFactory, VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys),
-                    numIncludeFields, dataTupleBuilderFactory, distanceFunctionFactory, crossPollination);
+                    numIncludeFields, distanceFunctionFactory, crossPollination, epsilon);
         } else {
             return null;
         }

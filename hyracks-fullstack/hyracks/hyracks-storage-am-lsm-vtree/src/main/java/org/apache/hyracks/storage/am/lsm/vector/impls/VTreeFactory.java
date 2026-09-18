@@ -47,6 +47,7 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
     private final VTreeQuantizationParams quantizationParams;
     private final IVTreeDistanceFunctionFactory distanceFunctionFactory;
     private final CrossPollinationConfig crossPollination;
+    private final double epsilon;
 
     public VTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IPageManagerFactory freePageManagerFactory,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
@@ -54,7 +55,7 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, int vectorDimensions,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             VTreeQuantizationParams quantizationParams, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            CrossPollinationConfig crossPollination) {
+            CrossPollinationConfig crossPollination, double epsilon) {
         super(ioManager, bufferCache, freePageManagerFactory, interiorFrameFactory, leafFrameFactory, cmpFactories,
                 fieldCount);
         this.metadataFrameFactory = metadataFrameFactory;
@@ -65,13 +66,14 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.crossPollination = crossPollination;
+        this.epsilon = epsilon;
     }
 
     @Override
     public VTree createIndexInstance(FileReference file) throws HyracksDataException {
         return new VTree(bufferCache, freePageManagerFactory.createPageManager(bufferCache), interiorFrameFactory,
-                leafFrameFactory, metadataFrameFactory, dataFrameFactory, cmpFactories, vectorDimensions,
-                vectorDimensions, file, vectorAccessorFactory, dataTupleBuilderFactory, quantizationParams,
-                distanceFunctionFactory, crossPollination);
+                leafFrameFactory, metadataFrameFactory, dataFrameFactory, cmpFactories, fieldCount, vectorDimensions,
+                file, vectorAccessorFactory, dataTupleBuilderFactory, quantizationParams, distanceFunctionFactory,
+                crossPollination, epsilon);
     }
 }
