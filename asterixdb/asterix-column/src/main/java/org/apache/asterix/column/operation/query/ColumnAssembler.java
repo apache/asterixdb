@@ -28,6 +28,7 @@ import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
@@ -92,6 +93,10 @@ public final class ColumnAssembler {
             }
 
             if (groupIndex != AbstractPrimitiveValueAssembler.NEXT_ASSEMBLER) {
+                // EndOfRepeatedGroupAssembler jumps back to the start of its group, so this is the only branch
+                // that can fail to make progress; a group whose exit condition is never met spins here forever.
+                // Guarding the jump rather than the loop keeps the straight-line per-column advance untouched.
+                InvokeUtil.failIfInterrupted();
                 index = groupIndex;
             } else {
                 index++;

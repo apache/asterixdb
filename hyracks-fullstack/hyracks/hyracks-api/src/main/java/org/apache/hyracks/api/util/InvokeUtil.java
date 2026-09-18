@@ -36,6 +36,7 @@ import org.apache.hyracks.util.InterruptibleSupplier;
 import org.apache.hyracks.util.Span;
 import org.apache.hyracks.util.ThrowingAction;
 import org.apache.hyracks.util.ThrowingConsumer;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,6 +52,24 @@ public class InvokeUtil {
                     failure);
 
     private InvokeUtil() {
+    }
+
+    /**
+     * Fails if the current thread has been interrupted, leaving the interrupt status set so that the task
+     * teardown that follows still sees it. Intended for loops that are pure CPU over resident data: Hyracks
+     * cancels a task by interrupting its thread, so a loop that neither blocks nor allocates never observes the
+     * cancellation on its own and strands the thread for the life of the process. The check is a plain field
+     * read, cheap enough to sit directly in such a loop.
+     *
+     * @throws HyracksDataException wrapping an {@link InterruptedException}, which
+     *                              {@link ExceptionUtils#causedByInterrupt(Throwable)} recognizes as a
+     *                              cancellation rather than a query failure
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Shared interrupt poll for non-blocking loops")
+    public static void failIfInterrupted() throws HyracksDataException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw HyracksDataException.create(new InterruptedException());
+        }
     }
 
     /**

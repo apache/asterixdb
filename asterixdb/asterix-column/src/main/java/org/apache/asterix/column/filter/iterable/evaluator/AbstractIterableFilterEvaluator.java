@@ -25,6 +25,7 @@ import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
@@ -93,6 +94,11 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
             advance = primaryKeyReader.next() && primaryKeyReader.isMissing();
             // Advance tuple index
             tupleIndex++;
+            if (advance) {
+                // only the repeat costs anything: a reader stuck reporting MISSING spins here without blocking,
+                // while the ordinary single pass never reaches the check
+                InvokeUtil.failIfInterrupted();
+            }
         }
 
         // Advance value index

@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.InvokeUtil;
 
 public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFilterEvaluator {
     private final List<IColumnValuesReader> repeatedReaders;
@@ -51,8 +52,13 @@ public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFil
 
     private boolean evaluateRepeated() throws HyracksDataException {
         boolean result = false;
-        boolean doNext;
+        boolean doNext = false;
         do {
+            if (doNext) {
+                // a reader whose delimiter state never reports the last delimiter spins here without ever
+                // blocking; guarding the repeat rather than the body leaves the single-value case untouched
+                InvokeUtil.failIfInterrupted();
+            }
             doNext = false;
             result |= inspect();
             for (int i = 0; i < repeatedReaders.size(); i++) {

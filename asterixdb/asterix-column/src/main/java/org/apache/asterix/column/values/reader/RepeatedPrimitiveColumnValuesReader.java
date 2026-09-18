@@ -24,6 +24,7 @@ import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -99,6 +100,7 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
 
         if (isRepeatedValue()) {
             while (!isLastDelimiter()) {
+                InvokeUtil.failIfInterrupted();
                 writeLevel(writer);
                 if (isValue()) {
                     writer.writeValue(this);
@@ -126,7 +128,9 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         for (int i = 0; i < count; i++) {
             doNextAndCheck();
             if (isRepeatedValue()) {
+                // the delimiter is the sole exit; inconsistent delimiter state turns this into a pure-CPU spin
                 while (!isLastDelimiter()) {
+                    InvokeUtil.failIfInterrupted();
                     doNextAndCheck();
                 }
             }
