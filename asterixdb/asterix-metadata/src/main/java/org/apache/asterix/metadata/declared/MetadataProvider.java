@@ -826,7 +826,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getVectorSearchRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] queryFields,
-            ITupleFilterFactory tupleFilterFactory, boolean indexOnly) throws AlgebricksException {
+            ITupleFilterFactory tupleFilterFactory, int[] includeFilterFields, boolean indexOnly)
+            throws AlgebricksException {
         Index vectorIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
                 dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (vectorIndex == null) {
@@ -870,7 +871,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         VTreeSearchOperatorDescriptor vectorSearchOp = new VTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                 queryFields, indexDataflowHelperFactory, retainInput, searchCallbackFactory, vectorAccessorFactory,
                 distanceFunctionFactory, quantizerFactory, partitionsMap, numPrimaryKeys, numSecondaryKeys,
-                tupleFilterFactory, indexEpsilon, indexOnly);
+                tupleFilterFactory, includeFilterFields, indexEpsilon, indexOnly);
 
         return new Pair<>(vectorSearchOp, partitioningProperties.getConstraints());
     }

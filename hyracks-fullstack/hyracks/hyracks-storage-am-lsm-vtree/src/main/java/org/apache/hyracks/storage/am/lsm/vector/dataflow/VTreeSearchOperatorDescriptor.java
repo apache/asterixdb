@@ -80,6 +80,11 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     // When set, the cursor will only return tuples that pass this filter
     protected final ITupleFilterFactory tupleFilterFactory;
 
+    // Physical field indexes, in output order, of the INCLUDE columns that filter reads. The optimizer
+    // declares them as output variables of the index search, so the runtime emits them. Empty when no
+    // filter was pushed.
+    protected final int[] includeFilterFields;
+
     /** Epsilon from vector index WITH metadata (ANN / cluster search). */
     protected final double indexEpsilon;
 
@@ -96,7 +101,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
             ISearchOperationCallbackFactory searchCallbackFactory, IVTreeBinaryAccessorFactory vectorAccessorFactory,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
             int[][] partitionsMap, int numPrimaryKeys, int numSecondaryKeys, ITupleFilterFactory tupleFilterFactory,
-            double indexEpsilon, boolean indexOnly) {
+            int[] includeFilterFields, double indexEpsilon, boolean indexOnly) {
         super(spec, 1, 1); // 1 input, 1 output
         this.queryFields = queryFields;
         this.indexHelperFactory = indexHelperFactory;
@@ -109,6 +114,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.numPrimaryKeys = numPrimaryKeys;
         this.numSecondaryKeys = numSecondaryKeys;
         this.tupleFilterFactory = tupleFilterFactory;
+        this.includeFilterFields = includeFilterFields;
         this.indexEpsilon = indexEpsilon;
         this.indexOnly = indexOnly;
         this.outRecDescs[0] = outRecDesc;
@@ -124,7 +130,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         return new VTreeSearchOperatorNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), queryFields, indexHelperFactory,
                 retainInput, searchCallbackFactory, tupleProjectorFactory, vectorAccessorFactory,
-                distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, indexEpsilon,
-                numPrimaryKeys, indexOnly);
+                distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, includeFilterFields,
+                indexEpsilon, numPrimaryKeys, indexOnly);
     }
 }

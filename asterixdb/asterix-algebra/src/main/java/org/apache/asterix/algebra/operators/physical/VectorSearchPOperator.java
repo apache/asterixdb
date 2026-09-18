@@ -60,11 +60,14 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Contributes the runtime operator for an unnest-map representing a vector index search.
  */
 public class VectorSearchPOperator extends IndexSearchPOperator {
+
+    private static final int[] NO_INCLUDE_FILTER_FIELDS = new int[0];
 
     public VectorSearchPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast) {
@@ -160,6 +163,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         // The opSchema only has [pk] because INCLUDE fields are only used for filtering.
         // Filter variables are mapped directly to physical field indexes via annotation.
         ITupleFilterFactory tupleFilterFactory = null;
+        int[] includeFilterFields = NO_INCLUDE_FILTER_FIELDS;
         if (unnestMap instanceof UnnestMapOperator) {
             UnnestMapOperator unnestMapOp = (UnnestMapOperator) unnestMap;
             if (unnestMapOp.getSelectCondition() != null) {
@@ -185,6 +189,8 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
 
                 tupleFilterFactory = mp.createTupleFilterFactory(new IOperatorSchema[] { filterSchema }, filterTypeEnv,
                         unnestMapOp.getSelectCondition().getValue(), context);
+
+                includeFilterFields = includeFilterFields(unnestMapOp, filterVarToFieldIndex);
             } else if (VectorIncludeFilterPushdown.hasDeclaredFilterVariables(unnestMapOp)) {
                 // The index-only plan declares the INCLUDE columns its predicate reads as outputs of this
                 // unnest-map while leaving the predicate in a SELECT above, for PushFilterIntoVectorSearchRule
@@ -201,9 +207,10 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         // jobGenParams.isIndexOnly() (set by IntroduceTopKAccessMethodRule when the projection above
         // LIMIT references only PK columns) tells the runtime to emit [pk..., D(q,x)] per candidate so
         // the downstream sort can rank without the primary BTree lookup.
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> vectorSearch = mp.getVectorSearchRuntime(
-                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), dataset,
-                jobGenParams.getIndexName(), queryIndexes, tupleFilterFactory, jobGenParams.isIndexOnly());
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> vectorSearch =
+                mp.getVectorSearchRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
+                        jobGenParams.getRetainInput(), dataset, jobGenParams.getIndexName(), queryIndexes,
+                        tupleFilterFactory, includeFilterFields, jobGenParams.isIndexOnly());
 
         IOperatorDescriptor opDesc = vectorSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
@@ -213,5 +220,38 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
 
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
+    }
+
+    /**
+     * The physical field indexes of the INCLUDE columns the pushed filter reads, in output order.
+     * <p>
+     * Those columns are the LAST variables of the unnest-map: both call sites of
+     * {@link VectorIncludeFilterPushdown#declareFilterVariables} append them, the index-only one after it has
+     * appended the distance. The operator schema, and hence the output record descriptor, is built from that
+     * same list, and the runtime writes the primary keys, then the distance, then these columns -- so their
+     * being trailing and in this order is what makes the two agree. Checked rather than assumed: a tuple
+     * narrower than the descriptor is emitted with the previous tuple's offsets in its trailing slots, not
+     * with an error.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static int[] includeFilterFields(UnnestMapOperator unnestMap,
+            Map<LogicalVariable, Integer> filterVarToFieldIndex) throws CompilationException {
+        if (filterVarToFieldIndex == null || filterVarToFieldIndex.isEmpty()) {
+            return NO_INCLUDE_FILTER_FIELDS;
+        }
+        List<LogicalVariable> vars = unnestMap.getVariables();
+        int numFilterVars = filterVarToFieldIndex.size();
+        int firstFilterVar = vars.size() - numFilterVars;
+        int[] fields = new int[numFilterVars];
+        for (int i = 0; i < numFilterVars; i++) {
+            Integer field = firstFilterVar >= 0 ? filterVarToFieldIndex.get(vars.get(firstFilterVar + i)) : null;
+            if (field == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
+                        "the vector index search does not declare its " + numFilterVars
+                                + " INCLUDE filter columns as its last output variables: " + vars);
+            }
+            fields[i] = field;
+        }
+        return fields;
     }
 }

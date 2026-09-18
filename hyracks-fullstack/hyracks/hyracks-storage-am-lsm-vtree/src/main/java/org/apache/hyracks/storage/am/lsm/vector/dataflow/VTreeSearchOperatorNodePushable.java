@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
@@ -105,6 +106,15 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected final int numPrimaryKeys;
 
     /**
+     * Physical field indexes, in output order, of the INCLUDE columns the pushed filter reads. The cursor
+     * reads these columns to decide whether a candidate passes; they are also declared as output variables
+     * of the index-search unnest-map, so they must be written -- the output record descriptor is built from
+     * that declaration, and an unwritten field is emitted holding the previous tuple's offsets. Empty when
+     * no filter was pushed.
+     */
+    protected final int[] includeFilterFields;
+
+    /**
      * Index-only ANN flag. When true the pushable emits {@code [pk..., D(q,x)]} per candidate by
      * stashing the active cursor and reaching into {@link IVectorSearchCursor} for the per-tuple
      * distance, then appending it as an ADOUBLE after the PK bytes the existing PKOnlyTupleProjector
@@ -123,7 +133,8 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             ISearchOperationCallbackFactory searchCallbackFactory, ITupleProjectorFactory projectorFactory,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDistanceFunctionFactory distanceFunctionFactory,
             IVTreeQuantizerFactory quantizerFactory, int[][] partitionsMap, ITupleFilterFactory tupleFilterFactory,
-            double indexEpsilon, int numPrimaryKeys, boolean indexOnly) throws HyracksDataException {
+            int[] includeFilterFields, double indexEpsilon, int numPrimaryKeys, boolean indexOnly)
+            throws HyracksDataException {
         // Vector search does its filtering in the cursor, so the operator passes no filter fields,
         // tuple filter, output limit, or search-callback proceed result (see the args below).
         super(ctx, inputRecDesc, partition, null, // minFilterFieldIndexes
@@ -146,6 +157,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.quantizerFactory = quantizerFactory;
         this.tupleFilterFactory = tupleFilterFactory;
+        this.includeFilterFields = includeFilterFields;
         this.indexEpsilon = indexEpsilon;
         this.numPrimaryKeys = numPrimaryKeys;
         this.indexOnly = indexOnly;
@@ -158,6 +170,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added the output-width check")
     public void open() throws HyracksDataException {
         super.open();
 
@@ -165,6 +178,16 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         // This filter is pushed down to the cursor level for proper K counting
         if (tupleFilterFactory != null) {
             tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
+        }
+
+        // ArrayTupleBuilder.reset() clears the write position but not the end offsets, so a field the
+        // descriptor declares and writeTupleToOutput never writes is emitted holding the previous tuple's
+        // offsets -- a silent wrong value in whatever reads it, never an error. Refuse the job instead.
+        int declared = recordDesc.getFieldCount();
+        int written = (retainInput ? inputRecDesc.getFieldCount() : 0) + getFieldCount(indexes[0]);
+        if (declared != written) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "the vector search output declares " + declared + " fields but writes " + written);
         }
     }
 
@@ -284,8 +307,9 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected int getFieldCount(IIndex index) {
         // numPrimaryKeys is supplied by the descriptor from dataset metadata (no more hardcoded 1).
         // Index-only mode appends one extra ADOUBLE field per emitted tuple (the per-candidate
-        // D(q,x) read from the cursor in writeTupleToOutput).
-        return numPrimaryKeys + (indexOnly ? 1 : 0);
+        // D(q,x) read from the cursor in writeTupleToOutput), and a pushed filter appends the
+        // INCLUDE columns it reads.
+        return numPrimaryKeys + (indexOnly ? 1 : 0) + includeFilterFields.length;
     }
 
     /**
@@ -304,7 +328,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     }
 
     /**
-     * Two responsibilities:
+     * Three responsibilities:
      * <ol>
      *   <li>Always run the configured projector (the {@code PKOnlyTupleProjector}) so the PK bytes
      *       from the cursor tuple land in {@code tb} exactly as in the legacy path.</li>
@@ -313,6 +337,9 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
      *       is written as {@code [ADOUBLE type tag (1 byte), IEEE-754 double (8 bytes)]} to match the
      *       algebra-side variable type ({@code BuiltinType.ADOUBLE}). Search always uses the pruned top-K
      *       cursor (the only {@link IVectorSearchCursor}), so the cast is safe.</li>
+     *   <li>Append the {@link #includeFilterFields} a pushed filter reads, copied straight out of the
+     *       cursor tuple. They are stored there in the same form a dataflow field of that type takes, so
+     *       the bytes transfer as they are.</li>
      * </ol>
      *
      * <p>A genuine {@link Double#NaN} distance (e.g. a zero-magnitude vector under cosine) is a real value
@@ -336,6 +363,10 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         if (indexOnly) {
             dos.writeByte(ADOUBLE_TYPE_TAG);
             dos.writeDouble(dqx);
+            tb.addFieldEndOffset();
+        }
+        for (int field : includeFilterFields) {
+            dos.write(tuple.getFieldData(field), tuple.getFieldStart(field), tuple.getFieldLength(field));
             tb.addFieldEndOffset();
         }
         return projected;
