@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IExternalLangIPCProto;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class PythonDomainSocketProto extends AbstractPythonIPCProto implements IExternalLangIPCProto {
     private final String wd;
@@ -32,6 +33,8 @@ public class PythonDomainSocketProto extends AbstractPythonIPCProto implements I
     private ByteBuffer headerBuffer;
     public static final int HYR_HEADER_SIZE = 21; // 4 (sz) + 8 (mid) + 8 (rmid) + 1 (flags)
     public static final int HYR_HEADER_SIZE_NOSZ = 17; // 8 + 8 + 1
+    private static final String TRUNCATED_STREAM = "UDF Executor ended the stream unexpectedly while sending output.";
+    private static final String NO_ERROR_MESSAGE = "UDF executor raised an error, but with no error message.";
 
     public PythonDomainSocketProto(OutputStream sockOut, SocketChannel chan, String wd) {
         super(sockOut);
@@ -65,7 +68,7 @@ public class PythonDomainSocketProto extends AbstractPythonIPCProto implements I
         readFully(headerBuffer.capacity(), headerBuffer);
         if (headerBuffer.remaining() < Integer.BYTES) {
             recvBuffer.limit(0);
-            throw new AsterixException("Python process exited unexpectedly");
+            throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, TRUNCATED_STREAM);
         }
         int msgSz = headerBuffer.getInt() - HYR_HEADER_SIZE_NOSZ;
         if (recvBuffer.capacity() < msgSz) {
@@ -77,8 +80,17 @@ public class PythonDomainSocketProto extends AbstractPythonIPCProto implements I
             unpackerInput.reset(recvBuffer.array(), recvBuffer.position() + recvBuffer.arrayOffset(),
                     recvBuffer.remaining());
             unpacker.reset(unpackerInput);
-            throw new AsterixException(unpacker.unpackString().replace('\0', ' '));
+            throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, unpackError());
         }
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Guard against an ERROR frame that carries no message body")
+    private String unpackError() throws IOException {
+        if (!unpacker.hasNext() || unpacker.tryUnpackNil()) {
+            return NO_ERROR_MESSAGE;
+        }
+        String errMsg = unpacker.unpackString().replace('\0', ' ');
+        return errMsg.isEmpty() ? NO_ERROR_MESSAGE : errMsg;
     }
 
     private void readFully(int msgSz, ByteBuffer buf) throws IOException, AsterixException {
@@ -89,7 +101,7 @@ public class PythonDomainSocketProto extends AbstractPythonIPCProto implements I
         while (size > 0) {
             read = chan.read(buf);
             if (read < 0) {
-                throw new AsterixException("Socket closed");
+                throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, TRUNCATED_STREAM);
             }
             size -= read;
         }

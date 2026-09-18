@@ -17,13 +17,12 @@
   ~  under the License.
   ~
   -->
-<!DOCTYPE test-suite [
-        <!ENTITY PythonQueries SYSTEM "queries_sqlpp/external-library/PythonQueries.xml">
-        ]>
-<test-suite
-             xmlns="urn:xml.testframework.asterix.apache.org"
-             ResultOffsetPath="results"
-             QueryOffsetPath="queries_sqlpp"
-             QueryFileExtension=".sqlpp">
-  &PythonQueries;
-</test-suite>
+<test-group name="external-library-python-fenced">
+  <test-case FilePath="external-library" check-warnings="true">
+    <compilation-unit name="py_function_error_fenced">
+      <output-dir compare="Clean-JSON">py_function_error_fenced</output-dir>
+      <expected-warn>UDF Executor ended the stream unexpectedly while sending output.</expected-warn>
+      <expected-warn>failed to execute</expected-warn>
+    </compilation-unit>
+  </test-case>
+</test-group>

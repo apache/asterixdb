@@ -116,7 +116,7 @@ public class PodmanPythonFunctionIT {
 
     @Parameters(name = "PodmanPythonFunctionIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_it_python.xml",
+        return LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_it_python_fenced.xml",
                 "../asterix-app/src/test/resources/runtimets");
     }
 
