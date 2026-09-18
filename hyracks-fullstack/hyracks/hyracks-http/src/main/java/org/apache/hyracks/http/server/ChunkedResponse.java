@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,11 +63,14 @@ import io.netty.util.ReferenceCountUtil;
  * If an error occurs after sending the first chunk, the error is sent as the last chunk and the connection is then
  * closed; if the error cannot be sent (no error content, or the channel is no longer writable), the connection is
  * closed without terminating the response.
+ * If a write to the channel failed, the body on the wire is missing a stretch of what the servlet wrote, so the
+ * response is never terminated as a complete one whatever its status says.
  * Here is a breakdown of the possible cases.
  * 1. smaller than chunkSize, no error -> full response
  * 2. smaller than chunkSize, error -> full response
  * 3. larger than chunkSize, error after header -> error as last chunk, then close connection
  * 4. larger than chunkSize, no error. -> header, data, empty response
+ * 5. a failed write -> close connection, or a non-chunked error response where no chunk was sent
  */
 public class ChunkedResponse implements IServletResponse {
 
@@ -119,6 +123,7 @@ public class ChunkedResponse implements IServletResponse {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Never terminate a response whose write failed as a complete one")
     public void close() throws IOException {
         try {
             InvokeUtil.tryIoWithCleanups(() -> {
@@ -127,7 +132,8 @@ public class ChunkedResponse implements IServletResponse {
                 } else {
                     outputStream.close();
                 }
-                if (errorBuf == null && response.status() == HttpResponseStatus.OK) {
+                boolean writeFailed = outputStream.writeFailed();
+                if (errorBuf == null && !writeFailed && response.status() == HttpResponseStatus.OK) {
                     if (!done) {
                         respond(LastHttpContent.EMPTY_LAST_CONTENT);
                     }
@@ -141,11 +147,16 @@ public class ChunkedResponse implements IServletResponse {
                             // the error cannot be written, so close rather than leave the client waiting
                             LOGGER.log(Level.WARN,
                                     "Error after header write of chunked response; cannot send the error content "
-                                            + "(errorBuf={}, writable={})",
-                                    errorBuf, ctx.channel().isWritable());
+                                            + "(errorBuf={}, writable={}, writeFailed={})",
+                                    errorBuf, ctx.channel().isWritable(), writeFailed);
                             future = ctx.channel().close().addListener(handler);
                         }
                     } else {
+                        if (writeFailed && response.status() == HttpResponseStatus.OK) {
+                            // nothing went out, so the failure can still be reported in the status line; a body the
+                            // channel refused must not be answered with a success
+                            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                        }
                         // we didn't send anything to the user, we need to send an non-chunked error response
                         fullResponse(response.protocolVersion(), response.status(),
                                 errorBuf == null ? ctx.alloc().buffer(0, 0) : errorBuf, response.headers());

@@ -297,7 +297,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             responsePrinter.end();
         }
         if (sessionOutput.out().checkError()) {
-            LOGGER.warn("Error flushing output writer");
+            // the writer keeps this to itself, so this is the only sign that the response did not all reach the
+            // client; name what it is, since it reads as a fault here and is almost always one at the other end
+            LOGGER.warn("the response of {} was not written in full; the client has most likely disconnected or"
+                    + " stopped reading it", requestRef.getUuid());
         }
     }
 

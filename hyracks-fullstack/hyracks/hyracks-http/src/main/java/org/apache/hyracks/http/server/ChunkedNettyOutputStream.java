@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.hyracks.api.util.InvokeUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +41,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
     private final ChunkedResponse response;
     private ByteBuf buffer;
     private boolean closed;
+    private boolean writeFailed;
 
     public ChunkedNettyOutputStream(ChannelHandlerContext ctx, int chunkSize, ChunkedResponse response) {
         this.response = response;
@@ -53,6 +55,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
             if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length)) {
                 throw new IndexOutOfBoundsException();
             }
+            ensureNotFailed();
             while (len > 0) {
                 int space = buffer.writableBytes();
                 if (space >= len) {
@@ -73,6 +76,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
+        ensureNotFailed();
         if (!buffer.isWritable()) {
             flush();
         }
@@ -80,16 +84,21 @@ public class ChunkedNettyOutputStream extends OutputStream {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Drop the buffer of a failed write")
     public void close() throws IOException {
         if (!closed) {
             InvokeUtil.tryIoWithCleanups(() -> {
-                if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
-                    flush();
-                } else {
-                    response.fullResponse(buffer);
-                    // The responsibility of releasing the buffer is now with the netty pipeline since it is
-                    // forwarded within the http content. We must nullify buffer to avoid releasing the buffer twice.
-                    buffer = null;
+                // what is still buffered after a failed write comes after the bytes that write lost, so it is
+                // dropped: sending it would hand the client a body that parses with a stretch missing from it
+                if (!writeFailed) {
+                    if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
+                        flush();
+                    } else {
+                        response.fullResponse(buffer);
+                        // The responsibility of releasing the buffer is now with the netty pipeline since it is
+                        // forwarded within the http content. We must nullify buffer to avoid releasing it twice.
+                        buffer = null;
+                    }
                 }
                 super.close();
             }, () -> {
@@ -101,23 +110,50 @@ public class ChunkedNettyOutputStream extends OutputStream {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Record a write that never landed")
     public void flush() throws IOException {
-        ensureWritable();
-        if (buffer != null && buffer.readableBytes() > 0) {
-            if (response.status() == HttpResponseStatus.OK) {
-                int size = buffer.capacity();
-                response.beforeFlush();
-                DefaultHttpContent content = new DefaultHttpContent(buffer);
-                ctx.writeAndFlush(content, ctx.channel().voidPromise());
-                // The responsibility of releasing the buffer is now with the netty pipeline since it is forwarded
-                // within the http content. We must nullify buffer before we allocate the next one to avoid
-                // releasing the buffer twice in case the allocation call fails.
-                buffer = null;
-                buffer = ctx.alloc().buffer(size);
-            } else {
-                response.error(buffer);
-                buffer.clear();
+        ensureNotFailed();
+        try {
+            ensureWritable();
+            if (buffer != null && buffer.readableBytes() > 0) {
+                if (response.status() == HttpResponseStatus.OK) {
+                    int size = buffer.capacity();
+                    response.beforeFlush();
+                    DefaultHttpContent content = new DefaultHttpContent(buffer);
+                    ctx.writeAndFlush(content, ctx.channel().voidPromise());
+                    // The responsibility of releasing the buffer is now with the netty pipeline since it is forwarded
+                    // within the http content. We must nullify buffer before we allocate the next one to avoid
+                    // releasing the buffer twice in case the allocation call fails.
+                    buffer = null;
+                    buffer = ctx.alloc().buffer(size);
+                } else {
+                    response.error(buffer);
+                    buffer.clear();
+                }
             }
+        } catch (IOException e) {
+            // the caller cannot tell how much of what it handed us was consumed, and a PrintWriter goes on writing
+            // after it; refusing every later write is what keeps the body a prefix of the response rather than one
+            // with a hole punched in it
+            writeFailed = true;
+            throw e;
+        }
+    }
+
+    /**
+     * Whether bytes a caller handed this stream failed to reach the channel. Such a response cannot be terminated
+     * as a complete one: what reached the client is missing a stretch from the middle, and only an aborted stream
+     * tells the client so.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
+    boolean writeFailed() {
+        return writeFailed;
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
+    private void ensureNotFailed() throws IOException {
+        if (writeFailed) {
+            throw new IOException("Write to the response failed");
         }
     }
 

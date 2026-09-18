@@ -132,7 +132,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             LOGGER.log(Level.WARN, "Error retrieving result for handle: \"{}\"", handle, e);
         }
         if (response.writer().checkError()) {
-            LOGGER.warn("Error flushing output writer for \"{}\"", strHandle);
+            LOGGER.warn("the result of \"{}\" was not written in full; the client has most likely disconnected"
+                    + " or stopped reading it", strHandle);
         }
     }
 

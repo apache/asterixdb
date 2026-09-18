@@ -110,7 +110,8 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
         printer.end();
         if (response.writer().checkError()) {
-            LOGGER.warn("Error flushing output writer");
+            LOGGER.warn("the status of {} was not written in full; the client has most likely disconnected or"
+                    + " stopped reading it", handle.getRequestId());
         }
     }
 

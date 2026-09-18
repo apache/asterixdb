@@ -1,5 +1,5 @@
 {
-    "cancellable": true,
+    "cancellable": false,
     "clientContextID": "completed_requests_query",
     "elapsedTime": "R{.*}",
     "jobCreateTime": "R{.*}",

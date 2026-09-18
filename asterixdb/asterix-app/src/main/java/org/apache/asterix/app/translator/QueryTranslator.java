@@ -4637,9 +4637,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
+                }
+                // the job is done, so committing it is not work a cancel could undo and an interrupt would tear
+                // the two-phase commit; the next statement marks the request cancellable again
+                if (!clientRequest.markUncancellable()) {
+                    throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
                 }
                 if (atomic) {
                     globalTxManager.commitTransaction(jobId);
@@ -4842,9 +4846,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
+                }
+                // the job is done, so committing it is not work a cancel could undo and an interrupt would tear
+                // the two-phase commit; the next statement marks the request cancellable again
+                if (!clientRequest.markUncancellable()) {
+                    throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
                 }
                 if (atomic) {
                     globalTxManager.commitTransaction(jobId);
@@ -4914,9 +4922,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
-                    ensureNotCancelled(clientRequest, reqId);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
+                }
+                // the job is done, so committing it is not work a cancel could undo and an interrupt would tear
+                // the two-phase commit; the next statement marks the request cancellable again
+                if (!clientRequest.markUncancellable()) {
+                    throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
                 }
                 if (atomic) {
                     globalTxManager.commitTransaction(jobId);
@@ -6433,12 +6445,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (jId != null) {
                 jId.setValue(jobId);
             }
-            if (ResultDelivery.ASYNC == resultDelivery) {
+            boolean async = ResultDelivery.ASYNC == resultDelivery;
+            if (async) {
                 printer.print(jobId);
-                hcc.waitForCompletion(jobId);
-            } else {
-                hcc.waitForCompletion(jobId);
-                ensureNotCancelled(clientRequest, reqId);
+            }
+            hcc.waitForCompletion(jobId);
+            // the job is done: neither committing it nor sending its result is work a cancel could undo, and an
+            // interrupt in either would tear the commit or the response; the next statement marks it cancellable
+            // again
+            if (!clientRequest.markUncancellable()) {
+                throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
+            }
+            if (!async) {
                 printer.print(jobId);
             }
             if (atomic) {

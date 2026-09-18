@@ -41,6 +41,7 @@ import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.result.fields.ExplainOnlyResultsPrinter;
 import org.apache.asterix.app.result.fields.IndexAdviseResultsPrinter;
 import org.apache.asterix.app.result.fields.SignaturePrinter;
+import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.cache.CompiledPlan;
@@ -52,6 +53,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.Job;
 import org.apache.asterix.common.utils.Job.SubmissionMode;
@@ -124,6 +126,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.control.common.config.OptionTypes;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -404,7 +407,7 @@ public class APIFramework {
                     new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
 
             if (isAdviceOnly) {
-                printAdviseAsResult(metadataProvider, output, printer, indexAdvisor);
+                printAdviseAsResult(metadataProvider, output, printer, indexAdvisor, requestParameters);
                 return null;
             }
 
@@ -439,7 +442,7 @@ public class APIFramework {
             }
 
             if (isExplainOnly) {
-                printPlanAsResult(metadataProvider, output, printer, printSignature);
+                printPlanAsResult(metadataProvider, output, printer, printSignature, requestParameters);
                 if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                     executionPlans.setOptimizedLogicalPlan(null);
                 }
@@ -477,9 +480,10 @@ public class APIFramework {
     }
 
     private void printAdviseAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
-            IndexAdvisor advisor) throws AlgebricksException {
+            IndexAdvisor advisor, IRequestParameters requestParameters) throws AlgebricksException {
 
         try {
+            markUncancellable(metadataProvider, requestParameters);
             executionPlans.setCompileTimeResult(advisor.getResultJson().toString());
             printer.addResultPrinter(
                     new IndexAdviseResultsPrinter(metadataProvider.getApplicationContext(), advisor, output));
@@ -490,8 +494,9 @@ public class APIFramework {
     }
 
     private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
-            boolean printSignature) throws AlgebricksException {
+            boolean printSignature, IRequestParameters requestParameters) throws AlgebricksException {
         try {
+            markUncancellable(metadataProvider, requestParameters);
             if (printSignature) {
                 printer.addResultPrinter(SignaturePrinter.INSTANCE);
             }
@@ -501,6 +506,24 @@ public class APIFramework {
             printer.printResults();
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
+        }
+    }
+
+    /**
+     * Refuses a cancel of the request being compiled. A statement that only compiles submits no job, so a cancel
+     * has none to abort and would fall through to interrupting this thread - see {@code ClientRequest#doCancel} -
+     * part way through what it is writing. The next statement marks the request cancellable again.
+     *
+     * @throws RuntimeDataException if the request was cancelled before this, its response no longer being wanted
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
+    private static void markUncancellable(MetadataProvider metadataProvider, IRequestParameters requestParameters)
+            throws RuntimeDataException {
+        String reqId = requestParameters.getRequestReference().getUuid();
+        IClientRequest request = metadataProvider.getApplicationContext().getRequestTracker().get(reqId);
+        // a request the tracker no longer holds has been cancelled and deregistered, as ensureNotCancelled reads it
+        if (request == null || !request.markUncancellable()) {
+            throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
         }
     }
 

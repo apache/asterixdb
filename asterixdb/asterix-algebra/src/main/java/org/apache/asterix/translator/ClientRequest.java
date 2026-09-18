@@ -195,8 +195,10 @@ public class ClientRequest extends BaseClientRequest {
         // Only the jobs that have not finished are aborted: a finished job's results are what a handle already
         // handed to the client points at, and cancelling it would do nothing in any case. There is at most one
         // such job - see getUnfinishedJobIds - but nothing here relies on that.
-        // With no such job nothing would tell the executing thread that the request was cancelled, it being
-        // between two statements or compiling one, so the thread is interrupted instead.
+        // With no such job nothing but an interrupt would tell the executing thread that the request was
+        // cancelled: it is compiling a statement or between two of them. Once a statement's job has finished the
+        // request is marked uncancellable, so the interrupt never lands on the thread committing that job or
+        // writing its response.
         List<JobId> jobIds = getUnfinishedJobIds();
         if (!jobIds.isEmpty()) {
             IHyracksClientConnection hcc = appCtx.getHcc();
