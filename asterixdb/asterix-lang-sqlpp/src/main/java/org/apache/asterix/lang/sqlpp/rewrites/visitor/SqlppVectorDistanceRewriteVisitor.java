@@ -99,7 +99,7 @@ public final class SqlppVectorDistanceRewriteVisitor extends AbstractSqlppSimple
     // call as index-eligible for IntroduceTopKAccessMethodRule and (b) carries the ANN-only search
     // parameters. Metric/parameter validation happens here at compile time.
 
-    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.1;
+    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.75;
     private static final int DEFAULT_K_MULTIPLIER = 1;
 
     private static boolean isAnnDistanceCall(CallExpr callExpr) {

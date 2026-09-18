@@ -94,7 +94,7 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     // The actual tuple filter, created from the factory
     protected ITupleFilter tupleFilter;
 
-    /** Epsilon from vector index metadata (default 0.3 when absent in catalog). */
+    /** Epsilon from vector index metadata. */
     protected final double indexEpsilon;
 
     /**

@@ -40,12 +40,12 @@ public class VTreeSearchPredicate implements ISearchPredicate {
     private int queryFieldIndex;
     private int k; // Number of nearest neighbors to return (for ANN queries)
     private ITupleFilter tupleFilter; // Filter for INCLUDE field predicates (e.g., year > 2000)
-    private double minProbeFraction; // Fraction of leaf clusters to probe (0.0-1.0, default 0.1)
+    private double minProbeFraction; // Fraction of leaf clusters to probe (0.0-1.0, default 0.75)
     private double epsilon; // Distance threshold for level-wise cross-pollination (internal, not user-facing)
     private int kMultiplier; // Multiplier for candidate limit: K * kMultiplier sent to PK for reranking (default 1)
 
-    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.1;
-    private static final double DEFAULT_EPSILON = 0.3;
+    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.75;
+    private static final double DEFAULT_EPSILON = 0.75;
     private static final int DEFAULT_K_MULTIPLIER = 1;
 
     public VTreeSearchPredicate() {
@@ -108,7 +108,7 @@ public class VTreeSearchPredicate implements ISearchPredicate {
     /**
      * Set the min_probe_fraction parameter (fraction of leaf clusters to probe).
      * Converted to nprobe = max(1, floor(totalLeafClusters * fraction)) at runtime.
-     * Value of 0 means use default (0.1).
+     * Value of 0 means use default (0.75).
      */
     public void setMinProbeFraction(double minProbeFraction) {
         if (minProbeFraction <= 0.0) {

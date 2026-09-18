@@ -111,8 +111,8 @@ public class VectorIndexGeometryTest {
     /** The probe fraction is a floor: the search keeps opening clusters until it has enough candidates. */
     @Test
     public void candidateCountRaisesProbesAboveTheFraction() throws Exception {
-        // 100 rows per partition cluster into 10 leaves of 10 entries; a zero fraction would probe one.
-        VectorIndexGeometry geometry = geometry(params(DIMENSION), NO_INCLUDES, 400, 0, 35);
+        // 100 rows per partition cluster into 10 leaves of 10 entries; a tenth would probe one.
+        VectorIndexGeometry geometry = geometry(params(DIMENSION), NO_INCLUDES, 400, 0.1, 35);
 
         assertEquals(4, geometry.getProbes(), 0);
         assertEquals(40, geometry.getScannedEntries(), 0);
@@ -122,8 +122,7 @@ public class VectorIndexGeometryTest {
     @Test
     public void zeroFractionProbesTheDefaultShare() throws Exception {
         VectorIndexGeometry byDefault = geometry(params(DIMENSION), NO_INCLUDES, CARDINALITY, 0, CANDIDATES);
-        VectorIndexGeometry explicit =
-                geometry(params(DIMENSION), NO_INCLUDES, CARDINALITY, PROBE_FRACTION, CANDIDATES);
+        VectorIndexGeometry explicit = geometry(params(DIMENSION), NO_INCLUDES, CARDINALITY, 0.75, CANDIDATES);
 
         assertEquals(explicit.getProbes(), byDefault.getProbes(), 0);
     }

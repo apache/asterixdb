@@ -39,8 +39,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
  *   [0] = query vector            (e.g., from constant [1.0, 2.0, ...])
  *   [1] = k value                 (from LIMIT k)
  *   [2] = distance metric         (e.g., "euclidean")
- *   [3] = min_probe_fraction      (ANN_DISTANCE arg 3, default 0.1)
- *   [4] = k_multiplier            (ANN_DISTANCE arg 4, default 1)
+ *   [3] = min_probe_fraction      (ANN_DISTANCE arg 3)
+ *   [4] = k_multiplier            (ANN_DISTANCE arg 4)
  */
 public class VectorJobGenParams extends AccessMethodJobGenParams {
 

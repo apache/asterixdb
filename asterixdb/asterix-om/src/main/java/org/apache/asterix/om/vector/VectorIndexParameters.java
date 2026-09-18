@@ -94,7 +94,7 @@ public final class VectorIndexParameters implements Serializable {
      * build used, so this only stands in for a record written before that.
      */
     public static final double DEFAULT_TRAIN_LIST_FRACTION = 0.1;
-    public static final double DEFAULT_EPSILON = 0.25;
+    public static final double DEFAULT_EPSILON = 0.75;
     public static final int DEFAULT_CROSS_POLLINATION_M = 1;
     public static final double DEFAULT_RNG_FACTOR = 1.0;
     /** Sanity cap on {@link #CROSS_POLLINATION_M}: anything larger almost certainly indicates a user error. */

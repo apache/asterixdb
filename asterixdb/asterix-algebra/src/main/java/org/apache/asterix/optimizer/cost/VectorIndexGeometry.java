@@ -67,7 +67,7 @@ public final class VectorIndexGeometry {
     private static final double MIN_ROWS = 1.0;
 
     // The search substitutes this for a non-positive probe fraction, so the geometry has to as well.
-    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.1;
+    private static final double DEFAULT_MIN_PROBE_FRACTION = 0.75;
 
     private final double treeCentroids;
     private final double entriesPerCluster;

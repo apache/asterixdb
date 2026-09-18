@@ -44,7 +44,7 @@ public final class AnnSearchPreferenceAnnotation implements IExpressionAnnotatio
         return metric;
     }
 
-    /** Fraction of clusters to probe during the ANN search; default 0.1. */
+    /** Fraction of clusters to probe during the ANN search. */
     public double getMinProbeFraction() {
         return minProbeFraction;
     }
