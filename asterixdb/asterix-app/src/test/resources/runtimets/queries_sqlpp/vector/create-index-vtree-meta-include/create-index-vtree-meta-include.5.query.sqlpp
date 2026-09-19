@@ -18,13 +18,10 @@
  */
 
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+// Meta PK and the record's INCLUDE column, both returned, with a WHERE on the column. Index-only.
+// Records have id 1..11 and meta().id 901..911; filtered set is id 3..11, nearest 3 are 3, 4, 5.
+SELECT VALUE [meta(m).id, m.id]
+FROM VecMeta m
+WHERE m.id > 2
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;

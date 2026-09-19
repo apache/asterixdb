@@ -17,14 +17,14 @@
  * under the License.
  */
 
+// An INCLUDE column that is an undeclared (open) field holding a nested record. A query reading a
+// field inside it (m.info.year), in a projection or a predicate, is served by the column: the access
+// binds to the emitted variable and the remaining step is applied to it.
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
-LIMIT 3;
+CREATE TYPE MovieType AS OPEN {
+  id: int,
+  embedding: [double]
+};
+CREATE DATASET MovieNested(MovieType) PRIMARY KEY id;

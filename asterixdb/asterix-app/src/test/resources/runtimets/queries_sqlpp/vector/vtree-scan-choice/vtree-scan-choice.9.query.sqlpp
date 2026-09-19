@@ -17,14 +17,13 @@
  * under the License.
  */
 
+
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
+// The .6 case with the projected column changed to the index's INCLUDE column, and nothing else.
+// The search reads `year` out of the secondary tuple and returns it, so the ninety-row fetch and
+// rerank that made the plain scan win there does not happen and the index wins instead.
 EXPLAIN
-SELECT VALUE m.category
+SELECT VALUE m.year
 FROM Vec m
 ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
 LIMIT 3;

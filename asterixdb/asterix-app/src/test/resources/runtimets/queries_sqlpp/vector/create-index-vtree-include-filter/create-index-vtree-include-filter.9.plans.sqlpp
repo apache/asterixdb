@@ -17,14 +17,20 @@
  * under the License.
  */
 
+
+-- param compile-only:string=true
+-- param optimized-logical-plan:string=true
+
+// CBO cost estimates vary with the cluster shape, so disable it to keep the plan stable.
+SET `compiler.cbo` "false";
+
+// The .8 query as a plan assertion. `year` is both filtered on and returned, so it must be ONE
+// declared output of the vector search serving both -- the unnest-map carries [pk, dist, year], not
+// a second copy -- and there must be no BTREE_SEARCH above it.
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+
+SELECT m.id, m.year
+FROM MovieSmall m
+WHERE m.year > 2005
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;

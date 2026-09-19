@@ -31,7 +31,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.asterix.optimizer.rules.am.VectorJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -68,7 +67,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  */
 public class VectorSearchPOperator extends IndexSearchPOperator {
 
-    private static final int[] NO_INCLUDE_FILTER_FIELDS = new int[0];
+    private static final int[] NO_INCLUDE_FIELDS = new int[0];
 
     public VectorSearchPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast) {
@@ -121,6 +120,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Reject a filter condition on an index without INCLUDE columns instead of dropping it")
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
@@ -160,48 +160,36 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         boolean isQuantized = vectorDetails.getVectorParameters().isQuantized();
         int numSecondaryKeys = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
 
-        // Create tuple filter factory if selectCondition is present (for INCLUDE field filtering)
-        // The opSchema only has [pk] because INCLUDE fields are only used for filtering.
-        // Filter variables are mapped directly to physical field indexes via annotation.
+        // The INCLUDE columns are declared on the search whether this query reads them or not, so one
+        // mapping serves the pushed predicate, the projection, and the runtime's output tuple alike.
         ITupleFilterFactory tupleFilterFactory = null;
-        int[] includeFilterFields = NO_INCLUDE_FILTER_FIELDS;
+        int[] includeFields = NO_INCLUDE_FIELDS;
         if (unnestMap instanceof UnnestMapOperator) {
             UnnestMapOperator unnestMapOp = (UnnestMapOperator) unnestMap;
+            VectorIncludeFilterPushdown.IncludeColumns columns =
+                    VectorIncludeFilterPushdown.getIncludeColumns(unnestMapOp);
+
             if (unnestMapOp.getSelectCondition() != null) {
-                // Get filter variable to physical field index mapping from annotation
-                @SuppressWarnings("unchecked")
-                Map<LogicalVariable, Integer> filterVarToFieldIndex = (Map<LogicalVariable, Integer>) unnestMapOp
-                        .getAnnotations().get(VectorIncludeFilterPushdown.VECTOR_FILTER_VAR_MAPPING);
-
-                // Get filter variable types from annotation
-                @SuppressWarnings("unchecked")
-                Map<LogicalVariable, IAType> filterVarTypes = (Map<LogicalVariable, IAType>) unnestMapOp
-                        .getAnnotations().get(VectorIncludeFilterPushdown.VECTOR_FILTER_VAR_TYPES);
-
-                // Create filter schema with direct mapping for filter-only variables
-                // numSecondaryKeys: offset from physical tuple start to PK field
+                if (columns == null) {
+                    // A condition reaches the search only through the binding, which has nothing to bind a
+                    // field access to without INCLUDE columns. One here without them was installed by some
+                    // other hand, and dropping it would return the rows it was meant to remove.
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
+                            "the vector index search of index " + jobGenParams.getIndexName()
+                                    + " carries a filter condition but the index declares no INCLUDE columns");
+                }
+                // The operator schema carries the INCLUDE columns at their output positions, but the filter
+                // runs against the SECONDARY tuple, so its variables resolve through the mapping instead.
                 IOperatorSchema filterSchema =
-                        new VectorIndexFilterSchema(opSchema, filterVarToFieldIndex, numSecondaryKeys);
-
-                // Create type environment with filter variable types
-                // Pass context so function expressions can use this wrapper for recursive type lookups
+                        new VectorIndexFilterSchema(opSchema, columns.varToFieldIndex(), numSecondaryKeys);
                 IVariableTypeEnvironment filterTypeEnv =
-                        new VectorIndexFilterTypeEnvironment(typeEnv, filterVarTypes, context);
-
+                        new VectorIndexFilterTypeEnvironment(typeEnv, columns.varTypes(), context);
                 tupleFilterFactory = mp.createTupleFilterFactory(new IOperatorSchema[] { filterSchema }, filterTypeEnv,
                         unnestMapOp.getSelectCondition().getValue(), context);
+            }
 
-                includeFilterFields = includeFilterFields(unnestMapOp, filterVarToFieldIndex);
-            } else if (VectorIncludeFilterPushdown.hasDeclaredFilterVariables(unnestMapOp)) {
-                // The index-only plan declares the INCLUDE columns its predicate reads as outputs of this
-                // unnest-map while leaving the predicate in a SELECT above, for PushFilterIntoVectorSearchRule
-                // to move into the select condition. Reaching job generation with the columns declared but no
-                // condition means that never happened -- something relocated or consumed the SELECT. The
-                // runtime emits only [pk..., dist], so the declared columns would be read as fields that were
-                // never written. Fail here rather than emit that.
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
-                        "the vector index-only plan declared INCLUDE filter columns on the index search of "
-                                + jobGenParams.getIndexName() + " but no filter condition reached it");
+            if (columns != null) {
+                includeFields = includeFieldIndexes(unnestMapOp, columns.varToFieldIndex());
             }
         }
 
@@ -211,7 +199,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> vectorSearch =
                 mp.getVectorSearchRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
                         jobGenParams.getRetainInput(), dataset, jobGenParams.getIndexName(), queryIndexes,
-                        tupleFilterFactory, includeFilterFields, jobGenParams.isIndexOnly());
+                        tupleFilterFactory, includeFields, jobGenParams.isIndexOnly());
 
         IOperatorDescriptor opDesc = vectorSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
@@ -224,21 +212,22 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
     }
 
     /**
-     * The physical field indexes of the INCLUDE columns the pushed filter reads, in output order.
+     * The physical field indexes of the INCLUDE columns this search emits, in output order.
      * <p>
-     * Those columns are the LAST variables of the unnest-map: both call sites of
-     * {@link VectorIncludeFilterPushdown#declareFilterVariables} append them, the index-only one after it has
-     * appended the distance. The operator schema, and hence the output record descriptor, is built from that
-     * same list, and the runtime writes the primary keys, then the distance, then these columns -- so their
+     * Those columns are the LAST variables of the unnest-map:
+     * {@link VectorIncludeFilterPushdown#declareIncludeColumns} appends them after the primary keys and, on
+     * the index-only plan, after the distance. The operator schema, and hence the output record descriptor,
+     * is built from that same list, and the runtime writes the primary keys, then the distance, then these
+     * columns -- so their
      * being trailing and in this order is what makes the two agree. Checked rather than assumed: a tuple
      * narrower than the descriptor is emitted with the previous tuple's offsets in its trailing slots, not
      * with an error.
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
-    private static int[] includeFilterFields(UnnestMapOperator unnestMap,
+    private static int[] includeFieldIndexes(UnnestMapOperator unnestMap,
             Map<LogicalVariable, Integer> filterVarToFieldIndex) throws CompilationException {
         if (filterVarToFieldIndex == null || filterVarToFieldIndex.isEmpty()) {
-            return NO_INCLUDE_FILTER_FIELDS;
+            return NO_INCLUDE_FIELDS;
         }
         List<LogicalVariable> vars = unnestMap.getVariables();
         int numFilterVars = filterVarToFieldIndex.size();

@@ -18,13 +18,8 @@
  */
 
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
-LIMIT 3;
+CREATE INDEX idx_emb
+  ON MovieNested(embedding VECTOR)
+  INCLUDE (info)
+  TYPE VTREE
+  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "train_list_fraction": 1.0, "seed": 42 };

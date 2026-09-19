@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,10 +39,8 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
@@ -86,7 +85,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * <pre>
  * SELECT id, title
  * FROM movie
- * WHERE year > 2000  -- Handled by BTreeAccessMethod
+ * WHERE year > 2000  -- Evaluated inside the search when `year` is an INCLUDE column of the index
  * ORDER BY ANN_DISTANCE(reviewEmbedding, [1.0, 2.0, ...], "Euclidean")  -- Handled by VectorIndexAccessMethod
  * LIMIT 10
  * </pre>
@@ -213,7 +212,9 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * - ORDER BY: Computes exact distances on full records
      * - LIMIT: Extracts final top-k results
      *
-     * TODO: Add index-only plan optimization (skip primary lookup when only PK is needed)
+     * With {@code indexOnly} set there is no primary lookup: the search emits the primary keys, the distance
+     * and the INCLUDE columns, the ORDER BY sorts on that distance, and the plan above is rebound to those
+     * outputs.
      *
      * @param limitRef Reference to LIMIT operator
      * @param orderRef Reference to ORDER operator
@@ -224,6 +225,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * @param context Optimization context
      * @return The transformed plan with vector index search + primary lookup, or null if transformation fails
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Splice the index-only search into the plan before retyping the operators above it")
     public ILogicalOperator createIndexSearchPlan(Mutable<ILogicalOperator> limitRef,
             Mutable<ILogicalOperator> orderRef, AbstractFunctionCallExpression annDistanceExpr,
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
@@ -319,9 +321,24 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, false, false, null);
 
-        // INCLUDE-field filter pushdown is intentionally deferred to PushFilterIntoVectorSearchRule (a
-        // physical rewrite): the field-access predicate references the record variable, which is not in this
-        // unnest's input type environment. Just register the variables the vector index search produces.
+        // Output order is [pk..., distance?, INCLUDE columns...]. The distance goes on first because the
+        // INCLUDE columns must be the trailing outputs: job generation lines the emitted tuple up with the
+        // output record descriptor by taking them from the end of the variable list.
+        LogicalVariable distVar = null;
+        VectorIncludeFilterPushdown.IncludeColumns includeColumns = null;
+        if (secondaryIndexUnnestOp instanceof UnnestMapOperator) {
+            UnnestMapOperator searchUnnest = (UnnestMapOperator) secondaryIndexUnnestOp;
+            if (isIndexOnlyPlan) {
+                distVar = context.newVar();
+                searchUnnest.getVariables().add(distVar);
+                searchUnnest.getVariableTypes().add(BuiltinType.ADOUBLE);
+            }
+            // Every INCLUDE column of the index is declared, for both plan shapes. One mapping then serves
+            // whatever reads them -- a predicate pushed into the search, a projection returning them, or
+            // neither -- and the runtime emits exactly what is declared.
+            includeColumns = VectorIncludeFilterPushdown.declareIncludeColumns(searchUnnest,
+                    includeContext(chosenIndex, dataset, recordType, dataSourceOp), context::newVar);
+        }
         context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
 
         if (isIndexOnlyPlan) {
@@ -352,9 +369,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                                 + "search but got " + secondaryIndexUnnestOp.getOperatorTag());
             } else {
                 UnnestMapOperator unnestMap = (UnnestMapOperator) secondaryIndexUnnestOp;
-                LogicalVariable distVar = context.newVar();
-                unnestMap.getVariables().add(distVar);
-                unnestMap.getVariableTypes().add(BuiltinType.ADOUBLE);
 
                 // Rewrite ORDER BY: replace the ann_distance call with VarRef($$dist). isIndexOnlyPlan was
                 // only left true if orderOp has exactly one expression (the ann_distance call); keep the same
@@ -367,7 +381,8 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 // Rebind the WHERE onto the index's INCLUDE columns. There is no primary lookup here to
                 // evaluate it against, and the record variable is about to be neutralized, so a predicate
                 // left reading the record would collapse to select(missing) and drop every row.
-                bindIncludeFilterToSearch(unnestMap, selectOp, chosenIndex, dataset, recordType, dataSourceOp, context);
+                bindIncludeFilterToSearch(selectOp, chosenIndex, dataset, recordType, dataSourceOp, includeColumns,
+                        context);
 
                 // Build the variable substitution map: old PK vars → new PK vars. The secondary
                 // UnnestMap allocates fresh context.newVar() PK variables, so anything that
@@ -375,7 +390,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 List<LogicalVariable> oldVars = dataSourceOp.getVariables();
                 int numPK = dataset.getPrimaryKeys().size();
                 List<LogicalVariable> newPkVars = unnestMap.getVariables().subList(0, numPK);
-                Map<LogicalVariable, LogicalVariable> pkSubstitution = new java.util.HashMap<>();
+                Map<LogicalVariable, LogicalVariable> pkSubstitution = new HashMap<>();
                 for (int i = 0; i < numPK; i++) {
                     pkSubstitution.put(oldVars.get(i), newPkVars.get(i));
                 }
@@ -387,17 +402,19 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 LogicalVariable oldRecVar = numPK < oldVars.size() ? oldVars.get(numPK) : null;
                 LogicalVariable oldMetaVar = numPK + 1 < oldVars.size() ? oldVars.get(numPK + 1) : null;
 
-                // Map PK field name -> new PK variable, split by the record the PK field is actually
-                // sourced from (0 = data record, 1 = meta record).
+                // Map PK field PATH -> new PK variable, split by the record the PK field is actually
+                // sourced from (0 = data record, 1 = meta record) so a PK sourced from meta() named "id" is
+                // never confused with an unrelated data-record field of that name. Paths, not names: a
+                // nested primary key binds exactly as a top-level one does.
                 List<Integer> keySourceIndicators = DatasetUtil.getKeySourceIndicators(dataset);
-                Map<String, LogicalVariable> recordPkFieldToNewVar = new java.util.HashMap<>();
-                Map<String, LogicalVariable> metaPkFieldToNewVar = new java.util.HashMap<>();
+                Map<List<String>, LogicalVariable> recordPkPathToNewVar = new LinkedHashMap<>();
+                Map<List<String>, LogicalVariable> metaPkPathToNewVar = new LinkedHashMap<>();
                 List<List<String>> pkPaths = dataset.getPrimaryKeys();
                 for (int i = 0; i < numPK; i++) {
                     List<String> p = pkPaths.get(i);
-                    if (p != null && p.size() == 1) {
+                    if (p != null && !p.isEmpty()) {
                         boolean fromMeta = keySourceIndicators != null && keySourceIndicators.get(i) == 1;
-                        (fromMeta ? metaPkFieldToNewVar : recordPkFieldToNewVar).put(p.get(0), newPkVars.get(i));
+                        (fromMeta ? metaPkPathToNewVar : recordPkPathToNewVar).put(p, newPkVars.get(i));
                     }
                 }
 
@@ -416,11 +433,26 @@ public class VectorIndexAccessMethod implements IAccessMethod {
 
                 // 2. Rewrite field-access on the old record/meta vars to direct PK VarRefs (e.g. the
                 //    SELECT VALUE m.idx projection above LIMIT), each against only its own PK fields.
+                // Both the primary keys and the INCLUDE columns are outputs of the search now, so pointing
+                // the plan above at them is one operation over full paths, applied to the record the path is
+                // actually declared on.
+                // Through the plan's ASSIGN bindings, so an access the compiler split across ASSIGNs binds
+                // as the one path it is -- the same resolution the gate accepted it by. Collected before any
+                // rewrite, so each variable still maps to the access it was defined as.
+                Map<LogicalVariable, ILogicalExpression> bindings =
+                        VectorIncludeFilterPushdown.collectAssignBindings(rewriteRoot);
                 if (oldRecVar != null) {
-                    rewriteRecordFieldAccessToPk(rewriteRoot, oldRecVar, recordPkFieldToNewVar);
+                    VectorIncludeFilterPushdown.IndexContext recordCtx =
+                            includeContext(chosenIndex, dataset, recordType, Set.of(oldRecVar));
+                    if (includeColumns != null) {
+                        bindPathsInDescendants(rewriteRoot, recordCtx, includeColumns.pathToVar(), bindings);
+                    }
+                    bindPathsInDescendants(rewriteRoot, recordCtx, recordPkPathToNewVar, bindings);
                 }
                 if (oldMetaVar != null) {
-                    rewriteRecordFieldAccessToPk(rewriteRoot, oldMetaVar, metaPkFieldToNewVar);
+                    bindPathsInDescendants(rewriteRoot,
+                            includeContext(chosenIndex, dataset, metaRecordType, Set.of(oldMetaVar)),
+                            metaPkPathToNewVar, bindings);
                 }
 
                 // 3. Any remaining ASSIGN expression that still references oldRecVar/oldMetaVar
@@ -440,17 +472,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                     neutralizeDanglingExpressions(rewriteRoot, deadRecordVars);
                 }
 
-                // Recompute type env bottom-up over every operator whose schema/expressions changed:
-                // the new secondary UnnestMap, the LIMIT chain, then each above-LIMIT ancestor from the
-                // one closest to LIMIT up to the root (aboveLimitOps is ordered root-first).
-                context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
-                org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil.typeOpRec(limitRef, context);
-                if (aboveLimitOps != null) {
-                    for (int ai = aboveLimitOps.size() - 1; ai >= 0; ai--) {
-                        context.computeAndSetTypeEnvironmentForOperator(aboveLimitOps.get(ai));
-                    }
-                }
-
                 // Cross-pollination dedup (index-only branch): when cross_pollination_m > 1 the secondary
                 // cursor emits up to M (pk..., dist) copies per record. The primary-lookup path dedups via a
                 // DistinctOperator above its primary UNNEST-MAP (see createRestOfIndexSearchPlan below), but the
@@ -459,6 +480,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 // so LIMIT applies to DISTINCT PKs. DistinctOperator propagates all input vars, so $$dist
                 // survives for the ORDER BY $$dist above it. For M == 1 we return the bare UNNEST-MAP so the
                 // plan stays byte-identical to the legacy path.
+                ILogicalOperator indexOnlyPlan = secondaryIndexUnnestOp;
                 if (extractCrossPollinationM(chosenIndex) > 1 && numPK > 0) {
                     List<Mutable<ILogicalExpression>> dedupExprs = new ArrayList<>(numPK);
                     for (LogicalVariable pkVar : newPkVars) {
@@ -471,9 +493,28 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                     dedupOp.getInputs().add(new MutableObject<>(secondaryIndexUnnestOp));
                     dedupOp.setExecutionMode(secondaryIndexUnnestOp.getExecutionMode());
                     context.computeAndSetTypeEnvironmentForOperator(dedupOp);
-                    return dedupOp;
+                    indexOnlyPlan = dedupOp;
                 }
-                return secondaryIndexUnnestOp;
+
+                // The rewritten operators above now read variables only the search produces, so the search
+                // must be in the tree before any of them is retyped. Typed while the scan it replaces is still
+                // there, those variables have no producer: a bare reference merely types as unknown, but a
+                // function over one of them -- `m.year + 1`, `lower(m.title)`, a nested access on an INCLUDE
+                // column -- has no input type to compute from and fails. The caller replaces this same
+                // reference with what is returned here, which is harmless.
+                subTree.getDataSourceRef().setValue(indexOnlyPlan);
+
+                // Recompute type env bottom-up over every operator whose schema/expressions changed:
+                // the new secondary UnnestMap, the LIMIT chain, then each above-LIMIT ancestor from the
+                // one closest to LIMIT up to the root (aboveLimitOps is ordered root-first).
+                context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
+                org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil.typeOpRec(limitRef, context);
+                if (aboveLimitOps != null) {
+                    for (int ai = aboveLimitOps.size() - 1; ai >= 0; ai--) {
+                        context.computeAndSetTypeEnvironmentForOperator(aboveLimitOps.get(ai));
+                    }
+                }
+                return indexOnlyPlan;
             }
         }
 
@@ -657,76 +698,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
     }
 
     /**
-     * Ensures an integer constant expression uses AInt32 instead of AInt64.
-     *
-     * SQL++ parser creates AInt64 (8 bytes) for all integer literals, but the runtime
-     * uses IntegerPointable.getInteger() which reads only 4 bytes. Reading the first
-     * 4 bytes of an 8-byte big-endian AInt64 for small values yields 0.
-     *
-     * This method converts AInt64 constants to AInt32 at compile time so the runtime
-     * can correctly read them with IntegerPointable.
-     *
-     * @param expr The expression to check and potentially convert
-     * @return The original expression if not an AInt64 constant, or a new AInt32 constant expression
-     */
-
-    /**
-     * Index-only support: walk {@code op} and its descendants and replace every
-     * {@code field-access-by-name(VarRef(recVar), "fieldName")} where {@code fieldName} is a PK column
-     * with a direct {@code VarRef(pkVar)}. Used to repair ASSIGNs like
-     * {@code $$id := field-access($$rec, "id")} after the DataSourceScan has been replaced by the
-     * secondary UnnestMap (which no longer produces the record variable).
-     */
-    private static void rewriteRecordFieldAccessToPk(ILogicalOperator op, LogicalVariable recVar,
-            Map<String, LogicalVariable> pkFieldToVar) {
-        if (op == null) {
-            return;
-        }
-        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AssignOperator a = (AssignOperator) op;
-            for (Mutable<ILogicalExpression> exprRef : a.getExpressions()) {
-                rewriteRecordFieldAccessExpr(exprRef, recVar, pkFieldToVar);
-            }
-        }
-        // Other operator types could in principle hold expressions referencing $$rec (e.g. SELECT,
-        // ORDER, ASSIGNs further down). Walk all inputs and apply uniformly.
-        for (Mutable<ILogicalOperator> input : op.getInputs()) {
-            rewriteRecordFieldAccessToPk(input.getValue(), recVar, pkFieldToVar);
-        }
-    }
-
-    private static void rewriteRecordFieldAccessExpr(Mutable<ILogicalExpression> exprRef, LogicalVariable recVar,
-            Map<String, LogicalVariable> pkFieldToVar) {
-        ILogicalExpression e = exprRef.getValue();
-        if (e.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return;
-        }
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
-        if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fce.getFunctionIdentifier())
-                && fce.getArguments().size() == 2) {
-            ILogicalExpression a0 = fce.getArguments().get(0).getValue();
-            ILogicalExpression a1 = fce.getArguments().get(1).getValue();
-            if (a0.getExpressionTag() == LogicalExpressionTag.VARIABLE
-                    && a1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                LogicalVariable v0 = ((VariableReferenceExpression) a0).getVariableReference();
-                if (recVar.equals(v0)) {
-                    String fieldName = extractStringFromConstant(a1);
-                    if (fieldName != null && pkFieldToVar.containsKey(fieldName)) {
-                        VariableReferenceExpression pkRef =
-                                new VariableReferenceExpression(pkFieldToVar.get(fieldName));
-                        pkRef.setSourceLocation(e.getSourceLocation());
-                        exprRef.setValue(pkRef);
-                        return;
-                    }
-                }
-            }
-        }
-        for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
-            rewriteRecordFieldAccessExpr(arg, recVar, pkFieldToVar);
-        }
-    }
-
-    /**
      * Bind a {@code WHERE} over the index's {@code INCLUDE} columns to the vector search of an index-only
      * plan: declare the columns it reads as outputs of the index-search unnest-map and rewrite the
      * predicate to read them, so the cursor can filter candidates itself and no primary lookup is needed to
@@ -740,37 +711,73 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * unsupported plan shape — fail loudly instead of emitting a plan that silently drops every row.
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Index-only ANN plans bind their INCLUDE-field predicate")
-    private static void bindIncludeFilterToSearch(UnnestMapOperator unnestMap, SelectOperator selectOp,
-            Index chosenIndex, Dataset dataset, ARecordType recordType, AbstractDataSourceOperator dataSourceOp,
-            IOptimizationContext context) throws AlgebricksException {
+    private static void bindIncludeFilterToSearch(SelectOperator selectOp, Index chosenIndex, Dataset dataset,
+            ARecordType recordType, AbstractDataSourceOperator dataSourceOp,
+            VectorIncludeFilterPushdown.IncludeColumns includeColumns, IOptimizationContext context)
+            throws AlgebricksException {
         if (selectOp == null) {
             return;
         }
-        Index.VectorIndexDetails details = (Index.VectorIndexDetails) chosenIndex.getIndexDetails();
-        int numPK = dataset.getPrimaryKeys().size();
-        List<LogicalVariable> dsVars = dataSourceOp.getVariables();
-        // Everything after the primary keys is the dataset record and, when present, the meta record: the
-        // only bases a pushable field access may be rooted at.
-        Set<LogicalVariable> recordVars = new HashSet<>(dsVars.subList(Math.min(numPK, dsVars.size()), dsVars.size()));
-
-        VectorIncludeFilterPushdown.IndexContext idx =
-                new VectorIncludeFilterPushdown.IndexContext(details.getIncludeFieldNames(), recordType,
-                        details.getVectorParameters().isQuantized(), numPK, recordVars);
-        VectorIncludeFilterPushdown.PushedIncludeFilter pushed = VectorIncludeFilterPushdown
-                .analyze(selectOp.getCondition().getValue(), selectOp, idx, context, context::newVar);
-        if (pushed == null) {
+        ILogicalExpression bound = VectorIncludeFilterPushdown.bindPredicate(selectOp.getCondition().getValue(),
+                selectOp, includeContext(chosenIndex, dataset, recordType, dataSourceOp), context, includeColumns);
+        if (bound == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
                     "the vector index-only plan was chosen for a WHERE that cannot be pushed into the "
                             + "INCLUDE fields of index " + chosenIndex.getIndexName());
         }
-        VectorIncludeFilterPushdown.declareFilterVariables(unnestMap, pushed);
         // Rebind the SELECT to the INCLUDE columns instead of moving the predicate into the unnest-map's
         // select condition. The record variable it used to read is about to be neutralized, so it cannot
         // stay as it is -- but once it reads variables the unnest-map produces it is an ordinary predicate
         // over ordinary variables, which every rule between here and the physical rewrites can handle.
         // PushFilterIntoVectorSearchRule moves it into the select condition at the same point it does for
-        // the lookup-and-rerank plan.
-        selectOp.getCondition().setValue(pushed.condition());
+        // the lookup-and-rerank plan, and fails the compilation if by then it cannot; a predicate the rules
+        // in between prove true is simply removed, and nothing has to arrive.
+        selectOp.getCondition().setValue(bound);
+    }
+
+    /**
+     * The index-side inputs {@link VectorIncludeFilterPushdown} needs, with the record variable(s) a field
+     * access must be rooted at to be a candidate.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Root pushdown at the data record only, never the meta record")
+    private static VectorIncludeFilterPushdown.IndexContext includeContext(Index chosenIndex, Dataset dataset,
+            ARecordType recordType, AbstractDataSourceOperator dataSourceOp) {
+        int numPK = dataset.getPrimaryKeys().size();
+        List<LogicalVariable> dsVars = dataSourceOp.getVariables();
+        // The scan produces [pk..., record, meta?]. Only the record is a base: INCLUDE paths are resolved
+        // against the record type, so admitting the meta variable would let `meta(m).year` bind to a record
+        // column of the same name. IntroduceTopKAccessMethodRule's gate makes the same choice, and must: its
+        // verdict is what admits a predicate to the binding done here.
+        Set<LogicalVariable> recordVars = numPK < dsVars.size() ? Set.of(dsVars.get(numPK)) : Set.of();
+        return includeContext(chosenIndex, dataset, recordType, recordVars);
+    }
+
+    private static VectorIncludeFilterPushdown.IndexContext includeContext(Index chosenIndex, Dataset dataset,
+            ARecordType recordType, Set<LogicalVariable> recordVars) {
+        Index.VectorIndexDetails details = (Index.VectorIndexDetails) chosenIndex.getIndexDetails();
+        return new VectorIncludeFilterPushdown.IndexContext(details.getIncludeFieldNames(), recordType,
+                details.getVectorParameters().isQuantized(), dataset.getPrimaryKeys().size(), recordVars);
+    }
+
+    /**
+     * Point every reference to one of {@code pathToVar}'s paths, in {@code op} and its descendants, at the
+     * search output carrying that column, so the plan above no longer needs the assembled record.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static void bindPathsInDescendants(ILogicalOperator op, VectorIncludeFilterPushdown.IndexContext idx,
+            Map<List<String>, LogicalVariable> pathToVar, Map<LogicalVariable, ILogicalExpression> bindings)
+            throws AlgebricksException {
+        if (op == null || pathToVar == null || pathToVar.isEmpty()) {
+            return;
+        }
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            for (Mutable<ILogicalExpression> exprRef : ((AssignOperator) op).getExpressions()) {
+                VectorIncludeFilterPushdown.bindPaths(exprRef, idx, pathToVar, bindings);
+            }
+        }
+        for (Mutable<ILogicalOperator> input : op.getInputs()) {
+            bindPathsInDescendants(input.getValue(), idx, pathToVar, bindings);
+        }
     }
 
     /**
@@ -783,7 +790,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * on these values, but the type system still walks them.
      */
     private static void neutralizeDanglingExpressions(ILogicalOperator root, List<LogicalVariable> oldRecordVars) {
-        Set<LogicalVariable> dead = new java.util.HashSet<>(oldRecordVars);
+        Set<LogicalVariable> dead = new HashSet<>(oldRecordVars);
         // Iterate to a fixpoint: each pass may neutralize an ASSIGN whose variable then feeds the next.
         while (neutralizeDeadPass(root, dead)) {
             // keep going until no new variable becomes dead
@@ -834,18 +841,4 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         }
         return false;
     }
-
-    private static String extractStringFromConstant(ILogicalExpression e) {
-        if (e.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        ConstantExpression ce = (ConstantExpression) e;
-        IAlgebricksConstantValue v = ce.getValue();
-        if (!(v instanceof AsterixConstantValue)) {
-            return null;
-        }
-        IAObject obj = ((AsterixConstantValue) v).getObject();
-        return (obj instanceof AString) ? ((AString) obj).getStringValue() : null;
-    }
-
 }

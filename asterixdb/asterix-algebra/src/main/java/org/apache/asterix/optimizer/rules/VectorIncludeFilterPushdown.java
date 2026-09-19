@@ -77,67 +77,168 @@ public final class VectorIncludeFilterPushdown {
     }
 
     /**
-     * Annotation key for the filter variable to physical field index mapping.
-     * Value type: Map&lt;LogicalVariable, Integer&gt;
+     * Annotation key for the INCLUDE columns a vector index search emits.
+     * Value type: {@link IncludeColumns}
      */
-    public static final String VECTOR_FILTER_VAR_MAPPING = "VECTOR_FILTER_VAR_MAPPING";
+    public static final String VECTOR_INCLUDE_COLUMNS = "VECTOR_INCLUDE_COLUMNS";
 
     /**
-     * Annotation key for the filter variable to type mapping.
-     * Value type: Map&lt;LogicalVariable, IAType&gt;
-     */
-    public static final String VECTOR_FILTER_VAR_TYPES = "VECTOR_FILTER_VAR_TYPES";
-
-    /**
-     * Register the INCLUDE columns a rewritten predicate reads as variables produced by the vector index
-     * unnest-map, and hand {@link org.apache.asterix.algebra.operators.physical.VectorSearchPOperator} their
-     * physical field indexes via the annotations above.
+     * Every INCLUDE column of the searched index, bound to a variable the search emits.
      * <p>
-     * This only declares the columns; the predicate itself stays wherever the caller put it. The index-only
-     * plan uses that: it binds its predicate to these variables but leaves it in a {@code SELECT} above the
-     * unnest-map, so the predicate remains an ordinary expression over ordinary variables for every rule
-     * that runs before {@link PushFilterIntoVectorSearchRule} moves it in.
+     * All of them are declared, whether this query reads them or not, so that one mapping serves every use:
+     * a predicate pushed into the search, a projection returning the column, or neither. Keyed by the full
+     * path, so a nested INCLUDE column ({@code INCLUDE (info.year)}) is addressed exactly like a top-level
+     * one and never confused with a same-named field elsewhere in the record.
+     *
+     * @param pathToVar each column's full path to the variable carrying it, in INCLUDE order; empty when
+     *                  the index declares the same path twice, which leaves no unambiguous binding
+     * @param varToFieldIndex each variable's physical field index in the secondary tuple
+     * @param varTypes each variable's type, for the filter's type environment
      */
-    public static void declareFilterVariables(UnnestMapOperator vectorUnnest, PushedIncludeFilter pushed) {
-        vectorUnnest.getAnnotations().put(VECTOR_FILTER_VAR_MAPPING, pushed.varToFieldIndex());
-        vectorUnnest.getAnnotations().put(VECTOR_FILTER_VAR_TYPES, pushed.varTypes());
+    public record IncludeColumns(Map<List<String>, LogicalVariable> pathToVar,
+            Map<LogicalVariable, Integer> varToFieldIndex, Map<LogicalVariable, IAType> varTypes) {
+    }
 
-        for (Map.Entry<LogicalVariable, IAType> entry : pushed.varTypes().entrySet()) {
+    /**
+     * Declare every INCLUDE column of the index as an output of the vector index search, appended after the
+     * primary keys and, on the index-only plan, the distance.
+     * <p>
+     * The runtime emits exactly what is declared here, so the columns are bound once, at the point the
+     * unnest-map is created, rather than discovered per use. A predicate and a projection over the same
+     * column then resolve to the same variable by construction.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public static IncludeColumns declareIncludeColumns(UnnestMapOperator vectorUnnest, IndexContext idx,
+            Supplier<LogicalVariable> varSupplier) throws AlgebricksException {
+        IncludeColumns columns = buildIncludeColumns(idx, varSupplier);
+        if (columns == null) {
+            return null;
+        }
+        for (Map.Entry<LogicalVariable, IAType> entry : columns.varTypes().entrySet()) {
             vectorUnnest.getVariables().add(entry.getKey());
             vectorUnnest.getVariableTypes().add(entry.getValue());
         }
+        vectorUnnest.getAnnotations().put(VECTOR_INCLUDE_COLUMNS, columns);
+        return columns;
     }
 
     /**
-     * Declare the INCLUDE columns and move the predicate into the unnest-map's select condition, which is
-     * where the runtime reads it from. Only {@link PushFilterIntoVectorSearchRule} calls this, during the
-     * physical rewrites: a select condition reads variables the operator produces rather than variables from
-     * its input, which is not what an expression on an operator normally means, so it is created as late as
-     * possible to keep it out of the way of the rules that walk expressions.
+     * The index's INCLUDE columns bound to variables from {@code varSupplier}, or {@code null} when the
+     * index has none. Touches no operator, so the gate can run the analysis on throwaway variables to reach
+     * a verdict before any of this is spliced into a plan.
      */
-    public static void apply(UnnestMapOperator vectorUnnest, PushedIncludeFilter pushed) {
-        declareFilterVariables(vectorUnnest, pushed);
-        vectorUnnest.setSelectCondition(new MutableObject<>(pushed.condition()));
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    private static IncludeColumns buildIncludeColumns(IndexContext idx, Supplier<LogicalVariable> varSupplier)
+            throws AlgebricksException {
+        List<List<String>> includeFieldNames = idx.includeFieldNames();
+        if (includeFieldNames == null || includeFieldNames.isEmpty()) {
+            return null;
+        }
+        Map<List<String>, LogicalVariable> pathToVar = new LinkedHashMap<>();
+        Map<LogicalVariable, Integer> varToFieldIndex = new LinkedHashMap<>();
+        Map<LogicalVariable, IAType> varTypes = new LinkedHashMap<>();
+
+        int numSecondaryKeys = idx.isQuantized() ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
+                : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
+        int fieldIndex = numSecondaryKeys + idx.numPrimaryKeys();
+        for (List<String> fieldPath : includeFieldNames) {
+            LogicalVariable var = varSupplier.get();
+            // An open field not in the type declaration has no declared type; ANY still lets the type
+            // environment resolve the variable.
+            IAType fieldType = idx.recordType().getSubFieldType(fieldPath);
+            if (fieldType == null) {
+                fieldType = BuiltinType.ANY;
+            }
+            pathToVar.put(fieldPath, var);
+            varToFieldIndex.put(var, fieldIndex++);
+            varTypes.put(var, fieldType);
+        }
+        // Every column is still declared -- the tuple the runtime writes has to match the declaration either
+        // way -- but two identical INCLUDE paths leave no unambiguous variable to bind a reference to, so
+        // nothing is bound and the predicate stays above the search. DDL rejects such an index
+        // (INDEX_ILLEGAL_REPETITIVE_FIELD), so this is a belt-and-braces check, not a reachable path.
+        if (pathToVar.size() < includeFieldNames.size()) {
+            pathToVar.clear();
+        }
+        return new IncludeColumns(pathToVar, varToFieldIndex, varTypes);
+    }
+
+    /** The INCLUDE columns declared on {@code vectorUnnest}, or {@code null} if it has none. */
+    public static IncludeColumns getIncludeColumns(UnnestMapOperator vectorUnnest) {
+        return (IncludeColumns) vectorUnnest.getAnnotations().get(VECTOR_INCLUDE_COLUMNS);
     }
 
     /**
-     * Whether {@code vectorUnnest} already has its INCLUDE filter variables declared -- i.e. the index-only
-     * plan bound a predicate to them during the access-method phase and left it in a SELECT for
-     * {@link PushFilterIntoVectorSearchRule} to move in.
-     */
-    public static boolean hasDeclaredFilterVariables(UnnestMapOperator vectorUnnest) {
-        return vectorUnnest.getAnnotations().containsKey(VECTOR_FILTER_VAR_MAPPING);
-    }
-
-    /**
-     * A predicate that has been fully rewritten against a vector index's INCLUDE columns.
+     * Rewrite {@code condition} to read the declared INCLUDE columns instead of the record, or return
+     * {@code null} when any part of it cannot be served that way.
      *
-     * @param condition the rewritten predicate, referencing only the variables in {@code varToFieldIndex}
-     * @param varToFieldIndex each fresh filter variable's physical field index in the secondary tuple
-     * @param varTypes each fresh filter variable's type, for the filter's type environment
+     * @param selectOp the {@code SELECT} carrying the condition; the {@code ASSIGN} chain below it is inlined
+     *                 so that field accesses on the record are visible
      */
-    public record PushedIncludeFilter(ILogicalExpression condition, Map<LogicalVariable, Integer> varToFieldIndex,
-            Map<LogicalVariable, IAType> varTypes) {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Bind a path through its covering prefix, as a projection does")
+    public static ILogicalExpression bindPredicate(ILogicalExpression condition, ILogicalOperator selectOp,
+            IndexContext idx, IOptimizationContext context, IncludeColumns columns) throws AlgebricksException {
+        if (condition == null) {
+            return null;
+        }
+        MutableObject<ILogicalExpression> conditionRef = new MutableObject<>(condition.cloneExpression());
+        inlineAssigns(conditionRef, selectOp, context);
+
+        // Bind every field access whose path, or whose longest prefix, is an INCLUDE column: `m.info.year`
+        // over INCLUDE (info) becomes a field access on the emitted column, exactly as it does in a
+        // projection. There is no separate "is every path covered" test; the guard below is the whole
+        // decision. A predicate reading no field at all still binds, trivially, to nothing. It has to:
+        // leaving it in a SELECT above the search would filter a candidate set the search had already capped.
+        Map<List<String>, LogicalVariable> pathToVar = columns == null ? Map.of() : columns.pathToVar();
+        ILogicalExpression rewritten = rewriteFieldAccess(conditionRef.getValue(), pathToVar, idx, Map.of());
+
+        // Completeness guard: the pushed condition must reference ONLY INCLUDE column variables. A field
+        // access no INCLUDE column covers, an access pattern resolveFieldPath does not recognize, or a
+        // non-inlinable ASSIGN output each leave a reference to the source record behind -- a variable that
+        // is not in scope at the unnest.
+        Set<LogicalVariable> rewrittenUsed = new HashSet<>();
+        rewritten.getUsedVariables(rewrittenUsed);
+        if (!new HashSet<>(pathToVar.values()).containsAll(rewrittenUsed)) {
+            return null;
+        }
+        return rewritten;
+    }
+
+    /**
+     * Replace, in place, every field access under {@code exprRef} whose full path is a key of
+     * {@code pathToVar} with a reference to that variable.
+     * <p>
+     * The same rewrite {@link #bindPredicate} applies, without its guard: a projection legitimately reads
+     * other things too, which are left alone. An access whose own path does not match is descended into, so
+     * a query reading {@code m.info.year} still binds when the column is {@code INCLUDE (info)}.
+     * <p>
+     * Paths, not names, so this serves a nested column exactly as it serves a top-level one -- and it is the
+     * same operation whether the variable carries an INCLUDE column or a primary key.
+     *
+     * @param bindings the plan's ASSIGN bindings, through which an access split across ASSIGNs
+     *                 ({@code $$a := m.info; $$b := $$a.year}) resolves to its full path; see
+     *                 {@link #resolveRecordFieldPath(AbstractFunctionCallExpression, IndexContext, Map)}
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public static void bindPaths(Mutable<ILogicalExpression> exprRef, IndexContext idx,
+            Map<List<String>, LogicalVariable> pathToVar, Map<LogicalVariable, ILogicalExpression> bindings)
+            throws AlgebricksException {
+        if (pathToVar == null || pathToVar.isEmpty()) {
+            return;
+        }
+        exprRef.setValue(rewriteFieldAccess(exprRef.getValue(), pathToVar, idx, bindings));
+    }
+
+    /**
+     * Move the predicate into the unnest-map's select condition, which is where the runtime reads it from.
+     * Only {@link PushFilterIntoVectorSearchRule} calls this, during the physical rewrites: a select
+     * condition reads variables the operator produces rather than variables from its input, which is not what
+     * an expression on an operator normally means, so it is created as late as possible to keep it out of the
+     * way of the rules that walk expressions.
+     */
+    public static void apply(UnnestMapOperator vectorUnnest, ILogicalExpression condition) {
+        vectorUnnest.setSelectCondition(new MutableObject<>(condition));
     }
 
     /**
@@ -158,102 +259,20 @@ public final class VectorIncludeFilterPushdown {
     }
 
     /**
-     * Whether {@code condition} can be pushed, without allocating any variables or touching the
-     * optimization context. Used by the cost model and by the index-only gate.
+     * Whether {@code condition} can be served entirely from the index's INCLUDE columns. Used by the
+     * index-only gate, which has to decide before any of those columns exist.
+     * <p>
+     * A dry run of {@link #bindPredicate} against throwaway variables, rather than a second implementation
+     * of the same checks. The gate's answer is irreversible -- {@code indexOnly} is serialized into the
+     * index-search arguments before the binding runs, so a gate that admits a predicate the binding then
+     * declines leaves the plan unable to rebind it -- which is exactly why the two must not be able to
+     * drift apart.
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public static boolean isPushable(ILogicalExpression condition, ILogicalOperator selectOp, IndexContext idx,
             IOptimizationContext context) throws AlgebricksException {
-        return analyze(condition, selectOp, idx, context, new ThrowawayVariableSupplier()) != null;
-    }
-
-    /**
-     * Rewrites {@code condition} to read the index's INCLUDE columns, or returns {@code null} when any part
-     * of it cannot be served that way.
-     *
-     * @param condition the {@code SELECT} condition to push
-     * @param selectOp the {@code SELECT} carrying {@code condition}; the {@code ASSIGN} chain below it is
-     *                 inlined into the condition so that field accesses on the record are visible
-     * @param varSupplier allocates the fresh filter variables — {@code context::newVar} when the result
-     *                    will be spliced into the plan, a throwaway supplier when only the verdict matters
-     */
-    public static PushedIncludeFilter analyze(ILogicalExpression condition, ILogicalOperator selectOp, IndexContext idx,
-            IOptimizationContext context, Supplier<LogicalVariable> varSupplier) throws AlgebricksException {
-        if (condition == null || idx.includeFieldNames() == null || idx.includeFieldNames().isEmpty()) {
-            return null;
-        }
-
-        MutableObject<ILogicalExpression> conditionRef = new MutableObject<>(condition.cloneExpression());
-        inlineAssigns(conditionRef, selectOp, context);
-
-        // Collect the FULL field paths the filter reads, resolved against the record variable(s) this vector
-        // search feeds. Matching on full paths (not leaf names) is what keeps `WHERE m.b.year > 2000` from
-        // being pushed against an `INCLUDE (a.year)` column, and restricting the base to this subtree's
-        // record variable(s) is what keeps a second record (from a join or a LET) from being redirected into
-        // the index's INCLUDE field.
-        Set<List<String>> filterFieldPaths = new HashSet<>();
-        extractFieldPaths(conditionRef.getValue(), idx, filterFieldPaths);
-        if (filterFieldPaths.isEmpty()) {
-            return null;
-        }
-
-        // Bail out if the filter references any field that is not in the index's INCLUDE list.
-        Map<List<String>, Integer> includeFieldIndex = buildIncludeFieldIndex(idx.includeFieldNames());
-        // Two identical INCLUDE paths would collapse the map and bind the filter to whichever was inserted
-        // last; bail rather than risk pushing a predicate that resolves to the wrong physical field.
-        if (includeFieldIndex.size() < idx.includeFieldNames().size()) {
-            return null;
-        }
-        for (List<String> fieldPath : filterFieldPaths) {
-            if (!includeFieldIndex.containsKey(fieldPath)) {
-                return null;
-            }
-        }
-
-        // Physical tuple format depends on quantization:
-        // Non-quantized: [distance, centroidId, pk_0..pk_{N-1}, include_fields...]
-        // Quantized:     [distance, centroidId, qDist, qEmbed, pk_0..pk_{N-1}, include_fields...]
-        // INCLUDE fields start after the secondary keys and ALL primary key columns.
-        int numSecondaryKeys = idx.isQuantized() ? VTreeDataTupleAccessor.Q_NUM_SECONDARY_FIELDS
-                : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
-        int includeFieldPhysicalIndex = numSecondaryKeys + idx.numPrimaryKeys();
-
-        Map<List<String>, LogicalVariable> fieldToNewVar = new HashMap<>();
-        // Insertion-ordered (INCLUDE order): the caller appends these to the unnest-map's variable list,
-        // so a hash order would make the emitted plan differ run to run for a multi-field predicate.
-        Map<LogicalVariable, Integer> filterVarToFieldIndex = new LinkedHashMap<>();
-        Map<LogicalVariable, IAType> filterVarToType = new LinkedHashMap<>();
-
-        for (List<String> fieldPath : idx.includeFieldNames()) {
-            if (filterFieldPaths.contains(fieldPath)) {
-                LogicalVariable newVar = varSupplier.get();
-                fieldToNewVar.put(fieldPath, newVar);
-                filterVarToFieldIndex.put(newVar, includeFieldPhysicalIndex);
-
-                // For open-schema fields not in the type declaration, getSubFieldType returns null;
-                // default to ANY so the type environment can still resolve the variable type.
-                IAType fieldType = idx.recordType().getSubFieldType(fieldPath);
-                if (fieldType == null) {
-                    fieldType = BuiltinType.ANY;
-                }
-                filterVarToType.put(newVar, fieldType);
-            }
-            includeFieldPhysicalIndex++;
-        }
-
-        ILogicalExpression rewritten = rewriteFieldAccess(conditionRef.getValue(), fieldToNewVar, idx);
-
-        // Completeness guard: the pushed condition must reference ONLY the freshly-created INCLUDE
-        // variables. The earlier checks act on field paths that resolveFieldPath recognizes; an access
-        // pattern it does not recognize, or a non-inlinable ASSIGN output, can leave a reference to the
-        // source record in the condition. Embedding such a condition would reference a variable that is not
-        // in scope at the unnest -- an invalid plan. Decline instead of emitting one.
-        Set<LogicalVariable> rewrittenUsed = new HashSet<>();
-        rewritten.getUsedVariables(rewrittenUsed);
-        if (!new HashSet<>(fieldToNewVar.values()).containsAll(rewrittenUsed)) {
-            return null;
-        }
-
-        return new PushedIncludeFilter(rewritten, filterVarToFieldIndex, filterVarToType);
+        return bindPredicate(condition, selectOp, idx, context,
+                buildIncludeColumns(idx, new ThrowawayVariableSupplier())) != null;
     }
 
     /**
@@ -313,43 +332,59 @@ public final class VectorIncludeFilterPushdown {
     }
 
     /**
-     * Builds a map from an INCLUDE field's full path to its index in the INCLUDE list.
+     * The full field path {@code funcExpr} reads off one of {@code idx}'s record variables, or {@code null}
+     * if it is not a field access on one of them.
      * <p>
-     * Keyed by the whole path, not the leaf name: {@code INCLUDE (a.year)} must not match a filter on
-     * {@code b.year}. {@link List} equality gives exactly path equality.
+     * Full paths throughout: a nested column is addressed as {@code [info, year]} and never matches a
+     * top-level {@code year}, and both access forms resolve, so callers do not have to know whether
+     * {@code ByNameToByIndexFieldAccessRule} has run.
      */
-    private static Map<List<String>, Integer> buildIncludeFieldIndex(List<List<String>> includeFieldNames) {
-        Map<List<String>, Integer> result = new HashMap<>();
-        for (int i = 0; i < includeFieldNames.size(); i++) {
-            result.put(includeFieldNames.get(i), i);
-        }
-        return result;
+    public static List<String> resolveRecordFieldPath(AbstractFunctionCallExpression funcExpr, IndexContext idx)
+            throws AlgebricksException {
+        return resolveFieldPath(funcExpr, idx, Map.of());
     }
 
     /**
-     * Collects the full field paths the filter reads from this vector search's record variable(s).
+     * As {@link #resolveRecordFieldPath(AbstractFunctionCallExpression, IndexContext)}, also following an
+     * access whose base is a variable that {@code bindings} defines as a field access itself.
      * <p>
-     * Only accesses rooted at one of {@code idx.recordVars()} are collected. An access on any other record
-     * is deliberately ignored here, so it survives the rewrite and trips the completeness guard in
-     * {@link #analyze} — which then declines instead of silently evaluating someone else's predicate
-     * against an INCLUDE column.
+     * The compiler routinely splits a nested access across ASSIGNs -- {@code $$a := m.info} then
+     * {@code $$b := $$a.year} -- so read in place, the outer access has a variable for its base and no path
+     * at all, while the inner one reads a column prefix that is not itself a column. Followed through the
+     * binding, the two are one access to {@code [info, year]}. The predicate side sidesteps this by inlining
+     * the chain first; the projection side cannot rewrite the plan to look, so it resolves through the
+     * bindings instead, and the index-only rewrite must do the same or it would leave the outer access
+     * unbound and let the neutralized chain collapse the value to MISSING.
+     *
+     * @param bindings ASSIGN bindings of the plan, variable to defining expression; may be empty
      */
-    private static void extractFieldPaths(ILogicalExpression expr, IndexContext idx, Set<List<String>> fieldPaths)
-            throws AlgebricksException {
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Resolve a nested access split across ASSIGNs to its full path")
+    public static List<String> resolveRecordFieldPath(AbstractFunctionCallExpression funcExpr, IndexContext idx,
+            Map<LogicalVariable, ILogicalExpression> bindings) throws AlgebricksException {
+        return resolveFieldPath(funcExpr, idx, bindings);
+    }
+
+    /** The {@code variable -> expression} bindings of every ASSIGN under {@code root}, {@code root} included. */
+    public static Map<LogicalVariable, ILogicalExpression> collectAssignBindings(ILogicalOperator root) {
+        Map<LogicalVariable, ILogicalExpression> bindings = new HashMap<>();
+        collectAssignBindings(root, bindings);
+        return bindings;
+    }
+
+    private static void collectAssignBindings(ILogicalOperator op, Map<LogicalVariable, ILogicalExpression> bindings) {
+        if (op == null) {
             return;
         }
-
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        List<String> path = resolveFieldPath(funcExpr, idx);
-        if (path != null) {
-            fieldPaths.add(path);
-            // Do not recurse: the nested accesses under this one are the prefix of the path just added.
-            return;
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator assign = (AssignOperator) op;
+            List<LogicalVariable> vars = assign.getVariables();
+            List<Mutable<ILogicalExpression>> exprs = assign.getExpressions();
+            for (int i = 0; i < vars.size(); i++) {
+                bindings.put(vars.get(i), exprs.get(i).getValue());
+            }
         }
-
-        for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-            extractFieldPaths(arg.getValue(), idx, fieldPaths);
+        for (Mutable<ILogicalOperator> input : op.getInputs()) {
+            collectAssignBindings(input.getValue(), bindings);
         }
     }
 
@@ -364,8 +399,8 @@ public final class VectorIncludeFilterPushdown {
      * this runs in two phases: before {@code ByNameToByIndexFieldAccessRule} (the index-only gate) accesses
      * are by name, after it (the physical pushdown) a declared type's accesses are by index.
      */
-    private static List<String> resolveFieldPath(AbstractFunctionCallExpression funcExpr, IndexContext idx)
-            throws AlgebricksException {
+    private static List<String> resolveFieldPath(AbstractFunctionCallExpression funcExpr, IndexContext idx,
+            Map<LogicalVariable, ILogicalExpression> bindings) throws AlgebricksException {
         FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
         boolean byName = fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
         boolean byIndex = fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
@@ -377,12 +412,22 @@ public final class VectorIncludeFilterPushdown {
         List<String> prefix;
         if (base.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             LogicalVariable baseVar = ((VariableReferenceExpression) base).getVariableReference();
-            if (!idx.recordVars().contains(baseVar)) {
-                return null;
+            if (idx.recordVars().contains(baseVar)) {
+                prefix = List.of();
+            } else {
+                // A variable an ASSIGN defines as a field access is that access: the chain the compiler split
+                // is followed back to the record. Anything else is a base this search knows nothing about.
+                ILogicalExpression bound = bindings.get(baseVar);
+                if (bound == null || bound.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                    return null;
+                }
+                prefix = resolveFieldPath((AbstractFunctionCallExpression) bound, idx, bindings);
+                if (prefix == null) {
+                    return null;
+                }
             }
-            prefix = List.of();
         } else if (base.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            prefix = resolveFieldPath((AbstractFunctionCallExpression) base, idx);
+            prefix = resolveFieldPath((AbstractFunctionCallExpression) base, idx, bindings);
             if (prefix == null) {
                 return null;
             }
@@ -431,11 +476,14 @@ public final class VectorIncludeFilterPushdown {
     }
 
     /**
-     * Rewrites field-access expressions to use the new INCLUDE field variables.
-     * Example: {@code gt($row.getField(2), 2000)} -> {@code gt($year, 2000)}
+     * Rewrites field-access expressions to use the INCLUDE column variables. An access whose own path is not
+     * a column is descended into, so the longest covered prefix binds.
+     * Example: {@code gt($row.getField(2), 2000)} -> {@code gt($year, 2000)};
+     * {@code gt($row.info.year, 2000)} over {@code INCLUDE (info)} -> {@code gt($info.year, 2000)}
      */
     private static ILogicalExpression rewriteFieldAccess(ILogicalExpression expr,
-            Map<List<String>, LogicalVariable> fieldToVar, IndexContext idx) throws AlgebricksException {
+            Map<List<String>, LogicalVariable> fieldToVar, IndexContext idx,
+            Map<LogicalVariable, ILogicalExpression> bindings) throws AlgebricksException {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return expr;
         }
@@ -444,7 +492,7 @@ public final class VectorIncludeFilterPushdown {
 
         // Replace a field access with a variable reference only when its FULL path — resolved against this
         // search's record variable — is one of the INCLUDE fields we created a variable for.
-        List<String> path = resolveFieldPath(funcExpr, idx);
+        List<String> path = resolveFieldPath(funcExpr, idx, bindings);
         if (path != null && fieldToVar.containsKey(path)) {
             LogicalVariable newVar = fieldToVar.get(path);
             VariableReferenceExpression varRef = new VariableReferenceExpression(newVar);
@@ -455,7 +503,7 @@ public final class VectorIncludeFilterPushdown {
         List<Mutable<ILogicalExpression>> newArgs = new ArrayList<>();
         boolean changed = false;
         for (Mutable<ILogicalExpression> argRef : funcExpr.getArguments()) {
-            ILogicalExpression newArg = rewriteFieldAccess(argRef.getValue(), fieldToVar, idx);
+            ILogicalExpression newArg = rewriteFieldAccess(argRef.getValue(), fieldToVar, idx, bindings);
             newArgs.add(new MutableObject<>(newArg));
             if (newArg != argRef.getValue()) {
                 changed = true;

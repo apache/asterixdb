@@ -18,13 +18,8 @@
  */
 
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+// Nearest 3 to the origin are ids 1, 2, 3; `info` comes off the search and `.year` is read from it.
+SELECT m.id, m.info.year AS y
+FROM MovieNested m
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;

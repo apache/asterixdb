@@ -37,16 +37,12 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.cost.VectorIndexGeometry;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -56,8 +52,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -70,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -133,12 +128,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     protected double queryMinProbeFraction = 0;
     protected int queryKMultiplier = 0;
 
-    // SELECT operator info for filter pushdown
+    // The WHERE between the ORDER and the scan, and how many SELECTs carry it. The pushdown installs one
+    // condition on the search, so a subtree holding more than one SELECT is refused an index outright rather
+    // than have one of them left above the search; see chooseVectorIndex.
     protected SelectOperator selectOp = null;
-    protected Set<List<String>> filterFieldNames = null; // Field names referenced in WHERE clause
-    // Set when the WHERE reads a field no INCLUDE list can cover. An access on the meta record resolves to
-    // a bare leaf name, which would otherwise be matched against the data record's INCLUDE fields.
-    protected boolean filterReadsUncoverableField = false;
+    protected int numSelectOps = 0;
 
     /**
      * Master switch for the index-only ANN plan optimization. Enabled by default: when the projection above
@@ -388,7 +382,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
 
         // 4. Find SELECT operator (if any) and extract filter fields.
-        // Populates selectOp and filterFieldNames if a SELECT exists.
+        // Populates selectOp if a SELECT exists.
         // Must be called AFTER setDatasetAndTypeMetadata so recordType is available.
         findSelectOperatorInSubTree();
 
@@ -402,18 +396,21 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
         // 7. Choose best vector index (considering INCLUDE fields if filter exists), minus the ones the
         // cost-based optimizer already ruled out.
-        chooseVectorIndex(analyzedAMs, chosenIndexes);
+        chooseVectorIndex(analyzedAMs, chosenIndexes, context);
 
         return true;
     }
 
     /**
-     * Finds SELECT operator between ORDER and DATASOURCE_SCAN.
-     * Also extracts filter field names from the SELECT condition.
+     * Finds the SELECT operators between ORDER and DATASOURCE_SCAN, setting {@link #selectOp} to the topmost
+     * and {@link #numSelectOps} to how many there are.
      *
-     * @return The SELECT operator if found, null otherwise
+     * @return The topmost SELECT operator if any, null otherwise
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Count every SELECT rather than stop at the first")
     protected SelectOperator findSelectOperatorInSubTree() {
+        selectOp = null;
+        numSelectOps = 0;
         if (orderOp.getInputs().isEmpty()) {
             return null;
         }
@@ -423,9 +420,10 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
         while (currentOp != null) {
             if (currentOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                selectOp = (SelectOperator) currentOp;
-                filterFieldNames = extractFilterFieldsFromCondition(selectOp.getCondition().getValue());
-                return selectOp;
+                numSelectOps++;
+                if (selectOp == null) {
+                    selectOp = (SelectOperator) currentOp;
+                }
             }
 
             if (currentOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
@@ -437,224 +435,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             currentOp = (AbstractLogicalOperator) currentOp.getInputs().get(0).getValue();
         }
 
-        return null;
-    }
-
-    /**
-     * Extracts field names referenced in a filter condition expression.
-     * Traverses function call expressions to find field access operations.
-     *
-     * @param condition The filter condition expression
-     * @return Set of field names (as List<String> for nested field paths)
-     */
-    protected Set<List<String>> extractFilterFieldsFromCondition(ILogicalExpression condition) {
-        Set<List<String>> fields = new HashSet<>();
-        extractFieldsFromExpressionRecursive(condition, fields);
-        return fields;
-    }
-
-    /**
-     * Recursively extracts field names from an expression.
-     * Handles function calls (AND, OR, comparison operators, field-access).
-     */
-    private void extractFieldsFromExpressionRecursive(ILogicalExpression expr, Set<List<String>> fields) {
-        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-
-            // Check if this is a field access function (e.g., field-access-by-name)
-            if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)
-                    || funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
-                if (isMetaRecordAccess(funcExpr)) {
-                    // Record that the filter cannot be covered rather than its name: the name belongs to the
-                    // meta record, and adding it would be matched against the data record's INCLUDE list --
-                    // `meta(m).expiration` would read the record's `expiration` column.
-                    filterReadsUncoverableField = true;
-                    return;
-                }
-                // Extract field name from field access function
-                List<String> fieldPath = extractFieldPathFromFieldAccess(funcExpr);
-                if (fieldPath != null && !fieldPath.isEmpty()) {
-                    fields.add(fieldPath);
-                }
-            } else {
-                // Recursively process arguments for other functions (AND, OR, GT, LT, etc.)
-                for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-                    extractFieldsFromExpressionRecursive(arg.getValue(), fields);
-                }
-            }
-        } else if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-            // Variable reference - trace back through assigns to find field access.
-            // First check subTree assigns; if not found, scan from ORDER down to DATASOURCE_SCAN.
-            VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
-            LogicalVariable var = varRef.getVariableReference();
-            boolean found = findFieldFromAssigns(var, subTree.getAssignsAndUnnests(), fields);
-            if (!found && orderOp != null) {
-                searchAssignsInPlan(var, orderOp, fields);
-            }
-        }
-    }
-
-    /**
-     * Searches for variable definition in a list of assigns and extracts field info.
-     */
-    private boolean findFieldFromAssigns(LogicalVariable var, List<AbstractLogicalOperator> assigns,
-            Set<List<String>> fields) {
-        for (AbstractLogicalOperator op : assigns) {
-            if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                AssignOperator assignOp = (AssignOperator) op;
-                List<LogicalVariable> assignVars = assignOp.getVariables();
-                List<Mutable<ILogicalExpression>> assignExprs = assignOp.getExpressions();
-
-                for (int i = 0; i < assignVars.size(); i++) {
-                    if (assignVars.get(i).equals(var)) {
-                        extractFieldsFromExpressionRecursive(assignExprs.get(i).getValue(), fields);
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Searches all operators in the plan from the given operator downward for variable definition.
-     */
-    private boolean searchAssignsInPlan(LogicalVariable var, ILogicalOperator startOp, Set<List<String>> fields) {
-        ILogicalOperator currentOp = startOp;
-
-        while (currentOp != null) {
-            if (currentOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                AssignOperator assignOp = (AssignOperator) currentOp;
-                List<LogicalVariable> assignVars = assignOp.getVariables();
-                List<Mutable<ILogicalExpression>> assignExprs = assignOp.getExpressions();
-
-                for (int i = 0; i < assignVars.size(); i++) {
-                    if (assignVars.get(i).equals(var)) {
-                        // Found the assignment - recursively extract fields
-                        extractFieldsFromExpressionRecursive(assignExprs.get(i).getValue(), fields);
-                        return true;
-                    }
-                }
-            }
-
-            // Move to next operator
-            if (currentOp.getInputs().isEmpty()) {
-                break;
-            }
-            currentOp = currentOp.getInputs().get(0).getValue();
-        }
-        return false;
-    }
-
-    /**
-     * Whether {@code funcExpr} is a field access rooted at this subtree's meta record rather than its data
-     * record. The two are told apart by the subtree's own key-source mapping, the same way
-     * {@link #isProjectionPkOnly} separates a meta-sourced primary key from a record field of that name.
-     */
-    private boolean isMetaRecordAccess(AbstractFunctionCallExpression funcExpr) {
-        ILogicalExpression base = funcExpr.getArguments().isEmpty() ? null : funcExpr.getArguments().get(0).getValue();
-        while (base != null && base.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            List<Mutable<ILogicalExpression>> baseArgs = ((AbstractFunctionCallExpression) base).getArguments();
-            base = baseArgs.isEmpty() ? null : baseArgs.get(0).getValue();
-        }
-        if (base == null || base.getExpressionTag() != LogicalExpressionTag.VARIABLE || subTree == null) {
-            return false;
-        }
-        LogicalVariable baseVar = ((VariableReferenceExpression) base).getVariableReference();
-        OptimizableOperatorSubTree.RecordTypeSource varType = subTree.getRecordTypeFor(baseVar);
-        return varType != null && varType.sourceIndicator == 1;
-    }
-
-    /**
-     * Extracts field path from a field-access function expression.
-     * For nested fields like row.nested.field, returns ["nested", "field"].
-     */
-    private List<String> extractFieldPathFromFieldAccess(AbstractFunctionCallExpression funcExpr) {
-        List<String> fieldPath = new ArrayList<>();
-        extractFieldPathRecursive(funcExpr, fieldPath);
-        return fieldPath;
-    }
-
-    /**
-     * Recursively builds field path from nested field access expressions.
-     */
-    private void extractFieldPathRecursive(ILogicalExpression expr, List<String> fieldPath) {
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return;
-        }
-
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-
-        if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
-            // First argument is the record, second argument is the field name
-            if (funcExpr.getArguments().size() >= 2) {
-                // Recursively process the record argument (for nested field access)
-                extractFieldPathRecursive(funcExpr.getArguments().get(0).getValue(), fieldPath);
-
-                // Extract field name from second argument
-                ILogicalExpression fieldNameExpr = funcExpr.getArguments().get(1).getValue();
-                String fieldName = AccessMethodUtils.getStringConstant(new MutableObject<>(fieldNameExpr));
-                if (fieldName != null) {
-                    fieldPath.add(fieldName);
-                }
-            }
-        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
-            // First argument is the record, second argument is the field index
-            if (funcExpr.getArguments().size() >= 2) {
-                // Recursively process the record argument (for nested field access)
-                extractFieldPathRecursive(funcExpr.getArguments().get(0).getValue(), fieldPath);
-
-                // Extract field index from second argument and look up field name
-                ILogicalExpression fieldIndexExpr = funcExpr.getArguments().get(1).getValue();
-                Integer fieldIndex = AccessMethodUtils.getInt32Constant(new MutableObject<>(fieldIndexExpr));
-                if (fieldIndex != null && subTree.getRecordType() != null) {
-                    String[] fieldNames = subTree.getRecordType().getFieldNames();
-                    if (fieldIndex >= 0 && fieldIndex < fieldNames.length) {
-                        fieldPath.add(fieldNames[fieldIndex]);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Checks if a vector index has all required filter fields in its INCLUDE fields.
-     *
-     * @param index The vector index to check
-     * @param filterFields The set of field names referenced in the filter
-     * @return true if all filter fields are in the index's INCLUDE fields
-     */
-    protected boolean indexHasIncludeFields(Index index, Set<List<String>> filterFields) {
-        if (filterFields == null || filterFields.isEmpty()) {
-            // No filter fields - index can be used
-            return true;
-        }
-
-        if (index.getIndexType() != IndexType.VTREE) {
-            return false;
-        }
-
-        Index.VectorIndexDetails vectorDetails = (Index.VectorIndexDetails) index.getIndexDetails();
-        List<List<String>> includeFieldNames = vectorDetails.getIncludeFieldNames();
-
-        if (includeFieldNames == null || includeFieldNames.isEmpty()) {
-            return false;
-        }
-
-        // Check if all filter fields are present in INCLUDE fields.
-        for (List<String> filterField : filterFields) {
-            boolean found = false;
-            for (List<String> includeField : includeFieldNames) {
-                if (includeField.equals(filterField)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return false;
-            }
-        }
-        return true;
+        return selectOp;
     }
 
     /**
@@ -797,24 +578,33 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      * If the query specifies a constant distance metric that does not match the index metadata, compilation fails.
      */
     protected void chooseVectorIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
-            List<Pair<IAccessMethod, Index>> result) throws AlgebricksException {
+            List<Pair<IAccessMethod, Index>> result, IOptimizationContext context) throws AlgebricksException {
 
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(VectorIndexAccessMethod.INSTANCE);
         if (analysisCtx == null) {
             return;
         }
 
-        // A filter no INCLUDE list can cover makes the vector index a liability: the predicate would have to
-        // run above the search, after k has been counted, so LIMIT k could return fewer than k rows. Decline
-        // the index and let the exact scan answer it, as an uncovered record field already does. Note this
-        // cannot be folded into the hasFilter test below -- such a field contributes no name, so a predicate
-        // reading nothing else leaves filterFieldNames empty and would read as "no filter at all".
-        if (filterReadsUncoverableField) {
+        // A predicate that cannot be moved into the search must not leave a SELECT above it. The search
+        // caps candidates at k * k_multiplier, chosen without regard to the predicate, so filtering
+        // afterwards answers "the passing rows among the k nearest" instead of "the k nearest passing
+        // rows" -- and it can return nothing at all where passing rows exist. A non-functional predicate
+        // (random(), and anything else registered with isFunctional = false) cannot be evaluated per
+        // candidate in the cursor, so no vector index is offered and the query takes the exact scan.
+        if (selectOp != null && !selectOp.getCondition().getValue().isFunctional()) {
+            LOGGER.trace("chooseVectorIndex: the WHERE is non-functional and cannot be pushed into the "
+                    + "search; not offering a vector index");
             return;
         }
-
-        // Check if query has filter predicates
-        boolean hasFilter = selectOp != null && filterFieldNames != null && !filterFieldNames.isEmpty();
+        // The gate and the binding each handle one SELECT, and the search takes one condition. With several,
+        // pushing the topmost would leave the others above the search -- the very shape being avoided -- so
+        // no index is offered. The select rules consolidate adjacent SELECTs and push each as far down as its
+        // variables allow, so this shape is not known to arise; it is refused rather than assumed away.
+        if (numSelectOps > 1) {
+            LOGGER.trace("chooseVectorIndex: {} SELECTs between the ORDER and the scan, of which the pushdown "
+                    + "can install one; not offering a vector index", numSelectOps);
+            return;
+        }
 
         // Iterate over candidate vector indexes
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
@@ -834,8 +624,15 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                     continue;
                 }
 
-                // If query has filter, index must have all filter fields in its INCLUDE list.
-                if (hasFilter && !indexHasIncludeFields(index, filterFieldNames)) {
+                // A predicate must be evaluable INSIDE the search, or this index cannot answer the query
+                // at all. The search caps candidates at k * k_multiplier, chosen without regard to the
+                // predicate, so a predicate left in a SELECT above it answers "the passing rows among the
+                // k nearest" instead of "the k nearest passing rows" -- silently wrong, and it can return
+                // nothing where passing rows exist. Asking the pushdown itself, rather than a separate
+                // name-matching test, is what makes this decision agree with the binding that follows: an
+                // index offered here is one PushFilterIntoVectorSearchRule can and will bind, leaving no
+                // SELECT above the search in either plan shape.
+                if (selectOp != null && !isFilterPushableToInclude(index, context)) {
                     continue;
                 }
 
@@ -1033,21 +830,20 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         AbstractScanOperator dataSourceOp = (AbstractScanOperator) dataSourceOpRaw;
         List<LogicalVariable> dsVars = dataSourceOp.getVariables();
 
-        // PK fields: only support top-level single-segment paths (e.g. ["id"]); composite or nested PK
-        // paths are out of scope for the initial activation. Split PK field names by their key source
-        // (data record vs. meta record) so a PK sourced from meta() named "id" is never confused with an
-        // unrelated data-record field that happens to share the same name.
+        // PK field PATHS, split by their key source (data record vs. meta record) so a PK sourced from
+        // meta() named "id" is never confused with an unrelated data-record field that happens to share the
+        // name. Full paths, so a nested primary key is matched exactly like a top-level one.
         List<List<String>> pkPaths = subTree.getDataset().getPrimaryKeys();
         List<Integer> keySourceIndicators = DatasetUtil.getKeySourceIndicators(subTree.getDataset());
-        Set<String> recordPkFieldNames = new HashSet<>();
-        Set<String> metaPkFieldNames = new HashSet<>();
+        Set<List<String>> recordPkFieldPaths = new HashSet<>();
+        Set<List<String>> metaPkFieldPaths = new HashSet<>();
         for (int i = 0; i < pkPaths.size(); i++) {
             List<String> p = pkPaths.get(i);
-            if (p == null || p.size() != 1) {
+            if (p == null || p.isEmpty()) {
                 return false;
             }
             boolean fromMeta = keySourceIndicators != null && keySourceIndicators.get(i) == 1;
-            (fromMeta ? metaPkFieldNames : recordPkFieldNames).add(p.get(0));
+            (fromMeta ? metaPkFieldPaths : recordPkFieldPaths).add(p);
         }
         int numPK = pkPaths.size();
         if (dsVars.size() < numPK + 1) {
@@ -1060,12 +856,18 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         Set<LogicalVariable> recordVars = new HashSet<>(dsVars.subList(numPK, dsVars.size()));
         LogicalVariable dataRecordVar = dsVars.get(numPK);
         LogicalVariable metaRecordVar = dsVars.size() > numPK + 1 ? dsVars.get(numPK + 1) : null;
-        PkFieldContext pkCtx = new PkFieldContext(pkVars, recordVars, dataRecordVar, metaRecordVar, recordPkFieldNames,
-                metaPkFieldNames);
+        // An INCLUDE column is served like a primary key: the search reads it from the secondary tuple and
+        // emits it, so the record never has to be assembled to return it.
+        Index.VectorIndexDetails details = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
+        List<List<String>> includePaths = details.getIncludeFieldNames();
+        PkFieldContext pkCtx = new PkFieldContext(pkVars, recordVars, dataRecordVar, metaRecordVar, recordPkFieldPaths,
+                metaPkFieldPaths, includePaths == null ? Set.of() : new HashSet<>(includePaths),
+                pathContext(subTree.getRecordType(), dataRecordVar == null ? Set.of() : Set.of(dataRecordVar)),
+                pathContext(subTree.getMetaRecordType(), metaRecordVar == null ? Set.of() : Set.of(metaRecordVar)));
 
         // Collect ASSIGN bindings throughout the entire subtree.
-        Map<LogicalVariable, ILogicalExpression> bindings = new HashMap<>();
-        collectAssignBindings(subTree.getRoot(), bindings);
+        Map<LogicalVariable, ILogicalExpression> bindings =
+                VectorIncludeFilterPushdown.collectAssignBindings(subTree.getRoot());
 
         // Gather variables used above the LIMIT.
         Set<LogicalVariable> liveOut = new HashSet<>();
@@ -1104,7 +906,14 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 return false;
             }
         }
-        return true;
+        // Every variable the predicate reads is one the search emits, which is still not enough: the
+        // index-only branch installs a predicate by rebinding it onto the INCLUDE columns, and that is its
+        // only way to evaluate one -- the record is never assembled. A predicate it cannot rebind leaves it
+        // holding a SELECT it cannot install, which job generation then rejects. Two such predicates reach
+        // here with every variable "safe": one over primary keys, and one reading no dataset field at all
+        // (`WHERE random() > 0.5`), whose variable set is empty so the loop above passes vacuously. Both
+        // belong on lookup-and-rerank, where the SELECT can simply stay above the search.
+        return selectOp == null || isFilterPushableToInclude(vectorIndex, context);
     }
 
     /**
@@ -1176,18 +985,37 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         final Set<LogicalVariable> recordVars;
         final LogicalVariable dataRecordVar;
         final LogicalVariable metaRecordVar;
-        final Set<String> recordPkFieldNames;
-        final Set<String> metaPkFieldNames;
+        final Set<List<String>> recordPkFieldPaths;
+        final Set<List<String>> metaPkFieldPaths;
+        /** The searched index's INCLUDE columns, which the search emits alongside the primary keys. */
+        final Set<List<String>> includePaths;
+        /** Resolves a field access on the data record, and on the meta record, to its full path. */
+        final VectorIncludeFilterPushdown.IndexContext dataRecordCtx;
+        final VectorIncludeFilterPushdown.IndexContext metaRecordCtx;
 
         PkFieldContext(Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, LogicalVariable dataRecordVar,
-                LogicalVariable metaRecordVar, Set<String> recordPkFieldNames, Set<String> metaPkFieldNames) {
+                LogicalVariable metaRecordVar, Set<List<String>> recordPkFieldPaths, Set<List<String>> metaPkFieldPaths,
+                Set<List<String>> includePaths, VectorIncludeFilterPushdown.IndexContext dataRecordCtx,
+                VectorIncludeFilterPushdown.IndexContext metaRecordCtx) {
             this.pkVars = pkVars;
             this.recordVars = recordVars;
             this.dataRecordVar = dataRecordVar;
             this.metaRecordVar = metaRecordVar;
-            this.recordPkFieldNames = recordPkFieldNames;
-            this.metaPkFieldNames = metaPkFieldNames;
+            this.recordPkFieldPaths = recordPkFieldPaths;
+            this.metaPkFieldPaths = metaPkFieldPaths;
+            this.includePaths = includePaths;
+            this.dataRecordCtx = dataRecordCtx;
+            this.metaRecordCtx = metaRecordCtx;
         }
+    }
+
+    /**
+     * A context that resolves a field access rooted at one of {@code recordVars} to its full path. Only
+     * the record type and the accepted bases matter for that, so the index-side fields are left empty.
+     */
+    private static VectorIncludeFilterPushdown.IndexContext pathContext(ARecordType recordType,
+            Set<LogicalVariable> recordVars) {
+        return new VectorIncludeFilterPushdown.IndexContext(null, recordType, false, 0, recordVars);
     }
 
     /**
@@ -1208,28 +1036,6 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         for (Mutable<ILogicalOperator> input : op.getInputs()) {
             collectSelectConditionVars(input.getValue(), vars);
-        }
-    }
-
-    /**
-     * Walk {@code op} and its inputs collecting {@code variable → expression} bindings from every
-     * {@code ASSIGN} operator. Used by {@link #isProjectionPkOnly} to trace derived live-out variables
-     * back to their definitions.
-     */
-    private void collectAssignBindings(ILogicalOperator op, Map<LogicalVariable, ILogicalExpression> bindings) {
-        if (op == null) {
-            return;
-        }
-        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AssignOperator a = (AssignOperator) op;
-            List<LogicalVariable> vars = a.getVariables();
-            List<Mutable<ILogicalExpression>> exprs = a.getExpressions();
-            for (int i = 0; i < vars.size(); i++) {
-                bindings.put(vars.get(i), exprs.get(i).getValue());
-            }
-        }
-        for (Mutable<ILogicalOperator> input : op.getInputs()) {
-            collectAssignBindings(input.getValue(), bindings);
         }
     }
 
@@ -1274,19 +1080,31 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 // (e.g. a data-record field "id" next to a meta()-sourced PK also named "id") must not be
                 // treated as PK-safe here — only field-access on the record the PK is actually declared on
                 // is a safe substitute.
-                if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid) && fce.getArguments().size() == 2) {
-                    ILogicalExpression a0 = fce.getArguments().get(0).getValue();
-                    ILogicalExpression a1 = fce.getArguments().get(1).getValue();
-                    if (a0.getExpressionTag() == LogicalExpressionTag.VARIABLE
-                            && a1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                        LogicalVariable target = ((VariableReferenceExpression) a0).getVariableReference();
-                        if (target.equals(pkCtx.dataRecordVar) || target.equals(pkCtx.metaRecordVar)) {
-                            String fieldName = extractStringConstant(a1);
-                            Set<String> allowedNames = target.equals(pkCtx.dataRecordVar) ? pkCtx.recordPkFieldNames
-                                    : pkCtx.metaPkFieldNames;
-                            return fieldName != null && allowedNames.contains(fieldName);
-                        }
+                // A field access on the record is safe when its FULL path is a primary key or, on the data
+                // record, an INCLUDE column of the searched index -- both are emitted by the search. Paths
+                // rather than names, resolved through the same code the filter pushdown uses, so a nested
+                // column and either access form (by name, or by index after
+                // ByNameToByIndexFieldAccessRule) are all handled, as is an access the compiler split across
+                // ASSIGNs ($$a := m.info; $$b := $$a.year), which resolves through the bindings to its full
+                // path. An access that does not itself match falls through to the argument walk below, which
+                // reaches a shorter path that may: reading `m.info.year` is servable by an `INCLUDE (info)`
+                // column.
+                try {
+                    List<String> path =
+                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, pkCtx.dataRecordCtx, bindings);
+                    if (path != null
+                            && (pkCtx.recordPkFieldPaths.contains(path) || pkCtx.includePaths.contains(path))) {
+                        return true;
                     }
+                    List<String> metaPath =
+                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, pkCtx.metaRecordCtx, bindings);
+                    if (metaPath != null && pkCtx.metaPkFieldPaths.contains(metaPath)) {
+                        return true;
+                    }
+                } catch (AlgebricksException resolveFailure) {
+                    LOGGER.trace("isProjectionPkOnly: could not resolve a field access; not index-only",
+                            resolveFailure);
+                    return false;
                 }
                 // For any other function call: all argument expressions must be PK-safe.
                 for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
@@ -1299,19 +1117,6 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             default:
                 return false;
         }
-    }
-
-    private static String extractStringConstant(ILogicalExpression e) {
-        if (e.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        ConstantExpression ce = (ConstantExpression) e;
-        IAlgebricksConstantValue v = ce.getValue();
-        if (!(v instanceof AsterixConstantValue)) {
-            return null;
-        }
-        IAObject obj = ((AsterixConstantValue) v).getObject();
-        return (obj instanceof AString) ? ((AString) obj).getStringValue() : null;
     }
 
     /**
@@ -1328,8 +1133,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         queryMinProbeFraction = 0;
         queryKMultiplier = 0;
         selectOp = null;
-        filterFieldNames = null;
-        filterReadsUncoverableField = false;
+        numSelectOps = 0;
         aboveLimitOps.clear();
         subTree.reset();
     }

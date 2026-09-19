@@ -64,6 +64,16 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-include-open-nested">
+            <output-dir compare="Clean-JSON">create-index-vtree-include-open-nested</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-meta-include">
+            <output-dir compare="Clean-JSON">create-index-vtree-meta-include</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-similarity-normalize">
             <output-dir compare="Clean-JSON">create-index-vtree-similarity-normalize</output-dir>
         </compilation-unit>

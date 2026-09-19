@@ -18,13 +18,10 @@
  */
 
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+// A function over an INCLUDE column in the projection only. Index-only: `title` comes off the search and
+// upper() is applied to that variable. Filtered set is ids 6..30; nearest 3 are 6, 7, 8.
+SELECT m.id, upper(m.title) AS t
+FROM MovieMulti m
+WHERE m.year > 2005
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;

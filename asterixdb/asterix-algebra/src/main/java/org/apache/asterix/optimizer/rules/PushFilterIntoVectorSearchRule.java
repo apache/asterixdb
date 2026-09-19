@@ -21,9 +21,12 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -31,8 +34,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -69,8 +72,19 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  *                       selectCondition: (rewritten to use $includeField1, ...)
  * </pre>
  *
- * New variables are created for the INCLUDE fields produced by VECTOR_INDEX_UNNEST, and
+ * The INCLUDE columns are already declared as outputs of VECTOR_INDEX_UNNEST by the access-method phase;
  * field-access expressions in the filter are rewritten to reference those variables.
+ * <p>
+ * The SELECT has to sit within the search's own pipeline: the descent from it stops at a LIMIT, or at
+ * any operator other than the ones the two plan shapes put between a WHERE and the search. A predicate
+ * above a LIMIT filters the rows the LIMIT let through, which is a different query from filtering the
+ * candidates the search ranks, so it must stay where it is.
+ * <p>
+ * A SELECT that does sit in the pipeline is the WHERE index selection admitted, and it was admitted because
+ * the search can evaluate it. One that cannot be bound here, or a second one reaching a search that already
+ * holds a condition, is therefore a plan some rule in between has reshaped into the very thing index selection
+ * refused -- a filter left above a search that has already capped its candidates -- and compilation fails
+ * rather than emit it. A predicate proven true and removed on the way never arrives here and needs nothing.
  */
 public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
 
@@ -99,35 +113,30 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        // Index-only shape: the access-method phase already declared the INCLUDE columns on the unnest-map
-        // and rebound the predicate to them, leaving it here as an ordinary SELECT so that the rules in
-        // between saw an ordinary plan. Nothing is left to resolve -- just move it into the select
-        // condition, which is the one place the runtime reads it from.
-        if (VectorIncludeFilterPushdown.hasDeclaredFilterVariables(searchInfo.vectorUnnest())) {
-            Set<LogicalVariable> conditionVars = new HashSet<>();
-            selectOp.getCondition().getValue().getUsedVariables(conditionVars);
-            if (!searchInfo.vectorUnnest().getVariables().containsAll(conditionVars)) {
-                return false;
-            }
-            searchInfo.vectorUnnest().setSelectCondition(new MutableObject<>(selectOp.getCondition().getValue()));
-            return dropSelect(opRef, selectOp, searchInfo.vectorUnnest(), op, context);
+        UnnestMapOperator vectorUnnest = searchInfo.vectorUnnest();
+        if (vectorUnnest.getSelectCondition() != null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, selectOp.getSourceLocation(),
+                    "a second WHERE reached the vector search of index " + searchInfo.indexName()
+                            + ", which evaluates one condition");
         }
 
-        // The whole decision — which field paths the predicate reads, whether the index's INCLUDE list
-        // covers them, and what the rewritten predicate looks like — lives in VectorIncludeFilterPushdown,
-        // shared with the index-only gate in IntroduceTopKAccessMethodRule. See that class for why the two
-        // must not be separate implementations.
+        // One binding for both plan shapes. On the index-only plan the access-method phase already rebound
+        // the predicate onto the INCLUDE columns, so there is no field access left to rewrite -- but the
+        // rules that ran since may have moved part of it into an ASSIGN (ExtractCommonExpressionsRule does,
+        // for a subexpression the projection shares), and only the binding's inlining puts that back. The
+        // completeness guard then confirms nothing but search outputs remain, on either shape.
         VectorIncludeFilterPushdown.IndexContext idx =
                 new VectorIncludeFilterPushdown.IndexContext(searchInfo.includeFieldNames(), searchInfo.recordType(),
                         searchInfo.isQuantized(), searchInfo.numPrimaryKeys(), searchInfo.recordVars());
-        VectorIncludeFilterPushdown.PushedIncludeFilter pushed = VectorIncludeFilterPushdown
-                .analyze(selectOp.getCondition().getValue(), selectOp, idx, context, context::newVar);
-        if (pushed == null) {
-            return false;
+        ILogicalExpression bound = VectorIncludeFilterPushdown.bindPredicate(selectOp.getCondition().getValue(),
+                selectOp, idx, context, VectorIncludeFilterPushdown.getIncludeColumns(vectorUnnest));
+        if (bound == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, selectOp.getSourceLocation(),
+                    "the WHERE above the vector search of index " + searchInfo.indexName()
+                            + " reads what the search cannot evaluate, though index selection admits only a WHERE it can");
         }
-
-        VectorIncludeFilterPushdown.apply(searchInfo.vectorUnnest(), pushed);
-        return dropSelect(opRef, selectOp, searchInfo.vectorUnnest(), op, context);
+        VectorIncludeFilterPushdown.apply(vectorUnnest, bound);
+        return dropSelect(opRef, selectOp, vectorUnnest, op, context);
     }
 
     /** Remove the SELECT whose predicate now lives in the vector search, and retype what changed. */
@@ -147,70 +156,89 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
      *                   (and PK) variables of THIS search's primary-index lookup, excluding its meta
      *                   record. A field access must be rooted at one of these to be a candidate for
      *                   pushdown.
+     * @param indexName  the searched index, for diagnostics
      */
     private record VectorSearchInfo(UnnestMapOperator vectorUnnest, List<List<String>> includeFieldNames,
-            ARecordType recordType, boolean isQuantized, int numPrimaryKeys, Set<LogicalVariable> recordVars) {
+            ARecordType recordType, boolean isQuantized, int numPrimaryKeys, Set<LogicalVariable> recordVars,
+            String indexName) {
     }
 
     /**
-     * Finds VECTOR_INDEX_UNNEST below the SELECT operator, skipping intervening ASSIGNs.
+     * Finds the vector index search this SELECT's predicate can be moved into, or {@code null} if there is
+     * none within the search's own pipeline.
      */
     private VectorSearchInfo findVectorIndexUnnest(SelectOperator selectOp, IOptimizationContext context)
             throws AlgebricksException {
-        ILogicalOperator current = selectOp.getInputs().get(0).getValue();
-        while (current.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            current = current.getInputs().get(0).getValue();
-        }
-        return searchForVectorUnnest(current, context, new ArrayList<>());
+        return searchForVectorUnnest(selectOp.getInputs().get(0).getValue(), context, new ArrayList<>());
     }
 
     /**
-     * Recursively searches for a VECTOR_INDEX_UNNEST under the given operator, collecting on the way down
-     * the non-vector unnest-maps it passes through — the primary-index lookup that materializes the dataset
-     * record the filter reads. Their variables become the pushdown bases in {@link #buildSearchInfo}, which
-     * is where the dataset is known and the meta record can be told apart from the record.
+     * Walks down from the SELECT to a VECTOR_INDEX_UNNEST, collecting on the way the index-search
+     * unnest-maps it passes through — the primary-index lookup that materializes the dataset record the
+     * filter reads. Their variables become the pushdown bases in {@link #buildSearchInfo}, which is where the
+     * dataset is known and the meta record can be told apart from the record.
+     * <p>
+     * Only the operators the two plan shapes put between a WHERE and the search are walked through, and each
+     * must have a single input. A LIMIT in particular ends the walk: a predicate above it applies to the rows
+     * the LIMIT let through, and moving it into the search would instead choose which candidates the search
+     * ranks — "the k nearest that pass" in place of "those of the k nearest that pass". A join ends it too, so
+     * a predicate over another branch's record can never be resolved against this index's INCLUDE columns.
      */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Stop the descent at a LIMIT and at operators outside the search pipeline")
     private VectorSearchInfo searchForVectorUnnest(ILogicalOperator op, IOptimizationContext context,
-            List<UnnestMapOperator> recordSources) throws AlgebricksException {
-
-        if (op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
-            UnnestMapOperator unnest = (UnnestMapOperator) op;
-            ILogicalExpression expr = unnest.getExpressionRef().getValue();
-
-            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-
-                if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INDEX_SEARCH)) {
-                    AccessMethodJobGenParams params = new AccessMethodJobGenParams();
-                    params.readFromFuncArgs(funcExpr.getArguments());
-
-                    if (params.getIndexType() == IndexType.VTREE) {
-                        if (unnest.getSelectCondition() != null) {
-                            return null;
-                        }
-                        return buildSearchInfo(unnest, params, context, recordSources);
-                    }
+            List<Pair<UnnestMapOperator, AccessMethodJobGenParams>> recordSources) throws AlgebricksException {
+        switch (op.getOperatorTag()) {
+            case UNNEST_MAP: {
+                UnnestMapOperator unnest = (UnnestMapOperator) op;
+                AccessMethodJobGenParams params = indexSearchParams(unnest);
+                if (params == null) {
+                    return null;
                 }
+                if (params.getIndexType() == IndexType.VTREE) {
+                    return buildSearchInfo(unnest, params, context, recordSources);
+                }
+                recordSources.add(new Pair<>(unnest, params));
+                break;
             }
-            recordSources.add(unnest);
+            case ASSIGN:
+            case SELECT:
+            case PROJECT:
+            case ORDER:
+            case DISTINCT:
+            case EXCHANGE:
+                break;
+            default:
+                return null;
         }
-
-        for (Mutable<ILogicalOperator> inputRef : op.getInputs()) {
-            VectorSearchInfo result = searchForVectorUnnest(inputRef.getValue(), context, recordSources);
-            if (result != null) {
-                return result;
-            }
+        if (op.getInputs().size() != 1) {
+            return null;
         }
+        return searchForVectorUnnest(op.getInputs().get(0).getValue(), context, recordSources);
+    }
 
-        return null;
+    /** The parameters of the index search {@code unnest} performs, or {@code null} if it is not one. */
+    private static AccessMethodJobGenParams indexSearchParams(UnnestMapOperator unnest) throws AlgebricksException {
+        ILogicalExpression expr = unnest.getExpressionRef().getValue();
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return null;
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INDEX_SEARCH)) {
+            return null;
+        }
+        AccessMethodJobGenParams params = new AccessMethodJobGenParams();
+        params.readFromFuncArgs(funcExpr.getArguments());
+        return params;
     }
 
     /**
      * Builds VectorSearchInfo from the found vector index.
      */
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Admit only this dataset's primary lookup as a pushdown base")
     private VectorSearchInfo buildSearchInfo(UnnestMapOperator unnest, AccessMethodJobGenParams params,
-            IOptimizationContext context, List<UnnestMapOperator> recordSources) throws AlgebricksException {
+            IOptimizationContext context, List<Pair<UnnestMapOperator, AccessMethodJobGenParams>> recordSources)
+            throws AlgebricksException {
 
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
 
@@ -230,17 +258,31 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         ARecordType recordType = (ARecordType) mp.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
 
-        // A primary-index lookup on a collection with a meta part produces [pk..., record, meta]. Drop the
+        // Only this dataset's own primary-index lookup materializes the record the INCLUDE paths are resolved
+        // against; a field access on any other lookup's record must be left alone so the completeness guard
+        // declines it. On a collection with a meta part the lookup produces [pk..., record, meta]. Drop the
         // meta variable: resolveFieldPath resolves a field access against the dataset's record type, so
         // admitting it would let `WHERE meta(m).year > 0` bind to the record's INCLUDE column of the same
         // name and filter on the wrong value.
         Set<LogicalVariable> recordVars = new HashSet<>();
-        for (UnnestMapOperator lookup : recordSources) {
-            List<LogicalVariable> vars = lookup.getVariables();
+        for (Pair<UnnestMapOperator, AccessMethodJobGenParams> lookup : recordSources) {
+            if (!isPrimaryLookupOf(lookup.second, dataset)) {
+                continue;
+            }
+            List<LogicalVariable> vars = lookup.first.getVariables();
             recordVars.addAll(vars.subList(0, dataset.hasMetaPart() ? vars.size() - 1 : vars.size()));
         }
 
         return new VectorSearchInfo(unnest, details.getIncludeFieldNames(), recordType,
-                details.getVectorParameters().isQuantized(), dataset.getPrimaryKeys().size(), recordVars);
+                details.getVectorParameters().isQuantized(), dataset.getPrimaryKeys().size(), recordVars,
+                index.getIndexName());
+    }
+
+    /** Whether {@code params} describe a search of {@code dataset}'s primary index, which is named after it. */
+    private static boolean isPrimaryLookupOf(AccessMethodJobGenParams params, Dataset dataset) {
+        return Objects.equals(params.getDatabaseName(), dataset.getDatabaseName())
+                && Objects.equals(params.getDataverseName(), dataset.getDataverseName())
+                && Objects.equals(params.getDatasetName(), dataset.getDatasetName())
+                && Objects.equals(params.getIndexName(), dataset.getDatasetName());
     }
 }

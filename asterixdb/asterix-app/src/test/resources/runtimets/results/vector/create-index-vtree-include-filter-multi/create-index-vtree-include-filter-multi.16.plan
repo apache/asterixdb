@@ -1,32 +1,32 @@
-distribute result [$$18]
+distribute result [$$21]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 3
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$18])
+      project ([$$21])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$35(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$37(ASC) ]  |PARTITIONED|
           limit 3
           -- STREAM_LIMIT  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (topK: 3) (ASC, $$35)
-              -- STABLE_SORT [topK: 3] [$$35(ASC)]  |PARTITIONED|
+              order (topK: 3) (ASC, $$37)
+              -- STABLE_SORT [topK: 3] [$$37(ASC)]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$18] <- [ordered-list-constructor($$33, $$34)] project: [$$18, $$35]
+                  assign [$$21] <- [{"id": $$36, "t": uppercase($$40)}] project: [$$21, $$37]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$33, $$34, $$35])
+                    project ([$$36, $$37, $$40])
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$33, $$34, $$35, $$36] <- index-search("idx_cpk_emb", 8, "Default", "testcpk", "MovieCpk", false, false, true, 5, $$28, $$29, $$30, $$31, $$32)
+                        unnest-map [$$36, $$37, $$38, $$39, $$40, $$41] <- index-search("idx_emb", 8, "Default", "test", "MovieMulti", false, false, true, 5, $$31, $$32, $$33, $$34, $$35) condition (gt($$38, 2005))
                         -- VECTOR_SEARCH  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$28, $$29, $$30, $$31, $$32] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                            assign [$$31, $$32, $$33, $$34, $$35] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
                             -- ASSIGN  |PARTITIONED|
                               empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

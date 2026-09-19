@@ -17,14 +17,16 @@
  * under the License.
  */
 
+
+-- param compile-only:string=true
+-- param optimized-logical-plan:string=true
+SET `compiler.cbo` "false";
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+// A NESTED INCLUDE column, filtered on and returned. Addressed by its full path [info, year], and served
+// index-only: the projection reads the column off the search even though the compiler splits the nested
+// access across two ASSIGNs, and the predicate is pushed into the search.
+SELECT m.id, m.info.year AS year
+FROM MovieSmall m
+WHERE m.info.year > 2005
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;

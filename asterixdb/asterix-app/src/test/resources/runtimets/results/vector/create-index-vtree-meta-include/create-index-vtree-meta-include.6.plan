@@ -1,30 +1,30 @@
-distribute result [$$35]
+distribute result [$$21]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 3
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$35])
+      project ([$$21])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$36(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$37(ASC) ]  |PARTITIONED|
           limit 3
           -- STREAM_LIMIT  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              order (topK: 3) (ASC, $$36)
-              -- STABLE_SORT [topK: 3] [$$36(ASC)]  |PARTITIONED|
+              order (topK: 3) (ASC, $$37)
+              -- STABLE_SORT [topK: 3] [$$37(ASC)]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$35, $$36])
-                  -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$21] <- [ordered-list-constructor($$36, $$38)] project: [$$21, $$37]
+                  -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      unnest-map [$$35, $$36, $$37, $$38, $$39, $$40] <- index-search("idx_emb", 8, "Default", "test", "MovieMulti", false, false, true, 5, $$30, $$31, $$32, $$33, $$34) condition (and(gt($$37, 2005), eq($$38, 5)))
+                      unnest-map [$$36, $$37, $$38] <- index-search("idx_emb", 8, "Default", "test", "VecMeta", false, false, true, 5, $$31, $$32, $$33, $$34, $$35) condition (gt($$38, 2))
                       -- VECTOR_SEARCH  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          assign [$$30, $$31, $$32, $$33, $$34] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                          assign [$$31, $$32, $$33, $$34, $$35] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
                           -- ASSIGN  |PARTITIONED|
                             empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

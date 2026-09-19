@@ -17,14 +17,15 @@
  * under the License.
  */
 
+
+-- param compile-only:string=true
+-- param optimized-logical-plan:string=true
+SET `compiler.cbo` "false";
 USE test;
-// Every cluster probed and thirty candidates collected per requested row: the search touches the
-// whole partition and then reranks ninety fetched rows, so the plain data scan wins.
-// `category` is deliberately NOT an INCLUDE column of idx_emb -- the fetch and rerank this case
-// prices is exactly what the index-only plan removes, so projecting `year` instead would tip the
-// choice back to the index (see the case below).
-EXPLAIN
-SELECT VALUE m.category
-FROM Vec m
-ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0, 30)
+// A predicate that reads no dataset field at all. Its variable set is empty, so every "is this variable
+// safe" test passes vacuously; only asking whether the predicate can actually be bound catches it.
+SELECT VALUE m.id
+FROM MovieSmall m
+WHERE random() > 0.5
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
 LIMIT 3;
