@@ -451,7 +451,7 @@ public class APIFramework {
             if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
                 generateJob(spec, output.config().getHyracksJobFormat());
             }
-            if (isQuery) {
+            if (isQuery && compiler.getOptimizationContext().isPlanReusable()) {
                 lastCompiledPlan = new CompiledPlan(plan, compiler.getOptimizationContext());
             }
             return spec;

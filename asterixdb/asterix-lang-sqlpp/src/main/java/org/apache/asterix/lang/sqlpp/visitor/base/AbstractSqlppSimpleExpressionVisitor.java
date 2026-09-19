@@ -73,6 +73,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class AbstractSqlppSimpleExpressionVisitor
@@ -90,6 +91,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     public Expression visit(FromTerm fromTerm, ILangExpression arg) throws CompilationException {
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), arg));
+        visitTimeTravel(fromTerm.getTimeTravel(), arg);
 
         // Visits join/unnest/nest clauses.
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
@@ -101,6 +103,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     @Override
     public Expression visit(JoinClause joinClause, ILangExpression arg) throws CompilationException {
         joinClause.setRightExpression(visit(joinClause.getRightExpression(), arg));
+        visitTimeTravel(joinClause.getTimeTravel(), arg);
         joinClause.setConditionExpression(visit(joinClause.getConditionExpression(), arg));
         return null;
     }
@@ -524,5 +527,17 @@ public class AbstractSqlppSimpleExpressionVisitor
             newExprList.add(visit(expr, arg));
         }
         return newExprList;
+    }
+
+    /**
+     * Visits the value expression of an {@code AT SNAPSHOT} / {@code AT TIMESTAMP} specification, if there is
+     * one. The value has to reduce to a compile-time constant, but it still goes through the regular expression
+     * rewrites (function call resolution, operator-to-function-call conversion, UDF inlining, ...) so that
+     * anything foldable actually gets a chance to fold.
+     */
+    protected void visitTimeTravel(TimeTravelSpec timeTravel, ILangExpression arg) throws CompilationException {
+        if (timeTravel != null) {
+            timeTravel.setValueExpression(visit(timeTravel.getValueExpression(), arg));
+        }
     }
 }

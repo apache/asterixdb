@@ -109,6 +109,14 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), fromTerm));
 
+        // Resolved before the new scope opens, so the value cannot see this term's own binding variables.
+        // Inside the scope, "FROM Users AS c AT SNAPSHOT c.uid" would bind c to the term's own item
+        // variable and the value would become a per-row field access, failing much later and much less
+        // helpfully -- ASX1106 "expected constant value" pointing at the whole clause, rather than ASX1073
+        // "undefined identifier c" pointing at the c. It would also put this term's own binding variable
+        // into its free variable set, which the rewrites that read that set have no reason to expect.
+        visitTimeTravel(fromTerm.getTimeTravel(), fromTerm);
+
         scopeChecker.createNewScope();
 
         // Registers the data item variable.
@@ -136,6 +144,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // the correlation here,
         // we defer the check to the query optimizer.
         joinClause.setRightExpression(visit(joinClause.getRightExpression(), joinClause));
+
+        // Before the right branch's variables are registered, for the same reason as in visit(FromTerm):
+        // "JOIN d AT SNAPSHOT d.x" must not bind d to the branch it is selecting the snapshot for.
+        visitTimeTravel(joinClause.getTimeTravel(), joinClause);
 
         // Registers the data item variable.
         VariableExpr rightVar = joinClause.getRightVariable();

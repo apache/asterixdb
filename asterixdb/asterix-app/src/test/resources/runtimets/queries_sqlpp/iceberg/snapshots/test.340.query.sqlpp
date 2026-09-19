@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// RIGHT OUTER JOIN with a snapshot on *both* sides: the rewrite swaps the join inputs, so both
+// values have to survive the swap. Counting the LEFT id is what discriminates -- the join keeps
+// all 800 right rows either way, but a.id is null wherever the left side lacks that id. Both
+// sides read snapshot 1 (ids 1-800), so every row matches => 800; had the left snapshot been
+// dropped, the left side would read latest, lose 10/20/30, and give 797
+SELECT count(a.id) AS matched
+FROM usersNoSnapshot AS a AT snapshot %SNAPSHOT_1_SNAPSHOT_ID%
+RIGHT OUTER JOIN usersNoSnapshot AS b AT snapshot %SNAPSHOT_1_SNAPSHOT_ID% ON a.id = b.id;

@@ -24,21 +24,21 @@ import java.util.Objects;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 
 public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
 
     private Expression rightExpr;
     private final VariableExpr rightVar;
     private final VariableExpr rightPosVar;
-    private final TimeTravel timeTravel;
+    private TimeTravelSpec timeTravel;
 
     public AbstractBinaryCorrelateClause(Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
         this(rightExpr, rightVar, rightPosVar, null);
     }
 
     public AbstractBinaryCorrelateClause(Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
-            TimeTravel timeTravel) {
+            TimeTravelSpec timeTravel) {
         this.rightExpr = rightExpr;
         this.rightVar = rightVar;
         this.rightPosVar = rightPosVar;
@@ -69,8 +69,12 @@ public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
         return timeTravel != null;
     }
 
-    public TimeTravel getTimeTravel() {
+    public TimeTravelSpec getTimeTravel() {
         return timeTravel;
+    }
+
+    public void setTimeTravel(TimeTravelSpec timeTravel) {
+        this.timeTravel = timeTravel;
     }
 
     @Override

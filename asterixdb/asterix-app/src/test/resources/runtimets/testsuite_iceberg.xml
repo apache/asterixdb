@@ -192,10 +192,13 @@
     <test-case FilePath="iceberg/negative">
       <compilation-unit name="bad-snapshot-format">
         <output-dir compare="Text">bad-snapshot-format</output-dir>
-        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: Hello!</expected-error>
-        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: 2024-12-12 11:11:11</expected-error>
-        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: Hello!</expected-error>
-        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or yyyy-MM-dd'T'HH:mm:ss). Found: 2024-12-12 11:11:11.123</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: Hello!</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: 2024-12-12 11:11:11</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: Hello!</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: 2024-12-12 11:11:11.123</expected-error>
+        <expected-error>ASX1239: Invalid Iceberg snapshot value</expected-error>
+        <expected-error>ASX1108: External source error. unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: </expected-error>
+        <expected-error>ASX1108: External source error. java.lang.IllegalArgumentException: Cannot find a snapshot older than</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/negative">

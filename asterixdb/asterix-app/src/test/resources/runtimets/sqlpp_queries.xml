@@ -7298,6 +7298,46 @@
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="time-travel-negative">
+        <output-dir compare="Text">time-travel-negative</output-dir>
+        <expected-error>ASX1266: Time travel value could not be resolved while compiling the query</expected-error>
+        <expected-error>ASX1265: Invalid 'AT SNAPSHOT' value: expected an integer or a string, but got date</expected-error>
+        <expected-error>ASX1265: Invalid 'AT TIMESTAMP' value: expected an integer, a string, a date or a datetime, but got null</expected-error>
+        <expected-error>ASX1265: Invalid 'AT TIMESTAMP' value: expected an integer, a string, a date or a datetime, but got double</expected-error>
+        <expected-error>ASX1106: Expected constant value</expected-error>
+        <expected-error>ASX1086: No value for parameter: $ts</expected-error>
+        <expected-error>ASX1267: current_date cannot be used in a time travel value; use current_date_immediate instead</expected-error>
+        <expected-error>ASX1265: Invalid 'AT TIMESTAMP' value: expected an integer, a string, a date or a datetime, but got time</expected-error>
+        <expected-error>ASX1265: Invalid 'AT SNAPSHOT' value: expected an integer or a string, but got boolean</expected-error>
+        <expected-error>ASX1266: Time travel value could not be resolved while compiling the query</expected-error>
+        <expected-error>ASX1073: Cannot resolve alias reference for undefined identifier d</expected-error>
+        <expected-error>ASX1106: Expected constant value</expected-error>
+        <expected-error>ASX1079: Compilation error: No positional variables are allowed over datasets</expected-error>
+        <expected-error>ASX1265: Invalid 'AT SNAPSHOT' value: expected an integer or a string, but got uuid</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="time-travel-udf-param">
+        <output-dir compare="Text">time-travel-udf-param</output-dir>
+        <expected-error>ASX1265: Invalid 'AT TIMESTAMP' value: expected an integer, a string, a date or a datetime, but got boolean</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="time-travel-value-types">
+        <output-dir compare="Text">time-travel-value-types</output-dir>
+        <expected-error>ASX1266: Time travel value could not be resolved while compiling the query</expected-error>
+        <expected-error>ASX1266: Time travel value could not be resolved while compiling the query</expected-error>
+        <expected-error>ASX1266: Time travel value could not be resolved while compiling the query</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="time-travel-non-assign">
+        <output-dir compare="Text">time-travel-non-assign</output-dir>
+        <expected-error>ASX1106: Expected constant value</expected-error>
+        <expected-error>ASX1106: Expected constant value</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="big_in_list/000">
         <output-dir compare="Text">big_in_list/000</output-dir>
       </compilation-unit>
@@ -16202,6 +16242,11 @@
     <test-case FilePath="metrics">
       <compilation-unit name="plan-cache-parameterized">
         <output-dir compare="Text">plan-cache-parameterized</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="metrics">
+      <compilation-unit name="plan-cache-time-travel">
+        <output-dir compare="Text">plan-cache-time-travel</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="metrics">

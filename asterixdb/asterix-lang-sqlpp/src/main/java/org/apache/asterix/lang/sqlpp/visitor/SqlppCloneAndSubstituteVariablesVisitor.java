@@ -59,6 +59,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -123,8 +124,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 }
             }
         }
-        FromTerm newFromTerm =
-                new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses, fromTerm.getTimeTravel());
+        FromTerm newFromTerm = new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses,
+                copyTimeTravel(fromTerm.getTimeTravel(), env));
         newFromTerm.setSourceLocation(fromTerm.getSourceLocation());
         return Pair.of(newFromTerm, currentEnv);
     }
@@ -150,8 +151,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) joinClause.getConditionExpression().accept(this, currentEnv).getLeft();
 
-        JoinClause newJoinClause = new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar,
-                conditionExpr, joinClause.getOuterJoinMissingValueType());
+        JoinClause newJoinClause =
+                new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar, conditionExpr,
+                        joinClause.getOuterJoinMissingValueType(), copyTimeTravel(joinClause.getTimeTravel(), env));
         newJoinClause.setSourceLocation(joinClause.getSourceLocation());
         return Pair.of(newJoinClause, currentEnv);
     }
@@ -508,5 +510,22 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return Pair.of(newWinExpr, env);
+    }
+
+    /**
+     * Clones a time travel specification in {@code env}, the scope the value is resolved in: the enclosing one,
+     * before the clause's own binding variables. A value that only resolves to a constant later can still
+     * reference variables here -- a function parameter while a function body is being inlined -- and they must
+     * be substituted like anywhere else, or the clone refers to a variable that no longer exists.
+     */
+    private TimeTravelSpec copyTimeTravel(TimeTravelSpec timeTravel, VariableSubstitutionEnvironment env)
+            throws CompilationException {
+        if (timeTravel == null) {
+            return null;
+        }
+        TimeTravelSpec copy = new TimeTravelSpec(
+                (Expression) timeTravel.getValueExpression().accept(this, env).getLeft(), timeTravel.getType());
+        copy.setSourceLocation(timeTravel.getSourceLocation());
+        return copy;
     }
 }

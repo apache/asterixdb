@@ -94,6 +94,7 @@ import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnknownCheckForKnownTypeExpressionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
+import org.apache.asterix.optimizer.rules.ResolveTimeTravelValueRule;
 import org.apache.asterix.optimizer.rules.RewriteClusterByToKMeansRule;
 import org.apache.asterix.optimizer.rules.RewriteCountDistinctToHashRule;
 import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
@@ -241,6 +242,8 @@ public final class RuleCollections {
         normalization.add(new ListifyUnnestingFunctionRule());
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new CancelUnnestSingletonListRule());
+        // must run before UnnestToDataScanRule, which is where a time travel value is read
+        normalization.add(new ResolveTimeTravelValueRule(appCtx));
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
         normalization.add(new FuzzyEqRule());

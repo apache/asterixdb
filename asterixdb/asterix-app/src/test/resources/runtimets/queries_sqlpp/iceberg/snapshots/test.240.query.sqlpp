@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// a snapshotted JOIN that precedes a RIGHT OUTER JOIN: the rewrite rebuilds the preceding
+// clause, and its snapshot has to survive that rebuild. a and c read usersYesSnapshot, pinned to
+// snapshot 1 (ids 1-800), and b is aimed at snapshot 1 too, so all 800 ids match => 800. Had the
+// rebuild dropped b's snapshot, b would read latest, lose 10/20/30, and give 797
+SELECT count(b.id) AS matched
+FROM usersYesSnapshot AS a
+JOIN usersNoSnapshot AS b AT snapshot %SNAPSHOT_1_SNAPSHOT_ID% ON a.id = b.id
+RIGHT OUTER JOIN usersYesSnapshot AS c ON b.id = c.id;

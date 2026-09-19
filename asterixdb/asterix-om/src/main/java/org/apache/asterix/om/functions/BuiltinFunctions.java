@@ -174,6 +174,7 @@ public class BuiltinFunctions {
     private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToIntermediateAggregate = new HashMap<>();
     private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToGlobalAggregate = new HashMap<>();
     private static final Map<FunctionIdentifier, FunctionIdentifier> aggregateToSerializableAggregate = new HashMap<>();
+    private static final Map<FunctionIdentifier, FunctionIdentifier> jobClockToImmediateVariant = new HashMap<>();
     private static final Map<FunctionIdentifier, FunctionIdentifier> scalarToAggregateFunctionMap = new HashMap<>();
     private static final Map<FunctionIdentifier, FunctionIdentifier> distinctToRegularAggregateFunctionMap =
             new HashMap<>();
@@ -2284,6 +2285,9 @@ public class BuiltinFunctions {
         addFunction(CURRENT_TIME_IMMEDIATE, ATimeTypeComputer.INSTANCE, false);
         addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, false);
         addFunction(CURRENT_DATETIME_IMMEDIATE, ADateTimeTypeComputer.INSTANCE, false);
+        addImmediateVariant(CURRENT_DATE, CURRENT_DATE_IMMEDIATE);
+        addImmediateVariant(CURRENT_TIME, CURRENT_TIME_IMMEDIATE);
+        addImmediateVariant(CURRENT_DATETIME, CURRENT_DATETIME_IMMEDIATE);
         addPrivateFunction(DAY_TIME_DURATION_GREATER_THAN, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, ABooleanTypeComputer.INSTANCE, true);
@@ -3310,6 +3314,24 @@ public class BuiltinFunctions {
     public static void addGlobalAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
         aggregateToGlobalAggregate.put(fi, globalfi);
         globalAggregateFunctions.add(globalfi);
+    }
+
+    /**
+     * Pairs a function that reads the job start time with the variant that reads the wall clock instead. A job
+     * clock function can only be evaluated inside a running job; where a value has to be computed without one
+     * (an {@code AT SNAPSHOT} / {@code AT TIMESTAMP} value is resolved while the query is compiled), the
+     * immediate variant is what can be used, and this is what the error naming it is built from.
+     */
+    public static void addImmediateVariant(FunctionIdentifier jobClockFi, FunctionIdentifier immediateFi) {
+        jobClockToImmediateVariant.put(jobClockFi, immediateFi);
+    }
+
+    /**
+     * @return the wall clock variant registered for a job clock function, or {@code null} if {@code fi} is not
+     *         a job clock function
+     */
+    public static FunctionIdentifier getImmediateVariant(FunctionIdentifier fi) {
+        return jobClockToImmediateVariant.get(fi);
     }
 
     public static void addUnnestFun(FunctionIdentifier fi, boolean returnsUniqueValues) {

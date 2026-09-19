@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -35,7 +36,7 @@ class CurrentDateEval extends AbstractCurrentDateEval {
     @Override
     protected int getCurrentDateChrononAdjusted() throws HyracksDataException {
         if (dateChrononAdjusted == Integer.MIN_VALUE) {
-            dateChrononAdjusted = cal.getChrononInDays(getJobStartTimeAsAdjustedChronon());
+            dateChrononAdjusted = (int) getJobStartTimeValue(ATypeTag.DATE);
         }
         return dateChrononAdjusted;
     }

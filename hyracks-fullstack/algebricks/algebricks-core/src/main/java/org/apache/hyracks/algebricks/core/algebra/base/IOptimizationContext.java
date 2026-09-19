@@ -107,4 +107,15 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     IndexAdvisor getIndexAdvisor();
 
+    /**
+     * Records that the plan being optimized holds a value computed during optimization that is only valid for
+     * this compilation, such as a clock read, so the plan must not be reused for a later run of the statement.
+     */
+    void markPlanNotReusable();
+
+    /**
+     * @return {@code false} if {@link #markPlanNotReusable()} was called for this plan
+     */
+    boolean isPlanReusable();
+
 }

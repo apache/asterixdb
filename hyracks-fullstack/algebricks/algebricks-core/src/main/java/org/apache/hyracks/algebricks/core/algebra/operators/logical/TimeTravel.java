@@ -21,6 +21,18 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+
+/**
+ * The {@code AT SNAPSHOT} / {@code AT TIMESTAMP} specification of a time travelling scan.
+ * <p>
+ * The value is an ordinary expression reference, exposed through
+ * {@link AbstractUnnestNonMapOperator#acceptExpressionTransform} like any other operator expression, so
+ * constant folding reduces it in the normal course of optimization. It has to end up a constant: the value
+ * selects which snapshot's manifest and data files the scan reads, so it must be known while the plan is still
+ * being built, and whoever consumes it (see {@code DatasetRewriter}) rejects anything that did not fold.
+ */
 public class TimeTravel {
 
     public enum Type {
@@ -38,16 +50,20 @@ public class TimeTravel {
         }
     }
 
-    private final String snapshotIdOrTimestamp;
+    private final Mutable<ILogicalExpression> valueExpressionRef;
     private final Type type;
 
-    public TimeTravel(String snapshotIdOrTimestamp, Type type) {
-        this.snapshotIdOrTimestamp = snapshotIdOrTimestamp;
+    public TimeTravel(Mutable<ILogicalExpression> valueExpressionRef, Type type) {
+        this.valueExpressionRef = valueExpressionRef;
         this.type = type;
     }
 
-    public String getSnapshotIdOrTimestamp() {
-        return snapshotIdOrTimestamp;
+    public Mutable<ILogicalExpression> getValueExpressionRef() {
+        return valueExpressionRef;
+    }
+
+    public ILogicalExpression getValueExpression() {
+        return valueExpressionRef.getValue();
     }
 
     public Type getType() {
@@ -62,17 +78,16 @@ public class TimeTravel {
         if (!(object instanceof TimeTravel target)) {
             return false;
         }
-        return Objects.equals(snapshotIdOrTimestamp, target.getSnapshotIdOrTimestamp())
-                && Objects.equals(type, target.getType());
+        return type == target.type && Objects.equals(getValueExpression(), target.getValueExpression());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(snapshotIdOrTimestamp, type);
+        return Objects.hash(getValueExpression(), type);
     }
 
     @Override
     public String toString() {
-        return type.getKeyword() + " " + snapshotIdOrTimestamp;
+        return type.getKeyword() + " " + getValueExpression();
     }
 }

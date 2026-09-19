@@ -20,6 +20,7 @@ package org.apache.asterix.external.util.iceberg;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
@@ -28,6 +29,7 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -84,9 +86,16 @@ public class IcebergSnapshotUtils {
             LocalDateTime localDateTime = LocalDateTime.parse(timestamp, ISO_LOCAL_DATE_TIME);
             return localDateTime.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
         } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            // the same with a zone offset, e.g., "yyyy-MM-dd'T'HH:mm:ssZ" or "yyyy-MM-dd'T'HH:mm:ss+03:00", which
+            // is how a clock function that renders a zone writes the current time
+            return OffsetDateTime.parse(timestamp, ISO_OFFSET_DATE_TIME).toInstant().toEpochMilli();
+        } catch (DateTimeParseException ignored) {
             throw CompilationException.create(EXTERNAL_SOURCE_ERROR,
-                    "unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd or "
-                            + "yyyy-MM-dd'T'HH:mm:ss). Found: " + timestamp);
+                    "unexpected TIMESTAMP snapshot format. Allow formats are: (milliseconds, yyyy-MM-dd, "
+                            + "yyyy-MM-dd'T'HH:mm:ss or yyyy-MM-dd'T'HH:mm:ssXXX). Found: " + timestamp);
         }
     }
 

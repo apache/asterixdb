@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : AT SNAPSHOT / AT TIMESTAMP accept any expression that folds to a constant, which is resolved
+ *              : during expression-to-plan translation. This exercises that resolution: the datasets here are
+ *              : internal, so the resolved value is discarded and the plan is the plain plan -- what is being
+ *              : tested is that each of these forms compiles at all.
+ * Expected Res : Success
+ */
+
+drop dataverse timetravel if exists;
+create dataverse timetravel;
+
+use timetravel;
+
+create type timetravel.UserType as {
+  uid : integer
+};
+
+create dataset Users(UserType) primary key uid;
+
+create dataset Visitors(UserType) primary key uid;
+
+-- param $ts:string=8574821
+
+select element {'a': u.uid, 'b': v.uid, 'c': w.uid, 'd': x.uid, 'e': y.uid, 'f': z.uid}
+from Users as u AT SNAPSHOT 8574821,
+     Users as v AT TIMESTAMP date("2026-08-20") - duration("P2D")
+     join Visitors as w AT TIMESTAMP unix_time_from_date_in_ms(date("2026-08-20")) on v.uid = w.uid,
+     -- a year-month duration, and one off a datetime carrying a millisecond fraction
+     Visitors as x AT TIMESTAMP date("2026-08-20") - duration("P3M"),
+     Users as y AT TIMESTAMP datetime("2026-08-20T13:45:30.123") - duration("P3M"),
+     Users as z AT SNAPSHOT $ts
+where u.uid = v.uid and w.uid = x.uid and x.uid = y.uid and y.uid = z.uid
+;

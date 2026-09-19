@@ -52,11 +52,11 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -150,7 +150,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
         Expression fromExpr = fromTerm.getLeftExpression();
         VariableExpr fromVar = fromTerm.getLeftVariable();
         VariableExpr fromPosVar = fromTerm.getPositionalVariable();
-        TimeTravel fromTimeTravel = fromTerm.getTimeTravel();
+        TimeTravelSpec fromTimeTravel = fromTerm.getTimeTravel();
 
         List<AbstractBinaryCorrelateClause> correlateClauses = fromTerm.getCorrelateClauses();
         for (int i = 0; i < correlateClauses.size(); i++) {
@@ -163,7 +163,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                 Expression rightExpr = joinClause.getRightExpression();
                 VariableExpr rightVar = joinClause.getRightVariable();
                 VariableExpr rightPosVar = joinClause.getPositionalVariable();
-                TimeTravel rightTimeTravel = joinClause.getTimeTravel();
+                TimeTravelSpec rightTimeTravel = joinClause.getTimeTravel();
                 Expression condExpr = joinClause.getConditionExpression();
                 Literal.Type outerMissingValueType = joinClause.getOuterJoinMissingValueType();
                 if (i == 0) {
@@ -251,11 +251,11 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                                 newPrecedingClause = new JoinClause(joinPrecedingClause.getJoinType(),
                                         joinPrecedingClause.getRightExpression(),
                                         newVariableExpr(newPrecedingClauseRightVar, precedingClauseRightVarSourceLoc),
-                                        newPrecedingClauseRightPosVar != null
-                                                ? newVariableExpr(newPrecedingClauseRightPosVar,
-                                                        precedingClauseRightPosVarSourceLoc)
+                                        newPrecedingClauseRightPosVar != null ? newVariableExpr(
+                                                newPrecedingClauseRightPosVar, precedingClauseRightPosVarSourceLoc)
                                                 : null,
-                                        newCondExpr, joinPrecedingClause.getOuterJoinMissingValueType());
+                                        newCondExpr, joinPrecedingClause.getOuterJoinMissingValueType(),
+                                        joinPrecedingClause.getTimeTravel());
                                 newPrecedingClause.setSourceLocation(precedingClauseSourceLoc);
                                 break;
                             case UNNEST_CLAUSE:
@@ -351,7 +351,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
     }
 
     private Expression createRightSelectExpression(Expression fromExpr, VarIdentifier fromVar, VarIdentifier fromPosVar,
-            List<AbstractBinaryCorrelateClause> correlateClauseList, TimeTravel timeTravel,
+            List<AbstractBinaryCorrelateClause> correlateClauseList, TimeTravelSpec timeTravel,
             List<Projection> projectList, SourceLocation sourceLoc) {
         FromTerm newFromTerm = new FromTerm(fromExpr, newVariableExpr(fromVar, sourceLoc),
                 fromPosVar != null ? newVariableExpr(fromPosVar, sourceLoc) : null, correlateClauseList, timeTravel);

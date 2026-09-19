@@ -49,6 +49,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
+import org.apache.asterix.optimizer.rules.util.TimeTravelUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -118,6 +119,14 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         } else {
             dataSource = metadataProvider.findDataSource(dsid);
         }
+        // The time travel value must have folded to a constant by now: ConstantFoldingRule sits earlier in the
+        // same normalization rule collection as UnnestToDataScanRule, which is what got us here. This reads it
+        // unconditionally, including for dataset kinds that have no snapshots, so that a value which did not
+        // fold -- or folded to something unusable -- is reported rather than silently dropped.
+        TimeTravel timeTravel = unnest.getTimeTravel();
+        String timeTravelValue =
+                timeTravel == null ? null : TimeTravelUtil.resolve(timeTravel, unnest.getSourceLocation());
+
         boolean hasMeta = dataSource.hasMeta();
         if (hasMeta) {
             variables.add(context.newVar());
@@ -132,12 +141,11 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             if (externalSubpath instanceof String) {
                 dataSourceProperties.put(SUBPATH, (String) externalSubpath);
             }
-            Object timeTravelObj = unnest.getTimeTravel();
-            if (timeTravelObj instanceof TimeTravel timeTravel) {
-                if (timeTravel.getType().equals(TimeTravel.Type.SNAPSHOT_ID)) {
-                    dataSourceProperties.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, timeTravel.getSnapshotIdOrTimestamp());
-                } else if (timeTravel.getType().equals(TimeTravel.Type.SNAPSHOT_TIMESTAMP)) {
-                    dataSourceProperties.put(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY, timeTravel.getSnapshotIdOrTimestamp());
+            if (timeTravel != null) {
+                if (timeTravel.getType() == TimeTravel.Type.SNAPSHOT_ID) {
+                    dataSourceProperties.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, timeTravelValue);
+                } else if (timeTravel.getType() == TimeTravel.Type.SNAPSHOT_TIMESTAMP) {
+                    dataSourceProperties.put(ICEBERG_SNAPSHOT_TIMESTAMP_PROPERTY_KEY, timeTravelValue);
                 } else {
                     throw new IllegalStateException("Unknown snapshot type");
                 }

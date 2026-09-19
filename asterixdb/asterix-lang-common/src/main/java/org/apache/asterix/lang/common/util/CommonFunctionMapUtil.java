@@ -20,6 +20,7 @@
 package org.apache.asterix.lang.common.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommonFunctionMapUtil {
@@ -264,5 +265,13 @@ public class CommonFunctionMapUtil {
 
     public static void addFunctionMapping(String alias, String functionName) {
         FUNCTION_NAME_MAP.put(alias, functionName);
+    }
+
+    /**
+     * @return every alias that maps to {@code functionName}, sorted; empty if it has none
+     */
+    public static List<String> getAliases(String functionName) {
+        return FUNCTION_NAME_MAP.entrySet().stream().filter(e -> e.getValue().equals(functionName))
+                .map(Map.Entry::getKey).sorted().toList();
     }
 }

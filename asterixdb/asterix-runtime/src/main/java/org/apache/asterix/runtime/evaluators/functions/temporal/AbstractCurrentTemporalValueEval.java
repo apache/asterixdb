@@ -21,13 +21,10 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 import java.time.DateTimeException;
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.zone.ZoneRules;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.functions.AbstractScalarEval;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -42,7 +39,6 @@ abstract class AbstractCurrentTemporalValueEval extends AbstractScalarEval {
     protected final IEvaluatorContext ctx;
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
-    protected final GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
 
     private long jobStartTime = Long.MIN_VALUE;
     private ZoneId jobStartTimeZoneId;
@@ -53,12 +49,15 @@ abstract class AbstractCurrentTemporalValueEval extends AbstractScalarEval {
         this.ctx = ctx;
     }
 
-    protected final long getSystemCurrentTimeAsAdjustedChronon() throws HyracksDataException {
-        return getChrononAdjusted(System.currentTimeMillis());
+    protected final long getSystemCurrentTimeValue(ATypeTag type) throws HyracksDataException {
+        ensureJobStartTimeZone();
+        return CurrentTemporalValueUtil.valueAt(type, System.currentTimeMillis(), jobStartTimeZoneRules);
     }
 
-    protected final long getJobStartTimeAsAdjustedChronon() throws HyracksDataException {
-        return getChrononAdjusted(getJobStartTime());
+    protected final long getJobStartTimeValue(ATypeTag type) throws HyracksDataException {
+        long startTime = getJobStartTime();
+        ensureJobStartTimeZone();
+        return CurrentTemporalValueUtil.valueAt(type, startTime, jobStartTimeZoneRules);
     }
 
     private long getJobStartTime() throws HyracksDataException {
@@ -85,11 +84,5 @@ abstract class AbstractCurrentTemporalValueEval extends AbstractScalarEval {
                 throw new HyracksDataException(ErrorCode.ILLEGAL_STATE, e, srcLoc, "job-start-timezone");
             }
         }
-    }
-
-    private long getChrononAdjusted(long chronon) throws HyracksDataException {
-        ensureJobStartTimeZone();
-        ZoneOffset tzOffset = jobStartTimeZoneRules.getOffset(Instant.ofEpochMilli(chronon));
-        return cal.adjustChrononByTimezone(chronon, (int) -TimeUnit.SECONDS.toMillis(tzOffset.getTotalSeconds()));
     }
 }

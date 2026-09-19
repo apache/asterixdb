@@ -406,7 +406,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (op.hasTimeTravel()) {
             TimeTravel timeTravel = op.getTimeTravel();
             buffer.append(" at ").append(timeTravel.getType().getKeyword()).append(" ")
-                    .append(timeTravel.getSnapshotIdOrTimestamp());
+                    .append(timeTravel.getValueExpression().accept(exprVisitor, indent));
         }
         if (op.hasPositionalVariable()) {
             buffer.append(" at ").append(String.valueOf(op.getPositionalVariable()));
@@ -424,7 +424,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (op.hasTimeTravel()) {
             TimeTravel timeTravel = op.getTimeTravel();
             buffer.append(" at ").append(timeTravel.getType().getKeyword()).append(" ")
-                    .append(timeTravel.getSnapshotIdOrTimestamp());
+                    .append(timeTravel.getValueExpression().accept(exprVisitor, indent));
         }
         if (op.getPositionalVariable() != null) {
             buffer.append(" at " + op.getPositionalVariable());

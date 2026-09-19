@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -32,6 +33,6 @@ class CurrentTimeImmediateEval extends AbstractCurrentTimeEval {
 
     @Override
     protected int getCurrentTimeChrononAdjusted() throws HyracksDataException {
-        return cal.getTimeChronon(getSystemCurrentTimeAsAdjustedChronon());
+        return (int) getSystemCurrentTimeValue(ATypeTag.TIME);
     }
 }

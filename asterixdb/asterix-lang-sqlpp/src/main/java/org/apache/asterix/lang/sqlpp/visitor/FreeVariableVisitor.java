@@ -72,6 +72,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.commons.lang3.tuple.Pair;
@@ -105,6 +106,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
         // Visit the left expression of a from term.
         fromTerm.getLeftExpression().accept(this, freeVars);
+        collectTimeTravelFreeVariables(fromTerm.getTimeTravel(), freeVars);
 
         // Adds binding variables.
         bindingVariables.add(fromTerm.getLeftVariable());
@@ -122,6 +124,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
                 clauseFreeVars.clear();
             }
             clause.getRightExpression().accept(this, clauseFreeVars);
+            collectTimeTravelFreeVariables(clause.getTimeTravel(), clauseFreeVars);
 
             switch (clause.getClauseType()) {
                 case UNNEST_CLAUSE:
@@ -622,5 +625,17 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         selectFreeVars.removeAll(gbyBindingVars);
         selectFreeVars.removeAll(gbyLetsBindingVars);
         selectFreeVars.removeAll(clusterByBindingVars);
+    }
+
+    /**
+     * A time travel value has to be a compile-time constant, so it should not reference anything. Its free
+     * variables are still collected so that a reference is reported here rather than silently surviving into
+     * the rewrites that consume this information.
+     */
+    private void collectTimeTravelFreeVariables(TimeTravelSpec timeTravel, Collection<VariableExpr> freeVars)
+            throws CompilationException {
+        if (timeTravel != null) {
+            timeTravel.getValueExpression().accept(this, freeVars);
+        }
     }
 }

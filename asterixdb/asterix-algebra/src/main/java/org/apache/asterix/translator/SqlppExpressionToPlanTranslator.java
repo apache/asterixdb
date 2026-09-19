@@ -86,6 +86,7 @@ import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -139,6 +140,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -427,10 +429,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             LogicalVariable pVar = context.newVarFromExpression(fromTerm.getPositionalVariable());
             // We set the positional variable type as BIGINT type.
             unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.getLeft()), pVar, BuiltinType.AINT64,
-                    fromTerm.getTimeTravel());
+                    toTimeTravel(fromTerm.getTimeTravel()));
         } else {
-            unnestOp =
-                    new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.getLeft()), fromTerm.getTimeTravel());
+            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.getLeft()),
+                    toTimeTravel(fromTerm.getTimeTravel()));
         }
         unnestOp.getAnnotations().put(ARRAY_ACCESS, fromExpr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION);
         ExternalSubpathAnnotation hint = ((AbstractExpression) fromExpr).findHint(ExternalSubpathAnnotation.class);
@@ -448,6 +450,62 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             }
         }
         return Pair.of(topOpRef.getValue(), fromVar);
+    }
+
+    /**
+     * Translates the value of an {@code AT SNAPSHOT} / {@code AT TIMESTAMP} specification into the expression
+     * reference the operator carries. It is translated against a throwaway input, so a value that needs
+     * operators of its own -- a subquery, or a non-deterministic call that cannot be inlined -- is rejected
+     * here rather than leaking an operator into the plan. Reducing it to a constant is left to constant
+     * folding, and reading that constant to {@code DatasetRewriter}.
+     */
+    private TimeTravel toTimeTravel(TimeTravelSpec timeTravelSpec) throws CompilationException {
+        if (timeTravelSpec == null) {
+            return null;
+        }
+        Mutable<ILogicalOperator> valueInputRef = new MutableObject<>(new EmptyTupleSourceOperator());
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
+                langExprToAlgExpression(timeTravelSpec.getValueExpression(), valueInputRef);
+        // A non-functional call is not inlined by langExprToAlgExpression; it is left in an ASSIGN above the
+        // input. There is no plan for that ASSIGN to live in here, so fold its expression back into the value.
+        // Anything else that needed an operator is a subquery, and any variable still referenced afterwards
+        // comes from an enclosing scope; neither can be a constant.
+        ILogicalExpression value = eo.getLeft();
+        Mutable<ILogicalOperator> opRef = eo.getRight();
+        while (opRef != valueInputRef) {
+            ILogicalOperator op = opRef.getValue();
+            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                throw new CompilationException(ErrorCode.EXPECTED_CONSTANT_VALUE, timeTravelSpec.getSourceLocation());
+            }
+            AssignOperator assign = (AssignOperator) op;
+            for (int i = 0, n = assign.getVariables().size(); i < n; i++) {
+                value = substituteVariable(value, assign.getVariables().get(i),
+                        assign.getExpressions().get(i).getValue());
+            }
+            opRef = assign.getInputs().get(0);
+        }
+        List<LogicalVariable> usedVars = new ArrayList<>();
+        value.getUsedVariables(usedVars);
+        if (!usedVars.isEmpty()) {
+            throw new CompilationException(ErrorCode.EXPECTED_CONSTANT_VALUE, timeTravelSpec.getSourceLocation());
+        }
+        return new TimeTravel(new MutableObject<>(value), timeTravelSpec.getType());
+    }
+
+    private static ILogicalExpression substituteVariable(ILogicalExpression expr, LogicalVariable var,
+            ILogicalExpression replacement) {
+        switch (expr.getExpressionTag()) {
+            case VARIABLE:
+                return ((VariableReferenceExpression) expr).getVariableReference().equals(var)
+                        ? replacement.cloneExpression() : expr;
+            case FUNCTION_CALL:
+                for (Mutable<ILogicalExpression> argRef : ((AbstractFunctionCallExpression) expr).getArguments()) {
+                    argRef.setValue(substituteVariable(argRef.getValue(), var, replacement));
+                }
+                return expr;
+            default:
+                return expr;
+        }
     }
 
     @Override
@@ -676,21 +734,21 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(rightExpr, inputOpRef);
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> pUnnestExpr =
                 makeUnnestExpression(eo.getLeft(), eo.getRight());
+        TimeTravel timeTravel = toTimeTravel(binaryCorrelate.getTimeTravel());
         AbstractUnnestOperator unnestOp;
         if (binaryCorrelate.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(binaryCorrelate.getPositionalVariable());
             // We set the positional variable type as BIGINT type.
             unnestOp = outerUnnest
                     ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.getLeft()), pVar,
-                            BuiltinType.AINT64, outerUnnestMissingValue, binaryCorrelate.getTimeTravel())
+                            BuiltinType.AINT64, outerUnnestMissingValue, timeTravel)
                     : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.getLeft()), pVar, BuiltinType.AINT64,
-                            binaryCorrelate.getTimeTravel());
+                            timeTravel);
         } else {
             unnestOp = outerUnnest
                     ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.getLeft()),
-                            outerUnnestMissingValue, binaryCorrelate.getTimeTravel())
-                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.getLeft()),
-                            binaryCorrelate.getTimeTravel());
+                            outerUnnestMissingValue, timeTravel)
+                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.getLeft()), timeTravel);
         }
         unnestOp.getAnnotations().put(ARRAY_ACCESS, rightExpr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION);
         ExternalSubpathAnnotation hint = ((AbstractExpression) rightExpr).findHint(ExternalSubpathAnnotation.class);

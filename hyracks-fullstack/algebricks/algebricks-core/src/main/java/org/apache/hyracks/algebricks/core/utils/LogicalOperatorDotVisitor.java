@@ -392,7 +392,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.append("unnest ").append(op.getVariable());
         if (op.getTimeTravel() != null) {
             String keyword = op.getTimeTravel().getType().getKeyword();
-            String timeTravelValue = op.getTimeTravel().getSnapshotIdOrTimestamp();
+            String timeTravelValue = String.valueOf(op.getTimeTravel().getValueExpression());
             stringBuilder.append(" at ").append(keyword).append(" ").append(timeTravelValue);
         }
         if (op.getPositionalVariable() != null) {
@@ -415,7 +415,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.append("outer-unnest ").append(op.getVariable());
         if (op.getTimeTravel() != null) {
             String keyword = op.getTimeTravel().getType().getKeyword();
-            String timeTravelValue = op.getTimeTravel().getSnapshotIdOrTimestamp();
+            String timeTravelValue = String.valueOf(op.getTimeTravel().getValueExpression());
             stringBuilder.append(" at ").append(keyword).append(" ").append(timeTravelValue);
         }
         if (op.getPositionalVariable() != null) {

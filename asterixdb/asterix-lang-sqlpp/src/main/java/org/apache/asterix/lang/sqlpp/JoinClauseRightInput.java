@@ -20,16 +20,16 @@ package org.apache.asterix.lang.sqlpp;
 
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 
 public class JoinClauseRightInput {
     private final Expression rightExpr;
     private final VariableExpr rightVar;
     private final VariableExpr posVar;
-    private final TimeTravel timeTravel;
+    private final TimeTravelSpec timeTravel;
 
     public JoinClauseRightInput(Expression rightExpr, VariableExpr rightVar, VariableExpr posVar,
-            TimeTravel timeTravel) {
+            TimeTravelSpec timeTravel) {
         this.rightExpr = rightExpr;
         this.rightVar = rightVar;
         this.posVar = posVar;
@@ -48,7 +48,7 @@ public class JoinClauseRightInput {
         return posVar;
     }
 
-    public TimeTravel getTimeTravel() {
+    public TimeTravelSpec getTimeTravel() {
         return timeTravel;
     }
 }

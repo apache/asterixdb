@@ -28,15 +28,15 @@ import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class FromTerm extends AbstractClause {
     private Expression leftExpr;
     private final VariableExpr leftVar;
     private final VariableExpr posVar;
     private final List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
-    private final TimeTravel timeTravel;
+    private TimeTravelSpec timeTravel;
 
     public FromTerm(Expression leftExpr, VariableExpr leftVar, VariableExpr posVar,
             List<AbstractBinaryCorrelateClause> correlateClauses) {
@@ -44,7 +44,7 @@ public class FromTerm extends AbstractClause {
     }
 
     public FromTerm(Expression leftExpr, VariableExpr leftVar, VariableExpr posVar,
-            List<AbstractBinaryCorrelateClause> correlateClauses, TimeTravel timeTravel) {
+            List<AbstractBinaryCorrelateClause> correlateClauses, TimeTravelSpec timeTravel) {
         this.leftExpr = leftExpr;
         this.leftVar = leftVar;
         this.posVar = posVar;
@@ -96,8 +96,12 @@ public class FromTerm extends AbstractClause {
         return timeTravel != null;
     }
 
-    public TimeTravel getTimeTravel() {
+    public TimeTravelSpec getTimeTravel() {
         return timeTravel;
+    }
+
+    public void setTimeTravel(TimeTravelSpec timeTravel) {
+        this.timeTravel = timeTravel;
     }
 
     @Override

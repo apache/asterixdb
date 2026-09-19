@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : A time travel value may be built from a clock function. Such a function is impure and is not
+ *              : folded anywhere else, but this position is consumed before the job exists, so it is resolved
+ *              : here. The datasets are internal, so the resolved value is discarded and the plan is the plain
+ *              : plan -- what is tested is that each form compiles, which it cannot do unless the value was
+ *              : reduced to a constant.
+ * Expected Res : Success
+ */
+
+drop dataverse timetravel if exists;
+create dataverse timetravel;
+
+use timetravel;
+
+create type timetravel.UserType as {
+  uid : integer
+};
+
+create dataset Users(UserType) primary key uid;
+
+select element {'a': u.uid, 'b': v.uid, 'c': w.uid}
+from Users as u AT TIMESTAMP current_datetime_immediate() - duration("P3M"),
+     Users as v AT TIMESTAMP current_date_immediate(),
+     Users as w AT SNAPSHOT unix_time_from_datetime_in_ms(current_datetime_immediate())
+where u.uid = v.uid and v.uid = w.uid
+;

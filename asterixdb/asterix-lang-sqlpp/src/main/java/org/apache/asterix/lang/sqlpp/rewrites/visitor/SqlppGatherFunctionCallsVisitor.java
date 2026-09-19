@@ -48,6 +48,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -69,6 +70,7 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
     @Override
     public Void visit(FromTerm fromTerm, Void arg) throws CompilationException {
         fromTerm.getLeftExpression().accept(this, arg);
+        gatherTimeTravelCalls(fromTerm.getTimeTravel(), arg);
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
             correlateClause.accept(this, arg);
         }
@@ -78,6 +80,7 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
     @Override
     public Void visit(JoinClause joinClause, Void arg) throws CompilationException {
         joinClause.getRightExpression().accept(this, arg);
+        gatherTimeTravelCalls(joinClause.getTimeTravel(), arg);
         joinClause.getConditionExpression().accept(this, arg);
         return null;
     }
@@ -288,5 +291,11 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
             expression.getEndIndexExpression().accept(this, arg);
         }
         return null;
+    }
+
+    private void gatherTimeTravelCalls(TimeTravelSpec timeTravel, Void arg) throws CompilationException {
+        if (timeTravel != null) {
+            timeTravel.getValueExpression().accept(this, arg);
+        }
     }
 }

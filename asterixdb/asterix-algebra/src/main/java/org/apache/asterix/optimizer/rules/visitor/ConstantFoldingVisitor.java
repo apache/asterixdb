@@ -215,7 +215,7 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
             return Pair.of(changed, expr);
         }
 
-        if (!expr.isFunctional() || !canConstantFold(expr)) {
+        if (!isFoldable(expr) || !canConstantFold(expr)) {
             return Pair.of(changed, expr);
         }
 
@@ -370,6 +370,14 @@ public class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Bo
             }
         }
         return n;
+    }
+
+    /**
+     * Whether a call whose arguments are all constants may be evaluated here. Folding a non-functional call
+     * would fix a value that is meant to vary per evaluation, so by default only functional calls qualify.
+     */
+    protected boolean isFoldable(ScalarFunctionCallExpression expr) {
+        return expr.isFunctional();
     }
 
     private boolean canConstantFold(ScalarFunctionCallExpression function) throws AlgebricksException {

@@ -1,0 +1,24 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// a bare integer snapshot id: the value is an expression now, not only a string literal.
+// snapshot 1 holds ids 1-800, so pointing this latest-reading collection at it gives 800
+// rather than the 997 it returns on its own
+SELECT count(*) as count
+FROM usersNoSnapshot AT snapshot %SNAPSHOT_1_SNAPSHOT_ID%;

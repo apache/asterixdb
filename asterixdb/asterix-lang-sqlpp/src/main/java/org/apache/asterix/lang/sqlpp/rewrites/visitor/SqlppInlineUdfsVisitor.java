@@ -55,6 +55,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -97,6 +98,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fromTerm.getLeftExpression());
         fromTerm.setLeftExpression(p.getRight());
         changed |= p.getLeft();
+        changed |= inlineUdfsAndViewsInTimeTravel(fromTerm.getTimeTravel());
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
             changed |= correlateClause.accept(this, arg);
         }
@@ -109,7 +111,8 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         joinClause.setRightExpression(p1.getRight());
         Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(joinClause.getConditionExpression());
         joinClause.setConditionExpression(p2.getRight());
-        return p1.getLeft() || p2.getLeft();
+        boolean timeTravelChanged = inlineUdfsAndViewsInTimeTravel(joinClause.getTimeTravel());
+        return p1.getLeft() || p2.getLeft() || timeTravelChanged;
     }
 
     @Override
@@ -344,5 +347,14 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }
         return varExprMap;
+    }
+
+    private boolean inlineUdfsAndViewsInTimeTravel(TimeTravelSpec timeTravel) throws CompilationException {
+        if (timeTravel == null) {
+            return false;
+        }
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(timeTravel.getValueExpression());
+        timeTravel.setValueExpression(p.getRight());
+        return p.getLeft();
     }
 }

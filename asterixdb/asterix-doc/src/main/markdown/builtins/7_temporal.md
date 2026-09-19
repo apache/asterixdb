@@ -244,30 +244,69 @@
 
         current_date()
 
- * Gets the current date.
+ * Gets the current date. The value is taken once, when the query starts running, and
+   every call to this function within the query returns that same value.
  * Arguments: None
  * Return Value:
-    * a `date` value of the date when the function is called.
+    * a `date` value, the same for every row of the query.
 
 ### current_time ###
  * Syntax:
 
         current_time()
 
- * Get the current time
+ * Gets the current time. The value is taken once, when the query starts running, and
+   every call to this function within the query returns that same value.
  * Arguments: None
  * Return Value:
-    * a `time` value of the time when the function is called.
+    * a `time` value, the same for every row of the query.
 
 ### current_datetime ###
  * Syntax:
 
         current_datetime()
 
- * Get the current datetime
+ * Gets the current datetime. The value is taken once, when the query starts running, and
+   every call to this function within the query returns that same value.
  * Arguments: None
  * Return Value:
-    * a `datetime` value of the datetime when the function is called.
+    * a `datetime` value, the same for every row of the query.
+
+### current_date_immediate ###
+ * Syntax:
+
+        current_date_immediate()
+
+ * Gets the current date, read from the clock at the moment the call is evaluated. A single
+   value for the query is not guaranteed: separate calls may return different values.
+ * Arguments: None
+ * Return Value:
+    * a `date` value.
+
+### current_time_immediate ###
+ * Syntax:
+
+        current_time_immediate()
+
+ * Gets the current time, read from the clock at the moment the call is evaluated. As with
+   `current_date_immediate()`, a single value for the query is not guaranteed.
+ * Arguments: None
+ * Return Value:
+    * a `time` value.
+
+### current_datetime_immediate ###
+ * Syntax:
+
+        current_datetime_immediate()
+
+ * Gets the current datetime, read from the clock at the moment the call is evaluated. As with
+   `current_date_immediate()`, a single value for the query is not guaranteed.
+ * In an `AT SNAPSHOT` / `AT TIMESTAMP` value, which is computed while the query is compiled, this
+   function and `current_date_immediate()` are taken in UTC, the zone a time travel timestamp is read
+   in, so that they select the current instant.
+ * Arguments: None
+ * Return Value:
+    * a `datetime` value.
 
 
 ### get_date_from_datetime ###

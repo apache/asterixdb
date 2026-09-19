@@ -70,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -605,7 +606,8 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
         UnnestOperator opCopy = new UnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getTimeTravel());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(),
+                deepCopyTimeTravel(op.getTimeTravel()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -643,7 +645,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
                 deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getMissingValue(),
-                op.getTimeTravel());
+                deepCopyTimeTravel(op.getTimeTravel()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -684,5 +686,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
 
     public LinkedHashMap<LogicalVariable, LogicalVariable> getInputToOutputVariableMapping() {
         return inputVarToOutputVarMapping;
+    }
+
+    private TimeTravel deepCopyTimeTravel(TimeTravel timeTravel) throws AlgebricksException {
+        return timeTravel == null ? null
+                : new TimeTravel(exprDeepCopyVisitor.deepCopyExpressionReference(timeTravel.getValueExpressionRef()),
+                        timeTravel.getType());
     }
 }

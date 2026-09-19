@@ -83,6 +83,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private IMetadataProvider metadataProvider;
     private Object compilerFactory;
     private IndexAdvisor indexAdvisor;
+    private boolean planReusable = true;
 
     public AlgebricksOptimizationContext(IOptimizationContextFactory optContextFactory, int varCounter,
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
@@ -411,6 +412,16 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public IndexAdvisor getIndexAdvisor() {
         return indexAdvisor;
+    }
+
+    @Override
+    public void markPlanNotReusable() {
+        planReusable = false;
+    }
+
+    @Override
+    public boolean isPlanReusable() {
+        return planReusable;
     }
 
 }

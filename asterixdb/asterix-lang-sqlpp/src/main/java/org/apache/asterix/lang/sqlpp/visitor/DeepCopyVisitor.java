@@ -74,9 +74,9 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 
 public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangExpression, Void> {
 
@@ -98,7 +98,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr fromVar = (VariableExpr) fromTerm.getLeftVariable().accept(this, arg);
         VariableExpr positionVar = fromTerm.getPositionalVariable() == null ? null
                 : (VariableExpr) fromTerm.getPositionalVariable().accept(this, arg);
-        TimeTravel timeTravel = fromTerm.getTimeTravel();
+        TimeTravelSpec timeTravel = copy(fromTerm.getTimeTravel(), arg);
 
         // Visits join/unnest/nest clauses.
         List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
@@ -118,7 +118,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
                 : (VariableExpr) joinClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) joinClause.getConditionExpression().accept(this, arg);
         JoinClause copy = new JoinClause(joinClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
-                conditionExpresion, joinClause.getOuterJoinMissingValueType());
+                conditionExpresion, joinClause.getOuterJoinMissingValueType(), copy(joinClause.getTimeTravel(), arg));
         copy.setSourceLocation(joinClause.getSourceLocation());
         return copy;
     }
@@ -622,5 +622,15 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             newFieldList.add(Pair.of((Expression) field.getLeft().accept(this, arg), field.getRight()));
         }
         return newFieldList;
+    }
+
+    private TimeTravelSpec copy(TimeTravelSpec timeTravel, Void arg) throws CompilationException {
+        if (timeTravel == null) {
+            return null;
+        }
+        TimeTravelSpec copy = new TimeTravelSpec((Expression) timeTravel.getValueExpression().accept(this, arg),
+                timeTravel.getType());
+        copy.setSourceLocation(timeTravel.getSourceLocation());
+        return copy;
     }
 }

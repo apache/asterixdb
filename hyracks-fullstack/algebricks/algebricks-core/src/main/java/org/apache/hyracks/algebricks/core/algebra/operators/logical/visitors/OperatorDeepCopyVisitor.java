@@ -70,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.TimeTravel;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -278,7 +279,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, Void arg) throws AlgebricksException {
         return new UnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
-                op.getPositionalVariable(), op.getPositionalVariableType(), op.getTimeTravel());
+                op.getPositionalVariable(), op.getPositionalVariableType(), deepCopyTimeTravel(op.getTimeTravel()));
     }
 
     @Override
@@ -469,7 +470,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void arg)
             throws AlgebricksException {
         return new LeftOuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
-                op.getPositionalVariable(), op.getPositionalVariableType(), op.getMissingValue(), op.getTimeTravel());
+                op.getPositionalVariable(), op.getPositionalVariableType(), op.getMissingValue(),
+                deepCopyTimeTravel(op.getTimeTravel()));
     }
 
     @Override
@@ -506,5 +508,10 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             newNestedPlans.add(OperatorManipulationUtil.deepCopy(nestedPlan, newWinOp));
         }
         return newWinOp;
+    }
+
+    private TimeTravel deepCopyTimeTravel(TimeTravel timeTravel) throws AlgebricksException {
+        return timeTravel == null ? null
+                : new TimeTravel(deepCopyExpressionRef(timeTravel.getValueExpressionRef()), timeTravel.getType());
     }
 }

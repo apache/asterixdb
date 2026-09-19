@@ -66,6 +66,7 @@ import org.apache.asterix.lang.sqlpp.expression.ChangeExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.struct.TimeTravelSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -90,6 +91,9 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
         if (visit(fromTerm.getLeftExpression(), arg)) {
             return true;
         }
+        if (visitTimeTravel(fromTerm.getTimeTravel(), arg)) {
+            return true;
+        }
         if (fromTerm.hasCorrelateClauses()) {
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
                 if (correlateClause.accept(this, arg)) {
@@ -102,7 +106,8 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
 
     @Override
     public Boolean visit(JoinClause joinClause, T arg) throws CompilationException {
-        return visit(joinClause.getRightExpression(), arg) || visit(joinClause.getConditionExpression(), arg);
+        return visit(joinClause.getRightExpression(), arg) || visitTimeTravel(joinClause.getTimeTravel(), arg)
+                || visit(joinClause.getConditionExpression(), arg);
     }
 
     @Override
@@ -357,5 +362,9 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
             return true;
         }
         return cc.hasWithOptions() && visit(cc.getWithOptions(), arg);
+    }
+
+    protected Boolean visitTimeTravel(TimeTravelSpec timeTravel, T arg) throws CompilationException {
+        return timeTravel != null && visit(timeTravel.getValueExpression(), arg);
     }
 }

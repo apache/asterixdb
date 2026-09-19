@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// GROUP BY above a snapshotted JOIN: the group-by sugar rewrite clones the FROM clause, so the
+// JOIN's snapshot has to survive that clone. The left side reads latest (ids 1-1000 less the
+// deleted ids 10/20/30) and the right side snapshot 1 (ids 1-800), so 797 ids match: 397 at or
+// below 400 (400 less the deleted 10/20/30) and 400 above it. Had the clone dropped the snapshot,
+// the right side would read latest too and the false group would be 600 instead of 400
+SELECT lo, count(*) AS c
+FROM usersNoSnapshot AS a
+JOIN usersNoSnapshot AS b AT snapshot %SNAPSHOT_1_SNAPSHOT_ID% ON a.id = b.id
+GROUP BY a.id <= 400 AS lo
+ORDER BY lo;
