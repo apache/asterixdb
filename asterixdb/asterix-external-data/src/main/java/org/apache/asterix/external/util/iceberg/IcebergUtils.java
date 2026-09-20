@@ -264,6 +264,7 @@ public class IcebergUtils {
         // if either pushdown flag is provided, it must be a boolean
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES);
 
         // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);

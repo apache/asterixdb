@@ -30,6 +30,7 @@ import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
+import org.apache.iceberg.deletes.PositionDeleteIndex;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.iceberg.io.CloseableIterable;
@@ -87,14 +88,26 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
     private final boolean caseSensitive;
     private final VariantProjectionPlan plan;
 
+    /**
+     * Whether position deletes will be applied to this read. Fixed at open time because it decides whether the
+     * fail-safe row-index check in {@link #init()} runs; the bitmap itself arrives later via
+     * {@link #withDeletedPositions}, so a caller can decline on {@link #canPrune()} before paying to load it.
+     */
+    private final boolean applyPositionDeletes;
+    /** Positions deleted in THIS data file; set only when {@link #applyPositionDeletes}, and only before iteration. */
+    private PositionDeleteIndex deletedPositions;
+
     private ParquetFileReader reader;
     private MessageType clippedProjection;
     private boolean[] shouldSkip;
+    /** Per row group, its file-absolute first row index; only populated when {@link #applyPositionDeletes}. */
+    private long[] rowGroupFirstRow;
     private long totalValues;
     private boolean pruned;
 
     private VariantProjectedParquetReader(org.apache.iceberg.io.InputFile input, Schema expectedSchema,
-            Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan) {
+            Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan,
+            boolean applyPositionDeletes) {
         this.input = input;
         this.expectedSchema = expectedSchema;
         this.filter = filter;
@@ -102,6 +115,7 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
         this.splitLength = splitLength;
         this.caseSensitive = caseSensitive;
         this.plan = plan;
+        this.applyPositionDeletes = applyPositionDeletes;
     }
 
     /**
@@ -113,8 +127,33 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
     public static VariantProjectedParquetReader open(org.apache.iceberg.io.InputFile input, Schema expectedSchema,
             Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan)
             throws IOException {
+        return open(input, expectedSchema, filter, splitStart, splitLength, caseSensitive, plan, false);
+    }
+
+    /**
+     * Opens for a read that will apply position deletes, without yet supplying them.
+     * <p>
+     * Two phases on purpose. Loading a deletion vector or merging position-delete files costs real IO, and this read
+     * is declined whenever the clip is a no-op for the file or a row group lacks its first-row index. Callers should
+     * check {@link #canPrune()} first and only then load positions and hand them over with
+     * {@link #withDeletedPositions}; declining after the load would pay for the bitmap twice, since the standard
+     * delete path loads its own.
+     * <p>
+     * Position deletes are applied here rather than through {@code DeleteFilter.filter(..)} because that route needs
+     * the synthetic {@code _pos} column materialized into every row, which the pruned physical projection cannot
+     * express. Skipping against the bitmap reads and decodes nothing extra.
+     *
+     * @param applyPositionDeletes {@code true} when the task carries position deletes or a deletion vector, so the
+     *            fail-safe row-index check runs and {@link #withDeletedPositions} becomes mandatory before iterating
+     * @throws IOException if the file cannot be opened or its footer read
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Two-phase open so the caller can decline on canPrune() before loading the deletion bitmap; "
+            + "positions arrive via withDeletedPositions and are mandatory before iteration")
+    public static VariantProjectedParquetReader open(org.apache.iceberg.io.InputFile input, Schema expectedSchema,
+            Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan,
+            boolean applyPositionDeletes) throws IOException {
         VariantProjectedParquetReader created = new VariantProjectedParquetReader(input, expectedSchema, filter,
-                splitStart, splitLength, caseSensitive, plan);
+                splitStart, splitLength, caseSensitive, plan, applyPositionDeletes);
         try {
             created.init();
         } catch (Exception e) {
@@ -122,6 +161,34 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
             throw e instanceof IOException ? (IOException) e : new IOException(e);
         }
         return created;
+    }
+
+    /**
+     * Convenience for callers that already hold the bitmap: opens with position deletes enabled and attaches them.
+     * Equivalent to {@code open(.., true).withDeletedPositions(deletedPositions)}; {@code null} means no position
+     * deletes at all.
+     */
+    public static VariantProjectedParquetReader open(org.apache.iceberg.io.InputFile input, Schema expectedSchema,
+            Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan,
+            PositionDeleteIndex deletedPositions) throws IOException {
+        VariantProjectedParquetReader reader = open(input, expectedSchema, filter, splitStart, splitLength,
+                caseSensitive, plan, deletedPositions != null);
+        return deletedPositions != null ? reader.withDeletedPositions(deletedPositions) : reader;
+    }
+
+    /**
+     * Supplies the positions to skip. Required exactly when the reader was opened with position deletes enabled, and
+     * must precede {@link #iterator()}.
+     */
+    public VariantProjectedParquetReader withDeletedPositions(PositionDeleteIndex positions) {
+        if (!applyPositionDeletes) {
+            throw new IllegalStateException("reader was not opened for position deletes");
+        }
+        if (positions == null) {
+            throw new IllegalArgumentException("positions");
+        }
+        this.deletedPositions = positions;
+        return this;
     }
 
     /**
@@ -188,14 +255,36 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
             }
         }
 
+        if (applyPositionDeletes) {
+            // Fail-safe: establish every row group's file-absolute first row index NOW, before a single row is
+            // produced. Parquet records it per row group (a prefix sum taken over the UNFILTERED footer, so it stays
+            // correct when a split range drops earlier row groups); -1 means the file does not carry it, and a
+            // position delete cannot then be applied safely. Declining here degrades to the standard delete-aware
+            // path; discovering it mid-iteration could not, because rows would already have been emitted.
+            rowGroupFirstRow = new long[rowGroups.size()];
+            for (int i = 0; i < rowGroups.size(); i++) {
+                long firstRow = rowGroups.get(i).getRowIndexOffset();
+                if (firstRow < 0 && !shouldSkip[i]) {
+                    pruned = false;
+                    return;
+                }
+                rowGroupFirstRow[i] = firstRow;
+            }
+        }
+
         // The narrowed physical schema: only these column chunks are fetched.
         reader.setRequestedSchema(clippedProjection);
     }
 
     @Override
     public CloseableIterator<Record> iterator() {
+        if (applyPositionDeletes && deletedPositions == null) {
+            // Refusing here is what keeps the two-phase open safe: without it, a caller that forgot the bitmap would
+            // silently return every deleted row.
+            throw new IllegalStateException("opened for position deletes but withDeletedPositions(..) was not called");
+        }
         ParquetValueReader<Record> model = GenericParquetReaders.buildReader(expectedSchema, clippedProjection);
-        return new RecordIterator(reader, model, shouldSkip, totalValues);
+        return new RecordIterator(reader, model, shouldSkip, totalValues, deletedPositions, rowGroupFirstRow);
     }
 
     @Override
@@ -214,28 +303,56 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
         }
     }
 
-    /** Mirrors Iceberg's {@code ParquetReader.FileIterator}. */
+    /**
+     * Mirrors Iceberg's {@code ParquetReader.FileIterator}, plus position-delete skipping.
+     * <p>
+     * Without deletes this is a one-to-one loop and {@code valuesRead < totalValues} answers {@link #hasNext()}
+     * exactly. Position deletes break that invariant — rows read and rows emitted diverge — so the iterator carries a
+     * one-record look-ahead. A deleted row is still <em>read</em> from the page source and discarded, because the
+     * column readers are a stream: skipping the call would desynchronize every subsequent value. The saving is in the
+     * pruned column chunks, which were never fetched at all, not in skipping the decode of a deleted row.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added position-delete skipping against a deletion bitmap keyed by each row group's file-absolute "
+            + "first row index, and converted hasNext() to a look-ahead since dropped rows make rows-read and "
+            + "rows-emitted diverge")
     private static final class RecordIterator implements CloseableIterator<Record> {
         private final ParquetFileReader reader;
         private final ParquetValueReader<Record> model;
         private final boolean[] shouldSkip;
         private final long totalValues;
+        private final PositionDeleteIndex deletedPositions;
+        private final long[] rowGroupFirstRow;
 
         private int nextRowGroup = 0;
         private long nextRowGroupStart = 0;
         private long valuesRead = 0;
 
+        /** File-absolute position of the next row to be read, tracked only when position deletes are being applied. */
+        private long currentRowGroupFirstRow = -1;
+        private long rowsReadInCurrentRowGroup = 0;
+
+        private Record lookAhead;
+        private boolean lookAheadReady;
+
         private RecordIterator(ParquetFileReader reader, ParquetValueReader<Record> model, boolean[] shouldSkip,
-                long totalValues) {
+                long totalValues, PositionDeleteIndex deletedPositions, long[] rowGroupFirstRow) {
             this.reader = reader;
             this.model = model;
             this.shouldSkip = shouldSkip;
             this.totalValues = totalValues;
+            this.deletedPositions = deletedPositions;
+            this.rowGroupFirstRow = rowGroupFirstRow;
         }
 
         @Override
         public boolean hasNext() {
-            return valuesRead < totalValues;
+            if (deletedPositions == null) {
+                return valuesRead < totalValues;
+            }
+            if (!lookAheadReady) {
+                fillLookAhead();
+            }
+            return lookAheadReady;
         }
 
         @Override
@@ -243,12 +360,39 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
+            if (deletedPositions != null) {
+                Record value = lookAhead;
+                lookAhead = null;
+                lookAheadReady = false;
+                return value;
+            }
+            return readNextRow();
+        }
+
+        /** Reads forward, discarding deleted rows, until a live row is found or the split is exhausted. */
+        private void fillLookAhead() {
+            while (valuesRead < totalValues) {
+                Record value = readNextRow();
+                // readNextRow() has already counted the row it returned, and reset the counter if it crossed into a
+                // new row group, so the row just read is at offset (count - 1) within the current row group.
+                long position = currentRowGroupFirstRow + rowsReadInCurrentRowGroup - 1;
+                if (!deletedPositions.isDeleted(position)) {
+                    lookAhead = value;
+                    lookAheadReady = true;
+                    return;
+                }
+            }
+        }
+
+        private Record readNextRow() {
             if (valuesRead >= nextRowGroupStart) {
                 advance();
+                rowsReadInCurrentRowGroup = 0;
             }
             // Containers are never reused here (Iceberg's reuseContainers is off on this read path).
             Record value = model.read(null);
             valuesRead += 1;
+            rowsReadInCurrentRowGroup += 1;
             return value;
         }
 
@@ -260,6 +404,9 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
                 }
                 PageReadStore pages = reader.readNextRowGroup();
                 nextRowGroupStart += pages.getRowCount();
+                if (rowGroupFirstRow != null) {
+                    currentRowGroupFirstRow = rowGroupFirstRow[nextRowGroup];
+                }
                 nextRowGroup += 1;
                 model.setPageSource(pages);
             } catch (IOException e) {

@@ -477,6 +477,15 @@ public class ExternalDataConstants {
         public static final String SPLIT_SCAN_TASKS = "splitScanTasks";
         public static final boolean DEFAULT_SPLIT_SCAN_TASKS = true;
 
+        // A third flag, for the same reason the second one exists: this is the only variant-pushdown path that can
+        // produce a WRONG ANSWER rather than a slow one. With it off, a delete-bearing file takes the standard
+        // delete-aware read exactly as before, and pruning survives on every file that carries no deletes — which is
+        // why this is not folded into VARIANT_PROJECTION_PUSHDOWN. Default on, as a break-glass off-switch, since
+        // releases rather than patches are shipped.
+        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant projection pushdown on scan tasks that carry delete files; separate from VARIANT_PROJECTION_PUSHDOWN because this is the only one of the three whose failure mode is a silent wrong answer (deleted rows returned, or live rows dropped) rather than extra IO")
+        public static final String VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = "variantProjectionPushdownWithDeletes";
+        public static final boolean DEFAULT_VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = true;
+
         static {
             if (DEFAULT_VARIANT_DEPTH < 1 || DEFAULT_VARIANT_DEPTH > MAX_VARIANT_DEPTH) {
                 throw new IllegalStateException(

@@ -53,6 +53,7 @@ import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.data.GenericDeleteFilter;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
+import org.apache.iceberg.deletes.PositionDeleteIndex;
 import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.io.FileIO;
 import org.apache.iceberg.io.InputFile;
@@ -85,6 +86,9 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     // clip each file's shredded typed_value. Empty when the flag is off or nothing is narrowable, in which case the
     // reader behaves exactly as before.
     private final VariantProjectionPlan variantProjectionPlan;
+    // Whether a task carrying deletes may still take the pruned read. Separate from the plan's own flag because this
+    // is the only one of the variant pushdowns whose failure mode is a wrong answer rather than extra IO.
+    private final boolean variantProjectionPushdownWithDeletes;
     private final IWarningCollector warningCollector;
 
     @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Read the variantProjectionPushdown flag (default on) and build the per-scan VariantProjectionPlan from the projected Iceberg schema + requested-fields type; any failure falls back to an empty plan so the optimization can never break the read")
@@ -102,6 +106,9 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             throw HyracksDataException.create(throwable);
         }
         this.variantProjectionPlan = buildVariantProjectionPlan();
+        this.variantProjectionPushdownWithDeletes = Boolean.parseBoolean(configuration.getOrDefault(
+                ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES, Boolean.toString(
+                        ExternalDataConstants.IcebergOptions.DEFAULT_VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES)));
     }
 
     // Best-effort: any problem decoding the requested-fields type just disables pushdown for this scan (empty plan),
@@ -256,8 +263,21 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         FileScanTask task = fileScanTasks.get(nextTaskIndex++);
         InputFile inFile = tableFileIo.newInputFile(task.file().location());
 
-        if (shouldTryPrunedVariantRead(variantProjectionPlan, task.deletes()) && tryPrunedVariantRead(inFile, task)) {
-            return;
+        CloseableIterable<Record> prunedRead = null;
+        try {
+            prunedRead = openPrunedReadIfEligible(tableFileIo, inFile, task, schemaAtSnapshot, projectedSchema,
+                    variantProjectionPlan, variantProjectionPushdownWithDeletes);
+            if (prunedRead != null) {
+                iterable = prunedRead;
+                recordsIterator = prunedRead.iterator();
+                return;
+            }
+        } catch (Exception e) {
+            // Pruning is only an optimization: anything at all going wrong degrades to the proven path below.
+            CleanupUtils.closeSilently(prunedRead, null);
+            iterable = null;
+            recordsIterator = null;
+            warnProjectionNotPushed(e);
         }
 
         iterable = openStandardRead(tableFileIo, inFile, task, schemaAtSnapshot, projectedSchema);
@@ -298,51 +318,118 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     }
 
     /**
-     * Whether this task may take the variant-pruned read path. Two conditions, and the second is the interesting one.
+     * Whether this task may take the variant-pruned read path.
      * <p>
-     * Variant sub-path projection pushdown is skipped whenever a task carries deletes, because that read is
-     * materialized against {@code deleteFilter.requiredSchema()} — a superset of the projection, which for position
-     * deletes also includes the synthetic {@code _pos} column that the schema clipper cannot express. Skipping keeps
-     * the delete path exactly as it was.
+     * A task with no deletes qualifies whenever the plan narrows something. A task that <em>does</em> carry deletes
+     * qualifies only while {@code pushdownWithDeletes} is on, which is the
+     * {@code variantProjectionPushdownWithDeletes} flag: turning it off restores the previous behaviour, where any
+     * delete file sent the whole task down the standard delete-aware read, while leaving pruning untouched on every
+     * delete-free file.
      * <p>
-     * Deletes are per-task, not per-table, so the two paths genuinely interleave within one scan: deletion vectors are
-     * file-scoped, so a table with DVs on some files yields pruned reads for the rest. Equality deletes attach to every
-     * file of a partition and so disable pruning across the whole scan. Extracted from the read path so that routing is
-     * assertable on its own — nothing downstream reveals which branch a file took.
+     * Deletes are per-task, not per-table, so the paths genuinely interleave within one scan: deletion vectors are
+     * file-scoped, so a table with vectors on some files still has delete-free files alongside them. Equality deletes
+     * attach to every file of a partition, so with the flag off they disable pruning across the whole scan.
+     * <p>
+     * Answering {@code true} is permission to <em>try</em>, not a guarantee: the per-file clip may turn out to be a
+     * no-op, and a position-delete file whose row groups do not record their first row index is declined at open time.
+     * Extracted from the read path so routing is assertable on its own — nothing downstream reveals which branch a
+     * file took.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted the pruned-vs-delete-path routing decision so a test can assert that a DV-bearing task falls back while DV-free tasks in the same scan are pruned")
-    static boolean shouldTryPrunedVariantRead(VariantProjectionPlan plan, List<DeleteFile> deletes) {
-        return !plan.isEmpty() && (deletes == null || deletes.isEmpty());
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Routing decision now admits delete-bearing tasks when variantProjectionPushdownWithDeletes is on, and still declines them when it is off")
+    static boolean shouldTryPrunedVariantRead(VariantProjectionPlan plan, List<DeleteFile> deletes,
+            boolean pushdownWithDeletes) {
+        if (plan.isEmpty()) {
+            return false;
+        }
+        return deletes == null || deletes.isEmpty() || pushdownWithDeletes;
     }
 
     /**
-     * Attempts a read with the file's unreferenced shredded variant sub-columns pruned away.
-     *
-     * @return {@code true} if the pruned read was installed; {@code false} if the caller must use the standard read
-     *         path — either because clipping could not narrow this file (serialized column, the requested paths are
-     *         residual-only, array/scalar shredding, ...) or because anything at all went wrong. Pruning is purely an
-     *         optimization, so every failure degrades to the proven path instead of failing the query.
+     * The one routing decision for a task: the variant-pruned read when — and only when — it is allowed and pays.
+     * <p>
+     * Returns the pruned read to install, or {@code null} when the task must take the standard read: the plan narrows
+     * nothing, the task carries deletes while {@code variantProjectionPushdownWithDeletes} is off, or the per-file
+     * clip turns out to be a no-op. With deletes present and allowed, the read is
+     * {@link #openPrunedDeleteAwareRead the delete-aware composition}; otherwise it is the plain pruned reader.
+     * <p>
+     * Package-private and static, like {@link #shouldTryPrunedVariantRead} and {@link #openPrunedDeleteAwareRead},
+     * because this is the decision the flag is supposed to control, and the test that proves the flag works has to
+     * drive <em>this</em> method — flag on must yield the pruned read, flag off must yield {@code null} and therefore
+     * the full-width standard read — rather than a re-assembled copy of it. Every decline happens before a row is
+     * produced; the caller's fallback is always the proven path with nothing emitted.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Installs the variant-pruned read when the per-file clip actually narrows the schema, and falls back to Iceberg's standard read path on a no-op clip or any failure")
-    private boolean tryPrunedVariantRead(InputFile inFile, FileScanTask task) {
-        VariantProjectedParquetReader prunedReader = null;
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Folded the pruned/pruned-with-deletes routing into one testable entry point so the "
+            + "variantProjectionPushdownWithDeletes flag can be proven end to end: off must restore the standard read")
+    static CloseableIterable<Record> openPrunedReadIfEligible(FileIO io, InputFile inFile, FileScanTask task,
+            Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan, boolean pushdownWithDeletes)
+            throws IOException {
+        if (!shouldTryPrunedVariantRead(plan, task.deletes(), pushdownWithDeletes)) {
+            return null;
+        }
+        boolean hasDeletes = task.deletes() != null && !task.deletes().isEmpty();
+        if (hasDeletes) {
+            return openPrunedDeleteAwareRead(io, inFile, task, tableSchema, projectedSchema, plan);
+        }
+        VariantProjectedParquetReader prunedReader = VariantProjectedParquetReader.open(inFile, projectedSchema,
+                task.residual(), task.start(), task.length(), true, plan);
+        if (!prunedReader.canPrune()) {
+            // Nothing to gain on this file; prefer the standard path over the replicated read logic.
+            prunedReader.close();
+            return null;
+        }
+        return prunedReader;
+    }
+
+    /**
+     * Builds the pruned, delete-aware read for one task, or returns {@code null} when this file must take the standard
+     * delete path.
+     * <p>
+     * Package-private and static for the same reason {@link #shouldTryPrunedVariantRead} is: it is the composition
+     * itself, and a test that reassembled these calls by hand would be asserting its own copy rather than the shipped
+     * one. Given a task planned by Iceberg, a test can drive exactly what the reader drives.
+     * <p>
+     * Returning {@code null} rather than throwing keeps the fail-safe honest: every decline is made before a row is
+     * produced, so the caller can still fall back to the proven path with nothing emitted.
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted the pruned delete-aware composition so a test can drive the shipped code from a real "
+            + "Iceberg scan task rather than reassembling the same calls itself")
+    static CloseableIterable<Record> openPrunedDeleteAwareRead(FileIO io, InputFile inFile, FileScanTask task,
+            Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan) throws IOException {
+        PositionlessGenericDeleteFilter deleteFilter =
+                new PositionlessGenericDeleteFilter(io, task, tableSchema, projectedSchema);
+
+        // Open first, load deletes second. Both the clip being a no-op and a missing row-index offset are decided at
+        // open time, and either sends this task to the standard delete path, which loads its own copy of every
+        // delete file. Loading here before knowing would pay that IO twice on exactly the files that gain nothing.
+        VariantProjectedParquetReader prunedReader =
+                VariantProjectedParquetReader.open(inFile, deleteFilter.requiredSchema(), task.residual(), task.start(),
+                        task.length(), true, plan, deleteFilter.hasPosDeletes());
+        if (!prunedReader.canPrune()) {
+            // Nothing to gain on this file, or row positions are unavailable for a position-delete file.
+            prunedReader.close();
+            return null;
+        }
+
         try {
-            prunedReader = VariantProjectedParquetReader.open(inFile, projectedSchema, task.residual(), task.start(),
-                    task.length(), true, variantProjectionPlan);
-            if (!prunedReader.canPrune()) {
-                // Nothing to gain on this file; prefer the standard path over the replicated read logic.
-                prunedReader.close();
-                return false;
+            if (deleteFilter.hasPosDeletes()) {
+                PositionDeleteIndex deletedPositions = deleteFilter.deletedRowPositions();
+                if (deletedPositions == null) {
+                    // Position deletes were reported but no bitmap came back: do not guess, take the proven path.
+                    prunedReader.close();
+                    return null;
+                }
+                prunedReader.withDeletedPositions(deletedPositions);
             }
-            iterable = prunedReader;
-            recordsIterator = prunedReader.iterator();
-            return true;
-        } catch (Exception e) {
+            // CloseableIterable.filter adds the reader as a closeable of the wrapper, so closing the returned iterable
+            // closes the reader underneath it. eqDeletedRowFilter() loads the equality set right here, after the
+            // decision to prune has been made — and before any row is produced.
+            return deleteFilter.hasEqDeletes()
+                    ? CloseableIterable.filter(prunedReader, deleteFilter.eqDeletedRowFilter()) : prunedReader;
+        } catch (RuntimeException | IOException e) {
+            // A delete file that cannot be loaded must not leak the open reader; the caller falls back and the
+            // standard path reports whatever is wrong with the delete file itself.
             CleanupUtils.closeSilently(prunedReader, null);
-            iterable = null;
-            recordsIterator = null;
-            warnProjectionNotPushed(e);
-            return false;
+            throw e;
         }
     }
 

@@ -56,36 +56,53 @@ public class IcebergVariantReadRoutingTest {
     private static final List<DeleteFile> ONE_DELETE = Collections.singletonList(null);
     private static final List<DeleteFile> NO_DELETES = Collections.emptyList();
 
+    /** {@code variantProjectionPushdownWithDeletes}, named for readability at the call sites below. */
+    private static final boolean WITH_DELETES_ON = true;
+    private static final boolean WITH_DELETES_OFF = false;
+
     @Test
     public void narrowedPlanAndNoDeletes_isPruned() throws Exception {
-        Assert.assertTrue(IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), NO_DELETES));
+        Assert.assertTrue(
+                IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), NO_DELETES, WITH_DELETES_ON));
+        Assert.assertTrue("a delete-free task never depends on the deletes flag",
+                IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), NO_DELETES, WITH_DELETES_OFF));
     }
 
     @Test
-    public void narrowedPlanButDeletesPresent_fallsBack() throws Exception {
-        Assert.assertFalse(IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), ONE_DELETE));
+    public void deletesPresentAndFlagOn_isPruned() throws Exception {
+        Assert.assertTrue(
+                IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), ONE_DELETE, WITH_DELETES_ON));
+    }
+
+    /** With the flag off, any delete file sends the whole task down the standard delete-aware read, as it used to. */
+    @Test
+    public void deletesPresentAndFlagOff_fallsBack() throws Exception {
+        Assert.assertFalse(
+                IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), ONE_DELETE, WITH_DELETES_OFF));
     }
 
     @Test
     public void emptyPlan_isNeverPruned() throws Exception {
-        Assert.assertFalse(
-                IcebergFileRecordReader.shouldTryPrunedVariantRead(VariantProjectionPlan.none(), NO_DELETES));
-        Assert.assertFalse(
-                IcebergFileRecordReader.shouldTryPrunedVariantRead(VariantProjectionPlan.none(), ONE_DELETE));
+        for (boolean withDeletes : new boolean[] { WITH_DELETES_ON, WITH_DELETES_OFF }) {
+            Assert.assertFalse(IcebergFileRecordReader.shouldTryPrunedVariantRead(VariantProjectionPlan.none(),
+                    NO_DELETES, withDeletes));
+            Assert.assertFalse(IcebergFileRecordReader.shouldTryPrunedVariantRead(VariantProjectionPlan.none(),
+                    ONE_DELETE, withDeletes));
+        }
     }
 
     /** A task may report null rather than an empty list; that is not "has deletes". */
     @Test
     public void nullDeletes_isTreatedAsNone() throws Exception {
-        Assert.assertTrue(IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), null));
+        Assert.assertTrue(IcebergFileRecordReader.shouldTryPrunedVariantRead(narrowingPlan(), null, WITH_DELETES_OFF));
     }
 
     /**
-     * The deletion-vector table's shape: DVs on two of its files, none on the rest. Exactly the DV-free files must be
-     * pruned, in the same scan — the interleaving that an equality-delete table can never produce.
+     * The deletion-vector table's shape: vectors on two of its files, none on the rest. With the deletes flag OFF this
+     * is the interleaving the scan produces — exactly the vector-bearing files fall back, and the rest still prune.
      */
     @Test
-    public void deletionVectorTable_prunesOnlyTheFilesWithoutVectors() throws Exception {
+    public void deletionVectorTable_withDeletesOff_prunesOnlyTheFilesWithoutVectors() throws Exception {
         VariantProjectionPlan plan = narrowingPlan();
         int fileCount = 21;
         List<Integer> filesWithVectors = Arrays.asList(3, 20);
@@ -94,21 +111,42 @@ public class IcebergVariantReadRoutingTest {
         List<Integer> fellBack = new ArrayList<>();
         for (int file = 0; file < fileCount; file++) {
             List<DeleteFile> deletes = filesWithVectors.contains(file) ? ONE_DELETE : NO_DELETES;
-            (IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, deletes) ? pruned : fellBack).add(file);
+            (IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, deletes, WITH_DELETES_OFF) ? pruned : fellBack)
+                    .add(file);
         }
 
-        Assert.assertEquals("only the DV-bearing files fall back", filesWithVectors, fellBack);
+        Assert.assertEquals("only the vector-bearing files fall back", filesWithVectors, fellBack);
         Assert.assertEquals("every other file is pruned", fileCount - filesWithVectors.size(), pruned.size());
         Assert.assertFalse("the mix must actually be a mix", pruned.isEmpty() || fellBack.isEmpty());
     }
 
-    /** An equality delete attaches to every file of the partition, so nothing in the scan is pruned. */
+    /** Same table with the flag ON: the vector-bearing files are no longer excluded, so the whole scan is offered. */
     @Test
-    public void equalityDeleteTable_prunesNothing() throws Exception {
+    public void deletionVectorTable_withDeletesOn_offersEveryFile() throws Exception {
+        VariantProjectionPlan plan = narrowingPlan();
+        int fileCount = 21;
+        List<Integer> filesWithVectors = Arrays.asList(3, 20);
+
+        for (int file = 0; file < fileCount; file++) {
+            List<DeleteFile> deletes = filesWithVectors.contains(file) ? ONE_DELETE : NO_DELETES;
+            Assert.assertTrue("file " + file + " must be offered to the pruned read",
+                    IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, deletes, WITH_DELETES_ON));
+        }
+    }
+
+    /**
+     * An equality delete attaches to every file of the partition, so with the flag off nothing in the scan is pruned —
+     * and with it on, everything is offered. This is the case the flag changes most, since there is no interleaving to
+     * soften it.
+     */
+    @Test
+    public void equalityDeleteTable_prunesNothingUntilTheFlagIsOn() throws Exception {
         VariantProjectionPlan plan = narrowingPlan();
         for (int file = 0; file < 20; file++) {
             Assert.assertFalse("every task carries the equality delete",
-                    IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, ONE_DELETE));
+                    IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, ONE_DELETE, WITH_DELETES_OFF));
+            Assert.assertTrue("with the flag on, the same task is offered",
+                    IcebergFileRecordReader.shouldTryPrunedVariantRead(plan, ONE_DELETE, WITH_DELETES_ON));
         }
     }
 
