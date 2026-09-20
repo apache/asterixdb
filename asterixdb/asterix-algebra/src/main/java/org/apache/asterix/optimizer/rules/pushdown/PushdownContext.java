@@ -181,9 +181,10 @@ public class PushdownContext {
     }
 
     private static Set<LogicalOperatorTag> getScopeOperators() {
+        // LIMIT: a filter pushed into the scan beneath it would change which rows the LIMIT is taken from
         return EnumSet.of(LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN, LogicalOperatorTag.GROUP,
                 LogicalOperatorTag.WINDOW, LogicalOperatorTag.RUNNINGAGGREGATE, LogicalOperatorTag.UNIONALL,
-                LogicalOperatorTag.INTERSECT);
+                LogicalOperatorTag.INTERSECT, LogicalOperatorTag.LIMIT);
     }
 
 }

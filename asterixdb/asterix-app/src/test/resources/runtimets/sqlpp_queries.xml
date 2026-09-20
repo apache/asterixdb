@@ -16040,6 +16040,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="limit">
+      <compilation-unit name="select-above-limit">
+        <output-dir compare="Text">select-above-limit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
       <compilation-unit name="query-ASTERIXDB-2420">
         <output-dir compare="Text">query-ASTERIXDB-2420</output-dir>
       </compilation-unit>

@@ -1,0 +1,32 @@
+distribute result [$$35] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    order (ASC, $$35) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+    -- STABLE_SORT [$$35(ASC)]  |UNPARTITIONED|
+      exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+        select (gt($$36, 2001)) project: [$$35] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+        -- STREAM_SELECT  |UNPARTITIONED|
+          limit 3 [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+          -- STREAM_LIMIT  |UNPARTITIONED|
+            exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+            -- SORT_MERGE_EXCHANGE [$$36(ASC) ]  |PARTITIONED|
+              limit 3 [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+              -- STREAM_LIMIT  |PARTITIONED|
+                exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (topK: 3) (ASC, $$36) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                  -- STABLE_SORT [topK: 3] [$$36(ASC)]  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      assign [$$36] <- [$$m.getField(1)] project: [$$35, $$36] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$35, $$m] <- test.Movies [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

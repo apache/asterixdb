@@ -77,6 +77,12 @@ public class PushSelectDownRule implements IAlgebraicRewriteRule {
                 || !OperatorPropertiesUtil.isMovable(op2)) {
             return false;
         }
+        // A LIMIT cuts rows by count and position. A filter above it keeps some of the rows the cut let
+        // through; the same filter below it changes which rows the cut is taken from. Those are different
+        // queries, so a SELECT is never moved through a LIMIT, however unrelated its variables.
+        if (op2.getOperatorTag() == LogicalOperatorTag.LIMIT) {
+            return false;
+        }
 
         SelectOperator sigma = (SelectOperator) sigmaRef.getValue();
         LinkedList<LogicalVariable> usedInSigma = new LinkedList<LogicalVariable>();
