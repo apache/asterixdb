@@ -48,6 +48,11 @@ public final class DoubleValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        doubleReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.DOUBLE;
     }

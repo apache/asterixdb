@@ -254,28 +254,44 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         }
     }
 
-    @Override
-    public void skip(int count) throws HyracksDataException {
-        if (primaryKey) {
-            /*
-             * Do not modify the position of primary key (PK) reader as it is maintained by the cursor.
-             * Previously, we used two separate primary key readers
-             * 1- One for the cursor
-             *   - Its position maintained by the cursor
-             * 2- And one for assembler (if the primary key is requested -- like in SELECT *)
-             *   - Its position maintained by calling this skip method
-             * In the previous approach, maintaining the positions of two primary key(s) readers were messy,
-             * as we needed to re-sync the assembler reader with the cursor PK reader. The reason is that
-             * anti-matters are handled at the cursor level. When anti-matters are processed, they are skipped --
-             * making the assembler PK reader out of sync.
-             *
-             * Additionally, maintaining two readers that are decoding the same values (twice) is unnecessary.
-             */
-            return;
+    protected final boolean isPrimaryKey() {
+        return primaryKey;
+    }
+
+    /**
+     * Consumes up to {@code limit} consecutive plain values (entries at the max level that are not null) without
+     * decoding them, and returns how many were consumed. Zero means the next entry is a delimiter, a null, a missing,
+     * or the end of the column, and the caller has to step over it with {@link #nextLevel()}.
+     * <p>
+     * Afterwards this reader looks exactly as if {@code next()} had been called that many times, except that the
+     * value reader has not moved: the caller owes it a bulk {@link AbstractValueReader#skip(int)} of the returned
+     * count. Counting values here and skipping them in one move is what makes positioning inside a mega leaf cheap
+     * for arrays of fixed-width values, where {@code next()} would decode every element on the way.
+     */
+    protected final int skipPlainValues(int limit) throws HyracksDataException {
+        if (allMissing || limit <= 0) {
+            return 0;
         }
-        for (int i = 0; i < count; i++) {
-            next();
+        int skipped;
+        try {
+            skipped = currentDefinitionLevels.skipWhile(maxLevel, limit);
+        } catch (Exception e) {
+            ColumnarValueException ex = new ColumnarValueException();
+            ObjectNode readerNode = ex.createNode(getClass().getSimpleName());
+            appendReaderInformation(readerNode);
+            LOGGER.error("error skipping plain values, collected info: {}", ex.getNode());
+            ex.addSuppressed(e);
+            throw ex;
         }
+        if (skipped > 0) {
+            valueIndex += skipped;
+            level = maxLevel;
+            nullLevel = false;
+            // the state that the same number of nextLevel() calls would have left behind
+            firstValueForCurrentTuple = skipped == 1 && currentTupleIndex != previousTupleIndex;
+            previousTupleIndex = currentTupleIndex;
+        }
+        return skipped;
     }
 
     protected final void writeLevel(IColumnValuesWriter writer) throws HyracksDataException {

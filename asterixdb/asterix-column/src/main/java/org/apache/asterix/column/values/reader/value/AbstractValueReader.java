@@ -33,6 +33,13 @@ public abstract class AbstractValueReader implements Comparable<AbstractValueRea
 
     public abstract ATypeTag getTypeTag();
 
+    /**
+     * Advances past {@code count} values without materializing them. Abstract on purpose: a reader over a fixed-width
+     * or block-decoded encoding can move positionally, one over a prefix-compressed encoding has to walk, and a new
+     * reader must say which it is rather than silently inherit a walk.
+     */
+    public abstract void skip(int count) throws HyracksDataException;
+
     public boolean getBoolean() {
         throw new UnsupportedOperationException(getClass().getName());
     }

@@ -32,6 +32,18 @@ public abstract class AbstractParquetValuesReader {
 
     public abstract void skip();
 
+    /**
+     * Skips {@code count} values. Abstract so that every decoder states whether its layout allows a positional move
+     * or forces a walk; {@link #skipOneByOne(int)} is the walk.
+     */
+    public abstract void skip(int count);
+
+    protected final void skipOneByOne(int count) {
+        for (int i = 0; i < count; i++) {
+            skip();
+        }
+    }
+
     public int readInteger() {
         throw new UnsupportedOperationException(getClass().getName());
     }

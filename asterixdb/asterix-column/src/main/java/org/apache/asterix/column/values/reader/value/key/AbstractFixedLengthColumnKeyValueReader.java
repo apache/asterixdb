@@ -70,6 +70,12 @@ public abstract class AbstractFixedLengthColumnKeyValueReader extends AbstractVa
         value.set(buffer.array(), offset, valueLength);
     }
 
+    @Override
+    public void skip(int count) {
+        throw new UnsupportedOperationException(
+                "the cursor positions a primary key reader; see PrimitiveColumnValuesReader#skip");
+    }
+
     protected abstract int getValueLength();
 
 }

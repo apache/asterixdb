@@ -94,6 +94,13 @@ public final class IntervalValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) throws HyracksDataException {
+        typeReader.skip(count);
+        startReader.skip(count);
+        endReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.INTERVAL;
     }

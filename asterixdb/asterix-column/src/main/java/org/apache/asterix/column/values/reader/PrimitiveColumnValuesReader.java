@@ -63,6 +63,44 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
     }
 
     @Override
+    public void skip(int count) throws HyracksDataException {
+        if (isPrimaryKey()) {
+            /*
+             * Do not modify the position of primary key (PK) reader as it is maintained by the cursor.
+             * Previously, we used two separate primary key readers
+             * 1- One for the cursor
+             *   - Its position maintained by the cursor
+             * 2- And one for assembler (if the primary key is requested -- like in SELECT *)
+             *   - Its position maintained by calling this skip method
+             * In the previous approach, maintaining the positions of two primary key(s) readers were messy,
+             * as we needed to re-sync the assembler reader with the cursor PK reader. The reason is that
+             * anti-matters are handled at the cursor level. When anti-matters are processed, they are skipped --
+             * making the assembler PK reader out of sync.
+             *
+             * Additionally, maintaining two readers that are decoding the same values (twice) is unnecessary.
+             */
+            return;
+        }
+        int values = 0;
+        while (count > 0) {
+            int plain = skipPlainValues(count);
+            values += plain;
+            count -= plain;
+            if (count > 0) {
+                if (valueIndex == valueCount) {
+                    break;
+                }
+                nextLevel();
+                if (level == maxLevel) {
+                    values++;
+                }
+                count--;
+            }
+        }
+        valueReader.skip(values);
+    }
+
+    @Override
     public boolean isRepeated() {
         return false;
     }

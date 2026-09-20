@@ -51,6 +51,11 @@ public class IntValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        intReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return typeTag;
     }

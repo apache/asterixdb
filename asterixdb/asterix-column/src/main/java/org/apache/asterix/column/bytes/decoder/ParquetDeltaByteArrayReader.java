@@ -65,6 +65,12 @@ public class ParquetDeltaByteArrayReader extends AbstractParquetValuesReader {
     }
 
     @Override
+    public void skip(int count) {
+        // every value is a prefix of its predecessor plus a suffix, so there is no way past a value but through it
+        skipOneByOne(count);
+    }
+
+    @Override
     public IValueReference readBytes() {
         int prefixLength = prefixLengthReader.readInteger();
         // This does not copy bytes

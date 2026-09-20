@@ -48,6 +48,11 @@ public final class FloatValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        floatReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.FLOAT;
     }

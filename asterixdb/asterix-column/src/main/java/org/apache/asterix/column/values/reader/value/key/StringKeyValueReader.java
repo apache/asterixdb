@@ -85,6 +85,12 @@ public final class StringKeyValueReader extends AbstractValueReader implements I
     }
 
     @Override
+    public void skip(int count) {
+        throw new UnsupportedOperationException(
+                "the cursor positions a primary key reader; see PrimitiveColumnValuesReader#skip");
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.STRING;
     }

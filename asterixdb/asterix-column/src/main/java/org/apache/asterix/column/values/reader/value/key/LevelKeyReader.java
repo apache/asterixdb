@@ -60,6 +60,11 @@ public final class LevelKeyReader extends AbstractValueReader implements IColumn
     }
 
     @Override
+    public void skip(int count) {
+        // NoOp, like nextValue()
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.MISSING;
     }

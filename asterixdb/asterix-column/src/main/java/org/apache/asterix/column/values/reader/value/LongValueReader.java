@@ -48,6 +48,11 @@ public final class LongValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        longReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.BIGINT;
     }

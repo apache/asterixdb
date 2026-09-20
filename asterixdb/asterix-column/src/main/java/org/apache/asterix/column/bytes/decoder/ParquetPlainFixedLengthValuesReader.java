@@ -59,6 +59,16 @@ public class ParquetPlainFixedLengthValuesReader extends AbstractParquetValuesRe
     }
 
     @Override
+    public void skip(int count) {
+        int bytes = count * valueLength;
+        try {
+            in.skipBytes(bytes);
+        } catch (IOException e) {
+            throw new ParquetDecodingException("could not skip " + bytes + " bytes", e);
+        }
+    }
+
+    @Override
     public long readLong() {
         try {
             return in.readLong();

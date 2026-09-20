@@ -50,6 +50,11 @@ public final class StringValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        stringReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.STRING;
     }

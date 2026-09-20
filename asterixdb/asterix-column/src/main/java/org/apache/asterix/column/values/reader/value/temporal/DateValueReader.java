@@ -50,6 +50,11 @@ public class DateValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        dateReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.DATE;
     }

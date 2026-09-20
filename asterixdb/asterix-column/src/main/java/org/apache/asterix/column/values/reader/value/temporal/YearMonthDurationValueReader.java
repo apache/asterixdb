@@ -50,6 +50,11 @@ public class YearMonthDurationValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        yearMonthDurationReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.YEARMONTHDURATION;
     }

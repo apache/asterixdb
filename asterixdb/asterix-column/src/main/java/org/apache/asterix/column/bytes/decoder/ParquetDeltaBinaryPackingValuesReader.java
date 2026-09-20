@@ -107,6 +107,19 @@ public class ParquetDeltaBinaryPackingValuesReader extends AbstractParquetValues
     public void skip() {
         checkRead();
         valuesRead++;
+        // without this the next read returns the value that was supposed to be skipped
+        valuesBufferedRead++;
+    }
+
+    @Override
+    public void skip(int count) {
+        while (count > 0) {
+            checkRead();
+            int n = Math.min(count, valuesBuffered - valuesBufferedRead);
+            valuesBufferedRead += n;
+            valuesRead += n;
+            count -= n;
+        }
     }
 
     @Override

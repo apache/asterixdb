@@ -50,6 +50,11 @@ public class TimeValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        timeReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.TIME;
     }

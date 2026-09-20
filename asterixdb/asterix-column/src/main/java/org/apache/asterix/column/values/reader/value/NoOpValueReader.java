@@ -41,6 +41,14 @@ public final class NoOpValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        // a null or missing column has entries but never values, so the column readers always arrive with zero
+        if (count > 0) {
+            throw new UnsupportedOperationException(getClass().getName());
+        }
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.MISSING;
     }

@@ -54,6 +54,11 @@ public final class UUIDValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        uuidReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.UUID;
     }

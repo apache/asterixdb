@@ -49,6 +49,11 @@ public class DayTimeDurationValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        dayTimeDurationValueReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.DATETIME;
     }

@@ -90,6 +90,72 @@ public class ParquetRunLengthBitPackingHybridDecoder {
         return result;
     }
 
+    /**
+     * Consumes consecutive entries equal to {@code value}, at most {@code limit} of them, and returns how many were
+     * consumed. The first entry that differs is left for {@link #readInt()}. A run-length run is consumed by
+     * adjusting its remaining count, so the cost of skipping an array of identical levels does not depend on the
+     * array's length; a bit-packed group is scanned in its decoded buffer.
+     * <p>
+     * The stream's last bit-packed group is padded with zeros that are indistinguishable from real entries, so the
+     * caller must bound {@code limit} by the number of entries it knows remain, as it already does for
+     * {@link #readInt()}.
+     */
+    public int skipWhile(int value, int limit) throws HyracksDataException {
+        int skipped = 0;
+        try {
+            while (skipped < limit) {
+                if (currentCount == 0) {
+                    if (in.available() <= 0) {
+                        // leave the exhausted stream to readInt(), which reports it the same way it always has
+                        break;
+                    }
+                    readNext();
+                }
+                if (mode == MODE.RLE) {
+                    if (currentValue != value) {
+                        break;
+                    }
+                    int n = Math.min(currentCount, limit - skipped);
+                    currentCount -= n;
+                    skipped += n;
+                } else {
+                    int start = currentBufferLength - currentCount;
+                    int end = start + Math.min(currentCount, limit - skipped);
+                    int i = start;
+                    while (i < end && currentBuffer[i] == value) {
+                        i++;
+                    }
+                    currentCount -= i - start;
+                    skipped += i - start;
+                    if (i < end) {
+                        break;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+        return skipped;
+    }
+
+    /**
+     * Skips {@code count} entries whatever their values, a run at a time.
+     */
+    public void skip(int count) throws HyracksDataException {
+        try {
+            while (count > 0) {
+                if (currentCount == 0) {
+                    readNext();
+                }
+                int n = Math.min(currentCount, count);
+                currentCount -= n;
+                count -= n;
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
     private void readNext() throws IOException {
         Preconditions.checkArgument(in.available() > 0, "Reading past RLE/BitPacking stream.");
         final int header = BytesUtils.readUnsignedVarInt(in);

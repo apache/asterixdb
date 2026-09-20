@@ -54,6 +54,11 @@ public final class BooleanValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) throws HyracksDataException {
+        booleanReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.BOOLEAN;
     }

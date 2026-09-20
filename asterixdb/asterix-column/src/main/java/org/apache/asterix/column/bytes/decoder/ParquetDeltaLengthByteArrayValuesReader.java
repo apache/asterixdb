@@ -55,6 +55,19 @@ public class ParquetDeltaLengthByteArrayValuesReader extends AbstractParquetValu
     }
 
     @Override
+    public void skip(int count) {
+        long bytes = 0;
+        for (int i = 0; i < count; i++) {
+            bytes += lengthReader.readInteger();
+        }
+        try {
+            in.skipFully(bytes);
+        } catch (IOException e) {
+            throw new ParquetDecodingException("Failed to skip " + bytes + " bytes");
+        }
+    }
+
+    @Override
     public IValueReference readBytes() {
         int length = lengthReader.readInteger();
         try {

@@ -69,6 +69,12 @@ public class DurationValueReader extends AbstractValueReader {
     }
 
     @Override
+    public void skip(int count) {
+        monthsReader.skip(count);
+        millisReader.skip(count);
+    }
+
+    @Override
     public ATypeTag getTypeTag() {
         return ATypeTag.DURATION;
     }
