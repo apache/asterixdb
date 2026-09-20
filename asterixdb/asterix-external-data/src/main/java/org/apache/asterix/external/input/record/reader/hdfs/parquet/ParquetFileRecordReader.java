@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
+import org.apache.asterix.external.input.filter.ParquetFilterExpression;
 import org.apache.asterix.external.input.record.ValueReferenceRecord;
 import org.apache.asterix.external.input.record.reader.hdfs.AbstractHDFSRecordReader;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -42,10 +43,12 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     private final IWarningCollector warningCollector;
 
     public ParquetFileRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, IExternalDataRuntimeContext context, UserGroupInformation ugi) {
+            JobConf conf, IExternalDataRuntimeContext context, UserGroupInformation ugi,
+            ParquetFilterExpression rowGroupFilter) {
         super(read, inputSplits, readSchedule, nodeName, new ValueReferenceRecord<>(), conf, ugi);
         this.warningCollector = context.getTaskContext().getWarningCollector();
         ((MapredParquetInputFormat) inputFormat).setValueEmbedder(context.getValueEmbedder());
+        ((MapredParquetInputFormat) inputFormat).setRowGroupFilter(rowGroupFilter);
     }
 
     @Override

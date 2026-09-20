@@ -1127,6 +1127,26 @@ public class ExternalDataUtils {
                 String resolved = resolveTimeZone(properties.get(ExternalDataConstants.KEY_TIMEZONE));
                 properties.put(ExternalDataConstants.KEY_TIMEZONE, resolved);
             }
+            validateBoolean(properties, ExternalDataConstants.ParquetOptions.ROW_GROUP_FILTER);
+            validateBoolean(properties, ExternalDataConstants.ParquetOptions.TIMESTAMP_AS_LONG);
+            validateBoolean(properties, ExternalDataConstants.ParquetOptions.DATE_AS_INT);
+            validateBoolean(properties, ExternalDataConstants.ParquetOptions.TIME_AS_INT);
+        }
+    }
+
+    /**
+     * Rejects anything but true or false at DDL time. Empty is rejected too, since {@code parseBoolean} would read
+     * it as a silent off.
+     */
+    private static void validateBoolean(Map<String, String> properties, String propertyName)
+            throws CompilationException {
+        String value = properties.get(propertyName);
+        if (value == null) {
+            return;
+        }
+        if (!ExternalDataConstants.TRUE.equalsIgnoreCase(value)
+                && !ExternalDataConstants.FALSE.equalsIgnoreCase(value)) {
+            throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, propertyName, value);
         }
     }
 

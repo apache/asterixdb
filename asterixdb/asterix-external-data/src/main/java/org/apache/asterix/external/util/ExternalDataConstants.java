@@ -508,6 +508,29 @@ public class ExternalDataConstants {
          */
         public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
         public static final String HADOOP_DECIMAL_TO_DOUBLE = ASTERIX_HADOOP_PREFIX + DECIMAL_TO_DOUBLE;
+        /**
+         * Read a temporal value as the number the column stores rather than as a temporal type: a timestamp as
+         * its {@link ATypeTag#BIGINT} epoch value in the column's own unit, a date as days since the epoch, a
+         * time as its unit since midnight. The reader otherwise narrows a timestamp to milliseconds, so these
+         * are how a microsecond or nanosecond column keeps the precision it holds.
+         * <p>
+         * A value read this way is a plain number, so the timezone option does not apply to it -- there is no
+         * zone in an epoch value to shift out of.
+         * Default: false
+         */
+        public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
+        public static final String HADOOP_TIMESTAMP_AS_LONG = ASTERIX_HADOOP_PREFIX + TIMESTAMP_AS_LONG;
+        public static final boolean DEFAULT_TIMESTAMP_AS_LONG = false;
+
+        /** @see #TIMESTAMP_AS_LONG */
+        public static final String DATE_AS_INT = "date-to-int";
+        public static final String HADOOP_DATE_AS_INT = ASTERIX_HADOOP_PREFIX + DATE_AS_INT;
+        public static final boolean DEFAULT_DATE_AS_INT = false;
+
+        /** @see #TIMESTAMP_AS_LONG */
+        public static final String TIME_AS_INT = "time-to-int";
+        public static final String HADOOP_TIME_AS_INT = ASTERIX_HADOOP_PREFIX + TIME_AS_INT;
+        public static final boolean DEFAULT_TIME_AS_INT = false;
 
         /**
          * Time Zone ID to convert UTC time and timestamp {@link ATypeTag#TIME} and {@link ATypeTag#DATETIME}
@@ -516,5 +539,15 @@ public class ExternalDataConstants {
          * then we will return the UTC time and issue a warning about that.
          */
         public static final String HADOOP_TIMEZONE = ASTERIX_HADOOP_PREFIX + KEY_TIMEZONE;
+
+        /**
+         * Push a query's predicate into the reader, so row groups whose statistics rule them out are skipped
+         * instead of decoded. It never changes an answer -- the engine evaluates the predicate itself either way
+         * -- so this exists to be turned off when a scan is slower with it, which a file whose statistics exclude
+         * nothing can be, since the predicate is then evaluated per row group for no benefit.
+         * Default: true
+         */
+        public static final String ROW_GROUP_FILTER = "rowGroupFilter";
+        public static final boolean DEFAULT_ROW_GROUP_FILTER = true;
     }
 }

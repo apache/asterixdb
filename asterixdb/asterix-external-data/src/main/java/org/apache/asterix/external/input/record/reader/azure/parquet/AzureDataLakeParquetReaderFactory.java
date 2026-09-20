@@ -32,7 +32,6 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
-import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
@@ -43,8 +42,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
-import org.apache.parquet.hadoop.ParquetInputFormat;
 
 import com.azure.storage.file.datalake.DataLakeServiceClient;
 import com.azure.storage.file.datalake.models.PathItem;
@@ -87,13 +84,6 @@ public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
         conf.set(ConfigurationKeys.FS_AZURE_ACCOUNT_IS_HNS_ENABLED, "true");
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
-        if (filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory) {
-            FilterPredicate parquetFilterPredicate =
-                    ((ParquetFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
-            if (parquetFilterPredicate != null) {
-                ParquetInputFormat.setFilterPredicate(conf, parquetFilterPredicate);
-            }
-        }
     }
 
     @Override

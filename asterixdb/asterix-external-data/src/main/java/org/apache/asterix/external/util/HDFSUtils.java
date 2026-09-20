@@ -462,6 +462,13 @@ public class HDFSUtils {
         //Rebase and parse decimal as double?
         conf.set(ParquetOptions.HADOOP_DECIMAL_TO_DOUBLE,
                 configuration.getOrDefault(ParquetOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
+        //Read temporal values as the numbers they store, keeping sub-millisecond precision
+        conf.set(ParquetOptions.HADOOP_TIMESTAMP_AS_LONG, configuration.getOrDefault(ParquetOptions.TIMESTAMP_AS_LONG,
+                String.valueOf(ParquetOptions.DEFAULT_TIMESTAMP_AS_LONG)));
+        conf.set(ParquetOptions.HADOOP_DATE_AS_INT, configuration.getOrDefault(ParquetOptions.DATE_AS_INT,
+                String.valueOf(ParquetOptions.DEFAULT_DATE_AS_INT)));
+        conf.set(ParquetOptions.HADOOP_TIME_AS_INT, configuration.getOrDefault(ParquetOptions.TIME_AS_INT,
+                String.valueOf(ParquetOptions.DEFAULT_TIME_AS_INT)));
         //Re-adjust the time zone for UTC-adjusted values
         conf.set(ParquetOptions.HADOOP_TIMEZONE, configuration.getOrDefault(ExternalDataConstants.KEY_TIMEZONE, ""));
 

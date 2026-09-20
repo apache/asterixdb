@@ -69,8 +69,10 @@ class TimestampConverter extends GenericPrimitiveConverter {
     @Override
     public void addLong(long value) {
         long convertedTime = TimeConverter.getConvertedTime(timeUnit, value);
-        // Plain parquet has no timestamp-to-long option, so every timestamp is emitted as a datetime.
-        if (TimestampZoneProjector.isShiftedOnRead(adjustedToUtc, false)) {
+        // asked of the context rather than hard-coded: with timestamp-to-long the column maps to BIGINT and this
+        // converter is never built, so the answer cannot differ today -- but a second copy of the rule that can
+        // disagree with the reader is exactly what isShiftedOnRead exists to prevent
+        if (TimestampZoneProjector.isShiftedOnRead(adjustedToUtc, context.isTimestampAsLong())) {
             convertedTime = context.applyTimeZone(convertedTime);
         }
         context.serializeDateTime(convertedTime, parent.getDataOutput());

@@ -44,6 +44,8 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
+import org.apache.asterix.external.input.filter.ParquetFilterExpression;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
@@ -358,7 +360,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
                 readerConf = confFactory.getConf();
             }
             return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf, context,
-                    ugi);
+                    ugi, rowGroupFilter());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -381,12 +383,23 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         return new ExternalStreamRuntimeDataContext(context, partition, valueEmbedder);
     }
 
+    /**
+     * The row-group filter is handed to the reader rather than written into the {@link JobConf}, because the conf
+     * the node reads from is a snapshot taken in {@link #configureHdfsConf}; anything put into the live conf after
+     * that point never leaves the coordinator.
+     */
+    private ParquetFilterExpression rowGroupFilter() {
+        return filterEvaluatorFactory instanceof ParquetFilterEvaluatorFactory
+                ? ((ParquetFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression() : null;
+    }
+
     private static IRecordReader<?> createRecordReader(Map<String, String> configuration, boolean[] read,
             InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf,
-            IExternalDataRuntimeContext context, UserGroupInformation ugi) {
+            IExternalDataRuntimeContext context, UserGroupInformation ugi, ParquetFilterExpression rowGroupFilter) {
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim()
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
-            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi);
+            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi,
+                    rowGroupFilter);
         } else if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim()
                 .equals(ExternalDataConstants.INPUT_FORMAT_AVRO)) {
             return new AvroFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi);

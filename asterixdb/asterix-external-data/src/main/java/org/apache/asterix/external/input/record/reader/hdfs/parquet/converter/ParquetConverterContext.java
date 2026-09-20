@@ -132,6 +132,9 @@ public class ParquetConverterContext extends ParserContext {
      * Temporal Configuration
      * ************************************************************************
      */
+    private final boolean timestampAsLong;
+    private final boolean dateAsInt;
+    private final boolean timeAsInt;
     private final String timeZoneId;
     private final TimestampZoneProjector timeZoneProjector;
 
@@ -156,12 +159,29 @@ public class ParquetConverterContext extends ParserContext {
         parseJson = configuration.getBoolean(ParquetOptions.HADOOP_PARSE_JSON_STRING, false);
         decimalToDouble = configuration.getBoolean(ParquetOptions.HADOOP_DECIMAL_TO_DOUBLE, false);
 
+        timestampAsLong = configuration.getBoolean(ParquetOptions.HADOOP_TIMESTAMP_AS_LONG,
+                ParquetOptions.DEFAULT_TIMESTAMP_AS_LONG);
+        dateAsInt = configuration.getBoolean(ParquetOptions.HADOOP_DATE_AS_INT, ParquetOptions.DEFAULT_DATE_AS_INT);
+        timeAsInt = configuration.getBoolean(ParquetOptions.HADOOP_TIME_AS_INT, ParquetOptions.DEFAULT_TIME_AS_INT);
+
         String configuredTimeZoneId = configuration.get(ParquetOptions.HADOOP_TIMEZONE);
         TimeZone timeZone = ExternalDataUtils.resolveTimeZoneOrWarn(configuredTimeZoneId, warnings::add);
         // kept verbatim rather than canonicalised: AsterixTypeToParquetTypeVisitor only asks whether it is
         // empty, to decide the "UTC-adjusted value read without a timezone" warning
         timeZoneId = configuredTimeZoneId == null ? "" : configuredTimeZoneId;
         timeZoneProjector = new TimestampZoneProjector(timeZone == null ? null : timeZone.toZoneId());
+    }
+
+    public boolean isTimestampAsLong() {
+        return timestampAsLong;
+    }
+
+    public boolean isDateAsInt() {
+        return dateAsInt;
+    }
+
+    public boolean isTimeAsInt() {
+        return timeAsInt;
     }
 
     public IExternalFilterValueEmbedder getValueEmbedder() {

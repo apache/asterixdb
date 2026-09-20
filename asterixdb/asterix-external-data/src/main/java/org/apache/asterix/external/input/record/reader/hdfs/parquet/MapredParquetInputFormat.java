@@ -25,6 +25,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.external.input.filter.ParquetFilterExpression;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.mapred.InputSplit;
@@ -50,11 +51,12 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
 
     private final ParquetInputFormat<ArrayBackedValueStorage> realInputFormat = new ParquetInputFormat<>();
     private IExternalFilterValueEmbedder valueEmbedder;
+    private ParquetFilterExpression rowGroupFilter;
 
     @Override
     public RecordReader<Void, VoidPointable> getRecordReader(InputSplit split, JobConf job, Reporter reporter)
             throws IOException {
-        return new ParquetRecordReaderWrapper(split, job, reporter, valueEmbedder);
+        return new ParquetRecordReaderWrapper(split, job, reporter, valueEmbedder, rowGroupFilter);
     }
 
     @Override
@@ -87,6 +89,10 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
 
     public void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
         this.valueEmbedder = valueEmbedder;
+    }
+
+    public void setRowGroupFilter(ParquetFilterExpression rowGroupFilter) {
+        this.rowGroupFilter = rowGroupFilter;
     }
 
     public static boolean isTaskSideMetaData(JobConf job) {

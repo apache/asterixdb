@@ -240,14 +240,18 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         if (logicalType == null || logicalType instanceof IntLogicalTypeAnnotation) {
             inferredTypeTag = ATypeTag.BIGINT;
         } else if (logicalType instanceof DateLogicalTypeAnnotation) {
-            inferredTypeTag = ATypeTag.DATE;
+            inferredTypeTag = context.isDateAsInt() ? ATypeTag.BIGINT : ATypeTag.DATE;
         } else if (logicalType instanceof TimeLogicalTypeAnnotation) {
-            inferredTypeTag = ATypeTag.TIME;
-        } else if (logicalType instanceof TimestampLogicalTypeAnnotation
-                && checkDatetime(type, context, sourceLocation)) {
-            TimestampLogicalTypeAnnotation tsType = (TimestampLogicalTypeAnnotation) logicalType;
-            warnIfUTCAdjustedAndZoneIdIsNotSet(context, sourceLocation, tsType.isAdjustedToUTC());
-            inferredTypeTag = ATypeTag.DATETIME;
+            inferredTypeTag = context.isTimeAsInt() ? ATypeTag.BIGINT : ATypeTag.TIME;
+        } else if (logicalType instanceof TimestampLogicalTypeAnnotation) {
+            if (context.isTimestampAsLong()) {
+                // the stored epoch value is returned as it is, so there is no zone to warn about
+                inferredTypeTag = ATypeTag.BIGINT;
+            } else if (checkDatetime(type, context, sourceLocation)) {
+                TimestampLogicalTypeAnnotation tsType = (TimestampLogicalTypeAnnotation) logicalType;
+                warnIfUTCAdjustedAndZoneIdIsNotSet(context, sourceLocation, tsType.isAdjustedToUTC());
+                inferredTypeTag = ATypeTag.DATETIME;
+            }
         } else if (logicalType instanceof DecimalLogicalTypeAnnotation) {
             ensureDecimalToDoubleEnabled(type, context, sourceLocation);
             inferredTypeTag = ATypeTag.DOUBLE;

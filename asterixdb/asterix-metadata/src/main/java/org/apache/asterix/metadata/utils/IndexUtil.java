@@ -47,6 +47,7 @@ import org.apache.asterix.external.input.filter.NoOpDeltaTableFilterEvaluatorFac
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.NoOpIcebergTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.ParquetFilterEvaluatorFactory;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -413,9 +414,13 @@ public class IndexUtil {
                 ExternalFilterBuilder externalFilterBuilder = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
                 externalFilterEvaluatorFactory = externalFilterBuilder.build();
             }
+            String rowGroupFilter = properties.get(ExternalDataConstants.ParquetOptions.ROW_GROUP_FILTER);
+            if (rowGroupFilter != null && !Boolean.parseBoolean(rowGroupFilter)) {
+                return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory, null);
+            }
             ParquetFilterBuilder builder = new ParquetFilterBuilder(
                     (ParquetExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
-            return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory, builder.buildFilterPredicate());
+            return new ParquetFilterEvaluatorFactory(externalFilterEvaluatorFactory, builder.buildFilterExpression());
         }
     }
 

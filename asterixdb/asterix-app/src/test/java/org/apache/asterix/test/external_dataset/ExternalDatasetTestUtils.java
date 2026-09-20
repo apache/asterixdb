@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.test.external_dataset.avro.AvroFileConverterUtil;
 import org.apache.asterix.test.external_dataset.deltalake.DeltaAllTypeGenerator;
@@ -49,6 +50,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.parquet.example.data.Group;
+import org.apache.parquet.example.data.simple.SimpleGroupFactory;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.example.ExampleParquetWriter;
+import org.apache.parquet.hadoop.example.GroupWriteSupport;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Types;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -76,6 +88,20 @@ public class ExternalDatasetTestUtils {
     public static final String MIXED_DEFINITION = "mixed-data/reviews/";
     public static final String PARQUET_DEFINITION = "parquet-data/reviews/";
     public static final String PARQUET_NULL_TEST_DIRECTORY = "parquet-data/null-test/";
+    public static final String PARQUET_ROW_GROUPS_DIRECTORY = "parquet-data/row-groups/";
+    public static final String PARQUET_TEMPORAL_TYPES_DIRECTORY = "parquet-data/temporal-types/";
+    /** Rows in the many-row-group fixture; the suite's expected counts are written against it. */
+    public static final int ROW_GROUPS_ROW_COUNT = 5000;
+    /** Small enough that the rows above land in many row groups rather than one. */
+    private static final int ROW_GROUPS_ROW_GROUP_BYTES = 1024;
+    /** Every row's timestamp carries this sub-millisecond remainder, which is what the read path truncates away. */
+    private static final long ROW_GROUPS_SUBMILLI_MICROS = 456L;
+
+    private static final int TEMPORAL_TYPES_ROW_COUNT = 3;
+
+    private static final int TEMPORAL_TYPES_EPOCH_DAY = 19000;
+
+    private static final int TEMPORAL_TYPES_MILLIS_OF_DAY = 3600000;
     public static final String AVRO_DEFINITION = "avro-data/reviews/";
     public static final String ILLEGAL_CHARACTER_DEFINITION = "illegal-character-data/";
     public static final String ILLEGAL_CHARACTER_SCENARIOS_DEFINITION = "illegal-character-scenarios-data/";
@@ -507,6 +533,9 @@ public class ExternalDatasetTestUtils {
         loadData(PARQUET_BASEDIR, "", "repeated_struct.parquet", PARQUET_NULL_TEST_DIRECTORY, definitionSegment, false,
                 false);
 
+        loadRowGroupsFile();
+        loadTemporalTypesFile();
+
         Collection<File> files =
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), PARQUET_FILTER);
         for (File file : files) {
@@ -591,6 +620,92 @@ public class ExternalDatasetTestUtils {
             size++;
         }
         LOGGER.info("Loaded {} files from {}", size, dataBasePath + File.separator + rootPath);
+    }
+
+    /**
+     * Writes and uploads one Parquet file carrying a date, a time and a UTC-adjusted microsecond timestamp, so the
+     * date-to-int, time-to-int and timestamp-to-long options can be observed against the same rows. Every {@code ts}
+     * carries a sub-millisecond remainder, which is exactly what the reader discards when the value is read as a
+     * datetime and keeps when it is read as its stored number.
+     */
+    private static void loadTemporalTypesFile() {
+        try {
+            MessageType schema = Types.buildMessage().required(PrimitiveType.PrimitiveTypeName.INT64).named("id")
+                    .required(PrimitiveType.PrimitiveTypeName.INT32).as(LogicalTypeAnnotation.dateType()).named("d")
+                    .required(PrimitiveType.PrimitiveTypeName.INT32)
+                    .as(LogicalTypeAnnotation.timeType(false, LogicalTypeAnnotation.TimeUnit.MILLIS)).named("t")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)).named("ts")
+                    .named("row");
+            File directory = new File(BINARY_GEN_BASEDIR);
+            java.nio.file.Files.createDirectories(directory.toPath());
+            File file = new File(directory, "temporal_types.parquet");
+            java.nio.file.Files.deleteIfExists(file.toPath());
+            Configuration configuration = new Configuration();
+            GroupWriteSupport.setSchema(schema, configuration);
+            SimpleGroupFactory groups = new SimpleGroupFactory(schema);
+            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(file.getAbsolutePath());
+            try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path).withType(schema)
+                    .withConf(configuration).withCompressionCodec(CompressionCodecName.UNCOMPRESSED).build()) {
+                for (int i = 1; i <= TEMPORAL_TYPES_ROW_COUNT; i++) {
+                    writer.write(groups.newGroup().append("id", (long) i).append("d", TEMPORAL_TYPES_EPOCH_DAY + i)
+                            .append("t", TEMPORAL_TYPES_MILLIS_OF_DAY + i)
+                            .append("ts", TimeUnit.MILLISECONDS.toMicros(i) + ROW_GROUPS_SUBMILLI_MICROS));
+                }
+            }
+            loadData(BINARY_GEN_BASEDIR, "", "temporal_types.parquet", PARQUET_TEMPORAL_TYPES_DIRECTORY, "", false,
+                    false);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to prepare the parquet temporal-types fixture", e);
+        }
+    }
+
+    /**
+     * Writes and uploads a single Parquet file of {@value #ROW_GROUPS_ROW_COUNT} rows with a deliberately small
+     * row-group size, so it holds many row groups rather than the one every other Parquet fixture here has. A file
+     * with one row group cannot show row-group skipping: either that group is read or the file is, and the two are
+     * the same thing.
+     * <p>
+     * {@code id} ascends, so each row group's statistics cover a distinct range and a predicate is decidable from
+     * them alone. {@code ts} is microseconds and every row carries a sub-millisecond remainder, which the reader
+     * truncates away; a predicate written against what the collection displays must therefore still match it.
+     */
+    private static void loadRowGroupsFile() {
+        try {
+            MessageType schema = Types.buildMessage().required(PrimitiveType.PrimitiveTypeName.INT64).named("id")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)).named("ts")
+                    .named("row");
+            File directory = new File(BINARY_GEN_BASEDIR);
+            java.nio.file.Files.createDirectories(directory.toPath());
+            File file = new File(directory, "row_groups.parquet");
+            java.nio.file.Files.deleteIfExists(file.toPath());
+            Configuration configuration = new Configuration();
+            GroupWriteSupport.setSchema(schema, configuration);
+            SimpleGroupFactory groups = new SimpleGroupFactory(schema);
+            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(file.getAbsolutePath());
+            try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path).withType(schema)
+                    .withConf(configuration).withRowGroupSize((long) ROW_GROUPS_ROW_GROUP_BYTES)
+                    .withCompressionCodec(CompressionCodecName.UNCOMPRESSED).withDictionaryEncoding(false).build()) {
+                for (int i = 1; i <= ROW_GROUPS_ROW_COUNT; i++) {
+                    long micros = TimeUnit.MILLISECONDS.toMicros(i) + ROW_GROUPS_SUBMILLI_MICROS;
+                    writer.write(groups.newGroup().append("id", (long) i).append("ts", micros));
+                }
+            }
+            int rowGroups;
+            try (ParquetFileReader reader = ParquetFileReader.open(configuration, path)) {
+                rowGroups = reader.getFooter().getBlocks().size();
+            }
+            // Without this the suite would pass while testing nothing it was written for: one row group makes every
+            // query below read the whole file, which is what the failing case looks like.
+            if (rowGroups < 2) {
+                throw new IllegalStateException("row-groups fixture collapsed to " + rowGroups + " row group(s)");
+            }
+            LOGGER.info("Parquet row-groups fixture: {} rows in {} row groups", ROW_GROUPS_ROW_COUNT, rowGroups);
+            loadData(BINARY_GEN_BASEDIR, "", "row_groups.parquet", PARQUET_ROW_GROUPS_DIRECTORY, "", false, false);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to prepare the parquet row-groups fixture", e);
+        }
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,

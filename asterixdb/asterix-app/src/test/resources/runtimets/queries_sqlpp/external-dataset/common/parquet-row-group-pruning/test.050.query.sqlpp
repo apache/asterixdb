@@ -1,0 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : A sub-millisecond row survives a predicate written at the value it displays
+ * Expected Res : Success
+ */
+
+// Every row's ts carries a sub-millisecond remainder the reader truncates away, so row 1234 reads back as
+// 1970-01-01T00:00:01.234Z while the file stores 1234456 microseconds. Pushing the instant that literal names
+// excludes the row group holding it and this returns nothing; pushing the whole millisecond it denotes keeps it.
+// Asserted on the rows returned rather than on a count, because a lost row is the failure mode.
+
+USE test;
+
+SELECT VALUE r.id FROM RowGroups r WHERE r.ts = datetime("1970-01-01T00:00:01.234Z");

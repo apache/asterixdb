@@ -20,8 +20,10 @@ package org.apache.asterix.metadata.utils.filter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.external.input.filter.ParquetFilterExpression;
+import org.apache.asterix.external.input.filter.ParquetFilterExpression.Comparison;
+import org.apache.asterix.external.input.filter.ParquetFilterExpression.Operator;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ADouble;
@@ -48,11 +50,14 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
-import org.apache.parquet.filter2.predicate.FilterApi;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
-import org.apache.parquet.filter2.predicate.Operators;
-import org.apache.parquet.io.api.Binary;
 
+/**
+ * Builds the row-group filter pushed into Parquet readers.
+ * <p>
+ * The result names columns and literals without choosing a physical Parquet type for either; that choice belongs
+ * to the node reading a particular file, and is made by
+ * {@code org.apache.asterix.external.input.filter.ParquetFilterConverter}.
+ */
 public class ParquetFilterBuilder extends AbstractFilterBuilder {
 
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
@@ -63,28 +68,31 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
                 context, typeEnv);
     }
 
-    public FilterPredicate buildFilterPredicate() throws AlgebricksException {
-        FilterPredicate parquetFilterPredicate = null;
+    public ParquetFilterExpression buildFilterExpression() throws AlgebricksException {
+        ParquetFilterExpression expression = null;
         if (filterExpression != null) {
             try {
-                parquetFilterPredicate = createFilterExpression(filterExpression);
+                expression = createFilterExpression(filterExpression);
             } catch (Exception e) {
                 LOGGER.error("Error creating Parquet row-group filter expression ", e.getMessage());
             }
         }
-        return parquetFilterPredicate;
+        return expression;
     }
 
-    private FilterPredicate createComparisonExpression(ILogicalExpression arg1, ILogicalExpression arg2,
+    private ParquetFilterExpression createComparisonExpression(ILogicalExpression arg1, ILogicalExpression arg2,
             FunctionIdentifier fid) throws AlgebricksException {
         ILogicalExpression columnName;
         ConstantExpression constExpr;
+        boolean constantOnLeft;
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             constExpr = (ConstantExpression) arg1;
             columnName = arg2;
+            constantOnLeft = true;
         } else if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             constExpr = (ConstantExpression) arg2;
             columnName = arg1;
+            constantOnLeft = false;
         } else {
             return null;
         }
@@ -93,43 +101,87 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
             return null;
         }
         AsterixConstantValue constantValue = (AsterixConstantValue) constExpr.getValue();
-        String fieldName = createColumnExpression(columnName);
-        if (fieldName == null) {
+        String[] path = createColumnExpression(columnName);
+        if (path == null) {
             return null;
         }
-        switch (constantValue.getObject().getType().getTypeTag()) {
+        Operator operator = toOperator(fid);
+        if (operator == null) {
+            return null;
+        }
+        // a comparison reads column-then-literal, so a literal on the left reverses it: 5 < x is x > 5
+        if (constantOnLeft) {
+            operator = flip(operator);
+        }
+
+        ATypeTag tag = constantValue.getObject().getType().getTypeTag();
+        Object value;
+        switch (tag) {
             case STRING:
-                return createComparisionFunction(FilterApi.binaryColumn(fieldName),
-                        Binary.fromString(((AString) constantValue.getObject()).getStringValue()), fid);
+                value = ((AString) constantValue.getObject()).getStringValue();
+                break;
             case TINYINT:
-                return createComparisionFunction(FilterApi.intColumn(fieldName),
-                        (int) ((AInt8) constantValue.getObject()).getByteValue(), fid);
+                value = (long) ((AInt8) constantValue.getObject()).getByteValue();
+                break;
             case SMALLINT:
-                return createComparisionFunction(FilterApi.intColumn(fieldName),
-                        (int) ((AInt16) constantValue.getObject()).getShortValue(), fid);
+                value = (long) ((AInt16) constantValue.getObject()).getShortValue();
+                break;
             case INTEGER:
-                return createComparisionFunction(FilterApi.intColumn(fieldName),
-                        ((AInt32) constantValue.getObject()).getIntegerValue(), fid);
-            case BOOLEAN:
-                if (!fid.equals(AlgebricksBuiltinFunctions.EQ)) {
-                    throw new RuntimeException("Unsupported comparison function: " + fid);
-                }
-                return FilterApi.eq(FilterApi.booleanColumn(fieldName), constantValue.isTrue());
+                value = (long) ((AInt32) constantValue.getObject()).getIntegerValue();
+                break;
             case BIGINT:
-                return createComparisionFunction(FilterApi.longColumn(fieldName),
-                        ((AInt64) constantValue.getObject()).getLongValue(), fid);
+                value = ((AInt64) constantValue.getObject()).getLongValue();
+                break;
+            case BOOLEAN:
+                if (operator != Operator.EQ) {
+                    return null;
+                }
+                value = constantValue.isTrue();
+                break;
             case DOUBLE:
-                return createComparisionFunction(FilterApi.doubleColumn(fieldName),
-                        ((ADouble) constantValue.getObject()).getDoubleValue(), fid);
+                value = ((ADouble) constantValue.getObject()).getDoubleValue();
+                break;
             case DATE:
-                return createComparisionFunction(FilterApi.intColumn(fieldName),
-                        ((ADate) constantValue.getObject()).getChrononTimeInDays(), fid);
+                value = (long) ((ADate) constantValue.getObject()).getChrononTimeInDays();
+                break;
             case DATETIME:
-                Long millis = ((ADateTime) constantValue.getObject()).getChrononTime();
-                return createComparisionFunction(FilterApi.longColumn(fieldName),
-                        TimeUnit.MILLISECONDS.toMicros(millis), fid);
+                // milliseconds; the node converts to whatever unit the file stores
+                value = ((ADateTime) constantValue.getObject()).getChrononTime();
+                break;
             default:
                 return null;
+        }
+        return new Comparison(path, operator, tag, value);
+    }
+
+    private static Operator toOperator(FunctionIdentifier fid) {
+        if (fid.equals(AlgebricksBuiltinFunctions.EQ)) {
+            return Operator.EQ;
+        } else if (fid.equals(AlgebricksBuiltinFunctions.GE)) {
+            return Operator.GT_EQ;
+        } else if (fid.equals(AlgebricksBuiltinFunctions.GT)) {
+            return Operator.GT;
+        } else if (fid.equals(AlgebricksBuiltinFunctions.LE)) {
+            return Operator.LT_EQ;
+        } else if (fid.equals(AlgebricksBuiltinFunctions.LT)) {
+            return Operator.LT;
+        } else {
+            return null;
+        }
+    }
+
+    private static Operator flip(Operator operator) {
+        switch (operator) {
+            case GT:
+                return Operator.LT;
+            case GT_EQ:
+                return Operator.LT_EQ;
+            case LT:
+                return Operator.GT;
+            case LT_EQ:
+                return Operator.GT_EQ;
+            default:
+                return operator;
         }
     }
 
@@ -138,7 +190,7 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         return null;
     }
 
-    private FilterPredicate createFilterExpression(ILogicalExpression expr) throws AlgebricksException {
+    private ParquetFilterExpression createFilterExpression(ILogicalExpression expr) throws AlgebricksException {
         if (expr == null || expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             LOGGER.info("Unsupported expression for row group filter: "
                     + LogRedactionUtil.userData(expr == null ? "NULL" : expr.toString()));
@@ -155,39 +207,22 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
         }
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
         if (fid.equals(AlgebricksBuiltinFunctions.AND) || fid.equals(AlgebricksBuiltinFunctions.OR)) {
-            FilterPredicate filterPredicate = createAndOrPredicate(fid, args, 0, args.size());
-            if (filterPredicate == null) {
+            ParquetFilterExpression expression = createAndOrPredicate(fid, args, 0, args.size());
+            if (expression == null) {
                 LOGGER.info("Unable to construct row group filter with OR/AND expression");
             }
-            return filterPredicate;
+            return expression;
         } else {
-            FilterPredicate filterPredicate =
+            ParquetFilterExpression expression =
                     createComparisonExpression(args.get(0).getValue(), args.get(1).getValue(), fid);
-            if (filterPredicate == null) {
+            if (expression == null) {
                 LOGGER.info("Unable to construct row group filter");
             }
-            return filterPredicate;
+            return expression;
         }
     }
 
-    private <T extends Comparable<T>, C extends Operators.Column<T> & Operators.SupportsLtGt> FilterPredicate createComparisionFunction(
-            C column, T value, FunctionIdentifier fid) {
-        if (fid.equals(AlgebricksBuiltinFunctions.EQ)) {
-            return FilterApi.eq(column, value);
-        } else if (fid.equals(AlgebricksBuiltinFunctions.GE)) {
-            return FilterApi.gtEq(column, value);
-        } else if (fid.equals(AlgebricksBuiltinFunctions.GT)) {
-            return FilterApi.gt(column, value);
-        } else if (fid.equals(AlgebricksBuiltinFunctions.LE)) {
-            return FilterApi.ltEq(column, value);
-        } else if (fid.equals(AlgebricksBuiltinFunctions.LT)) {
-            return FilterApi.lt(column, value);
-        } else {
-            return null;
-        }
-    }
-
-    protected String createColumnExpression(ILogicalExpression expression) {
+    protected String[] createColumnExpression(ILogicalExpression expression) {
         ARecordType path = filterPaths.get(expression);
         if (path.getFieldNames().length != 1) {
             return null;
@@ -195,9 +230,9 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
             // The field could be a nested field
             List<String> fieldList = new ArrayList<>();
             fieldList = createPathExpression(path, fieldList);
-            return String.join(".", fieldList);
+            return fieldList == null ? null : fieldList.toArray(new String[0]);
         } else if (path.getFieldTypes()[0].getTypeTag() == ATypeTag.ANY) {
-            return path.getFieldNames()[0];
+            return new String[] { path.getFieldNames()[0] };
         } else {
             return null;
         }
@@ -219,12 +254,12 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
     }
 
     // Converts or(pred1, pred2, pred3) to or(pred1, or(pred2, pred3))
-    private FilterPredicate createAndOrPredicate(FunctionIdentifier function, List<Mutable<ILogicalExpression>> args,
-            int leftInclusive, int rightExclusive) throws AlgebricksException {
+    private ParquetFilterExpression createAndOrPredicate(FunctionIdentifier function,
+            List<Mutable<ILogicalExpression>> args, int leftInclusive, int rightExclusive) throws AlgebricksException {
         if (rightExclusive - leftInclusive == 1) {
             return createLeafFilterPredicate(args.get(leftInclusive));
         } else {
-            FilterPredicate left, right;
+            ParquetFilterExpression left, right;
             if (rightExclusive - leftInclusive == 2) {
                 left = createLeafFilterPredicate(args.get(leftInclusive));
                 right = createLeafFilterPredicate(args.get(leftInclusive + 1));
@@ -242,19 +277,19 @@ public class ParquetFilterBuilder extends AbstractFilterBuilder {
                 } else if (right == null) {
                     return left;
                 } else {
-                    return FilterApi.and(left, right);
+                    return new ParquetFilterExpression.And(left, right);
                 }
 
             } else {
                 if (left == null || right == null) {
                     return null;
                 }
-                return FilterApi.or(left, right);
+                return new ParquetFilterExpression.Or(left, right);
             }
         }
     }
 
-    private FilterPredicate createLeafFilterPredicate(Mutable<ILogicalExpression> expression)
+    private ParquetFilterExpression createLeafFilterPredicate(Mutable<ILogicalExpression> expression)
             throws AlgebricksException {
         if (expression.get().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expression.get();

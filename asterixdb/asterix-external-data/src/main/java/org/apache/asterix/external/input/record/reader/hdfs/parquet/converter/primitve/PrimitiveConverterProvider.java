@@ -84,7 +84,11 @@ public class PrimitiveConverterProvider {
     private static PrimitiveConverter getIntConverter(ATypeTag typeTag, PrimitiveType type,
             AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
             throws IOException {
-        IntLogicalTypeAnnotation intType = (IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
+        // a date, time or timestamp column read as its stored number arrives here too, so this cannot assume
+        // the annotation is an integer one
+        LogicalTypeAnnotation annotation = type.getLogicalTypeAnnotation();
+        IntLogicalTypeAnnotation intType =
+                annotation instanceof IntLogicalTypeAnnotation ? (IntLogicalTypeAnnotation) annotation : null;
         if (intType != null && !intType.isSigned()) {
             return new UnsignedIntegerConverter(parent, stringFieldName, index, context);
         }

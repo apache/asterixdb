@@ -24,15 +24,14 @@ import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmb
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.parquet.filter2.predicate.FilterPredicate;
 
 public class ParquetFilterEvaluatorFactory implements IExternalFilterEvaluatorFactory {
     private static final long serialVersionUID = 1L;
-    private final FilterPredicate filterExpression;
+    private final ParquetFilterExpression filterExpression;
     private final IExternalFilterEvaluatorFactory externalFilterEvaluatorFactory;
 
     public ParquetFilterEvaluatorFactory(IExternalFilterEvaluatorFactory externalFilterEvaluatorFactory,
-            FilterPredicate expression) {
+            ParquetFilterExpression expression) {
         this.externalFilterEvaluatorFactory = externalFilterEvaluatorFactory;
         this.filterExpression = expression;
     }
@@ -49,7 +48,7 @@ public class ParquetFilterEvaluatorFactory implements IExternalFilterEvaluatorFa
         return externalFilterEvaluatorFactory.createValueEmbedder(warningCollector);
     }
 
-    public FilterPredicate getFilterExpression() {
+    public ParquetFilterExpression getFilterExpression() {
         return filterExpression;
     }
 }

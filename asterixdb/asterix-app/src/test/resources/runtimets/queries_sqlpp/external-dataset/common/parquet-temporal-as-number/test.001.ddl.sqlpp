@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : The same file read as temporal values and as the numbers it stores
+ * Expected Res : Success
+ */
+
+// Three rows whose ts carries a sub-millisecond remainder. Read as a datetime that remainder is discarded; read
+// as a number it survives, which is what these options are for.
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+CREATE TYPE TemporalType AS {
+};
+
+CREATE EXTERNAL DATASET TemporalNumbers(TemporalType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%
+  ("container"="playground"),
+  ("definition"="parquet-data/temporal-types"),
+  ("format" = "parquet"),
+  ("date-to-int" = "true"),
+  ("time-to-int" = "true"),
+  ("timestamp-to-long" = "true")
+);
+
+CREATE EXTERNAL DATASET TemporalValues(TemporalType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%
+  ("container"="playground"),
+  ("definition"="parquet-data/temporal-types"),
+  ("format" = "parquet")
+);
+
+// A number carries no zone, so this must read identically to TemporalNumbers above.
+CREATE EXTERNAL DATASET TemporalNumbersZoned(TemporalType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%
+  ("container"="playground"),
+  ("definition"="parquet-data/temporal-types"),
+  ("format" = "parquet"),
+  ("timestamp-to-long" = "true"),
+  ("timezone" = "+03:00")
+);

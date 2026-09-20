@@ -1387,6 +1387,18 @@
         <output-dir compare="Text">query-with-limit-plan</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common">
+      <compilation-unit name="parquet-row-group-pruning">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">parquet-row-group-pruning</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet-temporal-as-number">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet-temporal-as-number</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="s3-include-exclude">
     <test-case FilePath="external-dataset">
