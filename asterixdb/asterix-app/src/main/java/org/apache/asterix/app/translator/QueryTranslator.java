@@ -4381,6 +4381,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. drop library
             MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, databaseName, dataverseName, libraryName);
 
+            // the library's artifacts are gone by now, so the drop can no longer be compensated; anything an
+            // extension keys off the library is discarded here rather than with the pending-drop record, which
+            // a failed artifact removal would have rolled back
+            beforeDropTxnCommit(metadataProvider, mdTxnCtx,
+                    EntityDetails.newLibrary(databaseName, dataverseName, libraryName));
+
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
