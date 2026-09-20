@@ -299,8 +299,8 @@ public class VectorIndexAccessMethod implements IAccessMethod {
         );
         jobGenParams.setQueryVarList(queryVarList);
 
-        // Index-only opportunity detected upstream in IntroduceTopKAccessMethodRule (PK-only
-        // projection above LIMIT). When set, the secondary UnnestMap emits an extra $$dist field, the
+        // Index-only opportunity detected upstream in IntroduceTopKAccessMethodRule (everything read
+        // above the LIMIT is covered by the index). When set, the secondary UnnestMap emits an extra $$dist field, the
         // ORDER BY rebinds to it, and the primary BTree lookup + rerank are skipped (see branch below).
         //
         // Every precondition must be settled HERE, before the params are handed to
@@ -345,8 +345,8 @@ public class VectorIndexAccessMethod implements IAccessMethod {
             // ============================================================================
             // INDEX-ONLY BRANCH
             // ============================================================================
-            // The projection above LIMIT only references PK columns (verified by
-            // IntroduceTopKAccessMethodRule.isProjectionPkOnly). We can therefore:
+            // The projection above LIMIT reads only what the search emits (verified by
+            // IntroduceTopKAccessMethodRule.isProjectionCoveredByIndex). We can therefore:
             //   1. Add a new $$dist ADOUBLE output variable to the secondary UnnestMap so the runtime
             //      emits  [ pk_0, ..., pk_{n-1}, dist ]  per candidate.
             //   2. Rewrite the upstream ORDER BY ann_distance(...) to ORDER BY $$dist (a cheap scalar
@@ -704,7 +704,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * evaluate it. The predicate stays in its {@code SELECT} until the physical rewrites.
      * <p>
      * A no-op when the query has no {@code WHERE}. Otherwise the predicate must be fully bindable:
-     * {@code IntroduceTopKAccessMethodRule.isProjectionPkOnly} only admits the index-only plan when
+     * {@code IntroduceTopKAccessMethodRule.isProjectionCoveredByIndex} only admits the index-only plan when
      * {@link VectorIncludeFilterPushdown} says it is, and by the time we get here {@code indexOnly} has
      * already been serialized into the index-search arguments and cannot be withdrawn. A decline at this
      * point is therefore the two having drifted apart, which is a broken invariant rather than an

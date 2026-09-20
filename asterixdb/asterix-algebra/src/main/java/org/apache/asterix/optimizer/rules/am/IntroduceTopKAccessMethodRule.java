@@ -135,18 +135,19 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     protected int numSelectOps = 0;
 
     /**
-     * Master switch for the index-only ANN plan optimization. Enabled by default: when the projection above
-     * the LIMIT is PK-only, the plan emits (pk, dist) directly from the secondary VTree and skips the
-     * primary BTree lookup + rerank. The plan rewrite handles above-LIMIT query-parameter ASSIGNs (see
-     * {@link #isProjectionPkOnly}), and the secondary VTree reconciles anti-matter (delete) tuples itself,
-     * so a PK-only ANN query over a dataset with deletes returns no deleted PKs.
+     * Master switch for the index-only ANN plan optimization. Enabled by default: when everything the plan
+     * reads above the LIMIT is covered by the index -- the primary keys and the INCLUDE columns -- the plan
+     * emits (pk, dist, INCLUDE columns) directly from the secondary VTree and skips the primary BTree lookup
+     * + rerank. The plan rewrite handles above-LIMIT query-parameter ASSIGNs (see
+     * {@link #isProjectionCoveredByIndex}), and the secondary VTree reconciles anti-matter (delete) tuples
+     * itself, so an index-only ANN query over a dataset with deletes returns no deleted rows.
      */
     private static final boolean INDEX_ONLY_ENABLED = true;
 
     /**
      * Ancestor chain from the rewrite-pre entry point down to (but not including) the matched
      * {@code limitOp}. Populated by {@link #checkAndApplyTopKTransformation} as it recurses; consumed
-     * by {@link #isProjectionPkOnly} to gather variables used above the LIMIT.
+     * by {@link #isProjectionCoveredByIndex} to gather variables used above the LIMIT.
      */
     protected final List<AbstractLogicalOperator> aboveLimitOps = new ArrayList<>();
 
@@ -244,7 +245,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
 
         // Recursively check children — push self onto the ancestor chain so that, when we reach a
-        // LIMIT below, isProjectionPkOnly() has the full list of operators above it.
+        // LIMIT below, isProjectionCoveredByIndex() has the full list of operators above it.
         aboveLimitOps.add(op);
         try {
             for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
@@ -728,7 +729,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             // Whether the primary lookup is skipped is per-index: two indexes can differ in whether their
             // INCLUDE list covers this query's WHERE, and that is the difference between fetching every
             // candidate and fetching none.
-            double fetchedCard = isProjectionPkOnly(candidate.second, context) ? 0 : candidateCard;
+            double fetchedCard = isProjectionCoveredByIndex(candidate.second, context) ? 0 : candidateCard;
             Index.VectorIndexDetails details = (Index.VectorIndexDetails) candidate.second.getIndexDetails();
             VectorIndexGeometry geometry = new VectorIndexGeometry(details.getVectorParameters(),
                     details.getIncludeFieldTypes(), primaryKeyTypes, datasetCardinality, numPartitions, pageSize,
@@ -766,11 +767,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     protected boolean applyTopKPlanTransformation(Index vectorIndex, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context) throws AlgebricksException {
 
-        // Decide whether the index-only plan branch can be taken (PK-only projection above LIMIT):
-        // when every variable consumed above the LIMIT is PK-derived, the assembled record from the
-        // primary BTree lookup is never needed, so the vector index emits (pk, dist) and the plan
-        // skips the lookup + rerank entirely.
-        boolean indexOnly = isProjectionPkOnly(vectorIndex, context);
+        // Decide whether the index-only plan branch can be taken: when every variable consumed above the
+        // LIMIT resolves to a primary key or an INCLUDE column of this index, the assembled record from the
+        // primary BTree lookup is never needed, so the vector index emits (pk, dist, INCLUDE columns) and
+        // the plan skips the lookup + rerank entirely.
+        boolean indexOnly = isProjectionCoveredByIndex(vectorIndex, context);
 
         // Build the index-search subplan (UNNEST-MAP over vector index). selectOp is passed so the
         // access method can attach a selectCondition for filter pushdown when applicable.
@@ -788,10 +789,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Detects whether consumers above the matched {@code limitOp} only reference primary-key columns
-     * of the dataset — meaning the assembled record produced by a downstream primary BTree lookup is
-     * never needed and the plan can take the index-only branch (vector index emits {@code (pk, dist)},
-     * SORT on {@code $$dist}, LIMIT, done — no primary lookup, no rerank).
+     * Detects whether consumers above the matched {@code limitOp} read only what the vector index emits: the
+     * dataset's primary keys and the index's INCLUDE columns — meaning the assembled record produced by a
+     * downstream primary BTree lookup is never needed and the plan can take the index-only branch (vector
+     * index emits {@code (pk, dist, INCLUDE columns)}, SORT on {@code $$dist}, LIMIT, done — no primary
+     * lookup, no rerank).
      *
      * <p>Algorithm:
      * <ol>
@@ -801,20 +803,21 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      *       (variable → defining expression).</li>
      *   <li>Compute the live-out set of {@code limitOp} by collecting variables used by every operator
      *       in {@link #aboveLimitOps}.</li>
-     *   <li>For each live-out variable, trace through the bindings: it is PK-safe iff it resolves to a
-     *       PK variable, a constant, or a {@code field-access-by-name($$rec, f)} where {@code f} is the
-     *       (top-level, single-segment) name of a PK column sourced from the SAME record ($$rec being the
-     *       dataset record or the meta record) that the PK column is actually declared on. If any live-out
-     *       variable fails the trace, the optimization cannot be safely applied.</li>
+     *   <li>For each live-out variable, trace through the bindings: it is covered iff it resolves to a
+     *       PK variable, a constant, or a field access whose full path — reassembled through the ASSIGN
+     *       chain when the compiler split it — is a primary key of the record it is read from (the dataset
+     *       record or the meta record, each against its own keys), or an INCLUDE column of the searched
+     *       index read from the dataset record. If any live-out variable fails the trace, the optimization
+     *       cannot be safely applied.</li>
      * </ol>
      *
-     * <p>Conservatively returns {@code false} for composite or nested PK paths, external data sources, or
-     * unfamiliar plan shapes.
+     * <p>Conservatively returns {@code false} for external data sources or unfamiliar plan shapes.
      */
-    protected boolean isProjectionPkOnly(Index vectorIndex, IOptimizationContext context) throws AlgebricksException {
+    protected boolean isProjectionCoveredByIndex(Index vectorIndex, IOptimizationContext context)
+            throws AlgebricksException {
         // Index-only skips the primary BTree lookup and emits (pk, dist) straight from the secondary VTree.
         // Correct even with deletes: the VTree search cursor reconciles anti-matter (delete) tuples itself,
-        // so a PK-only ANN query over a dataset with deletes returns no deleted PKs. Enabled by default; the
+        // so an index-only ANN query over a dataset with deletes returns no deleted rows. Enabled by default; the
         // gate is a kill-switch, not a correctness guard, so when disabled the optimizer falls back to the
         // legacy lookup-and-rerank plan.
         if (!INDEX_ONLY_ENABLED) {
@@ -860,8 +863,8 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // emits it, so the record never has to be assembled to return it.
         Index.VectorIndexDetails details = (Index.VectorIndexDetails) vectorIndex.getIndexDetails();
         List<List<String>> includePaths = details.getIncludeFieldNames();
-        PkFieldContext pkCtx = new PkFieldContext(pkVars, recordVars, dataRecordVar, metaRecordVar, recordPkFieldPaths,
-                metaPkFieldPaths, includePaths == null ? Set.of() : new HashSet<>(includePaths),
+        CoverageContext coverage = new CoverageContext(pkVars, recordVars, dataRecordVar, metaRecordVar,
+                recordPkFieldPaths, metaPkFieldPaths, includePaths == null ? Set.of() : new HashSet<>(includePaths),
                 pathContext(subTree.getRecordType(), dataRecordVar == null ? Set.of() : Set.of(dataRecordVar)),
                 pathContext(subTree.getMetaRecordType(), metaRecordVar == null ? Set.of() : Set.of(metaRecordVar)));
 
@@ -875,21 +878,22 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             try {
                 VariableUtilities.getUsedVariables(op, liveOut);
             } catch (AlgebricksException e) {
-                LOGGER.trace("isProjectionPkOnly: failed to collect used vars from {}", op.getOperatorTag(), e);
+                LOGGER.trace("isProjectionCoveredByIndex: failed to collect used vars from {}", op.getOperatorTag(), e);
                 return false;
             }
         }
-        // Trace each live-out variable; fail on the first non-PK-derived one.
+        // Trace each live-out variable; fail on the first that the index does not cover.
         Set<LogicalVariable> visiting = new HashSet<>();
         for (LogicalVariable v : liveOut) {
-            if (!isVarPkSafe(v, bindings, pkCtx, visiting)) {
-                LOGGER.trace("isProjectionPkOnly: live-out variable {} is not PK-derived; bailing", v);
+            if (!isVarCovered(v, bindings, coverage, visiting)) {
+                LOGGER.trace("isProjectionCoveredByIndex: live-out variable {} is not covered by the index; bailing",
+                        v);
                 return false;
             }
         }
 
         // A WHERE below the LIMIT is invisible to the liveOut scan above, which only covers the projection
-        // above the LIMIT. It can still be served index-only in two ways: its variables are PK-derived, or
+        // above the LIMIT. It can still be served index-only in two ways: its variables are covered, or
         // the predicate reads nothing but INCLUDE columns of the chosen index, in which case the index-only
         // branch rebinds it onto those columns instead of leaving a SELECT above a dead record variable
         // (which VectorIndexAccessMethod#neutralizeDanglingExpressions would collapse to select(missing),
@@ -897,11 +901,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         Set<LogicalVariable> filterVars = new HashSet<>();
         collectSelectConditionVars(subTree.getRoot(), filterVars);
         for (LogicalVariable v : filterVars) {
-            if (!isVarPkSafe(v, bindings, pkCtx, visiting)) {
+            if (!isVarCovered(v, bindings, coverage, visiting)) {
                 if (isFilterPushableToInclude(vectorIndex, context)) {
                     return true;
                 }
-                LOGGER.trace("isProjectionPkOnly: WHERE condition var {} is neither PK-safe nor an INCLUDE "
+                LOGGER.trace("isProjectionCoveredByIndex: WHERE condition var {} is neither covered nor an INCLUDE "
                         + "field of {}; not index-only", v, vectorIndex.getIndexName());
                 return false;
             }
@@ -973,14 +977,14 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Groups the pieces {@link #isVarPkSafe} and {@link #isExprPkSafe} need to decide whether a
-     * {@code field-access-by-name} target is PK-safe: the data-source PK variables, the combined
-     * record/meta "direct use" variables, the data-record and meta-record variables individually, and the
-     * PK field names declared on each of those two records (kept separate so a same-named field on the
-     * "wrong" record — e.g. a data-record field called "id" next to a {@code meta().id} PK — is never
-     * treated as PK-safe).
+     * Groups the pieces {@link #isVarCovered} and {@link #isExprCovered} need to decide whether a field
+     * access is covered by the index: the data-source PK variables, the combined record/meta "direct use"
+     * variables, the data-record and meta-record variables individually, the PK field paths declared on
+     * each of those two records (kept separate so a same-named field on the "wrong" record — e.g. a
+     * data-record field called "id" next to a {@code meta().id} PK — is never treated as covered), and the
+     * searched index's INCLUDE paths.
      */
-    private static final class PkFieldContext {
+    private static final class CoverageContext {
         final Set<LogicalVariable> pkVars;
         final Set<LogicalVariable> recordVars;
         final LogicalVariable dataRecordVar;
@@ -993,7 +997,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         final VectorIncludeFilterPushdown.IndexContext dataRecordCtx;
         final VectorIncludeFilterPushdown.IndexContext metaRecordCtx;
 
-        PkFieldContext(Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, LogicalVariable dataRecordVar,
+        CoverageContext(Set<LogicalVariable> pkVars, Set<LogicalVariable> recordVars, LogicalVariable dataRecordVar,
                 LogicalVariable metaRecordVar, Set<List<String>> recordPkFieldPaths, Set<List<String>> metaPkFieldPaths,
                 Set<List<String>> includePaths, VectorIncludeFilterPushdown.IndexContext dataRecordCtx,
                 VectorIncludeFilterPushdown.IndexContext metaRecordCtx) {
@@ -1020,8 +1024,8 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
     /**
      * Collect the variables used in every {@code SELECT} condition in the subtree (below the LIMIT). Used by
-     * {@link #isProjectionPkOnly} to reject the index-only plan when a {@code WHERE} needs a non-PK record
-     * field (e.g. a filter on an INCLUDE field), which the index-only plan cannot serve.
+     * {@link #isProjectionCoveredByIndex} to check the {@code WHERE}, which the live-out scan above the LIMIT
+     * does not see.
      */
     private void collectSelectConditionVars(ILogicalOperator op, Set<LogicalVariable> vars) {
         if (op == null) {
@@ -1039,12 +1043,12 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
     }
 
-    private boolean isVarPkSafe(LogicalVariable v, Map<LogicalVariable, ILogicalExpression> bindings,
-            PkFieldContext pkCtx, Set<LogicalVariable> visiting) {
-        if (pkCtx.pkVars.contains(v)) {
+    private boolean isVarCovered(LogicalVariable v, Map<LogicalVariable, ILogicalExpression> bindings,
+            CoverageContext coverage, Set<LogicalVariable> visiting) {
+        if (coverage.pkVars.contains(v)) {
             return true;
         }
-        if (pkCtx.recordVars.contains(v)) {
+        if (coverage.recordVars.contains(v)) {
             // Direct use of the dataset record — requires the assembled record. Not safe.
             return false;
         }
@@ -1059,26 +1063,27 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 // don't track). Be conservative.
                 return false;
             }
-            return isExprPkSafe(e, bindings, pkCtx, visiting);
+            return isExprCovered(e, bindings, coverage, visiting);
         } finally {
             visiting.remove(v);
         }
     }
 
-    private boolean isExprPkSafe(ILogicalExpression e, Map<LogicalVariable, ILogicalExpression> bindings,
-            PkFieldContext pkCtx, Set<LogicalVariable> visiting) {
+    private boolean isExprCovered(ILogicalExpression e, Map<LogicalVariable, ILogicalExpression> bindings,
+            CoverageContext coverage, Set<LogicalVariable> visiting) {
         switch (e.getExpressionTag()) {
             case CONSTANT:
                 return true;
             case VARIABLE:
-                return isVarPkSafe(((VariableReferenceExpression) e).getVariableReference(), bindings, pkCtx, visiting);
+                return isVarCovered(((VariableReferenceExpression) e).getVariableReference(), bindings, coverage,
+                        visiting);
             case FUNCTION_CALL: {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
                 FunctionIdentifier fid = fce.getFunctionIdentifier();
                 // Special-case field access on the record/meta variable: PK fields sourced from that SAME
                 // record only. A PK field name that collides with an unrelated field on the OTHER record
                 // (e.g. a data-record field "id" next to a meta()-sourced PK also named "id") must not be
-                // treated as PK-safe here — only field-access on the record the PK is actually declared on
+                // treated as covered here — only field-access on the record the PK is actually declared on
                 // is a safe substitute.
                 // A field access on the record is safe when its FULL path is a primary key or, on the data
                 // record, an INCLUDE column of the searched index -- both are emitted by the search. Paths
@@ -1091,24 +1096,24 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 // column.
                 try {
                     List<String> path =
-                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, pkCtx.dataRecordCtx, bindings);
+                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, coverage.dataRecordCtx, bindings);
                     if (path != null
-                            && (pkCtx.recordPkFieldPaths.contains(path) || pkCtx.includePaths.contains(path))) {
+                            && (coverage.recordPkFieldPaths.contains(path) || coverage.includePaths.contains(path))) {
                         return true;
                     }
                     List<String> metaPath =
-                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, pkCtx.metaRecordCtx, bindings);
-                    if (metaPath != null && pkCtx.metaPkFieldPaths.contains(metaPath)) {
+                            VectorIncludeFilterPushdown.resolveRecordFieldPath(fce, coverage.metaRecordCtx, bindings);
+                    if (metaPath != null && coverage.metaPkFieldPaths.contains(metaPath)) {
                         return true;
                     }
                 } catch (AlgebricksException resolveFailure) {
-                    LOGGER.trace("isProjectionPkOnly: could not resolve a field access; not index-only",
+                    LOGGER.trace("isProjectionCoveredByIndex: could not resolve a field access; not index-only",
                             resolveFailure);
                     return false;
                 }
-                // For any other function call: all argument expressions must be PK-safe.
+                // For any other function call: all argument expressions must be covered.
                 for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
-                    if (!isExprPkSafe(arg.getValue(), bindings, pkCtx, visiting)) {
+                    if (!isExprCovered(arg.getValue(), bindings, coverage, visiting)) {
                         return false;
                     }
                 }
