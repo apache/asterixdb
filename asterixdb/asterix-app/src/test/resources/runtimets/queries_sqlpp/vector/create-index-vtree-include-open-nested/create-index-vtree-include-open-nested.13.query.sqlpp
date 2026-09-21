@@ -17,16 +17,10 @@
  * under the License.
  */
 
-// Round-trip test for a NESTED INCLUDE path (IndexTupleTranslator writeIncludeFields/read). The include
-// field info.year is a two-component path; before the fix only its first component was persisted and it did
-// not read back correctly. 'info' is a declared nested record so the covering INCLUDE resolves.
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
 USE test;
-CREATE TYPE MovieType AS {
-  id: int,
-  info: { year: int, title: string },
-  embedding: [double],
-  other: { year: int }
-};
-CREATE DATASET MovieSmall(MovieType) PRIMARY KEY id;
+// The INCLUDE record itself projected whole. Index-only: the column is the record. Ids 6, 7, 8 with info.
+SELECT m.id, m.info AS info
+FROM MovieNested m
+WHERE m.info.year > 2005
+ORDER BY ann_distance(m.embedding, [0.0, 0.0, 0.0, 0.0], "euclidean", 1.0)
+LIMIT 3;

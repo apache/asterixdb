@@ -1,0 +1,32 @@
+distribute result [$$24]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 3
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$24])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$42(ASC) ]  |PARTITIONED|
+          limit 3
+          -- STREAM_LIMIT  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 3) (ASC, $$42)
+              -- STABLE_SORT [topK: 3] [$$42(ASC)]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$24] <- [{"id": $$41, "y": $$44, "t": $$43.getField("title")}] project: [$$24, $$42]
+                  -- ASSIGN  |PARTITIONED|
+                    assign [$$44] <- [$$43.getField("year")]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$41, $$42, $$43] <- index-search("idx_emb", 8, "Default", "test", "MovieNested", false, false, true, 5, $$36, $$37, $$38, $$39, $$40) condition (gt($$43.getField("year"), 2005))
+                        -- VECTOR_SEARCH  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$36, $$37, $$38, $$39, $$40] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                            -- ASSIGN  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
