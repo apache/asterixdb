@@ -88,6 +88,9 @@
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
     <google-cloud-core.version>2.75.0</google-cloud-core.version>
 
+    <!-- keep in sync with asterixdb/pom.xml -->
+    <azurecore.version>1.59.1</azurecore.version>
+
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
@@ -264,6 +267,11 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-core</artifactId>
         <version>${google-cloud-core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-core</artifactId>
+        <version>${azurecore.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

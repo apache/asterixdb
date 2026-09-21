@@ -33,6 +33,7 @@ import org.apache.hyracks.util.IRetryPolicy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.azure.core.exception.AzureException;
 import com.google.cloud.BaseServiceException;
 
 import software.amazon.awssdk.core.exception.SdkException;
@@ -188,8 +189,10 @@ public class CloudRetryableRequestUtil {
         while (true) {
             try {
                 return request.call();
-            } catch (IOException | BaseServiceException | SdkException e) {
+            } catch (IOException | BaseServiceException | SdkException | AzureException e) {
                 if (!shouldRetry.test(e)) {
+                    // the only record of this failure: it is not retried, so no later attempt will log it
+                    LOGGER.warn("Not retrying ICloudReturnableRequest, the failure was deemed non-retryable", e);
                     throw HyracksDataException.create(e);
                 }
                 if (retryPolicy == null) {
@@ -200,9 +203,18 @@ public class CloudRetryableRequestUtil {
                     Thread.currentThread().interrupt();
                 }
                 try {
-                    if (Thread.currentThread().isInterrupted() || !retryPolicy.retry(e)) {
-                        LOGGER.debug("Exiting doRun() loop. isInterrupted: {}, attempt: {}/{}",
-                                Thread.currentThread().isInterrupted(), attempt, NUMBER_OF_RETRIES);
+                    // read once, so the branch taken and the message logged cannot disagree
+                    boolean interrupted = Thread.currentThread().isInterrupted();
+                    if (interrupted || !retryPolicy.retry(e)) {
+                        if (interrupted) {
+                            LOGGER.debug("Exiting doRun() loop, thread was interrupted. attempt: {}/{}", attempt,
+                                    NUMBER_OF_RETRIES);
+                        } else {
+                            // the last attempt is not logged by the retry path below, so without this the failure
+                            // that actually aborted the operation would only surface as a thrown exception
+                            LOGGER.error("Exhausted retries ({}) performing ICloudReturnableRequest", NUMBER_OF_RETRIES,
+                                    e);
+                        }
                         throw HyracksDataException.create(e);
                     }
                 } catch (InterruptedException interruptedEx) {

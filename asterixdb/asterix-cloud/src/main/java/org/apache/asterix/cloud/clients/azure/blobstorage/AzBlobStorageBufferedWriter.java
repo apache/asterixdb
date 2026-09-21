@@ -84,18 +84,15 @@ public class AzBlobStorageBufferedWriter implements ICloudBufferedWriter {
             throw new IllegalArgumentException(errMsg);
         }
         guardian.checkIsolatedWriteAccess(bucket, path);
-        try {
-            BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(path).getBlockBlobClient();
-            BufferedInputStream bufferedInputStream = IOUtils.buffer(stream, length);
-            String blockID =
-                    Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
-            initBlockBlobUploads(blockID);
-            blockIDArrayList.add(blockID);
-            blockBlobClient.stageBlock(blockID, bufferedInputStream, length);
-        } catch (Exception e) {
-            LOGGER.error("Error while uploading blocks of data: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+        BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(path).getBlockBlobClient();
+        BufferedInputStream bufferedInputStream = IOUtils.buffer(stream, length);
+        String blockID =
+                Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        initBlockBlobUploads(blockID);
+        blockIDArrayList.add(blockID);
+        // deliberately uncaught: CloudRetryableRequestUtil retries AzureException, so re-wrapping the SDK failure
+        // here would hide it from the retry loop and abort the upload on the first, possibly transient, failure
+        blockBlobClient.stageBlock(blockID, bufferedInputStream, length);
     }
 
     private void initBlockBlobUploads(String blockID) {

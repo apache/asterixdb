@@ -96,5 +96,9 @@
       <artifactId>sdk-core</artifactId>
       <version>${awsjavasdk.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-core</artifactId>
+    </dependency>
   </dependencies>
 </project>

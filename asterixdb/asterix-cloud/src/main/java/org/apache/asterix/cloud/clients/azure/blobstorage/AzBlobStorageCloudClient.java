@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
@@ -226,7 +227,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             return binaryData.toBytes();
         } catch (BlobStorageException ex) {
             BlobErrorCode errorCode = ex.getErrorCode();
-            if (errorCode.equals(BlobErrorCode.BLOB_NOT_FOUND)) {
+            if (BlobErrorCode.BLOB_NOT_FOUND.equals(errorCode)) {
                 LOGGER.warn("Blob not found on cloud: {}", path);
                 return null;
             }
@@ -320,7 +321,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             return blobClient.getProperties().getBlobSize();
         } catch (BlobStorageException ex) {
             BlobErrorCode errorCode = ex.getErrorCode();
-            if (errorCode.equals(BlobErrorCode.BLOB_NOT_FOUND)) {
+            if (BlobErrorCode.BLOB_NOT_FOUND.equals(errorCode)) {
                 LOGGER.error("error while getting blob size; no such blob found: {} ", config.getPrefix() + path);
                 return 0;
             }
@@ -340,7 +341,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             return blobClient.exists();
         } catch (BlobStorageException ex) {
             BlobErrorCode errorCode = ex.getErrorCode();
-            if (errorCode.equals(BlobErrorCode.BLOB_NOT_FOUND)) {
+            if (BlobErrorCode.BLOB_NOT_FOUND.equals(errorCode)) {
                 return false;
             }
             throw HyracksDataException.create(ex);
@@ -417,7 +418,16 @@ public class AzBlobStorageCloudClient implements ICloudClient {
 
     @Override
     public Predicate<Exception> getObjectNotFoundExceptionPredicate() {
-        return ex -> (ex instanceof BlobStorageException bse) && bse.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND);
+        return AzBlobStorageCloudClient::isNotFound;
+    }
+
+    /**
+     * Matched on the status rather than the error code, both because {@link BlobStorageException#getErrorCode()}
+     * returns null whenever the service omits the x-ms-error-code header and because a missing container is a 404
+     * too. A wrong answer here either retries a permanent failure or, by throwing, replaces the real cloud failure.
+     */
+    static boolean isNotFound(Exception ex) {
+        return (ex instanceof BlobStorageException bse) && bse.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND;
     }
 
     private static ConnectionClientPair<BlobServiceClient> buildSyncClient(AzBlobStorageClientConfig config) {
