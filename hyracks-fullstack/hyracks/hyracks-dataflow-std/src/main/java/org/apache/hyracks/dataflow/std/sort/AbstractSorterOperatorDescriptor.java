@@ -37,6 +37,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
@@ -180,6 +182,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     AbstractExternalSortRunMerger merger =
                             getSortRunMerger(ctx, recordDescProvider, runs, comparators, nmkComputer, framesLimit);
                     IFrameWriter wrappingWriter = null;
+                    Throwable failure = null;
                     try {
                         if (runs.isEmpty()) {
                             wrappingWriter = merger.prepareSkipMergingFinalResultWriter(writer);
@@ -195,18 +198,26 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                             wrappingWriter.open();
                             merger.process(wrappingWriter);
                         }
-                    } catch (Throwable e) {
+                    } catch (Throwable e) { // NOSONAR: rethrown below, once the writer has been closed
+                        failure = e;
                         if (wrappingWriter != null) {
-                            wrappingWriter.fail();
+                            CleanupUtils.fail(wrappingWriter, failure);
                         }
-                        throw HyracksDataException.create(e);
                     } finally {
                         if (sorter != null) {
-                            sorter.close();
+                            try {
+                                sorter.close();
+                            } catch (Throwable th) { // NOSONAR: must not mask the failure being reported
+                                failure = ExceptionUtils.suppress(failure, th);
+                            }
                         }
-                        if (wrappingWriter != null) {
-                            wrappingWriter.close();
-                        }
+                        // Closing through CleanupUtils so that a failure to close is suppressed onto the failure
+                        // that caused it. A throwing finally block instead *replaces* the original exception, which
+                        // has hidden real errors behind unrelated cleanup NPEs.
+                        failure = CleanupUtils.close(wrappingWriter, failure);
+                    }
+                    if (failure != null) {
+                        throw HyracksDataException.create(failure);
                     }
                 }
 

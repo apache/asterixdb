@@ -24,13 +24,12 @@ import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWri
 import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.PRIMITIVE_TYPE_ERROR_FIELD;
 
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.AsterixParquetRuntimeException;
 import org.apache.asterix.om.lazy.AbstractLazyVisitablePointable;
 import org.apache.asterix.om.lazy.AbstractListLazyVisitablePointable;
 import org.apache.asterix.om.lazy.FlatLazyVisitablePointable;
 import org.apache.asterix.om.lazy.ILazyVisitablePointableVisitor;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
-import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -154,12 +153,12 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
 
     public ParquetRecordLazyVisitor(MessageType schema, IAType typeInfo) {
         this.schema = schema;
-        if (typeInfo.getTypeTag() == ATypeTag.OBJECT) {
-            this.rec = new TypedRecordLazyVisitablePointable((ARecordType) typeInfo);
-        } else if (typeInfo.getTypeTag() == ATypeTag.ANY) {
-            this.rec = new RecordLazyVisitablePointable(true);
-        } else {
-            throw new RuntimeException("Type Unsupported for parquet printing");
+        // Parquet's WriteSupport contract gives nowhere to declare a checked exception, so the coded failure
+        // travels out in AsterixParquetRuntimeException, which ParquetExternalFilePrinter unwraps.
+        try {
+            this.rec = ParquetRecordPointableUtils.createRecordPointable(typeInfo);
+        } catch (HyracksDataException e) {
+            throw new AsterixParquetRuntimeException(e);
         }
         this.fieldNamesDictionary = new FieldNamesDictionary();
         this.parquetValueWriter = new ParquetValueWriter();

@@ -18,16 +18,23 @@
  */
 package org.apache.asterix.cloud.parquet;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SINK_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.TYPE_UNSUPPORTED_PARQUET_WRITE;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.writer.printer.parquet.ParquetSchemaLazyVisitor;
 import org.apache.asterix.external.writer.printer.parquet.SchemaCheckerLazyVisitor;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputSinkPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.writer.IWriterPartitioner;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -84,6 +91,7 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
         for (int i = 0; i < tupleAccessor.getTupleCount(); i++) {
             tupleRef.reset(tupleAccessor, i);
             setValue(tupleRef, sourceColumn, sourceValue);
+            checkWritable(sourceValue);
             poolWriter.inferSchema(sourceValue);
         }
 
@@ -101,13 +109,51 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
 
     @Override
     public void fail() throws HyracksDataException {
-        frameWriter.fail();
+        if (frameWriter != null) {
+            frameWriter.fail();
+        }
     }
 
+    // close() runs even when open() failed part-way, so neither field can be assumed to have been assigned.
     @Override
     public void close() throws HyracksDataException {
-        poolWriter.close();
-        frameWriter.close();
+        Throwable failure = null;
+        if (poolWriter != null) {
+            try {
+                poolWriter.close();
+            } catch (Throwable th) { // NOSONAR: the frame writer still has to be closed
+                failure = th;
+            }
+        }
+        failure = CleanupUtils.close(frameWriter, failure);
+        if (failure != null) {
+            throw asSinkFailure(failure);
+        }
+    }
+
+    /**
+     * Failures raised while closing come from finalising the destination files -- flushing the Parquet footer and
+     * completing the upload -- so they belong to the external sink rather than to the engine. Wrapped plainly they
+     * reach the user as ASX25000 "Internal error", which names nothing they can act on. An exception that already
+     * carries an error code keeps it, since that code is more specific than EXTERNAL_SINK_ERROR.
+     */
+    private static HyracksDataException asSinkFailure(Throwable failure) {
+        if (failure instanceof HyracksDataException coded) {
+            return coded;
+        }
+        return RuntimeDataException.create(EXTERNAL_SINK_ERROR, failure, getMessageOrToString(failure));
+    }
+
+    /**
+     * The source type is a record type, but a nullable one whenever the record is built by a merge, so an unknown
+     * value can still reach the writer. Parquet has no representation for a row that is not a record, and the
+     * readers below assume the record layout, so refuse it here rather than misreading it.
+     */
+    private static void checkWritable(IPointable value) throws HyracksDataException {
+        ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[value.getByteArray()[value.getStartOffset()]];
+        if (tag == ATypeTag.NULL || tag == ATypeTag.MISSING) {
+            throw RuntimeDataException.create(TYPE_UNSUPPORTED_PARQUET_WRITE, tag);
+        }
     }
 
     private void setValue(IFrameTupleReference tuple, int column, IPointable value) {

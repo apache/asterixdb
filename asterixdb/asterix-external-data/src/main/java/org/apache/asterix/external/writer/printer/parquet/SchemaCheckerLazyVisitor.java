@@ -23,8 +23,6 @@ import org.apache.asterix.om.lazy.AbstractListLazyVisitablePointable;
 import org.apache.asterix.om.lazy.FlatLazyVisitablePointable;
 import org.apache.asterix.om.lazy.ILazyVisitablePointableVisitor;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
-import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,15 +35,9 @@ public class SchemaCheckerLazyVisitor implements ISchemaChecker,
     private final FieldNamesDictionary fieldNamesDictionary;
     private final RecordLazyVisitablePointable record;
 
-    public SchemaCheckerLazyVisitor(IAType typeInfo) {
+    public SchemaCheckerLazyVisitor(IAType typeInfo) throws HyracksDataException {
         this.fieldNamesDictionary = new FieldNamesDictionary();
-        if (typeInfo.getTypeTag() == ATypeTag.OBJECT) {
-            this.record = new TypedRecordLazyVisitablePointable((ARecordType) typeInfo);
-        } else if (typeInfo.getTypeTag() == ATypeTag.ANY) {
-            this.record = new RecordLazyVisitablePointable(true);
-        } else {
-            throw new RuntimeException("Type Unsupported for parquet printing");
-        }
+        this.record = ParquetRecordPointableUtils.createRecordPointable(typeInfo);
     }
 
     @Override

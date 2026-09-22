@@ -1,0 +1,3 @@
+{ "grp": "A", "name": "one", "id": 1, "grp_source": "a" }
+{ "grp": "B", "name": "two", "id": 2, "grp_source": "b" }
+{ "grp": "A", "name": "three", "id": 3, "grp_source": "a" }

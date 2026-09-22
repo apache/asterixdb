@@ -75,6 +75,10 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
                     .withDictionaryPageSize(ExternalDataConstants.PARQUET_DICTIONARY_PAGE_SIZE)
                     .enableDictionaryEncoding().withValidation(false).withWriterVersion(writerVersion).withConf(conf)
                     .build();
+        } catch (AsterixParquetRuntimeException e) {
+            // a coded failure raised while building the writer, e.g. an unsupported source type; its own error
+            // code is more specific than PARQUET_WRITER_ERROR, so surface it rather than the catch-all below
+            throw e.getHyracksDataException();
         } catch (Exception e) {
             throw new RuntimeDataException(ErrorCode.PARQUET_WRITER_ERROR, e, e.getMessage());
         }

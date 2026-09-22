@@ -140,6 +140,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-partition-merged-record">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground"),' />
+        <output-dir compare="Text">parquet-partition-merged-record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="parquet-utf8">
         <placeholder name="adapter" value="S3" />
         <placeholder name="pathprefix" value="" />
@@ -357,6 +367,8 @@
         <expected-error>HYR0132: Extra field in the result, field 'c' does not exist at 'root' in the schema</expected-error>
         <expected-error>ASX0072: Parquet does not support arrays containing mixed data types</expected-error>
         <expected-error>ASX1108: External source error. java.lang.IllegalArgumentException: java.net.URISyntaxException: Relative path in absolute URI: parquet:errorchecks25 . If your file path contains colons then this can lead to this error. HDFS does not support colons in file paths.</expected-error>
+        <expected-error>ASX1204: 'null' type not supported in parquet format</expected-error>
+        <expected-error>ASX1204: 'bigint' type not supported in parquet format</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
