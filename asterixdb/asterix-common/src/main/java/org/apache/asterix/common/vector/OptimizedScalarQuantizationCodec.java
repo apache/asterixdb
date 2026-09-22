@@ -78,15 +78,15 @@ public final class OptimizedScalarQuantizationCodec {
      * Converts a distance metric string to SimilarityFunction enum.
      * 
      * @param distanceMetric Distance metric string (e.g., "euclidean", "cosine", "dot")
-     * @return Corresponding SimilarityFunction enum, or DOT_PRODUCT as default
+     * @return Corresponding SimilarityFunction enum
+     * @throws HyracksDataException if the metric is not one a vector index can be created with
      */
-    public static SimilarityFunction fromDistanceMetric(String distanceMetric) {
-        // Resolve the metric name through VectorSimilarityMetric, the single source of truth for vector
-        // metric aliases (it handles null/blank/casing). A null (unrecognized or blank) metric falls back
-        // to DOT_PRODUCT, preserving the previous default for unknown metrics.
+    public static SimilarityFunction fromDistanceMetric(String distanceMetric) throws HyracksDataException {
         VectorSimilarityMetric metric = VectorSimilarityMetric.fromAlias(distanceMetric);
         if (metric == null) {
-            return SimilarityFunction.DOT_PRODUCT;
+            // The codes must be built under the metric the index's distance function ranks by.
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                    "Unknown vector distance metric '" + distanceMetric + "' reached the quantizer");
         }
         return switch (metric) {
             case EUCLIDEAN -> SimilarityFunction.EUCLIDEAN;
