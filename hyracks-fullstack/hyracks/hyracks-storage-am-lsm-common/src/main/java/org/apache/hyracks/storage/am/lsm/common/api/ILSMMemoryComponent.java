@@ -56,7 +56,8 @@ public interface ILSMMemoryComponent extends ILSMComponent {
     void cleanup() throws HyracksDataException;
 
     /**
-     * @return true if there are data in the memory component, false otherwise
+     * @return true if the memory component has been modified since it was last reset, whether by tuples or by its
+     *         metadata alone, false otherwise
      */
     boolean isModified();
 
@@ -64,6 +65,17 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      * Set the component as modified
      */
     void setModified();
+
+    /**
+     * @return true if tuples have been written to the memory component since it was last reset, false if it is
+     *         unmodified or its only modifications are to its metadata
+     */
+    boolean hasTuples();
+
+    /**
+     * Set the component as holding tuples, and so as {@link #setModified() modified}
+     */
+    void setHasTuples();
 
     /**
      * Makes this component known to the memory budget without taking any of it. Pages are taken separately, by

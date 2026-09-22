@@ -432,7 +432,7 @@ public class LSMHarness implements ILSMHarness {
             // The mutable component is always in the first index.
             AbstractLSMMemoryComponent mutableComponent =
                     (AbstractLSMMemoryComponent) ctx.getComponentHolder().getFirst();
-            mutableComponent.setModified();
+            mutableComponent.setHasTuples();
         } catch (Exception e) {
             failedOperation = true;
             throw e;

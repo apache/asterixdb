@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +68,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycleComponent {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    // keep track of the memory usage of each filtered memory component
+    // keep track of the memory usage of each primary memory component, so that the flush thread can pick the one
+    // holding the most memory, and so that a filtered component can be flushed once it reaches its own page cap
     private final Map<ILSMMemoryComponent, AtomicInteger> memoryComponentUsageMap =
             Collections.synchronizedMap(new HashMap<>());
     private final Map<FileReference, AtomicInteger> fileRefUsageMap = Collections.synchronizedMap(new HashMap<>());
@@ -78,7 +81,6 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     private final Set<ILSMIndex> flushingIndexes = Collections.synchronizedSet(new HashSet<>());
     private final Set<ILSMMemoryComponent> flushingComponents = Collections.synchronizedSet(new HashSet<>());
-    private int flushPtr;
 
     private final int filteredMemoryComponentMaxNumPages;
     private final int flushPageBudget;
@@ -121,14 +123,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                                 isMetadataIndex(index) ? "metadata" : "primary", index.toString());
                     }
                 }
-                if (index.getNumOfFilterFields() > 0) {
-                    // handle filtered primary index
-                    AtomicInteger usage = new AtomicInteger();
-                    memoryComponentUsageMap.put(memoryComponent, usage);
-                    for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
-                        if (ref != null) {
-                            fileRefUsageMap.put(ref, usage);
-                        }
+                AtomicInteger usage = new AtomicInteger();
+                memoryComponentUsageMap.put(memoryComponent, usage);
+                for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
+                    if (ref != null) {
+                        fileRefUsageMap.put(ref, usage);
                     }
                 }
             }
@@ -140,27 +139,14 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         ILSMIndex index = memoryComponent.getLsmIndex();
         if (index.isPrimaryIndex()) {
             synchronized (this) {
-                int pos = primaryIndexes.indexOf(index);
-                if (pos >= 0) {
-                    primaryIndexes.remove(index);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("Unregistered {} index {} to the global VBC",
-                                isMetadataIndex(index) ? "metadata" : "primary", index.toString());
-                    }
-                    if (primaryIndexes.isEmpty()) {
-                        flushPtr = 0;
-                    } else if (flushPtr >= pos && flushPtr > 0) {
-                        // If the removed index is before flushPtr, we should decrement flushPtr by 1 so that
-                        // it still points to the same index.
-                        flushPtr = (flushPtr - 1) % primaryIndexes.size();
-                    }
+                if (primaryIndexes.remove(index) && LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Unregistered {} index {} to the global VBC",
+                            isMetadataIndex(index) ? "metadata" : "primary", index.toString());
                 }
-                if (index.getNumOfFilterFields() > 0) {
-                    memoryComponentUsageMap.remove(memoryComponent);
-                    for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
-                        if (ref != null) {
-                            fileRefUsageMap.remove(ref);
-                        }
+                memoryComponentUsageMap.remove(memoryComponent);
+                for (FileReference ref : memoryComponent.getComponentFileRefs().getFileReferences()) {
+                    if (ref != null) {
+                        fileRefUsageMap.remove(ref);
                     }
                 }
             }
@@ -191,13 +177,10 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             }
             checkAndNotifyFlushThread(false);
         }
-        if (memoryComponent.getLsmIndex().getNumOfFilterFields() > 0
-                && memoryComponent.getLsmIndex().isPrimaryIndex()) {
-            AtomicInteger usage = memoryComponentUsageMap.get(memoryComponent);
-            if (usage != null) {
-                // reset usage to 0 after the memory component is flushed
-                usage.set(0);
-            }
+        AtomicInteger usage = memoryComponentUsageMap.get(memoryComponent);
+        if (usage != null) {
+            // reset usage to 0 after the memory component is flushed
+            usage.set(0);
         }
     }
 
@@ -247,6 +230,9 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         AtomicInteger usage = fileRefUsageMap.get(fileRef);
         if (usage != null) {
             fileIdUsageMap.put(fileId, usage);
+        } else {
+            // file ids are recycled, so an untracked file must not inherit the usage of whatever held this id before
+            fileIdUsageMap.remove(fileId);
         }
     }
 
@@ -279,23 +265,20 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
         ICachedPage page = vbc.pin(dpid, context);
         if (context.isNewPage()) {
-            incrementFilteredMemoryComponentUsage(dpid, 1);
+            incrementMemoryComponentUsage(dpid, 1);
             checkAndNotifyFlushThread(false);
         }
         return page;
     }
 
-    private void incrementFilteredMemoryComponentUsage(long dpid, int pages) {
-        if (filteredMemoryComponentMaxNumPages > 0) {
-            // update memory usage of filtered index
-            AtomicInteger usage = fileIdUsageMap.get(BufferedFileHandle.getFileId(dpid));
-            if (usage != null) {
-                usage.addAndGet(pages);
-                // We do not need extra code to flush this filtered memory component when it becomes full.
-                // This method is only called when there are active writers on this memory component.
-                // When the writer exits, it'll automatically flush this memory component when it finds out
-                // that this memory component becomes full.
-            }
+    private void incrementMemoryComponentUsage(long dpid, int pages) {
+        AtomicInteger usage = fileIdUsageMap.get(BufferedFileHandle.getFileId(dpid));
+        if (usage != null) {
+            usage.addAndGet(pages);
+            // We do not need extra code to flush a filtered memory component when it becomes full.
+            // This method is only called when there are active writers on this memory component.
+            // When the writer exits, it'll automatically flush this memory component when it finds out
+            // that this memory component becomes full.
         }
     }
 
@@ -319,7 +302,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             throws HyracksDataException {
         vbc.resizePage(cPage, multiplier, extraPageBlockHelper);
         int delta = multiplier - cPage.getFrameSizeMultiplier();
-        incrementFilteredMemoryComponentUsage(((VirtualPage) cPage).dpid(), delta);
+        incrementMemoryComponentUsage(((VirtualPage) cPage).dpid(), delta);
         if (delta > 0) {
             checkAndNotifyFlushThread(false);
         }
@@ -519,13 +502,16 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         }
 
         private ILSMIndex selectFlushIndex() throws HyracksDataException {
-            int cycles = 0;
-            while (vbc.getUsage() >= flushPageBudget && cycles <= primaryIndexes.size()) {
-                // find the first modified memory component while avoiding infinite loops
-                ILSMIndex primaryIndex = primaryIndexes.get(flushPtr);
-                flushPtr = (flushPtr + 1) % primaryIndexes.size();
-                cycles++;
-                if (!primaryIndex.isCurrentMutableComponentEmpty() && !flushingIndexes.contains(primaryIndex)) {
+            // flush the fullest memory component first. picking a victim in registration order instead spends a
+            // flush per dataset to reclaim a dataset's worth of pages, so with many datasets sharing one budget the
+            // budget stays exceeded and the next one is flushed straight away- the components written that way are
+            // small, numerous, and leave a merge apiece behind them. for the same reason a component holding only
+            // metadata is a victim of last resort; see candidatesByDescendingUsage
+            for (ILSMIndex primaryIndex : candidatesByDescendingUsage()) {
+                if (vbc.getUsage() < flushPageBudget) {
+                    break;
+                }
+                if (!primaryIndex.isCurrentMutableComponentEmpty()) {
                     // we need to manually flush this memory component because it may be idle at this point
                     // note that this is different from flushing a filtered memory component
                     PrimaryIndexOperationTracker opTracker =
@@ -566,6 +552,57 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             return null;
         }
 
+        /**
+         * @return the indexes whose memory component may be flushed to relieve memory, fullest first. A component
+         *         whose only modifications are to its metadata frees next to nothing when flushed, yet costs a disk
+         *         component (and in time a merge) all the same, and where many components are modified only that
+         *         way they would crowd out the few which hold the memory whenever those are already flushing. So
+         *         only components holding tuples are candidates, unless none does and no flush is in progress which
+         *         would free memory instead.
+         */
+        private List<ILSMIndex> candidatesByDescendingUsage() throws HyracksDataException {
+            List<ILSMIndex> candidates = null;
+            Map<ILSMIndex, Integer> usages = null;
+            boolean anyHoldsTuples = false;
+            final int size = primaryIndexes.size();
+            for (int i = 0; i < size; i++) {
+                ILSMIndex primaryIndex = primaryIndexes.get(i);
+                if (flushingIndexes.contains(primaryIndex) || primaryIndex.isCurrentMutableComponentEmpty()) {
+                    continue;
+                }
+                boolean holdsTuples = primaryIndex.getCurrentMemoryComponent().hasTuples();
+                if (anyHoldsTuples && !holdsTuples) {
+                    continue;
+                }
+                if (holdsTuples && !anyHoldsTuples && candidates != null) {
+                    // the candidates so far hold only metadata, and are no longer needed
+                    candidates.clear();
+                    usages.clear();
+                }
+                anyHoldsTuples |= holdsTuples;
+                if (candidates == null) {
+                    candidates = new ArrayList<>();
+                    usages = new IdentityHashMap<>();
+                }
+                candidates.add(primaryIndex);
+                // take the usage once: writers keep adding to these counters while we sort, and a comparator
+                // reading them live can contradict itself, which the sort rejects outright
+                usages.put(primaryIndex, memoryComponentUsage(primaryIndex));
+            }
+            if (candidates == null || (!anyHoldsTuples && !flushingIndexes.isEmpty())) {
+                return Collections.emptyList();
+            }
+            if (candidates.size() > 1) {
+                Map<ILSMIndex, Integer> usageSnapshot = usages;
+                candidates.sort(Comparator.comparingInt(usageSnapshot::get).reversed());
+            }
+            return candidates;
+        }
+
+        private int memoryComponentUsage(ILSMIndex primaryIndex) {
+            AtomicInteger usage = memoryComponentUsageMap.get(primaryIndex.getCurrentMemoryComponent());
+            return usage == null ? 0 : usage.get();
+        }
     }
 
 }

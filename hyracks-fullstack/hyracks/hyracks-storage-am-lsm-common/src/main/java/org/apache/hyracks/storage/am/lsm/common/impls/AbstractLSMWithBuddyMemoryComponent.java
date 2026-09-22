@@ -34,7 +34,7 @@ public abstract class AbstractLSMWithBuddyMemoryComponent extends AbstractLSMMem
 
     @Override
     public void cleanup() throws HyracksDataException {
-        if (allocated.get()) {
+        if (allocated) {
             super.cleanup();
             getBuddyIndex().deactivate();
             getBuddyIndex().destroy();
@@ -50,7 +50,7 @@ public abstract class AbstractLSMWithBuddyMemoryComponent extends AbstractLSMMem
 
     @Override
     public void doDeallocate() throws HyracksDataException {
-        if (allocated.get()) {
+        if (allocated) {
             super.doDeallocate();
             getBuddyIndex().deactivate();
             getBuddyIndex().destroy();

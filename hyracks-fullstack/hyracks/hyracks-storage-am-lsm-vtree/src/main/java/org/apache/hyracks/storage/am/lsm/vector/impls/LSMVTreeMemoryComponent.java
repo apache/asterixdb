@@ -69,7 +69,7 @@ public class LSMVTreeMemoryComponent extends AbstractLSMMemoryComponent {
     }
 
     public boolean isAllocated() {
-        return allocated.get();
+        return allocated;
     }
 
     @Override

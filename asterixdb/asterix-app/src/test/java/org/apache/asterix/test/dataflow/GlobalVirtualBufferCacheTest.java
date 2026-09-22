@@ -19,7 +19,6 @@
 package org.apache.asterix.test.dataflow;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +32,6 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.StorageProperties.Option;
-import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
@@ -59,10 +57,12 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.logging.log4j.LogManager;
@@ -227,101 +227,41 @@ public class GlobalVirtualBufferCacheTest {
         }
     }
 
+    /**
+     * A memory component whose only modification is to its metadata frees next to nothing when flushed, so the
+     * global VBC should not flush it to relieve memory held by another index's tuples: with many such components,
+     * flushing each in turn produces a disk component per flush while memory stays over budget.
+     */
     @Test
-    public void testFlushPtrBoundsAfterRemovingLastIndex() throws Exception {
+    public void testMetadataOnlyComponentNotFlushedWhileTuplesHoldMemory() throws Exception {
+        TestLsmBtree metadataOnly = primaryIndexes[1];
+        MutableArrayValueReference key = new MutableArrayValueReference("GlobalVBCTestKey".getBytes());
+        MutableArrayValueReference value = new MutableArrayValueReference("GlobalVBCTestValue".getBytes());
+        primaryIndexDataflowHelpers[1].open();
         try {
-            // Create a scenario with multiple indexes to manipulate flushPtr
-            DataverseName dvName = DataverseName.createSinglePartName(StorageTestUtils.DATAVERSE_NAME);
-
-            // Create 3 additional datasets to have multiple indexes
-            Dataset dataset2 = new TestDataset(dvName, "ds2", dvName, StorageTestUtils.DATA_TYPE_NAME,
-                    StorageTestUtils.NODE_GROUP_NAME, NoMergePolicyFactory.NAME, null,
-                    new InternalDatasetDetails(null, PartitioningStrategy.HASH, StorageTestUtils.PARTITIONING_KEYS,
-                            null, null, null, false, null, null),
-                    null, DatasetType.INTERNAL, StorageTestUtils.DATASET_ID + 2, 0);
-
-            Dataset dataset3 = new TestDataset(dvName, "ds3", dvName, StorageTestUtils.DATA_TYPE_NAME,
-                    StorageTestUtils.NODE_GROUP_NAME, NoMergePolicyFactory.NAME, null,
-                    new InternalDatasetDetails(null, PartitioningStrategy.HASH, StorageTestUtils.PARTITIONING_KEYS,
-                            null, null, null, false, null, null),
-                    null, DatasetType.INTERNAL, StorageTestUtils.DATASET_ID + 3, 0);
-
-            // Create indexes for first partition only for simplicity
-            PrimaryIndexInfo index2Info = StorageTestUtils.createPrimaryIndex(nc, dataset2, 0);
-            PrimaryIndexInfo index3Info = StorageTestUtils.createPrimaryIndex(nc, dataset3, 0);
-
-            // Create index instances
-            IIndexDataflowHelperFactory factory2 =
-                    new IndexDataflowHelperFactory(nc.getStorageManager(), index2Info.getFileSplitProvider());
-            IIndexDataflowHelper helper2 = factory2.create(testCtxs[0].getJobletContext().getServiceContext(), 0);
-            helper2.open();
-            TestLsmBtree index2 = (TestLsmBtree) helper2.getIndexInstance();
-            helper2.close();
-
-            IIndexDataflowHelperFactory factory3 =
-                    new IndexDataflowHelperFactory(nc.getStorageManager(), index3Info.getFileSplitProvider());
-            IIndexDataflowHelper helper3 = factory3.create(testCtxs[0].getJobletContext().getServiceContext(), 0);
-            helper3.open();
-            TestLsmBtree index3 = (TestLsmBtree) helper3.getIndexInstance();
-            helper3.close();
-
-            // Access the global VBC through reflection to manipulate flushPtr
-            GlobalVirtualBufferCache globalVBC = (GlobalVirtualBufferCache) ncAppCtx.getVirtualBufferCache();
-
-            // Use reflection to access private fields
-            Field flushPtrField = GlobalVirtualBufferCache.class.getDeclaredField("flushPtr");
-            flushPtrField.setAccessible(true);
-
-            Field primaryIndexesField = GlobalVirtualBufferCache.class.getDeclaredField("primaryIndexes");
-            primaryIndexesField.setAccessible(true);
-
-            // Register memory components to add indexes to the list
-            // We already have primaryIndexes[0] and filteredPrimaryIndexes[0] registered
-            globalVBC.register(index2.getCurrentMemoryComponent());
-            globalVBC.register(index3.getCurrentMemoryComponent());
-
-            // Get the current state
-            @SuppressWarnings("unchecked")
-            List<ILSMIndex> primaryIndexes = (List<ILSMIndex>) primaryIndexesField.get(globalVBC);
-            int currentSize = primaryIndexes.size();
-
-            // Set flushPtr to point to the last index (should be currentSize - 1)
-            flushPtrField.set(globalVBC, currentSize - 1);
-            int flushPtrBefore = (Integer) flushPtrField.get(globalVBC);
-
-            // Verify we have the expected setup
-            Assert.assertTrue("Should have at least 3 indexes", currentSize >= 3);
-            Assert.assertEquals("flushPtr should point to last index", currentSize - 1, flushPtrBefore);
-
-            // Remove the last index (the one flushPtr is pointing to)
-            ILSMIndex lastIndex = primaryIndexes.get(currentSize - 1);
-            globalVBC.unregister(lastIndex.getCurrentMemoryComponent());
-
-            // Check the state after removal
-            int newSize = primaryIndexes.size();
-            int flushPtrAfter = (Integer) flushPtrField.get(globalVBC);
-
-            // This demonstrates the bug: flushPtr should be within bounds [0, newSize)
-            // With the current buggy code (flushPtr > pos), flushPtr would be (currentSize-1-1) % newSize
-            // But if flushPtr == pos (pointing to removed index), it's not adjusted and points out of bounds
-
-            Assert.assertEquals("List should be smaller after removal", currentSize - 1, newSize);
-
-            // The bug manifests when flushPtr equals the position of the removed index
-            // In this case, flushPtr is not adjusted and points beyond the list
-            if (flushPtrBefore == currentSize - 1) { // We removed the index flushPtr was pointing to
-                Assert.assertTrue("flushPtr should be within bounds after removal",
-                        flushPtrAfter >= 0 && flushPtrAfter < newSize);
-            }
-
-            // Clean up
-            helper2.destroy();
-            helper3.destroy();
-
-        } catch (Exception e) {
-            LOGGER.error("testFlushPtrBoundsAfterRemovingLastIndex failed", e);
-            Assert.fail(e.getMessage());
+            ILSMIndexAccessor accessor = metadataOnly.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            accessor.updateMeta(key, value);
+        } finally {
+            primaryIndexDataflowHelpers[1].close();
         }
+        Assert.assertTrue(metadataOnly.getCurrentMemoryComponent().isModified());
+        Assert.assertFalse(metadataOnly.getCurrentMemoryComponent().hasTuples());
+
+        // fill the budget many times over through another index, so that the global VBC flushes repeatedly
+        AtomicReference<Exception> exceptionRef = new AtomicReference<>();
+        try {
+            insertRecords(16 * 1024, 0, false, exceptionRef).join();
+            if (exceptionRef.get() != null) {
+                throw exceptionRef.get();
+            }
+        } finally {
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
+        }
+        Assert.assertTrue("the global VBC should have flushed the index holding tuples",
+                primaryIndexes[0].getDiskComponents().size() > 1);
+        Assert.assertEquals("the global VBC should not have flushed the metadata-only memory component", 0,
+                metadataOnly.getDiskComponents().size());
+        Assert.assertTrue(metadataOnly.getCurrentMemoryComponent().isModified());
     }
 
     private void initializeNc() throws Exception {
