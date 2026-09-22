@@ -44,12 +44,8 @@ import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure.BulkLoadRecordFormat;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
-import org.apache.hyracks.storage.am.vector.TestDoubleArrayVectorAccessor;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
-import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
-import org.apache.hyracks.storage.am.vector.utils.NoOpVectorQuantizer;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.junit.After;
@@ -211,8 +207,6 @@ public class LSMVTreeMultiClusterAgreementTest {
 
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
-        iap.getParameters().put(IVTreeQuantizer.IAP_KEY, NoOpVectorQuantizer.INSTANCE);
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
         if (useTopK) {
             iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);

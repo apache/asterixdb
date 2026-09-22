@@ -26,6 +26,7 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.vector.OptimizedScalarQuantizerFactory;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.dataflow.data.common.AOrderedListVectorBinaryAccessorFactory;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
@@ -153,6 +154,10 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
             // Distance-function factory — persisted on the resource so a restarted index reconstructs
             // the same distance implementation.
             VectorDistanceFunctionFactory distanceFunctionFactory = new VectorDistanceFunctionFactory(distanceMetric);
+            // Quantizer factory — persisted next to the distance-function factory, from the same metric, so
+            // a search reads both off the index instead of the operator shipping the quantizer half.
+            OptimizedScalarQuantizerFactory quantizerFactory =
+                    isQuantized ? new OptimizedScalarQuantizerFactory(distanceMetric.canonical()) : null;
             // Atomicity is a property of the dataset, so every index on it must report the same value --
             // PrimaryIndexOperationTracker#flushIfRequested walks the partition's open indexes, and on one
             // whose memory component still holds writers it returns quietly only if that index is atomic,
@@ -165,7 +170,7 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     mergePolicyProperties, true, vectorDimensions, vectorFields,
                     typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, atomic,
                     vectorAccessorFactory, VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys),
-                    numIncludeFields, distanceFunctionFactory, crossPollination, epsilon);
+                    numIncludeFields, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
         } else {
             return null;
         }

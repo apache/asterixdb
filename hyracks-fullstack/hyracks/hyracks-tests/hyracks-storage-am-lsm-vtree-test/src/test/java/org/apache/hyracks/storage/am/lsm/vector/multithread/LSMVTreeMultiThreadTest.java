@@ -45,9 +45,7 @@ import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure.BulkLoadRecordFormat;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
-import org.apache.hyracks.storage.am.vector.TestDoubleArrayVectorAccessor;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
-import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -166,8 +164,6 @@ public class LSMVTreeMultiThreadTest {
             for (int t = 0; t < numSearchThreads; t++) {
                 IndexAccessParameters iap =
                         new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-                iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY,
-                        TestDoubleArrayVectorAccessor.Factory.INSTANCE);
                 IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
                 SearchWorker worker = new SearchWorker(accessor, TARGET_CENTROID, BULK_LOADED_PER_CENTROID);
                 searchWorkers.add(worker);
@@ -371,7 +367,6 @@ public class LSMVTreeMultiThreadTest {
 
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
         IIndexCursor cursor = accessor.createSearchCursor(false);
@@ -447,7 +442,6 @@ public class LSMVTreeMultiThreadTest {
 
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
         IIndexCursor cursor = accessor.createSearchCursor(false);

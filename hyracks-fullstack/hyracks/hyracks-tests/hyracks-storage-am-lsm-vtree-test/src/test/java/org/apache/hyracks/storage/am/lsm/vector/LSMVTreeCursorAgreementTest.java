@@ -47,12 +47,8 @@ import org.apache.hyracks.storage.am.lsm.vector.util.QuantizedSearchTestDriver;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure.BulkLoadRecordFormat;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
-import org.apache.hyracks.storage.am.vector.TestDoubleArrayVectorAccessor;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
-import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
-import org.apache.hyracks.storage.am.vector.utils.NoOpVectorQuantizer;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.junit.After;
@@ -232,6 +228,60 @@ public class LSMVTreeCursorAgreementTest {
         }
     }
 
+    /**
+     * A search opened without the parameters the top-K cursor needs must say which one is missing.
+     * <p>
+     * The task context is the one entry that genuinely has to arrive this way — it is per-operation, and
+     * the inverted index passes its own the same way. The diagnosis comes from the spill buffer that
+     * needs it; what this pins is that the message names the key, so the operator that failed to populate
+     * the map is identifiable from it.
+     */
+    @Test
+    public void aTopKSearchMissingItsTaskContextNamesWhatIsMissing() throws Exception {
+        AbstractVectorTreeTestContext ctx = newContext(collidingDistanceCluster());
+        try {
+            ctx.getIndex().create();
+            ctx.getIndex().activate();
+            testUtils.buildStaticStructure(ctx);
+            testUtils.bulkLoadRecords(ctx);
+
+            NullPointerException noContext = Assert.assertThrows(NullPointerException.class,
+                    () -> searchWithout(ctx, HyracksConstants.HYRACKS_TASK_CONTEXT));
+            Assert.assertTrue("message should name the missing key, was: " + noContext.getMessage(),
+                    noContext.getMessage().contains(HyracksConstants.HYRACKS_TASK_CONTEXT));
+        } finally {
+            ctx.getIndex().deactivate();
+        }
+    }
+
+    /** Opens a top-K search with every required parameter except {@code omittedKey}. */
+    private void searchWithout(AbstractVectorTreeTestContext ctx, String omittedKey) throws Exception {
+        ArrayTupleBuilder queryTupleBuilder = new ArrayTupleBuilder(1);
+        queryTupleBuilder.addField(DoubleArraySerializerDeserializer.INSTANCE, new double[] { 5, 0, 0 });
+        ArrayTupleReference queryTuple = new ArrayTupleReference();
+        queryTuple.reset(queryTupleBuilder.getFieldEndOffsets(), queryTupleBuilder.getByteArray());
+
+        VTreeSearchPredicate predicate = new VTreeSearchPredicate();
+        predicate.setQueryTuple(queryTuple);
+        predicate.setQueryFieldIndex(0);
+        predicate.setK(K);
+
+        IndexAccessParameters iap =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);
+        if (!HyracksConstants.HYRACKS_TASK_CONTEXT.equals(omittedKey)) {
+            iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
+        }
+
+        IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
+        IIndexCursor cursor = accessor.createSearchCursor(false);
+        try {
+            accessor.search(cursor, predicate);
+        } finally {
+            cursor.destroy();
+        }
+    }
+
     // ---- the agreement assertion --------------------------------------------------------------
 
     /**
@@ -269,8 +319,6 @@ public class LSMVTreeCursorAgreementTest {
 
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
-        iap.getParameters().put(IVTreeQuantizer.IAP_KEY, NoOpVectorQuantizer.INSTANCE);
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
         if (useTopK) {
             iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);

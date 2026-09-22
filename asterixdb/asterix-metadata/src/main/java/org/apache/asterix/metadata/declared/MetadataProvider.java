@@ -59,7 +59,6 @@ import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.asterix.common.vector.OptimizedScalarQuantizerFactory;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.dataflow.data.common.AOrderedListVectorBinaryAccessorFactory;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -860,18 +859,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int[] projectedFields = VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys);
 
         AOrderedListVectorBinaryAccessorFactory vectorAccessorFactory = new AOrderedListVectorBinaryAccessorFactory();
-        // The distance metric is fixed at index creation and baked into the factories the search operator
+        // The distance metric is fixed at index creation and baked into the factory the search operator
         // ships; the storage layer never sees a metric string.
         VectorSimilarityMetric distanceMetric = vectorParameters.getSimilarity();
         VectorDistanceFunctionFactory distanceFunctionFactory = new VectorDistanceFunctionFactory(distanceMetric);
-        OptimizedScalarQuantizerFactory quantizerFactory =
-                new OptimizedScalarQuantizerFactory(distanceMetric.canonical());
 
         int[][] partitionsMap = partitioningProperties.getComputeStorageMap();
         VTreeSearchOperatorDescriptor vectorSearchOp = new VTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                 queryFields, indexDataflowHelperFactory, retainInput, searchCallbackFactory, vectorAccessorFactory,
-                distanceFunctionFactory, quantizerFactory, partitionsMap, projectedFields, tupleFilterFactory,
-                includeFilterFields, indexEpsilon, indexOnly);
+                distanceFunctionFactory, partitionsMap, projectedFields, tupleFilterFactory, includeFilterFields,
+                indexEpsilon, indexOnly);
 
         return new Pair<>(vectorSearchOp, partitioningProperties.getConstraints());
     }

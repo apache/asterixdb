@@ -53,12 +53,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeDiskComponent;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeTopKSearchCursor;
-import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
-import org.apache.hyracks.storage.am.vector.utils.NoOpVectorQuantizer;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -147,7 +144,7 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
      * Sets up the environment properly like the production VTreeSearchOperatorNodePushable:
      * 1. Creates a query tuple containing the vector
      * 2. Sets up the predicate with the query tuple and field index
-     * 3. Creates an accessor with IVTreeBinaryAccessorFactory in its parameters
+     * 3. Creates an index accessor
      */
     public void scanClosestLeafCluster(AbstractVectorTreeTestContext ctx) throws Exception {
         double[] queryVector = { 20.0d, 20.0d, 15.0d };
@@ -163,11 +160,10 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
         predicate.setQueryTuple(queryTuple);
         predicate.setQueryFieldIndex(0); // Vector is at field 0
 
-        // 3. Create accessor with IVTreeBinaryAccessorFactory in parameters
+        // 3. Create the index accessor
         // This is what VTreeSearchOperatorNodePushable does in addAdditionalIndexAccessorParams()
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
         IIndexCursor cursor = accessor.createSearchCursor(false);
@@ -263,10 +259,9 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
         predicate.setK(k); // Set K for top-K ANN search
         predicate.setEpsilon(0.0); // No level-wise cross-pollination
 
-        // 3. Create accessor with IVTreeBinaryAccessorFactory in parameters
+        // 3. Create the index accessor
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
         IIndexCursor cursor = accessor.createSearchCursor(false);
@@ -345,13 +340,9 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
         predicate.setQueryFieldIndex(0);
         predicate.setK(k);
 
-        // 3. Create accessor with IVTreeBinaryAccessorFactory in parameters.
-        // Pass NoOpVectorQuantizer so the cursor can dequantize test embeddings
-        // (test mode stores full-precision vectors as "quantized" embeddings).
+        // 3. Create the index accessor.
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
-        iap.getParameters().put(IVTreeQuantizer.IAP_KEY, NoOpVectorQuantizer.INSTANCE);
         // Opt in to LSMVTreeTopKSearchCursor — this test exercises the production top-K search
         // path. Other test verification paths (e.g. verifyInsertedRecords) leave the flag unset
         // and get the streaming LSMVTreeSearchCursor.
@@ -509,7 +500,6 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
         // Create accessor with vector accessor factory
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, TestDoubleArrayVectorAccessor.Factory.INSTANCE);
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
         IIndexCursor cursor = accessor.createSearchCursor(false);

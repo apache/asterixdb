@@ -21,19 +21,17 @@ package org.apache.hyracks.storage.am.vector.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
 /**
- * Factory for {@link IVTreeQuantizer} instances, supplied to the storage layer through the
- * index-access-parameters map (key {@link #IAP_KEY}).
+ * Factory for {@link IVTreeQuantizer} instances, supplied to the storage layer at construction time
+ * and persisted on the local resource so it survives NC restart.
  * <p>
- * Replaces the previous {@code Class.forName} / constructor-reflection block in
- * {@code VTree#search} that constructed an AsterixDB {@code ScalarVectorQuantizer} from a
- * {@code float[]} quantization-params payload.
+ * Lets the {@code asterix-common} layer plug in a quantizer implementation without the
+ * {@code hyracks-storage-am-vtree} module depending on AsterixDB types. Extends
+ * {@link IJsonSerializable} so the concrete factory can be persisted on the local resource.
  */
-public interface IVTreeQuantizerFactory extends Serializable {
-
-    /** Index-access-parameters key under which a factory instance is passed to the storage layer. */
-    String IAP_KEY = "VECTOR_QUANTIZER_FACTORY";
+public interface IVTreeQuantizerFactory extends Serializable, IJsonSerializable {
 
     /**
      * Build a quantizer for the given dimensionality. The distance metric is fixed at index creation and

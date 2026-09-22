@@ -47,6 +47,7 @@ import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.api.IQuantizedResource;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
@@ -69,6 +70,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     private static final String KEY_NUM_INCLUDE_FIELDS = "numIncludeFields";
     private static final String KEY_VECTOR_ACCESSOR_FACTORY = "vectorAccessorFactory";
     private static final String KEY_DISTANCE_FUNCTION_FACTORY = "distanceFunctionFactory";
+    private static final String KEY_QUANTIZER_FACTORY = "quantizerFactory";
     private static final String KEY_CROSS_POLLINATION_M = "crossPollinationM";
     private static final String KEY_RNG_FACTOR = "rngFactor";
     private static final String KEY_EPSILON = "epsilon";
@@ -96,6 +98,13 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
 
     /**
+     * Quantizer factory supplied at DDL time for a quantized index, {@code null} otherwise. Persisted
+     * beside the distance-function factory: both are fixed by the index's similarity metric and have to
+     * select the same one.
+     */
+    protected final IVTreeQuantizerFactory quantizerFactory;
+
+    /**
      * Cross-pollination placement config supplied at DDL time; never {@code null}. Persisted so that
      * incremental insert and delete on a restarted index resolve the leaf clusters bulk-load used.
      */
@@ -121,8 +130,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
             Map<String, String> mergePolicyProperties, boolean durable, int vectorDimensions, int[] vectorFields,
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
-            double epsilon) {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
+            CrossPollinationConfig crossPollination, double epsilon) {
         super(path, storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -134,6 +143,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.identityFields = Objects.requireNonNull(identityFields, "identityFields");
         this.numIncludeFields = numIncludeFields;
         this.distanceFunctionFactory = Objects.requireNonNull(distanceFunctionFactory, "distanceFunctionFactory");
+        this.quantizerFactory = quantizerFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.epsilon = epsilon;
     }
@@ -141,8 +151,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     protected LSMVTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int vectorDimensions,
             int[] vectorFields, boolean atomic, IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             int numIncludeFields, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            CrossPollinationConfig crossPollination, double epsilon, VTreeQuantizationParams quantization)
-            throws HyracksDataException {
+            IVTreeQuantizerFactory quantizerFactory, CrossPollinationConfig crossPollination, double epsilon,
+            VTreeQuantizationParams quantization) throws HyracksDataException {
         super(registry, json);
         this.vectorDimensions = vectorDimensions;
         this.vectorFields = vectorFields;
@@ -151,6 +161,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.identityFields = Objects.requireNonNull(identityFields, "identityFields");
         this.numIncludeFields = numIncludeFields;
         this.distanceFunctionFactory = Objects.requireNonNull(distanceFunctionFactory, "distanceFunctionFactory");
+        this.quantizerFactory = quantizerFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.epsilon = epsilon;
         this.quantization = quantization;
@@ -166,6 +177,13 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         ioOpCallbackFactory.initialize(ncServiceCtx, this);
         pageWriteCallbackFactory.initialize(ncServiceCtx, this);
 
+        // A quantized index whose factory did not survive the round trip would search unquantized rather
+        // than fail, which reads as a recall regression rather than a corrupt resource.
+        if (quantization != null && quantizerFactory == null) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "The quantizer factory is missing from the quantized resource at " + path);
+        }
+
         // The tuple layout follows from the persisted facts, so it is rebuilt here rather than carried as a
         // second copy of them.
         VTreeDataTupleBuilderFactory dataTupleBuilderFactory =
@@ -180,7 +198,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
                 ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, pageWriteCallbackFactory,
                 vectorDimensions, vectorFields, filterFields, null, null, null, durable, metadataPageManagerFactory,
                 atomic, null, vectorAccessorFactory, identityFields, dataTupleBuilderFactory, quantization,
-                distanceFunctionFactory, crossPollination, epsilon);
+                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
     }
 
     @Override
@@ -208,6 +226,10 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         // see PersistedResourceRegistry#registerClasses.
         json.set(KEY_VECTOR_ACCESSOR_FACTORY, vectorAccessorFactory.toJson(registry));
         json.set(KEY_DISTANCE_FUNCTION_FACTORY, distanceFunctionFactory.toJson(registry));
+        // Absent for a non-quantized index, whose quantization node is absent too.
+        if (quantizerFactory != null) {
+            json.set(KEY_QUANTIZER_FACTORY, quantizerFactory.toJson(registry));
+        }
         if (quantization != null) {
             ObjectNode quantizationNode = OBJECT_MAPPER.createObjectNode();
             quantizationNode.put(KEY_MIN_QUANTILE, quantization.minQuantile());
@@ -235,6 +257,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
                 (IVTreeBinaryAccessorFactory) registry.deserialize(require(json, KEY_VECTOR_ACCESSOR_FACTORY));
         IVTreeDistanceFunctionFactory distanceFunctionFactory =
                 (IVTreeDistanceFunctionFactory) registry.deserialize(require(json, KEY_DISTANCE_FUNCTION_FACTORY));
+        IVTreeQuantizerFactory quantizerFactory = json.has(KEY_QUANTIZER_FACTORY)
+                ? (IVTreeQuantizerFactory) registry.deserialize(json.get(KEY_QUANTIZER_FACTORY)) : null;
         double epsilon = require(json, KEY_EPSILON).asDouble();
         CrossPollinationConfig crossPollination = new CrossPollinationConfig(
                 require(json, KEY_CROSS_POLLINATION_M).asInt(), require(json, KEY_RNG_FACTOR).asDouble());
@@ -248,7 +272,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
                     require(node, KEY_SAMPLE_COUNT).asInt());
         }
         return new LSMVTreeLocalResource(registry, json, vectorDimensions, vectorFields, atomic, vectorAccessorFactory,
-                identityFields, numIncludeFields, distanceFunctionFactory, crossPollination, epsilon, quantization);
+                identityFields, numIncludeFields, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon,
+                quantization);
     }
 
     /**

@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.am.lsm.vector.impls.IVectorSearchCursor;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeTopKSearchCursor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
@@ -79,10 +78,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
     // Factory for creating distance functions (injected from the AsterixDB layer)
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
-
-    // Factory for creating per-query quantizers (passed from AsterixDB layer). Nullable for
-    // non-quantized indexes and for test contexts that pre-inject a pre-built IVTreeQuantizer.
-    protected final IVTreeQuantizerFactory quantizerFactory;
 
     // Tuple reference for extracting query parameters
     protected PermutingFrameTupleReference queryParamsTuple;
@@ -131,9 +126,8 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             int[] queryFields, IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput,
             ISearchOperationCallbackFactory searchCallbackFactory, ITupleProjectorFactory projectorFactory,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            IVTreeQuantizerFactory quantizerFactory, int[][] partitionsMap, ITupleFilterFactory tupleFilterFactory,
-            int[] includeFilterFields, double indexEpsilon, int numProjectedFields, boolean indexOnly)
-            throws HyracksDataException {
+            int[][] partitionsMap, ITupleFilterFactory tupleFilterFactory, int[] includeFilterFields,
+            double indexEpsilon, int numProjectedFields, boolean indexOnly) throws HyracksDataException {
         // Vector search does its filtering in the cursor, so the operator passes no filter fields,
         // tuple filter, output limit, or search-callback proceed result (see the args below).
         super(ctx, inputRecDesc, partition, null, // minFilterFieldIndexes
@@ -154,7 +148,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         this.queryFields = queryFields;
         this.vectorAccessorFactory = vectorAccessorFactory;
         this.distanceFunctionFactory = distanceFunctionFactory;
-        this.quantizerFactory = quantizerFactory;
         this.tupleFilterFactory = tupleFilterFactory;
         this.includeFilterFields = includeFilterFields;
         this.indexEpsilon = indexEpsilon;
@@ -371,21 +364,12 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
     @Override
     protected void addAdditionalIndexAccessorParams(IIndexAccessParameters iap) {
-        // Vector accessor factory: storage layer uses this to extract the query vector from the
-        // search predicate's tuple, keeping the extraction in the storage layer (no AsterixDB types
-        // leak down).
-        iap.getParameters().put(IVTreeBinaryAccessorFactory.IAP_KEY, vectorAccessorFactory);
-
-        // Distance-function factory injected from AsterixDB so the VTree can build an
-        // IVTreeDistanceFunction without depending on asterix-runtime types.
-        iap.getParameters().put(IVTreeDistanceFunctionFactory.IAP_KEY, distanceFunctionFactory);
-
-        // Quantizer factory (nullable). The VTree builds a per-query IVTreeQuantizer from the
-        // float[6] params persisted on the index. Null for non-quantized indexes and for test
-        // contexts that inject a pre-built IVTreeQuantizer under IVTreeQuantizer.IAP_KEY.
-        if (quantizerFactory != null) {
-            iap.getParameters().put(IVTreeQuantizerFactory.IAP_KEY, quantizerFactory);
-        }
+        // Nothing index-fixed is passed here. The vector accessor factory, the distance-function factory
+        // and the quantizer factory are all determined by the index -- the metric is chosen at CREATE INDEX
+        // time, and the optimizer falls back to a full scan rather than using the index when a query asks
+        // for a different one -- and all three are persisted on the resource, so the storage layer reads
+        // them from the index it already has. Passing them meant every search carried values that could
+        // only ever equal what the storage layer held.
 
         // Task context for the spillable top-K buffer (follows inverted-index pattern).
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx);

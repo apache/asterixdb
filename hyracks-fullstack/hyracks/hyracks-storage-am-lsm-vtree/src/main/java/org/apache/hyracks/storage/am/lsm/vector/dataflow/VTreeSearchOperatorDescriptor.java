@@ -31,7 +31,6 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.impls.FieldSubsetTupleProjectorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
-import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 /**
@@ -71,10 +70,6 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     // interface to keep this module free of AsterixDB type dependencies.
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
 
-    // Factory for creating per-query quantizers from the float[6] params persisted on the tree.
-    // Provided by AsterixDB (OptimizedScalarQuantizerFactory). Nullable for non-quantized indexes.
-    protected final IVTreeQuantizerFactory quantizerFactory;
-
     // Factory for creating tuple filters for INCLUDE field predicates (e.g., year > 2000)
     // When set, the cursor will only return tuples that pass this filter
     protected final ITupleFilterFactory tupleFilterFactory;
@@ -98,9 +93,8 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     public VTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] queryFields, IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput,
             ISearchOperationCallbackFactory searchCallbackFactory, IVTreeBinaryAccessorFactory vectorAccessorFactory,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
-            int[][] partitionsMap, int[] projectedFields, ITupleFilterFactory tupleFilterFactory,
-            int[] includeFilterFields, double indexEpsilon, boolean indexOnly) {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, int[][] partitionsMap, int[] projectedFields,
+            ITupleFilterFactory tupleFilterFactory, int[] includeFilterFields, double indexEpsilon, boolean indexOnly) {
         super(spec, 1, 1); // 1 input, 1 output
         this.queryFields = queryFields;
         this.indexHelperFactory = indexHelperFactory;
@@ -108,7 +102,6 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.searchCallbackFactory = searchCallbackFactory;
         this.vectorAccessorFactory = vectorAccessorFactory;
         this.distanceFunctionFactory = distanceFunctionFactory;
-        this.quantizerFactory = quantizerFactory;
         this.partitionsMap = partitionsMap;
         this.projectedFields = projectedFields;
         this.tupleFilterFactory = tupleFilterFactory;
@@ -128,7 +121,7 @@ public class VTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         return new VTreeSearchOperatorNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), queryFields, indexHelperFactory,
                 retainInput, searchCallbackFactory, tupleProjectorFactory, vectorAccessorFactory,
-                distanceFunctionFactory, quantizerFactory, partitionsMap, tupleFilterFactory, includeFilterFields,
-                indexEpsilon, projectedFields.length, indexOnly);
+                distanceFunctionFactory, partitionsMap, tupleFilterFactory, includeFilterFields, indexEpsilon,
+                projectedFields.length, indexOnly);
     }
 }

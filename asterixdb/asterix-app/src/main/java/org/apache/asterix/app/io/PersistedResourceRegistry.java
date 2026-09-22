@@ -37,6 +37,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicyFactory;
 import org.apache.asterix.common.transactions.Checkpoint;
+import org.apache.asterix.common.vector.OptimizedScalarQuantizerFactory;
 import org.apache.asterix.dataflow.data.common.AListElementTokenFactory;
 import org.apache.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
 import org.apache.asterix.dataflow.data.common.AOrderedListVectorBinaryAccessorFactory;
@@ -172,6 +173,9 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
 
         // IVTreeDistanceFunctionFactory — registered so LSMVTreeLocalResource can JSON-round-trip it.
         registeredClasses.put("VectorDistanceFunctionFactory", VectorDistanceFunctionFactory.class);
+
+        // IVTreeQuantizerFactory — same, for quantized VTree indexes.
+        registeredClasses.put("OptimizedScalarQuantizerFactory", OptimizedScalarQuantizerFactory.class);
 
         // ILSMMergePolicyFactory
         registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);

@@ -88,6 +88,9 @@ public class VTree extends AbstractTreeIndex {
     // null = non-quantized index.
     private final VTreeQuantizationParams quantizationParams;
     private final IVTreeDistanceFunctionFactory distanceFunctionFactory;
+    // null = no quantized distances for this index. Its presence, not quantizationParams, is the switch:
+    // test fixtures store full-precision vectors in the quantized field and so carry params-free factory.
+    private final IVTreeQuantizerFactory quantizerFactory;
     // Distance function for this index's metric, used by the write/clustering path; search builds
     // per-query functions from the factory.
     private final IVTreeDistanceFunction distanceFunction;
@@ -130,8 +133,8 @@ public class VTree extends AbstractTreeIndex {
             ITreeIndexFrameFactory dataFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
             int vectorDimensions, FileReference file, IVTreeBinaryAccessorFactory vectorAccessorFactory,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
-            double epsilon) throws HyracksDataException {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
+            CrossPollinationConfig crossPollination, double epsilon) throws HyracksDataException {
         super(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
         this.vectorDimensions = vectorDimensions;
         this.metadataFrameFactory = metadataFrameFactory;
@@ -141,6 +144,7 @@ public class VTree extends AbstractTreeIndex {
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
         this.distanceFunction = distanceFunctionFactory.createDistanceFunction();
+        this.quantizerFactory = quantizerFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         // A negative window would shrink rather than widen the candidate set, which no caller means.
         if (epsilon < 0.0) {
@@ -608,15 +612,11 @@ public class VTree extends AbstractTreeIndex {
         private final VTree tree;
         private final VTreeOpContext ctx;
         private boolean destroyed = false;
-        // The IAP map and the tree's quantization params are fixed for the accessor's lifetime, so these are
-        // resolved once at construction and read as fixed fields during search. queryDistanceFunctionFactory
-        // is the optional query-time factory (null → fall back to the index's own); queryVectorAccessor
-        // decodes the query tuple; quantizerFactory / injectedQuantizer are the production and test quantizer
-        // seams. Only the quantizer instance is built per search (it depends on the predicate's distance metric).
+        // Fixed for the accessor's lifetime, so they are resolved once at construction and read as fixed
+        // fields during search. Only the quantizer instance is built per search.
         private final IVTreeDistanceFunctionFactory queryDistanceFunctionFactory;
         private final IVTreeBinaryAccessor queryVectorAccessor;
         private final IVTreeQuantizerFactory quantizerFactory;
-        private final IVTreeQuantizer injectedQuantizer;
         private final VTreeQuantizationParams quantizationParams;
 
         public VTreeAccessor(VTree tree, IIndexAccessParameters iap) {
@@ -625,13 +625,13 @@ public class VTree extends AbstractTreeIndex {
                     tree.metadataFrameFactory, tree.dataFrameFactory, tree.freePageManager, tree.cmpFactories,
                     tree.vectorDimensions, iap.getModificationCallback(), iap.getSearchOperationCallback(),
                     tree.dataTupleBuilderFactory, tree.quantizationParams, tree.vectorAccessorFactory);
-            this.queryDistanceFunctionFactory =
-                    (IVTreeDistanceFunctionFactory) iap.getParameters().get(IVTreeDistanceFunctionFactory.IAP_KEY);
-            IVTreeBinaryAccessorFactory queryAccessorFactory =
-                    (IVTreeBinaryAccessorFactory) iap.getParameters().get(IVTreeBinaryAccessorFactory.IAP_KEY);
-            this.queryVectorAccessor = queryAccessorFactory == null ? null : queryAccessorFactory.createAccessor();
-            this.quantizerFactory = (IVTreeQuantizerFactory) iap.getParameters().get(IVTreeQuantizerFactory.IAP_KEY);
-            this.injectedQuantizer = (IVTreeQuantizer) iap.getParameters().get(IVTreeQuantizer.IAP_KEY);
+            this.queryVectorAccessor = tree.vectorAccessorFactory.createAccessor();
+            // All come from the tree, which was configured from the same index metadata the search operator
+            // reads. They used to arrive through the access-parameters map as well, which meant the operator
+            // rebuilt values the index already held and a search could fail for want of a parameter it never
+            // needed.
+            this.queryDistanceFunctionFactory = tree.distanceFunctionFactory;
+            this.quantizerFactory = tree.quantizerFactory;
             this.quantizationParams = tree.getQuantizationParams();
         }
 
@@ -739,7 +739,7 @@ public class VTree extends AbstractTreeIndex {
          */
         private IVTreeDistanceFunctionFactory resolveDistanceFunctionFactory() {
             // queryDistanceFunctionFactory was resolved from the IAP at accessor construction.
-            return queryDistanceFunctionFactory != null ? queryDistanceFunctionFactory : tree.distanceFunctionFactory;
+            return queryDistanceFunctionFactory;
         }
 
         /** Build the cursor initial state: root page (static for memory components), query vector, metric fn. */
@@ -757,28 +757,18 @@ public class VTree extends AbstractTreeIndex {
         }
 
         /**
-         * Resolve the query-time quantizer (if any) and publish its quantized query vector onto
-         * {@code initialState}. Production path: an {@link IVTreeQuantizerFactory} supplied via IAP
-         * by VTreeSearchOperatorNodePushable builds a quantizer from the float[6] quantization
-         * params persisted on the tree. Test fallback: a pre-built {@link IVTreeQuantizer} injected
-         * directly under {@link IVTreeQuantizer#IAP_KEY} (e.g. NoOpVectorQuantizer.INSTANCE in
-         * VectorTreeTestUtils). Leaves {@code initialState} unquantized when neither applies.
+         * Build the query-time quantizer from the index's own factory and publish its quantized query
+         * vector onto {@code initialState}. Leaves {@code initialState} unquantized for an index that has
+         * no quantizer factory, and for an operation with no query vector.
          */
         private void resolveAndSetQuantizer(VTreeCursorInitialState initialState, double[] queryVector)
                 throws HyracksDataException {
-            // quantizationParams / quantizerFactory / injectedQuantizer were resolved from the tree and IAP at
-            // accessor construction; the quantizer's distance metric is baked into the factory.
-            if (quantizationParams != null && queryVector != null && quantizerFactory != null) {
-                IVTreeQuantizer quantizer = quantizerFactory.createQuantizer(tree.vectorDimensions, quantizationParams);
-                initialState.setQuantizedQueryVector(quantizer.quantize(queryVector));
-                initialState.setQuantizer(quantizer);
+            if (queryVector == null || quantizerFactory == null) {
+                return;
             }
-
-            // Fallback: a pre-built IVTreeQuantizer injected directly under IVTreeQuantizer.IAP_KEY.
-            if (initialState.getQuantizer() == null && queryVector != null && injectedQuantizer != null) {
-                initialState.setQuantizedQueryVector(injectedQuantizer.quantize(queryVector));
-                initialState.setQuantizer(injectedQuantizer);
-            }
+            IVTreeQuantizer quantizer = quantizerFactory.createQuantizer(tree.vectorDimensions, quantizationParams);
+            initialState.setQuantizedQueryVector(quantizer.quantize(queryVector));
+            initialState.setQuantizer(quantizer);
         }
 
         /**

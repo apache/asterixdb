@@ -44,6 +44,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFacto
 import org.apache.hyracks.storage.am.lsm.vector.dataflow.LSMVTreeLocalResource;
 import org.apache.hyracks.storage.am.vector.TestDoubleArrayVectorAccessor;
 import org.apache.hyracks.storage.am.vector.TestVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.TestVTreeQuantizerFactory;
+import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IStorageManager;
@@ -90,6 +92,25 @@ public class LSMVTreeLocalResourceJsonTest {
         assertEquals(params, restored.getQuantizationParams());
     }
 
+    /**
+     * The quantizer factory is persisted beside the distance-function factory, and only for a quantized
+     * index. A quantized index that lost it would search unquantized -- a recall regression rather than a
+     * visible failure -- which is why createInstance reports its absence instead.
+     */
+    @Test
+    public void quantizerFactoryIsPersistedOnlyWhenPresent() throws Exception {
+        FakeRegistry registry = new FakeRegistry();
+        LSMVTreeLocalResource quantized = resource(registry, TestVTreeQuantizerFactory.INSTANCE);
+        quantized.setQuantizationParameters(new VTreeQuantizationParams(0.1f, 0.9f, 0.8f, 0.999f, 8, 20000));
+
+        JsonNode json = quantized.toJson(registry);
+        assertEquals(1, countOccurrences(text(json), "\"quantizerFactory\""));
+        LSMVTreeLocalResource restored = (LSMVTreeLocalResource) LSMVTreeLocalResource.fromJson(registry, json);
+        assertEquals(text(json), text(restored.toJson(registry)));
+
+        assertEquals(0, countOccurrences(text(resource(registry, null).toJson(registry)), "\"quantizerFactory\""));
+    }
+
     /** A truncated or foreign resource must be rejected, not silently defaulted into a mis-keyed index. */
     @Test
     public void missingRequiredKeyIsRejected() throws Exception {
@@ -133,6 +154,10 @@ public class LSMVTreeLocalResourceJsonTest {
     }
 
     private static LSMVTreeLocalResource resource(FakeRegistry registry) {
+        return resource(registry, TestVTreeQuantizerFactory.INSTANCE);
+    }
+
+    private static LSMVTreeLocalResource resource(FakeRegistry registry, IVTreeQuantizerFactory quantizerFactory) {
         return new LSMVTreeLocalResource("dataverse/dataset/0/idx", registry.serializable(IStorageManager.class),
                 new ITypeTraits[] { registry.serializable(ITypeTraits.class) },
                 new IBinaryComparatorFactory[] { registry.serializable(IBinaryComparatorFactory.class) }, null, null,
@@ -142,7 +167,8 @@ public class LSMVTreeLocalResourceJsonTest {
                 registry.serializable(ILSMIOOperationSchedulerProvider.class),
                 registry.serializable(ILSMMergePolicyFactory.class), Collections.emptyMap(), true, VECTOR_DIMENSIONS,
                 VECTOR_FIELDS, null, null, true, TestDoubleArrayVectorAccessor.Factory.INSTANCE, IDENTITY_FIELDS,
-                NUM_INCLUDE_FIELDS, TestVTreeDistanceFunctionFactory.INSTANCE, CROSS_POLLINATION, EPSILON);
+                NUM_INCLUDE_FIELDS, TestVTreeDistanceFunctionFactory.INSTANCE, quantizerFactory, CROSS_POLLINATION,
+                EPSILON);
     }
 
     /**
@@ -209,6 +235,7 @@ public class LSMVTreeLocalResourceJsonTest {
             byClass.put(TestDoubleArrayVectorAccessor.Factory.class.getName(),
                     TestDoubleArrayVectorAccessor.Factory.INSTANCE);
             byClass.put(TestVTreeDistanceFunctionFactory.class.getName(), TestVTreeDistanceFunctionFactory.INSTANCE);
+            byClass.put(TestVTreeQuantizerFactory.class.getName(), TestVTreeQuantizerFactory.INSTANCE);
         }
     }
 }

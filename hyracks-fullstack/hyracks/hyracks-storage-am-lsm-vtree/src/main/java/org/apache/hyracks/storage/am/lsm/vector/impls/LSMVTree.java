@@ -69,6 +69,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LoadOperation;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.impls.VTreeFlushLoader;
@@ -124,6 +125,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     // Raw quantization params for lazy quantizer creation at query time (null = non-quantized path)
     protected final VTreeQuantizationParams quantizationParams;
     protected final IVTreeDistanceFunctionFactory distanceFunctionFactory;
+    protected final IVTreeQuantizerFactory quantizerFactory;
     protected final CrossPollinationConfig crossPollination;
     protected final double epsilon;
 
@@ -145,7 +147,8 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] comparatorFields,
             IBinaryComparatorFactory[] keyCmpFactories, IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             VTreeQuantizationParams quantizationParams, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            CrossPollinationConfig crossPollination, double epsilon) throws HyracksDataException {
+            IVTreeQuantizerFactory quantizerFactory, CrossPollinationConfig crossPollination, double epsilon)
+            throws HyracksDataException {
 
         super(storageConfig, ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
@@ -164,6 +167,7 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
+        this.quantizerFactory = quantizerFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.epsilon = epsilon;
 
@@ -175,7 +179,8 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
             VTree vTree = new VTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
                     interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
                     1, vectorDimensions, virtualFileRef, vectorAccessorFactory, dataTupleBuilderFactory,
-                    quantizationParams, this.distanceFunctionFactory, this.crossPollination, this.epsilon);
+                    quantizationParams, this.distanceFunctionFactory, this.quantizerFactory, this.crossPollination,
+                    this.epsilon);
             LSMVTreeMemoryComponent mutableComponent = new LSMVTreeMemoryComponent(this, vTree, virtualBufferCache,
                     filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);
@@ -658,6 +663,15 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
      * search cursor for the VTree index; the streaming {@link LSMVTreeSearchCursor} is reserved
      * for component merges.
      */
+    /**
+     * The accessor that decodes a query vector. Fixed by the index's field type, so it is taken from here
+     * rather than passed per search: the search operator used to put an equivalent instance into the
+     * access-parameters map, which the index already held.
+     */
+    public IVTreeBinaryAccessorFactory getVectorAccessorFactory() {
+        return vectorAccessorFactory;
+    }
+
     public IIndexCursor createTopKSearchCursor(ILSMIndexOperationContext opCtx) {
         return new LSMVTreeTopKSearchCursor(opCtx);
     }

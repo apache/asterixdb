@@ -53,6 +53,7 @@ import org.apache.hyracks.storage.am.lsm.vector.tuples.LSMVTreeDataTupleWriterFa
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.frames.VTreeDataFrameFactory;
 import org.apache.hyracks.storage.am.vector.frames.VTreeInteriorFrameFactory;
@@ -88,6 +89,9 @@ public final class LSMVTreeUtils {
      *                           {@code IVTreeQuantizerFactory#createQuantizer}) or {@code null} for
      *                           the non-quantized test-fixture path; controls whether the leaf
      *                           frame uses the 4-field quantized layout or the 3-field bare layout.
+     * @param quantizerFactory   builds the query-time quantizer, or {@code null} for an index that has
+     *                           no quantized distances. Persisted on the resource alongside the
+     *                           distance-function factory, since both are fixed by the index's metric.
      * @param crossPollination   placement config from the index DDL; must not be {@code null}. There is
      *                           deliberately no convenience overload that supplies a default: the value
      *                           has to be the one bulk-load placed the records by, and a default here
@@ -106,8 +110,8 @@ public final class LSMVTreeUtils {
             IMetadataPageManagerFactory metadataPageManagerFactory, boolean atomic, RecordDescriptor inputRecDesc,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
-            IVTreeDistanceFunctionFactory distanceFunctionFactory, CrossPollinationConfig crossPollination,
-            double epsilon) throws HyracksDataException {
+            IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
+            CrossPollinationConfig crossPollination, double epsilon) throws HyracksDataException {
 
         // VTree tuples contain no field that is both fixed-length AND nullable, so the null bitmap is never
         // load-bearing and no INullIntrospector is needed (unlike BTree/RTree secondary keys):
@@ -174,7 +178,7 @@ public final class LSMVTreeUtils {
         VTreeFactory vtreeFactory = new VTreeFactory(ioManager, diskBufferCache, metadataPageManagerFactory,
                 interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
                 TREE_INDEX_FIELD_COUNT, vectorDimensions, vectorAccessorFactory, dataTupleBuilderFactory,
-                quantizationParams, distanceFunctionFactory, crossPollination, epsilon);
+                quantizationParams, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
         ILSMIndexFileManager fileManager = new LSMVTreeFileManager(ioManager, file, vtreeFactory);
         ILSMDiskComponentFactory componentFactory = new LSMVTreeDiskComponentFactory(vtreeFactory, filterHelper);
 
@@ -184,7 +188,7 @@ public final class LSMVTreeUtils {
                 bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 pageWriteCallbackFactory, vectorDimensions, vectorFields, filterFields, durable, atomic,
                 vectorAccessorFactory, comparatorFields, keyCmpFactories, dataTupleBuilderFactory, quantizationParams,
-                distanceFunctionFactory, crossPollination, epsilon);
+                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
     }
 
 }

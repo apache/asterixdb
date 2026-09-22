@@ -24,17 +24,13 @@ import org.apache.hyracks.api.io.IJsonSerializable;
 
 /**
  * Factory for {@link IVTreeDistanceFunction} instances. Supplied to the storage layer at
- * construction time (persisted on the local resource so it survives NC restart) and, for
- * query-time overrides, through the index-access-parameters map (key {@link #IAP_KEY}).
+ * construction time and persisted on the local resource, so it survives NC restart.
  * <p>
  * Lets the {@code asterix-runtime} layer plug in distance implementations without the
  * {@code hyracks-storage-am-vtree} module depending on AsterixDB types. Extends
  * {@link IJsonSerializable} so the concrete factory can be persisted on the local resource.
  */
 public interface IVTreeDistanceFunctionFactory extends Serializable, IJsonSerializable {
-
-    /** Index-access-parameters key under which a factory instance is passed to the storage layer. */
-    String IAP_KEY = "VD_FUN_FACTORY";
 
     /**
      * Build the distance function for the metric this factory was created with. The metric is fixed at

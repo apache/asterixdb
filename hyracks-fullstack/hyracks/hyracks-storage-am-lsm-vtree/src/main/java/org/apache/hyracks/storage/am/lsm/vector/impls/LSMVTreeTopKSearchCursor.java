@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
-import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 import org.apache.hyracks.storage.am.vector.impls.ClusterSearchResult;
@@ -210,12 +209,9 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
         // Get index access parameters
         IIndexAccessParameters iap = ((LSMVTreeOpContext) opCtx).getIndexAccessParameters();
 
-        // Initialize vector accessor from factory in parameters
-        IVTreeBinaryAccessorFactory vectorAccessorFactory =
-                (IVTreeBinaryAccessorFactory) iap.getParameters().get(IVTreeBinaryAccessorFactory.IAP_KEY);
-        if (vectorAccessorFactory != null) {
-            this.vectorAccessor = vectorAccessorFactory.createAccessor();
-        }
+        // From the index, which was configured with it at creation: it cannot be missing, so there is
+        // nothing here to validate or to fail on.
+        this.vectorAccessor = ((LSMVTree) opCtx.getIndex()).getVectorAccessorFactory().createAccessor();
 
         // Create cluster selection strategy (minProbeFraction → nprobe + DFS fallback)
         this.clusterStrategy = new NprobeClusterSelectionStrategy(vectorPred.getMinProbeFraction(), epsilon);
@@ -772,8 +768,16 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
         // Reclaims the per-component accessors and cursors. endSearch() also runs here to cover a cursor
         // destroyed without being opened or closed.
         try {
-            Throwable failure = CleanupUtils.destroy(null, vTreeAccessors);
-            failure = CleanupUtils.destroy(failure, rangeCursors);
+            // The enforced contract guarantees doClose() already ran (destroy requires the CLOSED state), which
+            // ended the current search. doDestroy() reclaims the per-component accessors + cursors for good,
+            // matching LSMIndexSearchCursor.doDestroy.
+            //
+            // Both arrays may still be null: doOpen() validates its access parameters before allocating them,
+            // so a cursor whose open failed reaches destroy() with nothing to reclaim. CleanupUtils.destroy
+            // dereferences the array, so passing null threw a NullPointerException from the cleanup path and
+            // replaced whatever diagnosis doOpen() had produced with a stack trace pointing at destroy().
+            Throwable failure = vTreeAccessors == null ? null : CleanupUtils.destroy(null, vTreeAccessors);
+            failure = rangeCursors == null ? failure : CleanupUtils.destroy(failure, rangeCursors);
             vTreeAccessors = null;
             rangeCursors = null;
             if (failure != null) {

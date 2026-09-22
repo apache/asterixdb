@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
@@ -46,6 +47,7 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
     private final IVTreeDataTupleBuilderFactory dataTupleBuilderFactory;
     private final VTreeQuantizationParams quantizationParams;
     private final IVTreeDistanceFunctionFactory distanceFunctionFactory;
+    private final IVTreeQuantizerFactory quantizerFactory;
     private final CrossPollinationConfig crossPollination;
     private final double epsilon;
 
@@ -55,7 +57,7 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, int vectorDimensions,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, IVTreeDataTupleBuilderFactory dataTupleBuilderFactory,
             VTreeQuantizationParams quantizationParams, IVTreeDistanceFunctionFactory distanceFunctionFactory,
-            CrossPollinationConfig crossPollination, double epsilon) {
+            IVTreeQuantizerFactory quantizerFactory, CrossPollinationConfig crossPollination, double epsilon) {
         super(ioManager, bufferCache, freePageManagerFactory, interiorFrameFactory, leafFrameFactory, cmpFactories,
                 fieldCount);
         this.metadataFrameFactory = metadataFrameFactory;
@@ -65,6 +67,7 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
         this.dataTupleBuilderFactory = dataTupleBuilderFactory;
         this.quantizationParams = quantizationParams;
         this.distanceFunctionFactory = distanceFunctionFactory;
+        this.quantizerFactory = quantizerFactory;
         this.crossPollination = crossPollination;
         this.epsilon = epsilon;
     }
@@ -74,6 +77,6 @@ public class VTreeFactory extends TreeIndexFactory<VTree> {
         return new VTree(bufferCache, freePageManagerFactory.createPageManager(bufferCache), interiorFrameFactory,
                 leafFrameFactory, metadataFrameFactory, dataFrameFactory, cmpFactories, fieldCount, vectorDimensions,
                 file, vectorAccessorFactory, dataTupleBuilderFactory, quantizationParams, distanceFunctionFactory,
-                crossPollination, epsilon);
+                quantizerFactory, crossPollination, epsilon);
     }
 }

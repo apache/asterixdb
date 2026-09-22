@@ -29,8 +29,5 @@ import org.apache.hyracks.api.io.IJsonSerializable;
  */
 public interface IVTreeBinaryAccessorFactory extends Serializable, IJsonSerializable {
 
-    /** Index-access-parameters key under which a factory instance is passed to the storage layer. */
-    String IAP_KEY = "VECTOR_QUERY";
-
     IVTreeBinaryAccessor createAccessor();
 }

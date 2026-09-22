@@ -29,14 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IVTreeQuantizer {
 
     /**
-     * Index-access-parameters key for injecting a pre-built quantizer (test-fixture path).
-     * Production code passes an {@link IVTreeQuantizerFactory} under
-     * {@link IVTreeQuantizerFactory#IAP_KEY} instead and lets the storage layer build the
-     * quantizer per query.
-     */
-    String IAP_KEY = "VECTOR_QUANTIZER";
-
-    /**
      * Quantize a full-precision vector and immediately dequantize it back to double[].
      *
      * @param vector the full-precision vector

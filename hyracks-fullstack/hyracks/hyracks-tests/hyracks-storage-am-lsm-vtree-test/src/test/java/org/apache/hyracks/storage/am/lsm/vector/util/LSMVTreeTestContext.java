@@ -50,6 +50,7 @@ import org.apache.hyracks.storage.am.lsm.vector.utils.LSMVTreeUtils;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
 import org.apache.hyracks.storage.am.vector.TestDoubleArrayVectorAccessor;
 import org.apache.hyracks.storage.am.vector.TestVTreeDistanceFunctionFactory;
+import org.apache.hyracks.storage.am.vector.TestVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
@@ -191,9 +192,11 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 metadataPageManagerFactory, false, // atomic
                 (RecordDescriptor) null, TestDoubleArrayVectorAccessor.Factory.INSTANCE, // inputRecDesc, vectorAccessorFactory
                 VTreeDataTupleAccessor.identityFields(effectiveFactory.isQuantized(), NUM_KEY_FIELDS), effectiveFactory,
-                (VTreeQuantizationParams) null, // builderFactory, quantizer
+                (VTreeQuantizationParams) null, // builderFactory, quantizationParams
                 TestVTreeDistanceFunctionFactory.INSTANCE, // distanceFunctionFactory (test fixture)
-                SINGLE_CLOSEST, EPSILON);
+                // Identity quantizer: these fixtures store full-precision vectors, and the top-K cursor
+                // requires a quantizer. Inert on this bare leaf layout, which carries no quantized bytes.
+                TestVTreeQuantizerFactory.INSTANCE, SINGLE_CLOSEST, EPSILON);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }
@@ -235,7 +238,10 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 true, metadataPageManagerFactory, false, (RecordDescriptor) null,
                 TestDoubleArrayVectorAccessor.Factory.INSTANCE,
                 VTreeDataTupleAccessor.identityFields(effectiveFactory.isQuantized(), NUM_KEY_FIELDS), effectiveFactory,
-                quantizationParams, TestVTreeDistanceFunctionFactory.INSTANCE, SINGLE_CLOSEST, EPSILON);
+                quantizationParams, TestVTreeDistanceFunctionFactory.INSTANCE,
+                // No quantizer: this fixture's leaves carry full-precision bytes in the quantized field,
+                // so a quantized distance off them would not mean anything. Neighbor tests never ask for one.
+                null, SINGLE_CLOSEST, EPSILON);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }
