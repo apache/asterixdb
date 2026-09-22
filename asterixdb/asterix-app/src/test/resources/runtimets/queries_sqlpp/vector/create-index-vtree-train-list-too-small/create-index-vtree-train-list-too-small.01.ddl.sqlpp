@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-// TYPE VTREE is optional when the indexed field carries the VECTOR annotation: no other index type
-// accepts one, so the annotation alone determines the type. Everything below is deliberately the
-// same shape as create-index-vtree, minus the TYPE clause.
+// A stated train_list_fraction that leaves fewer training records per partition than the clusters
+// derived for the collection is rejected at DDL time. Same collection shape as create-index-vtree.
 DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;

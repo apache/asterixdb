@@ -16,10 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-USE test;
-
-// No TYPE clause. The VECTOR annotation on `embedding` is what makes this a vector index; the
-// INCLUDE/WITH clauses that only a vector index accepts must be honoured too.
-CREATE INDEX idx_emb
-  ON MovieSmall(embedding VECTOR)
-  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "seed": 42 };
+DROP DATAVERSE test IF EXISTS;

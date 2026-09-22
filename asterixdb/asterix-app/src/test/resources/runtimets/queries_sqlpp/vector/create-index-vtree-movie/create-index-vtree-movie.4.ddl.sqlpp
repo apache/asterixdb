@@ -20,4 +20,4 @@
 
 USE testm;
 CREATE INDEX idx_emb ON MovieReal(embedding VECTOR) TYPE VTREE
-  WITH { "dimension": 384, "similarity": "l2_squared", "num_clusters": 4, "train_list_fraction": 1.0, "seed": 42 };
+  WITH { "dimension": 384, "similarity": "l2_squared", "num_clusters": 4, "seed": 42 };

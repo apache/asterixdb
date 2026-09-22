@@ -52,11 +52,3 @@ INSERT INTO MovieSmall ([
   {"id": 29, "embedding": [10.0, 10.0, 10.0, 1.4]},
   {"id": 30, "embedding": [10.0, 10.0, 10.0, 1.5]}
 ]);
-
-// Enough rows that every storage partition recommends several clusters, so a fraction that
-// trains on one or two rows per partition is short of the cluster count whatever the partition
-// count is.
-INSERT INTO MovieSmall (
-  SELECT VALUE {"id": 1000 + r, "embedding": [0.0, 0.0, 0.0, r * 0.001]}
-  FROM range(1, 4000) r
-);

@@ -16,10 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+// num_clusters and train_list_fraction stated together are rejected at DDL time, before the
+// cardinality is consulted. Same collection shape as create-index-vtree.
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
-
-// No TYPE clause. The VECTOR annotation on `embedding` is what makes this a vector index; the
-// INCLUDE/WITH clauses that only a vector index accepts must be honoured too.
-CREATE INDEX idx_emb
-  ON MovieSmall(embedding VECTOR)
-  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "seed": 42 };
+CREATE TYPE MovieType AS {
+  id: int,
+  embedding: [double]
+};
+CREATE DATASET MovieSmall(MovieType) PRIMARY KEY id;

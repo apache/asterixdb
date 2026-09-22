@@ -18,10 +18,10 @@
  */
 USE test;
 
-// A fraction this small leaves fewer training records than clusters, so there is not even one record
-// per centroid to place. Kept at 2 clusters so the collection is never smaller than the cluster count
-// itself -- D here is 30 records spread over the suite's storage partitions, so it is single digits.
+// A fraction this small leaves fewer training records than the clusters derived for the collection,
+// so there is not even one record per centroid to place. The cluster count is left to inference:
+// stating it alongside the fraction is itself an error (create-index-vtree-both-knobs).
 CREATE INDEX idx_emb
   ON MovieSmall(embedding VECTOR)
   TYPE VTREE
-  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "train_list_fraction": 0.01, "seed": 42 };
+  WITH { "dimension": 4, "similarity": "euclidean", "train_list_fraction": 0.001, "seed": 42 };

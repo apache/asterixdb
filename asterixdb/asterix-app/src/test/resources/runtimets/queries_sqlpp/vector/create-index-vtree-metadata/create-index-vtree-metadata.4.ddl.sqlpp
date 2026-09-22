@@ -21,7 +21,8 @@ USE test;
 
 // Every WITH parameter is given a non-default value, and one INCLUDE path is nested, so the
 // expected record below shows the actual persisted value of each rather than a default that
-// would also be produced by dropping the field.
+// would also be produced by dropping the field. train_list_fraction is the exception: it cannot
+// be stated alongside num_clusters, so the record shows the value derived from the cluster count.
 CREATE INDEX idx_emb
   ON MovieSmall(embedding VECTOR)
   INCLUDE (title, info.year)
@@ -31,7 +32,6 @@ CREATE INDEX idx_emb
     "similarity": "cosine",
     "quantization": "SQ4",
     "num_clusters": 2,
-    "train_list_fraction": 1.0,
     "seed": 42,
     "epsilon": 0.5,
     "cross_pollination_m": 3,

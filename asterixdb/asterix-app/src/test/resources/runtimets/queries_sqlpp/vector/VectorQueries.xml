@@ -120,7 +120,13 @@
     <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-train-list-too-small">
             <output-dir compare="Text">create-index-vtree-train-list-too-small</output-dir>
-            <expected-error>fewer than the 2 clusters to be built</expected-error>
+            <expected-error>clusters to be built. Raise it to at least</expected-error>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-both-knobs">
+            <output-dir compare="Text">create-index-vtree-both-knobs</output-dir>
+            <expected-error>cannot both be set</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">

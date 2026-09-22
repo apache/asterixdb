@@ -24,4 +24,4 @@ CREATE INDEX idx_emb
   ON MovieOpen(embedding VECTOR)
   INCLUDE (year: int)
   TYPE VTREE
-  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "train_list_fraction": 1.0, "seed": 42 };
+  WITH { "dimension": 4, "similarity": "euclidean", "num_clusters": 2, "seed": 42 };

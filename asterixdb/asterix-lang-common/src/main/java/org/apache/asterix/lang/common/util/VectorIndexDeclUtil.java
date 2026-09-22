@@ -99,6 +99,7 @@ public class VectorIndexDeclUtil {
         }
         AdmObjectNode node = ExpressionUtils.toNode(withRecord);
         validateWithClauseFieldNames(node);
+        validateSizingKnobsExclusive(node);
 
         VectorIndexParameters.Builder builder = VectorIndexParameters.builder();
         builder.setDimension(validateDimension(node));
@@ -116,6 +117,18 @@ public class VectorIndexDeclUtil {
             // Unreachable: the two mandatory parameters are validated above, which reports a clearer error.
             throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED, e, sourceLoc,
                     e.getMessage());
+        }
+    }
+
+    /**
+     * {@code num_clusters} and {@code train_list_fraction} are one decision: the training list is sized
+     * from the cluster count, so a stated fraction would either restate that size or contradict it.
+     */
+    private static void validateSizingKnobsExclusive(AdmObjectNode node) throws CompilationException {
+        if (node.get(NUM_CLUSTERS) != null && node.get(TRAIN_LIST_FRACTION) != null) {
+            throw new CompilationException(ErrorCode.COMPILATION_VECTOR_INDEX_CREATION_FAILED,
+                    "`num_clusters` and `train_list_fraction` cannot both be set. Set one and the other is "
+                            + "derived from it.");
         }
     }
 
