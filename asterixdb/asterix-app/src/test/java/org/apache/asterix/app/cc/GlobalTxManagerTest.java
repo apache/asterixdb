@@ -44,6 +44,7 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.transactions.IGlobalTransactionContext;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -304,6 +305,36 @@ public class GlobalTxManagerTest {
 
         assertEquals("only the partition that reported should be rolled back", Collections.singletonList(NODE_ID),
                 rolledBack);
+    }
+
+    /**
+     * JobManager.add registers the transaction and only then queues or executes the job. When that throws, the
+     * job id never reaches the client, so the statement path has nothing to abort with and the context - and
+     * the resource map it holds - is retained for the lifetime of the cluster controller: the repository is an
+     * unbounded map filled from the job lifecycle and drained only from the statement path.
+     */
+    @Test
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers deregistration of a transaction whose job was never submitted")
+    public void failedSubmissionDeregistersTheTransaction() {
+        JobId jobId = new JobId(8);
+        globalTxManager.beginTransaction(jobId, 1, 1, Collections.singletonList(DATASET_ID));
+        assertEquals("the transaction should be registered before the submission fails", 1, countTracked(jobId));
+
+        globalTxManager.notifyJobSubmissionFailed(jobId, mock(JobSpecification.class));
+
+        assertEquals("the transaction outlived the failed submission", 0, countTracked(jobId));
+    }
+
+    /**
+     * Every job's failed submission reaches every listener, so a job with no global transaction - which is
+     * most of them - has to pass through silently rather than fail looking up a context it never had.
+     */
+    @Test
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that a non-atomic job's failed submission is ignored")
+    public void failedSubmissionOfNonAtomicJobIsIgnored() throws Exception {
+        globalTxManager.notifyJobSubmissionFailed(new JobId(9), mock(JobSpecification.class));
+
+        verify(messageBroker, never()).sendRealTimeApplicationMessageToNC(any(INcAddressedMessage.class), anyString());
     }
 
     private IGlobalTransactionContext prepareTransaction(JobId jobId) {

@@ -57,6 +57,7 @@ import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -126,13 +127,19 @@ public class JobManager implements IJobManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public void add(JobRun jobRun) throws HyracksException {
         checkJob(jobRun);
         JobSpecification job = jobRun.getJobSpecification();
-        IJobCapacityController.JobSubmissionStatus status;
+        CCServiceContext serviceCtx = ccs.getContext();
+        boolean creationNotified = false;
+        boolean submitted = false;
         try {
-            status = jobCapacityController.allocate(job, jobRun.getJobId(), jobRun.getFlags());
-            CCServiceContext serviceCtx = ccs.getContext();
+            IJobCapacityController.JobSubmissionStatus status =
+                    jobCapacityController.allocate(job, jobRun.getJobId(), jobRun.getFlags());
+            // set before the notification, not after: it fans out to several listeners, and one that throws
+            // partway leaves the listeners ahead of it holding state only this failure path will release
+            creationNotified = true;
             serviceCtx.notifyJobCreation(jobRun.getJobId(), job, status);
             switch (status) {
                 case QUEUE:
@@ -144,9 +151,16 @@ public class JobManager implements IJobManager {
                 default:
                     throw new IllegalStateException("unknown submission status: " + status);
             }
+            submitted = true;
         } catch (HyracksDataException ex) {
             handleException(ex);
             throw ex;
+        } finally {
+            if (creationNotified && !submitted) {
+                // the job will neither start nor finish, so no later notification releases what the creation
+                // notification registered, and the client never receives the job id to release it either.
+                serviceCtx.notifyJobSubmissionFailed(jobRun.getJobId(), job);
+            }
         }
     }
 

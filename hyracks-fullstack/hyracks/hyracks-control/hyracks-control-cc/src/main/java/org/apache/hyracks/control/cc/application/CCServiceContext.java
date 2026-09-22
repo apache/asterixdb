@@ -43,8 +43,13 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ServiceContext;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
+import org.apache.hyracks.util.annotations.AiProvenance;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CCServiceContext extends ServiceContext implements ICCServiceContext {
+
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ICCContext ccContext;
 
     protected final Set<String> initPendingNodeIds;
@@ -97,6 +102,17 @@ public class CCServiceContext extends ServiceContext implements ICCServiceContex
             IJobCapacityController.JobSubmissionStatus status) throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, spec, status);
+        }
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public synchronized void notifyJobSubmissionFailed(JobId jobId, JobSpecification spec) {
+        for (IJobLifecycleListener l : jobLifecycleListeners) {
+            try {
+                l.notifyJobSubmissionFailed(jobId, spec);
+            } catch (Exception e) {
+                LOGGER.error("failed to notify {} that the submission of {} failed", l, jobId, e);
+            }
         }
     }
 

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * A listener for job related events
@@ -37,6 +38,19 @@ public interface IJobLifecycleListener {
      */
     void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
             throws HyracksException;
+
+    /**
+     * Notify the listener that a job it was told of in {@link #notifyJobCreation} will not run after all, its
+     * submission having failed. Neither {@link #notifyJobStart} nor {@link #notifyJobFinish} follows, and the
+     * job id never reaches the client, so whatever the creation notification registered is released here or
+     * not at all.
+     *
+     * @param jobId the job id
+     * @param spec the job specification
+     */
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    default void notifyJobSubmissionFailed(JobId jobId, JobSpecification spec) {
+    }
 
     /**
      * Notify the listener that the job has started on the cluster controller

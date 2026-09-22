@@ -315,6 +315,12 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
+    public void notifyJobSubmissionFailed(JobId jobId, JobSpecification spec) {
+        txnContextRepository.remove(jobId);
+    }
+
+    @Override
     public void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
     }
 
