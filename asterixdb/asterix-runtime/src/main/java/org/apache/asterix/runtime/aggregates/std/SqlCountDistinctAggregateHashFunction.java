@@ -65,10 +65,6 @@ import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
 import org.apache.hyracks.dataflow.std.sort.ISorter;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 
 /**
  * HASH_DISTINCT_COUNT — counts distinct non-null values. Equivalent to {@code COUNT(DISTINCT x)}.
@@ -102,7 +98,6 @@ import org.apache.hyracks.util.annotations.AiProvenance.Tool;
  * the comparator's ordering being consistent with its equality — the same property hash-equality already
  * assumes — so the two modes always agree.
  */
-@AiProvenance(agent = Agent.CLAUDE_SONNET_4_6, tool = Tool.CLAUDE_CODE_UI, contributionKind = ContributionKind.ASSISTED, notes = "Hash-optimized COUNT(DISTINCT): single-pass hash-based distinct counting with a bounded-memory ")
 public class SqlCountDistinctAggregateHashFunction extends AbstractAggregateFunction {
 
     // ---- result serialization ----
@@ -359,7 +354,6 @@ public class SqlCountDistinctAggregateHashFunction extends AbstractAggregateFunc
         liveSlots = 0;
     }
 
-    @AiProvenance(agent = Agent.CLAUDE_OPUS_5, tool = Tool.CLAUDE_CODE_UI, contributionKind = ContributionKind.ASSISTED, notes = "Pass a null normalizer array, not an array holding a null factory: NPE on first spill of a column with no normalized-key computer (ANY / complex)")
     private void ensureSpillStructures() throws HyracksDataException {
         if (runsGenerator != null) {
             return;

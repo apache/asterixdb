@@ -27,7 +27,6 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.ContentFile;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.expressions.And;
@@ -102,9 +101,6 @@ import org.apache.logging.log4j.Logger;
  * Note that {@link VariantSchemaClipper}, {@link RequestedVariantPaths}, {@link VariantProjectionPlan} and the
  * projected Parquet reader are <em>not</em> affected: they implement column projection, which #15384 does not address.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Evaluates shredded-variant sub-field manifest bounds ourselves (little-endian) to skip data files, "
-        + "because Iceberg 1.11.0's InclusiveMetricsEvaluator throws on variant bounds; conservative by "
-        + "construction — only drops a file when the bounds prove no row can match")
 public final class VariantBoundsEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -129,7 +125,6 @@ public final class VariantBoundsEvaluator {
      * path. The failing file, and the cause, go to the debug log instead - with the location redacted, since a log is
      * not the requester's to read.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Surfaces unevaluable variant bounds as a deduplicated warning naming the sub-field, with the redacted file location and cause on the debug log")
     private void warnBoundsNotEvaluated(String subField) {
         if (warningCollector != null && warningCollector.shouldWarn()) {
             warningCollector.warn(Warning.of(null, ErrorCode.ICEBERG_VARIANT_BOUNDS_NOT_EVALUATED, subField));

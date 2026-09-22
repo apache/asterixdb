@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Maps {@code vector_distance()} / {@code ann_distance()} metric string literals to the internal
@@ -41,7 +40,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@code COSINE} and {@code DOT} resolve to distance semantics ({@code cosine-distance} = 1 - similarity,
  * {@code dot-distance} = -dot product), not the public {@code cosine_similarity()} / {@code dot_product()} builtins.
  */
-@AiProvenance(agent = AiProvenance.Agent.GPT_5_3, tool = AiProvenance.Tool.CURSOR, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Restrict to six canonical metric literals")
 public final class VectorMetricFunctionMapUtil {
 
     private static final Map<VectorSimilarityMetric, String> METRIC_TO_BUILTIN =

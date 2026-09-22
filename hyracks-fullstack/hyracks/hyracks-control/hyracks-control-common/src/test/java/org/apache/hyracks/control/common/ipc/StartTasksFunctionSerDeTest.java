@@ -30,10 +30,8 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobKind;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.StartTasksFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class StartTasksFunctionSerDeTest {
 
     private static final String TZ = "UTC";

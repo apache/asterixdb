@@ -26,7 +26,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ClusterByOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Shields the CLUSTER BY assignment-centroid placeholder from variable inlining. The translator binds the
@@ -37,7 +36,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@code InlineVariablesRule} and {@code RemoveRedundantVariablesRule} honor. The rule never changes the
  * plan; it only records the variable, and only when a CLUSTER BY operator is present.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Assignment-centroid decorrelation: protect the translator placeholder from inlining")
 public class ProtectClusterByPlaceholderRule implements IAlgebraicRewriteRule {
 
     @Override

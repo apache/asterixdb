@@ -37,7 +37,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.write.DefaultColumnWriteContext;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,7 +61,6 @@ import org.junit.runners.Parameterized.Parameters;
  * only the main columns); after the fix they match.
  */
 @RunWith(Parameterized.class)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class FlushMetaColumnCountTest extends AbstractBytesTest {
 
     public FlushMetaColumnCountTest(TestCase testCase) throws HyracksDataException {

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.expressions.And;
 import org.apache.iceberg.expressions.Expression;
@@ -102,8 +101,6 @@ import org.apache.iceberg.types.Types.NestedField;
  * {@code IS NULL} has no literal to type an extract with, whatever the path syntax). Deleting them along with the
  * workaround would reintroduce a failed query, not merely a lost optimization.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Rewrites dotted predicates on VARIANT sub-fields into Iceberg extract terms so manifest "
-        + "sub-field bounds can prune data files; leaves anything it cannot rewrite untouched")
 public final class VariantPredicateRewriter {
 
     /**
@@ -153,7 +150,6 @@ public final class VariantPredicateRewriter {
      * Whether the schema contains a variant ANYWHERE, not just as a top-level column: a variant can sit inside a
      * struct, and a schema whose only variant is nested must still reach the rewrite below.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Looks for variants at any depth; scanning only top-level columns skipped the rewrite entirely for a variant nested in a struct")
     private static boolean hasVariantColumn(Schema schema) {
         return containsVariant(schema.asStruct());
     }
@@ -345,7 +341,6 @@ public final class VariantPredicateRewriter {
      * True if {@code expression} still references a VARIANT sub-field with a plain dotted name — that is, a predicate
      * {@link #rewrite} declined to convert into an extract term.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Detects dotted VARIANT sub-field references left behind by a declined rewrite; such a reference cannot bind and would fail scan planning")
     public static boolean containsVariantSubFieldPredicate(Expression expression, Schema schema) {
         if (schema == null) {
             return false;
@@ -367,7 +362,6 @@ public final class VariantPredicateRewriter {
     }
 
     /** Whether this predicate is a dotted reference whose root column is a VARIANT (so it cannot be bound). */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Leaf test shared by containsVariantSubFieldPredicate and withoutVariantSubFieldPredicates")
     private static boolean isVariantSubFieldReference(UnboundPredicate<?> predicate, Schema schema) {
         if (predicate.term() instanceof UnboundExtract) {
             return false; // already an extract term; handled by the iceberg-15384 split
@@ -406,7 +400,6 @@ public final class VariantPredicateRewriter {
      * collapses whole, so the pushed filter can only admit more files. The engine still applies the predicate to the
      * rows, so results are unchanged.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Correctness guard: drops dotted VARIANT sub-field references the rewriter declined, which would otherwise fail scan planning with a ValidationException; mirrors withoutExtractTerms' weaken-only discipline")
     public static Expression withoutVariantSubFieldPredicates(Expression expression, Schema schema) {
         if (expression == null || schema == null) {
             return expression;

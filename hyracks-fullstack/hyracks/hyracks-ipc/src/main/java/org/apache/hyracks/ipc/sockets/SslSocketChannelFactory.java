@@ -29,7 +29,6 @@ import javax.net.ssl.SSLEngine;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class SslSocketChannelFactory implements ISocketChannelFactory {
 
@@ -46,7 +45,6 @@ public class SslSocketChannelFactory implements ISocketChannelFactory {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "ASTERIXDB-3851: pass the dialled peer to the engine")
     public ISocketChannel createClientChannel(SocketChannel socketChannel) {
         final SSLEngine sslEngine = networkSecurityManager.newClientSSLEngine(peerOf(socketChannel));
         return new SslSocketChannel(socketChannel, sslEngine);
@@ -57,7 +55,6 @@ public class SslSocketChannelFactory implements ISocketChannelFactory {
      * the address passed to {@link SocketChannel#connect}, not a re-resolution of it, so a peer dialled by hostname
      * is identified by that hostname.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     private static InetSocketAddress peerOf(SocketChannel socketChannel) {
         final SocketAddress remoteAddress;
         try {

@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -79,7 +78,6 @@ public class LocalCloudUtilAdobeMock {
         return startS3CloudEnvironment(cleanStart, false);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "stream the S3 mock container's logs into the test log for diagnosing mock-side failures")
     public static S3MockContainer startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer)
             throws IOException {
         // Testcontainers 1.21.x defaults to Docker API version 1.32, but Docker Desktop 4.65.0+ requires

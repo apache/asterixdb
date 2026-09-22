@@ -27,10 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.junit.Test;
 
 import software.amazon.awssdk.services.s3.S3Client;
@@ -43,7 +39,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  * each request off the previous page's continuation token. A hand-rolled {@link S3Client} serves the pages, because
  * the in-memory S3 mock used by the other tests returns every key in a single page and never truncates.
  */
-@AiProvenance(agent = Agent.CLAUDE_FABLE_5_1, tool = Tool.CLAUDE_CODE_UI, contributionKind = ContributionKind.TEST_GENERATED)
 public class S3ClientUtilsListObjectsTest {
 
     private static final String BUCKET = "bucket";

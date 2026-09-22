@@ -25,7 +25,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IExternalLangIPCProto;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class PythonDomainSocketProto extends AbstractPythonIPCProto implements IExternalLangIPCProto {
     private final String wd;
@@ -84,7 +83,6 @@ public class PythonDomainSocketProto extends AbstractPythonIPCProto implements I
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Guard against an ERROR frame that carries no message body")
     private String unpackError() throws IOException {
         if (!unpacker.hasNext() || unpacker.tryUnpackNil()) {
             return NO_ERROR_MESSAGE;

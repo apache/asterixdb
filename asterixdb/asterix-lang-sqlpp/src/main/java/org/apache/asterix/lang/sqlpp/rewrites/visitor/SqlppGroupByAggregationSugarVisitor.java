@@ -51,7 +51,6 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * An AST pre-processor to rewrite group-by sugar queries, which does the following transformations:
@@ -92,7 +91,6 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
         this.externalVars = externalVars;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     @Override
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
 
@@ -202,7 +200,6 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
      * Rewrites the SQL-92 aggregates in the clauses after the grouping (LET/HAVING, ORDER BY, LIMIT, SELECT)
      * into aggregates over the group variable, and returns the free variables those clauses still read.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private Collection<VariableExpr> rewriteClausesAfterGrouping(SelectBlock selectBlock, ILangExpression arg,
             VariableExpr groupVar, Map<VariableExpr, Identifier> groupVarFieldMap,
             Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> preGroupAnnotatedVars,

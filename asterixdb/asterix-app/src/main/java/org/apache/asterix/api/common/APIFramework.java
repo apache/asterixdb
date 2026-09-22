@@ -126,7 +126,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.control.common.config.OptionTypes;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -516,7 +515,6 @@ public class APIFramework {
      *
      * @throws RuntimeDataException if the request was cancelled before this, its response no longer being wanted
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
     private static void markUncancellable(MetadataProvider metadataProvider, IRequestParameters requestParameters)
             throws RuntimeDataException {
         String reqId = requestParameters.getRequestReference().getUuid();

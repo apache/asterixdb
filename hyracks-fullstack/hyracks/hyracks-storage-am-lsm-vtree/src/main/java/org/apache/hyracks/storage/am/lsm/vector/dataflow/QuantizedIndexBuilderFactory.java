@@ -26,14 +26,12 @@ import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Produces {@link QuantizedIndexBuilder}s for the quantized vector-index create path. The build ingredients
  * are identical to {@link IndexBuilderFactory}; only the concrete builder type differs, so the quantization
  * constants sampled upstream can be injected into the resource at build time.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public class QuantizedIndexBuilderFactory extends IndexBuilderFactory {
 
     private static final long serialVersionUID = 1L;

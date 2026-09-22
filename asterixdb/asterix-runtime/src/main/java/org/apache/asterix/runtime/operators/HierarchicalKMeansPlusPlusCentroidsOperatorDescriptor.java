@@ -74,7 +74,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNod
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 import org.apache.hyracks.dataflow.std.misc.PartitionedUUID;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Enhanced version of LocalKMeansPlusPlusCentroidsOperatorDescriptor that maintains
@@ -157,7 +156,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
     private final long trainSeed; // Base seed for the training RNG; per-partition offset keeps partitions decorrelated
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor outputRecDesc, RecordDescriptor secondaryRecDesc, UUID sampleUUID, UUID tupleCountUUID,
             IScalarEvaluatorFactory args, int K, int maxScalableKmeansIter, VectorSimilarityMetric similarityMetric,
@@ -182,7 +180,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
      * Whether the index can hold this vector. The bulk load applies the same rule, so one that fails here is
      * never indexed, and must not shape the centroids either: not as a seed, candidate, padding or mean.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private boolean hasIndexDimension(double[] point) {
         return point.length == vectorDimension;
     }
@@ -287,7 +284,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                  * reader here lets each reset close its predecessor and the outer finally close the
                  * last one, so no open file handle outlives this operator.
                  */
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
                 private GeneratedRunFileReader currentSampleReader;
 
                 // Stateless distance function, built here on the NC from the serialized metric enum. Living on
@@ -990,7 +986,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                  * {@code null} if this partition holds none. The first build job already rejects that case, so
                  * it is unreachable here for a dimension mismatch.
                  */
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
                 private double[] seedFromFirstIndexableVector(IHyracksTaskContext ctx, FrameTupleAccessor fta,
                         FrameTupleReference tuple, IScalarEvaluator eval, IPointable inputVal,
                         ListAccessor listAccessor, KMeansUtils kMeansUtils, int partition)
@@ -1098,7 +1093,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                  * {@code currentSampleReader} tracks the single live reader across the nested k-means
                  * passes (which reassign their local variables); the outer finally closes the last one.
                  */
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
                 private GeneratedRunFileReader resetRunFileReader(IHyracksTaskContext ctx, UUID sampleUUID,
                         int partition) throws HyracksDataException {
                     closeCurrentSampleReader();
@@ -1110,7 +1104,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                     return reader;
                 }
 
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
                 private void closeCurrentSampleReader() throws HyracksDataException {
                     if (currentSampleReader != null) {
                         currentSampleReader.close();
@@ -1719,7 +1712,6 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
      * of parent 0 first, then parent 1, and so on, where "parent k" means the k-th emitted tuple of the
      * level above. Ties keep the k-means order.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     static final class LevelOrder {
         /** {@code order[L][k]} is the list index of the k-th emitted tuple of level {@code L}. */
         final int[][] order;

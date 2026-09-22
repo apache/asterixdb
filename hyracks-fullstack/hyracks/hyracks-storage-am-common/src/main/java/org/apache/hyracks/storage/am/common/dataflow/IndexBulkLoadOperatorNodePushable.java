@@ -38,7 +38,6 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.NoOpSampler;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -162,7 +161,6 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
                 NoOpSampler.INSTANCE, NoOpPageWriteCallback.INSTANCE);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Release every bulk loader even when one throws an unchecked exception")
     private void closeBulkLoaders() throws HyracksDataException {
         Throwable failure = null;
         for (IIndexBulkLoader bulkLoader : bulkLoaders) {

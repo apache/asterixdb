@@ -42,7 +42,6 @@ import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class AnalyzeStatement extends AbstractStatement {
 
@@ -187,7 +186,6 @@ public class AnalyzeStatement extends AbstractStatement {
      * The requested sampling method, using the same vocabulary persisted in the index metadata
      * ("full-scan" / "random"), from the {@code sample-method} option. Defaults to {@code RANDOM}.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "sample-method WITH option aligned with the stored SampleMethod enum")
     public Index.SampleIndexDetails.SampleMethod getSampleMethod() throws CompilationException {
         IAdmNode methodNode = getOption(SAMPLE_METHOD_FIELD_NAME);
         if (methodNode == null) {

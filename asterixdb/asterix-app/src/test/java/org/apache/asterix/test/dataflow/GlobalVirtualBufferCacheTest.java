@@ -65,7 +65,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -161,7 +160,6 @@ public class GlobalVirtualBufferCacheTest {
     }
 
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Bound filtered-component size check to budget + small overshoot tolerance; log page counts")
     public void testFlushes() {
         try {
             List<Thread> threads = new ArrayList<>();

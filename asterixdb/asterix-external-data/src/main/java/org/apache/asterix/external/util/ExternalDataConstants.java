@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 import org.apache.asterix.external.input.record.reader.hdfs.avro.AvroFileInputFormat;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class ExternalDataConstants {
 
@@ -450,22 +449,18 @@ public class ExternalDataConstants {
         public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
         public static final String TIME_AS_INT = "time-to-int";
         public static final String DATE_AS_INT = "date-to-int";
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause option controlling IcebergParquetDataParser's Variant nesting depth guard")
         public static final String VARIANT_DEPTH = "variantDepth";
         // Bounds and default kept alongside VARIANT_DEPTH itself (rather than split across IcebergUtils'
         // DDL-time validation and IcebergConverterContext's runtime read) so the two can't drift apart.
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "variantDepth's default/max, centralized here so IcebergUtils' DDL-time validation and IcebergConverterContext's runtime read can't drift apart")
         public static final int DEFAULT_VARIANT_DEPTH = 500;
         public static final int MAX_VARIANT_DEPTH = 1000;
 
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant sub-path projection pushdown (reading shredded). Default on; a break-glass off-switch since releases (not patches) are shipped, and the off path doubles as the differential-test oracle (off == on for the same query)")
         public static final String VARIANT_PROJECTION_PUSHDOWN = "variantProjectionPushdown";
         public static final boolean DEFAULT_VARIANT_PROJECTION_PUSHDOWN = true;
 
         // A second flag rather than one covering "variant pushdown", because the two fail differently: projection off
         // reads more columns, stats off reads more files. Only stats pushdown could, if it were ever wrong, drop a row
         // that should have been returned, which is what earns it a switch of its own.
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant sub-field stats pushdown (data-file skipping from manifest bounds). Default on; a break-glass off-switch since releases rather than patches are shipped, and the off path is a differential-test oracle: same rows, more files read")
         public static final String VARIANT_STATS_PUSHDOWN = "variantStatsPushdown";
         public static final boolean DEFAULT_VARIANT_STATS_PUSHDOWN = true;
 
@@ -473,7 +468,6 @@ public class ExternalDataConstants {
         // divided across partitions -- so unlike the two flags above it cannot drop a row. It still gets a switch
         // because it changes the shape of every Iceberg scan: an unsplit large file occupies one reader while the
         // rest of the cluster idles, and the off path is the differential-test oracle (same rows, fewer tasks).
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating splitting of data files across scan tasks. Default on; a break-glass off-switch since releases rather than patches are shipped, and the off path is a differential-test oracle: same rows, one task per data file")
         public static final String SPLIT_SCAN_TASKS = "splitScanTasks";
         public static final boolean DEFAULT_SPLIT_SCAN_TASKS = true;
 
@@ -482,7 +476,6 @@ public class ExternalDataConstants {
         // delete-aware read exactly as before, and pruning survives on every file that carries no deletes — which is
         // why this is not folded into VARIANT_PROJECTION_PUSHDOWN. Default on, as a break-glass off-switch, since
         // releases rather than patches are shipped.
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "WITH-clause flag gating variant projection pushdown on scan tasks that carry delete files; separate from VARIANT_PROJECTION_PUSHDOWN because this is the only one of the three whose failure mode is a silent wrong answer (deleted rows returned, or live rows dropped) rather than extra IO")
         public static final String VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = "variantProjectionPushdownWithDeletes";
         public static final boolean DEFAULT_VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = true;
 

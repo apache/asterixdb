@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataTupleAccessor;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Page-level mutation of a {@link VTree}'s directory and data pages: the half of the write path below
@@ -67,7 +66,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
 // Not a record: a stateless collaborator, not a data carrier. Record accessors would publish
 // bufferCache/freePageManager as package API, and record visibility cannot be narrowed.
 @SuppressWarnings("ClassCanBeRecord")
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted verbatim from VTree; behaviour unchanged")
 class VTreePageMutator {
 
     private final IBufferCache bufferCache;

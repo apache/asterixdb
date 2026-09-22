@@ -37,7 +37,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op5 Release</b>: the tail that closes the loop-back.
@@ -55,7 +54,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * after Cost's loop ran, which is after its store activities registered. Op5 is a sink; the loop ends when
  * its input EOFs.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansReleaseOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

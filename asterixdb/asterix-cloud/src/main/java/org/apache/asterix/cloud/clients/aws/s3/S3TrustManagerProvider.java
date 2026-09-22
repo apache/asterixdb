@@ -18,10 +18,6 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_4_6;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.GENERATED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
-
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -34,7 +30,6 @@ import java.util.List;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,7 +39,6 @@ import software.amazon.awssdk.http.TlsTrustManagersProvider;
  * Provides a {@link TlsTrustManagersProvider} that trusts the default system certificates
  * plus any additional PEM-encoded CA certificates supplied via the blobStorageCertificates setting.
  */
-@AiProvenance(agent = CLAUDE_OPUS_4_6, tool = GITHUB_COPILOT, contributionKind = GENERATED)
 final class S3TrustManagerProvider {
 
     private static final Logger LOGGER = LogManager.getLogger();

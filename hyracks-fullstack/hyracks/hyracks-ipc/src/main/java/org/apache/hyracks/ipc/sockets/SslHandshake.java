@@ -30,7 +30,6 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
 
 import org.apache.hyracks.util.NetworkUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,7 +64,6 @@ public class SslHandshake {
         handshakeInData = ByteBuffer.allocate(appBufferSize);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "handshake deadline, inline tasks")
     public boolean handshake() throws IOException {
         deadlineNanos = System.nanoTime() + HANDSHAKE_TIMEOUT_NANOS;
         try {
@@ -120,8 +118,6 @@ public class SslHandshake {
      *
      * @return true if the operation should be retried, false if the handshake deadline has passed
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "await readability within deadline")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "generalized to await writability")
     private boolean await(int op, String what) throws IOException {
         final long remainingNanos = deadlineNanos - System.nanoTime();
         if (remainingNanos <= 0) {
@@ -149,7 +145,6 @@ public class SslHandshake {
      *
      * @return true if the buffer was fully written, false if the handshake deadline has passed
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "bounded flush of handshake data")
     private boolean flush() throws IOException {
         while (outEncryptedData.hasRemaining()) {
             if (socketChannel.write(outEncryptedData) == 0 && !awaitWritable()) {

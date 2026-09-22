@@ -46,7 +46,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -70,7 +69,6 @@ import org.apache.logging.log4j.Logger;
  * reloaded — the defect this class was extracted to prevent. {@code VectorIndexParametersTupleTranslatorTest}
  * guards the count: add a field without extending {@code NAMES} and it fails.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public final class VectorIndexParameters implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -133,7 +131,6 @@ public final class VectorIndexParameters implements Serializable {
      * re-deriving it needs the cardinality as it stood at creation. This mirrors how the seed is fixed at DDL
      * time and persisted so the index records what its own build used.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public VectorIndexParameters withInferredSizes(int effectiveNumClusters, double effectiveTrainListFraction) {
         Builder b = builder();
         b.setDimension(dimension);

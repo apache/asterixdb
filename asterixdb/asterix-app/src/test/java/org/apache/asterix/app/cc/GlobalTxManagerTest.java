@@ -49,7 +49,6 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,7 +57,6 @@ import org.junit.Test;
  * be indistinguishable, because the wait was a bare timed {@code wait()} with no predicate and no check of
  * what it woke up to.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers rollback completion and rollback timeout of the atomic statement protocol")
 public class GlobalTxManagerTest {
 
     private static final long ROLLBACK_TIMEOUT_MILLIS = 500;
@@ -314,7 +312,6 @@ public class GlobalTxManagerTest {
      * unbounded map filled from the job lifecycle and drained only from the statement path.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers deregistration of a transaction whose job was never submitted")
     public void failedSubmissionDeregistersTheTransaction() {
         JobId jobId = new JobId(8);
         globalTxManager.beginTransaction(jobId, 1, 1, Collections.singletonList(DATASET_ID));
@@ -330,7 +327,6 @@ public class GlobalTxManagerTest {
      * most of them - has to pass through silently rather than fail looking up a context it never had.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that a non-atomic job's failed submission is ignored")
     public void failedSubmissionOfNonAtomicJobIsIgnored() throws Exception {
         globalTxManager.notifyJobSubmissionFailed(new JobId(9), mock(JobSpecification.class));
 

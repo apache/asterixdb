@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.util;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.TEST_GENERATED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,10 +26,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
-@AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT, contributionKind = TEST_GENERATED, notes = "Tests for startElapsed(), immutable ELAPSED sentinel, and elapsed() >= boundary fix")
 public class SpanTest {
 
     // --- Span.ELAPSED ---

@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.btree.impls;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * Succinct, random-access set of B-tree leaf page ids for LSM sampling (ASTERIXDB-3702). Replaces the raw
  * {@code int[]} of leaf page ids that {@link DiskBTree#enumerateLeafPageIds} used to materialize
@@ -34,7 +32,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * Built by streaming: {@link #set(int)} per enumerated leaf id (no intermediate array), then
  * {@link #build()} once. Not thread-safe; single-writer during enumeration, read-only after build.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Bitmap+select encoding of leaf page ids to replace the int[] (ASTERIXDB-3702)")
 public final class BitmapLeafIds {
 
     // Every S-th set bit gets a sampled entry (word index + ones-before) so select() scans at most

@@ -55,7 +55,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -67,7 +66,6 @@ import org.junit.Test;
  * cancellable: leaving the cancellable set is for a statement that is only sending its result, and narrowing it
  * any further would let a cancelled request run the statements that remain.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class CancelWhileCompilingTest {
 
     private static final AsterixHyracksIntegrationUtil INTEGRATION_UTIL = new AsterixHyracksIntegrationUtil() {

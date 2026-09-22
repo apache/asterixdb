@@ -35,7 +35,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class IcebergConverterContext extends ParserContext {
 
@@ -47,7 +46,6 @@ public class IcebergConverterContext extends ParserContext {
     private final int maxVariantDepth;
     private final IWarningCollector warningCollector;
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Reads the variantDepth WITH-clause option (default 500), used by IcebergParquetDataParser's Variant nesting depth guard. Mirrors the timezone handling below: an empty value is treated as absent and falls back to the default, since Map.getOrDefault only falls back on an absent key, not an empty value")
     public IcebergConverterContext(Map<String, String> configuration, IWarningCollector warningCollector) {
         this.warningCollector = warningCollector;
         decimalToDouble = Boolean.parseBoolean(configuration.getOrDefault(DECIMAL_TO_DOUBLE, FALSE));

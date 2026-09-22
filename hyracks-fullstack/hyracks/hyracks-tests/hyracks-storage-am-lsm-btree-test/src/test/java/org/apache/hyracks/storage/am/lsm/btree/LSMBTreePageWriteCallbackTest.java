@@ -47,7 +47,6 @@ import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 import org.apache.hyracks.storage.common.buffercache.SleepRateLimiter;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -127,7 +126,6 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Count data pages via getMaxPageId; component metadata now spans multiple pages (theta sketch)")
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey,
             ITupleReference prefixHighKey) throws Exception {

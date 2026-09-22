@@ -30,7 +30,6 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -38,9 +37,6 @@ import org.junit.Test;
  * the zone's standard offset. These cases are what separates the two; a fixed-offset implementation passes
  * every winter case here and fails every summer one.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Daylight-saving coverage for the shared projector: summer vs winter, values spanning a "
-        + "transition through one instance, transition boundaries, and out-of-order values, none of "
-        + "which the existing avro/parquet fixtures reach because they use winter timestamps only")
 public class TimestampZoneProjectorTest {
 
     private static final ZoneId NEW_YORK = ZoneId.of("America/New_York");

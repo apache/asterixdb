@@ -44,7 +44,6 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class StorageProperties extends AbstractProperties {
 
@@ -300,7 +299,6 @@ public class StorageProperties extends AbstractProperties {
      * I/O locality only: batches are always consumed in full, so the batch size cannot influence <em>which</em> tuples
      * the sample contains. Removing the option would mean re-deriving that ceiling from something else, for no gain.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.DOC_GENERATED, notes = "Record why the sample leaf-draw batch size is retained now that it no longer binds in practice")
     public int getSampleLeafDrawBatchSize() {
         return accessor.getInt(Option.STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE);
     }

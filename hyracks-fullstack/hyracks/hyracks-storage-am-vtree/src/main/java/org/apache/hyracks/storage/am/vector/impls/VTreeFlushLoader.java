@@ -38,7 +38,6 @@ import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Flush loader for VTree that writes memory component (VBC) pages to a disk component,
@@ -106,8 +105,6 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
      *         tree's own root page id (bottom-up layout puts leaves first and the root at the
      *         highest static page id, so the first copied page is a LEAF, not the root)
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public int copyStaticStructure(VTree.VTreeAccessor staticAccessor) throws HyracksDataException {
 
         VTree staticTree = staticAccessor.getIndex();

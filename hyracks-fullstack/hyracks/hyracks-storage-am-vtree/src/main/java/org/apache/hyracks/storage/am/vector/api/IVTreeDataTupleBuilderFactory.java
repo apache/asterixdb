@@ -21,8 +21,6 @@ package org.apache.hyracks.storage.am.vector.api;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * Factory for {@link IVTreeDataTupleBuilder} instances.
  * <p>
@@ -48,6 +46,5 @@ public interface IVTreeDataTupleBuilderFactory extends Serializable {
      * key fields start at 4, rather than the non-quantized
      * {@code [distance, centroidId, key..., value...]} layout, whose key fields start at 2.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     boolean isQuantized();
 }

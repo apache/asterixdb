@@ -22,8 +22,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * The quantization schemes a VTree index can encode its embeddings with, together with the bit width each
  * one quantizes to. Sibling of {@link VectorSimilarityMetric}: the single source of truth for the values the
@@ -37,7 +35,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * It is {@link #name()} today, which means renaming a constant strands existing indexes: add a constant rather
  * than renaming one, and if a name ever has to change, give {@code label()} its own string instead.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public enum VectorQuantization {
     SQ4(4),
     SQ8(8);

@@ -36,7 +36,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.ExponentialRetryPolicy;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -130,7 +129,6 @@ public class AzureParallelDownloader extends AbstractParallelDownloader {
         return failedFiles;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "pass the requested directory down so the blob's local path is resolved against its device; log failures")
     private Mono<Void> downloadDirectoryAsync(FileReference directory, Set<FileReference> failedFiles) {
         return getBlobItems(directory).flatMap(blobItem -> {
             profiler.objectGet();
@@ -141,7 +139,6 @@ public class AzureParallelDownloader extends AbstractParallelDownloader {
         });
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "derive the local path by stripping the configured prefix instead of searching for 'storage'")
     private Mono<Void> downloadBlobAsync(FileReference directory, BlobItem blobItem, Set<FileReference> failedFiles) {
         FileReference diskDestFile = toLocalFile(directory, blobItem.getName());
         try {

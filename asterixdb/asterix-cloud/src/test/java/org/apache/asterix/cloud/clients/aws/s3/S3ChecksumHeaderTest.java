@@ -41,10 +41,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -82,7 +78,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
  * added by a late signed pre-signing stage); OBS and every store validated tolerate it as long as
  * Content-MD5 is present, so the snapshot records both.
  */
-@AiProvenance(agent = Agent.CLAUDE_OPUS_4_7, tool = Tool.CLAUDE_CODE_CLI, contributionKind = ContributionKind.TEST_GENERATED, notes = "ASTERIXDB-3791: asserts plain uploads and Content-MD5 on bulk delete in when_required against Adobe S3Mock; generated via Claude Code")
 public class S3ChecksumHeaderTest {
 
     private static final String REGION = "us-east-1";

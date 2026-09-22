@@ -43,7 +43,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.DeleteFile;
@@ -99,7 +98,6 @@ import org.junit.Test;
  * does", never a count that could pass by coincidence. {@link IcebergLargeFileSplittingTest} repeats the core of this
  * at real scale, with Iceberg's default sizes and a file over a gigabyte.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates multi-row-group Parquet files into temp Iceberg tables and asserts split tasks tile each file exactly, read every row exactly once on the plain, deletes (position files, equality, deletion vector) and variant-pruned paths with and without a residual, pack by sizeBytes and survive Java serialization")
 public class IcebergScanTaskSplittingTest {
 
     private static final long TARGET_SPLIT_SIZE = 64 * 1024;
@@ -276,7 +274,6 @@ public class IcebergScanTaskSplittingTest {
      * {@code Long.MIN_VALUE} yields one task of negative length that reads none of the file's rows and reports no
      * error. The timeout is part of the assertion: a regression here hangs rather than fails.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins the non-positive split-size guard, whose absence was measured to exhaust the heap on a data file without recorded split offsets")
     @Test(timeout = 60000)
     public void nonPositiveTargetSplitSizeIsRejected() throws Exception {
         List<FileScanTask> planned = planned(plainTable);
@@ -297,7 +294,6 @@ public class IcebergScanTaskSplittingTest {
      * the three flags stay consistent with each other.
      */
     @Test(timeout = 60000)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers the splitScanTasks flag default and parsing")
     public void splitScanTasksFlagDefaultsToOn() {
         Assert.assertTrue("absent means on",
                 IcebergParquetRecordReaderFactory.isSplitScanTasksEnabled(new HashMap<>()));
@@ -319,7 +315,6 @@ public class IcebergScanTaskSplittingTest {
      * every other test in this class green.
      */
     @Test(timeout = 60000)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Asserts the splitScanTasks flag controls planning, not just that it parses")
     public void splitScanTasksFlagControlsPlanning() throws Exception {
         List<FileScanTask> planned = planned(plainTable);
         Assert.assertFalse("fixture must plan at least one file", planned.isEmpty());
@@ -354,7 +349,6 @@ public class IcebergScanTaskSplittingTest {
      * them must still return every row. This is the differential oracle the flag exists to provide.
      */
     @Test(timeout = 60000)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Splitting off yields one task per data file and the same rows as splitting on")
     public void splittingOffYieldsOneTaskPerFileAndSameRows() throws Exception {
         List<FileScanTask> planned = planned(plainTable);
         Assert.assertFalse("fixture must plan at least one file", planned.isEmpty());

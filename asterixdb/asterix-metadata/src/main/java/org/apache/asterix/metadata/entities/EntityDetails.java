@@ -24,7 +24,6 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * This class provides static factory methods for creating entity details.
@@ -119,7 +118,6 @@ public class EntityDetails {
         return new EntityDetails(null, null, catalogName, EntityType.CATALOG);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public static EntityDetails newLibrary(String databaseName, DataverseName dataverseName, String libraryName) {
         return new EntityDetails(databaseName, dataverseName, libraryName, EntityType.LIBRARY);
     }

@@ -35,7 +35,6 @@ import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirem
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * What the CLUSTER BY k-means|| stages share, whatever they compute: they are blocking, they emit only the
@@ -44,7 +43,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * stage as the join and group-by families do, so an input arity or a partitioning requirement is a property
  * of the class.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public abstract class AbstractKMeansStagePOperator extends AbstractPhysicalOperator {
 
     /** Mirrors {@code OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_CLUSTER_BY}, which asterix-common owns. */

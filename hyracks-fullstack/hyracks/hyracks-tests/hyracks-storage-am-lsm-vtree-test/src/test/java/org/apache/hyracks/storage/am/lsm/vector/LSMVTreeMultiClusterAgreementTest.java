@@ -52,7 +52,6 @@ import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.am.vector.utils.NoOpVectorQuantizer;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -77,7 +76,6 @@ import org.junit.Test;
  * If per-component cluster iteration were not positionally aligned, the merged stream would interleave
  * the two clusters and release the hold before the twin arrived.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeMultiClusterAgreementTest {
 
     private static final VectorTestStructure STRUCT = VectorTestStructure.threeDim3Level();

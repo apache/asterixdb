@@ -22,11 +22,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Test;
 
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Contract of the shared interrupt poll")
 public class InvokeUtilFailIfInterruptedTest {
 
     @After

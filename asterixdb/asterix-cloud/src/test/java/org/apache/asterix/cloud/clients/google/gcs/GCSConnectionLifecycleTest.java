@@ -36,10 +36,6 @@ import java.util.regex.Pattern;
 
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -63,7 +59,6 @@ import com.sun.net.httpserver.HttpServer;
  *
  * Mirror of {@code S3ConnectionLifecycleTest} for the GCS code path.
  */
-@AiProvenance(agent = Agent.CLAUDE_OPUS_4_7, tool = Tool.CLAUDE_CODE_CLI, contributionKind = ContributionKind.TEST_GENERATED, notes = "MB-71767: runtime verification of HTTP idle/lifetime knobs on the GCS path; generated via Claude Code")
 public class GCSConnectionLifecycleTest {
 
     private static final String MOCK_SERVER_REGION = "us-west2";

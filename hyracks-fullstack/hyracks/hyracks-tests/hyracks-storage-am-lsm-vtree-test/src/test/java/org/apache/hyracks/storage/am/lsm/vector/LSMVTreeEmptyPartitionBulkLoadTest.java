@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.lsm.vector.util.VectorIndexTestDriver;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Before;
 
@@ -53,7 +52,6 @@ import org.junit.Before;
  * <p>
  * Every other fixture in this suite populates all of its clusters, which is why this went unnoticed.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for the empty-partition bulk load")
 public class LSMVTreeEmptyPartitionBulkLoadTest extends VectorIndexTestDriver {
 
     private final LSMVTreeTestHarness harness = new LSMVTreeTestHarness();

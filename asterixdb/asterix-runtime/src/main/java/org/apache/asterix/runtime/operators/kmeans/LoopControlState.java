@@ -44,7 +44,6 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  * {@link #abort()}, which raises the head. Readers must resolve this state on first frame, not in
  * {@code open()}; see {@link #required(IHyracksTaskContext, Object)}.
  */
-@org.apache.hyracks.util.annotations.AiProvenance(agent = org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.ASSISTED)
 public final class LoopControlState extends AbstractStateObject {
 
     // Not serialized: this state never leaves the NC (joblet-local). The semaphore is created empty; the loop tail

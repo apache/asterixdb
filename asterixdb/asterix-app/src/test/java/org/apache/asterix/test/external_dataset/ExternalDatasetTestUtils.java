@@ -47,7 +47,6 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.api.util.IoUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -231,8 +230,6 @@ public class ExternalDatasetTestUtils {
         LOGGER.info("Files added successfully");
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates (rather than checking in a fixture with a raw invalid byte) a file with a single "
-            + "illegal (invalid UTF-8) byte, used to test the illegalCharacterHandling property (replace vs fail)")
     private static void loadIllegalCharacterFile() {
         String fileName = "illegal-character.json";
         Path filePath = Paths.get("target", "rttest", "tmp", fileName);
@@ -249,12 +246,6 @@ public class ExternalDatasetTestUtils {
         playgroundDataLoader.upload(ILLEGAL_CHARACTER_DEFINITION + fileName, filePath.toString(), true, false);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates a small multi-record file covering several illegal-character decode scenarios beyond the "
-            + "single-bad-byte case: consecutive independent bad bytes, bad bytes separated by well-formed data, a "
-            + "single malformed sequence spanning multiple bytes (one replacement, not one per byte), a UTF-8-encoded "
-            + "surrogate, and a mid-stream byte-order-mark (well-formed, must NOT be treated as illegal) -- so these "
-            + "scenarios (already unit-tested against AsterixInputStreamReader directly) also get exercised through "
-            + "the full DDL/adapter/record-reader pipeline")
     private static void loadIllegalCharacterScenariosFile() {
         String fileName = "illegal-character-scenarios.json";
         Path filePath = Paths.get("target", "rttest", "tmp", fileName);
@@ -302,9 +293,6 @@ public class ExternalDatasetTestUtils {
                 false);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Generates a file that ends mid-character (a lone 2-byte UTF-8 lead byte with no continuation byte "
-            + "ever arriving), used to test that a truncated trailing sequence at true EOF is reported (fail-fast "
-            + "mode) rather than silently dropped")
     private static void loadIllegalCharacterTruncatedFile() {
         String fileName = "illegal-character-truncated.json";
         Path filePath = Paths.get("target", "rttest", "tmp", fileName);

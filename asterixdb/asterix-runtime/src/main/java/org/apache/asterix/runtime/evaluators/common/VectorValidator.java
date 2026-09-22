@@ -22,7 +22,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * A usable vector is a list of the expected length whose every element is numeric.
@@ -36,7 +35,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * An instance reuses one {@link ListAccessor} across calls, so it is <b>not</b> thread-safe; hold one per
  * evaluator instance the way {@code IsVectorDescriptor} does.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public final class VectorValidator {
 
     private final ListAccessor listAccessor = new ListAccessor();

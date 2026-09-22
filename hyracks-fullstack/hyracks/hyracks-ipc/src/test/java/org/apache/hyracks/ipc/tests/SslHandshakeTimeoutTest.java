@@ -34,7 +34,6 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.hyracks.ipc.sockets.SslHandshake;
 import org.apache.hyracks.ipc.sockets.SslSocketChannel;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -42,7 +41,6 @@ import org.junit.Test;
  * and then says nothing must therefore make the handshake wait, and give up at its deadline, rather than
  * retry the zero-length read in a tight loop.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "handshake deadline regression")
 public class SslHandshakeTimeoutTest {
 
     /**

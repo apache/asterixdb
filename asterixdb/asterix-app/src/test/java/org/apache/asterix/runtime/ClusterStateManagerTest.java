@@ -18,10 +18,6 @@
  */
 package org.apache.asterix.runtime;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_5;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.TEST_GENERATED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.SortedMap;
@@ -55,7 +51,6 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -208,7 +203,6 @@ public class ClusterStateManagerTest {
      * @throws Exception
      */
     @Test
-    @AiProvenance(agent = CLAUDE_OPUS_5, tool = CLAUDE_CODE_UI, contributionKind = TEST_GENERATED, notes = "ASTERIXDB-3798: pendingRemoval leaked ejected & failed-over node ids")
     public void pendingRemovalClearedOnNodeDeparture() throws Exception {
         ClusterStateManager csm = new ClusterStateManager();
         CcApplicationContext ccApplicationContext = ccAppContext(csm);

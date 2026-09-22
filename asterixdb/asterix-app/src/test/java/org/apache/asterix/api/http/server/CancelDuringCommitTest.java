@@ -40,7 +40,6 @@ import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -52,7 +51,6 @@ import org.junit.Test;
  * aborts a transaction the nodes may already have committed. A request in that window must therefore refuse a
  * cancel rather than have its thread interrupted.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class CancelDuringCommitTest {
 
     private static final AsterixHyracksIntegrationUtil INTEGRATION_UTIL = new AsterixHyracksIntegrationUtil() {

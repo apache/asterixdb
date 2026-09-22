@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Type;
 import org.apache.iceberg.types.Types;
@@ -54,8 +53,6 @@ import org.apache.iceberg.types.Types.NestedField;
  * both shapes exist in the fixtures. The walk follows struct nesting only; a variant inside a list or map is left off
  * the plan, matching the predicate side, because element bounds and element clipping are not modelled.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Variant projection gating: builds the map of VARIANT column -> requested sub-paths, gated on the flag, the "
-        + "Iceberg VARIANT type, and whether the request actually narrows the column")
 public final class VariantProjectionPlan {
 
     private static final VariantProjectionPlan EMPTY = new VariantProjectionPlan(Collections.emptyMap());
@@ -98,7 +95,6 @@ public final class VariantProjectionPlan {
      * shapes. Ordinary structs and primitives are also skipped here; Iceberg's own column projection already prunes
      * those.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Walks the schema for variants at any struct depth, keyed by unjoined path, so a variant nested in a struct gets column pruning like a top-level one")
     private static void collectVariants(Types.StructType struct, Deque<String> path, ARecordType projectedType,
             Map<List<String>, RequestedVariantPaths> byColumn) {
         for (NestedField field : struct.fields()) {

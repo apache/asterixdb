@@ -23,8 +23,6 @@ import java.net.InetSocketAddress;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 public interface INetworkSecurityManager {
 
     /**
@@ -40,7 +38,6 @@ public interface INetworkSecurityManager {
      *
      * @return a new ssl engine
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851")
     SSLEngine newServerSSLEngine();
 
     /**
@@ -52,7 +49,6 @@ public interface INetworkSecurityManager {
      * @param peer the address this connection was made to
      * @return a new ssl engine
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     SSLEngine newClientSSLEngine(InetSocketAddress peer);
 
     /**

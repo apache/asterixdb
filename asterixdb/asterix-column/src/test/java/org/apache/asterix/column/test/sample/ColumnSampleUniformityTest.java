@@ -19,7 +19,6 @@
 package org.apache.asterix.column.test.sample;
 
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.SampleCursorStats;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,7 +40,6 @@ import org.junit.Test;
  * Bins are in <em>key</em> space, not page space, deliberately: a fix that spreads page visits without spreading
  * tuple selection must not be able to satisfy this.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Chi-square uniformity guard over the live key space for the column sample cursor")
 public class ColumnSampleUniformityTest {
 
     /** ~50 mega-leaf pages in the sampled component (measured ~3265 keys per leaf page). */

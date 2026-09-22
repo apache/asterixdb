@@ -20,7 +20,6 @@ package org.apache.asterix.common.vector;
 
 import java.util.Locale;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +27,6 @@ import org.junit.Test;
  * The alias table is the single source of truth for every metric spelling the system accepts, on the
  * DDL path and the query path alike.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class VectorSimilarityMetricTest {
 
     @Test

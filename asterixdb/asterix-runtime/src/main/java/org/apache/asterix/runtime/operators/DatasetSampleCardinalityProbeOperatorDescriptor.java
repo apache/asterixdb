@@ -45,7 +45,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ChunkedComponentMetadataRe
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.theta.ThetaEstimator;
 import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -70,7 +69,6 @@ import org.apache.logging.log4j.Logger;
  * pre-theta components are EoL, only that output (and its metadata check) is dropped; the cardinality
  * output stays.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Unified probe: live-partition count (sample allocation) + missing-metadata count (upgrade fallback) in one pass")
 public final class DatasetSampleCardinalityProbeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;

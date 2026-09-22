@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.kmeans;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,7 +36,6 @@ import org.junit.Test;
  * vectors do not; the number is fixed by (hash, seed, round) and changes with each of them; and the numbers are
  * uniform in [0, 1) so they are valid against a probability.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class KMeansFingerprintTest {
 
     @Test

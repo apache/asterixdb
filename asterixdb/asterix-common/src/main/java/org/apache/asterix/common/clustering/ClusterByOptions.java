@@ -20,8 +20,6 @@ package org.apache.asterix.common.clustering;
 
 import java.util.Objects;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * The CLUSTER BY options after validation, immutable and shared by reference: the language rewrite
  * validates the WITH record and builds one instance, the clause carries it (surviving the AST clones a
@@ -32,7 +30,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * declared vector width) lives here; what is specific to one algorithm lives in that algorithm's block
  * ({@link KmeansOptions}), non-null exactly when the algorithm selects it.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Options holder replacing the flat fields on ClusterbyClause and ClusterByOperator")
 public final class ClusterByOptions {
 
     // The vocabulary the language layer resolves to and the expansion dispatches on, defined once so the

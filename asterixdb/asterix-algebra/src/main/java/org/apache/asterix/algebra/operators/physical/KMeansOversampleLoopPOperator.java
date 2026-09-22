@@ -36,7 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageO
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The k-means|| oversampling initialization as a five-operator systolic chain. Cost/Controller is the
@@ -47,7 +46,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * that NC's permit and pool/vector run files through joblet state; the two merges are single-partition.
  * Release is a sink dead-end, so it is registered as a job root to ensure its branch is scheduled.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansOversampleLoopPOperator extends AbstractKMeansLoopPOperator {
 
     @Override

@@ -47,7 +47,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The Lloyd loop head: materializes this partition's vectors once, then runs every refinement iteration
@@ -67,8 +66,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * Vectors never move between nodes: only the per-centroid partials (O(k · dim) per partition) and the centroid
  * set travel, both independent of the input size.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

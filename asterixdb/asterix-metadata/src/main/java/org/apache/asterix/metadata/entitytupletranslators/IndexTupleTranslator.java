@@ -78,7 +78,6 @@ import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.OptionalBoolean;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.google.common.base.Strings;
 
@@ -857,7 +856,6 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
      * their storage types and their order all come from {@link VectorIndexParameters}, which also owns the
      * read side, so a parameter cannot be dropped here by forgetting a second enumeration.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private void writeWithProperties(Index.VectorIndexDetails index) throws HyracksDataException {
         index.getVectorParameters().writeFields(recordBuilder);
     }

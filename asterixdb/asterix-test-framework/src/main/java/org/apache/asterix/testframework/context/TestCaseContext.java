@@ -41,7 +41,6 @@ import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.asterix.testframework.xml.TestSuiteParser;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.google.common.collect.Sets;
 
@@ -88,7 +87,6 @@ public class TestCaseContext {
      *         element. A category names something the test needs from the suite running it, so a suite that cannot
      *         provide it can leave the test out.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI)
     public boolean hasCategory(CategoryEnum category) {
         return testCase.getCategory().contains(category);
     }
@@ -255,7 +253,6 @@ public class TestCaseContext {
             }
         }
 
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "category is a list")
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {

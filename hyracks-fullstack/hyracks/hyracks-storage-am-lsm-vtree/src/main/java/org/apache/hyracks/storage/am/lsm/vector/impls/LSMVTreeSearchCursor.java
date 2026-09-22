@@ -45,7 +45,6 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.util.IndexCursorUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -756,7 +755,6 @@ public class LSMVTreeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     protected int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB)
             throws HyracksDataException {
         // Antimatter cancellation uses the same <distance, PK> key as the merge ordering.

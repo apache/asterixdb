@@ -18,18 +18,11 @@
  */
 package org.apache.hyracks.cloud.io;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.GPT_5_MINI;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.GENERATED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
-
 import java.util.Collection;
-
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Interface extracted from CloudProperties to allow consumers to depend on an abstraction.
  */
-@AiProvenance(agent = GPT_5_MINI, tool = GITHUB_COPILOT, contributionKind = GENERATED)
 public interface ICloudProperties {
 
     String getStorageScheme();

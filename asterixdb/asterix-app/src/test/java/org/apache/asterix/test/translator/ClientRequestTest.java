@@ -44,7 +44,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -148,7 +147,6 @@ public class ClientRequestTest {
     }
 
     /** The plan of the one job of a single statement is the request's own, as its id is. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void thePlanOfASingleStatementIsTheRequestsOwn() {
         ClientRequest request = newRequest();
@@ -163,7 +161,6 @@ public class ClientRequestTest {
      * plan: the plan is reported on the statement's job, where it does not appear and then vanish as the
      * next statement compiles its own.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void aMultiStatementRequestHasNoPlanOfItsOwn() {
         ClientRequest request = newRequest();
@@ -181,7 +178,6 @@ public class ClientRequestTest {
      * reports no jobId from the moment it is tracked, rather than reporting its first statement's job and
      * dropping it when the second statement submits one.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void aMultiStatementRequestReportsNoJobIdWhileItsFirstStatementRuns() {
         ClientRequest request = newRequest();
@@ -222,7 +218,6 @@ public class ClientRequestTest {
         assertFalse(request.hasPendingResults());
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     @Test
     public void aRequestWithOneJobReportsItFlatAndInTheArray() {
         ClientRequest request = newRequest();
@@ -240,7 +235,6 @@ public class ClientRequestTest {
      * flat job block carried and no others - the per-job compile time is not reported here, and was not.
      * The flat fields describe the request, so a later statement's failure is the request's failure.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     @Test
     public void severalJobsAreReportedInOrderWithTheFieldsAJobAlwaysHad() {
         ClientRequest request = newRequest();
@@ -272,7 +266,6 @@ public class ClientRequestTest {
      * The flat times span the request: the first job's creation and start, and the last job's end, so that a
      * reader is not told the request ended when its first statement did.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void theFlatTimesSpanEveryJob() throws Exception {
         ClientRequest request = newRequest();
@@ -290,7 +283,6 @@ public class ClientRequestTest {
     }
 
     /** A request one of whose jobs has not ended has not ended either, whatever the others did. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void theRequestDoesNotEndWhileAJobOfItsHasNot() {
         ClientRequest request = newRequest();
@@ -307,7 +299,6 @@ public class ClientRequestTest {
     }
 
     /** The jobs run one at a time, so what the request required is the peak of them, not their sum. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void theFlatRequirementIsThePeakOfTheJobs() {
         ClientRequest request = newRequest();
@@ -323,7 +314,6 @@ public class ClientRequestTest {
      * A job says which statement submitted it, as the response says of a statement's own report. Statements
      * that submit no job leave a gap, so a job's position in the array does not identify its statement.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void aJobSaysWhichStatementSubmittedIt() {
         ClientRequest request = newRequest();
@@ -339,7 +329,6 @@ public class ClientRequestTest {
     }
 
     /** A job submitted by no statement of the client's - the request's own - says nothing of a statement. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void aJobOfNoStatementOfTheClientsSaysNothing() {
         ClientRequest request = newRequest();
@@ -359,7 +348,6 @@ public class ClientRequestTest {
         runJob(request, jobId, capacity(1, 172032L), status, exceptions);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private static void runJob(ClientRequest request, JobId jobId, IReadOnlyClusterCapacity capacity, JobStatus status,
             List<Exception> exceptions) {
         request.addJob(jobId);
@@ -368,7 +356,6 @@ public class ClientRequestTest {
         request.jobFinished(jobId, status, exceptions);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     private static IReadOnlyClusterCapacity capacity(int cores, long memoryByteSize) {
         IReadOnlyClusterCapacity capacity = mock(IReadOnlyClusterCapacity.class);
         when(capacity.getAggregatedCores()).thenReturn(cores);

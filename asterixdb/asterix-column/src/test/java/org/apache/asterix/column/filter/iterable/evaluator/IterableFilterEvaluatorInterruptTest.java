@@ -34,7 +34,6 @@ import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.util.ExceptionUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -43,7 +42,6 @@ import org.junit.Test;
  * the task thread is stranded for the life of the process (MB-72389). Each case below builds a reader that
  * never terminates its loop and asserts that an interrupt delivered *while the loop is running* aborts it.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression coverage for interrupt polling in unbounded column filter loops")
 public class IterableFilterEvaluatorInterruptTest {
 
     /** {@code isRepeatedValue() && !isLastDelimiter()} never goes false, so the repeated-value loop spins. */

@@ -39,10 +39,6 @@ import org.apache.asterix.cloud.WriterSingleBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -66,7 +62,6 @@ import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
  * values, drive concurrent uploads to populate the connection pool, then observe established
  * TCP sockets via {@code lsof} to confirm connections are torn down at the configured times.
  */
-@AiProvenance(agent = Agent.CLAUDE_OPUS_4_7, tool = Tool.CLAUDE_CODE_CLI, contributionKind = ContributionKind.TEST_GENERATED, notes = "MB-71767: runtime verification of HTTP idle/lifetime knobs on the sync S3 path; generated via Claude Code")
 public class S3ConnectionLifecycleTest {
 
     private static final Logger LOGGER = LogManager.getLogger();

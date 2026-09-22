@@ -30,7 +30,6 @@ import java.security.cert.CertificateException;
 import java.util.Optional;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import io.netty.handler.ssl.ClientAuth;
 
@@ -47,7 +46,6 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     private transient KeyStore keyStore;
     private transient KeyStore trustStore;
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851")
     private NetworkSecurityConfig(boolean sslEnabled, boolean verifyPeerIdentity, boolean verifyRmiPeerIdentity,
             String keyStoreFile, String keyStorePassword, String trustStoreFile, KeyStore keyStore,
             KeyStore trustStore) {
@@ -66,7 +64,6 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
         return of(sslEnabled, true, true, keyStoreFile, keyStorePassword, trustStoreFile);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     public static NetworkSecurityConfig of(boolean sslEnabled, boolean verifyPeerIdentity,
             boolean verifyRmiPeerIdentity, String keyStoreFile, String keyStorePassword, String trustStoreFile) {
         return new NetworkSecurityConfig(sslEnabled, verifyPeerIdentity, verifyRmiPeerIdentity, keyStoreFile,
@@ -78,7 +75,6 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
         return of(sslEnabled, true, true, keyStore, keyStorePassword, trustStore);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     public static NetworkSecurityConfig of(boolean sslEnabled, boolean verifyPeerIdentity,
             boolean verifyRmiPeerIdentity, KeyStore keyStore, String keyStorePassword, KeyStore trustStore) {
         return new NetworkSecurityConfig(sslEnabled, verifyPeerIdentity, verifyRmiPeerIdentity, null, keyStorePassword,
@@ -96,13 +92,11 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     public boolean verifyPeerIdentity() {
         return verifyPeerIdentity;
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     public boolean verifyRmiPeerIdentity() {
         return verifyRmiPeerIdentity;
     }

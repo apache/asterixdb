@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import org.apache.asterix.column.test.sample.ColumnSampleBenchHarness.Projection;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.SampleCursorStats;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,8 +42,6 @@ import org.junit.runners.Parameterized;
  * a 475 000-insert index twice for identical checks.
  */
 @RunWith(Parameterized.class)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Smoke test proving the column LSM sample bench harness stands up a shadowed column index and "
-        + "drives the real column sample cursor in both projection modes")
 public class ColumnSampleBenchHarnessTest {
 
     @Parameterized.Parameters(name = "{0}")

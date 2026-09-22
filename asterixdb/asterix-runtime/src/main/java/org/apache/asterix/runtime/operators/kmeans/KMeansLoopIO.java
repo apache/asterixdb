@@ -49,7 +49,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ loops: shared wire formats and raw-vector (de)serialization for the loops' internal
@@ -58,7 +57,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * declared {@link ISerializerDeserializer} in the descriptors below is therefore a placeholder and is never
  * invoked.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public final class KMeansLoopIO {
 
     private KMeansLoopIO() {

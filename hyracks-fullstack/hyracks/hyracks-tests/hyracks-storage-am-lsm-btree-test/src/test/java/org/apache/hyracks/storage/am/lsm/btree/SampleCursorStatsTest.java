@@ -19,11 +19,9 @@
 package org.apache.hyracks.storage.am.lsm.btree;
 
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.SampleCursorStats;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Unit tests for SampleCursorStats' own accounting arithmetic (share computation, zero-denominator, reset)")
 public class SampleCursorStatsTest {
 
     @Test

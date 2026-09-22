@@ -29,7 +29,6 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 public class AvroLogicalTypesExampleGenerator {
@@ -50,8 +49,6 @@ public class AvroLogicalTypesExampleGenerator {
     private static final String AVRO_GEN_BASEDIR = "target/generated_avro_files";
     private static final String FILE_NAME = "avro_logical_type.avro";
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Fix timeMicrosField test value overflowing a day (was 12345678901234, > 24h in micros), which silently overflowed int during Avro TimeMicros parsing")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Add a null-valued nullable field so tests can cover Avro NULL (not MISSING) parsing")
     public static void writeLogicalTypesExample() throws IOException {
         Schema schema = new Schema.Parser().parse(SCHEMA_STRING);
         File destPath = new File(AVRO_GEN_BASEDIR);

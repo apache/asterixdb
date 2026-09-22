@@ -61,7 +61,6 @@ import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -71,9 +70,6 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Propagate the dataset's atomicity to the VTree resource")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Read the cross-pollination params at every M instead of only M > 1, so bulk-load and "
-            + "incremental DML resolve clusters with the same epsilon and deletes cancel their matter")
     public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Dataset dataset, Index index,
             ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,

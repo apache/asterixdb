@@ -47,7 +47,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -84,7 +83,6 @@ import org.junit.Test;
  * <b>42300.00</b>, with all 7200 samples in the lowest 3 bins. Recorded rather than automated — reproducing it
  * means editing production code.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Chi-square uniformity guard over the live key space for the row sample cursor")
 @SuppressWarnings("rawtypes")
 public class DiskBTreeSampleUniformityTest {
 

@@ -50,7 +50,6 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.util.ExitUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,7 +75,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Guarded both waits against lost wakeups and failed the statement on a commit timeout")
     public void commitTransaction(JobId jobId) throws ACIDException {
         IGlobalTransactionContext context = getTransactionContext(jobId);
         try {
@@ -133,7 +131,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Accumulate the reported resources atomically instead of racing on a plain map")
     public void handleJobPreparedMessage(JobId jobId, String nodeId, Map<String, ILSMComponentId> componentIdMap) {
         IGlobalTransactionContext context = txnContextRepository.get(jobId);
         if (context == null) {
@@ -157,7 +154,6 @@ public class GlobalTxManager implements IGlobalTxManager {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Send to a snapshot of the recipients and record how many acks that phase awaits")
     private void sendJobCommitMessages(IGlobalTransactionContext context) {
         // snapshot: the nodes messaged and the ack target taken from them must be one set, not two reads
         List<String> nodeIds = new ArrayList<>(context.getNodeResourceMap().keySet());
@@ -174,7 +170,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Await the snapshot of nodes actually messaged rather than a live map or the job's node count")
     public void handleJobCompletionMessage(JobId jobId, String nodeId) {
         IGlobalTransactionContext context = getTransactionContext(jobId);
         if (rejectStrayAck(context, TxnPhase.COMMIT, jobId, nodeId, "JobCompletionMessage")) {
@@ -191,7 +186,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Await the snapshot of nodes actually messaged rather than a live map or the job's node count")
     public void handleJobRollbackCompletionMessage(JobId jobId, String nodeId) {
         IGlobalTransactionContext context = getTransactionContext(jobId);
         if (rejectStrayAck(context, TxnPhase.ROLLBACK, jobId, nodeId, "JobRollbackCompletionMessage")) {
@@ -251,7 +245,6 @@ public class GlobalTxManager implements IGlobalTxManager {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Guarded the rollback wait with its predicate and reported the timeout instead of assuming success")
     private void sendJobRollbackMessages(IGlobalTransactionContext context) throws Exception {
         JobId jobId = context.getJobId();
         // snapshot: the nodes messaged and the ack target taken from them must be one set, not two reads
@@ -283,7 +276,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Drop the context even when the rollback messages fail to go out")
     public void abortTransaction(JobId jobId) throws Exception {
         try {
             IGlobalTransactionContext context = getTransactionContext(jobId);
@@ -315,7 +307,6 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public void notifyJobSubmissionFailed(JobId jobId, JobSpecification spec) {
         txnContextRepository.remove(jobId);
     }
@@ -335,7 +326,6 @@ public class GlobalTxManager implements IGlobalTxManager {
      * counted: the counter is shared across phases, so a straggler would push the current phase over its
      * target early and declare it complete while a node has yet to answer.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Drop acknowledgements belonging to an abandoned phase")
     private static boolean rejectStrayAck(IGlobalTransactionContext context, TxnPhase expected, JobId jobId,
             String nodeId, String messageKind) {
         if (context.getPhase() != expected) {
@@ -350,7 +340,6 @@ public class GlobalTxManager implements IGlobalTxManager {
      * Waits until the acknowledgements of every messaged node have moved the transaction to {@code target}, or
      * the timeout expires. The caller must re-read the status to tell those two outcomes apart.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Deadline-bounded, predicate-guarded wait shared by the commit and rollback phases")
     private static void awaitStatus(IGlobalTransactionContext context, TransactionStatus target, long timeoutMillis)
             throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);

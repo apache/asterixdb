@@ -69,7 +69,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,7 +80,6 @@ import org.mockito.Mockito;
  * activities (materializer sink + hierarchical clustering source) directly against a mocked task
  * context backed by a real {@link IOManager} for the materialized-sample run file.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
 
     private static final int DIM = 4;
@@ -144,7 +142,6 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
      * Every vector reaching k-means carries the declared dimension because isvector(field, dimension) has
      * already filtered the stream. The centroids it produces carry that dimension too.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     @Test
     public void testCentroidsCarryTheDeclaredDimension() throws Exception {
         List<CentroidTuple> centroids = parseAll(runOperator(42L, 2, 32768, twoClusterVectors(20)));
@@ -158,7 +155,6 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
      * k-means emits no centroids rather than failing: the first build job has already rejected a wholly
      * non-indexable sample, so this only arises when the operator is driven on its own.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     @Test
     public void testNoIndexableVectorEmitsNoCentroids() throws Exception {
         List<ITupleReference> run = runOperator(42L, 2, 32768, twoClusterVectors(20), DIM + 4);

@@ -36,7 +36,6 @@ import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -246,7 +245,6 @@ public class ClientRequest extends BaseClientRequest {
      * @param statementPosition the statement's position among the client's, counting from 1; 0 for a statement
      *                          of the request's own, which is not the client's to see
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public void setStatementPosition(int statementPosition) {
         this.statementPosition = statementPosition;
     }
@@ -257,7 +255,6 @@ public class ClientRequest extends BaseClientRequest {
      *
      * @param multiStatement whether the request carries more than one statement of the client's own
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public void setMultiStatement(boolean multiStatement) {
         this.multiStatement = multiStatement;
     }
@@ -350,7 +347,6 @@ public class ClientRequest extends BaseClientRequest {
         return null;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private void putJobDetails(ObjectNode json, boolean redact) {
         try {
             List<RequestJob> requestJobs;
@@ -391,7 +387,6 @@ public class ClientRequest extends BaseClientRequest {
      *
      * @return that job, or null where no one job is the request
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private RequestJob requestJob(List<RequestJob> requestJobs) {
         return !multiStatement && requestJobs.size() == 1 ? requestJobs.get(0) : null;
     }
@@ -402,7 +397,6 @@ public class ClientRequest extends BaseClientRequest {
      * have all finished, the peak of what they required - they run one at a time - and the first error any of
      * them reported, which for a request that stops at its first failing statement is that statement's.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static JobState rollUp(List<RequestJob> requestJobs) {
         if (requestJobs.isEmpty()) {
             return EMPTY_JOB_STATE;
@@ -438,7 +432,6 @@ public class ClientRequest extends BaseClientRequest {
      * something does not report itself terminated. Null, as a single job's unreported status is, where a job
      * has been submitted and its creation not yet notified.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static JobStatus rollUpStatus(List<RequestJob> requestJobs) {
         JobStatus failure = null;
         boolean running = false;
@@ -478,7 +471,6 @@ public class ClientRequest extends BaseClientRequest {
     }
 
     /** @return the earlier of two times, either of which may be unset */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static long earlier(long time, long otherTime) {
         if (time == 0) {
             return otherTime;
@@ -492,7 +484,6 @@ public class ClientRequest extends BaseClientRequest {
      *         no plan of its own; each of their plans belongs to its statement, and is reported on that
      *         statement's job.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private String requestPlan() {
         RequestJob requestJob;
         synchronized (jobsLock) {
@@ -501,7 +492,6 @@ public class ClientRequest extends BaseClientRequest {
         return requestJob != null ? requestJob.state.plan : null;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private static void putJobState(ObjectNode json, JobState state, long queueTimeMillis, boolean redact) {
         AMutableDateTime dateTime = new AMutableDateTime(0);
         putTime(json, state.createTime, "jobCreateTime", dateTime);
@@ -520,7 +510,6 @@ public class ClientRequest extends BaseClientRequest {
      * @return the time the request spent queued: the sum over its jobs, whose queue intervals do not overlap,
      *         its statements running one at a time
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static long queueTimeMillis(List<RequestJob> requestJobs) {
         long queueTime = 0;
         for (RequestJob job : requestJobs) {
@@ -534,7 +523,6 @@ public class ClientRequest extends BaseClientRequest {
      *         starting (failed while in the queue, cancelled/timeout); currentTime - createTime, if it is
      *         still in the queue
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static long queueTimeMillis(JobState state) {
         if (state.createTime == 0) {
             return 0;

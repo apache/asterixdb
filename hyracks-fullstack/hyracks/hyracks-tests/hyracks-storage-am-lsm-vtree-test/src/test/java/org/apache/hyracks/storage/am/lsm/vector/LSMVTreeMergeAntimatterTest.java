@@ -54,7 +54,6 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -81,7 +80,6 @@ import org.junit.Test;
  * frames use the insert (matter) tuple writer, which re-encodes the antimatter tuple as matter —
  * the delete resurrects.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeMergeAntimatterTest {
 
     private static final Logger LOGGER = LogManager.getLogger();

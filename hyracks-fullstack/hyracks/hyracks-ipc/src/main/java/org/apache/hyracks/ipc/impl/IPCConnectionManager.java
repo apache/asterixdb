@@ -46,7 +46,6 @@ import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.NetworkUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -351,7 +350,6 @@ public class IPCConnectionManager {
             workingPendingConnections.clear();
         }
 
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "discard late connect")
         private void connectionEstablished(IPCHandle handle, SelectionKey channelKey, ISocketChannel channel) {
             if (!handle.setStateUnlessClosed(HandleState.CONNECT_SENT)) {
                 // the waiter timed out and gave up on this handle; discard the late connection

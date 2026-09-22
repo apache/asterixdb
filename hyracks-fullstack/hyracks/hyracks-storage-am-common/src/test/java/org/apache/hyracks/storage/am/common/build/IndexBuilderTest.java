@@ -41,14 +41,12 @@ import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * Tests how {@link IndexBuilder} clears a leftover resource before creating an index.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for the create path's intolerant pre-delete (MB-73587)")
 public class IndexBuilderTest {
 
     private static final String RESOURCE_PATH = "storage/partition_5/Default/Default/airline/0/airline";

@@ -46,7 +46,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.util.OptionalBoolean;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Metadata describing an index.
@@ -691,8 +690,6 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         private final SampleMethod sampleMethod;
         private final Map<String, IndexStats> indexesStats;
 
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "SampleMethod enum backing the ANALYZE sample-method option; metadata names match the "
-                + "persisted vocabulary")
         public enum SampleMethod {
             RANDOM("random"),
             FULL_SCAN("full-scan");

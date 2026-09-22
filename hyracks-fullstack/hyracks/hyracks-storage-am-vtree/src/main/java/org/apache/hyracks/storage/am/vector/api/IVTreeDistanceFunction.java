@@ -20,7 +20,6 @@ package org.apache.hyracks.storage.am.vector.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Distance function between two decoded vectors, injected into the VTree index by the Hyracks
@@ -65,7 +64,6 @@ public interface IVTreeDistanceFunction {
      * @return the distance between {@code query} and the decoded vector
      * @throws HyracksDataException if the encoding is malformed or the calculation fails
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fused decode+measure entry point for the navigation hot path")
     default double decodeAndApply(double[] query, byte[] bytes, int offset, int length, double[] dst)
             throws HyracksDataException {
         DoubleArraySerializerDeserializer.readInto(bytes, offset, length, dst);
@@ -90,7 +88,6 @@ public interface IVTreeDistanceFunction {
      * @return the distance between {@code query} and the encoded vector
      * @throws HyracksDataException if the encoding is malformed or the calculation fails
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Distance-only fused entry point for callers that discard the centroid")
     default double decodeAndApply(double[] query, byte[] bytes, int offset, int length) throws HyracksDataException {
         return apply(query, DoubleArraySerializerDeserializer.read(bytes, offset, length));
     }

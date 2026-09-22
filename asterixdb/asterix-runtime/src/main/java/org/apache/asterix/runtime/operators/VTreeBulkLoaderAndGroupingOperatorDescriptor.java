@@ -74,7 +74,6 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.LocalResource;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -147,8 +146,6 @@ public class VTreeBulkLoaderAndGroupingOperatorDescriptor extends AbstractSingle
         return distanceFunction::apply;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Honour a DDL epsilon of 0 instead of coercing it, so bulk-load placement matches the "
-            + "insert/delete path")
     public VTreeBulkLoaderAndGroupingOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IIndexDataflowHelperFactory indexHelperFactory, RecordDescriptor inputRecordDescriptor,
             RecordDescriptor outputRecordDescriptor, IScalarEvaluatorFactory args, String distanceMetric,

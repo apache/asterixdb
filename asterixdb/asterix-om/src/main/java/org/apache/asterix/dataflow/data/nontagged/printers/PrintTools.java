@@ -36,7 +36,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.JtsModule;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.locationtech.jts.geom.Geometry;
@@ -363,7 +362,6 @@ public class PrintTools {
      * @param s the offset of that string's length prefix
      * @return the length, in bytes, of the standard UTF-8 encoding of that string
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "UTF-8 length companion to writeUTF8StringRaw")
     public static int getUTF8StringRawLength(byte[] b, int s) {
         final int utfLength = UTF8StringUtil.getUTFLength(b, s);
         int position = s + UTF8StringUtil.getNumBytesToStoreLength(utfLength);

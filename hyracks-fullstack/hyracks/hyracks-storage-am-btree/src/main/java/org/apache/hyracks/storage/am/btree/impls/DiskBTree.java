@@ -50,7 +50,6 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -187,7 +186,6 @@ public class DiskBTree extends BTree {
      * {@code int[]} variant's {@code [i]}. Safe: only genuine leaf-header ids are recorded (no
      * continuation/interior/compressed-only pages are ever touched).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Succinct bitmap encoding of enumerated leaf ids (ASTERIXDB-3702)")
     public BitmapLeafIds enumerateLeafPageIdsCompact(int rootPageId, BTreeOpContext ctx,
             IBufferCacheReadContext bcOpCtx) throws HyracksDataException {
         BitmapLeafIds leafIds = new BitmapLeafIds(getMaxPageId() + 1L);
@@ -202,7 +200,6 @@ public class DiskBTree extends BTree {
      * densely in {@code [0, maxPageId]}, so this sizes the {@link BitmapLeafIds} universe. Cheap: pins
      * only the metadata page.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Universe bound for the bitmap leaf-id encoding (ASTERIXDB-3702)")
     public int getMaxPageId() throws HyracksDataException {
         return freePageManager.getMaxPageId(freePageManager.createMetadataFrame());
     }

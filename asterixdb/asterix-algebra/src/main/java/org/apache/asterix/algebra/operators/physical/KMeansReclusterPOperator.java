@@ -36,7 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The k-means|| RECLUSTER stage: a single {@link KMeansReclusterOperatorDescriptor} that reduces the weighted
@@ -44,7 +43,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * one input and that input is the pool. The requirement below makes every partition reduce the complete
  * partial set, since an un-broadcast input would reduce only the local ones.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansReclusterPOperator extends AbstractKMeansStagePOperator {
 
     @Override

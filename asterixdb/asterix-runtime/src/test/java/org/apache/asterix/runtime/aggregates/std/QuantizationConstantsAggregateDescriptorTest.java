@@ -36,7 +36,6 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -47,7 +46,6 @@ import org.mockito.Mockito;
  * global step consumes such blobs and emits a BINARY blob with the serialized quantization constants
  * [minQ:float][maxQ:float][alpha:float][bits:int][confidence:float][sampleCount:int].
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class QuantizationConstantsAggregateDescriptorTest {
 
     /** Parsed form of the global-step output blob. */

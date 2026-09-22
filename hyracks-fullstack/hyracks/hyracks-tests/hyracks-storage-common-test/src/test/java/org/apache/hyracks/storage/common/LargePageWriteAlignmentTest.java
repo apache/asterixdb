@@ -36,7 +36,6 @@ import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBuffer
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -49,7 +48,6 @@ import org.junit.Test;
  * <p>
  * These tests assert the write covers every byte of every slot it owns.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Assert a large page write covers every slot it owns, contiguous and non contiguous")
 public class LargePageWriteAlignmentTest {
 
     private static final int PAGE_SIZE = 256;

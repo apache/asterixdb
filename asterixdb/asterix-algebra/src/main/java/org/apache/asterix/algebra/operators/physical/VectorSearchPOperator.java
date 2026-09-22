@@ -60,7 +60,6 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Contributes the runtime operator for an unnest-map representing a vector index search.
@@ -120,7 +119,6 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Reject a filter condition on an index without INCLUDE columns instead of dropping it")
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
@@ -223,7 +221,6 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
      * narrower than the descriptor is emitted with the previous tuple's offsets in its trailing slots, not
      * with an error.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static int[] includeFieldIndexes(UnnestMapOperator unnestMap,
             Map<LogicalVariable, Integer> filterVarToFieldIndex) throws CompilationException {
         if (filterVarToFieldIndex == null || filterVarToFieldIndex.isEmpty()) {

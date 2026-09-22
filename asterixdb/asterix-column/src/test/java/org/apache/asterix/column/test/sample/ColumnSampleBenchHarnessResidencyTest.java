@@ -20,7 +20,6 @@ package org.apache.asterix.column.test.sample;
 
 import org.apache.asterix.column.test.sample.ColumnSampleBenchHarness.Projection;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.SampleCursorStats;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,8 +32,6 @@ import org.junit.Test;
  * materialization is served by the column buffer pool, not the disk buffer cache these checks read, so the
  * outcome cannot depend on the projection — and a second 475 000-insert build would buy an identical result.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Split out of ColumnSampleBenchHarnessTest: the buffer-cache residency/budget checks do not depend "
-        + "on Projection, so they no longer need to run once per projection value")
 public class ColumnSampleBenchHarnessResidencyTest {
 
     /**

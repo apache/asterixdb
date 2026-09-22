@@ -18,18 +18,11 @@
  */
 package org.apache.hyracks.cloud.io;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.GENERATED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
-
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * Controls the AWS SDK v2 checksum behavior for S3 clients.
  * Introduced in SDK 2.30.0 where the default changed to {@link #WHEN_SUPPORTED},
  * which is not supported by all S3-compatible storage solutions.
  */
-@AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT, contributionKind = GENERATED)
 public enum S3ChecksumBehavior {
     /** Calculate/validate checksums only when required by the operation. Safe for S3-compatible endpoints. */
     WHEN_REQUIRED,

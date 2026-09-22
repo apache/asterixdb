@@ -27,7 +27,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.mutable.MutableLong;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,7 +110,6 @@ public class ExitUtil {
      *
      * @return {@code true} if termination has begun
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Lets halt-on-failure paths recognize a termination already in progress")
     public static boolean isExiting() {
         if (exiting) {
             return true;

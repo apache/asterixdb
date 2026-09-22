@@ -55,7 +55,6 @@ import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -120,8 +119,6 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
      *            (copy) factory so preserved delete-marker tuples are not re-encoded as matter;
      *            marker semantics are defined in the LSM layer (see hyracks-storage-am-lsm-vtree).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public VTreeBulkLoader(IPageWriteCallback callback, VTree vectorTree, ITreeIndexAccessor staticAccessor,
             ISketchSampler sampler, ITreeIndexFrameFactory dataFrameFactoryOverride) throws HyracksDataException {
 
@@ -198,7 +195,6 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public void add(ITupleReference tuple) throws HyracksDataException {
         sampler.addTuple(tuple);
         int tupleCentroidId = extractCentroidId(tuple);
@@ -473,7 +469,6 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public void end() throws HyracksDataException {
         // Finish last cluster's remaining data page
         if (currentDataPage != null && entriesInCurrentDataPage > 0) {
@@ -630,7 +625,6 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
      * The page is rewritten in place (same byte width, so slots do not move) before it is written
      * exactly once by the caller — no page is re-uploaded, honoring the cloud append-only rule.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     private void resolveLeafNeighborPointers(IVTreeLeafFrame lfFrame, Map<Integer, int[]> cidToFinalLoc,
             int staticBasePageId) throws HyracksDataException {
         VTreeLeafNeighborList.forEachLeafNeighborEntry(lfFrame, (neighborList, start, e) -> {

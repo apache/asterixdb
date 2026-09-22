@@ -29,7 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,7 +122,6 @@ public class ChunkedResponse implements IServletResponse {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Never terminate a response whose write failed as a complete one")
     public void close() throws IOException {
         try {
             InvokeUtil.tryIoWithCleanups(() -> {

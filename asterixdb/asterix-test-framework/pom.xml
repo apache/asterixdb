@@ -59,8 +59,6 @@
             <usedDependency>com.sun.xml.bind:jaxb-core</usedDependency>
             <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
             <usedDependency>com.sun.activation:javax.activation</usedDependency>
-            <!-- @AiProvenance is @Retention(SOURCE), so it leaves no trace for dependency:analyze -->
-            <usedDependency>org.apache.hyracks:hyracks-util</usedDependency>
           </usedDependencies>
         </configuration>
       </plugin>
@@ -90,10 +88,6 @@
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-util</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

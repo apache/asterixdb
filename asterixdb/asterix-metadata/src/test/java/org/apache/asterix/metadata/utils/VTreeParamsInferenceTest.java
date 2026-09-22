@@ -29,14 +29,12 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
  * The sizing rules, checked against the worked examples in the design they implement. Pure arithmetic, so it
  * is verified here rather than through a cluster; the runtime test only has to show the values are persisted.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class VTreeParamsInferenceTest {
 
     /** A ceiling nothing in these cases can reach, so each one exercises the rule it is named for. */

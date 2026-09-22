@@ -36,13 +36,11 @@ import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.VectorMetricFunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Rewrites {@code vector_distance(vec1, vec2, metric)} into the corresponding 2-arg vector builtin when
  * {@code metric} is a compile-time string literal.
  */
-@AiProvenance(agent = AiProvenance.Agent.GPT_5_3, tool = AiProvenance.Tool.CURSOR, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Compile-time rewrite for vector_distance sugar")
 public final class SqlppVectorDistanceRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override

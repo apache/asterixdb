@@ -54,7 +54,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.StructLike;
 import org.apache.iceberg.data.Record;
@@ -99,7 +98,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
     // against IcebergFileRecordReader's deleteFilter.requiredSchema() (a superset of projectedSchema with
     // extra equality/positional columns), so positional access would misalign. Nested structs (parseObject)
     // are not augmented this way, so index access is fine there.
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Hoisted projectedSchema.columns() out of the loop condition (was re-evaluated per column per row) and added the comment above explaining why name-based lookup here must not be changed to index-based")
     private void parseRootObject(Record record, DataOutput out) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -131,7 +129,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         parserContext.exitObject(valueBuffer, null, objectBuilder);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added VARIANT case")
     private void parseValue(Type fieldType, Object value, DataOutput out) throws IOException {
         if (value == null) {
             serializeNull(out);
@@ -220,7 +217,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         parserContext.exitCollection(valueBuffer, arrayBuilder);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Hoisted schema.fields() out of the loop condition, was re-evaluated per field per row")
     private void parseObject(StructType schema, StructLike structLike, DataOutput out) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -268,12 +264,10 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         parserContext.exitCollection(item, listBuilder);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Entry point for VARIANT column: unwraps Iceberg Variant and delegates to parseVariantValue")
     private void parseVariant(Variant variant, DataOutput out) throws IOException {
         parseVariantValue(variant.value(), out, 1);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Dispatches on PhysicalType and serializes each Variant primitive/object/array to the correct AsterixDB type. Includes a configurable max-depth guard (variantDepth WITH-clause option, default 500, since Variant nesting has no schema bound), a correct UUID read (java.util.UUID via UUIDUtil.convert, not the String that PhysicalType.UUID.javaClass() claims), the decimal-to-double opt-in gate for DECIMAL4/8/16, and timezone projection for TIMESTAMPTZ/TIMESTAMPTZ_NANOS")
     // Keep the PhysicalType -> serialized-shape mapping here in sync with getVariantTypeTag's
     // PhysicalType -> ATypeTag mapping: getVariantTypeTag predicts what this method will write, and
     // nothing enforces that the two switches agree beyond this comment.
@@ -350,7 +344,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Serializes a VariantObject as an open AsterixDB record")
     private void parseVariantObject(VariantObject variantObject, DataOutput out, int depth) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -363,7 +356,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         parserContext.exitObject(valueBuffer, null, objectBuilder);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Serializes a VariantArray as an AsterixDB ordered list")
     private void parseVariantArray(VariantArray variantArray, DataOutput out, int depth) throws IOException {
         final IMutableValueStorage valueBuffer = parserContext.enterCollection();
         final IAsterixListBuilder arrayBuilder = parserContext.getCollectionBuilder(NESTED_OPEN_AORDERED_LIST_TYPE);
@@ -438,7 +430,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         stringSerde.serialize(aString, out);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Removed the decimal-overflow-to-Infinity warning branch (and the now-unused warningCollector/decimalOverflowWarned state): decimal precision is capped at 38 significant digits, so doubleValue() can never actually return an infinite result for any value the type system can produce")
     private void serializeDecimal(Object value, DataOutput out) throws HyracksDataException {
         // Decimal precision is capped at 38 (DECIMAL16/Iceberg's max), so magnitude is bounded by ~10^38,
         // nowhere near Double.MAX_VALUE (~1.8x10^308) — doubleValue() can never return an infinite result here.
@@ -469,7 +460,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         serializeDateEpochDay((int) ((LocalDate) value).toEpochDay(), output);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Core date serializer accepting days-since-epoch; shared by serializeDate and Variant DATE handling")
     private void serializeDateEpochDay(int epochDay, DataOutput out) throws HyracksDataException {
         if (parserContext.isDateAsInt()) {
             serializeInteger(epochDay, out);
@@ -484,7 +474,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
                 output);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Core time serializer accepting milliseconds-of-day; shared by serializeTime and serializeTimeMicros")
     private void serializeTimeMillis(int timeInMillis, DataOutput out) throws HyracksDataException {
         if (parserContext.isTimeAsInt()) {
             serializeInteger(timeInMillis, out);
@@ -494,7 +483,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Converts Variant TIME (microseconds-of-day) to milliseconds and delegates to serializeTimeMillis")
     private void serializeTimeMicros(long timeMicros, DataOutput out) throws HyracksDataException {
         serializeTimeMillis((int) MillisecondChronon.narrow(timeMicros, TimeUnit.MICROSECONDS), out);
     }
@@ -538,8 +526,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
      * instant, indistinguishable from a real one. Wall-clock sources ({@code utcAdjusted == false}) are never shifted
      * on either path; they were never instants to begin with.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Handles isTimestampAsLong flag for microsecond-precision timestamps; shared by Iceberg TIMESTAMP and Variant TIMESTAMPTZ/TIMESTAMPNTZ")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Timezone projection moved inside the datetime branch so the epoch long is emitted unshifted; callers pass whether the value is UTC-adjusted instead of pre-projecting")
     private void serializeTimestampMicros(long epochMicros, boolean utcAdjusted, DataOutput out)
             throws HyracksDataException {
         if (parserContext.isTimestampAsLong()) {
@@ -554,8 +540,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Handles isTimestampAsLong flag for nanosecond-precision timestamps; shared by Iceberg TIMESTAMP_NANO and Variant TIMESTAMPTZ_NANOS/TIMESTAMPNTZ_NANOS")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Same reshaping as serializeTimestampMicros: the projection lives in the datetime branch only")
     private void serializeTimestampNanos(long epochNanos, boolean utcAdjusted, DataOutput out)
             throws HyracksDataException {
         if (parserContext.isTimestampAsLong()) {
@@ -567,7 +551,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Core datetime serializer accepting epoch milliseconds; shared by timestamp helpers and Variant TIMESTAMP handling")
     private void serializeDatetimeMillis(long epochMillis, DataOutput out) throws HyracksDataException {
         aDateTime.setValue(epochMillis);
         datetimeSerde.serialize(aDateTime, out);
@@ -609,7 +592,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         ensureDecimalToDoubleEnabled(type.toString(), context);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "String-typed overload so the decimal-to-double gate can also be enforced for Variant DECIMAL4/8/16, which have a PhysicalType rather than an Iceberg Type")
     private static void ensureDecimalToDoubleEnabled(String typeDescription, IcebergConverterContext context)
             throws RuntimeDataException {
         if (!context.isDecimalToDoubleEnabled()) {
@@ -618,7 +600,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added the VARIANT case, taking the actual field value (not just an isNull flag) and delegating to getVariantTypeTag so the reported tag reflects the value's real PhysicalType. Also reports ATypeTag.BIGINT instead of INTEGER for DATE/TIME-as-int, matching serializeInteger's actual int64 output")
     private static ATypeTag getTypeTag(Type type, Object value, IcebergConverterContext parserContext)
             throws HyracksDataException {
         if (value == null) {
@@ -670,7 +651,6 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         };
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Resolves the real tag for a VARIANT column's value by inspecting its PhysicalType, mirroring the exact dispatch/option-flag logic in parseVariantValue")
     // Keep this PhysicalType -> ATypeTag mapping in sync with parseVariantValue's PhysicalType -> serialized-shape
     // mapping: this method predicts what that method will write, and nothing enforces that the two switches agree
     // beyond this comment.

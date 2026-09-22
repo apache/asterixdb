@@ -47,7 +47,6 @@ import org.apache.hyracks.storage.am.vector.TestVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,7 +58,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * the only description of an index that survives a restart, so a field that fails to round-trip surfaces
  * as a silently mis-configured index rather than as an error here.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Round-trip tests for the local resource JSON")
 public class LSMVTreeLocalResourceJsonTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();

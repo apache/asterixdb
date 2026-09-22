@@ -74,7 +74,6 @@ import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Validates a {@code CLUSTER BY} block and resolves its descriptor. A block
@@ -97,7 +96,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@code random} init modes, the Euclidean(-squared) metrics, and an optional {@code num_iterations} count
  * of Lloyd iterations (3 by default, capped by the rule that expands the operator).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     // WITH option keys, compared case-insensitively; named as the vector index's WITH options are.

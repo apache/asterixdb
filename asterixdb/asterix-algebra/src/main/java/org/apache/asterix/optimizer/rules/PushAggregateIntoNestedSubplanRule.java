@@ -53,7 +53,6 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule {
 
@@ -503,7 +502,6 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
 
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Scoped substitution support for CLUSTER BY centroid decorrelation")
     private static List<Mutable<ILogicalExpression>> collectExpressions(ILogicalOperator op)
             throws AlgebricksException {
         List<Mutable<ILogicalExpression>> refs = new ArrayList<>();

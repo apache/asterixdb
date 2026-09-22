@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.text.WordUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class StringUtil {
     private static final Map<String, String> CAMEL_CACHE = Collections.synchronizedMap(new LRUMap<>(1024));
@@ -55,7 +54,6 @@ public class StringUtil {
     /**
      * Quotes a nullable string value with single quotes if non-null, otherwise returns null (no quotes).
      */
-    @AiProvenance(agent = AiProvenance.Agent.GPT_4_1, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public static String quoteNullableString(String value) {
         return value == null ? "null" : "'" + value + "'";
     }

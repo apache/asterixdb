@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.AppendFiles;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileFormat;
@@ -74,8 +73,6 @@ import org.junit.Test;
  * {@code InclusiveMetricsEvaluator} rather than deleting it — the type matrix and the never-lose-a-row invariant stay
  * just as valuable against their implementation.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Exhaustive no-data-loss tests for variant sub-field bound pruning over real manifests: verifies "
-        + "every kept/dropped decision against the actual rows, plus conservative fallbacks")
 public class VariantBoundsEvaluatorTest {
 
     private static final String COLUMN = "variant_field";
@@ -118,7 +115,6 @@ public class VariantBoundsEvaluatorTest {
      * The warning names the sub-field, never the data file: it is the actionable part, and being identical for every
      * file in the scan it folds into one warning instead of thousands.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Provokes the unparseable-bound path with hand-written garbage bytes and asserts the file is kept and one warning naming the sub-field is raised")
     @Test
     public void unparseableBound_keepsTheFileAndWarnsOnce() throws Exception {
         Table table = createTable("garbage-bounds");
@@ -222,7 +218,6 @@ public class VariantBoundsEvaluatorTest {
      * @param residual    a value of a different physical type, forced into the residual blob; {@code null}
      *                    writes an all-shredded control file instead
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Builds a file mixing shredded and residual values at the SAME variant path, to test whether Iceberg's manifest bounds account for residual values")
     private static void appendMixedShreddingFile(Table table, String fileName, String field, int[] typedValues,
             VariantValue residual) throws Exception {
         VariantMetadata meta = Variants.metadata(field);
@@ -277,7 +272,6 @@ public class VariantBoundsEvaluatorTest {
      * Nothing else in either harness exercises a single variant path that is shredded in some rows and residual in
      * others, which is why this is asserted directly rather than inferred.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Asserts that a file is not skipped for a value living in the variant residual blob rather than the shredded typed_value column; the assumption all file skipping depends on")
     @Test
     public void residualValueAtAShreddedPath_doesNotGetTheFileSkipped() throws Exception {
         Table table = createTable("residual");
@@ -304,7 +298,6 @@ public class VariantBoundsEvaluatorTest {
      * starts emitting typed-column-only bounds for a partially shredded path, this fails, and
      * {@link VariantBoundsEvaluator} would then be able to skip a file that holds a matching residual row.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Tripwire: Iceberg publishes bounds for a fully shredded variant path but none once any value at that path is residual; this all-or-nothing behaviour is what makes data-file skipping sound")
     @Test
     public void icebergPublishesNoBoundsWhenAPathIsPartlyResidual() throws Exception {
         Table allShredded = createTable("all-shredded");

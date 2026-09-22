@@ -24,7 +24,6 @@ import java.io.File;
 import java.net.URI;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -105,8 +104,6 @@ public class LocalCloudUtil {
         return s3MockServer;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "MB-68099: tolerate bucket-already-exists so a lost-response SDK retry of createBucket "
-            + "(seen during MinIO nginx cert rotation) no longer fails teardown")
     public static void recreateBucket(String bucketName, S3Client client) {
         String verb = "Created";
         try {

@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.lsm.vector.tuples;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Accepts the tuples a same-key write may overwrite, namely delete markers. The VTree counterpart of
@@ -30,7 +29,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * without knowing what antimatter is, since the encoding belongs to the LSM tuple writer. A tuple that
  * is not an {@link ILSMTreeTupleReference} carries no antimatter bit and counts as matter.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public enum LSMVTreeAntimatterTupleAcceptor implements ITupleAcceptor {
     INSTANCE;
 

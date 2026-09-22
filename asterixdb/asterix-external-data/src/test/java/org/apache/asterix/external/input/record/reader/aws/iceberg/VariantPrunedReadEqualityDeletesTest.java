@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.FileScanTask;
@@ -78,8 +77,6 @@ import org.junit.Test;
  * disabled — a differential oracle rather than a hand-written expectation, so the test cannot encode the same mistake
  * twice.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Drives the pruned delete path from a committed Iceberg table so equality deletes, v2 position delete "
-        + "files and the both-kinds-at-once case are covered against Iceberg's own delete filter as oracle")
 public class VariantPrunedReadEqualityDeletesTest {
 
     private static final String COLUMN = "variant_field";
@@ -367,7 +364,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * field-id set and ORs the resulting predicates; a composition that only honoured the first group, or that built
      * one projection for both, would keep rows the second file removes.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void twoEqualityDeletesWithDifferentKeys_bothApply() throws Exception {
         File warehouse = warehouse();
@@ -401,7 +397,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * covers that the shipped path threads {@code task.start()}/{@code task.length()} and the file-wide bitmap
      * through correctly, per split, with the equality key column widening the schema at the same time.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void realSplitsWithBothDeleteKinds_unionMatchesWholeFileOracle() throws Exception {
         File warehouse = warehouse();
@@ -440,7 +435,6 @@ public class VariantPrunedReadEqualityDeletesTest {
     }
 
     /** A dense deletion vector — roughly every third row, in every row group — through the real delete loader. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void denseDeletionVector_matchesIcebergRowForRow() throws Exception {
         File warehouse = warehouse();
@@ -470,7 +464,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * close, every delete-bearing file would leak an open input stream. Asserted rather than assumed, because it rests
      * on an Iceberg implementation detail ({@code combine(.., iterable)}) that a version bump could change.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void closingTheReturnedIterableClosesTheUnderlyingStream() throws Exception {
         File warehouse = warehouse();
@@ -589,7 +582,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * (c) is the one that would otherwise go unnoticed — a leak per delete-bearing file per failing query, visible
      * only as exhausted file handles much later.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void unreadableDeletionVector_failsBeforeAnyRowAndClosesTheReader() throws Exception {
         File warehouse = warehouse();
@@ -664,7 +656,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * than half" cannot flake. Wall-clock is the number a person wants to see and the one that would flake a build
      * agent, so it goes to stdout, as the sibling deep/wide tests in {@code ReadingShreddedPushdownTest} do.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void prunedDeleteAwareRead_readsFarFewerBytesThanTheStandardDeletePath() throws Exception {
         File warehouse = warehouse();
@@ -772,8 +763,6 @@ public class VariantPrunedReadEqualityDeletesTest {
      * This is the break-glass switch, so it has to be shown to actually switch. The correctness mirrors in the cluster
      * suites prove flag-off gives the same answers; only the byte count can prove it gives them the slow way.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Drives openPrunedReadIfEligible with the flag on and off over one delete-bearing task and "
-            + "asserts by byte count that off restores the full standard read while on prunes")
     @Test
     public void theFlagTurnsDeleteAwarePruningOnAndOff() throws Exception {
         File warehouse = warehouse();

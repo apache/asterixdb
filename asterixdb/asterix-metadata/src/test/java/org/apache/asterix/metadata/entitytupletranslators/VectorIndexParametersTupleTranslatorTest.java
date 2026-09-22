@@ -58,7 +58,6 @@ import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.OptionalBoolean;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -72,7 +71,6 @@ import org.junit.Test;
  * without extending {@code NAMES} fails it, and the failure message names the methods to update. Give the new
  * parameter a non-default value in {@link #everyParameterRoundTrips} and the round trip is covered too.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class VectorIndexParametersTupleTranslatorTest {
 
     /** Every parameter set to a non-default value, so a dropped field cannot look like a correct round trip. */

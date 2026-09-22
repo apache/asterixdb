@@ -29,7 +29,6 @@ import org.apache.asterix.external.util.iceberg.RequestedVariantPaths;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.TableProperties;
 import org.apache.iceberg.data.GenericRecord;
@@ -65,9 +64,6 @@ import org.junit.Test;
  * A single-row-group fixture exercises none of this, which is why {@link #ROW_COUNT} and the row-group size below are
  * chosen to produce several.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Position-delete composition over a multi-row-group shredded-variant file: surviving rows asserted by "
-        + "identity across row-group boundaries, split ranges, whole-row-group deletions and the empty/all "
-        + "extremes, plus a guard that pruning actually happened")
 public class VariantPrunedReadWithDeletesTest {
 
     private static final String COLUMN = "variant_field";
@@ -437,7 +433,6 @@ public class VariantPrunedReadWithDeletesTest {
      * — the part that could actually go wrong — the reader must not terminate early or mis-account rows just because
      * the bitmap is non-empty while none of its positions are ever encountered.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void deletionsEntirelyOutsideTheSplit_removeNothingFromIt() throws Exception {
         File dataFile = writeFixture();
@@ -473,7 +468,6 @@ public class VariantPrunedReadWithDeletesTest {
      * <p>
      * The seed is fixed and printed with every failure, so a red run is reproducible rather than a flake report.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void randomizedDeletionsSplitsAndSkips_matchBruteForce() throws Exception {
         long seed = 20260920L;
@@ -546,7 +540,6 @@ public class VariantPrunedReadWithDeletesTest {
      * The two-phase open's safety catch: opened for position deletes but never given them, the reader must refuse to
      * iterate. Without this, a caller that declined-then-forgot would silently return every deleted row.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void openedForPositionDeletesWithoutSupplyingThem_refusesToIterate() throws Exception {
         File dataFile = writeFixture();

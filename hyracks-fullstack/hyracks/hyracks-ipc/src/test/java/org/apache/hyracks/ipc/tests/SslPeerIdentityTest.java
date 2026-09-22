@@ -48,7 +48,6 @@ import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.ipc.security.NetworkSecurityConfig;
 import org.apache.hyracks.ipc.security.NetworkSecurityManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
@@ -66,7 +65,6 @@ import org.junit.Test;
  * that the node which was dialled did. These assert that a client channel also holds the peer to the identity its
  * certificate was issued to, so a certificate the cluster CA issued to another node is refused (ASTERIXDB-3851).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "ASTERIXDB-3851")
 public class SslPeerIdentityTest {
 
     private static final String DIALLED_HOST = "localhost";

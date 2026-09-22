@@ -34,7 +34,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageO
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * One Lloyd refinement run as a three-operator systolic chain, which is the oversampling loop's shape with a
@@ -44,7 +43,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * co-locates and shares that NC's permit and run files, while the centroid merge is single-partition. Release
  * is a sink dead-end, so it is registered as a job root to ensure its branch is scheduled.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansLloydLoopPOperator extends AbstractKMeansLoopPOperator {
 
     @Override

@@ -78,7 +78,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogicalOperator, Void> {
 
@@ -256,7 +255,6 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public ILogicalOperator visitClusterByOperator(ClusterByOperator op, Void arg) throws AlgebricksException {
         ClusterByOperator opCopy =
                 new ClusterByOperator(new MutableObject<>(new VariableReferenceExpression(op.getVectorVariable())),

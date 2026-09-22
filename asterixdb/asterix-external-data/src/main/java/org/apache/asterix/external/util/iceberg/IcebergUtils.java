@@ -55,7 +55,6 @@ import org.apache.asterix.external.util.iceberg.nessie.NessieUtils;
 import org.apache.asterix.external.util.iceberg.rest.RestUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.aws.AwsProperties;
@@ -112,7 +111,6 @@ public class IcebergUtils {
      *
      * @param configuration catalog properties, or a collection configuration with them merged in
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the catalog-level vending switch in either property space")
     public static boolean isVendedCredentials(Map<String, String> configuration) {
         String prefixed = configuration.get(
                 ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL + IcebergConstants.ICEBERG_VENDED_CREDENTIALS_PROPERTY_KEY);
@@ -133,9 +131,6 @@ public class IcebergUtils {
      *
      * @param catalogSource catalog source
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI,
-            contributionKind = AiProvenance.ContributionKind.GENERATED,
-            notes = "Identifies which catalog sources are REST-backed and can therefore vend credentials")
     public static boolean supportsVendedCredentials(IcebergCatalogSource catalogSource) {
         // kept exhaustive on purpose, so a newly added source has to make this choice explicitly
         return switch (catalogSource) {
@@ -152,7 +147,6 @@ public class IcebergUtils {
      * @param configuration collection properties, before the catalog's are merged in
      * @param sourceLoc     location of the declaration, for error reporting
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Rejects the catalog-level vending property when set on a collection")
     public static void validateVendedCredentialsNotSetOnCollection(Map<String, String> configuration,
             SourceLocation sourceLoc) throws CompilationException {
         if (configuration.containsKey(IcebergConstants.ICEBERG_VENDED_CREDENTIALS_PROPERTY_KEY)) {
@@ -167,7 +161,6 @@ public class IcebergUtils {
      *
      * @param properties the catalog's own properties, unprefixed
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Validates the catalog-level vending switch against the source's capability")
     public static void validateVendedCredentialsCapability(Map<String, String> properties) throws CompilationException {
         if (!isVendedCredentials(properties)) {
             return;
@@ -280,7 +273,6 @@ public class IcebergUtils {
      * back to the default on an empty value, while these flags are read with {@code getOrDefault} and so would see
      * {@code ""}, which {@code parseBoolean} reads as off.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "DDL-time validation for the variant pushdown boolean flags, following the variantDepth pattern; rejects empty as well since parseBoolean would read it as a silent off")
     private static void validateBoolean(Map<String, String> properties, String propertyName)
             throws CompilationException {
         String value = properties.get(propertyName);
@@ -292,7 +284,6 @@ public class IcebergUtils {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Validates the variantDepth WITH-clause option at DDL time, matching the existing timezone validation pattern in this method. The catch block is reserved purely for genuine Integer.parseInt failures; the out-of-range case throws CompilationException directly")
     private static void validateIntegerInRange(String propertyName, String value, int min, int max)
             throws CompilationException {
         int parsed;
@@ -324,7 +315,6 @@ public class IcebergUtils {
      * @param configuration configuration
      * @return catalog properties
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Carry the vended-credentials marker through to the catalog properties so setFileIoProperties can see it")
     public static Map<String, String> filterCatalogProperties(Map<String, String> configuration) {
         Map<String, String> properties = new HashMap<>();
         String ioReader = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
@@ -551,7 +541,6 @@ public class IcebergUtils {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Skip FileIO configuration when the catalog vends the credentials")
     /**
      * Asks the catalog to vend storage credentials for the tables it hands out. Only the request side is ours:
      * the credentials come back on the load-table response and the Iceberg client applies them to the table's
@@ -559,7 +548,6 @@ public class IcebergUtils {
      *
      * @param catalogProperties catalog properties
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Requests credential vending via the REST access-delegation header")
     private static void setAccessDelegationIfVended(Map<String, String> catalogProperties) {
         if (isVendedCredentials(catalogProperties)) {
             catalogProperties.put(IcebergConstants.Rest.ACCESS_DELEGATION_HEADER_PROPERTY,

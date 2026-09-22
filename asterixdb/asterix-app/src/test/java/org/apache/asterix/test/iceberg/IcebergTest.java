@@ -64,7 +64,6 @@ import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.AppendFiles;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.DataFile;
@@ -266,7 +265,6 @@ public class IcebergTest {
      * but no longer compares the two reads - only each read against itself. Checked here rather than as a test case
      * because it is a property of the fixtures, and failing before the containers start makes the cause obvious.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     private static void assertFlagsOffExpectationsAreCopies() throws IOException {
         Path results = Paths.get("src", "test", "resources", "runtimets", "results", "iceberg");
         for (String fileName : List.of("result.020.adm", "result.030.adm")) {
@@ -383,7 +381,6 @@ public class IcebergTest {
         writeAllTypesData(allTypesTable);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Creates a dedicated table covering every Iceberg Variant PhysicalType")
     private static void writeAllTypesVariantTable(org.apache.iceberg.nessie.NessieCatalog catalog) throws Exception {
         Table variantTable = createTable(catalog, ALL_TYPES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -393,13 +390,11 @@ public class IcebergTest {
         writeAllTypesVariantData(variantTable);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Schema for the dedicated Variant-coverage table: an id plus a single VARIANT column")
     private static Schema buildAllTypesVariantSchema() {
         return new Schema(required(1, "id", Types.IntegerType.get()),
                 Types.NestedField.optional(2, "variant_field", Types.VariantType.get()));
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Writes rows isolating: (1) an object covering every supported Variant PhysicalType, (2) a fully null Variant column, (3) a top-level Variant array, (4) a top-level Variant string, (5) a top-level Variant NULL value distinct from a null column, (6-24) every remaining PhysicalType as a bare top-level (non-object-nested) Variant value, (25) a string over the 63-byte short-string encoding threshold")
     private static void writeAllTypesVariantData(Table table) throws Exception {
         GenericRecord template = GenericRecord.create(table.schema());
         List<Record> records = new ArrayList<>();
@@ -478,7 +473,6 @@ public class IcebergTest {
         LOGGER.info("[WRITE] all_types_variant table committed with {} record(s)", records.size());
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Appends a row whose variant_field is a bare top-level Variant value (not nested in an object); returns the next unused id")
     private static int addTopLevelScalarRow(GenericRecord template, List<Record> records, int id,
             org.apache.iceberg.variants.VariantValue value) {
         Record row = template.copy();
@@ -488,7 +482,6 @@ public class IcebergTest {
         return id + 1;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "objectValue/arrayValue nest 3 levels deep (object->array->object and array->object) to exercise multi-level recursion")
     private static Variant buildVariantAllPhysicalTypes() {
         VariantMetadata metadata = Variants.metadata("nullValue", "boolTrueValue", "boolFalseValue", "int8Value",
                 "int16Value", "int32Value", "int64Value", "floatValue", "doubleValue", "decimal4Value", "decimal8Value",
@@ -541,7 +534,6 @@ public class IcebergTest {
         return Variant.of(metadata, root);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Dedicated minimal table for testing the variantDepth WITH-clause guard: a single row whose Variant is nested exactly 3 levels deep")
     private static void writeDepthTestVariantTable(org.apache.iceberg.nessie.NessieCatalog catalog) throws Exception {
         Table depthTestTable = createTable(catalog, DEPTH_TEST_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -551,7 +543,6 @@ public class IcebergTest {
         writeDepthTestVariantData(depthTestTable);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Writes a single row whose Variant nests exactly 3 levels deep (object -> object -> scalar leaf), used to verify the variantDepth WITH-clause option rejects data nested deeper than the configured limit")
     private static void writeDepthTestVariantData(Table table) throws Exception {
         GenericRecord template = GenericRecord.create(table.schema());
         Record row = template.copy();
@@ -572,7 +563,6 @@ public class IcebergTest {
         LOGGER.info("[WRITE] depth_test_variant table committed with 1 record");
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Builds a Variant nested exactly 3 levels deep: depth 1 is the outer object, depth 2 is the nested object under field \"a\", depth 3 is the scalar leaf under field \"b\"")
     private static Variant buildDepthThreeVariant() {
         VariantMetadata metadata = Variants.metadata("a", "b");
         ShreddedObject depthTwo = Variants.object(metadata);
@@ -589,7 +579,6 @@ public class IcebergTest {
     private static final Set<String> PARTIAL_SHREDDED_FIELDS =
             Set.of("int32Value", "stringValue", "boolTrueValue", "doubleValue", "dateValue", "objectValue");
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Read-side FULL-shredding counterpart to IcebergVariantSerializedAndShreddedTest: writes the SAME multi-row variant fixture serialized (first half of ids) and FULLY shredded (second half, every field promoted to a typed sub-column), so an ORDER BY id query proves the read pipeline reconstructs identical values whether the column is serialized or fully shredded")
     private static void writeShreddedVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, SHREDDED_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -610,7 +599,6 @@ public class IcebergTest {
         LOGGER.info("[WRITE] shredded_variant table committed with {} record(s)", 2 * rows.size());
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Dedicated PARTIAL-shredding read test: writes the SAME multi-row variant fixture serialized (first half of ids) and PARTIALLY shredded (second half, a subset of fields promoted to typed sub-columns and the rest kept in the object-level residual value), so an ORDER BY id query proves the read pipeline reconstructs identical values. Exercises the typed_value + residual merge that Iceberg 1.10.x corrupted and 1.11.0 fixed (issue #15086 / PR #15087)")
     private static void writePartiallyShreddedVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, PARTIALLY_SHREDDED_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -634,7 +622,6 @@ public class IcebergTest {
             Variants.metadata("bucket", "name", "ratio", "flag", "obj", "deep");
 
     /** The variant for bucket {@code i}: bucket=i, name="f"+i, ratio=i*1.5, flag=(i%2==0), obj.deep=i. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Extracted from writeManyFilesVariantTable so the deletes fixture writes byte-identical per-bucket variants")
     private static Variant bucketVariant(int i) {
         ShreddedObject nested = Variants.object(BUCKET_VARIANT_METADATA);
         nested.put("deep", Variants.of(i));
@@ -656,7 +643,6 @@ public class IcebergTest {
      *
      * @return the data file's path, so a deletion vector can reference it
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Extracted from writeManyFilesVariantTable so manyFilesVariant and deletesVariant share one file writer")
     private static String appendShreddedBucketFile(Table table, AppendFiles append, VariantShreddingFunction shredder,
             GenericRecord template, String filePrefix, int... buckets) throws Exception {
         String path = table.location() + "/data/" + filePrefix + buckets[0] + ".parquet";
@@ -690,7 +676,6 @@ public class IcebergTest {
      * bounds must still prune, or the test would pass for the trivial reason that nothing prunes at all. The two
      * queries in the suite assert both halves of that.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Files disagreeing on which variant sub-fields are shredded, so a predicate meets files with bounds and files without in one scan; guards against treating an absent bound as proof of no match")
     private static void writeMixedShreddingVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, MIXED_SHREDDING_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -728,7 +713,6 @@ public class IcebergTest {
      * Values are chosen so the two readings disagree and the wrong one prunes everything away: the literal
      * {@code "a.b"} is 5, the nested {@code a.b} is 99, so bounds for the nested path cannot contain 5.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Fixture probing whether a sub-field name containing a dot can be confused with nesting: holds literal \"a.b\"=5 alongside nested a.b=99 so pruning against the wrong path skips the only file and yields zero rows")
     private static void writeDottedFieldNameVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, DOTTED_FIELD_NAME_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -759,7 +743,6 @@ public class IcebergTest {
         LOGGER.info("[WRITE] dottedFieldNameVariant committed: literal \"a.b\"=5, nested a.b=99");
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes one shredded, single-row data file per bucket value (0..N-1) with bucket+name promoted to typed sub-columns and real metrics attached, so each file's manifest carries a narrow per-subfield bound. A predicate on variant_field.bucket then prunes almost every file via Iceberg's manifest evaluator (exercises variant sub-field predicate pushdown / file skipping)")
     private static void writeManyFilesVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, MANY_FILES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -799,7 +782,6 @@ public class IcebergTest {
      * delete is partition-scoped and attaches to every file in the partition, disabling projection pushdown across the
      * whole scan; a deletion vector is file-scoped, so pruned and fallback reads interleave within one scan.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Shredded per-bucket variant table with equality deletes committed in a later snapshot, so every scan task carries deletes and the delete-aware read path (requiredSchema widening) is exercised together with variant sub-field file pruning")
     private static void writeDeletesVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, DELETES_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -827,7 +809,6 @@ public class IcebergTest {
      * {@code id} rather than the whole table schema, so the variant column never appears in a delete file — the
      * equality comparison only needs the key.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Unpartitioned counterpart to writePartitionedEqualityDelete, with an id-only delete row schema so no variant column is written into the delete file")
     private static DeleteFile writeUnpartitionedEqualityDelete(Table table, int idToDelete) throws Exception {
         Schema deleteRowSchema = table.schema().select("id");
         String delPath = table.location() + "/deletes/delete-eq-" + idToDelete + ".parquet";
@@ -866,7 +847,6 @@ public class IcebergTest {
      * No production code here is delete-kind aware: the read path gates on whether a task has any deletes at all and
      * hands the rest to Iceberg, whose delete loader reads DVs itself. This fixture is what proves that.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Deletion-vector (format v3) counterpart to the equality-delete fixture: DVs are file-scoped, so only some files carry deletes and one scan mixes the pruned no-deletes read with the delete-aware read; the multi-row file proves a DV removing only part of a file still reconstructs the surviving rows")
     private static void writeDeletionVectorVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, DELETION_VECTOR_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -907,7 +887,6 @@ public class IcebergTest {
      * bitmap as a Puffin blob; the writer's second constructor argument is the "load this data file's existing DV"
      * callback, and there is none here. Format v3 allows at most one DV per data file, which is asserted.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes a Puffin deletion vector for the given row positions of one data file")
     private static DeleteFile writeDeletionVector(Table table, String dataFilePath, String dvName, long... positions)
             throws Exception {
         String dvPath = table.location() + "/deletes/dv-" + dvName + ".puffin";
@@ -942,7 +921,6 @@ public class IcebergTest {
      * </ul>
      * No deletes, so the read takes the variant-pruned path rather than the delete-aware one.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Single data file written with a tiny Parquet row-group size so it holds many row groups, making the reader's row-group loop and its skipping decisions reachable; every other fixture file has one row group")
     private static void writeManyRowGroupsVariantTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, MANY_ROW_GROUPS_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
                 PartitionSpec.unpartitioned());
@@ -975,7 +953,6 @@ public class IcebergTest {
      * Fails the fixture if the file ended up with a single row group. Without this the suite would still pass while
      * testing nothing it was written for, because a one-row-group file never enters the loop under test.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards the row-groups fixture: fails if the file collapsed to a single row group, which would silently void the suite")
     private static void assertMultipleRowGroups(Table table, String path) throws Exception {
         int rowGroups;
         try (ParquetFileReader reader = ParquetFileReader.open(parquetInput(table.io().newInputFile(path)))) {
@@ -1000,7 +977,6 @@ public class IcebergTest {
      * Written serialized rather than shredded on purpose: sub-field bounds are irrelevant here because nothing can be
      * pruned on a nested variant either way, and serialized keeps the fixture honest about what is being tested.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Table with a VARIANT nested inside a struct plus an ordinary sibling column, to establish that queries on a nested variant still return correct results (no pushdown possible) and that pruning on the sibling is unaffected")
     private static void writeNestedVariantInStructTable(NessieCatalog catalog) throws Exception {
         Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
                 Types.NestedField.optional(2, "st",
@@ -1049,7 +1025,6 @@ public class IcebergTest {
      * one partition's three files, a variant sub-field predicate alone leaves one file across all partitions, and both
      * together still leave exactly one.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Partitioned table with a shredded VARIANT, the only fixture covering partition pruning together with variant sub-field pruning")
     private static void writePartitionedVariantTable(NessieCatalog catalog) throws Exception {
         Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
                 Types.NestedField.required(2, "grp", Types.StringType.get()),
@@ -1092,7 +1067,6 @@ public class IcebergTest {
      * handled independently — but every other fixture has exactly one variant column, so nothing tested it. Pruning
      * must work through either column, and projecting one must not drag the other's sub-columns along.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Table with two independent shredded VARIANT columns, each with its own shredding shape, to cover the per-column projection plan and rewriter root resolution")
     private static void writeTwoVariantsTable(NessieCatalog catalog) throws Exception {
         Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
                 Types.NestedField.optional(2, "v1", Types.VariantType.get()),
@@ -1129,7 +1103,6 @@ public class IcebergTest {
     }
 
     /** The second variant column's shape: deliberately unlike bucketVariant so the two cannot be confused. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Second variant column's shape for the two-variant fixture")
     private static Variant secondVariant(VariantMetadata meta, int i) {
         ShreddedObject object = Variants.object(meta);
         object.put("code", Variants.of("c" + i));
@@ -1138,7 +1111,6 @@ public class IcebergTest {
     }
 
     /** Iceberg's canonical typed_value for a value, via the package-private ParquetVariantUtil. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reflective helper for Iceberg's canonical typed_value, shared by the two-variant shredding function")
     private static Type toParquetTypedValue(Variant value) throws Exception {
         Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
                 .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
@@ -1154,7 +1126,6 @@ public class IcebergTest {
      * value-as-variant read paths across several records. Fresh instances per call so the same fixture can be written
      * to more than one file.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Multi-record fixture varying the top-level PhysicalType: all-types object, bare int, bare string, array, top-level null value, and a null column, so the shredded read path is exercised across heterogeneous rows (typed_value + residual + value-as-variant + null handling)")
     private static List<Variant> variantFixtureRows() {
         List<Variant> rows = new ArrayList<>();
         rows.add(buildVariantAllPhysicalTypes()); // object covering every PhysicalType (shreddable)
@@ -1170,7 +1141,6 @@ public class IcebergTest {
         return rows;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes a multi-row Parquet data file (a null element writes a null variant column) using the given shredding function (null = serialized), then verifies the on-disk layout matches expectedShreddedFields (null = no typed_value) so a read test can never silently fall back to testing serialized data")
     private static DataFile writeVariantEncodingFile(Table table, String fileName, int startId, List<Variant> rowValues,
             VariantShreddingFunction shreddingFunc, Set<String> expectedShreddedFields) throws Exception {
         String path = table.location() + "/data/" + fileName;
@@ -1215,7 +1185,6 @@ public class IcebergTest {
      * fields. Partial shredding round-trips correctly as of Iceberg 1.11.0 (the residual serialization bug in 1.10.x —
      * issue #15086 / PR #15087 — is fixed).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reflectively uses Iceberg's ParquetVariantUtil.toParquetSchema to build a canonical typed_value; keeps all fields (full shred) or a named subset (partial shred, rest to residual)")
     private static VariantShreddingFunction shreddingFunc(Variant value, Set<String> keep) throws Exception {
         Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
                 .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
@@ -1239,7 +1208,6 @@ public class IcebergTest {
         return (fieldId, name) -> tv;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Reads the just-written file's Parquet footer through the table's own FileIO and asserts the variant column's typed_value holds exactly the expected shredded fields (null => serialized, no typed_value), so the fixture can never silently degrade to serialized or shred a different set than intended")
     private static void assertVariantLayoutOnDisk(Table table, String path, Set<String> expectedShreddedFields)
             throws Exception {
         GroupType variant;
@@ -1264,7 +1232,6 @@ public class IcebergTest {
     }
 
     /** Adapts an Iceberg {@link org.apache.iceberg.io.InputFile} to a Parquet InputFile for footer inspection. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Bridges Iceberg FileIO to a Parquet InputFile so the shredded-layout check reads the footer through the table's own IO instead of a separate S3 client")
     private static org.apache.parquet.io.InputFile parquetInput(org.apache.iceberg.io.InputFile in) {
         return new org.apache.parquet.io.InputFile() {
             @Override
@@ -1418,8 +1385,6 @@ public class IcebergTest {
      * A wrong answer here is a short result, never an error: if {@code = .123} returns only id 2, the pushed
      * predicate is comparing the literal against untruncated microseconds again.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Single-row files with sub-millisecond timestamps spanning one millisecond and the epoch "
-            + "boundary, so predicate widening is exercised where every row is its file's own bound")
     private static void writeTemporalPrecisionTable(NessieCatalog catalog) throws Exception {
         Table table =
                 createTable(catalog, TEMPORAL_PRECISION_TABLE_ID, temporalSchema(), PartitionSpec.unpartitioned());
@@ -1448,10 +1413,6 @@ public class IcebergTest {
      * and a filter makes more rows appear rather than fewer. Unfiltered the row is correctly gone, so only a query
      * with a predicate on the deleted column shows it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI,
-            contributionKind = AiProvenance.ContributionKind.TEST_GENERATED,
-            notes = "Equality delete on a sub-millisecond timestamp, so a pruned delete file resurrects the deleted "
-                    + "row unless the pushed predicate covers the whole millisecond")
     private static void writeTemporalEqDeleteTable(NessieCatalog catalog) throws Exception {
         Table table = createTable(catalog, TEMPORAL_EQ_DELETE_TABLE_ID, temporalSchema(),
                 PartitionSpec.unpartitioned());

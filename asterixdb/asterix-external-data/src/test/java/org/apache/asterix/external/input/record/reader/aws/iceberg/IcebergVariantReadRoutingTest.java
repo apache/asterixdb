@@ -30,7 +30,6 @@ import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Types;
@@ -48,7 +47,6 @@ import org.junit.Test;
  * a table with DVs on a few files still gets pruned reads for the rest; an <b>equality delete</b> attaches to every
  * file of a partition and so disables pruning for the whole scan.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Asserts per-task routing between the variant-pruned read and the delete-aware read, including the mixed scan a deletion-vector table produces")
 public class IcebergVariantReadRoutingTest {
 
     private static final String COLUMN = "variant_field";
@@ -158,7 +156,6 @@ public class IcebergVariantReadRoutingTest {
      * An unbindable filter must be dropped <em>and</em> reported. Silently discarding it would turn a mistyped column
      * name into unexplained slowness with nothing to go on; the warning names the filter that was skipped.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Asserts the unbindable-filter fail-safe both drops the filter and raises ICEBERG_FILTER_NOT_PUSHED, since the drop is otherwise invisible")
     @Test
     public void unbindableFilter_isDroppedAndWarned() {
         org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(org.apache.iceberg.types.Types.NestedField
@@ -181,12 +178,10 @@ public class IcebergVariantReadRoutingTest {
     }
 
     /** A filter that binds is pushed unchanged and must not produce a warning. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards against the fail-safe warning on every ordinary query, which would make the signal useless")
     /**
      * One unbindable reference must not cost the pushdown of everything ANDed with it. {@code Binder.bind} is
      * all-or-nothing over a whole expression, so the filter has to be weakened part by part instead of discarded.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that only the unbindable conjunct is dropped, so a typo in one predicate no longer disables pushdown for the rest")
     @Test
     public void mixedBindableAndUnbindable_keepsThePushablePart() {
         Schema schema = filterSchema();
@@ -206,7 +201,6 @@ public class IcebergVariantReadRoutingTest {
     }
 
     /** An OR cannot be weakened piecewise — dropping a disjunct strengthens the filter — so it goes whole. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards the weaken-only rule: an OR holding an unbindable side is dropped whole rather than half-kept")
     @Test
     public void unbindableInsideOr_dropsTheWholeDisjunction() {
         Schema schema = filterSchema();
@@ -253,7 +247,6 @@ public class IcebergVariantReadRoutingTest {
      * exception text — a message that varied per file would defeat the folding and emit one warning per data file,
      * on a path that runs once per file across every partition.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Runs the otherwise-unexecuted projection-fallback warning path, pinning that the code resolves to a message and that the message does not vary with the cause")
     @Test
     public void projectionFallback_raisesOneConstantWarning() throws Exception {
         WarningCollector warnings = new WarningCollector();

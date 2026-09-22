@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.DeleteFile;
@@ -77,9 +76,6 @@ import org.junit.Test;
  * replaces — and demands row-for-row equality. Losing pruning on some shape would be acceptable; returning a row the
  * standard path removes, or dropping one it keeps, is the one outcome none of these tests may pass on.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Row-for-row oracle comparisons of the pruned delete-aware read against Iceberg's standard delete "
-        + "path over partitioned tables, string/date/timestamp/decimal equality keys, a key column added by "
-        + "schema evolution, a struct-nested variant, two variant columns, and an unreadable equality file")
 public class VariantPrunedReadDeleteShapesTest {
 
     private static final int ROWS_PER_FILE = 120;

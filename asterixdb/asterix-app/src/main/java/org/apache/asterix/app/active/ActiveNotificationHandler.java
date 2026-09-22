@@ -48,7 +48,6 @@ import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.api.util.SingleThreadEventProcessor;
 import org.apache.hyracks.util.ExitUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -249,7 +248,6 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
      *
      * @throws HyracksDataException if the suspend was interrupted by this JVM terminating
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Report, rather than halt on, a suspend interrupted by an in-progress shutdown")
     public void suspendForDdlOrHalt(IActiveEntityEventsListener listener, MetadataProvider metadataProvider,
             Dataset targetDataset) throws HyracksDataException {
         try {

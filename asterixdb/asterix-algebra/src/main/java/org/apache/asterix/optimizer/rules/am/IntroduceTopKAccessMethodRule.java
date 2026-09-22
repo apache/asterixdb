@@ -64,7 +64,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -408,7 +407,6 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      *
      * @return The topmost SELECT operator if any, null otherwise
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Count every SELECT rather than stop at the first")
     protected SelectOperator findSelectOperatorInSubTree() {
         selectOp = null;
         numSelectOps = 0;

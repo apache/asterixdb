@@ -117,7 +117,6 @@ import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -974,7 +973,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
      * Every stage downstream may assume its input is a list of the declared dimension holding numeric
      * elements. None of them re-check it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private IOperatorDescriptor createUsableVectorFilterOp(JobSpecification spec,
             IScalarEvaluatorFactory vectorFieldAccessor, int dimension, RecordDescriptor inputRecordDescriptor,
             AlgebricksPartitionConstraint partitionConstraint) throws AlgebricksException {
@@ -992,7 +990,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
     }
 
     /** The declared dimension as a constant argument to {@code isvector}. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private static IScalarEvaluatorFactory constantInt32(int value) throws AlgebricksException {
         ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
         try {
@@ -1011,7 +1008,6 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
      * <em>untagged</em>. A filter placed after the assign would see a headerless list and reject everything,
      * so filtering happens on the scan side of the assign in every job.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private int getVectorDimension() {
         return ((Index.VectorIndexDetails) index.getIndexDetails()).getVectorParameters().getDimension();
     }

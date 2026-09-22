@@ -69,7 +69,6 @@ import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class MessageUnpackerToADM {
@@ -83,7 +82,6 @@ public class MessageUnpackerToADM {
     public MessageUnpackerToADM() {
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Added the bin8/bin16/bin32 cases so Python bytes become ADM binary")
     public void unpack(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         byte tag = NIL;
         if (in != null) {
@@ -326,7 +324,6 @@ public class MessageUnpackerToADM {
         out.write(buildBuf.getByteArray(), buildBuf.getStartOffset(), buildBuf.getLength());
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Writes a msgpack bin payload as ADM binary: varlen content length followed by the raw bytes")
     public void unpackBin(ByteBuffer in, DataOutput out, long uLen, boolean tag) throws IOException {
         if (Long.compareUnsigned(uLen, Integer.MAX_VALUE) > 0) {
             throw new UnsupportedOperationException("Binary is too long");

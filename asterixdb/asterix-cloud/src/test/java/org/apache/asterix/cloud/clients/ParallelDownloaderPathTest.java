@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -42,7 +41,6 @@ import org.junit.Test;
  * library at {@code applications/library/storage/...}, which is what broke library deployment on Azure Blob
  * Storage.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "the mapping had no unit coverage; the integration suites only exercise the library path shape")
 public class ParallelDownloaderPathTest {
 
     private static final IODeviceHandle DEVICE_0 = new IODeviceHandle(new File("/mnt/d0"), "."); // NOSONAR

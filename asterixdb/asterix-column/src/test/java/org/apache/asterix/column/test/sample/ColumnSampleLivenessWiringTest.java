@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnBTreeOp
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnBatchPointSearchCursor;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnSampleLivenessSearchCursor;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,8 +42,6 @@ import org.junit.Test;
  * path", which a query needs the projected columns and a positioned tuple for and which nothing else here would
  * notice.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Wiring guard: the existence-only liveness cursor and key-only projection must reach the sample "
-        + "path and only the sample path")
 public class ColumnSampleLivenessWiringTest {
 
     /** Small: this test inspects wiring and projection shape, not sampling behaviour. */
@@ -137,7 +134,6 @@ public class ColumnSampleLivenessWiringTest {
      * {@link CloudExistenceProjectionPinningTest}.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards phase 2 against the existence-only reduction, both by mutation and by wiring")
     public void derivingTheExistenceOnlyViewLeavesPhase2sProjectionIntact() throws Exception {
         LSMColumnBTreeOpContext opCtx = harness.createSearchOpContext();
         // What the sample cursor's own accessor builds its projection from.

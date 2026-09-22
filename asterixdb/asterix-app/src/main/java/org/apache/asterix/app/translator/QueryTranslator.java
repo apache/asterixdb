@@ -319,7 +319,6 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdat
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.OptionalBoolean;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -4954,7 +4953,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Undo the submission on the way out, the caller having no job id to undo it with")
     private JobId runTrackJob(IHyracksClientConnection hcc, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags,
             String reqId, String clientCtxId, ClientRequest clientRequest, JobKind jobKind) throws Exception {
         // Guard before submitting the job: if the request was cancelled and removed from the tracker,
@@ -4983,7 +4981,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      * statement's; a no-op for any other job. Reported through {@code failure} rather than thrown, so that the
      * reason the statement failed is the one the client is given.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Undo an atomic statement's registration without displacing the failure")
     private void abortGlobalTx(JobSpecification jobSpec, JobId jobId, Exception failure) {
         if (jobSpec.getProperty(AsterixJobProperty.GLOBAL_TX) == null) {
             return;

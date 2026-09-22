@@ -53,7 +53,6 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -75,7 +74,6 @@ import org.junit.Before;
  *
  * Data tuple format (standard): <distance, centroid_id, primary_key>
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeFlushSearchTest extends VectorIndexTestDriver {
 
     private static final Logger LOGGER = LogManager.getLogger();

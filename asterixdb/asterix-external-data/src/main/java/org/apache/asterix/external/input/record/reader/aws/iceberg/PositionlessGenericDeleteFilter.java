@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.iceberg;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.StructLike;
@@ -48,8 +47,6 @@ import org.apache.iceberg.io.InputFile;
  * task into {@code DeleteFilter.filter(..)}, which would otherwise silently dereference a null position accessor; a
  * loud failure there is the point.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Generic delete filter built with needRowPosCol=false so the required schema stays readable by the "
-        + "variant-pruned reader; row positions come from the deletion bitmap instead of a materialized column")
 final class PositionlessGenericDeleteFilter extends org.apache.iceberg.data.DeleteFilter<Record> {
 
     private final FileIO io;

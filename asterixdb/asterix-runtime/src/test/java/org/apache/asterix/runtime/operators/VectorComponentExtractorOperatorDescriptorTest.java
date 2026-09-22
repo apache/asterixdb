@@ -51,7 +51,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -60,7 +59,6 @@ import org.mockito.Mockito;
  * Unit tests for {@link VectorComponentExtractorOperatorDescriptor}: flattening a serialized ADM
  * ordered list of numbers into one single-field ADouble tuple per component.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class VectorComponentExtractorOperatorDescriptorTest {
 
     // Every value reaching this operator has already satisfied isvector(field, dimension): a list of the

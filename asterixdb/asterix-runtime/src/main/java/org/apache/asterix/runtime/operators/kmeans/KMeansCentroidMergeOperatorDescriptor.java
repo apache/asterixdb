@@ -51,7 +51,6 @@ import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The Lloyd loop's single-node centroid reduce, which folds every partition's {@code (count, sum)} partials
@@ -63,7 +62,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * reduce fires on the {@code nParticipants}-th end marker, and the loop is globally serialized, so at most
  * one iteration is in flight. The accumulator is O(partitions * k * dim) heap, held for that iteration.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansCentroidMergeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

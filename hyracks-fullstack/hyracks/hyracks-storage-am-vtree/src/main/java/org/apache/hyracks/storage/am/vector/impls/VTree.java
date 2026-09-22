@@ -61,7 +61,6 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -184,7 +183,6 @@ public class VTree extends AbstractTreeIndex {
      * default. Used by merges to install a polarity-preserving (copy) tuple writer; matter/delete-marker
      * semantics are defined in the LSM layer (see hyracks-storage-am-lsm-vtree).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public IIndexBulkLoader createComponentBulkLoader(IPageWriteCallback callback, ITreeIndexAccessor staticAccessor,
             ISketchSampler sampler, ITreeIndexFrameFactory dataFrameFactoryOverride) throws HyracksDataException {
         return new VTreeBulkLoader(callback, this, staticAccessor, sampler, dataFrameFactoryOverride);

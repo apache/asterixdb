@@ -57,7 +57,6 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Shared logic for the CLUSTER BY {@code CENTROID} aggregate family: accumulates an element-wise vector sum and a
@@ -152,7 +151,6 @@ public abstract class AbstractCentroidAggregateFunction extends AbstractAggregat
     protected abstract void processNull();
 
     /** LOCAL raw step: the input is a vector (ordered list of doubles). Accumulate element-wise; count++. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     protected void processDataValues(IFrameTupleReference tuple) throws HyracksDataException {
         if (skipStep()) {
             return;

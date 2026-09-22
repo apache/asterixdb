@@ -19,7 +19,6 @@
 package org.apache.asterix.column.test.sample;
 
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.SampleCursorStats;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +34,6 @@ import org.junit.Test;
  * {@code NUM_KEYS} is 165 000, not the 20 000 the plan asked for: column materialization pays per page, so a
  * ~7-page index under-exercises phase 2 and reproduces the very spatial distortion the bias fix removed.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Baseline cost-breakdown diagnostic: measures whether the liveness search dominates column sample cost post bias-fix")
 public class ColumnSampleCostBaselineTest {
 
     private static final int NUM_KEYS = 165000;

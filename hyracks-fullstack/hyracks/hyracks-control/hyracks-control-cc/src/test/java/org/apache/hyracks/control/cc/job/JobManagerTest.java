@@ -53,7 +53,6 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.logs.LogFile;
 import org.apache.hyracks.control.common.work.NoOpCallback;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -283,7 +282,6 @@ public class JobManagerTest {
      * the statement that holds the job id, so a stranded entry is retained for the lifetime of the CC.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers the job-queue-full submission failure")
     public void queueFullNotifiesCreationFailed() throws HyracksException {
         IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
         ClusterControllerService ccs = mockClusterControllerService(0);
@@ -312,7 +310,6 @@ public class JobManagerTest {
      * HyracksDataException catch in {@code add} sees.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers an unchecked submission failure, which the HyracksDataException catch misses")
     public void uncheckedSubmissionFailureNotifiesCreationFailed() throws HyracksException {
         IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
         ClusterControllerService ccs = mockClusterControllerService();
@@ -341,7 +338,6 @@ public class JobManagerTest {
      * creation for it would deregister a transaction the statement is still going to commit.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that an accepted submission is not reported as failed")
     public void acceptedSubmissionDoesNotNotifyCreationFailed() throws HyracksException {
         IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
         ClusterControllerService ccs = mockClusterControllerService();

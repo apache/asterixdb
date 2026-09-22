@@ -25,7 +25,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class VectorDistanceCalculation {
 
@@ -53,7 +52,6 @@ public class VectorDistanceCalculation {
     /** Negated dot product as an {@link IVTreeDistanceFunction}, so that smaller still means nearer. */
     public static final IVTreeDistanceFunction DOT_DISTANCE_FN = new DotDistanceFunction();
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fused decode+measure")
     private static final class EuclideanSquaredFunction implements IVTreeDistanceFunction {
         @Override
         public double apply(double[] a, double[] b) {
@@ -72,7 +70,6 @@ public class VectorDistanceCalculation {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fused decode+measure")
     private static final class EuclideanFunction implements IVTreeDistanceFunction {
         @Override
         public double apply(double[] a, double[] b) {
@@ -92,7 +89,6 @@ public class VectorDistanceCalculation {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fused decode+measure")
     private static final class CosineDistanceFunction implements IVTreeDistanceFunction {
         @Override
         public double apply(double[] a, double[] b) {
@@ -111,7 +107,6 @@ public class VectorDistanceCalculation {
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fused decode+measure")
     private static final class DotDistanceFunction implements IVTreeDistanceFunction {
         @Override
         public double apply(double[] a, double[] b) {

@@ -18,18 +18,11 @@
  */
 package org.apache.hyracks.util;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
-@AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT, contributionKind = REFACTORED, notes = "Renamed init() to startElapsed(), made ELAPSED an immutable sentinel, fixed elapsed() >= off-by-one, added startElapsed() with do/while Javadoc")
 public class Span {
 
     public static final Span INFINITE = new Span() {

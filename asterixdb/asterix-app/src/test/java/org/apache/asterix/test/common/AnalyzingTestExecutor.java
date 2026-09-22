@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.IOUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -82,7 +81,6 @@ public class AnalyzingTestExecutor extends TestExecutor {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Compare plans without cost: ANALYZE uses random LSM sampling, so CBO cardinality/cost estimates are not reproducible run-to-run")
     public void runScriptAndCompareWithResultPlan(File scriptFile, BufferedReader readerExpected,
             BufferedReader readerActual) throws Exception {
         // This suite runs ANALYZE (random leaf sampling) before planning, so the CBO

@@ -66,7 +66,6 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Expands a {@link ClusterByOperator} into the chain of stages that implements its algorithm, the way the
@@ -79,7 +78,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * Runs at the head of the physical phase -- after every logical rule, so they all see one opaque node with one
  * ordinary input, and before physical-operator assignment and property enforcement, which need the stages.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
 
     /** k-means||: rounds of oversampling, and the pool width drawn per round as a multiple of k. */

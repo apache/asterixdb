@@ -55,7 +55,6 @@ import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.am.vector.utils.NoOpVectorQuantizer;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -80,7 +79,6 @@ import org.junit.Test;
  * and a K that truncates would make the two sets differ for reasons that have nothing to do with
  * reconciliation.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeCursorAgreementTest {
 
     private static final VectorTestStructure STRUCT_3D = VectorTestStructure.threeDim1Centroid();

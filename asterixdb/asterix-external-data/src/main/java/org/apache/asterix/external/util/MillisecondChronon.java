@@ -20,8 +20,6 @@ package org.apache.asterix.external.util;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 /**
  * The single point at which a sub-millisecond external temporal value is narrowed to the millisecond chronon
  * {@code ADateTime} and {@code ATime} hold.
@@ -46,8 +44,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * agree there. What those still rely on is that this <em>truncates rather than rounds</em>: rounding would shift
  * every window by half a millisecond.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Extracted from the four truncation sites in IcebergParquetDataParser so the read path and the "
-        + "pushdown widening derive from one documented function instead of four comments")
 public final class MillisecondChronon {
 
     /** The width of the chronon, in microseconds — the span of stored values that narrow to one millisecond. */

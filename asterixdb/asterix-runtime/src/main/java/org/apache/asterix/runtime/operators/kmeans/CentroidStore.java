@@ -30,7 +30,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The current centroid set of one Lloyd loop partition, handed from the loop's tail back to its head.
@@ -46,7 +45,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * the writer stores before {@code release()} and the reader loads after {@code acquire()}, so the semaphore's
  * happens-before covers the handoff and no additional synchronization is required.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public interface CentroidStore {
 
     /** Begins a replacement set. The current set stays readable until {@link #endPut()} swaps it. */

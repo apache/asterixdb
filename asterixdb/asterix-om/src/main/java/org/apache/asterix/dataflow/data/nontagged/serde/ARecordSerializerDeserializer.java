@@ -44,7 +44,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ARecordSerializerDeserializer implements ISerializerDeserializer<ARecord> {
@@ -300,7 +299,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return offset + AInt32SerializerDeserializer.getInt(serRecord, pointer + nullBitmapSize + (4 * fieldId));
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Delegates to pre-computed-hash overload to enable constant field-name optimisation")
     public static int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart,
             IBinaryHashFunction nameHashFunction, IBinaryComparator nameComparator) throws HyracksDataException {
         int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, nstart + 1);
@@ -310,7 +308,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 fieldNameHashCode, nameComparator);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Accepts pre-computed UTF-8 lengths and hash code; called directly from constant field-name path")
     public static int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart,
             int fieldUtflength, int fieldUtfMetaLen, int fieldNameHash, IBinaryComparator nameComparator)
             throws HyracksDataException {

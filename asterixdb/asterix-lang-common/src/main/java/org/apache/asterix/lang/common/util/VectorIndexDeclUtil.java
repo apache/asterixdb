@@ -51,7 +51,6 @@ import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.vector.VectorIndexParameters;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Validates the {@code WITH} clause of a {@code CREATE INDEX ... TYPE VTREE} statement and turns it into the
@@ -297,7 +296,6 @@ public class VectorIndexDeclUtil {
      * rebuilt identically. Drawing it at DDL time rather than at job-generation time is what makes it
      * persistable — the {@code Metadata.Index} record is written before the creation job is built.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static long validateSeed(AdmObjectNode node) throws CompilationException {
         IAdmNode seedNode = node.get(SEED);
         if (seedNode == null) {

@@ -34,7 +34,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -45,7 +44,6 @@ import org.junit.Test;
  * being sent would interrupt the thread writing that result - mid-write, in a response whose header is already on the
  * wire. Such a request must leave the cancellable set, so the cancel is refused and the response is delivered whole.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class CancelDuringResultStreamingTest {
 
     private static final AsterixHyracksIntegrationUtil INTEGRATION_UTIL = new AsterixHyracksIntegrationUtil();

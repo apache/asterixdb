@@ -53,7 +53,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class AvroDataParser extends AbstractDataParser implements IRecordDataParser<GenericRecord> {
     private final AvroConverterContext parserContext;
@@ -75,7 +74,6 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Add the field even when its value is NULL (previously only non-null/non-missing values were added, silently dropping null fields)")
     private void parseObject(GenericRecord record, DataOutput out) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -146,7 +144,6 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         parserContext.exitCollection(item, listBuilder);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Throw a well-formed unsupported-type error instead of a 1-arg message that crashes formatting")
     private void parseUnion(Schema unionSchema, Object value, DataOutput out) throws IOException {
         Schema actualSchema = getActualSchema(unionSchema, value);
         if (actualSchema != null) {
@@ -156,7 +153,6 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Return the null branch of a nullable union for null values instead of returning null (no match)")
     private Schema getActualSchema(Schema unionSchema, Object value) {
         List<Schema> possibleTypes = unionSchema.getTypes();
         Schema nullSchema = null;
@@ -199,7 +195,6 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Map null values to NULL instead of MISSING; make union fall-through explicit")
     private ATypeTag getTypeTag(Schema schema, Object value) throws HyracksDataException {
         Schema.Type schemaType = schema.getType();
         LogicalType logicalType = schema.getLogicalType();
@@ -274,9 +269,6 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Only apply the timezone offset to UTC-instant timestamps (timestamp-millis/micros); "
-            + "stop double-applying it to time-micros, and stop applying it at all to time-millis/micros "
-            + "and local-timestamp-millis/micros, none of which carry an associated timezone")
     private void parseLogicalValue(LogicalType logicalType, Object value, DataOutput out) throws IOException {
         if (logicalType instanceof LogicalTypes.Uuid) {
             if (parserContext.isUuidAsString()) {

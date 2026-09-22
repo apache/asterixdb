@@ -50,7 +50,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Decides whether a {@code WHERE} predicate can be evaluated entirely from a vector index's
@@ -69,8 +68,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  *       makes the two impossible to drift apart.</li>
  * </ul>
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted from PushFilterIntoVectorSearchRule so the index-only gate and the pushdown "
-        + "share one decision")
 public final class VectorIncludeFilterPushdown {
 
     private VectorIncludeFilterPushdown() {
@@ -107,7 +104,6 @@ public final class VectorIncludeFilterPushdown {
      * unnest-map is created, rather than discovered per use. A predicate and a projection over the same
      * column then resolve to the same variable by construction.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public static IncludeColumns declareIncludeColumns(UnnestMapOperator vectorUnnest, IndexContext idx,
             Supplier<LogicalVariable> varSupplier) throws AlgebricksException {
         IncludeColumns columns = buildIncludeColumns(idx, varSupplier);
@@ -127,7 +123,6 @@ public final class VectorIncludeFilterPushdown {
      * index has none. Touches no operator, so the gate can run the analysis on throwaway variables to reach
      * a verdict before any of this is spliced into a plan.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static IncludeColumns buildIncludeColumns(IndexContext idx, Supplier<LogicalVariable> varSupplier)
             throws AlgebricksException {
         List<List<String>> includeFieldNames = idx.includeFieldNames();
@@ -175,8 +170,6 @@ public final class VectorIncludeFilterPushdown {
      * @param selectOp the {@code SELECT} carrying the condition; the {@code ASSIGN} chain below it is inlined
      *                 so that field accesses on the record are visible
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Bind a path through its covering prefix, as a projection does")
     public static ILogicalExpression bindPredicate(ILogicalExpression condition, ILogicalOperator selectOp,
             IndexContext idx, IOptimizationContext context, IncludeColumns columns) throws AlgebricksException {
         if (condition == null) {
@@ -220,7 +213,6 @@ public final class VectorIncludeFilterPushdown {
      *                 ({@code $$a := m.info; $$b := $$a.year}) resolves to its full path; see
      *                 {@link #resolveRecordFieldPath(AbstractFunctionCallExpression, IndexContext, Map)}
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public static void bindPaths(Mutable<ILogicalExpression> exprRef, IndexContext idx,
             Map<List<String>, LogicalVariable> pathToVar, Map<LogicalVariable, ILogicalExpression> bindings)
             throws AlgebricksException {
@@ -268,7 +260,6 @@ public final class VectorIncludeFilterPushdown {
      * declines leaves the plan unable to rebind it -- which is exactly why the two must not be able to
      * drift apart.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public static boolean isPushable(ILogicalExpression condition, ILogicalOperator selectOp, IndexContext idx,
             IOptimizationContext context) throws AlgebricksException {
         return bindPredicate(condition, selectOp, idx, context,
@@ -358,7 +349,6 @@ public final class VectorIncludeFilterPushdown {
      *
      * @param bindings ASSIGN bindings of the plan, variable to defining expression; may be empty
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Resolve a nested access split across ASSIGNs to its full path")
     public static List<String> resolveRecordFieldPath(AbstractFunctionCallExpression funcExpr, IndexContext idx,
             Map<LogicalVariable, ILogicalExpression> bindings) throws AlgebricksException {
         return resolveFieldPath(funcExpr, idx, bindings);

@@ -57,7 +57,6 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Snapshot;
@@ -140,7 +139,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * Separate from {@code variantProjectionPushdown} on purpose: that one only changes how many columns are read,
      * while this one changes which files are read at all.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the variantStatsPushdown WITH-clause flag (default on) gating manifest-bounds data-file skipping")
     private boolean isVariantStatsPushdownEnabled() {
         return Boolean.parseBoolean(
                 originalConfiguration.getOrDefault(ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN,
@@ -159,7 +157,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * A warning is raised so the lost pushdown is visible to whoever wrote the query rather than showing up only as
      * unexplained slowness.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Drops an unbindable filter instead of failing scan planning, and warns that pushdown was skipped. Reachable whenever a predicate names a field absent from the Iceberg schema, which the filter builder does not validate")
     static Expression bindableOrNoFilter(Expression expression, Schema schema, IWarningCollector warningCollector) {
         if (expression == null) {
             return Expressions.alwaysTrue();
@@ -196,7 +193,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * One warning is raised per dropped part, naming it, so the lost pushdown is attributable rather than showing up
      * as unexplained slowness.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Drops only the unbindable conjuncts instead of the whole filter, so a predicate on a column absent from the Iceberg schema no longer costs the pushdown of everything ANDed with it")
     private static Expression withoutUnbindable(Expression expression, Schema schema,
             IWarningCollector warningCollector) {
         if (bindable(expression, schema)) {
@@ -348,7 +344,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * Unlike the two variant pushdown flags this one cannot change which rows are returned: splitting only divides
      * the same bytes differently across partitions. What it changes is how much of the cluster a scan can use.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the splitScanTasks WITH-clause flag (default on) gating splitting of data files across scan tasks")
     /**
      * The scan's tasks for {@code plannedTasks}: split at {@code targetSplitSize}, or Iceberg's own one-task-per-file
      * planning when {@code splitScanTasks} is off.
@@ -361,7 +356,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * @param configuration the collection's configuration, read for the {@code splitScanTasks} flag
      * @return the tasks to distribute across partitions
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Joins the splitScanTasks gate to the split itself so a test can assert the flag controls planning")
     static List<FileScanTask> planScanTasks(List<FileScanTask> plannedTasks, long targetSplitSize,
             Map<String, String> configuration) {
         return isSplitScanTasksEnabled(configuration) ? splitTasks(plannedTasks, targetSplitSize) : plannedTasks;
@@ -396,7 +390,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      *            Iceberg default of 128 MB
      * @return the split tasks, in planning order
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Splits planned data files into row-group-aligned sub-tasks and coalesces adjacent pieces up to the table's target split size, so one large file no longer floors the scan's wall-clock")
     static List<FileScanTask> splitTasks(List<FileScanTask> tasks, long targetSplitSize) {
         // The table's read.split.target-size reaches here through Long.parseLong with no range check, so the value
         // is the user's to set, and a non-positive one is destructive: Iceberg's fixed-size split iterator advances
@@ -435,7 +428,6 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * alone would pack a split with a large deletion vector as if it were free. This is the same weight Iceberg's own
      * {@code TableScanUtil.planTasks} uses.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Weighs tasks by sizeBytes (data bytes plus attached delete files) instead of length, and returns the workloads so the packing is testable in isolation")
     static List<PartitionWorkLoadBasedOnSize> distributeWorkLoad(List<FileScanTask> fileScanTasks,
             int partitionsCount) {
         PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,

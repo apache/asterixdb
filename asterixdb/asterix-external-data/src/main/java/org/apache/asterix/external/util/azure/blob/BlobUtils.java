@@ -59,7 +59,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import com.azure.core.credential.AzureSasCredential;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
@@ -236,7 +235,6 @@ public class BlobUtils {
      * @param baseClient the base Reactor Netty {@link HttpClient} to apply SSL disabling on top of
      * @return a new {@link HttpClient} with an insecure trust manager applied
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.DOC_GENERATED)
     public static HttpClient disableSslVerify(HttpClient baseClient) {
         try {
             SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();

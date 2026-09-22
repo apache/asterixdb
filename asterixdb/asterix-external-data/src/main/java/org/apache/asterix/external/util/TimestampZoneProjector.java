@@ -27,7 +27,6 @@ import java.time.zone.ZoneRules;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Shifts a UTC-adjusted timestamp into the time zone configured on an external collection.
@@ -44,9 +43,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * <b>Not thread-safe by design.</b> The transition cache below is mutable and unsynchronized, so an instance
  * belongs to exactly one parser, and parsers are per-task/per-thread.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted verbatim from IcebergParquetDataParser's private nested class and given a MILLIS "
-        + "unit, so the avro, delta and parquet readers can share the one daylight-saving-aware "
-        + "implementation instead of each holding a fixed raw offset")
 public final class TimestampZoneProjector {
 
     /** Unit of the epoch value being projected. The offset is applied in the same unit it arrives in. */

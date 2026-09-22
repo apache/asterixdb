@@ -38,7 +38,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op3 Sample</b>: the per-partition Bernoulli draw of
@@ -61,7 +60,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@code open()}, since only the arrival of data orders this task behind Op1's registration. Points already covered by the pool (d^2 = 0) are never re-drawn, and a
  * non-positive phi (pool already covers everything) yields no draws, as in the paper.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansSampleOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

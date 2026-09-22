@@ -35,7 +35,6 @@ import java.nio.file.Path;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +47,6 @@ import org.msgpack.core.MessagePack;
  * frame with no message in it, and a connection that dies halfway through a response - are
  * reproducible without a Python interpreter.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class PythonDomainSocketProtoTest {
 
     private Path sockDir;

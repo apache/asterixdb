@@ -45,7 +45,6 @@ import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * LSM disk component for Vector Clustering Trees. Wraps a materialized {@link VTree} on persistent
@@ -222,7 +221,6 @@ public class LSMVTreeDiskComponent extends AbstractLSMDiskComponent {
      * Builds a data-frame factory identical to the tree's default except that its tuple writer
      * carries over the source tuple's antimatter bit.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private ITreeIndexFrameFactory createCopyDataFrameFactory() {
         VTreeDataFrameFactory dataFrameFactory = (VTreeDataFrameFactory) getIndex().getDataFrameFactory();
         LSMVTreeDataTupleWriterFactory tupleWriterFactory =

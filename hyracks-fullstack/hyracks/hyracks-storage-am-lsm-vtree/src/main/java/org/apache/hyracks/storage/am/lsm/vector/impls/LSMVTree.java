@@ -83,7 +83,6 @@ import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -330,7 +329,6 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
      * quantized indexes carry non-null {@code quantizationParams}; test fixtures may select the
      * quantized layout purely through the data-tuple-creator factory.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public boolean isQuantized() {
         return quantizationParams != null || dataTupleBuilderFactory.isQuantized();
     }
@@ -465,7 +463,6 @@ public class LSMVTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMVTreeMergeOperation mergeOp = (LSMVTreeMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();

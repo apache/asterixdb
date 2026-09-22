@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -36,8 +35,6 @@ import org.junit.Test;
  * timestamp. The two used to be resolved by different parsers, so an id could be accepted at DDL time and
  * read as GMT.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins the DDL-time and read-time resolvers to the same answer, and guards the offset of every "
-        + "available id against regression")
 public class TimeZoneResolutionTest {
 
     /**

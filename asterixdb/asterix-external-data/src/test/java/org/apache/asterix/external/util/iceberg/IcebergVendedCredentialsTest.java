@@ -34,7 +34,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.iceberg.glue.GlueUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.aws.AwsProperties;
 import org.apache.iceberg.gcp.gcs.GCSFileIO;
@@ -48,7 +47,6 @@ import org.junit.Test;
  * when credentials are not vended — otherwise the assertion would pass just as happily if the feature were
  * deleted.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Validation and property-plumbing coverage for credential vending, with no data access")
 public class IcebergVendedCredentialsTest {
 
     private static final String SWITCH = IcebergConstants.ICEBERG_VENDED_CREDENTIALS_PROPERTY_KEY;

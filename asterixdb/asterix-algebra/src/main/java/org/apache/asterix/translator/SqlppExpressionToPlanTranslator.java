@@ -144,7 +144,6 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Each visit returns a pair of an operator and a variable. The variable
@@ -275,7 +274,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
      * rewrite has already validated the WITH options and named the three variables on the clause.
      */
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public Pair<ILogicalOperator, LogicalVariable> visit(ClusterbyClause clusterbyClause,
             Mutable<ILogicalOperator> tupSource) throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> clustering =
@@ -1127,7 +1125,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
      * the clause leaves live, since the operator consumes the FROM bindings. The descriptor has no bound
      * variable of its own, so it is expanded here as a record of the clause's output variables.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "SELECT * after CLUSTER BY expands to the descriptor and members bindings")
     private void getClusterBindings(ClusterbyClause cbc, List<FieldBinding> outFieldBindings, Set<String> outFieldNames)
             throws CompilationException {
         SourceLocation loc = cbc.getSourceLocation();

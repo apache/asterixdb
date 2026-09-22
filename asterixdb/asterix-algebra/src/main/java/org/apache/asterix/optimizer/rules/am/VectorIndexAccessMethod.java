@@ -73,7 +73,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Access method for vector indexes.
@@ -225,7 +224,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * @param context Optimization context
      * @return The transformed plan with vector index search + primary lookup, or null if transformation fails
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Splice the index-only search into the plan before retyping the operators above it")
     public ILogicalOperator createIndexSearchPlan(Mutable<ILogicalOperator> limitRef,
             Mutable<ILogicalOperator> orderRef, AbstractFunctionCallExpression annDistanceExpr,
             OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
@@ -585,7 +583,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * @return the query vector expression
      * @throws CompilationException if the call has no matched function expression in {@code analysisCtx}
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Resolve the ann_distance query vector by matched argument rather than by position")
     private static ILogicalExpression getQueryVectorExpr(AbstractFunctionCallExpression annDistanceExpr,
             AccessMethodAnalysisContext analysisCtx) throws CompilationException {
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
@@ -710,7 +707,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * point is therefore the two having drifted apart, which is a broken invariant rather than an
      * unsupported plan shape — fail loudly instead of emitting a plan that silently drops every row.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Index-only ANN plans bind their INCLUDE-field predicate")
     private static void bindIncludeFilterToSearch(SelectOperator selectOp, Index chosenIndex, Dataset dataset,
             ARecordType recordType, AbstractDataSourceOperator dataSourceOp,
             VectorIncludeFilterPushdown.IncludeColumns includeColumns, IOptimizationContext context)
@@ -739,7 +735,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * The index-side inputs {@link VectorIncludeFilterPushdown} needs, with the record variable(s) a field
      * access must be rooted at to be a candidate.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Root pushdown at the data record only, never the meta record")
     private static VectorIncludeFilterPushdown.IndexContext includeContext(Index chosenIndex, Dataset dataset,
             ARecordType recordType, AbstractDataSourceOperator dataSourceOp) {
         int numPK = dataset.getPrimaryKeys().size();
@@ -763,7 +758,6 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * Point every reference to one of {@code pathToVar}'s paths, in {@code op} and its descendants, at the
      * search output carrying that column, so the plan above no longer needs the assembled record.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private static void bindPathsInDescendants(ILogicalOperator op, VectorIncludeFilterPushdown.IndexContext idx,
             Map<List<String>, LogicalVariable> pathToVar, Map<LogicalVariable, ILogicalExpression> bindings)
             throws AlgebricksException {

@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -144,7 +143,6 @@ final class IPCHandle implements IIPCHandle {
      *
      * @return true if the transition was made, false if the handle was already closed
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "closed is terminal")
     synchronized boolean setStateUnlessClosed(HandleState newState) {
         if (state == HandleState.CLOSED) {
             return false;
@@ -161,7 +159,6 @@ final class IPCHandle implements IIPCHandle {
      *
      * @return true if the handle became connected, false if it was closed or the wait timed out
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "bound the connect wait")
     synchronized boolean waitTillConnected(long timeoutMillis) throws InterruptedException {
         final long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         while (true) {

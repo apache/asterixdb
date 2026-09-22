@@ -33,7 +33,6 @@ import org.apache.asterix.external.input.record.reader.aws.iceberg.converter.Ice
 import org.apache.asterix.external.input.record.reader.stream.AvroConverterContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -41,8 +40,6 @@ import org.junit.Test;
  * keeps reading -- deliberately -- but must say so rather than silently applying no offset. These cases pin that
  * the warning fires exactly then, and never when no timezone was asked for.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers the ignored-timezone warning at the shared helper and through two reader contexts, "
-        + "including the avro one whose warnings previously went to a list nothing drained")
 public class TimeZoneIgnoredWarningTest {
 
     /** Captures what a reader would report, so a test can assert on it without a cluster. */

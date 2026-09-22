@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -59,7 +58,6 @@ import org.junit.Test;
  * The harness uses 512-byte pages, so a full-precision centroid {@code double[]} of dimension 100
  * (800 bytes) — or a data record with a comparably large embedding — cannot fit in a fresh page.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeOversizedTupleTest {
 
     // Dimension chosen so that a full-precision centroid (8 bytes/dim = 800 bytes) far exceeds the

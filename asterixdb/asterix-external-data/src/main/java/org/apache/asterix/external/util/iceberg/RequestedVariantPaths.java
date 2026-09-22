@@ -28,7 +28,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * An immutable tree describing which sub-paths of a single Iceberg {@code VARIANT} column a query actually accesses,
@@ -52,8 +51,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * consumer never prunes a value the query might need. Pruning is thus best-effort and can only ever remove sub-columns
  * the query provably does not reference.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Variant projection pushdown: extracts the requested variant sub-path tree from the "
-        + "optimizer's projected ARecordType; leaf/ANY/non-record => whole value (no pruning)")
 public final class RequestedVariantPaths {
 
     /** Whole value requested; do not prune anything below this node. */

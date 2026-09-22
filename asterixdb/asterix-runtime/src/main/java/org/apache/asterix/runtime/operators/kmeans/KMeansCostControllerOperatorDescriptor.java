@@ -46,7 +46,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op1 Cost / Controller</b>: the loop head, the
@@ -74,8 +73,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * data. The sub-graph works on any topology: the co-located Op1/Op3/Op5 share an NC's joblet state, and the
  * merges are single-node.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

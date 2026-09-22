@@ -50,7 +50,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,7 +100,6 @@ public class LSMBTreeComponentLifecycleTest {
      * never arrived, for as long as the index stays open. Take those pages when the index switches to the component
      * instead, which is the same on-demand allocation a component already goes through after every flush.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void testAllocateTakesPagesForTheCurrentMemoryComponentOnly() throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys);
@@ -131,7 +129,6 @@ public class LSMBTreeComponentLifecycleTest {
      * the component the index switches to after a flush must take them on demand. This is the same path a flushed
      * component already takes, since a flush cleans it up and leaves it unallocated.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     @Test
     public void testNextMemoryComponentTakesItsPagesWhenTheIndexSwitchesToIt() throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys);

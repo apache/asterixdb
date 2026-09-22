@@ -35,7 +35,6 @@ import org.apache.asterix.lang.sqlpp.clause.ClusterbyClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class BindingVariableVisitor extends AbstractSqlppAstVisitor<Void, Collection<VariableExpr>> {
     @Override
@@ -88,7 +87,6 @@ public class BindingVariableVisitor extends AbstractSqlppAstVisitor<Void, Collec
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "CLUSTER BY binding variables, so callers stop listing them by hand")
     public Void visit(ClusterbyClause clusterbyClause, Collection<VariableExpr> bindingVars)
             throws CompilationException {
         // The clause binds its descriptor and members variables where the query named them, plus the

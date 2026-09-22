@@ -24,8 +24,6 @@ import java.net.InetAddress;
 import java.security.KeyStore;
 import java.util.Optional;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
-
 import io.netty.handler.ssl.ClientAuth;
 
 public interface INetworkSecurityConfig extends Serializable {
@@ -51,7 +49,6 @@ public interface INetworkSecurityConfig extends Serializable {
      *
      * @return true if the peer's identity should be verified. Otherwise false.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     default boolean verifyPeerIdentity() {
         return true;
     }
@@ -63,7 +60,6 @@ public interface INetworkSecurityConfig extends Serializable {
      *
      * @return true if the peer's identity should be verified on RMI connections. Otherwise false.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
     default boolean verifyRmiPeerIdentity() {
         return true;
     }

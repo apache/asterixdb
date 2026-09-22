@@ -42,7 +42,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeser
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op2 PhiMerge</b>: the single-node φ-reduce of one
@@ -63,7 +62,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * Everything else in the loop is already deterministic on a fixed topology (fixed seeds; PoolMerge and
  * CentroidMerge sort before folding); this keeps the reduce from being the one place that is not.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansPhiMergeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

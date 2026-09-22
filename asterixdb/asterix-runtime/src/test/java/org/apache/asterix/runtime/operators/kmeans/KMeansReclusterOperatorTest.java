@@ -52,7 +52,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
 import org.apache.hyracks.test.support.TestUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -65,7 +64,6 @@ import org.junit.Test;
  * Activity order follows {@link KMeansReclusterOperatorDescriptor#contributeActivities}: StorePool (0),
  * Score (1).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansReclusterOperatorTest {
     // Same value as SqlppClusterByVisitor's RECLUSTER_SEED_DEFAULT, the seed used when a query sets none
     // (mirrored here: this module cannot see that class). The expected picks below depend on it.

@@ -46,7 +46,6 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.util.ThreadDumpUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Utils for running SQL++ or AQL runtime tests.
@@ -244,7 +243,6 @@ public class LangExecutionUtil {
      * loop, made every azblob-backed suite fail whenever that loop happened to be inside a subscribe() at dump
      * time.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "the check matched the whole thread dump, so unrelated stack frames counted as leaks")
     private static List<String> leakedExecutionEngineThreads() {
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
         List<String> leaked = new ArrayList<>();

@@ -136,7 +136,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Table;
@@ -182,8 +181,6 @@ public class ExternalDataUtils {
     // Defaults to replace-and-continue; only "fail" opts into failing fast on an illegal character. The value is
     // validated against the allowed set (replace/fail) at DDL time in validate(...), so anything reaching here is
     // already known to be one of those two.
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads the illegalCharacterHandling WITH-clause property to decide replace-and-continue "
-            + "(default) vs. fail-fast")
     public static boolean shouldFailOnIllegalCharacter(Map<String, String> configuration) {
         String mode = configuration.get(KEY_ILLEGAL_CHARACTER_HANDLING);
         return ILLEGAL_CHARACTER_HANDLING_FAIL.equalsIgnoreCase(mode);
@@ -685,9 +682,6 @@ public class ExternalDataUtils {
      * @param configuration external data configuration
      * @throws HyracksDataException HyracksDataException
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Added a value check for illegalCharacterHandling (allowed: replace/fail), matching the "
-            + "existing pattern for header/force-quote/empty-string-as-null/redact-warnings in this method -- "
-            + "previously any value other than exactly \"fail\" (e.g. a typo) silently behaved as replace")
     public static void validate(Map<String, String> configuration) throws HyracksDataException {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         String header = configuration.get(KEY_HEADER);
@@ -1065,7 +1059,6 @@ public class ExternalDataUtils {
      *
      * @throws DateTimeException when neither spelling is a zone id
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Case-insensitive offset forms via an upper-cased retry, shared by the DDL and read resolvers")
     private static ZoneId parseOffsetZoneId(String timeZoneId) {
         try {
             return ZoneId.of(timeZoneId);
@@ -1090,9 +1083,6 @@ public class ExternalDataUtils {
      * @param timeZoneId configured id, possibly null or empty
      * @return the resolved zone, or {@code null} when unset or unrecognised
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Read-path timezone resolution shared by the avro, delta, parquet and iceberg converter "
-            + "contexts, which each resolved with TimeZone.getTimeZone and so read an accepted id as GMT "
-            + "whenever it was not spelled canonically")
     /**
      * Resolves a configured timezone for the read path and reports it when it cannot be resolved, so a
      * collection whose timezone is being ignored says so instead of silently reading UTC-adjusted values with no
@@ -1102,8 +1092,6 @@ public class ExternalDataUtils {
      * @param warningSink where to deliver the warning; readers differ in how theirs reaches the user
      * @return the resolved zone, or {@code null} when unset or unresolvable
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reports a configured timezone that cannot be resolved, shared by the avro, delta, parquet and "
-            + "iceberg readers")
     public static TimeZone resolveTimeZoneOrWarn(String timeZoneId, Consumer<Warning> warningSink) {
         TimeZone resolved = resolveTimeZoneOrUnset(timeZoneId);
         // This warning is for collections that pre-existed before the DDL check, so they continue reading. But all
@@ -1149,8 +1137,6 @@ public class ExternalDataUtils {
                 || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Rejects an invalid timezone at DDL time and stores the canonical id, matching the parquet, "
-            + "delta and iceberg validators. Avro previously accepted any string here")
     public static void validateAvroTypeAndConfiguration(Map<String, String> properties, ARecordType datasetRecordType)
             throws CompilationException {
         if (isAvroFormat(properties)) {

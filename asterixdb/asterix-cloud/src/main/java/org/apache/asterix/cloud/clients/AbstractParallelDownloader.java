@@ -31,7 +31,6 @@ import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.hyracks.util.ExponentialRetryPolicy;
 import org.apache.hyracks.util.IRetryPolicy;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -95,7 +94,6 @@ public abstract class AbstractParallelDownloader implements IParallelDownloader 
      * path verbatim. The device cannot be taken from the key: object storage is a flat, cluster-wide
      * namespace that deliberately does not record which local device a node keeps a file on.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "one definition of the key-to-path mapping, shared by every backend's downloader")
     protected final FileReference toLocalFile(FileReference directory, String objectKey) {
         String prefix = getPrefix();
         String relativePath = objectKey.startsWith(prefix) ? objectKey.substring(prefix.length()) : objectKey;

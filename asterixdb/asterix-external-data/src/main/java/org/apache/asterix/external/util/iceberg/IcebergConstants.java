@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.asterix.external.util.aws.AwsConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.google.GCSConstants;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.aws.s3.S3FileIO;
 import org.apache.iceberg.azure.adlsv2.ADLSFileIO;
 
@@ -52,7 +51,6 @@ public class IcebergConstants {
      * Set on the CATALOG: whether it may hand out storage credentials. A collection never carries this; it
      * inherits the catalog's answer, which is re-read from the catalog on every compilation.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Catalog property enabling credential vending")
     public static final String ICEBERG_VENDED_CREDENTIALS_PROPERTY_KEY = "vendedCredentials";
 
     public static final String ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL = "catalog-property#";
@@ -85,7 +83,6 @@ public class IcebergConstants {
     public static class Rest {
         // Iceberg defines no constant for this header, so it is passed through the REST client's own
         // "header." catalog-property prefix.
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Catalog property that asks the REST catalog to vend storage credentials")
         public static final String ACCESS_DELEGATION_HEADER_PROPERTY = "header.X-Iceberg-Access-Delegation";
         public static final String ACCESS_DELEGATION_VENDED_CREDENTIALS = "vended-credentials";
     }

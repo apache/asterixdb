@@ -39,7 +39,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
 import org.apache.hyracks.util.ParseUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class AsterixInputStreamReader extends Reader {
 
@@ -61,9 +60,6 @@ public class AsterixInputStreamReader extends Reader {
         this(in, bufferSize, false, NoOpWarningCollector.INSTANCE);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Illegal (invalid UTF-8) characters previously stalled the decoder forever since its "
-            + "CoderResult was never consulted; default to substituting U+FFFD and continuing (with a warning), "
-            + "with an explicit fail-fast option that reports the error immediately instead of stalling")
     public AsterixInputStreamReader(AsterixInputStream in, int bufferSize, boolean failOnIllegalCharacter,
             IWarningCollector warnings) {
         this.in = in;
@@ -79,9 +75,6 @@ public class AsterixInputStreamReader extends Reader {
         this.byteBuffer.flip();
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Consult the decoder's CoderResult (previously discarded). In fail-fast mode, report an illegal "
-            + "character as EXTERNAL_SOURCE_ERROR instead of the generic untyped wrapping; otherwise skip past it, "
-            + "substitute U+FFFD, warn, and keep decoding the rest of the buffer")
     private void decode(boolean endOfInput) throws IOException {
         while (true) {
             CoderResult result = decoder.decode(byteBuffer, charBuffer, endOfInput);
@@ -185,7 +178,6 @@ public class AsterixInputStreamReader extends Reader {
         return charBuffer.position();
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.DEEPSEEK_CODER, tool = AiProvenance.Tool.FACTORY_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Check for thread interruption (and throw InterruptedIOException) to prevent infinite spin in read loop when stream is cancelled and the inputStream is not handling interrupts")
     private static void checkInterrupted() throws IOException {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedIOException("Thread interrupted while reading stream");

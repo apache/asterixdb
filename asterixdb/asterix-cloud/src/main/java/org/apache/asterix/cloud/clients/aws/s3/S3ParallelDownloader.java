@@ -36,7 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -260,7 +259,6 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         return builder.build();
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "reject custom certificates instead of warning and building a client that cannot trust them")
     private static S3AsyncClient createS3CrtAsyncClient(S3ClientConfig config) {
         if (!config.getCertificates().isEmpty()) {
             // the CRT client has no hook for a custom trust store, so a client built here would fail every TLS

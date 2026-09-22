@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class DoubleArraySerializerDeserializer implements ISerializerDeserializer<double[]> {
     private static final long serialVersionUID = 1L;
@@ -79,7 +78,6 @@ public class DoubleArraySerializerDeserializer implements ISerializerDeserialize
      * @return the decoded array
      * @throws HyracksDataException if the encoded length does not fit within {@code length}
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Stream-free decode for hot per-record paths")
     public static double[] read(byte[] bytes, int offset, int length) throws HyracksDataException {
         int len = readLength(bytes, offset, length);
         double[] array = new double[len];

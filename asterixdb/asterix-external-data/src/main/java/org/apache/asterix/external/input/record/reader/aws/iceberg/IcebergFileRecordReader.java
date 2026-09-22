@@ -41,7 +41,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
@@ -91,7 +90,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     private final boolean variantProjectionPushdownWithDeletes;
     private final IWarningCollector warningCollector;
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Read the variantProjectionPushdown flag (default on) and build the per-scan VariantProjectionPlan from the projected Iceberg schema + requested-fields type; any failure falls back to an empty plan so the optimization can never break the read")
     public IcebergFileRecordReader(List<FileScanTask> fileScanTasks, Schema projectedSchema,
             Map<String, String> configuration, IWarningCollector warningCollector) throws HyracksDataException {
         this.fileScanTasks = fileScanTasks;
@@ -142,7 +140,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      * <p>
      * Cost is bounded: the two callers run once per scan task and once per reader, never per record.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Surfaces a silent projection-pushdown fallback as a deduplicated warning plus a debug log with the cause; message is constant so the warning collector counts repeats rather than repeating them")
     // Package-private so a test can execute the warn path itself: the two callers are defensive catches that
     // nothing reachable makes throw, so this line would otherwise never run under test.
     void warnProjectionNotPushed(Exception cause) {
@@ -296,7 +293,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      *
      * @return the rows of the task; closing it closes the underlying file read
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted the standard (non-pruned) per-task read, with and without deletes, so the split-range read is testable in isolation")
     static CloseableIterable<Record> openStandardRead(FileIO io, InputFile inFile, FileScanTask task,
             Schema schemaAtSnapshot, Schema projectedSchema) {
         int deletesCount = (task.deletes() == null) ? 0 : task.deletes().size();
@@ -335,7 +331,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      * Extracted from the read path so routing is assertable on its own — nothing downstream reveals which branch a
      * file took.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Routing decision now admits delete-bearing tasks when variantProjectionPushdownWithDeletes is on, and still declines them when it is off")
     static boolean shouldTryPrunedVariantRead(VariantProjectionPlan plan, List<DeleteFile> deletes,
             boolean pushdownWithDeletes) {
         if (plan.isEmpty()) {
@@ -358,8 +353,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      * the full-width standard read — rather than a re-assembled copy of it. Every decline happens before a row is
      * produced; the caller's fallback is always the proven path with nothing emitted.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Folded the pruned/pruned-with-deletes routing into one testable entry point so the "
-            + "variantProjectionPushdownWithDeletes flag can be proven end to end: off must restore the standard read")
     static CloseableIterable<Record> openPrunedReadIfEligible(FileIO io, InputFile inFile, FileScanTask task,
             Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan, boolean pushdownWithDeletes)
             throws IOException {
@@ -391,8 +384,6 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      * Returning {@code null} rather than throwing keeps the fail-safe honest: every decline is made before a row is
      * produced, so the caller can still fall back to the proven path with nothing emitted.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Extracted the pruned delete-aware composition so a test can drive the shipped code from a real "
-            + "Iceberg scan task rather than reassembling the same calls itself")
     static CloseableIterable<Record> openPrunedDeleteAwareRead(FileIO io, InputFile inFile, FileScanTask task,
             Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan) throws IOException {
         PositionlessGenericDeleteFilter deleteFilter =

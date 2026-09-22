@@ -35,7 +35,6 @@ import org.apache.hyracks.dataflow.std.sort.Utility;
 import org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.util.IntSerDeUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -121,7 +120,6 @@ public class VariableTupleMemoryManagerTest extends AbstractTupleMemoryManagerTe
      * lengths covers every such boundary regardless of the frame size.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     public void testTupleEndingAtFrameBoundaryIsStoredIntact() throws HyracksDataException {
         for (int charCount = 0; charCount < Common.MIN_FRAME_SIZE; charCount++) {
             tupleMemoryManager.reset();

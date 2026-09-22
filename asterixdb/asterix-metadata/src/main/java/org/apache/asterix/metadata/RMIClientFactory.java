@@ -33,7 +33,6 @@ import javax.net.ssl.SSLSocketFactory;
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.ipc.security.NetworkSecurityManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
 
@@ -102,7 +101,6 @@ public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
          * {@link SSLSocket} performs no such check unless it is asked to, leaving any holder of a certificate the
          * trust store chains to able to answer in place of the metadata node.
          */
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "ASTERIXDB-3851")
         private Socket identifyPeer(Socket socket) {
             if (!verifyPeerIdentity) {
                 return socket;

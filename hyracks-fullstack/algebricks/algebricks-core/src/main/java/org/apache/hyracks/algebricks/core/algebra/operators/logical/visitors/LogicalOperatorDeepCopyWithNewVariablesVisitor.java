@@ -81,7 +81,6 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * This visitor deep-copies a query plan but uses a new set of variables. Method
@@ -552,7 +551,6 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public ILogicalOperator visitClusterByOperator(ClusterByOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         ClusterByOperator opCopy = new ClusterByOperator(

@@ -44,7 +44,6 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.LogRedactionUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,7 +59,6 @@ public class StringJsonParseEval implements IScalarEvaluator {
     private final ArrayBackedValueStorage resultStorage;
     private final DataOutput out;
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Three-outcome enum to distinguish parse success, EOF, and error in tryParseAndSetResult")
     private enum ParseOutcome {
         SUCCESS,
         EOF,
@@ -132,7 +130,6 @@ public class StringJsonParseEval implements IScalarEvaluator {
      * Returns {@link ParseOutcome#SUCCESS} and sets {@code result} on success,
      * {@link ParseOutcome#EOF} if the input was empty, or {@link ParseOutcome#ERROR} on a parse failure.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Extracted to eliminate duplicated try/catch parse blocks; returns ParseOutcome to preserve distinct EOF vs error semantics")
     private ParseOutcome tryParseAndSetResult(IPointable result) throws HyracksDataException {
         resultStorage.reset();
         try {
@@ -160,7 +157,6 @@ public class StringJsonParseEval implements IScalarEvaluator {
      * Such sequences are valid CESU-8 but invalid UTF-8, and are rejected by Jackson 2.20+.
      * Scanning for 0xED is cheap and covers the vast majority of inputs with zero allocation.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.GITHUB_COPILOT, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Fast pre-scan to detect CESU-8 surrogates (0xED [0xA0-0xBF]) before triggering the more expensive CESU-8 to UTF-8 re-encoding retry path")
     private static boolean containsCesu8Surrogate(byte[] bytes, int offset, int length) {
         int end = offset + length;
         for (int i = offset; i < end - 1; i++) {

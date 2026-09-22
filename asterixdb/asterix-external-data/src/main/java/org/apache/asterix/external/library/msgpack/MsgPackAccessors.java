@@ -60,7 +60,6 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class MsgPackAccessors {
@@ -68,7 +67,6 @@ public class MsgPackAccessors {
     private MsgPackAccessors() {
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Added the BINARY case so binary arguments reach Python as bytes")
     public static IMsgPackAccessor<IPointable, DataOutput, Void> createFlatMsgPackAccessor(ATypeTag aTypeTag)
             throws HyracksDataException {
         switch (aTypeTag) {
@@ -177,7 +175,6 @@ public class MsgPackAccessors {
     }
 
     public static class MsgPackStringAccessor {
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Declare the UTF-8 length rather than the stored modified-UTF8 length")
         public static Void apply(IPointable pointable, DataOutput out) throws IOException {
             byte[] b = pointable.getByteArray();
             int s = pointable.getStartOffset();
@@ -192,7 +189,6 @@ public class MsgPackAccessors {
 
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Packs ADM binary as a msgpack bin32, which msgpack-python unpacks as bytes")
     public static class MsgPackBinaryAccessor {
         public static Void apply(IPointable pointable, DataOutput out) throws IOException {
             byte[] b = pointable.getByteArray();

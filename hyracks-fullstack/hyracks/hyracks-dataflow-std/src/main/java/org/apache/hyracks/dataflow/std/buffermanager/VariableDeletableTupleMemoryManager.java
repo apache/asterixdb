@@ -29,7 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender;
 import org.apache.hyracks.dataflow.std.sort.util.IAppendDeletableFrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -75,7 +74,6 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Fail on an undersized frame, and report no space rather than index with -1, in place of two ineffective assertions")
     public boolean insertTuple(IFrameTupleAccessor fta, int idx, TuplePointer tuplePointer)
             throws HyracksDataException {
         int requiredFreeSpace = calculatePhysicalSpace(fta, idx);
@@ -145,7 +143,6 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
         return -1;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Account for the frame's trailing bookkeeping when sizing a frame for a tuple")
     private static int calculateMinFrameSizeToPlaceTuple(int requiredFreeSpace, int minFrameSize) {
         return (1 + (requiredFreeSpace + DeletableFrameTupleAppender.FRAME_META_SIZE - 1) / minFrameSize)
                 * minFrameSize;

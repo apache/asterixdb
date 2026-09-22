@@ -51,7 +51,6 @@ import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBuffer
 import org.apache.hyracks.storage.common.buffercache.context.write.LocalOnlyWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -198,7 +197,6 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public void add(ITupleReference tuple) throws HyracksDataException {
         int childPageId = determineChildPageId();
         ITupleReference entryTuple = createEntryTuple(tuple, childPageId);

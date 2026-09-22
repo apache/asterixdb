@@ -54,7 +54,6 @@ import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Per-task runtime for the CLUSTER BY k-means|| RECLUSTER stage ({@link KMeansReclusterOperatorDescriptor}): reads
@@ -69,7 +68,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * <p>
  * Output vectors are re-serialized as OPEN lists (tagged items) because the output column is typed ANY.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 final class KMeansStageRuntime {
 
     static final double KIND_POOL = 0.0d;

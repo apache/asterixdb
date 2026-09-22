@@ -39,7 +39,6 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.common.LocalResource;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -226,7 +225,6 @@ public class PersistentLocalResourceRepositoryTest {
     }
 
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for stale resource state of a released storage partition (MB-73587)")
     public void invalidateReleasedPartitionResources() throws Exception {
         final INcApplicationContext ncAppCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
         final String nodeId = ncAppCtx.getServiceContext().getNodeId();

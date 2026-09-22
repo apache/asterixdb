@@ -49,7 +49,6 @@ import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunMerger;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — <b>Op4 PoolMerge</b>: the single-node draw-union of one
@@ -65,7 +64,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * supplies that order without holding the round resident. Because the loop is globally serialized, at most one
  * round is live in the sort at a time (emitted and closed before the next round arrives).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 

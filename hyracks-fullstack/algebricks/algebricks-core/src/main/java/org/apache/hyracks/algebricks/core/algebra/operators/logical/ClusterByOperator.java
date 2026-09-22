@@ -38,7 +38,6 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY as the query expressed it. Consumes the block's rows and emits one tuple per cluster: its id,
@@ -49,8 +48,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * physical phase expands it into the stages that implement the algorithm, the way the combiner rules expand
  * one group-by into a local and a global one.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Nested-plans spike: members carried as a GROUP BY-style nested plan")
 public class ClusterByOperator extends AbstractOperatorWithNestedPlans {
 
     // The input's vector-valued variable, held as an expression so substitution and pruning rules see it.

@@ -34,7 +34,6 @@ import org.apache.asterix.external.util.MillisecondChronon;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileFormat;
@@ -69,8 +68,6 @@ import org.junit.Test;
  * the pre-1970 direction wrong changes results only for rows whose microseconds land in one specific millisecond, and
  * only when that row is the minimum of its file or row group.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Evaluates the widened predicate against stored values and compares with independently computed "
-        + "millisecond semantics, covering every operator across the epoch and pre-1970 boundaries")
 public class IcebergTemporalPredicateWideningTest {
 
     private static final String COLUMN = "ts";

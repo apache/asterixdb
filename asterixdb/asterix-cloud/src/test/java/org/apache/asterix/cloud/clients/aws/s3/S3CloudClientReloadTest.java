@@ -31,10 +31,6 @@ import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.hyracks.cloud.io.ICloudProperties;
 import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.junit.Test;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
@@ -51,7 +47,6 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
  * split, since the reload line printed the config it had just failed to replace. Credential rotation is the
  * bite: downloads keep presenting keys that are about to be revoked.
  */
-@AiProvenance(agent = Agent.CLAUDE_OPUS_5, tool = Tool.CLAUDE_CODE_UI, contributionKind = ContributionKind.TEST_GENERATED, notes = "reloadConfiguration had no unit coverage; the downloader half of a reload was untested")
 public class S3CloudClientReloadTest {
 
     private static final String BUCKET = "reload-test-bucket";

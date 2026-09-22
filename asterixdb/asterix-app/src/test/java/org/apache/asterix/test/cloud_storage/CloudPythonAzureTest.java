@@ -37,7 +37,6 @@ import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.Description;
 import org.apache.asterix.testframework.xml.TestCase;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -66,7 +65,6 @@ import reactor.netty.http.client.HttpClient;
  */
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "azblob counterpart of CloudPythonS3Test; Python UDFs had no object-storage coverage outside S3")
 public class CloudPythonAzureTest {
 
     private final TestCaseContext tcCtx;

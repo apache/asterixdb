@@ -30,7 +30,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Infers the two sizes a vector index build needs when the user does not state them: the leaf cluster count
@@ -44,7 +43,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@link #TRAIN_ROWS_PER_CLUSTER} rows per cluster, which is the rule of thumb for having enough data to pick
  * a representative centroid. That coupling is why the two cannot both be set by the user.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public final class VTreeParamsInference {
 
     /**

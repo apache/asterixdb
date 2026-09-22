@@ -32,7 +32,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -55,7 +54,6 @@ public class GlobalTransactionContext implements IGlobalTransactionContext {
      * executor threads at once. A plain {@link java.util.HashMap} loses entries under that concurrency, which
      * drops a node from the commit broadcast and silently leaves its partitions uncommitted.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Made the node resource map concurrent; prepared messages are accumulated from several threads")
     private final Map<String, Map<String, ILSMComponentId>> nodeResourceMap;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -114,7 +112,6 @@ public class GlobalTransactionContext implements IGlobalTransactionContext {
      * the previous phase, or counted against a target that is already in place.
      */
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Open a phase, its acknowledgement target and its counter in one step")
     public void beginPhase(TxnPhase phase, int expectedAcks) {
         acksReceived.set(0);
         this.expectedAcks = expectedAcks;
@@ -132,12 +129,10 @@ public class GlobalTransactionContext implements IGlobalTransactionContext {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Atomic accumulation of a partition's prepared resources")
     public void addPreparedNodeResources(String nodeId, Map<String, ILSMComponentId> componentIdMap) {
         nodeResourceMap.computeIfAbsent(nodeId, k -> new ConcurrentHashMap<>()).putAll(componentIdMap);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Keep the recovered map concurrent so rollback shares the live map's guarantees")
     private static Map<String, Map<String, ILSMComponentId>> concurrentCopy(
             Map<String, Map<String, ILSMComponentId>> source) {
         Map<String, Map<String, ILSMComponentId>> copy = new ConcurrentHashMap<>();

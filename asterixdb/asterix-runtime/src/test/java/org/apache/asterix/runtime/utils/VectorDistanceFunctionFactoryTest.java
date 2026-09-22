@@ -26,7 +26,6 @@ import java.util.Random;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +35,6 @@ import org.junit.Test;
  * distances order the candidate list and the index is expected to rebuild reproducibly from a fixed seed, so
  * a one-ulp difference is a real behavior change.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Equivalence of fused decode+measure against decode-then-measure")
 public class VectorDistanceFunctionFactoryTest {
 
     private static byte[] encode(double[] v) throws Exception {

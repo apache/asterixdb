@@ -54,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.logging.log4j.LogManager;
@@ -76,7 +75,6 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
      * splits the name back apart cannot tell them apart. A name that two different paths produced maps to an EMPTY
      * list, meaning "ambiguous within this query".
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Preserves the unjoined filter path segments so a VARIANT sub-field named with a dot cannot be mistaken for nesting during predicate pushdown")
     private final Map<String, List<String>> pathSegments = new HashMap<>();
 
     public IcebergTableFilterBuilder(ExternalDatasetProjectionFiltrationInfo projectionFiltrationInfo,
@@ -416,8 +414,6 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
      * @implNote package-private and static so {@code IcebergTemporalPredicateWideningTest} can evaluate the
      *           produced expression directly against stored values; it uses no instance state.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Pushes the whole millisecond a truncated temporal literal denotes, so Iceberg cannot prune a "
-            + "file, row group or delete file that holds a row the engine matches")
     static Expression buildTruncatedTemporalComparison(FunctionIdentifier fid, String columnName, long literal,
             boolean nonNegativeDomain) {
         if (literal > Long.MAX_VALUE - MICROS_PER_MILLI || literal < Long.MIN_VALUE + MICROS_PER_MILLI) {
@@ -582,7 +578,6 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
      *
      * @return {@code name}, so callers can return it directly
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Records unjoined path segments per reference name, marking collisions ambiguous so pushdown declines instead of guessing")
     private String recordSegments(String name, List<String> segments) {
         List<String> existing = pathSegments.get(name);
         if (existing == null) {

@@ -33,10 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for prepared resources lost when several partitions report concurrently")
 public class GlobalTransactionContextTest {
 
     private static final int NUM_NODES = 8;

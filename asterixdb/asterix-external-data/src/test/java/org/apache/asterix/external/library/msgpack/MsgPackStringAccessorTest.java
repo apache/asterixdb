@@ -28,7 +28,6 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 import org.junit.Test;
@@ -38,7 +37,6 @@ import org.msgpack.core.MessageUnpacker;
 /**
  * Strings handed to a Python UDF must be packed as standard UTF-8, not as the modified UTF-8 they are stored in.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for supplementary characters mis-sized in msgpack STR headers")
 public class MsgPackStringAccessorTest {
 
     private static final String EMOJI = "😀";

@@ -35,7 +35,6 @@ import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.ipc.sockets.SslSocketChannelFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 public class NetworkSecurityManager implements INetworkSecurityManager {
 
@@ -55,7 +54,6 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851: split from newSSLEngine(clientMode)")
     public SSLEngine newServerSSLEngine() {
         try {
             SSLEngine sslEngine = newSSLContext(false).createSSLEngine();
@@ -67,7 +65,6 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "ASTERIXDB-3851: identify the peer against the certificate it presents")
     public SSLEngine newClientSSLEngine(InetSocketAddress peer) {
         try {
             // the peer host is the name matched against the certificate, so an engine created without it cannot

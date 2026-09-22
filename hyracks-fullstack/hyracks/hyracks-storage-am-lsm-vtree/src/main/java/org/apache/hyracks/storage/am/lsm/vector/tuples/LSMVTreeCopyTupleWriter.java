@@ -26,7 +26,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Tuple writer that preserves the antimatter bit of the SOURCE tuple (LSMBTreeCopyTupleWriter
@@ -35,7 +34,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * as antimatter, not silently re-encoded as matter. Matter tuples are written identically to
  * {@link LSMVTreeDataTupleWriter}.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public class LSMVTreeCopyTupleWriter extends LSMVTreeDataTupleWriter {
 
     public LSMVTreeCopyTupleWriter(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits,

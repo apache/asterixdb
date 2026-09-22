@@ -38,7 +38,6 @@ import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.common.LocalResource;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -140,7 +139,6 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public synchronized void release(int partition) throws HyracksDataException {
         if (!partitions.containsKey(partition)) {
             return;

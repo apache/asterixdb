@@ -26,7 +26,6 @@ import java.util.NoSuchElementException;
 import org.apache.asterix.external.util.iceberg.RequestedVariantPaths;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.external.util.iceberg.VariantSchemaClipper;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
@@ -75,9 +74,6 @@ import org.apache.parquet.schema.MessageType;
  * Callers must treat this as best-effort: use {@link #canPrune()} to check that clipping actually narrowed the schema
  * for this file, and fall back to Iceberg's standard read path otherwise (or on any failure).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Reads a Parquet data file with unreferenced shredded variant sub-columns pruned from the physical "
-        + "requested schema; mirrors Iceberg's ReadConf/FileIterator (split range, the three row-group "
-        + "filters on the unclipped projection, page-source loop) and reuses GenericParquetReaders.buildReader")
 public final class VariantProjectedParquetReader implements CloseableIterable<Record> {
 
     private final org.apache.iceberg.io.InputFile input;
@@ -147,8 +143,6 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
      *            fail-safe row-index check runs and {@link #withDeletedPositions} becomes mandatory before iterating
      * @throws IOException if the file cannot be opened or its footer read
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Two-phase open so the caller can decline on canPrune() before loading the deletion bitmap; "
-            + "positions arrive via withDeletedPositions and are mandatory before iteration")
     public static VariantProjectedParquetReader open(org.apache.iceberg.io.InputFile input, Schema expectedSchema,
             Expression filter, long splitStart, long splitLength, boolean caseSensitive, VariantProjectionPlan plan,
             boolean applyPositionDeletes) throws IOException {
@@ -312,9 +306,6 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
      * column readers are a stream: skipping the call would desynchronize every subsequent value. The saving is in the
      * pruned column chunks, which were never fetched at all, not in skipping the decode of a deleted row.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added position-delete skipping against a deletion bitmap keyed by each row group's file-absolute "
-            + "first row index, and converted hasNext() to a look-ahead since dropped rows make rows-read and "
-            + "rows-emitted diverge")
     private static final class RecordIterator implements CloseableIterator<Record> {
         private final ParquetFileReader reader;
         private final ParquetValueReader<Record> model;

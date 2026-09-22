@@ -18,17 +18,12 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_FABLE_5_1;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
 import org.apache.asterix.external.util.aws.s3.S3Utils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -42,7 +37,6 @@ public class S3ClientUtils {
         throw new AssertionError("do not instantiate");
     }
 
-    @AiProvenance(agent = CLAUDE_FABLE_5_1, tool = CLAUDE_CODE_UI, contributionKind = REFACTORED, notes = "Paginate with the SDK ListObjectsV2 iterable instead of a manual continuation-token loop")
     public static List<S3Object> listS3Objects(S3Client s3Client, String bucket, String path) {
         ListObjectsV2Request listObjectsRequest =
                 ListObjectsV2Request.builder().bucket(bucket).prefix(toCloudPrefix(path)).build();

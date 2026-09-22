@@ -19,9 +19,6 @@
 
 package org.apache.asterix.optimizer.rules.cbo;
 
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_OPUS_4_8;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +81,6 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -373,7 +369,6 @@ public class Stats {
      * leaf input cannot yield the distinct count of a join key, and the caller falls back to its default
      * selectivity.
      */
-    @AiProvenance(agent = CLAUDE_OPUS_4_8, tool = CLAUDE_CODE_UI, notes = "Identify the sampled side's join-key expression from liveness instead of position")
     private static ILogicalExpression findSampledSideJoinKeyExpr(ILogicalOperator leafInputOp,
             AbstractFunctionCallExpression joinExpr) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> args = joinExpr.getArguments();
@@ -396,12 +391,10 @@ public class Stats {
         return null;
     }
 
-    @AiProvenance(agent = CLAUDE_OPUS_4_8, tool = CLAUDE_CODE_UI, notes = "Side attribution helper for findSampledSideJoinKeyExpr")
     private static boolean isFromThisSide(List<LogicalVariable> argVars, List<LogicalVariable> liveVars) {
         return !argVars.isEmpty() && liveVars.containsAll(argVars);
     }
 
-    @AiProvenance(agent = CLAUDE_OPUS_4_8, tool = CLAUDE_CODE_UI, notes = "Side attribution helper for findSampledSideJoinKeyExpr")
     private static boolean isFromOtherSide(List<LogicalVariable> argVars, List<LogicalVariable> liveVars) {
         return !argVars.isEmpty() && argVars.stream().noneMatch(liveVars::contains);
     }
@@ -969,7 +962,6 @@ public class Stats {
      * <em>is</em> a bare variable reference no ASSIGN is added, so the plan is exactly the one that was
      * built before expressions were supported.
      */
-    @AiProvenance(agent = CLAUDE_OPUS_4_8, tool = CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Count distinct values of an expression, not only of a variable")
     protected List<List<IAObject>> runSamplingQueryDistinct(IOptimizationContext ctx, ILogicalOperator op,
             ILogicalExpression keyExpr, Index index) throws AlgebricksException {
         LOGGER.info("***running sample query***");

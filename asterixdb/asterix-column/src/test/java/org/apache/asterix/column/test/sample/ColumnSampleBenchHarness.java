@@ -96,7 +96,6 @@ import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorF
 import org.apache.hyracks.storage.common.disk.NoOpDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.trace.ITracer;
 
 /**
@@ -123,7 +122,6 @@ import org.apache.hyracks.util.trace.ITracer;
  * shadow structure's shape. Memory runs ~{@code 2 * numKeys * 256 B}, so 600 000 keys holds ~300 MB against the
  * 4 GB test heap.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Column LSM sample bench harness: builds a shadowed column LSM and drives the column sample cursor")
 public class ColumnSampleBenchHarness {
 
     /** Column pages are buffer-cache pages; 32 KB matches the product default. */
@@ -467,7 +465,6 @@ public class ColumnSampleBenchHarness {
      * Number of mega-leaf pages in the oldest (sampled) disk component. The sampler draws uniformly over these, so
      * this is the population size a leaf-page uniformity check must be computed against.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Release the accessor and read context in a finally, matching the cleanup pattern runSample already uses")
     public int getSampledComponentLeafPageCount() throws HyracksDataException {
         return getSampledComponentLeafPageIds().length;
     }
@@ -477,7 +474,6 @@ public class ColumnSampleBenchHarness {
      * sample cursor draws from. Exposed so a test can position a read leaf frame on a real mega-leaf page and
      * observe what a given {@link IColumnReadContext} pins for it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Expose the sampled component's leaf page ids; getSampledComponentLeafPageCount now delegates here")
     public int[] getSampledComponentLeafPageIds() throws HyracksDataException {
         LSMColumnBTreeOpContext opCtx = createSearchOpContext();
         List<ILSMComponent> components = opCtx.getComponentHolder();
@@ -577,7 +573,6 @@ public class ColumnSampleBenchHarness {
      * The column-sized disk buffer cache the components live in. Exposed so a test can pin real mega-leaf pages
      * directly instead of going through a cursor.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Expose the disk buffer cache for a direct page-pinning test")
     public IBufferCache getDiskBufferCache() {
         return diskBufferCache;
     }

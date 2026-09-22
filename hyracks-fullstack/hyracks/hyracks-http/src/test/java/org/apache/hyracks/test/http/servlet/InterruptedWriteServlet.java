@@ -27,7 +27,6 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -37,7 +36,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * {@link PrintWriter} writes after that - it records the failure and carries on - must not reach the client, and the
  * response must not be terminated as a complete one.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class InterruptedWriteServlet extends AbstractServlet {
 
     /** What the servlet writes once its writer has failed; the client must never see it. */

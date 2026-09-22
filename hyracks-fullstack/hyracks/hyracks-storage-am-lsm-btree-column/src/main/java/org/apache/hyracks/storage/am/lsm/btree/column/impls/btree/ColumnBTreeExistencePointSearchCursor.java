@@ -24,7 +24,6 @@ import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnR
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Point-search cursor answering <b>existence only</b>: {@code hasNext()} says whether the key is physically on
@@ -50,7 +49,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * positioned {@code frameTuple} there is no monotonic {@code tupleIndex} for it to build on, and the sampler's
  * probe keys are not ascending anyway.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Existence-only column point-search cursor for the sample cursor's newer-component liveness probe")
 public final class ColumnBTreeExistencePointSearchCursor extends ColumnBTreePointSearchCursor {
 
     public ColumnBTreeExistencePointSearchCursor(ColumnBTreeReadLeafFrame frame, IIndexCursorStats stats, int index,

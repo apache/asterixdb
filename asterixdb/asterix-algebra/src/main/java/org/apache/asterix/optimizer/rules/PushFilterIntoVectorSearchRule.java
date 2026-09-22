@@ -47,7 +47,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Pushes filter conditions into a vector index search when the filter only references
@@ -94,7 +93,6 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
@@ -184,7 +182,6 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
      * ranks — "the k nearest that pass" in place of "those of the k nearest that pass". A join ends it too, so
      * a predicate over another branch's record can never be resolved against this index's INCLUDE columns.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Stop the descent at a LIMIT and at operators outside the search pipeline")
     private VectorSearchInfo searchForVectorUnnest(ILogicalOperator op, IOptimizationContext context,
             List<Pair<UnnestMapOperator, AccessMethodJobGenParams>> recordSources) throws AlgebricksException {
         switch (op.getOperatorTag()) {
@@ -234,8 +231,6 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
     /**
      * Builds VectorSearchInfo from the found vector index.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Admit only this dataset's primary lookup as a pushdown base")
     private VectorSearchInfo buildSearchInfo(UnnestMapOperator unnest, AccessMethodJobGenParams params,
             IOptimizationContext context, List<Pair<UnnestMapOperator, AccessMethodJobGenParams>> recordSources)
             throws AlgebricksException {

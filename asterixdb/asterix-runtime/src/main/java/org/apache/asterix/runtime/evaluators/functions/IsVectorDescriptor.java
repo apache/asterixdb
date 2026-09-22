@@ -37,7 +37,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * {@code isvector(v)} and {@code isvector(v, dimension)}: true when {@code v} is a list whose every element
@@ -58,7 +57,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * guard relies on.
  */
 @MissingNullInOutFunction
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public class IsVectorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = IsVectorDescriptor::new;
@@ -86,7 +84,6 @@ public class IsVectorDescriptor extends AbstractScalarFunctionDynamicDescriptor 
      * count does not resolve and null or missing propagates from either argument.
      */
     @MissingNullInOutFunction
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public static final class IsVectorWithDimensionDescriptor extends IsVectorDescriptor {
         public static final IFunctionDescriptorFactory FACTORY = IsVectorWithDimensionDescriptor::new;
         private static final long serialVersionUID = 1L;

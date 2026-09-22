@@ -60,7 +60,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.azure.AzureProperties;
 
 import com.azure.core.credential.AccessToken;
@@ -345,7 +344,6 @@ public class DatalakeUtils {
                 || adapter.equalsIgnoreCase(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATALAKE_ALIAS);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Read the collection properties once instead of prefixing each lookup")
     public static void setIcebergAdlsAuthParams(Map<String, String> properties) throws CompilationException {
         // the collection's own credentials, with the prefix already stripped
         Map<String, String> collectionProperties = IcebergUtils.filterCollectionProperties(properties);

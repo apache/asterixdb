@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.AppendFiles;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileFormat;
@@ -82,9 +81,6 @@ import org.junit.Test;
  * {@code InclusiveMetricsEvaluator} rather than deleting it — the type matrix and the never-lose-a-row invariant stay
  * just as valuable against their implementation.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "All-variant-type and corner-case coverage for bound-based file pruning: exact pruning for "
-        + "comparable types, never-prune for temporal/binary/uuid/null, boundary literals, extremes, "
-        + "NaN/infinity, unicode and long strings, nested paths and null columns")
 public class VariantBoundsAllTypesTest {
 
     private static final String COLUMN = "variant_field";

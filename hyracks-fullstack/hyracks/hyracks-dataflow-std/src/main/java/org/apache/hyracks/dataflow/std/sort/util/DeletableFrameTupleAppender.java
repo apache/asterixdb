@@ -27,7 +27,6 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.IntSerDeUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * This is a special frame which is used in TupleMemoryBuffer.
@@ -45,7 +44,6 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
      * frame for a given amount of tuple data has to add this to it; see
      * {@link #getContiguousFreeSpace()}, which subtracts it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, notes = "Expose the frame trailer size so callers can size a frame correctly")
     public static final int FRAME_META_SIZE = FrameConstants.SIZE_LEN + SIZE_DELETED_SPACE;
     private final RecordDescriptor recordDescriptor;
     private ByteBuffer buffer;

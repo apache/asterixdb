@@ -30,17 +30,12 @@ import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig.S3ParallelDownload
 import org.apache.asterix.cloud.clients.profiler.NoOpRequestProfilerLimiter;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
-import org.apache.hyracks.util.annotations.AiProvenance.Agent;
-import org.apache.hyracks.util.annotations.AiProvenance.ContributionKind;
-import org.apache.hyracks.util.annotations.AiProvenance.Tool;
 import org.junit.Test;
 
 /**
  * The parallel downloader client type is an explicit choice: its default does not depend on whether an endpoint
  * is configured, and the CRT client refuses a configuration it cannot honour.
  */
-@AiProvenance(agent = Agent.CLAUDE_FABLE_5_1, tool = Tool.CLAUDE_CODE_UI, contributionKind = ContributionKind.TEST_GENERATED, notes = "the endpoint-derived default and the certificate warning had no coverage")
 public class S3ParallelDownloaderClientTypeTest {
 
     private static final String ENDPOINT = "https://127.0.0.1:9";

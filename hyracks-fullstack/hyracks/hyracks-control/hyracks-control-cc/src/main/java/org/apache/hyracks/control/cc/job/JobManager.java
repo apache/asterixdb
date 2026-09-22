@@ -57,7 +57,6 @@ import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.NoOpCallback;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +126,6 @@ public class JobManager implements IJobManager {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED)
     public void add(JobRun jobRun) throws HyracksException {
         checkJob(jobRun);
         JobSpecification job = jobRun.getJobSpecification();

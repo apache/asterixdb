@@ -34,7 +34,6 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * CLUSTER BY k-means‖ initialization loop — codec bridging the loop's boundaries to the shipped
@@ -52,8 +51,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * byte-compatible, since the loop's output is consumed by the merge stage built on that class; the
  * cluster-by runtime tests pin it. A later cleanup may extract a single source of truth.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Decoder bound to the declared dimension; admits only numeric arrays of that width")
 public final class KMeansVectorCodec {
 
     /** Envelope kind fields (match KMeansStageRuntime.KIND_*). */

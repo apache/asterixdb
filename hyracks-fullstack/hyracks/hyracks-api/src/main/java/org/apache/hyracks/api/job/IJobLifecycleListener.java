@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * A listener for job related events
@@ -48,7 +47,6 @@ public interface IJobLifecycleListener {
      * @param jobId the job id
      * @param spec the job specification
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     default void notifyJobSubmissionFailed(JobId jobId, JobSpecification spec) {
     }
 

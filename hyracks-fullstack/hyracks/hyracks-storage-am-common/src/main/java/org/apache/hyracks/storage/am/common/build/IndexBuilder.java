@@ -35,7 +35,6 @@ import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -135,7 +134,6 @@ public class IndexBuilder implements IIndexBuilder {
      * node did not own its storage partition), in which case there is nothing to clear and the create should
      * proceed.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private void deleteLeftoverResource(ILocalResourceRepository localResourceRepository) throws HyracksDataException {
         try {
             localResourceRepository.delete(resourceRelPath);

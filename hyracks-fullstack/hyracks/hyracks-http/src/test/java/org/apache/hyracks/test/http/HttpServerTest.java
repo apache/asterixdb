@@ -58,7 +58,6 @@ import org.apache.hyracks.test.http.servlet.ErrorAfterHeaderServlet;
 import org.apache.hyracks.test.http.servlet.InterruptedWriteServlet;
 import org.apache.hyracks.test.http.servlet.SleepyServlet;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -454,7 +453,6 @@ public class HttpServerTest {
      * cannot tell from a complete one, so the connection is aborted instead.
      */
     @Test
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
     public void failedWriteAbortsTheResponseTest() throws Exception {
         final WebManager webMgr = new WebManager();
         final HttpServerConfig config =

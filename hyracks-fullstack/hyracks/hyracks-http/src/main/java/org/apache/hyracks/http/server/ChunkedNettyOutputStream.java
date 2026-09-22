@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.hyracks.api.util.InvokeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,7 +83,6 @@ public class ChunkedNettyOutputStream extends OutputStream {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Drop the buffer of a failed write")
     public void close() throws IOException {
         if (!closed) {
             InvokeUtil.tryIoWithCleanups(() -> {
@@ -110,7 +108,6 @@ public class ChunkedNettyOutputStream extends OutputStream {
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Record a write that never landed")
     public void flush() throws IOException {
         ensureNotFailed();
         try {
@@ -145,12 +142,10 @@ public class ChunkedNettyOutputStream extends OutputStream {
      * as a complete one: what reached the client is missing a stretch from the middle, and only an aborted stream
      * tells the client so.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
     boolean writeFailed() {
         return writeFailed;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI)
     private void ensureNotFailed() throws IOException {
         if (writeFailed) {
             throw new IOException("Write to the response failed");

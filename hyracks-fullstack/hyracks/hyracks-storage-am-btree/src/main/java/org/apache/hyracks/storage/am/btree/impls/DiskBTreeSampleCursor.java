@@ -38,7 +38,6 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -119,7 +118,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     private long totalReusedPinnedPageHits = 0;
     private boolean endedPreemptively = false;
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Draw-batch capacity derived from the sample target")
     public DiskBTreeSampleCursor(DiskBTree diskBTree, IBTreeLeafFrame leafFrame, long componentSampleCardinality,
             long sampleSeed, BTreeOpContext ctx, IBufferCacheReadContext bufferCacheOpCtx,
             ILSMIndexBatchPointCursor searchCursor, int maxLeafFindingAttempts, int leafDrawBatchSize,
@@ -158,7 +156,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Reset the batch so a reused cursor cannot inherit a stale one")
     protected void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         if (page != null) {
             releasePage();
@@ -211,7 +208,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      * either way, so bounded extra work and no effect on uniformity.
      */
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Full-batch consumption so the pageId sort cannot act as a spatial filter")
     protected boolean doHasNext() throws HyracksDataException {
         while (true) {
             if (pendingLeafDrawIndex >= currentBatchSize) {
@@ -259,7 +255,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     }
 
     /** Decodes the next draw of the current batch. The caller guarantees the batch is not exhausted. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Pure decoding; refill moved to the caller so stopping points are visible in the loop")
     private LeafDraw nextLeafDraw() {
         // High 32 bits of the sort key ARE the pageId; the low 32 index back into the unsorted side arrays.
         long sortKey = drawSortKeys[pendingLeafDrawIndex++];
@@ -285,7 +280,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      * <p>
      * Sets {@link #currentBatchSize} to 0 when nothing more is needed (target met) or possible (no leaf pages).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Batch sized to the shortfall so it can be consumed in full")
     private void refillLeafDrawBatch() {
         pendingLeafDrawIndex = 0;
         currentBatchSize = 0;
@@ -381,7 +375,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
      * over-weights the low slots unless {@code tupleCount} is a power of two. The bound must be positive, which
      * {@link #pinAndAcceptLeafPage}'s {@code tupleCount == 0} rejection guarantees.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Slot drawn with nextInt(bound); the % fold was non-uniform")
     private int findRandomTuple() {
         long nanos = traceTimingEnabled ? System.nanoTime() : 0L;
         int numberOfTuples = leafFrame.getTupleCount();
@@ -413,7 +406,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Reset the batch by emptying it; the fixed batch length is gone")
     protected void doClose() throws HyracksDataException {
         if (LOGGER.isTraceEnabled()) {
             double avgBatchDraws = totalLeafDrawBatches == 0 ? 0.0 : (double) totalLeafDraws / totalLeafDrawBatches;
@@ -485,7 +477,6 @@ public final class DiskBTreeSampleCursor extends EnforcedIndexCursor implements 
         private int pageId;
         private double acceptanceSample;
 
-        @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "A draw is a page plus its Olken acceptance sample; the slot is drawn where used")
         private LeafDraw(int pageId, double acceptanceSample) {
             this.pageId = pageId;
             this.acceptanceSample = acceptanceSample;

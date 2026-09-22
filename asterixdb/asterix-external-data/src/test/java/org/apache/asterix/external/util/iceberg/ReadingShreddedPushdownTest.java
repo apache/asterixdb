@@ -33,7 +33,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
@@ -80,8 +79,6 @@ import org.junit.Test;
  * <p>
  * Parts 1–4 are unaffected by that upgrade — column projection is a separate Iceberg gap that #15384 does not address.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Requested-path extraction and Parquet typed_value clipping tests "
-        + "across nesting, residual-only, multi-column, arrays, scalars, ids, ordering, and safe no-ops")
 public class ReadingShreddedPushdownTest {
 
     private static final String COLUMN = "variant_field";
@@ -473,7 +470,6 @@ public class ReadingShreddedPushdownTest {
      * produce. Rewriting on the wrong reading prunes against the wrong sub-field's bounds and drops matching rows, so
      * the decision is made from the unjoined segments the builder recorded, never by splitting the name.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins the segment-aware rewrite contract: nesting is pushed, a dotted field name is declined, and unknown or collided names are declined rather than guessed")
     @Test
     public void rewrite_usesUnjoinedSegmentsAndNeverGuessesADottedName() {
         Schema schema = icebergSchema();
@@ -501,7 +497,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** Segments needing RFC 9535 escaping cannot be written after a dot, so they are declined rather than mangled. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Checks the RFC 9535 member-name-shorthand gate that mirrors Iceberg's own PathUtil rule")
     @Test
     public void rewrite_declinesSegmentsThatNeedEscaping() {
         Schema schema = icebergSchema();
@@ -520,7 +515,6 @@ public class ReadingShreddedPushdownTest {
      * struct, not the variant, so the rewrite has to find the variant by walking prefixes — {@code st}, then
      * {@code st.v} — and treat only what follows it as the variant sub-path.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that a variant nested in a struct is rewritten against column st.v with sub-path $.bucket, rather than declined because the first segment is a struct")
     @Test
     public void rewrite_findsAVariantNestedInsideAStruct() {
         Schema nested =
@@ -564,7 +558,6 @@ public class ReadingShreddedPushdownTest {
      * describe <em>all</em> elements, which carries existential semantics this evaluator does not model. Following
      * struct nesting only keeps those on the ordinary, unpruned path.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Pins that variants inside a list or map are excluded from both projection and predicate pushdown, so the struct-only walk cannot silently start resolving through collection boundaries")
     @Test
     public void variantInsideAListOrMap_isLeftAlone() throws Exception {
         Schema inList = new Schema(
@@ -627,7 +620,6 @@ public class ReadingShreddedPushdownTest {
      * loaded build agent, so it is printed rather than asserted.</li>
      * </ul>
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Deeply nested unreferenced sub-field (100 levels, 1000 rows) so the cost of reading it dominates; asserts the pruned read fetches far fewer bytes and reports both timings")
     @Test
     public void endToEnd_prunedReadSkipsADeeplyNestedSubField() throws Exception {
         org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
@@ -708,7 +700,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** @return {@code { x: i, d1: { d2: { ... { d100: "leaf-i" } } } }} — one cheap field and one very deep one. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Builds the deep fixture row; the leaf varies per row so the deep columns cannot be dictionary-collapsed to nothing")
     private static org.apache.iceberg.variants.Variant deepVariant(org.apache.iceberg.variants.VariantMetadata meta,
             int i) {
         org.apache.iceberg.variants.VariantValue value = org.apache.iceberg.variants.Variants.of("leaf-" + i);
@@ -736,7 +727,6 @@ public class ReadingShreddedPushdownTest {
      * The ordinary sibling {@code st.label} is asserted too: rebuilding the struct must not disturb the fields that
      * were never part of the variant.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "End-to-end proof that a struct-nested variant is planned, clipped and read with fewer bytes, and that Parquet accepts a rebuilt intermediate group")
     @Test
     public void endToEnd_prunedReadClipsAVariantNestedInAStruct() throws Exception {
         org.apache.iceberg.Schema schema =
@@ -954,7 +944,6 @@ public class ReadingShreddedPushdownTest {
      * test that passes for the wrong reason. Enough rows are written that column data dominates the footer, which a
      * single-row fixture cannot do.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Counts bytes actually read through a wrapping InputFile for the pruned vs unpruned read of the same shredded file; the only evidence that variant projection pushdown reduces I/O rather than just returning correct values")
     @Test
     public void endToEnd_prunedReadFetchesFewerBytes() throws Exception {
         org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
@@ -1035,7 +1024,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** Row {@code i}'s variant: one small low-cardinality field plus three fat ones, all distinct per row. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Builds the lopsided fixture row for the bytes-read test; fat values vary per row so dictionary encoding cannot collapse them")
     private static org.apache.iceberg.variants.Variant wideVariant(org.apache.iceberg.variants.VariantMetadata meta,
             int i) {
         org.apache.iceberg.variants.ShreddedObject root = org.apache.iceberg.variants.Variants.object(meta);
@@ -1052,7 +1040,6 @@ public class ReadingShreddedPushdownTest {
      * let Parquet's compression erase these columns (measured at barely 3x savings when it did), and a value shared
      * across rows would let dictionary encoding do the same. A fixed seed keeps the file byte-identical run to run.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Seeded pseudo-random string so the fat sub-columns survive compression and dictionary encoding, keeping the bytes-read comparison meaningful")
     private static String fatValue(int field, int row) {
         java.util.Random random = new java.util.Random(field * 1_000_003L + row);
         StringBuilder value = new StringBuilder(FAT_VALUE_LENGTH);
@@ -1066,7 +1053,6 @@ public class ReadingShreddedPushdownTest {
      * An {@link org.apache.iceberg.io.InputFile} that counts the bytes its streams actually deliver. Both read paths
      * take an Iceberg InputFile, so wrapping here measures the pruned and unpruned reads on identical terms.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Counting InputFile wrapper so the bytes-read comparison measures real I/O instead of footer-derived column sizes")
     private static final class CountingInputFile implements org.apache.iceberg.io.InputFile {
         private final org.apache.iceberg.io.InputFile delegate;
         private final java.util.concurrent.atomic.AtomicLong bytes = new java.util.concurrent.atomic.AtomicLong();
@@ -1469,7 +1455,6 @@ public class ReadingShreddedPushdownTest {
      * The property every other test in this part depends on: Iceberg refuses to bind a dotted variant reference. If
      * this ever starts passing, the stripping below becomes unnecessary — and this test is how you find out.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Tripwire for the premise: asserts Iceberg still refuses to bind a dotted variant reference")
     @Test
     public void bindability_dottedVariantReferenceCannotBind() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1487,7 +1472,6 @@ public class ReadingShreddedPushdownTest {
      * uses, asserting the result binds. Each of these previously reached {@code TableScan.filter(..)} as a dotted
      * reference and would have failed the query rather than skipping the optimization.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Runs every declined-rewrite shape through the reader factory's filter pipeline and asserts the result binds; these previously reached TableScan as unbindable dotted references")
     @Test
     public void bindability_declinedRewritesAreStrippedNotPushed() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1515,7 +1499,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** A rewrite that succeeds must still leave a bindable filter once the extract terms are split out. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Confirms a successful rewrite also leaves a bindable pushed filter after the extract split")
     @Test
     public void bindability_successfulRewriteIsAlsoBindable() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1524,7 +1507,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** Stripping must weaken, never strengthen: under OR and NOT the whole node collapses to alwaysTrue. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Asserts variant sub-field stripping weakens under OR/NOT and preserves ordinary conjuncts under AND")
     @Test
     public void stripping_variantSubFieldWeakensUnderOrAndNot() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1550,7 +1532,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** A dotted reference into a real struct is Iceberg's business and must be left alone. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Guards against over-stripping: dotted references into a real struct must be untouched")
     @Test
     public void stripping_leavesRealStructReferencesAlone() {
         org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
@@ -1570,7 +1551,6 @@ public class ReadingShreddedPushdownTest {
      * The flag-off path: no rewrite at all, just stripping. It must still yield a bindable filter that keeps the
      * ordinary-column predicates, which is what "fall back to how it behaved before this feature" means.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers the variantStatsPushdown=false path, which strips without rewriting at all")
     @Test
     public void flagOff_strippingAloneLeavesABindableFilter() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1593,7 +1573,6 @@ public class ReadingShreddedPushdownTest {
      * here rather than in the reader factory's fail-safe matters: the fail-safe drops the entire filter, which would
      * also lose pushdown on the ordinary columns ANDed with it.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Covers variants nested inside structs, which the first version of the stripper missed because it only inspected the root column")
     @Test
     public void stripping_handlesVariantNestedInsideAStruct() {
         org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
@@ -1624,7 +1603,6 @@ public class ReadingShreddedPushdownTest {
      * it: the filter is discarded, the scan reads more files, and the query succeeds. Completes the enumeration of
      * unbindable shapes.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Documents the only unbindable shape stripping cannot classify (unknown column) and that the factory bind-rehearsal backstop covers it")
     @Test
     public void bindability_unknownColumnIsNotStrippedAndNeedsTheBackstop() {
         org.apache.iceberg.Schema schema = icebergSchema();
@@ -1643,7 +1621,6 @@ public class ReadingShreddedPushdownTest {
     }
 
     /** Mirrors the reader factory: rewrite, split out extract terms, then strip anything still unbindable. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Mirrors IcebergParquetRecordReaderFactory's filter pipeline so the tests exercise what production pushes")
     private static org.apache.iceberg.expressions.Expression pushedFilter(
             org.apache.iceberg.expressions.Expression original, org.apache.iceberg.Schema schema) {
         org.apache.iceberg.expressions.Expression rewritten =
@@ -1654,7 +1631,6 @@ public class ReadingShreddedPushdownTest {
         return VariantPredicateRewriter.withoutVariantSubFieldPredicates(rewritten, schema);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Fails with the binding error and the offending expression rather than a bare assertion failure")
     private static void assertBinds(String label, org.apache.iceberg.expressions.Expression expression,
             org.apache.iceberg.Schema schema) {
         try {

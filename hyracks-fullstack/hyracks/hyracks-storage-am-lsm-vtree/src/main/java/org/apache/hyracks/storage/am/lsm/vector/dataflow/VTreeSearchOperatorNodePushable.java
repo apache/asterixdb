@@ -47,7 +47,6 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -170,7 +169,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Added the output-width check")
     public void open() throws HyracksDataException {
         super.open();
 
@@ -264,7 +262,6 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
      * big-endian bytes are 0 for every small value. That produced a silently wrong {@code k} (0) rather than
      * an error, so switch on the tag instead of assuming the width.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     private int readIntegerQueryParam(int fieldIndex) {
         byte[] data = queryParamsTuple.getFieldData(fieldIndex);
         int tagOffset = queryParamsTuple.getFieldStart(fieldIndex);

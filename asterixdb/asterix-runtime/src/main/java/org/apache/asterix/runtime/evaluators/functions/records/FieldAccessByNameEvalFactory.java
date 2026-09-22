@@ -42,7 +42,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
@@ -62,7 +61,6 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
         this.funID = funID;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Fast path for constant field name: pre-compute UTF-8 lengths and hash at evaluator init time")
     @Override
     public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
         if (fldNameEvalFactory instanceof ConstantEvalFactory) {
@@ -161,7 +159,6 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
         return funID;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_4_6, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Evaluator for the constant field-name fast path; pre-computed hash/lengths passed via constructor")
     private static final class ConstantFieldNameEvaluator implements IScalarEvaluator {
 
         private final IEvaluatorContext ctx;

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.Test;
 
 /**
@@ -38,7 +37,6 @@ import org.junit.Test;
  * whole JVM, so an azblob-backed suite failed whenever that loop happened to be inside a subscribe() at dump time.
  * Only the thread's name identifies it as the execution engine's, which is what these tests pin.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "the leak check had no coverage; it was silently a whole-dump substring match")
 public class LangExecutionUtilTest {
 
     /** A stand-in for reactor's {@code InternalMonoOperator}: only its class name carries the marker. */

@@ -36,7 +36,6 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Merge column read metadata belongs to read an {@link ILSMDiskComponent}
@@ -57,9 +56,6 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
                 MERGE);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Constructor taking an explicit projected-column count so an existence-only (key-only) view "
-            + "can share the parsed column readers")
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Projector type is now a parameter so the existence-only view can report EXISTENCE instead of MERGE")
     private MergeColumnReadMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             IColumnValuesReader[] columnReaders, IValueReference serializedMetadata, int numberOfProjectedColumns,
             ColumnProjectorType projectorType) {

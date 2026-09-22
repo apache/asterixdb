@@ -75,11 +75,6 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMPORA
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_TYPE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_FABLE_5_1;
-import static org.apache.hyracks.util.annotations.AiProvenance.Agent.CLAUDE_SONNET_4_6;
-import static org.apache.hyracks.util.annotations.AiProvenance.ContributionKind.REFACTORED;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.CLAUDE_CODE_UI;
-import static org.apache.hyracks.util.annotations.AiProvenance.Tool.GITHUB_COPILOT;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -120,7 +115,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -592,7 +586,6 @@ public class S3Utils {
      * @param prefix                definition prefix
      * @param includeExcludeMatcher include/exclude matchers to apply
      */
-    @AiProvenance(agent = CLAUDE_FABLE_5_1, tool = CLAUDE_CODE_UI, contributionKind = REFACTORED, notes = "Paginate with the SDK ListObjectsV2 iterable instead of a manual continuation-token loop")
     private static List<S3Object> listS3Objects(S3Client s3Client, String container, String prefix,
             AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
             ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
@@ -753,7 +746,6 @@ public class S3Utils {
      * Cloud properties are intentionally not consulted here — this method is for external data (link) operations
      * only, not for blob storage.
      */
-    @AiProvenance(agent = CLAUDE_SONNET_4_6, tool = GITHUB_COPILOT)
     public static S3ChecksumBehavior resolveChecksumBehavior(Map<String, String> configuration)
             throws CompilationException {
         String perLink = configuration.get(CHECKSUM_BEHAVIOR_FIELD_NAME);

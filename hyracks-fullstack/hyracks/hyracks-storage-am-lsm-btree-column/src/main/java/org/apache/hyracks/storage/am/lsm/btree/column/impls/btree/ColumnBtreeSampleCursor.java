@@ -41,7 +41,6 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -135,7 +134,6 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
         this.stats = stats;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Cost-breakdown stats accessor")
     public SampleCursorStats getStats() {
         return stats;
     }
@@ -492,7 +490,6 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
      * so a repeat would pass a skip of {@code -1} and desync the decoder. The reader is already there, so the
      * repeat just re-runs the liveness decision.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "PK-seek and liveness timing, non-overlapping")
     private void probeGroupCandidates(int pageId, int candidateCount) throws HyracksDataException {
         long nanos = (traceTimingEnabled || stats != null) ? System.nanoTime() : 0L;
         // Subtracted from the method-wide window before it lands in stats.pkSeekNanos: the liveness check runs

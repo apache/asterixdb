@@ -96,7 +96,6 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * This rule matches the pattern:
@@ -837,7 +836,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     private boolean exprIsRecord(IVariableTypeEnvironment typeEnvironment, ILogicalExpression recordExpr)
             throws AlgebricksException {
         if (recordExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {

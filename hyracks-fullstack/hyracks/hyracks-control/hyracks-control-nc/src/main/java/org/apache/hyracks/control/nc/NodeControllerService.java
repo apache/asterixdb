@@ -97,7 +97,6 @@ import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.TraceUtils;
 import org.apache.hyracks.util.trace.Tracer;
@@ -728,7 +727,6 @@ public class NodeControllerService implements IControllerService {
         return networkSecurityManager;
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "ASTERIXDB-3851: pass the peer identity flags")
     protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig,
             INCApplication application) {
         return new NetworkSecurityManager(NetworkSecurityConfig.of(ncConfig.isSslEnabled(),

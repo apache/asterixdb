@@ -76,7 +76,6 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.LocalResource;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -152,7 +151,6 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                 private boolean quantizationParamsLoaded = false;
 
                 /** Set on producer failure, so {@code close()} does not build over a truncated stream. */
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
                 private boolean upstreamFailed = false;
 
                 // Get all storage partitions for this compute partition
@@ -543,7 +541,6 @@ public class VTreeStaticStructureCreatorOperatorDescriptor extends AbstractOpera
                 /**
                  * Build the static structure on a single storage partition.
                  */
-                @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Release the LOAD I/O declaration on the failure path")
                 private void buildStaticStructureOnPartition(int storagePartition, List<Integer> clustersPerLevel,
                         List<List<Integer>> centroidsPerCluster, List<ITupleReference> convertedTuples)
                         throws HyracksDataException {

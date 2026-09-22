@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.common.theta.ThetaSampler;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -165,8 +164,6 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
                 AntimatterAwareTupleAcceptor.INSTANCE);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Split into logical units (collect stats, floor-allocate, distribute remainder, warn); "
-            + "assert replaces the unreachable missing-theta-metadata fallback")
     private void computeDiskComponentSampleProportionality() throws HyracksDataException {
         List<ThetaEstimator.ComponentStats> componentStats = collectComponentStats();
 
@@ -310,8 +307,6 @@ public class LSMIndexSampleCursor extends EnforcedIndexCursor implements ILSMInd
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.ASSISTED, notes = "Close each exhausted per-component sample cursor before advancing, so its pinned pages are "
-            + "not retained for the rest of the scan")
     protected boolean doHasNext() throws HyracksDataException {
         // Need to find the next tuple in the sample.
         if (numDiskBTrees == 0 || sampledCount == sampleCardinality) {

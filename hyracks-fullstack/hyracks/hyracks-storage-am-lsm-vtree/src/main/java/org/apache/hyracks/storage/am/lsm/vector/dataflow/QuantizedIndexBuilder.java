@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IResourceWrapper;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Vector-index-specific {@link IndexBuilder} that carries scalar-quantization constants and injects them
@@ -42,7 +41,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * {@link QuantizedIndexCreateOperatorDescriptor} before
  * {@link #build()} runs.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public class QuantizedIndexBuilder extends IndexBuilder {
 
     private VTreeQuantizationParams quantizationParams;

@@ -34,7 +34,6 @@ import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,8 +49,6 @@ import org.junit.Test;
  * keep reading by default, with an explicit fail-fast option that reports
  * the error immediately as an EXTERNAL_SOURCE_ERROR instead of stalling.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_SONNET_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Regression test for illegal-character handling (replace-by-default, fail-fast option) in "
-        + "AsterixInputStreamReader")
 public class AsterixInputStreamReaderIllegalCharacterTest {
 
     private Path tempFile;

@@ -36,7 +36,6 @@ import org.apache.hyracks.util.InterruptibleSupplier;
 import org.apache.hyracks.util.Span;
 import org.apache.hyracks.util.ThrowingAction;
 import org.apache.hyracks.util.ThrowingConsumer;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +64,6 @@ public class InvokeUtil {
      *                              {@link ExceptionUtils#causedByInterrupt(Throwable)} recognizes as a
      *                              cancellation rather than a query failure
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Shared interrupt poll for non-blocking loops")
     public static void failIfInterrupted() throws HyracksDataException {
         if (Thread.currentThread().isInterrupted()) {
             throw HyracksDataException.create(new InterruptedException());

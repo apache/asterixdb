@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -67,8 +66,6 @@ import org.junit.Test;
  * {@code CloudCachedPage}, which an on-premise cache never produces. It records the page id and pins through the
  * contextless overload, so pages are real and unpinned symmetrically.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Proves CloudColumnReadContext pins the projected column pages for the full projection and nothing beyond page zero "
-        + "for the existence-only projection")
 public class CloudExistenceProjectionPinningTest {
 
     private static final Logger LOGGER = LogManager.getLogger();

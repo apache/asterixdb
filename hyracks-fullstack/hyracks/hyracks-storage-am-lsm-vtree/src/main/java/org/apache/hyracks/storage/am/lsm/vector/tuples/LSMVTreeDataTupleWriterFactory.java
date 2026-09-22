@@ -23,7 +23,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Factory for creating LSMVTreeDataTupleWriter instances.
@@ -60,7 +59,6 @@ public class LSMVTreeDataTupleWriterFactory implements ITreeIndexTupleWriterFact
      * flag. Required when a merge preserves antimatter tuples (merging set excludes the oldest
      * disk component).
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
     public LSMVTreeCopyTupleWriterFactory createCopyWriterFactory() {
         return new LSMVTreeCopyTupleWriterFactory(typeTraits, nullTypeTraits, nullIntrospector);
     }

@@ -62,7 +62,6 @@ import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.InterruptibleAction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -145,7 +144,6 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
         this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE, executor);
     }
 
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "owned handshake executor")
     private static ExecutorService newHandshakeExecutor() {
         return Executors.newCachedThreadPool(r -> {
             Thread t = new Thread(r, "HyracksConnection Handshake thread");
@@ -155,7 +153,6 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
     }
 
     @Override
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "shut down owned executor")
     public void close() {
         ipc.stop();
         if (ownedExecutor != null) {

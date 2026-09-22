@@ -23,7 +23,6 @@ import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Single authority for the VTree DATA-tuple field layout
@@ -94,7 +93,6 @@ public final class VTreeDataTupleAccessor {
     public static final int Q_NUM_SECONDARY_FIELDS = 4;
 
     /** Positions of the {@code count} identity fields that follow this access method's own fields. */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_CLI, contributionKind = AiProvenance.ContributionKind.GENERATED)
     public static int[] identityFields(boolean isQuantized, int count) {
         int start = getNumSecondaryFields(isQuantized);
         int[] fields = new int[count];

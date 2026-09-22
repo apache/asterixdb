@@ -21,7 +21,6 @@ package org.apache.asterix.external.util.iceberg;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
@@ -60,8 +59,6 @@ import org.apache.parquet.schema.Types;
  * Rebuilt groups keep their repetition, name, field id and logical-type annotation (a variant group is annotated, e.g.
  * {@code VARIANT(1)}), so the clipped schema still resolves against the file's columns.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Variant projection pushdown: prunes a Parquet variant typed_value group to the requested "
-        + "sub-fields; keeps metadata+value always; safe no-op on serialized/array/scalar/annotated groups")
 public final class VariantSchemaClipper {
 
     // Iceberg's variant shredding field names (org.apache.iceberg.parquet.ParquetVariantVisitor).
@@ -83,7 +80,6 @@ public final class VariantSchemaClipper {
      * <p>
      * Returns {@code fileSchema} unchanged when the path is absent, does not lead to a group, or nothing can be pruned.
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "Takes the variant's location as unjoined segments so a variant nested in a struct can be clipped, not just a top-level column")
     public static MessageType clip(MessageType fileSchema, List<String> path, RequestedVariantPaths paths) {
         if (fileSchema == null || paths == null || paths.isAll() || path == null || path.isEmpty()) {
             return fileSchema;
@@ -105,7 +101,6 @@ public final class VariantSchemaClipper {
      *
      * @return the rebuilt enclosing group, or {@code null} when nothing changed or the clip could not be applied
      */
-    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "Recursive descent that clips a variant at an arbitrary struct depth and rebuilds every enclosing group, preserving field ids and annotations")
     private static Type clipAt(GroupType enclosing, List<String> path, int index, RequestedVariantPaths paths) {
         String name = path.get(index);
         if (!enclosing.containsField(name)) {

@@ -22,13 +22,11 @@ package org.apache.hyracks.storage.am.lsm.vector.tuples;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * Factory for {@link LSMVTreeCopyTupleWriter} instances — merge-path data-frame writers that
  * carry over the source tuple's antimatter bit.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED)
 public class LSMVTreeCopyTupleWriterFactory extends LSMVTreeDataTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;

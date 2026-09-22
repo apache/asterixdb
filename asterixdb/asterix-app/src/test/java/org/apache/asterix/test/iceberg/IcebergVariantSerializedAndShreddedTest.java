@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.data.GenericRecord;
 import org.apache.iceberg.data.Record;
@@ -72,7 +71,6 @@ import org.junit.Test;
  * <p>The row also carries ordinary (non-variant) columns so the variant is exercised as one column among several,
  * the way it appears in a real table — not as the sole column.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Write-side unit test asserting serialized vs (fully/partially) shredded physical Parquet layout for a VARIANT column, with ordinary columns alongside and per-file verification across multiple files")
 public class IcebergVariantSerializedAndShreddedTest {
 
     // A realistic-ish row: several ordinary columns plus one variant column. Field ids are arbitrary but stable.

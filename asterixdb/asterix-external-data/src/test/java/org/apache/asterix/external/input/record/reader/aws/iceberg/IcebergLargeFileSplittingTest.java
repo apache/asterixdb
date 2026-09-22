@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileFormat;
@@ -72,7 +71,6 @@ import org.junit.runners.MethodSorters;
  * <p>
  * Ordered: the deletes are committed after the plain reads, on the same file, so the fixture is written once.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5_1, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED, notes = "Writes a 10 MB Parquet file as ten 1 MB row groups, then asserts it splits at the table's target and reads every row exactly once at three targets, before and after position deletes")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class IcebergLargeFileSplittingTest {
 

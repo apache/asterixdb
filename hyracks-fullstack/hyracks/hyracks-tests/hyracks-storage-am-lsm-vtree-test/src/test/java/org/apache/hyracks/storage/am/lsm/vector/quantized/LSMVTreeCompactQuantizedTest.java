@@ -43,7 +43,6 @@ import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.vector.util.VectorTestStructure;
 import org.apache.hyracks.storage.am.vector.AbstractVectorTreeTestContext;
 import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
-import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,7 +68,6 @@ import org.junit.Test;
  * survives COMPACT (the orphan antimatter is silently dropped because a full merge runs with
  * returnDeletedTuples=false).
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_FABLE_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.TEST_GENERATED)
 public class LSMVTreeCompactQuantizedTest {
 
     private static final Logger LOGGER = LogManager.getLogger();

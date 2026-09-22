@@ -40,7 +40,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePu
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
-import org.apache.hyracks.util.annotations.AiProvenance;
 
 /**
  * The k-means|| RECLUSTER stage, which consumes the broadcast partials and emits plain centroid vectors. It
@@ -52,7 +51,6 @@ import org.apache.hyracks.util.annotations.AiProvenance;
  * it as a source activity behind a blocking edge, since an input connector across a blocking-edge stage
  * boundary is never delivered.
  */
-@AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_4_8, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.ASSISTED)
 public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
