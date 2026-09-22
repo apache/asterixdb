@@ -20,7 +20,7 @@ distribute result [$$33]
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      unnest-map [$$33, $$34, $$35, $$36, $$37, $$38] <- index-search("idx_emb", 8, "Default", "test", "MovieMulti", false, false, true, 5, $$28, $$29, $$30, $$31, $$32) condition (eq({"y": $$35}, { "y": 2006 }))
+                      unnest-map [$$33, $$34, $$35] <- index-search("idx_emb", 8, "Default", "test", "MovieMulti", false, false, true, 5, $$28, $$29, $$30, $$31, $$32) condition (eq({"y": $$35}, { "y": 2006 }))
                       -- VECTOR_SEARCH  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -28,15 +28,11 @@ distribute result [$$19]
                           -- STABLE_SORT [$$35(ASC), $$36(ASC)]  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              project ([$$35, $$36])
-                              -- STREAM_PROJECT  |PARTITIONED|
+                              unnest-map [$$35, $$36] <- index-search("idx_cpk_emb", 8, "Default", "testcpk", "MovieCpk", false, false, false, 5, $$30, $$31, $$32, $$33, $$34)
+                              -- VECTOR_SEARCH  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  unnest-map [$$35, $$36, $$37] <- index-search("idx_cpk_emb", 8, "Default", "testcpk", "MovieCpk", false, false, false, 5, $$30, $$31, $$32, $$33, $$34)
-                                  -- VECTOR_SEARCH  |PARTITIONED|
-                                    exchange
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      assign [$$30, $$31, $$32, $$33, $$34] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
-                                      -- ASSIGN  |PARTITIONED|
-                                        empty-tuple-source
-                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  assign [$$30, $$31, $$32, $$33, $$34] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                                  -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

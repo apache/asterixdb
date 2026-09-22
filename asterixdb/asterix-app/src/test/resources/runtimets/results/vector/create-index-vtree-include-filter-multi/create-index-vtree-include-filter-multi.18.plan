@@ -1,0 +1,44 @@
+distribute result [$$21]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 3
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$21])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$25(ASC) ]  |PARTITIONED|
+          limit 3
+          -- STREAM_LIMIT  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 3) (ASC, $$25)
+              -- STABLE_SORT [topK: 3] [$$25(ASC)]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$25, $$21] <- [euclidean-distance($$26, array: [ 0.0, 0.0, 0.0, 0.0 ]), {"id": $$27, "dim": len($$26)}] project: [$$21, $$25]
+                  -- ASSIGN  |PARTITIONED|
+                    assign [$$26] <- [$$m.getField(5)] project: [$$27, $$26]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$27, $$m] <- index-search("MovieMulti", 0, "Default", "test", "MovieMulti", false, false, 1, $$35, 1, $$35, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$35)
+                            -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$35])
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    unnest-map [$$35, $$37] <- index-search("idx_emb", 8, "Default", "test", "MovieMulti", false, false, false, 5, $$30, $$31, $$32, $$33, $$34) condition (eq($$37, 5))
+                                    -- VECTOR_SEARCH  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$30, $$31, $$32, $$33, $$34] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                                        -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

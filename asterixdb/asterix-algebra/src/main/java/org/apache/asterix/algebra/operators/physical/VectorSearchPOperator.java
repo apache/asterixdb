@@ -19,8 +19,10 @@
 package org.apache.asterix.algebra.operators.physical;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -158,8 +160,8 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
         boolean isQuantized = vectorDetails.getVectorParameters().isQuantized();
         int numSecondaryKeys = VTreeDataTupleAccessor.getNumSecondaryFields(isQuantized);
 
-        // The INCLUDE columns are declared on the search whether this query reads them or not, so one
-        // mapping serves the pushed predicate, the projection, and the runtime's output tuple alike.
+        // The search declares the INCLUDE columns something in the query binds, and one mapping serves the
+        // pushed predicate, the projection, and the runtime's output tuple alike.
         ITupleFilterFactory tupleFilterFactory = null;
         int[] includeFields = NO_INCLUDE_FIELDS;
         if (unnestMap instanceof UnnestMapOperator) {
@@ -168,20 +170,23 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
                     VectorIncludeFilterPushdown.getIncludeColumns(unnestMapOp);
 
             if (unnestMapOp.getSelectCondition() != null) {
-                if (columns == null) {
-                    // A condition reaches the search only through the binding, which has nothing to bind a
-                    // field access to without INCLUDE columns. One here without them was installed by some
-                    // other hand, and dropping it would return the rows it was meant to remove.
+                Map<LogicalVariable, Integer> varToFieldIndex = columns == null ? Map.of() : columns.varToFieldIndex();
+                // A condition reaches the search only through the binding, which declares every column it
+                // binds. One reading anything else was installed by some other hand, and evaluating it
+                // against the secondary tuple would filter on whatever field index it lands on.
+                Set<LogicalVariable> conditionVars = new HashSet<>();
+                unnestMapOp.getSelectCondition().getValue().getUsedVariables(conditionVars);
+                if (!varToFieldIndex.keySet().containsAll(conditionVars)) {
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
                             "the vector index search of index " + jobGenParams.getIndexName()
-                                    + " carries a filter condition but the index declares no INCLUDE columns");
+                                    + " carries a filter condition reading variables it does not emit as "
+                                    + "INCLUDE columns: " + conditionVars);
                 }
                 // The operator schema carries the INCLUDE columns at their output positions, but the filter
                 // runs against the SECONDARY tuple, so its variables resolve through the mapping instead.
-                IOperatorSchema filterSchema =
-                        new VectorIndexFilterSchema(opSchema, columns.varToFieldIndex(), numSecondaryKeys);
-                IVariableTypeEnvironment filterTypeEnv =
-                        new VectorIndexFilterTypeEnvironment(typeEnv, columns.varTypes(), context);
+                IOperatorSchema filterSchema = new VectorIndexFilterSchema(opSchema, varToFieldIndex, numSecondaryKeys);
+                IVariableTypeEnvironment filterTypeEnv = new VectorIndexFilterTypeEnvironment(typeEnv,
+                        columns == null ? Map.of() : columns.varTypes(), context);
                 tupleFilterFactory = mp.createTupleFilterFactory(new IOperatorSchema[] { filterSchema }, filterTypeEnv,
                         unnestMapOp.getSelectCondition().getValue(), context);
             }
@@ -213,7 +218,7 @@ public class VectorSearchPOperator extends IndexSearchPOperator {
      * The physical field indexes of the INCLUDE columns this search emits, in output order.
      * <p>
      * Those columns are the LAST variables of the unnest-map:
-     * {@link VectorIncludeFilterPushdown#declareIncludeColumns} appends them after the primary keys and, on
+     * {@link VectorIncludeFilterPushdown#setIncludeColumns} appends them after the primary keys and, on
      * the index-only plan, after the distance. The operator schema, and hence the output record descriptor,
      * is built from that same list, and the runtime writes the primary keys, then the distance, then these
      * columns -- so their

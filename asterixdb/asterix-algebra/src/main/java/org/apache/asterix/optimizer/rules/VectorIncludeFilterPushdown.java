@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -80,12 +81,12 @@ public final class VectorIncludeFilterPushdown {
     public static final String VECTOR_INCLUDE_COLUMNS = "VECTOR_INCLUDE_COLUMNS";
 
     /**
-     * Every INCLUDE column of the searched index, bound to a variable the search emits.
+     * INCLUDE columns of the searched index, each bound to a variable the search emits.
      * <p>
-     * All of them are declared, whether this query reads them or not, so that one mapping serves every use:
-     * a predicate pushed into the search, a projection returning the column, or neither. Keyed by the full
-     * path, so a nested INCLUDE column ({@code INCLUDE (info.year)}) is addressed exactly like a top-level
-     * one and never confused with a same-named field elsewhere in the record.
+     * Keyed by the full path, so a nested INCLUDE column ({@code INCLUDE (info.year)}) is addressed exactly
+     * like a top-level one and never confused with a same-named field elsewhere in the record. One mapping
+     * serves every use: a predicate pushed into the search, a projection returning the column, and the
+     * tuple the runtime writes.
      *
      * @param pathToVar each column's full path to the variable carrying it, in INCLUDE order; empty when
      *                  the index declares the same path twice, which leaves no unambiguous binding
@@ -97,17 +98,41 @@ public final class VectorIncludeFilterPushdown {
     }
 
     /**
-     * Declare every INCLUDE column of the index as an output of the vector index search, appended after the
-     * primary keys and, on the index-only plan, the distance.
+     * The index's INCLUDE columns as pushdown candidates: those {@code vectorUnnest} already declares keep
+     * their variable, the rest get a fresh one. Declares nothing itself.
      * <p>
-     * The runtime emits exactly what is declared here, so the columns are bound once, at the point the
-     * unnest-map is created, rather than discovered per use. A predicate and a projection over the same
-     * column then resolve to the same variable by construction.
+     * A caller binds against the candidates and then declares, with {@link #setIncludeColumns}, the ones its
+     * binding used. Declaring a column nothing reads is not free: the runtime copies every declared column
+     * out of the secondary tuple for each of the {@code k * k_multiplier} candidates, and the project above
+     * the search then drops it.
      */
-    public static IncludeColumns declareIncludeColumns(UnnestMapOperator vectorUnnest, IndexContext idx,
+    public static IncludeColumns candidateColumns(UnnestMapOperator vectorUnnest, IndexContext idx,
             Supplier<LogicalVariable> varSupplier) throws AlgebricksException {
-        IncludeColumns columns = buildIncludeColumns(idx, varSupplier);
-        if (columns == null) {
+        IncludeColumns declared = getIncludeColumns(vectorUnnest);
+        Map<List<String>, LogicalVariable> reusable = declared == null ? Map.of() : declared.pathToVar();
+        return buildIncludeColumns(idx, path -> {
+            LogicalVariable existing = reusable.get(path);
+            return existing != null ? existing : varSupplier.get();
+        });
+    }
+
+    /**
+     * Make {@code columns} exactly the INCLUDE columns {@code vectorUnnest} declares, replacing whatever it
+     * declared before, and return them ({@code null} when there are none left).
+     * <p>
+     * They are the operator's trailing outputs, after the primary keys and the index-only distance, because
+     * job generation lines the emitted tuple up with the output record descriptor from the end.
+     */
+    public static IncludeColumns setIncludeColumns(UnnestMapOperator vectorUnnest, IncludeColumns columns) {
+        IncludeColumns declared = getIncludeColumns(vectorUnnest);
+        if (declared != null) {
+            int end = vectorUnnest.getVariables().size();
+            int start = end - declared.varToFieldIndex().size();
+            vectorUnnest.getVariables().subList(start, end).clear();
+            vectorUnnest.getVariableTypes().subList(start, end).clear();
+        }
+        if (columns == null || columns.varToFieldIndex().isEmpty()) {
+            vectorUnnest.getAnnotations().remove(VECTOR_INCLUDE_COLUMNS);
             return null;
         }
         for (Map.Entry<LogicalVariable, IAType> entry : columns.varTypes().entrySet()) {
@@ -118,13 +143,32 @@ public final class VectorIncludeFilterPushdown {
         return columns;
     }
 
+    /** {@code columns} narrowed to those {@code keep} holds a variable for, or {@code null} if that is none. */
+    public static IncludeColumns retainColumns(IncludeColumns columns, Set<LogicalVariable> keep) {
+        if (columns == null) {
+            return null;
+        }
+        Map<List<String>, LogicalVariable> pathToVar = new LinkedHashMap<>();
+        Map<LogicalVariable, Integer> varToFieldIndex = new LinkedHashMap<>();
+        Map<LogicalVariable, IAType> varTypes = new LinkedHashMap<>();
+        for (Map.Entry<List<String>, LogicalVariable> entry : columns.pathToVar().entrySet()) {
+            LogicalVariable var = entry.getValue();
+            if (keep.contains(var)) {
+                pathToVar.put(entry.getKey(), var);
+                varToFieldIndex.put(var, columns.varToFieldIndex().get(var));
+                varTypes.put(var, columns.varTypes().get(var));
+            }
+        }
+        return varToFieldIndex.isEmpty() ? null : new IncludeColumns(pathToVar, varToFieldIndex, varTypes);
+    }
+
     /**
      * The index's INCLUDE columns bound to variables from {@code varSupplier}, or {@code null} when the
      * index has none. Touches no operator, so the gate can run the analysis on throwaway variables to reach
      * a verdict before any of this is spliced into a plan.
      */
-    private static IncludeColumns buildIncludeColumns(IndexContext idx, Supplier<LogicalVariable> varSupplier)
-            throws AlgebricksException {
+    private static IncludeColumns buildIncludeColumns(IndexContext idx,
+            Function<List<String>, LogicalVariable> varSupplier) throws AlgebricksException {
         List<List<String>> includeFieldNames = idx.includeFieldNames();
         if (includeFieldNames == null || includeFieldNames.isEmpty()) {
             return null;
@@ -137,7 +181,7 @@ public final class VectorIncludeFilterPushdown {
                 : VTreeDataTupleAccessor.NQ_NUM_SECONDARY_FIELDS;
         int fieldIndex = numSecondaryKeys + idx.numPrimaryKeys();
         for (List<String> fieldPath : includeFieldNames) {
-            LogicalVariable var = varSupplier.get();
+            LogicalVariable var = varSupplier.apply(fieldPath);
             // An open field not in the type declaration has no declared type; ANY still lets the type
             // environment resolve the variable.
             IAType fieldType = idx.recordType().getSubFieldType(fieldPath);
@@ -148,10 +192,9 @@ public final class VectorIncludeFilterPushdown {
             varToFieldIndex.put(var, fieldIndex++);
             varTypes.put(var, fieldType);
         }
-        // Every column is still declared -- the tuple the runtime writes has to match the declaration either
-        // way -- but two identical INCLUDE paths leave no unambiguous variable to bind a reference to, so
-        // nothing is bound and the predicate stays above the search. DDL rejects such an index
-        // (INDEX_ILLEGAL_REPETITIVE_FIELD), so this is a belt-and-braces check, not a reachable path.
+        // Two identical INCLUDE paths leave no unambiguous variable to bind a reference to, so nothing binds
+        // and no column is declared. DDL rejects such an index (INDEX_ILLEGAL_REPETITIVE_FIELD), so this is
+        // a belt-and-braces check, not a reachable path.
         if (pathToVar.size() < includeFieldNames.size()) {
             pathToVar.clear();
         }
@@ -514,11 +557,11 @@ public final class VectorIncludeFilterPushdown {
      * Hands out variables that are never spliced into a plan, for the callers that only need the verdict.
      * Negative ids keep them distinguishable from real ones if they ever leak into a log line.
      */
-    private static final class ThrowawayVariableSupplier implements Supplier<LogicalVariable> {
+    private static final class ThrowawayVariableSupplier implements Function<List<String>, LogicalVariable> {
         private int nextId = -1;
 
         @Override
-        public LogicalVariable get() {
+        public LogicalVariable apply(List<String> path) {
             return new LogicalVariable(nextId--);
         }
     }

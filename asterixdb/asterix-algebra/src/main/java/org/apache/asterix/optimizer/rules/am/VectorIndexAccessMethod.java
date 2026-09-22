@@ -72,6 +72,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 /**
@@ -330,12 +331,16 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 distVar = context.newVar();
                 searchUnnest.getVariables().add(distVar);
                 searchUnnest.getVariableTypes().add(BuiltinType.ADOUBLE);
+                // Declare every INCLUDE column for now: the branch below rewrites the predicate and the
+                // projections onto them, and what neither ends up reading is dropped again before this plan
+                // is returned. The lookup-and-rerank shape declares nothing here -- only a pushed predicate
+                // can read a column there, and PushFilterIntoVectorSearchRule declares what it binds.
+                includeColumns =
+                        VectorIncludeFilterPushdown.setIncludeColumns(searchUnnest,
+                                VectorIncludeFilterPushdown.candidateColumns(searchUnnest,
+                                        includeContext(chosenIndex, dataset, recordType, dataSourceOp),
+                                        context::newVar));
             }
-            // Every INCLUDE column of the index is declared, for both plan shapes. One mapping then serves
-            // whatever reads them -- a predicate pushed into the search, a projection returning them, or
-            // neither -- and the runtime emits exactly what is declared.
-            includeColumns = VectorIncludeFilterPushdown.declareIncludeColumns(searchUnnest,
-                    includeContext(chosenIndex, dataset, recordType, dataSourceOp), context::newVar);
         }
         context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
 
@@ -426,8 +431,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                         ? aboveLimitOps.get(0) : (ILogicalOperator) limitRef.getValue();
 
                 // 1. Substitute old PK var refs throughout the plan (above and below LIMIT).
-                org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities
-                        .substituteVariablesInDescendantsAndSelf(rewriteRoot, pkSubstitution, context);
+                VariableUtilities.substituteVariablesInDescendantsAndSelf(rewriteRoot, pkSubstitution, context);
 
                 // 2. Rewrite field-access on the old record/meta vars to direct PK VarRefs (e.g. the
                 //    SELECT VALUE m.idx projection above LIMIT), each against only its own PK fields.
@@ -469,6 +473,15 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 if (!deadRecordVars.isEmpty()) {
                     neutralizeDanglingExpressions(rewriteRoot, deadRecordVars);
                 }
+
+                // 4. Undeclare the INCLUDE columns none of the rewrites above bound. Their variables were
+                // minted here, so every reference any of them can have was made by those rewrites, all of
+                // them under rewriteRoot -- a column absent from this set is one the runtime would copy out
+                // of the secondary tuple per candidate for nothing to read.
+                Set<LogicalVariable> boundVars = new HashSet<>();
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(rewriteRoot, boundVars);
+                VectorIncludeFilterPushdown.setIncludeColumns(unnestMap,
+                        VectorIncludeFilterPushdown.retainColumns(includeColumns, boundVars));
 
                 // Cross-pollination dedup (index-only branch): when cross_pollination_m > 1 the secondary
                 // cursor emits up to M (pk..., dist) copies per record. The primary-lookup path dedups via a

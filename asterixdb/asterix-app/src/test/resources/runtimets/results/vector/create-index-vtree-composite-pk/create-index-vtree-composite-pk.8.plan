@@ -18,15 +18,13 @@ distribute result [$$18]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   assign [$$18] <- [ordered-list-constructor($$33, $$34)] project: [$$18, $$35]
                   -- ASSIGN  |PARTITIONED|
-                    project ([$$33, $$34, $$35])
-                    -- STREAM_PROJECT  |PARTITIONED|
-                      exchange
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$33, $$34, $$35, $$36] <- index-search("idx_cpk_emb", 8, "Default", "testcpk", "MovieCpk", false, false, true, 5, $$28, $$29, $$30, $$31, $$32)
-                        -- VECTOR_SEARCH  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$28, $$29, $$30, $$31, $$32] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
-                            -- ASSIGN  |PARTITIONED|
-                              empty-tuple-source
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      unnest-map [$$33, $$34, $$35] <- index-search("idx_cpk_emb", 8, "Default", "testcpk", "MovieCpk", false, false, true, 5, $$28, $$29, $$30, $$31, $$32)
+                      -- VECTOR_SEARCH  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$28, $$29, $$30, $$31, $$32] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                          -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

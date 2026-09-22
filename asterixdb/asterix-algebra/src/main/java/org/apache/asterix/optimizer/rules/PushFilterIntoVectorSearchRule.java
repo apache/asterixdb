@@ -71,8 +71,10 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *                       selectCondition: (rewritten to use $includeField1, ...)
  * </pre>
  *
- * The INCLUDE columns are already declared as outputs of VECTOR_INDEX_UNNEST by the access-method phase;
- * field-access expressions in the filter are rewritten to reference those variables.
+ * Field-access expressions in the filter are rewritten to read INCLUDE columns of the search, which are
+ * declared here for the lookup-and-rerank shape and, for the index-only shape, already by the
+ * access-method phase -- there the projections read them too, so they have to exist before it rewrites
+ * the plan above the search.
  * <p>
  * The SELECT has to sit within the search's own pipeline: the descent from it stops at a LIMIT, or at
  * any operator other than the ones the two plan shapes put between a WHERE and the search. A predicate
@@ -126,13 +128,29 @@ public class PushFilterIntoVectorSearchRule implements IAlgebraicRewriteRule {
         VectorIncludeFilterPushdown.IndexContext idx =
                 new VectorIncludeFilterPushdown.IndexContext(searchInfo.includeFieldNames(), searchInfo.recordType(),
                         searchInfo.isQuantized(), searchInfo.numPrimaryKeys(), searchInfo.recordVars());
+        VectorIncludeFilterPushdown.IncludeColumns candidates =
+                VectorIncludeFilterPushdown.candidateColumns(vectorUnnest, idx, context::newVar);
         ILogicalExpression bound = VectorIncludeFilterPushdown.bindPredicate(selectOp.getCondition().getValue(),
-                selectOp, idx, context, VectorIncludeFilterPushdown.getIncludeColumns(vectorUnnest));
+                selectOp, idx, context, candidates);
         if (bound == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, selectOp.getSourceLocation(),
                     "the WHERE above the vector search of index " + searchInfo.indexName()
                             + " reads what the search cannot evaluate, though index selection admits only a WHERE it can");
         }
+        // Declare the columns this predicate reads, keeping the ones the index-only plan already declared
+        // for its projections. That plan bound its predicate to its own columns during the access-method
+        // phase, so the binding above found variable references there and adds nothing; the
+        // lookup-and-rerank plan, where a predicate is the only thing that can read a column, declares its
+        // columns here and none before.
+        Set<LogicalVariable> keep = new HashSet<>();
+        bound.getUsedVariables(keep);
+        VectorIncludeFilterPushdown.IncludeColumns declared =
+                VectorIncludeFilterPushdown.getIncludeColumns(vectorUnnest);
+        if (declared != null) {
+            keep.addAll(declared.varToFieldIndex().keySet());
+        }
+        VectorIncludeFilterPushdown.setIncludeColumns(vectorUnnest,
+                VectorIncludeFilterPushdown.retainColumns(candidates, keep));
         VectorIncludeFilterPushdown.apply(vectorUnnest, bound);
         return dropSelect(opRef, selectOp, vectorUnnest, op, context);
     }
