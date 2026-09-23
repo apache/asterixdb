@@ -16110,6 +16110,11 @@
         <output-dir compare="Text">plan-cache-parameterized</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="metrics">
+      <compilation-unit name="plan-cache-ddl-replace">
+        <output-dir compare="Text">plan-cache-ddl-replace</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="warnings">
     <test-case FilePath="warnings" check-warnings="true">

@@ -6173,6 +6173,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected boolean shouldInvalidateQueryPlanCache(Statement stmt) {
         switch (stmt.getKind()) {
+            case CREATE_FUNCTION:
+            case CREATE_VIEW:
+            case CREATE_LIBRARY:
             case CREATE_INDEX:
             case DATABASE_DROP:
             case DATAVERSE_DROP:
