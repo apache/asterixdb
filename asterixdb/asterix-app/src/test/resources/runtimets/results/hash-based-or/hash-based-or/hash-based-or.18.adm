@@ -1,0 +1,4 @@
+{ "e": { "age": 20, "id": 2, "name": "Bill", "deptno": "K55", "salary": 2000, "level": 0.0 } }
+{ "e": { "age": 42, "id": 12, "name": "Fred", "deptno": "K55", "salary": 3000, "level": 0 } }
+{ "e": { "age": 23, "id": 13, "name": "Fred2", "deptno": "K15", "salary": 2500, "level": -0.0 } }
+{ "e": { "age": 42, "id": 31, "name": "Fred1", "deptno": null, "salary": 2500, "level": 2 } }

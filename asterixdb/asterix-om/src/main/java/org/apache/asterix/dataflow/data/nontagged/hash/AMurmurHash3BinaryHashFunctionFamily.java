@@ -26,6 +26,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.common.ListAccessorUtil;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.pointables.nonvisitor.RecordField;
 import org.apache.asterix.om.pointables.nonvisitor.SortedRecord;
@@ -76,6 +77,10 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
 
     private static final class GenericHashFunction implements IBinaryHashFunction {
 
+        private static final long NEGATIVE_ZERO_BITS = Double.doubleToRawLongBits(-0.0d);
+        private static final byte[] POSITIVE_ZERO =
+                new byte[] { ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG, 0, 0, 0, 0, 0, 0, 0, 0 };
+
         private final ArrayBackedValueStorage valueBuffer = new ArrayBackedValueStorage();
         private final DataOutput valueOut = valueBuffer.getDataOutput();
         private final IObjectPool<IPointable, Void> voidPointableAllocator = new ListObjectPool<>(VOID_FACTORY);
@@ -119,8 +124,10 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     } catch (IOException e) {
                         throw HyracksDataException.create(ErrorCode.NUMERIC_PROMOTION_ERROR, e.getMessage());
                     }
-                    return MurmurHash3BinaryHash.hash(valueBuffer.getByteArray(), valueBuffer.getStartOffset(),
-                            valueBuffer.getLength(), seed);
+                    return hashDouble(valueBuffer.getByteArray(), valueBuffer.getStartOffset(),
+                            valueBuffer.getLength());
+                case DOUBLE:
+                    return hashDouble(bytes, offset, length);
                 case ARRAY:
                     try {
                         return hashArray(type, bytes, offset);
@@ -129,10 +136,19 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     }
                 case OBJECT:
                     return hashRecord(type, bytes, offset);
-                case DOUBLE:
                 default:
                     return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
             }
+        }
+
+        /**
+         * Comparators find -0.0 equal to 0.0, so it must hash as 0.0 rather than by its own bits.
+         */
+        private int hashDouble(byte[] bytes, int offset, int length) {
+            if (ADoubleSerializerDeserializer.getLongBits(bytes, offset + 1) == NEGATIVE_ZERO_BITS) {
+                return MurmurHash3BinaryHash.hash(POSITIVE_ZERO, 0, POSITIVE_ZERO.length, seed);
+            }
+            return MurmurHash3BinaryHash.hash(bytes, offset, length, seed);
         }
 
         private int hashArray(IAType type, byte[] bytes, int offset) throws IOException {

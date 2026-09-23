@@ -17,24 +17,4 @@
  * under the License.
  */
 
-DROP DATAVERSE gby IF EXISTS;
-CREATE DATAVERSE gby;
-
-USE gby;
-
-CREATE TYPE EmpType AS {
-  age : int,
-  id : int
-
-};
-
-CREATE DATASET Employee(EmpType) PRIMARY KEY id;
-
-CREATE DATASET Employee2(EmpType) PRIMARY KEY id;
-
-CREATE TYPE ZeroType AS {
-  id : int
-};
-
-CREATE DATASET Zeros(ZeroType) PRIMARY KEY id;
-
+SELECT VALUE array_intersect([0.0, 1], [-0.0, 2]);

@@ -17,24 +17,16 @@
  * under the License.
  */
 
-DROP DATAVERSE gby IF EXISTS;
-CREATE DATAVERSE gby;
+/*
+ * Description: -0.0 equals 0.0, so every hash-based operator must treat them as one value.
+ */
 
-USE gby;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-CREATE TYPE EmpType AS {
-  age : int,
-  id : int
+CREATE TYPE IdType AS { id: int };
+CREATE TYPE DoubleKeyType AS { k: double };
 
-};
-
-CREATE DATASET Employee(EmpType) PRIMARY KEY id;
-
-CREATE DATASET Employee2(EmpType) PRIMARY KEY id;
-
-CREATE TYPE ZeroType AS {
-  id : int
-};
-
-CREATE DATASET Zeros(ZeroType) PRIMARY KEY id;
-
+CREATE DATASET Zeros(IdType) PRIMARY KEY id;
+CREATE DATASET DoubleKeys(DoubleKeyType) PRIMARY KEY k;
