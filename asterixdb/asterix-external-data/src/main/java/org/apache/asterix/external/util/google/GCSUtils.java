@@ -18,6 +18,13 @@
  */
 package org.apache.asterix.external.util.google;
 
+import static com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration.BLOCK_SIZE;
+import static com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration.GCS_CONFIG_PREFIX;
+import static com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration.GCS_INPUT_STREAM_INPLACE_SEEK_LIMIT;
+import static com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration.GCS_INPUT_STREAM_MIN_RANGE_REQUEST_SIZE;
+import static com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration.GCS_OUTPUT_STREAM_BUFFER_SIZE;
+import static com.google.cloud.hadoop.util.HadoopCredentialConfiguration.ENABLE_NULL_CREDENTIAL_SUFFIX;
+import static com.google.cloud.hadoop.util.HadoopCredentialConfiguration.ENABLE_SERVICE_ACCOUNTS_SUFFIX;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
@@ -76,6 +83,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.TransportOptions;
+import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS;
+import com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem;
 import com.google.cloud.http.HttpTransportOptions;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.HttpStorageOptions;
@@ -279,6 +288,8 @@ public class GCSUtils {
             throws AlgebricksException {
         setHadoopCredentials(jobConf, configuration);
 
+        pinGcsConnector(jobConf);
+
         // set endpoint if provided, default is https://storage.googleapis.com/
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
         if (endpoint != null) {
@@ -298,6 +309,22 @@ public class GCSUtils {
     }
 
     /**
+     * Hadoop 3.5 ships its own gs:// connector (hadoop-gcp) and makes it the default through core-default.xml: it names
+     * that connector's classes in fs.gs.impl, and adds byte-size defaults ("64m") under fs.gs.* keys that the bundled
+     * gcs-connector also reads, but parses as plain numbers. Pin the gcs-connector's classes and its own defaults for
+     * those keys, which is what an unset key resolved to before Hadoop 3.5.
+     */
+    private static void pinGcsConnector(JobConf jobConf) {
+        jobConf.set(GCSConstants.HADOOP_FS_IMPL, GoogleHadoopFileSystem.class.getName());
+        jobConf.set(GCSConstants.HADOOP_ABSTRACT_FS_IMPL, GoogleHadoopFS.class.getName());
+        jobConf.setLong(BLOCK_SIZE.getKey(), BLOCK_SIZE.getDefault());
+        jobConf.setLong(GCS_INPUT_STREAM_INPLACE_SEEK_LIMIT.getKey(), GCS_INPUT_STREAM_INPLACE_SEEK_LIMIT.getDefault());
+        jobConf.setInt(GCS_INPUT_STREAM_MIN_RANGE_REQUEST_SIZE.getKey(),
+                GCS_INPUT_STREAM_MIN_RANGE_REQUEST_SIZE.getDefault());
+        jobConf.setInt(GCS_OUTPUT_STREAM_BUFFER_SIZE.getKey(), GCS_OUTPUT_STREAM_BUFFER_SIZE.getDefault());
+    }
+
+    /**
      * Sets the credentials provider type and the credentials to hadoop based on the provided configuration
      *
      * @param jobConf hadoop job config
@@ -310,6 +337,10 @@ public class GCSUtils {
         switch (authenticationType) {
             case ANONYMOUS:
                 jobConf.set(HADOOP_AUTH_TYPE, HADOOP_AUTH_UNAUTHENTICATED);
+                // the bundled gcs-connector does not read fs.gs.auth.type; without these it falls back to the
+                // compute engine metadata server, which only answers on a GCE VM
+                jobConf.setBoolean(GCS_CONFIG_PREFIX + ENABLE_SERVICE_ACCOUNTS_SUFFIX.getKey(), false);
+                jobConf.setBoolean(GCS_CONFIG_PREFIX + ENABLE_NULL_CREDENTIAL_SUFFIX.getKey(), true);
                 break;
             case IMPERSONATE_SERVICE_ACCOUNT:
                 String impersonateServiceAccount = configuration.get(IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME);

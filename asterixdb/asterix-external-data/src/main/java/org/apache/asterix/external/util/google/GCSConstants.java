@@ -55,6 +55,8 @@ public class GCSConstants {
 
     // hadoop internal configuration
     public static final String HADOOP_GCS_PROTOCOL = "gs";
+    public static final String HADOOP_FS_IMPL = "fs.gs.impl";
+    public static final String HADOOP_ABSTRACT_FS_IMPL = "fs.AbstractFileSystem.gs.impl";
     public static final String MAX_BATCH_THREADS = "fs.gs.batch.threads";
     public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
     public static final String HADOOP_SUPPORT_COMPRESSED = "fs.gs.inputstream.support.gzip.encoding.enable";
