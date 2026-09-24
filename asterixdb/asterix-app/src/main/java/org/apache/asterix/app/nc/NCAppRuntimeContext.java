@@ -300,6 +300,13 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 this.ncServiceContext);
         receptionist = receptionistFactory.create();
 
+        // On cloud storage the descriptor bound stays off: the cloud read, persist and sweep paths do I/O on a
+        // file's OS handle directly, outside the buffer cache's descriptor lock, so a release could race them.
+        final int maxOpenDescriptors =
+                cloudConfigurator != null ? Integer.MAX_VALUE : storageProperties.getBufferCacheMaxOpenDescriptors();
+        if (cloudConfigurator != null && storageProperties.getBufferCacheMaxOpenDescriptors() != Integer.MAX_VALUE) {
+            LOGGER.info("not bounding open file descriptors on cloud storage");
+        }
         Map<Integer, BufferedFileHandle> fileInfoMap = new HashMap<>();
         if (replicationProperties.isReplicationEnabled()) {
             if (LOGGER.isInfoEnabled()) {
@@ -318,12 +325,12 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             replicationChannel = new ReplicationChannel(this);
 
             bufferCache = new BufferCache(persistenceIOManager, prs, pcp, new FileMapManager(),
-                    storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory(),
-                    replicationManager, fileInfoMap);
+                    storageProperties.getBufferCacheMaxOpenFiles(), maxOpenDescriptors, ioQueueLen,
+                    getServiceContext().getThreadFactory(), replicationManager, fileInfoMap);
         } else {
             bufferCache = new BufferCache(persistenceIOManager, prs, pcp, new FileMapManager(),
-                    storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory(),
-                    fileInfoMap, defaultContext);
+                    storageProperties.getBufferCacheMaxOpenFiles(), maxOpenDescriptors, ioQueueLen,
+                    getServiceContext().getThreadFactory(), fileInfoMap, defaultContext);
         }
 
         if (storageProperties.getColumnBufferPoolMaxMemory() <= INVALID_BUFFER_POOL_MAX_MEMORY) {

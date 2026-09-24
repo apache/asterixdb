@@ -324,6 +324,7 @@ The following parameters for slave processes, under "[nc]" sections.
 |   nc    | result.public.port                        | Public IP port to announce dataset result distribution listener | same as result.listen.port |
 |   nc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000 |
 |   nc    | result.ttl                                | Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds | 86400000 |
+|   nc    | storage.buffercache.maxopendescriptors    | The number of OS file descriptors the buffer cache aims to hold at most. Beyond it, the descriptors of the least recently used files with no I/O in progress and no unforced writes are closed, and reopened on their next I/O. 0 means half of the process's maximum number of open files, or unbounded where that limit cannot be determined. Not applied on cloud storage | 0 |
 |   nc    | storage.buffercache.maxopenfiles          | The maximum number of open files in the buffer cache | 2147483647 |
 |   nc    | storage.buffercache.pagesize              | The page size in bytes for pages in the buffer cache | 131072 (128 kB) |
 |   nc    | storage.buffercache.size                  | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 1/4 of the JVM allocated memory |

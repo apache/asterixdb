@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +32,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -69,11 +74,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private static final int MAX_PIN_ATTEMPT_CYCLES = 1000;
     private static final int MAX_PAGE_READ_ATTEMPTS = 5;
     private static final long PERIOD_BETWEEN_READ_ATTEMPTS = 100;
+    // a pass that cannot get under the descriptor bound is not repeated for this long
+    private static final long DESCRIPTOR_RELEASE_BACKOFF_NANOS = TimeUnit.SECONDS.toNanos(1);
+    private static final long DESCRIPTOR_WARN_INTERVAL_NANOS = TimeUnit.MINUTES.toNanos(1);
     public static final boolean DEBUG = false;
 
     private final int pageSize;
     private final int maxOpenFiles;
     private final IBufferCacheReadContext defaultContext;
+    private final int maxOpenDescriptors;
+    private final int descriptorLowWatermark;
     final IIOManager ioManager;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
@@ -87,6 +97,18 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
     private final AtomicLong masterPinCount = new AtomicLong();
     private final Map<Thread, IThreadStats> statsSubscribers = new ConcurrentHashMap<>();
+    private final Executor executor;
+    private final AtomicInteger openDescriptors = new AtomicInteger();
+    private final AtomicLong descriptorsOpened = new AtomicLong();
+    private final AtomicLong descriptorsReleased = new AtomicLong();
+    private final AtomicLong descriptorsReopened = new AtomicLong();
+    private final AtomicLong descriptorsClosed = new AtomicLong();
+    private final AtomicLong descriptorReleasePasses = new AtomicLong();
+    private final AtomicLong descriptorReleasePassesOverBound = new AtomicLong();
+    private volatile IFileDescriptorListener descriptorListener = IFileDescriptorListener.NO_OP;
+    private final AtomicBoolean descriptorReleaseScheduled = new AtomicBoolean();
+    private volatile long nextDescriptorReleaseNanos = System.nanoTime();
+    private volatile long nextDescriptorWarnNanos = System.nanoTime();
 
     private boolean closed;
 
@@ -101,11 +123,35 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles, int ioQueuelen,
             ThreadFactory threadFactory, Map<Integer, BufferedFileHandle> fileInfoMap,
             IBufferCacheReadContext defaultContext) {
+        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, Integer.MAX_VALUE,
+                ioQueuelen, threadFactory, fileInfoMap, defaultContext);
+    }
+
+    /**
+     * @param maxOpenFiles
+     *            the maximum number of files the cache holds open; opening a file beyond it closes an unreferenced
+     *            one, and fails if every open file is referenced
+     * @param maxOpenDescriptors
+     *            the number of OS file descriptors the cache aims to hold at most; beyond it, the descriptors of the
+     *            least recently used files which have no I/O in flight and nothing written since their last force are
+     *            released, and reopened on their next I/O. The bound is soft: when nothing is releasable it is
+     *            exceeded rather than failing. {@link Integer#MAX_VALUE} disables releasing.
+     */
+    public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            int maxOpenDescriptors, int ioQueuelen, ThreadFactory threadFactory,
+            Map<Integer, BufferedFileHandle> fileInfoMap, IBufferCacheReadContext defaultContext) {
+        if (maxOpenDescriptors <= 0) {
+            throw new IllegalArgumentException("maxOpenDescriptors must be positive: " + maxOpenDescriptors);
+        }
         this.headerPageCache = new ArrayBlockingQueue<>(ioQueuelen);
         this.ioManager = ioManager;
         this.pageSize = pageReplacementStrategy.getPageSize();
         this.maxOpenFiles = maxOpenFiles;
         this.defaultContext = defaultContext;
+        this.maxOpenDescriptors = maxOpenDescriptors;
+        // release a tenth of the bound at a time, so passes are rare
+        this.descriptorLowWatermark = maxOpenDescriptors - Math.max(1, maxOpenDescriptors / 10);
         pageReplacementStrategy.setBufferCache(this);
         pageMap = new CacheBucket[pageReplacementStrategy.getMaxAllowedNumPages() * MAP_FACTOR + 1];
         for (int i = 0; i < pageMap.length; ++i) {
@@ -115,7 +161,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         this.pageCleanerPolicy = pageCleanerPolicy;
         this.fileMapManager = fileMapManager;
 
-        Executor executor = Executors.newCachedThreadPool(threadFactory);
+        executor = Executors.newCachedThreadPool(threadFactory);
         this.fileInfoMap = fileInfoMap;
         cleanerThread = new CleanerThread();
         executor.execute(cleanerThread);
@@ -134,8 +180,17 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles, int ioQueueLen,
             ThreadFactory threadFactory, IIOReplicationManager ioReplicationManager,
             Map<Integer, BufferedFileHandle> fileInfoMap) {
-        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, ioQueueLen,
-                threadFactory, fileInfoMap, DefaultBufferCacheReadContextProvider.DEFAULT);
+        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, Integer.MAX_VALUE,
+                ioQueueLen, threadFactory, ioReplicationManager, fileInfoMap);
+    }
+
+    //this constructor is used when replication is enabled to pass the IIOReplicationManager
+    public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            int maxOpenDescriptors, int ioQueueLen, ThreadFactory threadFactory,
+            IIOReplicationManager ioReplicationManager, Map<Integer, BufferedFileHandle> fileInfoMap) {
+        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, maxOpenDescriptors,
+                ioQueueLen, threadFactory, fileInfoMap, DefaultBufferCacheReadContextProvider.DEFAULT);
         this.ioReplicationManager = ioReplicationManager;
     }
 
@@ -455,6 +510,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         buffer.append("Number of physical pages: ").append(pageReplacementStrategy.getMaxAllowedNumPages())
                 .append('\n');
         buffer.append("Hash table size: ").append(pageMap.length).append('\n');
+        buffer.append("Open file descriptors: ").append(openDescriptors.get()).append(" (bound ")
+                .append(maxOpenDescriptors).append(", released ").append(descriptorsReleased.get())
+                .append(", reopened ").append(descriptorsReopened.get()).append(")\n");
         buffer.append("Page Map:\n");
         buffer.append("cpid -> [fileId:pageId, pinCount, valid/invalid, confiscated/physical, dirty/clean]");
         int nCachedPages = 0;
@@ -1492,6 +1550,190 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         }
 
         return fInfo.getCompressedPageWriter();
+    }
+
+    /**
+     * @return the number of OS file descriptors currently held by this cache's files
+     */
+    public int getOpenDescriptorCount() {
+        return openDescriptors.get();
+    }
+
+    /**
+     * @return the bound on open descriptors, or {@link Integer#MAX_VALUE} if unbounded
+     */
+    public int getMaxOpenDescriptors() {
+        return maxOpenDescriptors;
+    }
+
+    /**
+     * @return the number of files this cache holds open, whether or not their descriptors are released
+     */
+    public int getOpenFileCount() {
+        synchronized (fileInfoMap) {
+            return fileInfoMap.size();
+        }
+    }
+
+    /**
+     * @return how many descriptors have been opened by opening a file, not counting reopens
+     */
+    public long getOpenedDescriptorCount() {
+        return descriptorsOpened.get();
+    }
+
+    /**
+     * @return how many held descriptors have been closed by closing, purging or deleting their file
+     */
+    public long getClosedDescriptorCount() {
+        return descriptorsClosed.get();
+    }
+
+    /**
+     * @return how many release passes have run
+     */
+    public long getDescriptorReleasePassCount() {
+        return descriptorReleasePasses.get();
+    }
+
+    /**
+     * @return how many release passes have left the open descriptors over the bound, having found too few releasable
+     */
+    public long getDescriptorReleasePassOverBoundCount() {
+        return descriptorReleasePassesOverBound.get();
+    }
+
+    /**
+     * Set the listener to notify of descriptor releases, reopens and release passes; null clears it.
+     */
+    public void setDescriptorListener(IFileDescriptorListener listener) {
+        descriptorListener = listener != null ? listener : IFileDescriptorListener.NO_OP;
+    }
+
+    /**
+     * @return how many times a file's descriptor has been released to keep under the descriptor bound
+     */
+    public long getReleasedDescriptorCount() {
+        return descriptorsReleased.get();
+    }
+
+    /**
+     * @return how many times a released descriptor has been reopened by a subsequent I/O
+     */
+    public long getReopenedDescriptorCount() {
+        return descriptorsReopened.get();
+    }
+
+    // each returns the number of descriptors open afterwards
+
+    int descriptorOpened() {
+        descriptorsOpened.incrementAndGet();
+        return descriptorAcquired();
+    }
+
+    int descriptorReopened(long releasedNanos) {
+        descriptorsReopened.incrementAndGet();
+        final int open = descriptorAcquired();
+        try {
+            descriptorListener.descriptorReopened(releasedNanos);
+        } catch (Exception e) {
+            LOGGER.debug("descriptor listener failed", e);
+        }
+        return open;
+    }
+
+    int descriptorReleased(long idleNanos) {
+        descriptorsReleased.incrementAndGet();
+        final int open = openDescriptors.decrementAndGet();
+        try {
+            descriptorListener.descriptorReleased(idleNanos);
+        } catch (Exception e) {
+            LOGGER.debug("descriptor listener failed", e);
+        }
+        return open;
+    }
+
+    int descriptorClosed() {
+        descriptorsClosed.incrementAndGet();
+        return openDescriptors.decrementAndGet();
+    }
+
+    private int descriptorAcquired() {
+        // called from the open and I/O paths, so it only ever schedules the release pass, never runs it
+        final int open = openDescriptors.incrementAndGet();
+        if (open > maxOpenDescriptors && !closed && System.nanoTime() - nextDescriptorReleaseNanos >= 0
+                && descriptorReleaseScheduled.compareAndSet(false, true)) {
+            try {
+                executor.execute(this::releaseColdDescriptors);
+            } catch (RejectedExecutionException e) {
+                descriptorReleaseScheduled.set(false);
+            }
+        }
+        return open;
+    }
+
+    private record DescriptorCandidate(BufferedFileHandle handle, long idleNanos) {
+    }
+
+    /**
+     * Release the descriptors of the least recently used files until the count is back under the low watermark, or
+     * nothing more is releasable- a file with an I/O in flight, or with writes not yet forced, keeps its descriptor.
+     */
+    private void releaseColdDescriptors() {
+        try {
+            if (closed || openDescriptors.get() <= descriptorLowWatermark) {
+                return;
+            }
+            // snapshot each file's idle time against a single clock reading: the last I/O times move under us as
+            // I/O continues, and nanoTime() values are only comparable as differences, never directly
+            final long snapshotNanos = System.nanoTime();
+            final List<DescriptorCandidate> candidates = new ArrayList<>();
+            synchronized (fileInfoMap) {
+                for (BufferedFileHandle fh : fileInfoMap.values()) {
+                    if (fh.isDescriptorOpen()) {
+                        candidates.add(new DescriptorCandidate(fh, snapshotNanos - fh.getLastIoNanos()));
+                    }
+                }
+            }
+            final int n = candidates.size();
+            candidates.sort(Comparator.comparingLong(DescriptorCandidate::idleNanos).reversed());
+            int released = 0;
+            for (int i = 0; i < n && openDescriptors.get() > descriptorLowWatermark && !closed; i++) {
+                if (candidates.get(i).handle().tryReleaseDescriptor()) {
+                    released++;
+                }
+            }
+            final int open = openDescriptors.get();
+            descriptorReleasePasses.incrementAndGet();
+            if (open > maxOpenDescriptors) {
+                descriptorReleasePassesOverBound.incrementAndGet();
+            }
+            try {
+                descriptorListener.releasePassCompleted(released, System.nanoTime() - snapshotNanos,
+                        open <= maxOpenDescriptors);
+            } catch (Exception e) {
+                LOGGER.debug("descriptor listener failed", e);
+            }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(
+                        "released {} of {} file descriptors; {} now open against a bound of {} ({} released and {}"
+                                + " reopened in total)",
+                        released, n, open, maxOpenDescriptors, descriptorsReleased.get(), descriptorsReopened.get());
+            }
+            if (open > maxOpenDescriptors) {
+                final long now = System.nanoTime();
+                nextDescriptorReleaseNanos = now + DESCRIPTOR_RELEASE_BACKOFF_NANOS;
+                if (now - nextDescriptorWarnNanos >= 0) {
+                    nextDescriptorWarnNanos = now + DESCRIPTOR_WARN_INTERVAL_NANOS;
+                    LOGGER.warn("{} file descriptors open against a bound of {}; the rest are in use or have writes"
+                            + " not yet forced", open, maxOpenDescriptors);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("failure releasing file descriptors", e);
+        } finally {
+            descriptorReleaseScheduled.set(false);
+        }
     }
 
 }

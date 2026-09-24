@@ -46,6 +46,7 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.MXHelper;
 import org.apache.hyracks.util.StorageUtil;
 
 public class StorageProperties extends AbstractProperties {
@@ -55,6 +56,7 @@ public class StorageProperties extends AbstractProperties {
         // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
         STORAGE_BUFFERCACHE_SIZE(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_BUFFERCACHE_MAXOPENFILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
+        STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS(NONNEGATIVE_INTEGER, 0),
         STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
@@ -137,6 +139,12 @@ public class StorageProperties extends AbstractProperties {
                             + " of the buffer cache page size.";
                 case STORAGE_BUFFERCACHE_MAXOPENFILES:
                     return "The maximum number of open files in the buffer cache";
+                case STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS:
+                    return "The number of OS file descriptors the buffer cache aims to hold at most. Beyond it, the"
+                            + " descriptors of the least recently used files with no I/O in progress and no unforced"
+                            + " writes are closed, and reopened on their next I/O. 0 means half of the process's"
+                            + " maximum number of open files, or unbounded where that limit cannot be determined. Not"
+                            + " applied on cloud storage";
                 case STORAGE_MEMORYCOMPONENT_GLOBALBUDGET:
                     return "The size of memory allocated to the memory components.  The value should be a multiple "
                             + "of the memory component page size";
@@ -260,6 +268,20 @@ public class StorageProperties extends AbstractProperties {
 
     public int getBufferCacheMaxOpenFiles() {
         return accessor.getInt(Option.STORAGE_BUFFERCACHE_MAXOPENFILES);
+    }
+
+    /**
+     * @return the configured descriptor bound, or when it is 0, half the process's open file limit, leaving the rest
+     *         for sockets, logs and everything else the process opens; {@link Integer#MAX_VALUE} (unbounded) if that
+     *         limit cannot be determined
+     */
+    public int getBufferCacheMaxOpenDescriptors() {
+        int configured = accessor.getInt(Option.STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS);
+        if (configured > 0) {
+            return configured;
+        }
+        long processLimit = MXHelper.getMaxOpenFileCount();
+        return processLimit > 1 ? (int) Math.min(processLimit / 2, Integer.MAX_VALUE) : Integer.MAX_VALUE;
     }
 
     public int getMemoryComponentPageSize() {

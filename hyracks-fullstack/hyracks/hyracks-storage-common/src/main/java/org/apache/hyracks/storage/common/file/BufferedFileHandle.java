@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.AbstractBufferedFileIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -80,9 +79,8 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
         try {
             setPageInfo(cPage);
-            IFileHandle handle = getFileHandle();
             int pageSize = bufferCache.getPageSizeWithHeader();
-            long bytesRead = header.readFromFile(ioManager, handle, getFirstPageOffset(cPage), pageSize);
+            long bytesRead = readHeaderFromFile(header, getFirstPageOffset(cPage), pageSize);
 
             if (!verifyBytesRead(bufferCache.getPageSizeWithHeader(), bytesRead)) {
                 return;
@@ -117,7 +115,6 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
             IBufferCacheWriteContext context) throws HyracksDataException {
         final ByteBuffer buf = cPage.getBuffer();
         final boolean contiguousLargePages = getPageId(cPage.getDiskPageId()) + 1 == extraBlockPageId;
-        IFileHandle handle = getFileHandle();
         long bytesWritten;
         long offset;
         try {
@@ -125,7 +122,7 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
             buf.position(0);
             ByteBuffer[] buffers = header.prepareWrite(cPage);
             offset = getFirstPageOffset(cPage);
-            bytesWritten = context.write(ioManager, handle, offset, buffers);
+            bytesWritten = writeToFile(context, offset, buffers);
         } finally {
             returnHeaderHelper(header);
         }

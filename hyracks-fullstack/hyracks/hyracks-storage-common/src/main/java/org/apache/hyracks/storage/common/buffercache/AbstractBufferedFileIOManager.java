@@ -20,12 +20,16 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.StampedLock;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.control.nc.io.FileHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
@@ -33,12 +37,20 @@ import org.apache.hyracks.storage.common.compression.file.CompressedFileReferenc
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Handles all IO operations for a specified file.
+ * <p>
+ * The OS descriptor behind the file is separate from the file's lifecycle in the {@link BufferCache}: an open file
+ * whose descriptor has been released by {@link #tryReleaseDescriptor()} stays open as far as the cache is concerned,
+ * keeping its file id, pages and reference count, and has its descriptor reopened by the next read, write or force.
+ * Every such operation holds the descriptor lock shared, so a descriptor is never released under an I/O in flight.
  */
 @NotThreadSafe
 public abstract class AbstractBufferedFileIOManager {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String ERROR_MESSAGE = "%s unexpected number of bytes: [expected: %d, actual: %d, file: %s]";
     private static final String READ = "Read";
     private static final String WRITE = "Written";
@@ -50,6 +62,24 @@ public abstract class AbstractBufferedFileIOManager {
 
     private IFileHandle fileHandle;
     private volatile boolean hasOpen;
+
+    // shared by every I/O on the descriptor, exclusive to release it; not reentrant, and no I/O here nests another
+    // on the same file
+    private final StampedLock descriptorLock = new StampedLock();
+    // serializes reopening among the readers sharing descriptorLock; private, because the buffer cache synchronizes
+    // on the handle itself while closing it, which waits on descriptorLock
+    private final Object descriptorMonitor = new Object();
+    // whether the OS descriptor is currently held; changed under descriptorLock exclusively, or under descriptorLock
+    // shared plus descriptorMonitor when reopening
+    private volatile boolean descriptorOpen;
+    // set once the file is closed, purged or deleted, after which its descriptor is never reopened
+    private volatile boolean retired;
+    // writes issued, and the count covered by the last successful force: a descriptor is only released when equal
+    private final AtomicLong writeCount = new AtomicLong();
+    private volatile long forcedWriteCount;
+    private volatile long lastIoNanos;
+    // System.nanoTime() as of the last release of the descriptor, for logging how long it stayed released
+    private volatile long releasedNanos;
 
     protected AbstractBufferedFileIOManager(BufferCache bufferCache, IIOManager ioManager,
             BlockingQueue<BufferCacheHeaderHelper> headerPageCache, IPageReplacementStrategy pageReplacementStrategy) {
@@ -112,9 +142,18 @@ public abstract class AbstractBufferedFileIOManager {
      * @throws HyracksDataException
      */
     public void open(FileReference fileRef) throws HyracksDataException {
-        fileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        hasOpen = true;
+        final long stamp = descriptorLock.writeLock();
+        try {
+            fileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+            lastIoNanos = System.nanoTime();
+            retired = false;
+            descriptorOpen = true;
+            hasOpen = true;
+        } finally {
+            descriptorLock.unlockWrite(stamp);
+        }
+        bufferCache.descriptorOpened();
     }
 
     /**
@@ -124,14 +163,18 @@ public abstract class AbstractBufferedFileIOManager {
      */
     public void close() throws HyracksDataException {
         if (hasOpen) {
-            ioManager.close(fileHandle);
+            retireDescriptor("closed");
         }
     }
 
     public void purge() throws HyracksDataException {
-        ioManager.close(fileHandle);
+        retireDescriptor("purged");
     }
 
+    /**
+     * @return the file's OS handle. I/O done on it directly bypasses the descriptor lock, so a caller doing so must
+     *         only run where the buffer cache does not release descriptors
+     */
     public IFileHandle getFileHandle() {
         return fileHandle;
     }
@@ -143,7 +186,146 @@ public abstract class AbstractBufferedFileIOManager {
      * @throws HyracksDataException
      */
     public void force(boolean metadata) throws HyracksDataException {
-        ioManager.sync(fileHandle, metadata);
+        // sampled before the sync: a write that lands during it is not known to be covered by it
+        final long writesCovered = writeCount.get();
+        if (!descriptorOpen && writesCovered == forcedWriteCount) {
+            // released only once everything written was forced, and nothing has been written since
+            return;
+        }
+        final long stamp = beginIo();
+        try {
+            ioManager.sync(fileHandle, metadata);
+        } finally {
+            endIo(stamp);
+        }
+        synchronized (descriptorMonitor) {
+            if (writesCovered > forcedWriteCount) {
+                forcedWriteCount = writesCovered;
+            }
+        }
+    }
+
+    /* ********************************
+     * OS descriptor management
+     * ********************************
+     */
+
+    /**
+     * Release this file's OS descriptor if nothing is using it and everything written through it has been forced.
+     * The file stays open in the {@link BufferCache}; the next I/O reopens the descriptor. Never blocks: a descriptor
+     * with an I/O in flight is left alone.
+     *
+     * @return true if a descriptor was released
+     */
+    public boolean tryReleaseDescriptor() {
+        if (!isDescriptorReleasable()) {
+            return false;
+        }
+        final long stamp = descriptorLock.tryWriteLock();
+        if (stamp == 0L) {
+            return false;
+        }
+        try {
+            if (!isDescriptorReleasable()) {
+                return false;
+            }
+            ioManager.close(fileHandle);
+            descriptorOpen = false;
+            releasedNanos = System.nanoTime();
+        } catch (HyracksDataException e) {
+            // leave the descriptor as it was; it is not in use, and the next pass will try again
+            LOGGER.debug("failed to release the file descriptor of {}", fileHandle.getFileReference(), e);
+            return false;
+        } finally {
+            descriptorLock.unlockWrite(stamp);
+        }
+        final long idleNanos = releasedNanos - lastIoNanos;
+        final int open = bufferCache.descriptorReleased(idleNanos);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("released the file descriptor of {} after {}ms idle; {} now open", getFileReference(),
+                    TimeUnit.NANOSECONDS.toMillis(idleNanos), open);
+        }
+        return true;
+    }
+
+    /**
+     * @return whether the OS descriptor is currently held
+     */
+    public final boolean isDescriptorOpen() {
+        return descriptorOpen;
+    }
+
+    /**
+     * @return {@link System#nanoTime()} as of the last I/O through this file, or of its opening
+     */
+    public final long getLastIoNanos() {
+        return lastIoNanos;
+    }
+
+    private boolean isDescriptorReleasable() {
+        return descriptorOpen && !retired && fileHandle != null && writeCount.get() == forcedWriteCount;
+    }
+
+    private void retireDescriptor(String reason) throws HyracksDataException {
+        // exclusive, and blocking: the file is being closed for good, so wait out any I/O still in flight
+        final long stamp = descriptorLock.writeLock();
+        final IFileHandle retiredHandle = fileHandle;
+        boolean wasOpen;
+        try {
+            retired = true;
+            wasOpen = descriptorOpen;
+            descriptorOpen = false;
+            if (fileHandle != null) {
+                ioManager.close(fileHandle);
+            }
+        } finally {
+            descriptorLock.unlockWrite(stamp);
+        }
+        final int open = wasOpen ? bufferCache.descriptorClosed() : bufferCache.getOpenDescriptorCount();
+        if (retiredHandle != null && LOGGER.isDebugEnabled()) {
+            LOGGER.debug("retired the file descriptor of {} ({}; descriptor {}); {} now open",
+                    retiredHandle.getFileReference(), reason, wasOpen ? "held" : "already released", open);
+        }
+    }
+
+    private long beginIo() throws HyracksDataException {
+        final long stamp = descriptorLock.readLock();
+        try {
+            if (!descriptorOpen) {
+                reopenDescriptor();
+            }
+            lastIoNanos = System.nanoTime();
+            return stamp;
+        } catch (Throwable th) {
+            descriptorLock.unlockRead(stamp);
+            throw th;
+        }
+    }
+
+    private void endIo(long stamp) {
+        descriptorLock.unlockRead(stamp);
+    }
+
+    private void reopenDescriptor() throws HyracksDataException {
+        boolean reopened = false;
+        long reopenedNanos = 0L;
+        // several readers may get here at once under the shared lock; only one of them reopens
+        synchronized (descriptorMonitor) {
+            if (!descriptorOpen && !retired && fileHandle != null) {
+                ((FileHandle) fileHandle).ensureOpen();
+                descriptorOpen = true;
+                reopened = true;
+                reopenedNanos = System.nanoTime();
+            }
+        }
+        if (reopened) {
+            final long releasedForNanos = reopenedNanos - releasedNanos;
+            final int open = bufferCache.descriptorReopened(releasedForNanos);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("reopened the file descriptor of {} after {}ms released; {} now open", getFileReference(),
+                        TimeUnit.NANOSECONDS.toMillis(releasedForNanos), open);
+            }
+        }
     }
 
     /**
@@ -162,6 +344,7 @@ public abstract class AbstractBufferedFileIOManager {
     public abstract int getNumberOfPages() throws HyracksDataException;
 
     public void markAsDeleted() throws HyracksDataException {
+        retired = true;
         fileHandle = null;
     }
 
@@ -286,15 +469,71 @@ public abstract class AbstractBufferedFileIOManager {
     }
 
     protected final long readToBuffer(ByteBuffer buf, long offset) throws HyracksDataException {
-        return ioManager.syncRead(fileHandle, offset, buf);
+        final long stamp = beginIo();
+        try {
+            return ioManager.syncRead(fileHandle, offset, buf);
+        } finally {
+            endIo(stamp);
+        }
+    }
+
+    /**
+     * Read a page's header from the file, under the descriptor lock.
+     */
+    protected final long readHeaderFromFile(BufferCacheHeaderHelper header, long offset, int size)
+            throws HyracksDataException {
+        final long stamp = beginIo();
+        try {
+            return header.readFromFile(ioManager, fileHandle, offset, size);
+        } finally {
+            endIo(stamp);
+        }
+    }
+
+    /**
+     * Write through the given context, under the descriptor lock.
+     */
+    protected final long writeToFile(IBufferCacheWriteContext context, long offset, ByteBuffer buf)
+            throws HyracksDataException {
+        // counted before the write, so a force that overlaps it cannot claim to cover it
+        writeCount.incrementAndGet();
+        final long stamp = beginIo();
+        try {
+            return context.write(ioManager, fileHandle, offset, buf);
+        } finally {
+            endIo(stamp);
+        }
+    }
+
+    protected final long writeToFile(IBufferCacheWriteContext context, long offset, ByteBuffer[] buf)
+            throws HyracksDataException {
+        writeCount.incrementAndGet();
+        final long stamp = beginIo();
+        try {
+            return context.write(ioManager, fileHandle, offset, buf);
+        } finally {
+            endIo(stamp);
+        }
     }
 
     protected final long writeExtraToFile(ByteBuffer buf, long offset) throws HyracksDataException {
-        return ioManager.doSyncWrite(fileHandle, offset, buf);
+        writeCount.incrementAndGet();
+        final long stamp = beginIo();
+        try {
+            return ioManager.doSyncWrite(fileHandle, offset, buf);
+        } finally {
+            endIo(stamp);
+        }
     }
 
     protected final long writeExtraToFile(ByteBuffer[] buf, long offset) throws HyracksDataException {
-        return ioManager.doSyncWrite(fileHandle, offset, buf);
+        writeCount.incrementAndGet();
+        final long stamp = beginIo();
+        try {
+            return ioManager.doSyncWrite(fileHandle, offset, buf);
+        } finally {
+            endIo(stamp);
+        }
     }
 
     protected final long getFileSize() throws HyracksDataException {
