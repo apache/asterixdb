@@ -1,0 +1,14 @@
+distribute result [$$o] [cardinality: 1500.0, doc-size: 153.06, op-cost: 0.0, total-cost: 150.45]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1500.0, doc-size: 153.06, op-cost: 0.0, total-cost: 150.45]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$o]) [cardinality: 1500.0, doc-size: 153.06, op-cost: 0.0, total-cost: 150.45]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 1500.0, doc-size: 153.06, op-cost: 0.0, total-cost: 150.45]
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        data-scan []<-[$$15, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 153.06, op-cost: 0.0, total-cost: 150.45]
+        -- DATASOURCE_SCAN  |PARTITIONED|
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

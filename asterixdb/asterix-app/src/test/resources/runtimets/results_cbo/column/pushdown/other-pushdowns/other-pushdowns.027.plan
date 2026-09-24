@@ -1,20 +1,20 @@
-distribute result [$$37] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+distribute result [$$37] [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+  exchange [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$37] <- [{"$1": get-item(get-item(get-item($$38, 0).getField("f2"), 0), 0), "$2": get-item($$45, 1), "$3": get-item(get-item($$57.getField("f2"), 1), 1), "f4": $$45.getField("f4")}] project: [$$37] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+    assign [$$37] <- [{"$1": get-item(get-item(get-item($$38, 0).getField("f2"), 0), 0), "$2": get-item($$45, 1), "$3": get-item(get-item($$57.getField("f2"), 1), 1), "f4": $$45.getField("f4")}] project: [$$37] [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
     -- ASSIGN  |PARTITIONED|
-      assign [$$45] <- [$$57.getField("f3")] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+      assign [$$45] <- [$$57.getField("f3")] [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
       -- ASSIGN  |PARTITIONED|
-        assign [$$57] <- [get-item($$38, 1)] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+        assign [$$57] <- [get-item($$38, 1)] [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
         -- ASSIGN  |PARTITIONED|
-          assign [$$38] <- [$$c.getField("f1")] project: [$$38] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+          assign [$$38] <- [$$c.getField("f1")] project: [$$38] [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
           -- ASSIGN  |PARTITIONED|
-            project ([$$c]) [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+            project ([$$c]) [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+              exchange [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$39, $$c] <- test.ColumnDataset project ({f1:[{f2:[[any]],f3:<[any],{f4:any}>}]}) [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
+                data-scan []<-[$$39, $$c] <- test.ColumnDataset project ({f1:[{f2:[[any]],f3:<[any],{f4:any}>}]}) [cardinality: 2.0, doc-size: 4.0, op-cost: 0.0, total-cost: 1.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
                   exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

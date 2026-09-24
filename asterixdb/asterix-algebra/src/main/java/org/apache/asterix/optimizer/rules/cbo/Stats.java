@@ -42,7 +42,6 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.array.AbstractOperatorFromSubplanRewrite;
 import org.apache.asterix.translator.ConstantHelper;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1059,7 +1058,7 @@ public class Stats {
 
     // This one gets the cardinality and also projection sizes
     protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp,
-            int dataset, LogicalVariable primaryKey) throws AlgebricksException {
+            int dataset, LogicalVariable primaryKey, ILogicalOperator diskBoundaryOp) throws AlgebricksException {
         LOGGER.info("***running projection sample query***");
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
@@ -1072,16 +1071,22 @@ public class Stats {
         // assign [$$68, $$69, $$70, $$71, $$72] <- [serialized-size($$60), serialized-size($$str), serialized-size($$61), serialized-size($$65), serialized-size($$67)]
 
         // add the assign [$$56, ..., ] <- [encoded-size($$67), ..., ] on top of newAggOp
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(logOp, liveVars); // all the variables in the leafInput
+
+        // The variables coming from the disk are the live variables at diskBoundaryOp. Variables produced
+        // by ASSIGNs on top of it are computed later, they do not come from the disk.
         List<LogicalVariable> vars1 = new ArrayList<>();
-        VariableUtilities.getLiveVariables(logOp, vars1); // all the variables in the leafInput
-        // Depending on the order here. Assuming the first three variables are from the data scan operator.
-        if (!joinEnum.resultAndJoinVars.contains(primaryKey)) { // if the entire row is not being projected, we must remove $$p
+        VariableUtilities.getLiveVariables(diskBoundaryOp, vars1);
+
+        if (!joinEnum.resultAndJoinVars.contains(primaryKey)) {
             vars1.remove(primaryKey);
         }
 
-        List<LogicalVariable> vars3 = // these variables can be thrown away as they are not present joins and in the final project
-                new ArrayList<>(CollectionUtils.subtract(vars1, joinEnum.resultAndJoinVars /* vars2 */));
-        List<LogicalVariable> vars4 = new ArrayList<>(CollectionUtils.subtract(vars1, vars3)); // variables that will flow up the tree
+        // The variables that will flow up the tree as they appear in join expressions or in the final
+        // result, including those produced by ASSIGNs on top of diskBoundaryOp.
+        List<LogicalVariable> vars4 = new ArrayList<>(liveVars);
+        vars4.retainAll(joinEnum.resultAndJoinVars);
 
         List<LogicalVariable> vars = new ArrayList<>();
         vars.addAll(vars1);

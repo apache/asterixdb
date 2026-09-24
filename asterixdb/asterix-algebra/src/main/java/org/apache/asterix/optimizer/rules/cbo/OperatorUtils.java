@@ -416,6 +416,24 @@ public class OperatorUtils {
         return null;
     }
 
+    public static boolean isSelectOrUnnestOrDataScan(ILogicalOperator op) {
+        LogicalOperatorTag tag = op.getOperatorTag();
+        return tag == LogicalOperatorTag.SELECT || tag == LogicalOperatorTag.UNNEST
+                || tag == LogicalOperatorTag.DATASOURCESCAN;
+    }
+
+    // Finds the first SELECT, UNNEST or DATASOURCESCAN operator going down the linear chain starting at op.
+    public static ILogicalOperator findFirstSelectOrUnnestOrDataScan(ILogicalOperator op) {
+        ILogicalOperator currentOp = op;
+        while (currentOp.getInputs().size() == 1) {
+            if (isSelectOrUnnestOrDataScan(currentOp)) {
+                return currentOp;
+            }
+            currentOp = currentOp.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
     protected static Index findSampleIndex(DataSourceScanOperator scanOp, IOptimizationContext context)
             throws AlgebricksException {
         DataSource ds = (DataSource) scanOp.getDataSource();

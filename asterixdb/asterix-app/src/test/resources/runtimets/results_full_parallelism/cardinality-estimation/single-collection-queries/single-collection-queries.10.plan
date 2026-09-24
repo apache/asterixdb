@@ -1,0 +1,18 @@
+distribute result [$$19] [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$19] <- [{"o_orderdate": $$o.getField(4)}] project: [$$19] [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$o]) [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          unnest-map [$$20, $$o] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$23, 0, false, true, false) [cardinality: 1497.18, doc-size: 12.0, op-cost: 0.0, total-cost: 150.24]
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              assign [$$23] <- [5] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ASSIGN  |PARTITIONED|
+                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

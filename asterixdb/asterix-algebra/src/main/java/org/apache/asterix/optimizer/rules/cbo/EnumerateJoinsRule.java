@@ -20,11 +20,13 @@
 package org.apache.asterix.optimizer.rules.cbo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
@@ -36,6 +38,8 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.AdvisorPlanParser;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.CBOPlanStateTree;
 import org.apache.asterix.optimizer.rules.cbo.indexadvisor.FakeIndexProvider;
@@ -124,6 +128,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private List<LogicalVariable> resultAndJoinVars = new ArrayList();
     private int numberOfFromTerms;
+    private static final int MAX_LEAF_INPUT_ASSIGNED_VARS = 20;
 
     private List<Triple<ILogicalOperator, ILogicalOperator, List<ILogicalOperator>>> modifyUnnestInfo;
     // The first is the parent, the second is the current operator (LOJ), and the third is the third list from UnnestOpsInfo
@@ -973,23 +978,72 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return nextOp;
     }
 
-    private ILogicalOperator findSelectOrUnnestOrDataScan(ILogicalOperator op) {
-        LogicalOperatorTag tag;
+    /**
+     * Returns the top of the leafInput for a single table query. This is usually the first SELECT,
+     * UNNEST or DATASOURCESCAN below op. When canExtendLeafInputPastAssigns() allows it, the top moves
+     * up to the ASSIGNs sitting on that operator. Without them, the sampling query never sees the
+     * columns they compute, and the doc size comes out as zero.
+     * <p>
+     * Also sets resultAndJoinVars to the variables used above the leafInput, since those are the ones
+     * that flow out of it.
+     *
+     * @return the top of the leafInput, or null if the plan branches or ends before one is found
+     */
+    private ILogicalOperator findSingleTableLeafInput(ILogicalOperator op) throws AlgebricksException {
+        Set<LogicalVariable> usedAboveVars = new HashSet<>();
         ILogicalOperator currentOp = op;
-        while (true) {
-            if (currentOp.getInputs().size() > 1) {
-                return null; // Assuming only a linear plan for single table queries (as leafInputs are linear).
-            }
-            tag = currentOp.getOperatorTag();
-            if (tag == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-                return null; // if this happens, there is nothing we can do in CBO code since there is no datasourcescan
-            }
-            if ((tag == LogicalOperatorTag.SELECT) || (tag == LogicalOperatorTag.UNNEST)
-                    || (tag == LogicalOperatorTag.DATASOURCESCAN)) {
+        while (currentOp.getInputs().size() == 1) {
+            if (OperatorUtils.isSelectOrUnnestOrDataScan(currentOp)
+                    || canExtendLeafInputPastAssigns(currentOp, usedAboveVars)) {
+                resultAndJoinVars.clear();
+                resultAndJoinVars.addAll(usedAboveVars);
                 return currentOp;
             }
-
+            VariableUtilities.getUsedVariables(currentOp, usedAboveVars);
             currentOp = currentOp.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
+    private static boolean canExtendLeafInputPastAssigns(ILogicalOperator op, Set<LogicalVariable> usedAboveVars) {
+        List<LogicalVariable> producedVars = new ArrayList<>();
+        ILogicalOperator currentOp = op;
+        while (currentOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator assignOp = (AssignOperator) currentOp;
+            for (Mutable<ILogicalExpression> expr : assignOp.getExpressions()) {
+                if (!isFieldOrItemAccess(expr.getValue())) {
+                    return false;
+                }
+            }
+            producedVars.addAll(assignOp.getVariables());
+            if (producedVars.size() > MAX_LEAF_INPUT_ASSIGNED_VARS) {
+                return false;
+            }
+            currentOp = currentOp.getInputs().get(0).getValue();
+        }
+        return currentOp != op && OperatorUtils.isSelectOrUnnestOrDataScan(currentOp)
+                && !Collections.disjoint(producedVars, usedAboveVars);
+    }
+
+    private static boolean isFieldOrItemAccess(ILogicalExpression expr) {
+        switch (expr.getExpressionTag()) {
+            case VARIABLE:
+            case CONSTANT:
+                return true;
+            case FUNCTION_CALL:
+                AbstractFunctionCallExpression call = (AbstractFunctionCallExpression) expr;
+                if (!AnalysisUtil.isAccessToFieldRecord(call)
+                        && !call.getFunctionIdentifier().equals(BuiltinFunctions.GET_ITEM)) {
+                    return false;
+                }
+                for (Mutable<ILogicalExpression> arg : call.getArguments()) {
+                    if (!isFieldOrItemAccess(arg.getValue())) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -1242,7 +1296,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 EmptyTupleSourceOperator etsOp = etsDataSource.getLeft();
                 DataSourceScanOperator dataSourceOp = etsDataSource.getRight();
                 if (op.getOperatorTag().equals(LogicalOperatorTag.DISTRIBUTE_RESULT)) {// single table query
-                    ILogicalOperator selectOp = findSelectOrUnnestOrDataScan(op);
+                    ILogicalOperator selectOp = findSingleTableLeafInput(op);
                     if (selectOp == null) {
                         return false;
                     } else {
@@ -1387,10 +1441,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private void skipAllIndexes(ScanPlanNode plan, ILogicalOperator leafInput) {
         plan.getJoinNode().setSkipIndexAnnotationsForVectorChoice(plan);
+        ILogicalOperator selectOp = OperatorUtils.findFirstSelectOrUnnestOrDataScan(leafInput);
         if ((plan.getScanOp() == ScanPlanNode.ScanMethod.TABLE_SCAN
-                || plan.getScanOp() == ScanPlanNode.ScanMethod.VECTOR_SCAN)
-                && leafInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
-            SelectOperator selOper = (SelectOperator) leafInput;
+                || plan.getScanOp() == ScanPlanNode.ScanMethod.VECTOR_SCAN) && selectOp != null
+                && selectOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
+            SelectOperator selOper = (SelectOperator) selectOp;
             ILogicalExpression expr = selOper.getCondition().getValue();
             List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
             if (expr.splitIntoConjuncts(conjs)) {
@@ -1418,7 +1473,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private void buildNewTree(ScanPlanNode plan) {
         ILogicalOperator leftInput = plan.getLeafInput();
         skipAllIndexes(plan, leftInput);
-        ILogicalOperator selOp = findSelectOrUnnestOrDataScan(leftInput);
+        ILogicalOperator selOp = OperatorUtils.findFirstSelectOrUnnestOrDataScan(leftInput);
         if (selOp != null) {
             addCardCostAnnotations(selOp, plan);
         }
@@ -1529,7 +1584,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (planNode instanceof ScanPlanNode) {
             ILogicalOperator leftInput = removeTrue(((ScanPlanNode) planNode).getLeafInput());
             skipAllIndexes((ScanPlanNode) (planNode), leftInput);
-            ILogicalOperator selOp = findSelectOrUnnestOrDataScan(leftInput);
+            ILogicalOperator selOp = OperatorUtils.findFirstSelectOrUnnestOrDataScan(leftInput);
             if (selOp != null) {
                 addCardCostAnnotations(selOp, planNode);
             }

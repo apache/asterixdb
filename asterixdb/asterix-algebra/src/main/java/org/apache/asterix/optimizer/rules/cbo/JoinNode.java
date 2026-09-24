@@ -319,6 +319,9 @@ public class JoinNode {
         List<List<IAObject>> result;
         SelectOperator selOp = (SelectOperator) joinEnum.findASelectOp(leafInput);
 
+        // Variables produced at or below the first SELECT, UNNEST or DATASOURCESCAN count as coming from the disk.
+        ILogicalOperator diskBoundaryOp = OperatorUtils.findFirstSelectOrUnnestOrDataScan(leafInput);
+
         if (selOp == null) { // this should not happen. So check later why this happening.
             // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
             selOp = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
@@ -384,7 +387,7 @@ public class JoinNode {
         // Now apply all the predicates and get the card after all predicates are applied.
         // We call the sampling query even if a selectivity hint was provided because we have to get the lengths of the variables.
         result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
-                primaryKey);
+                primaryKey, diskBoundaryOp);
         double predicateCardinalityFromSample = joinEnum.getStatsHandle().findPredicateCardinality(result, true);
 
         double sizeVarsFromDisk;
@@ -397,7 +400,7 @@ public class JoinNode {
             ILogicalExpression saveExpr = selOp.getCondition().getValue();
             selOp.getCondition().setValue(ConstantExpression.TRUE);
             result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
-                    primaryKey);
+                    primaryKey, diskBoundaryOp);
             double x = joinEnum.getStatsHandle().findPredicateCardinality(result, true);
             // better to check if x is 0
             if (x == 0.0) {
