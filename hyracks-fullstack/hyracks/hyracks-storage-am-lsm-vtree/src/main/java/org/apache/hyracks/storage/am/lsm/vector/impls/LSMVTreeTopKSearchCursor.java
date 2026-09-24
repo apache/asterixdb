@@ -130,8 +130,8 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     // Vector accessor for extracting vectors from tuples
     private IVTreeBinaryAccessor vectorAccessor;
 
-    // Quantization state (propagated from first search cursor)
-    private double[] quantizedQueryVector;
+    // Decodes stored SQ codes. The heap scores those against the original query, so the
+    // quantized query is not kept here.
     private IVTreeQuantizer quantizer;
 
     // Data-tuple layout authority. This cursor is quantized-only (see class javadoc), so the layout
@@ -271,8 +271,8 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
             this.queryVector = firstSearchCursor.getQueryVector();
             this.distanceFunction = firstSearchCursor.getDistanceFunction();
 
-            // Extract quantized state from first cursor (null = non-quantized path)
-            this.quantizedQueryVector = firstSearchCursor.getQuantizedQueryVector();
+            // Stored codes still have to be decoded. The heap does not use the quantized query:
+            // quantizing it again was a second rounding on top of the stored codes.
             this.quantizer = firstSearchCursor.getQuantizer();
 
             if (this.queryVector == null) {
@@ -280,13 +280,10 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
                         "A query vector is required for the vector index blocked search");
             }
 
-            // computeApproximateDistance() dequantizes every candidate with these two, and they arrive
-            // independently of the USE_TOPK_SEARCH flag that selected this cursor (from a quantizer factory
-            // or instance in the index access parameters). Fail here rather than NPE per candidate.
-            if (this.quantizer == null || this.quantizedQueryVector == null) {
+            if (this.quantizer == null) {
                 throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                        "LSMVTreeTopKSearchCursor requires a quantizer and a quantized query vector; none was supplied "
-                                + "through the index access parameters");
+                        "LSMVTreeTopKSearchCursor requires a quantizer; none was supplied through the index access "
+                                + "parameters");
             }
 
             // Initialize strategy with first component's tree (candidateLimit so we collect 2*K for reranking)
@@ -662,21 +659,15 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     }
 
     /**
-     * Compute approximate distance D(q, x) using quantized embedding.
+     * Approximate distance from the original query to a stored code.
      *
-     * This cursor is dedicated for quantized vector indexes.
-     * Quantized data tuple format:
-     *   Field 0: distance_to_centroid, Field 1: centroidId,
-     *   Field 2: quantized_distance, Field 3: quantized_embedding, Field 4+: key and value fields
-     *
-     * Dequantizes the stored embedding bytes (field 3) and computes distance
-     * against the quantized query vector.
+     * Quantizing the query as well as the stored vector rounded it a second time, and that
+     * second rounding reordered neighbors. The stored code is still decoded; the query is not.
      */
     private double computeApproximateDistance(ITupleReference tuple) throws HyracksDataException {
-        // Quantized embedding content bytes (field 3, ByteArrayPointable prefix stripped) → dequantize.
         byte[] qBytes = dataAccessor.getQuantizedEmbedding(tuple);
         double[] dequantized = quantizer.dequantize(qBytes);
-        return distanceFunction.apply(quantizedQueryVector, dequantized);
+        return distanceFunction.apply(queryVector, dequantized);
     }
 
     // ==================== IIndexCursor Interface (EnforcedIndexCursor template methods) ====================

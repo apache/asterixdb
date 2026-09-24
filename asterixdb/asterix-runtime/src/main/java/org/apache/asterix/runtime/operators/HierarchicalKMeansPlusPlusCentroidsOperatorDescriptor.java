@@ -148,7 +148,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
 
     private final int maxScalableKmeansIter; // Maximum iterations for scalable K-means++ candidate selection
 
-    private final VectorSimilarityMetric similarityMetric; // resolved from distanceMetric; drives cosine normalization
+    private final VectorSimilarityMetric similarityMetric; // resolved from distanceMetric; drives spherical normalization
 
     private final RecordDescriptor secondaryRecDesc; // Input record descriptor (2-field format)
 
@@ -174,6 +174,13 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
         this.trainSeed = trainSeed;
         // Distance function from index DDL (WITH similarity "euclidean"|"cosine"|etc.); default euclidean squared
         this.similarityMetric = similarityMetric;
+    }
+
+    /**
+     * Cosine and DOT share spherical k-means: each Lloyd update L2-normalizes the centroid.
+     */
+    private static boolean requiresSphericalCentroids(VectorSimilarityMetric metric) {
+        return metric == VectorSimilarityMetric.COSINE || metric == VectorSimilarityMetric.DOT;
     }
 
     /**
@@ -1374,9 +1381,7 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                 }
 
                 /**
-                 * Normalizes centroid in place to unit L2 norm when using cosine similarity (spherical
-                 * k-means), so that centroid semantics match FAISS/Spark. Dot product is not normalized.
-                 * No-op for other metrics.
+                 * L2-normalizes {@code centroid} after a Lloyd update when the metric uses spherical k-means.
                  */
                 private void maybeNormalizeCentroid(double[] centroid) {
                     if (centroid != null && requiresNormalizedCentroids()) {
@@ -1384,14 +1389,8 @@ public final class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptor extends
                     }
                 }
 
-                /**
-                 * Whether the current distance function requires centroids to be L2-normalized after each
-                 * Lloyd update. Normalization is required only for cosine (spherical k-means); aligns with
-                 * FAISS spherical k-means and Spark's CosineDistanceMeasure. Dot product (MIPS) uses raw
-                 * centroids and does not require normalization.
-                 */
                 private boolean requiresNormalizedCentroids() {
-                    return similarityMetric == VectorSimilarityMetric.COSINE;
+                    return requiresSphericalCentroids(similarityMetric);
                 }
 
                 private static IVTreeDistanceFunction distanceFunctionFor(VectorSimilarityMetric metric) {

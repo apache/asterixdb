@@ -102,7 +102,7 @@ public class NearestCentroidScalarEvaluator implements IScalarEvaluator {
 
     /**
      * Resolves the metric argument to a distance function, caching by name. Returns false and warns if the
-     * name is not a known metric or names one k-means cannot use.
+     * name is not a known metric. DOT uses the same distance as cosine.
      */
     private boolean resolveMetric(IFrameTupleReference tuple) throws HyracksDataException {
         if (metricEval == null) {
@@ -124,11 +124,6 @@ public class NearestCentroidScalarEvaluator implements IScalarEvaluator {
         VectorSimilarityMetric metric = VectorSimilarityMetric.fromAlias(name);
         if (metric == null) {
             warn("nearest_centroid: unknown metric '" + name + "'");
-            return false;
-        }
-        if (metric == VectorSimilarityMetric.DOT) {
-            // dotDistance is a negated inner product, unbounded below, so no centroid minimizes it.
-            warn("nearest_centroid: metric 'dot' is not usable for clustering");
             return false;
         }
         distanceFn = new VectorDistanceFunctionFactory(metric).createDistanceFunction();
