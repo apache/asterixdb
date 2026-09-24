@@ -16,22 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+/* flushing puts the keys behind bloom filters */
+USE test;
 
-@FunctionalInterface
-public interface IBinaryComparator {
-
-    int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException;
-
-    /**
-     * Tells whether a value encoded with different bytes can compare equal to the given one. Anything that looks a
-     * value up by its bytes, such as a bloom filter, cannot rule out such a value.
-     *
-     * @return true if the value has another encoding that this comparator finds equal to it
-     */
-    default boolean hasEquivalentEncoding(byte[] b, int s, int l) throws HyracksDataException {
-        return false;
-    }
-}
+INSERT INTO FlushedZero ({ 'k': 0.0, 'x': 1 });
+INSERT INTO FlushedNegativeZero ({ 'k': -0.0, 'x': 2 });
+INSERT INTO FlushedFloatZero ({ 'k': float('0.0'), 'x': 3 });
+INSERT INTO FlushedDelete ({ 'k': -0.0, 'x': 6 });
+ANALYZE DATASET FlushedZero;
+ANALYZE DATASET FlushedNegativeZero;
+ANALYZE DATASET FlushedFloatZero;
+ANALYZE DATASET FlushedDelete;

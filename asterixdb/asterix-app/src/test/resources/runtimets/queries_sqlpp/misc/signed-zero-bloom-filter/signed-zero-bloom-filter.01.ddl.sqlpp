@@ -16,22 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+/*
+ * Description: -0.0 equals 0.0, so a bloom filter must not rule out one when the other is stored.
+ */
 
-@FunctionalInterface
-public interface IBinaryComparator {
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-    int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException;
+CREATE TYPE DoubleKeyType AS { k: double };
+CREATE TYPE FloatKeyType AS { k: float };
 
-    /**
-     * Tells whether a value encoded with different bytes can compare equal to the given one. Anything that looks a
-     * value up by its bytes, such as a bloom filter, cannot rule out such a value.
-     *
-     * @return true if the value has another encoding that this comparator finds equal to it
-     */
-    default boolean hasEquivalentEncoding(byte[] b, int s, int l) throws HyracksDataException {
-        return false;
-    }
-}
+CREATE DATASET FlushedZero(DoubleKeyType) PRIMARY KEY k;
+CREATE DATASET FlushedNegativeZero(DoubleKeyType) PRIMARY KEY k;
+CREATE DATASET FlushedFloatZero(FloatKeyType) PRIMARY KEY k;
+CREATE DATASET FlushedDelete(DoubleKeyType) PRIMARY KEY k;

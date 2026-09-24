@@ -81,6 +81,19 @@ public class MultiComparator {
         return 0;
     }
 
+    /**
+     * @return true if any key field of the tuple has another encoding that its comparator finds equal to it
+     * @see IBinaryComparator#hasEquivalentEncoding(byte[], int, int)
+     */
+    public boolean hasEquivalentEncoding(ITupleReference tuple) throws HyracksDataException {
+        for (int i = 0; i < cmps.length; i++) {
+            if (cmps[i].hasEquivalentEncoding(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public IBinaryComparator[] getComparators() {
         return cmps;
     }

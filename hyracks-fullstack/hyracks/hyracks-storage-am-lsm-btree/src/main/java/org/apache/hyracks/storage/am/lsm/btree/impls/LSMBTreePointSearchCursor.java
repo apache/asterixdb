@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements ILSMIndexCursor {
 
@@ -63,6 +64,8 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
 
     protected final long[] hashes = BloomFilter.createHashArray();
     protected boolean hashComputed = false;
+    private MultiComparator bloomFilterCmp;
+    private boolean keyHasEquivalentEncoding;
 
     public LSMBTreePointSearchCursor(ILSMIndexOperationContext opCtx) {
         this.opCtx = opCtx;
@@ -179,9 +182,12 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
                 // all bloom filters share the same hash function
                 // only compute it once for better performance
                 bloomFilters[componentIndex].computeHashes(predicate.getLowKey(), hashes);
+                keyHasEquivalentEncoding =
+                        bloomFilterCmp != null && bloomFilterCmp.hasEquivalentEncoding(predicate.getLowKey());
                 hashComputed = true;
             }
-            return bloomFilters[componentIndex].contains(hashes);
+            // the filter hashes the key's bytes, so it would miss an equal key stored with other bytes
+            return keyHasEquivalentEncoding || bloomFilters[componentIndex].contains(hashes);
         } else {
             return true;
         }
@@ -209,6 +215,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         lsmHarness = lsmInitialState.getLSMHarness();
         searchCallback = lsmInitialState.getSearchOperationCallback();
         predicate = (RangePredicate) lsmInitialState.getSearchPredicate();
+        bloomFilterCmp = lsmInitialState.getBloomFilterComparator();
         numBTrees = operationalComponents.size();
         if (btreeCursors != null && btreeCursors.length != numBTrees) {
             Throwable failure = CleanupUtils.destroy(null, btreeCursors);

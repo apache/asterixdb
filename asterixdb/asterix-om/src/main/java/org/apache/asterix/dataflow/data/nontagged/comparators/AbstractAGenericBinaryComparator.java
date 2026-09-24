@@ -28,6 +28,8 @@ import org.apache.asterix.dataflow.data.common.TaggedValueReference;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
@@ -63,6 +65,20 @@ abstract class AbstractAGenericBinaryComparator implements IBinaryComparator {
         // factory should have already made sure to get the actual type (and no null types)
         this.leftType = leftType;
         this.rightType = rightType;
+    }
+
+    /**
+     * -0.0 compares equal to 0.0.
+     */
+    @Override
+    public boolean hasEquivalentEncoding(byte[] b, int s, int l) {
+        if (b[s] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+            return ADoubleSerializerDeserializer.getDouble(b, s + 1) == 0.0d;
+        }
+        if (b[s] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
+            return AFloatSerializerDeserializer.getFloat(b, s + 1) == 0.0f;
+        }
+        return false;
     }
 
     protected final int compare(IAType leftType, TaggedValueReference leftValue, IAType rightType,

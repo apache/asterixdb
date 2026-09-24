@@ -7678,6 +7678,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="signed-zero-bloom-filter">
+        <output-dir compare="Text">signed-zero-bloom-filter</output-dir>
+        <expected-error>Inserting duplicate keys into the primary storage</expected-error>
+        <expected-error>Inserting duplicate keys into the primary storage</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-3403">
         <output-dir compare="Text">query-ASTERIXDB-3403</output-dir>
       </compilation-unit>
