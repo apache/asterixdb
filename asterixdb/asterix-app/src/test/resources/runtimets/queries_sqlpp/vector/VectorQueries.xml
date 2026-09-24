@@ -233,4 +233,9 @@
             <output-dir compare="Text">vtree-scan-choice</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="vtree-unnest-not-indexable">
+            <output-dir compare="Clean-JSON">vtree-unnest-not-indexable</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>

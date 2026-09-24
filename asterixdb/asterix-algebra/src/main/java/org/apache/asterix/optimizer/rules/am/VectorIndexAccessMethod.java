@@ -795,6 +795,10 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * are fully repaired (the second ASSIGN references {@code $$237}, not {@code $$rec} directly, and would
      * otherwise dangle and fail type inference). The live-out check guarantees nothing above LIMIT depends
      * on these values, but the type system still walks them.
+     * <p>
+     * Nothing below the LIMIT may depend on them either; that is not checked here, it is what index
+     * selection refuses (see {@code IntroduceTopKAccessMethodRule.chooseVectorIndex}). Widening the plan
+     * shape it admits without widening that refusal re-opens ASTERIXDB-3892.
      */
     private static void neutralizeDanglingExpressions(ILogicalOperator root, List<LogicalVariable> oldRecordVars) {
         Set<LogicalVariable> dead = new HashSet<>(oldRecordVars);

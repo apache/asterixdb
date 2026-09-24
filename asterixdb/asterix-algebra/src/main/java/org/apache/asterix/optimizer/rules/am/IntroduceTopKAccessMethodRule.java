@@ -604,6 +604,16 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                     + "can install one; not offering a vector index", numSelectOps);
             return;
         }
+        // The LIMIT's count reaches the search as k, so everything in between must map one row to one row.
+        // An UNNEST does not: its n = 0 case (empty array, absent field, non-array value) drops the row
+        // after the search has capped its candidates, exactly as a predicate left above the search would.
+        for (AbstractLogicalOperator pipelineOp : subTree.getAssignsAndUnnests()) {
+            if (pipelineOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                LOGGER.trace("chooseVectorIndex: {} between the ORDER and the scan does not preserve the row "
+                        + "count; not offering a vector index", pipelineOp.getOperatorTag());
+                return;
+            }
+        }
 
         // Iterate over candidate vector indexes
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
