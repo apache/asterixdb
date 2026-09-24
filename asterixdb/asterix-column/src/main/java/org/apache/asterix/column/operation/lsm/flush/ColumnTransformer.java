@@ -47,11 +47,12 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
     private AbstractSchemaNestedNode currentParent;
     private int primaryKeysLength;
     /**
-     * Hack-alert! This tracks the total length of all strings (as they're not as encodable as numerics)
-     * The total length can be used by {@link FlushColumnTupleWriter} to stop writing tuples to the current mega
-     * leaf node to avoid having a single column that spans to megabytes of pages.
+     * Estimated encoded size of all non-key values in the current batch, used by {@link FlushColumnTupleWriter} to
+     * stop writing tuples to the current mega leaf node before it exceeds the max leaf node size. The encoded size
+     * (not the raw value length) is tracked so that well-encoded columns (e.g., delta-packed integers) do not cut
+     * leaves short, while poorly-encoded ones (e.g., plain doubles of an embedding array) are not ignored.
      */
-    private int stringLengths;
+    private int valuesEstimatedSize;
     private int currentBatchVersion;
 
     public ColumnTransformer(FlushColumnMetadata columnMetadata, ObjectSchemaNode root, BitSet presentColumnsIndexes) {
@@ -59,16 +60,16 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         this.root = root;
         this.presentColumnsIndexes = presentColumnsIndexes;
         nonTaggedValue = new VoidPointable();
-        stringLengths = 0;
+        valuesEstimatedSize = 0;
         currentBatchVersion = 1;
     }
 
-    public int getStringLengths() {
-        return stringLengths;
+    public int getValuesEstimatedSize() {
+        return valuesEstimatedSize;
     }
 
-    public void resetStringLengths() {
-        stringLengths = 0;
+    public void resetValuesEstimatedSize() {
+        valuesEstimatedSize = 0;
         currentBatchVersion++;
     }
 
@@ -204,6 +205,7 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         PrimitiveSchemaNode node = (PrimitiveSchemaNode) arg;
         presentColumnsIndexes.set(node.getColumnIndex());
         IColumnValuesWriter writer = columnMetadata.getWriter(node.getColumnIndex());
+        int sizeBeforeWrite = writer.getEstimatedSize();
         if (valueTypeTag == ATypeTag.MISSING) {
             writer.writeLevel(columnMetadata.getLevel());
         } else if (valueTypeTag == ATypeTag.NULL) {
@@ -217,8 +219,8 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         }
         if (node.isPrimaryKey()) {
             primaryKeysLength += writer.getEstimatedSize();
-        } else if (node.getTypeTag() == ATypeTag.STRING) {
-            stringLengths += pointable.getLength();
+        } else {
+            valuesEstimatedSize += writer.getEstimatedSize() - sizeBeforeWrite;
         }
         columnMetadata.exitNode(arg);
         return null;

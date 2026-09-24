@@ -134,11 +134,11 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     /**
      * TODO a better approach should be adopted
      *
-     * @return the configured max number of tuples or zero if strings exceeded the maximum size
+     * @return the configured max number of tuples or zero if the written values exceeded the maximum size
      */
     @Override
     public final int getMaxNumberOfTuples() {
-        if (transformer.getStringLengths() >= maxLeafNodeSize) {
+        if (transformer.getValuesEstimatedSize() >= maxLeafNodeSize) {
             return 0;
         }
         return maxNumberOfTuples;
@@ -261,7 +261,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
 
     @Override
     public void reset() {
-        transformer.resetStringLengths();
+        transformer.resetValuesEstimatedSize();
         transformerForCurrentTuple.reset();
         presentColumnsIndexes.clear();
     }
