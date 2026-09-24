@@ -21,11 +21,13 @@ package org.apache.asterix.optimizer.rules.am;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -799,12 +801,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 found = false;
                 break;
             }
+        }
 
-            found = analyzeSelectOrJoinOpConditionAndUpdateAnalyzedAM(argFuncExpr, assignsAndUnnests,
-                    disjuncAnalyzedAMs, context, typeEnvironment);
-            if (!found) {
-                break;
-            }
+        if (found) {
+            found = analyzeEqualityDisjunction(funcExpr, assignsAndUnnests, disjuncAnalyzedAMs, context,
+                    typeEnvironment);
         }
 
         if (found) {
@@ -867,6 +868,56 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
         }
         return found;
+    }
+
+    /**
+     * Analyzes a disjunction of equalities between one variable and constants of one type, e.g. an IN list, as a
+     * single {@link DisjunctiveEqualityFuncExpr}. An access method's analysis of such an equality does not depend on
+     * the constant, so only the first disjunct is analyzed. One optimizable expression per disjunct would make every
+     * consumer of the matched expressions pay per disjunct, and several of them did so quadratically.
+     */
+    private boolean analyzeEqualityDisjunction(AbstractFunctionCallExpression disjunction,
+            List<AbstractLogicalOperator> assignsAndUnnests,
+            Map<IAccessMethod, AccessMethodAnalysisContext> disjuncAnalyzedAMs, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+        List<Mutable<ILogicalExpression>> disjuncts = disjunction.getArguments();
+        AbstractFunctionCallExpression first = (AbstractFunctionCallExpression) disjuncts.get(0).getValue();
+        if (!analyzeSelectOrJoinOpConditionAndUpdateAnalyzedAM(first, assignsAndUnnests, disjuncAnalyzedAMs, context,
+                typeEnvironment)) {
+            return false;
+        }
+        for (AccessMethodAnalysisContext analysisCtx : disjuncAnalyzedAMs.values()) {
+            List<IOptimizableFuncExpr> matched = analysisCtx.getMatchedFuncExprs();
+            // Each access method that matches an equality of a variable and a constant adds one expression for it.
+            if (matched.size() != 1 || matched.get(0).getFuncExpr() != first) {
+                return false;
+            }
+        }
+
+        // Distinct values, not distinct disjuncts: a = 1 and 1 = a are the same key, and a key listed twice is
+        // searched for twice and returns each of its records twice.
+        Set<ILogicalExpression> constants = new LinkedHashSet<>();
+        for (Mutable<ILogicalExpression> disjunct : disjuncts) {
+            constants.add(constantArg((AbstractFunctionCallExpression) disjunct.getValue()));
+        }
+        ILogicalExpression[] constantExprs = constants.toArray(new ILogicalExpression[0]);
+        for (AccessMethodAnalysisContext analysisCtx : disjuncAnalyzedAMs.values()) {
+            IOptimizableFuncExpr firstMatch = analysisCtx.getMatchedFuncExpr(0);
+            // The caller only accepts constants of one type.
+            IAType[] constantTypes = new IAType[constantExprs.length];
+            Arrays.fill(constantTypes, firstMatch.getConstantType(0));
+            analysisCtx.getMatchedFuncExprs().set(0, new DisjunctiveEqualityFuncExpr(disjunction, first,
+                    firstMatch.getLogicalVar(0), variableArgIndex(first), constantExprs.clone(), constantTypes));
+        }
+        return true;
+    }
+
+    private static int variableArgIndex(AbstractFunctionCallExpression eqExpr) {
+        return eqExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE ? 0 : 1;
+    }
+
+    private static ILogicalExpression constantArg(AbstractFunctionCallExpression eqExpr) {
+        return eqExpr.getArguments().get(1 - variableArgIndex(eqExpr)).getValue();
     }
 
     /**

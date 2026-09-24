@@ -2,33 +2,29 @@ distribute result [$$x]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    select (or(eq($$20, "one"), $$26, $$26)) project: [$$x]
+    select (eq($$x.getField(1), $$25)) project: [$$x]
     -- STREAM_SELECT  |PARTITIONED|
-      assign [$$26] <- [eq($$20, "two")]
-      -- ASSIGN  |PARTITIONED|
-        assign [$$20] <- [$$x.getField(1)]
-        -- ASSIGN  |PARTITIONED|
-          project ([$$x])
-          -- STREAM_PROJECT  |PARTITIONED|
+      project ([$$25, $$x])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          unnest-map [$$23, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", true, false, 1, $$27, 1, $$27, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              unnest-map [$$21, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", true, false, 1, $$25, 1, $$25, true, true, true)
-              -- BTREE_SEARCH  |PARTITIONED|
+              order (ASC, $$27)
+              -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  order (ASC, $$25)
-                  -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                  project ([$$25, $$27])
+                  -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      project ([$$25])
-                      -- STREAM_PROJECT  |PARTITIONED|
+                      unnest-map [$$26, $$27] <- index-search("TestSetIndex", 0, "Default", "test", "TestSet", true, true, 1, $$25, 1, $$25, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
                         exchange
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$24, $$25] <- index-search("TestSetIndex", 0, "Default", "test", "TestSet", true, true, 1, $$23, 1, $$23, true, true, true)
-                          -- BTREE_SEARCH  |PARTITIONED|
-                            exchange
-                            -- BROADCAST_EXCHANGE  |PARTITIONED|
-                              unnest $$23 <- scan-collection(array: [ "one", "two" ])
-                              -- UNNEST  |PARTITIONED|
-                                empty-tuple-source
-                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          unnest $$25 <- scan-collection(array: [ "one", "two" ])
+                          -- UNNEST  |PARTITIONED|
+                            empty-tuple-source
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

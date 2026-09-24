@@ -31,6 +31,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -269,68 +270,38 @@ public class BTreeAccessMethod implements IAccessMethod {
         return true;
     }
 
+    /**
+     * Replaces each disjunction of equalities that the index search turned into a list of search keys with a test
+     * that the record equals the key that found it, which the search keeps alongside the record.
+     */
     public static void optimizeSelectCondition(Mutable<ILogicalExpression> cond,
             List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions) {
-        if (cond.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond.getValue();
-            if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
-
-                LogicalVariable variable = null;
-                Set<ConstantExpression> constantExpressions = new HashSet<>();
-                List<ILogicalExpression> orExprs = new ArrayList<>();
-
-                for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-                    if (arg.get().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                        return;
-                    }
-
-                    AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) arg.get();
-
-                    if (!argFuncExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)) {
-                        return;
-                    }
-
-                    ILogicalExpression arg1 = argFuncExpr.getArguments().get(0).get();
-                    ILogicalExpression arg2 = argFuncExpr.getArguments().get(1).get();
-
-                    if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE
-                            && arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                        if (variable == null) {
-                            variable = ((VariableReferenceExpression) arg1).getVariableReference();
-                        } else if (!variable.equals(((VariableReferenceExpression) arg1).getVariableReference())) {
-                            return;
-                        }
-
-                        constantExpressions.add((ConstantExpression) arg2);
-                    } else if (arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE
-                            && arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                        if (variable == null) {
-                            variable = ((VariableReferenceExpression) arg2).getVariableReference();
-                        } else if (!variable.equals(((VariableReferenceExpression) arg2).getVariableReference())) {
-                            return;
-                        }
-                        constantExpressions.add((ConstantExpression) arg1);
-                    }
-                    orExprs.add(arg.get());
+        if (cond.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return;
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond.getValue();
+        if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+            for (Pair<LogicalVariable, List<ILogicalExpression>> keyVarAndConditions : optimizableDisjunctionConditions) {
+                // The keys must be this disjunction's constants and nothing else's. Compared structurally, since the
+                // condition may be a copy of the one the keys came from.
+                List<ILogicalExpression> conditions = keyVarAndConditions.getRight();
+                if (conditions.size() == 1 && (conditions.get(0) == funcExpr || conditions.get(0).equals(funcExpr))) {
+                    AbstractFunctionCallExpression firstDisjunct =
+                            (AbstractFunctionCallExpression) funcExpr.getArguments().get(0).getValue();
+                    ILogicalExpression variable = firstDisjunct.getArguments().get(0).getValue()
+                            .getExpressionTag() == LogicalExpressionTag.VARIABLE
+                                    ? firstDisjunct.getArguments().get(0).getValue()
+                                    : firstDisjunct.getArguments().get(1).getValue();
+                    List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+                    args.add(new MutableObject<>(variable.cloneExpression()));
+                    args.add(new MutableObject<>(new VariableReferenceExpression(keyVarAndConditions.getLeft())));
+                    cond.setValue(new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(EQ), args));
+                    return;
                 }
-
-                for (Pair<LogicalVariable, List<ILogicalExpression>> optimizableDisjunctionCondition : optimizableDisjunctionConditions) {
-                    if (optimizableDisjunctionCondition.getRight().containsAll(orExprs)
-                            && optimizableDisjunctionCondition.getRight().size() == orExprs.size()) {
-                        List<Mutable<ILogicalExpression>> args = new ArrayList<>();
-                        args.add(new MutableObject<>(new VariableReferenceExpression(variable)));
-                        args.add(new MutableObject<>(
-                                new VariableReferenceExpression(optimizableDisjunctionCondition.getLeft())));
-                        cond.setValue(
-                                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(EQ), args));
-                        break;
-                    }
-                }
-
-            } else if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
-                for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-                    optimizeSelectCondition(arg, optimizableDisjunctionConditions);
-                }
+            }
+        } else if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
+            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                optimizeSelectCondition(arg, optimizableDisjunctionConditions);
             }
         }
     }
@@ -417,16 +388,10 @@ public class BTreeAccessMethod implements IAccessMethod {
                 chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators, optimizableDisjunctionConditions);
     }
 
-    private static boolean containsOR(ILogicalExpression condition) {
-        if (condition.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) condition;
-            if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
+    private static boolean hasDisjunctiveEquality(AccessMethodAnalysisContext analysisCtx, Index chosenIndex) {
+        for (Pair<Integer, Integer> exprAndVar : analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex)) {
+            if (analysisCtx.getMatchedFuncExpr(exprAndVar.getLeft()) instanceof DisjunctiveEqualityFuncExpr) {
                 return true;
-            }
-            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-                if (containsOR(arg.get())) {
-                    return true;
-                }
             }
         }
         return false;
@@ -435,7 +400,7 @@ public class BTreeAccessMethod implements IAccessMethod {
     private void createKeyVarsAndExprsWithOr(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
             ArrayList<LogicalVariable> assignKeyVarList, ArrayList<List<Mutable<ILogicalExpression>>> assignKeyExprList,
             ArrayList<LogicalVariable> keyVarList, IOptimizationContext context, ILogicalExpression[] constExpressions,
-            LogicalVariable[] constExprVars, List<ILogicalExpression>[] disjunctiveEqualityKeyExprs,
+            LogicalVariable[] constExprVars, Set<ILogicalExpression>[] disjunctiveEqualityKeyExprs,
             List<ILogicalExpression>[] disjunctiveEqualityConditionExprs, boolean[] isDisjunctiveEqualityCondition,
             boolean isHighKey, int numlowKeys, List<List<ILogicalExpression>> disjunctiveEqualityConditionExprSet) {
         for (int i = 0; i < numKeys; i++) {
@@ -510,7 +475,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         LogicalVariable[] lowKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
         LogicalVariable[] highKeyConstAtRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
         boolean[] isDisjunctiveEqualityCondition = new boolean[numSecondaryKeys];
-        List<ILogicalExpression>[] disjunctiveEqualityKeyExprs = new List[numSecondaryKeys];
+        Set<ILogicalExpression>[] disjunctiveEqualityKeyExprs = new Set[numSecondaryKeys];
         List<ILogicalExpression>[] disjunctiveEqualityConditionExprs = new List[numSecondaryKeys];
         LogicalVariable[] disjunctiveRuntimeExprVars = new LogicalVariable[numSecondaryKeys];
 
@@ -541,6 +506,30 @@ public class BTreeAccessMethod implements IAccessMethod {
             // with a FLOAT or a DOUBLE constant that will be fed into an INTEGER index.
             // This is required because of type-casting. Refer to AccessMethodUtils.createSearchKeyExpr for details.
             IAType indexedFieldType = chosenIndexKeyFieldTypes.get(keyPos);
+            if (optFuncExpr instanceof DisjunctiveEqualityFuncExpr && probeSubTree == null) {
+                if (!isDisjunctiveEqualityCondition[keyPos]) {
+                    isDisjunctiveEqualityCondition[keyPos] = true;
+                    disjunctiveEqualityKeyExprs[keyPos] = new LinkedHashSet<>();
+                    disjunctiveEqualityConditionExprs[keyPos] = new ArrayList<>();
+                }
+                for (int i = 0; i < optFuncExpr.getNumConstantExpr(); i++) {
+                    Triple<ILogicalExpression, ILogicalExpression, Boolean> searchKey =
+                            AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, i, indexedFieldType,
+                                    probeSubTree, SEARCH_KEY_ROUNDING_FUNCTION_COMPUTER);
+                    // A second key is a real constant on an integer index, which a single equality gives up on too.
+                    if (searchKey == null || searchKey.second != null
+                            || searchKey.first.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                        return null;
+                    }
+                    disjunctiveEqualityKeyExprs[keyPos].add(searchKey.first);
+                }
+                AbstractFunctionCallExpression disjunction =
+                        ((DisjunctiveEqualityFuncExpr) optFuncExpr).getDisjunction();
+                disjunctiveEqualityConditionExprs[keyPos].add(disjunction);
+                replacedFuncExprs.add(disjunction);
+                isEqCondition = true;
+                continue;
+            }
             Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
                     AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexedFieldType, probeSubTree,
                             SEARCH_KEY_ROUNDING_FUNCTION_COMPUTER);
@@ -627,7 +616,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     } else {
                         isDisjunctiveEqualityCondition[keyPos] = true;
                         isEqCondition = true;
-                        disjunctiveEqualityKeyExprs[keyPos] = new ArrayList<>();
+                        disjunctiveEqualityKeyExprs[keyPos] = new LinkedHashSet<>();
                         disjunctiveEqualityKeyExprs[keyPos].add(searchKeyExpr);
                         disjunctiveEqualityConditionExprs[keyPos] = new ArrayList<>();
                         disjunctiveEqualityConditionExprs[keyPos].add(optFuncExpr.getFuncExpr());
@@ -1024,7 +1013,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
             throws AlgebricksException {
 
-        if (containsOR(conditionRef.get())) {
+        // A disjunction of equalities stands for all its keys, which only the OR plan searches for.
+        if (hasDisjunctiveEquality(analysisCtx, chosenIndex)) {
             return createBTreeIndexSearchPlanWithOr(afterTopOpRefs, topOpRef, conditionRef, assignBeforeTheOpRefs,
                     indexSubTree, probeSubTree, chosenIndex, analysisCtx, retainInput, retainMissing, requiresBroadcast,
                     context, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, chosenIndexKeyFieldNames,

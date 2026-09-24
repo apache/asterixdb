@@ -679,13 +679,18 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             List<IOptimizableFuncExpr> funcExprs =
                     analyzedAMs.get(indexAccessInfo.getAccessMethod()).getMatchedFuncExprs();
             IndexInfo indexInfo = new IndexInfo();
-            indexInfo.indexExprs = new ArrayList<>(Collections.nCopies(funcExprs.size(), null));
+            // Sized for every key position, which one expression per predicate (an IN list is one) may not reach.
+            indexInfo.indexExprs =
+                    new ArrayList<>(Collections.nCopies(Math.max(funcExprs.size(), indexFields.size()), null));
+            indexInfo.numFuncExprs = funcExprs.size();
             indexInfo.numKeys = indexFields.size();
             indexInfo.indexaccessinfo = indexAccessInfo;
             for (IOptimizableFuncExpr expr : funcExprs) {
                 for (int i = 0; i < expr.getNumLogicalVars(); i++) {
                     int i1 = indexFields.indexOf(expr.getFieldName(i));
-                    indexInfo.indexExprs.set(i1, expr.getFuncExpr().getFunctionIdentifier());
+                    if (i1 >= 0) {
+                        indexInfo.indexExprs.set(i1, expr.getFuncExpr().getFunctionIdentifier());
+                    }
                 }
             }
             indexesWithMaxMatchedKeysInfo.add(indexInfo);
@@ -695,6 +700,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
     class IndexInfo implements Comparable<IndexInfo> {
         List<FunctionIdentifier> indexExprs = new ArrayList<>();
+        int numFuncExprs;
         int numKeys;
         IndexAccessInfo indexaccessinfo;
 
@@ -710,7 +716,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 }
             }
 
-            if (this.indexExprs.size() != other.indexExprs.size()) {
+            if (this.numFuncExprs != other.numFuncExprs) {
                 return 0;
             }
 

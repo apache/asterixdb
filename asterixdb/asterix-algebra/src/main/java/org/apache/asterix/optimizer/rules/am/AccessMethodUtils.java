@@ -612,6 +612,17 @@ public class AccessMethodUtils {
     public static Triple<ILogicalExpression, ILogicalExpression, Boolean> createSearchKeyExpr(Index index,
             IOptimizableFuncExpr optFuncExpr, IAType indexedFieldType, OptimizableOperatorSubTree probeSubTree,
             SearchKeyRoundingFunctionProvider roundingFunctionProvider) throws AlgebricksException {
+        return createSearchKeyExpr(index, optFuncExpr, 0, indexedFieldType, probeSubTree, roundingFunctionProvider);
+    }
+
+    /**
+     * As {@link #createSearchKeyExpr(Index, IOptimizableFuncExpr, IAType, OptimizableOperatorSubTree,
+     * SearchKeyRoundingFunctionProvider)}, but from the given constant of the optimizable function expression.
+     */
+    public static Triple<ILogicalExpression, ILogicalExpression, Boolean> createSearchKeyExpr(Index index,
+            IOptimizableFuncExpr optFuncExpr, int constantIndex, IAType indexedFieldType,
+            OptimizableOperatorSubTree probeSubTree, SearchKeyRoundingFunctionProvider roundingFunctionProvider)
+            throws AlgebricksException {
         SourceLocation sourceLoc = optFuncExpr.getFuncExpr().getSourceLocation();
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
@@ -626,13 +637,13 @@ public class AccessMethodUtils {
                 return new Triple<>(varRef, null, false);
             }
 
-            ILogicalExpression constantAtRuntimeExpression = optFuncExpr.getConstantExpr(0);
+            ILogicalExpression constantAtRuntimeExpression = optFuncExpr.getConstantExpr(constantIndex);
             AsterixConstantValue constantValue = null;
             if (constantAtRuntimeExpression.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 constantValue = (AsterixConstantValue) ((ConstantExpression) constantAtRuntimeExpression).getValue();
             }
 
-            ATypeTag constantValueTag = optFuncExpr.getConstantType(0).getTypeTag();
+            ATypeTag constantValueTag = optFuncExpr.getConstantType(constantIndex).getTypeTag();
             ATypeTag indexedFieldTypeTag = TypeComputeUtils.getActualType(indexedFieldType).getTypeTag();
 
             // type casting happened from real (FLOAT, DOUBLE) value -> INT value?

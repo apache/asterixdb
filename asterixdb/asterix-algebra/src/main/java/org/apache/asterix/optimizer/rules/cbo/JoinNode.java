@@ -48,6 +48,7 @@ import org.apache.asterix.optimizer.cost.Cost;
 import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.asterix.optimizer.rules.am.AbstractIntroduceAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.AccessMethodAnalysisContext;
+import org.apache.asterix.optimizer.rules.am.DisjunctiveEqualityFuncExpr;
 import org.apache.asterix.optimizer.rules.am.IAccessMethod;
 import org.apache.asterix.optimizer.rules.am.IOptimizableFuncExpr;
 import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
@@ -636,12 +637,17 @@ public class JoinNode {
         return DummyPlanNode.INSTANCE;
     }
 
+    private static AbstractFunctionCallExpression predicateOf(IOptimizableFuncExpr optFuncExpr) {
+        return optFuncExpr instanceof DisjunctiveEqualityFuncExpr
+                ? ((DisjunctiveEqualityFuncExpr) optFuncExpr).getDisjunction() : optFuncExpr.getFuncExpr();
+    }
+
     private AbstractFunctionCallExpression buildExpr(List<IOptimizableFuncExpr> exprs,
             List<Pair<Integer, Integer>> pairs) {
         int i;
         if (pairs.size() == 1) {
             i = pairs.get(0).getLeft();
-            return exprs.get(i).getFuncExpr();
+            return predicateOf(exprs.get(i));
         }
 
         ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
@@ -651,7 +657,7 @@ public class JoinNode {
                 new TreeMap<>(Comparator.comparingInt(LogicalVariable::getId));
         for (i = 0; i < pairs.size(); i++) {
             IOptimizableFuncExpr funcExpr = exprs.get(pairs.get(i).getLeft());
-            ILogicalExpression expr = funcExpr.getFuncExpr();
+            ILogicalExpression expr = predicateOf(funcExpr);
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) expr;
 
@@ -663,7 +669,7 @@ public class JoinNode {
                         }
                     }
                 } else {
-                    andExpr.getArguments().add(new MutableObject<>(funcExpr.getFuncExpr()));
+                    andExpr.getArguments().add(new MutableObject<>(expr));
                 }
 
             }
