@@ -1226,6 +1226,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier COSINE_DISTANCE = FunctionConstants.newAsterix("cosine-distance", 2);
     public static final FunctionIdentifier DOT_DISTANCE = FunctionConstants.newAsterix("dot-distance", 2);
     public static final FunctionIdentifier VECTOR_DISTANCE = FunctionConstants.newAsterix("vector-distance", 3);
+    public static final FunctionIdentifier NORMALIZE_VECTOR = FunctionConstants.newAsterix("normalize-vector", 1);
 
     // Vector search functions
     public static final FunctionIdentifier ANN_DISTANCE =
@@ -1981,6 +1982,7 @@ public class BuiltinFunctions {
         addPrivateFunction(COSINE_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(DOT_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
         addFunction(VECTOR_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NORMALIZE_VECTOR, NullableOrderedListOfADoubleTypeComputer.INSTANCE, true);
 
         // Ann functions
         addFunction(ANN_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
