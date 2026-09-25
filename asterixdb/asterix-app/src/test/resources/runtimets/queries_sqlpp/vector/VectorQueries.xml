@@ -57,6 +57,18 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-compression-scheme">
+            <output-dir compare="Clean-JSON">create-index-vtree-compression-scheme</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="create-index-vtree-invalid-compression-scheme">
+            <output-dir compare="Text">create-index-vtree-invalid-compression-scheme</output-dir>
+            <expected-error>ASX1096: Unknown compression scheme zip. Supported schemes are [snappy,none]</expected-error>
+            <source-location>false</source-location>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-meta-pk">
             <output-dir compare="Clean-JSON">create-index-vtree-meta-pk</output-dir>
         </compilation-unit>

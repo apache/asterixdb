@@ -19,9 +19,13 @@
 
 package org.apache.hyracks.storage.am.vector.frames;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.btree.frames.OrderedSlotManager;
 import org.apache.hyracks.storage.am.common.api.ISlotManager;
 import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -61,6 +65,9 @@ public abstract class VTreeNSMFrame extends TreeIndexNSMFrame implements IVTreeF
     // Offset of the 4-byte centroid ID field. Subclass headers extend from CENTROID_ID_OFFSET + Integer.BYTES.
     protected static final int CENTROID_ID_OFFSET = CLUSTER_ID_OFFSET + Integer.BYTES;
 
+    // Every VTree frame is built on an OrderedSlotManager, so one slot size serves all of them.
+    private static final int SLOT_SIZE = new OrderedSlotManager().getSlotSize();
+
     protected MultiComparator cmp;
 
     public VTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager) {
@@ -78,6 +85,22 @@ public abstract class VTreeNSMFrame extends TreeIndexNSMFrame implements IVTreeF
     @Override
     public int getPageHeaderSize() {
         return CENTROID_ID_OFFSET + Integer.BYTES;
+    }
+
+    /**
+     * Zeroes the gap between the tuple area and the slot array of a VTree page about to be written. The page
+     * goes to disk whole, and that gap otherwise holds whatever its buffer held before: a reused cache victim,
+     * or an in-memory page copied as is. VTree pages leave a large gap, since every cluster ends on a partly
+     * filled page, so this is stale data in the file and compresses far worse than zeros.
+     *
+     * @param buf a heap buffer holding any VTree frame
+     */
+    public static void zeroUnusedSpace(ByteBuffer buf) {
+        int from = buf.getInt(Constants.FREE_SPACE_OFFSET);
+        int to = buf.capacity() - buf.getInt(Constants.TUPLE_COUNT_OFFSET) * SLOT_SIZE;
+        if (from < to) {
+            Arrays.fill(buf.array(), buf.arrayOffset() + from, buf.arrayOffset() + to, (byte) 0);
+        }
     }
 
     @Override

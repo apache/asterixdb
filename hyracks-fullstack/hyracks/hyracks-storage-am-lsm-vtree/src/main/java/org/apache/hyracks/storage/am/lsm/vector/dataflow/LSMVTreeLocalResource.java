@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -53,6 +54,7 @@ import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -81,6 +83,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     private static final String KEY_CONFIDENCE_INTERVAL = "confidenceInterval";
     private static final String KEY_BITS = "bits";
     private static final String KEY_SAMPLE_COUNT = "sampleCount";
+    private static final String KEY_COMPRESSOR_DECOMPRESSOR_FACTORY = "compressorDecompressorFactory";
 
     protected final int vectorDimensions;
     protected final int[] vectorFields;
@@ -114,6 +117,12 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
     protected final double epsilon;
 
     /**
+     * Page compression for the data ({@code .vct}) components. Persisted per index rather than resolved from the
+     * dataset at open time, so an index built before VTree compression existed keeps reading as uncompressed.
+     */
+    protected final ICompressorDecompressorFactory compressorDecompressorFactory;
+
+    /**
      * Scalar-quantization calibration, or {@code null} for a non-quantized index. Written once by
      * {@link QuantizedIndexBuilder} between resource creation and the first {@link #createInstance}, so
      * its presence is the single answer to whether this index is quantized.
@@ -131,7 +140,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
-            CrossPollinationConfig crossPollination, double epsilon) {
+            CrossPollinationConfig crossPollination, double epsilon,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         super(path, storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -146,13 +156,16 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.quantizerFactory = quantizerFactory;
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.epsilon = epsilon;
+        this.compressorDecompressorFactory =
+                Objects.requireNonNull(compressorDecompressorFactory, "compressorDecompressorFactory");
     }
 
     protected LSMVTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int vectorDimensions,
             int[] vectorFields, boolean atomic, IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             int numIncludeFields, IVTreeDistanceFunctionFactory distanceFunctionFactory,
             IVTreeQuantizerFactory quantizerFactory, CrossPollinationConfig crossPollination, double epsilon,
-            VTreeQuantizationParams quantization) throws HyracksDataException {
+            VTreeQuantizationParams quantization, ICompressorDecompressorFactory compressorDecompressorFactory)
+            throws HyracksDataException {
         super(registry, json);
         this.vectorDimensions = vectorDimensions;
         this.vectorFields = vectorFields;
@@ -165,6 +178,8 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         this.crossPollination = Objects.requireNonNull(crossPollination, "crossPollination");
         this.epsilon = epsilon;
         this.quantization = quantization;
+        this.compressorDecompressorFactory =
+                Objects.requireNonNull(compressorDecompressorFactory, "compressorDecompressorFactory");
     }
 
     @Override
@@ -198,7 +213,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
                 ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, pageWriteCallbackFactory,
                 vectorDimensions, vectorFields, filterFields, null, null, null, durable, metadataPageManagerFactory,
                 atomic, null, vectorAccessorFactory, identityFields, dataTupleBuilderFactory, quantization,
-                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
+                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon, compressorDecompressorFactory);
     }
 
     @Override
@@ -230,6 +245,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         if (quantizerFactory != null) {
             json.set(KEY_QUANTIZER_FACTORY, quantizerFactory.toJson(registry));
         }
+        json.set(KEY_COMPRESSOR_DECOMPRESSOR_FACTORY, compressorDecompressorFactory.toJson(registry));
         if (quantization != null) {
             ObjectNode quantizationNode = OBJECT_MAPPER.createObjectNode();
             quantizationNode.put(KEY_MIN_QUANTILE, quantization.minQuantile());
@@ -263,6 +279,12 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         CrossPollinationConfig crossPollination = new CrossPollinationConfig(
                 require(json, KEY_CROSS_POLLINATION_M).asInt(), require(json, KEY_RNG_FACTOR).asDouble());
 
+        // Absent on an index persisted before VTree compression existed: its components carry no look-aside file,
+        // so it must keep opening as uncompressed. This is the one key that deliberately bypasses require().
+        ICompressorDecompressorFactory compDecompFactory =
+                (ICompressorDecompressorFactory) registry.deserializeOrDefault(
+                        json.get(KEY_COMPRESSOR_DECOMPRESSOR_FACTORY), NoOpCompressorDecompressorFactory.class);
+
         VTreeQuantizationParams quantization = null;
         if (json.has(KEY_QUANTIZATION)) {
             JsonNode node = json.get(KEY_QUANTIZATION);
@@ -273,7 +295,7 @@ public class LSMVTreeLocalResource extends LsmResource implements IQuantizedReso
         }
         return new LSMVTreeLocalResource(registry, json, vectorDimensions, vectorFields, atomic, vectorAccessorFactory,
                 identityFields, numIncludeFields, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon,
-                quantization);
+                quantization, compDecompFactory);
     }
 
     /**

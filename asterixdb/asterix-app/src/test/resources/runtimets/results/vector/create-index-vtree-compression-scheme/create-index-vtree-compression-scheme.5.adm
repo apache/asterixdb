@@ -1,0 +1,3 @@
+{ "IndexName": "vt_default", "BlockLevelStorageCompression": { "IndexCompressionScheme": "snappy" } }
+{ "IndexName": "vt_none" }
+{ "IndexName": "vt_snappy", "BlockLevelStorageCompression": { "IndexCompressionScheme": "snappy" } }

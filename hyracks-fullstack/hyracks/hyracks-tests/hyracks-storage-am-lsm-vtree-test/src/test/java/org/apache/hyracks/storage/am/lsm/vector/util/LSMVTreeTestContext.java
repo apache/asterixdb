@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.vector.util;
 
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -57,6 +58,7 @@ import org.apache.hyracks.storage.am.vector.impls.VTreeDataTupleBuilderFactory;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 /**
  * Test context for LSM Vector Clustering Tree tests.
@@ -148,13 +150,6 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 metadataPageManagerFactory, null, numIncludeFields);
     }
 
-    /**
-     * Create a new LSMVTreeTestContext with a custom data tuple creator factory and include fields.
-     *
-     * @param dataTupleBuilderFactory the factory to use for creating data tuples,
-     *                                or null to use the default (standard) factory
-     * @param numIncludeFields number of include fields in the data record (0 = none)
-     */
     public static LSMVTreeTestContext create(NCConfig storageConfig, IIOManager ioManager,
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
             ISerializerDeserializer[] fieldSerdes, int numVectorFields, ILSMMergePolicy mergePolicy,
@@ -162,6 +157,28 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, int numIncludeFields) throws Exception {
+        return create(storageConfig, ioManager, virtualBufferCaches, file, diskBufferCache, fieldSerdes,
+                numVectorFields, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory,
+                metadataPageManagerFactory, dataTupleBuilderFactory, numIncludeFields,
+                NoOpCompressorDecompressorFactory.INSTANCE);
+    }
+
+    /**
+     * Create a new LSMVTreeTestContext with a custom data tuple creator factory and include fields.
+     *
+     * @param dataTupleBuilderFactory the factory to use for creating data tuples,
+     *                                or null to use the default (standard) factory
+     * @param numIncludeFields number of include fields in the data record (0 = none)
+     * @param compressorDecompressorFactory page compression for the data components
+     */
+    public static LSMVTreeTestContext create(NCConfig storageConfig, IIOManager ioManager,
+            List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
+            ISerializerDeserializer[] fieldSerdes, int numVectorFields, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory,
+            IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, int numIncludeFields,
+            ICompressorDecompressorFactory compressorDecompressorFactory) throws Exception {
 
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
 
@@ -196,7 +213,7 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 TestVTreeDistanceFunctionFactory.INSTANCE, // distanceFunctionFactory (test fixture)
                 // Identity quantizer: these fixtures store full-precision vectors, and the top-K cursor
                 // requires a quantizer. Inert on this bare leaf layout, which carries no quantized bytes.
-                TestVTreeQuantizerFactory.INSTANCE, SINGLE_CLOSEST, EPSILON);
+                TestVTreeQuantizerFactory.INSTANCE, SINGLE_CLOSEST, EPSILON, compressorDecompressorFactory);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }
@@ -241,7 +258,7 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 quantizationParams, TestVTreeDistanceFunctionFactory.INSTANCE,
                 // No quantizer: this fixture's leaves carry full-precision bytes in the quantized field,
                 // so a quantized distance off them would not mean anything. Neighbor tests never ask for one.
-                null, SINGLE_CLOSEST, EPSILON);
+                null, SINGLE_CLOSEST, EPSILON, NoOpCompressorDecompressorFactory.INSTANCE);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);
     }

@@ -44,6 +44,7 @@ import org.apache.asterix.runtime.utils.VectorDistanceFunctionFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.accessors.DoubleBinaryComparatorFactory;
@@ -164,13 +165,17 @@ public class VTreeResourceFactoryProvider implements IResourceFactoryProvider {
             // and throws otherwise. Under an atomic statement those writers are the normal state, and the
             // throw unwinds into GlobalVirtualBufferCache$FlushThread, which halts the JVM.
             boolean atomic = dataset.isAtomic();
+            // Same source as the B-tree secondaries: the scheme recorded on the index when it was created.
+            ICompressorDecompressorFactory compDecompFactory =
+                    mdProvider.getCompressionManager().getFactory(index.getCompressionScheme());
             return new LSMVTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                     filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory,
                     metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
                     mergePolicyProperties, true, vectorDimensions, vectorFields,
                     typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, atomic,
                     vectorAccessorFactory, VTreeDataTupleAccessor.identityFields(isQuantized, numPrimaryKeys),
-                    numIncludeFields, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
+                    numIncludeFields, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon,
+                    compDecompFactory);
         } else {
             return null;
         }

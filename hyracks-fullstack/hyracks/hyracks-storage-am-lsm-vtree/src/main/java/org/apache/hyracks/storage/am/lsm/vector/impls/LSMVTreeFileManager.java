@@ -22,8 +22,11 @@ package org.apache.hyracks.storage.am.lsm.vector.impls;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -34,6 +37,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReferenc
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMVTreeComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
+import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,15 +61,19 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
             (dir, name) -> !name.startsWith(".") && name.endsWith(VCTREE_SUFFIX);
 
     public LSMVTreeFileManager(IIOManager ioManager, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> vTreeFactory) {
-        super(ioManager, file, null);
+            TreeIndexFactory<? extends ITreeIndex> vTreeFactory,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
+        super(ioManager, file, null, compressorDecompressorFactory);
         this.vTreeFactory = vTreeFactory;
     }
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String baseName = getNextComponentSequence(vTreeFilter);
-        return new LSMVTreeComponentFileReferences(baseDir.getChild(baseName + DELIMITER + VCTREE_SUFFIX), null, null,
+        // Only the data component is compressed. The shared static structure is written once by a separate
+        // builder and must open the same way under every component, compressed dataset or not.
+        return new LSMVTreeComponentFileReferences(
+                getCompressedFileReferenceIfAny(baseName + DELIMITER + VCTREE_SUFFIX), null, null,
                 baseDir.getChild(STATIC_STRUCTURE_SUFFIX));
     }
 
@@ -76,7 +84,8 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
         // component references the same shared file the flush path references — there is no per-merge
         // ".staticstructure" file, and nothing ever creates one. It goes in the dedicated static-structure
         // slot, not the bloom-filter slot.
-        return new LSMVTreeComponentFileReferences(baseDir.getChild(baseName + DELIMITER + VCTREE_SUFFIX), null, null,
+        return new LSMVTreeComponentFileReferences(
+                getCompressedFileReferenceIfAny(baseName + DELIMITER + VCTREE_SUFFIX), null, null,
                 baseDir.getChild(STATIC_STRUCTURE_SUFFIX));
     }
 
@@ -103,6 +112,7 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         if (allVTreeFiles.isEmpty()) {
+            cleanLookAsideFiles(Collections.emptySet(), vTreeFactory.getBufferCache());
             return validFiles;
         }
 
@@ -130,6 +140,12 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
             }
         }
+
+        Set<String> survivingSequences = new HashSet<>();
+        for (IndexComponentFileReference survivor : survivors) {
+            survivingSequences.add(survivor.getSequence());
+        }
+        cleanLookAsideFiles(survivingSequences, vTreeFactory.getBufferCache());
 
         // LSM expects disk components ordered newest -> oldest: [2,2], [1,1], [0,0].
         survivors.sort(Collections.reverseOrder());
@@ -174,7 +190,17 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
      * listing under-reports (and would silently drop valid components here).
      */
     private void collectVTreeFiles(List<IndexComponentFileReference> files) throws HyracksDataException {
-        for (FileReference fileRef : ioManager.list(baseDir, vTreeFilter)) {
+        for (FileReference listed : ioManager.list(baseDir, vTreeFilter)) {
+            // Re-resolve through the compression scheme, or a compressed component would be opened as a raw file.
+            FileReference fileRef = getCompressedFileReferenceIfAny(listed.getName());
+            if (fileRef.isCompressed()
+                    && !ioManager.exists(((CompressedFileReference) fileRef).getLAFFileReference())) {
+                // A compressed component without its look-aside file cannot be read: a delete that removed the
+                // LAF but not the data file before a crash (CompressedFileManager.State.INVALID). Finish it.
+                LOGGER.log(Level.DEBUG, "Deleting VTree component {} with no look-aside file", fileRef);
+                cleanupOrphanedVTreeFile(fileRef);
+                continue;
+            }
             files.add(IndexComponentFileReference.of(fileRef));
         }
     }
@@ -208,11 +234,14 @@ public class LSMVTreeFileManager extends AbstractLSMIndexFileManager {
      */
     private void cleanupOrphanedVTreeFile(FileReference vTreeFile) {
         try {
-            LOGGER.log(Level.TRACE, "Cleaning up orphaned VTree file: {}", vTreeFile.getAbsolutePath());
-            ioManager.delete(vTreeFile);
+            LOGGER.log(Level.DEBUG, "Cleaning up orphaned VTree file: {}", vTreeFile.getAbsolutePath());
+            // through the buffer cache, which deletes a compressed file's look-aside file first, as recovery
+            // relies on, and unmaps the file if it is open
+            delete(vTreeFactory.getBufferCache(), vTreeFile);
         } catch (Exception e) {
             LOGGER.log(Level.TRACE, "Failed to clean up orphaned VTree file {}: {}", vTreeFile.getAbsolutePath(),
                     e.getMessage());
         }
     }
+
 }

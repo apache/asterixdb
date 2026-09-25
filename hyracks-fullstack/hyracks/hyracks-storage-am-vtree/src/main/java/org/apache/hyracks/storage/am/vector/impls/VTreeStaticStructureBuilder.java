@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeInteriorFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeLeafFrame;
 import org.apache.hyracks.storage.am.vector.api.VTreeStaticTupleConstants;
+import org.apache.hyracks.storage.am.vector.frames.VTreeNSMFrame;
 import org.apache.hyracks.storage.am.vector.utils.VTreeLeafNeighborList;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataKeys;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -360,6 +361,8 @@ public class VTreeStaticStructureBuilder extends PageWriteFailureCallback implem
     }
 
     private void writePage(ICachedPage page) throws HyracksDataException {
+        // Leaves are re-read from this local write by resolveAndUploadLeafNeighbors(), so zeroing here covers both.
+        VTreeNSMFrame.zeroUnusedSpace(page.getBuffer());
         if (currentLevel == numLevels - 1) {
             // Leaf page: its neighbor lists are still provisional, so record each centroid's placement
             // and publish the page LOCAL-ONLY. resolveAndUploadLeafNeighbors() later re-reads, resolves,

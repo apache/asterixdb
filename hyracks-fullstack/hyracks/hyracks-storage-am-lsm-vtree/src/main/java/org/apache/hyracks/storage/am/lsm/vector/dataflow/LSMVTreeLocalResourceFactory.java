@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.vector.dataflow;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
@@ -61,6 +62,8 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
     protected final CrossPollinationConfig crossPollination;
     /** Level-wise candidate window supplied at DDL time; threaded onto {@link LSMVTreeLocalResource}. */
     protected final double epsilon;
+    /** Page compression for the data components; the dataset's scheme, threaded onto the resource. */
+    protected final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     public LSMVTreeLocalResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -73,7 +76,8 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
             ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic,
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields, int numIncludeFields,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
-            CrossPollinationConfig crossPollination, double epsilon) {
+            CrossPollinationConfig crossPollination, double epsilon,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -88,6 +92,8 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
         this.vectorAccessorFactory = vectorAccessorFactory;
         this.identityFields = identityFields;
         this.numIncludeFields = numIncludeFields;
+        this.compressorDecompressorFactory =
+                Objects.requireNonNull(compressorDecompressorFactory, "compressorDecompressorFactory");
     }
 
     @Override
@@ -97,6 +103,6 @@ public class LSMVTreeLocalResourceFactory extends LsmResourceFactory {
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable, vectorDimensions, vectorFields, nullTypeTraits,
                 nullIntrospector, atomic, vectorAccessorFactory, identityFields, numIncludeFields,
-                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
+                distanceFunctionFactory, quantizerFactory, crossPollination, epsilon, compressorDecompressorFactory);
     }
 }

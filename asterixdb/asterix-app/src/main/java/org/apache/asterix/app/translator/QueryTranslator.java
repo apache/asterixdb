@@ -1924,6 +1924,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
+                // Resolved now, for the same reason as a BTREE's: the scheme its WITH clause names, or the
+                // configured default. Ahead of the sizing, so a bad scheme is reported before the dataset's state.
+                String compressionScheme = metadataProvider.getCompressionManager()
+                        .getDdlOrDefaultCompressionScheme(stmtCreateIndex.getCompressionScheme());
+
                 // Fix the sizing before the record is written. num_clusters and train_list_fraction are
                 // derived from the per-partition cardinality when the user leaves them out, and the record is
                 // written before any build job runs, so deriving them later would leave the catalog silent
@@ -1934,7 +1939,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         includeFieldSourceIndicators, includeFieldTypes, false, vectorParameters);
 
                 Index newIndex = new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails,
-                        stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);
+                        stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator, compressionScheme);
 
                 bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
                 EntityDetails entityDetails =

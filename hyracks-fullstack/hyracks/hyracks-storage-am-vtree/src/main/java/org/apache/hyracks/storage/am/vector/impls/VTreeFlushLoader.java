@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.vector.api.IVTreeInteriorFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeLeafFrame;
+import org.apache.hyracks.storage.am.vector.frames.VTreeNSMFrame;
 import org.apache.hyracks.storage.am.vector.utils.VTreeLeafNeighborList;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataKeys;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -249,6 +250,7 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
     }
 
     private void write(ICachedPage cPage) throws HyracksDataException {
+        VTreeNSMFrame.zeroUnusedSpace(cPage.getBuffer());
         compressedPageWriter.prepareWrite(cPage);
         pageWriter.write(cPage);
     }

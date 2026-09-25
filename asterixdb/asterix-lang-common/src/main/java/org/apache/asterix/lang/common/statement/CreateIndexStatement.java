@@ -81,11 +81,13 @@ public class CreateIndexStatement extends AbstractStatement {
         this.castDefaultNull = OptionalBoolean.ofNullable(castDefaultNull);
         this.castConfig = castConfig == null ? Collections.emptyMap() : castConfig;
         this.includeElements = includeElements;
-        // A vector index always has a WITH clause, so this is non-null exactly for TYPE VTREE. On a BTREE or ARRAY
-        // index the clause carries the compression scheme only; the grammar rejects it on any other type.
+        // A vector index always has a WITH clause, so this is non-null exactly for TYPE VTREE; its clause may also
+        // name a compression scheme. On a BTREE or ARRAY index the clause carries the compression scheme only; the
+        // grammar rejects it on any other type.
         this.vectorParameters =
                 indexType == IndexType.VTREE ? VectorIndexDeclUtil.validateAndGetParameters(withObjectRecord) : null;
-        this.compressionScheme = indexType == IndexType.VTREE ? null
+        this.compressionScheme = indexType == IndexType.VTREE
+                ? DatasetDeclParametersUtil.validateAndGetVectorIndexCompressionScheme(withObjectRecord)
                 : DatasetDeclParametersUtil.validateAndGetIndexCompressionScheme(withObjectRecord);
     }
 

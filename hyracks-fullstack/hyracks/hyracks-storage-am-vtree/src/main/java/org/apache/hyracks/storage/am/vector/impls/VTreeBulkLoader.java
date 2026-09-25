@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeInteriorFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeLeafFrame;
 import org.apache.hyracks.storage.am.vector.api.IVTreeMetadataFrame;
+import org.apache.hyracks.storage.am.vector.frames.VTreeNSMFrame;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
 import org.apache.hyracks.storage.am.vector.utils.VTreeLeafNeighborList;
 import org.apache.hyracks.storage.am.vector.utils.VTreeMetadataKeys;
@@ -647,6 +648,7 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
     }
 
     private void write(ICachedPage cPage) throws HyracksDataException {
+        VTreeNSMFrame.zeroUnusedSpace(cPage.getBuffer());
         compressedPageWriter.prepareWrite(cPage);
         pageWriter.write(cPage);
     }

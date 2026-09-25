@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -49,6 +50,8 @@ import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizerFactory;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.utils.CrossPollinationConfig;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressorFactory;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -71,6 +74,7 @@ public class LSMVTreeLocalResourceJsonTest {
     private static final int NUM_INCLUDE_FIELDS = 2;
     private static final double EPSILON = 0.75;
     private static final CrossPollinationConfig CROSS_POLLINATION = new CrossPollinationConfig(3, 1.0);
+    private static final ICompressorDecompressorFactory SNAPPY = new SnappyCompressorDecompressorFactory();
 
     /** Every key {@code appendToJson} writes unconditionally, so every key {@code fromJson} may not default. */
     private static final String[] REQUIRED_KEYS =
@@ -108,7 +112,8 @@ public class LSMVTreeLocalResourceJsonTest {
         LSMVTreeLocalResource restored = (LSMVTreeLocalResource) LSMVTreeLocalResource.fromJson(registry, json);
         assertEquals(text(json), text(restored.toJson(registry)));
 
-        assertEquals(0, countOccurrences(text(resource(registry, null).toJson(registry)), "\"quantizerFactory\""));
+        assertEquals(0, countOccurrences(text(resource(registry, (IVTreeQuantizerFactory) null).toJson(registry)),
+                "\"quantizerFactory\""));
     }
 
     /** A truncated or foreign resource must be rejected, not silently defaulted into a mis-keyed index. */
@@ -127,6 +132,34 @@ public class LSMVTreeLocalResourceJsonTest {
                         e.getMessage().contains(key));
             }
         }
+    }
+
+    /** The compression scheme is what decides whether a component opens through its look-aside file. */
+    @Test
+    public void compressedResourceRoundTrips() throws Exception {
+        FakeRegistry registry = new FakeRegistry();
+        JsonNode json = resource(registry, SNAPPY).toJson(registry);
+        LSMVTreeLocalResource restored = (LSMVTreeLocalResource) LSMVTreeLocalResource.fromJson(registry, json);
+
+        assertEquals(text(json), text(restored.toJson(registry)));
+        assertEquals(true, text(json).contains(SnappyCompressorDecompressorFactory.class.getName()));
+    }
+
+    /**
+     * A resource persisted before VTree compression has no compressor key. Its components carry no look-aside
+     * file, so it must come back uncompressed rather than being rejected like a missing required key.
+     */
+    @Test
+    public void resourceWithoutCompressorReadsAsUncompressed() throws Exception {
+        FakeRegistry registry = new FakeRegistry();
+        ObjectNode legacy = resource(registry, SNAPPY).toJson(registry).deepCopy();
+        legacy.remove("compressorDecompressorFactory");
+
+        LSMVTreeLocalResource restored = (LSMVTreeLocalResource) LSMVTreeLocalResource.fromJson(registry, legacy);
+
+        String restoredJson = text(restored.toJson(registry));
+        assertEquals(true, restoredJson.contains(NoOpCompressorDecompressorFactory.class.getName()));
+        assertEquals(false, restoredJson.contains(SnappyCompressorDecompressorFactory.class.getName()));
     }
 
     /** The base class owns filterFields; a subclass copy would write it twice and read back the later one. */
@@ -154,10 +187,20 @@ public class LSMVTreeLocalResourceJsonTest {
     }
 
     private static LSMVTreeLocalResource resource(FakeRegistry registry) {
-        return resource(registry, TestVTreeQuantizerFactory.INSTANCE);
+        return resource(registry, TestVTreeQuantizerFactory.INSTANCE, NoOpCompressorDecompressorFactory.INSTANCE);
     }
 
     private static LSMVTreeLocalResource resource(FakeRegistry registry, IVTreeQuantizerFactory quantizerFactory) {
+        return resource(registry, quantizerFactory, NoOpCompressorDecompressorFactory.INSTANCE);
+    }
+
+    private static LSMVTreeLocalResource resource(FakeRegistry registry,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
+        return resource(registry, TestVTreeQuantizerFactory.INSTANCE, compressorDecompressorFactory);
+    }
+
+    private static LSMVTreeLocalResource resource(FakeRegistry registry, IVTreeQuantizerFactory quantizerFactory,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         return new LSMVTreeLocalResource("dataverse/dataset/0/idx", registry.serializable(IStorageManager.class),
                 new ITypeTraits[] { registry.serializable(ITypeTraits.class) },
                 new IBinaryComparatorFactory[] { registry.serializable(IBinaryComparatorFactory.class) }, null, null,
@@ -168,7 +211,7 @@ public class LSMVTreeLocalResourceJsonTest {
                 registry.serializable(ILSMMergePolicyFactory.class), Collections.emptyMap(), true, VECTOR_DIMENSIONS,
                 VECTOR_FIELDS, null, null, true, TestDoubleArrayVectorAccessor.Factory.INSTANCE, IDENTITY_FIELDS,
                 NUM_INCLUDE_FIELDS, TestVTreeDistanceFunctionFactory.INSTANCE, quantizerFactory, CROSS_POLLINATION,
-                EPSILON);
+                EPSILON, compressorDecompressorFactory);
     }
 
     /**
@@ -224,7 +267,7 @@ public class LSMVTreeLocalResourceJsonTest {
         @Override
         public IJsonSerializable deserializeOrDefault(JsonNode json, Class<? extends IJsonSerializable> clazz)
                 throws HyracksDataException {
-            return json == null ? null : deserialize(json);
+            return json == null ? byClass.get(clazz.getName()) : deserialize(json);
         }
 
         FakeRegistry() {
@@ -236,6 +279,8 @@ public class LSMVTreeLocalResourceJsonTest {
                     TestDoubleArrayVectorAccessor.Factory.INSTANCE);
             byClass.put(TestVTreeDistanceFunctionFactory.class.getName(), TestVTreeDistanceFunctionFactory.INSTANCE);
             byClass.put(TestVTreeQuantizerFactory.class.getName(), TestVTreeQuantizerFactory.INSTANCE);
+            byClass.put(NoOpCompressorDecompressorFactory.class.getName(), NoOpCompressorDecompressorFactory.INSTANCE);
+            byClass.put(SnappyCompressorDecompressorFactory.class.getName(), SNAPPY);
         }
     }
 }

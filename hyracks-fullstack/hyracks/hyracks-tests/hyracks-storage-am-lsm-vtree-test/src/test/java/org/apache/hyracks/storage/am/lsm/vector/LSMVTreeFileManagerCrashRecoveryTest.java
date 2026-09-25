@@ -26,11 +26,16 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeFileManager;
 import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressorFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +57,7 @@ public class LSMVTreeFileManagerCrashRecoveryTest {
 
     private static final String VCT = "_vct";
     private static final String STATIC_STRUCTURE = ".staticstructure";
+    private static final String LAF = ".dic";
 
     private final LSMVTreeTestHarness harness = new LSMVTreeTestHarness();
 
@@ -78,7 +84,7 @@ public class LSMVTreeFileManagerCrashRecoveryTest {
         create(baseDir, "0_2" + VCT); // merged component (range 0..2)
         create(baseDir, STATIC_STRUCTURE);
 
-        LSMVTreeFileManager fileManager = new LSMVTreeFileManager(harness.getIOManager(), baseDir, null);
+        LSMVTreeFileManager fileManager = fileManager(baseDir, NoOpCompressorDecompressorFactory.INSTANCE);
         List<LSMComponentFileReferences> valid = fileManager.cleanupAndGetValidFiles();
 
         // Only the merged component is valid.
@@ -105,7 +111,7 @@ public class LSMVTreeFileManagerCrashRecoveryTest {
         create(baseDir, "2_2" + VCT);
         create(baseDir, STATIC_STRUCTURE);
 
-        LSMVTreeFileManager fileManager = new LSMVTreeFileManager(harness.getIOManager(), baseDir, null);
+        LSMVTreeFileManager fileManager = fileManager(baseDir, NoOpCompressorDecompressorFactory.INSTANCE);
         List<LSMComponentFileReferences> valid = fileManager.cleanupAndGetValidFiles();
 
         assertEquals("all three flushed components survive", 3, valid.size());
@@ -114,6 +120,70 @@ public class LSMVTreeFileManagerCrashRecoveryTest {
         assertTrue(valid.get(2).getInsertIndexFileReference().getFile().getName().startsWith("0_0"));
         assertTrue(exists(baseDir, "0_0" + VCT));
         assertTrue(exists(baseDir, "2_2" + VCT));
+    }
+
+    /** A compressed merge leaves each input's look-aside file behind too; those go with their data files. */
+    @Test
+    public void compressedCrashAfterMergeDropsInputLookAsideFiles() throws Exception {
+        FileReference baseDir = harness.getFileReference();
+        baseDir.getFile().mkdirs();
+        for (String seq : new String[] { "0_0", "1_1", "0_1" }) {
+            create(baseDir, seq + VCT);
+            create(baseDir, seq + VCT + LAF);
+        }
+        create(baseDir, STATIC_STRUCTURE);
+
+        List<LSMComponentFileReferences> valid = compressedFileManager(baseDir).cleanupAndGetValidFiles();
+
+        assertEquals(1, valid.size());
+        assertTrue("survivor must open through its look-aside file",
+                valid.get(0).getInsertIndexFileReference().isCompressed());
+        assertTrue(exists(baseDir, "0_1" + VCT));
+        assertTrue(exists(baseDir, "0_1" + VCT + LAF));
+        for (String seq : new String[] { "0_0", "1_1" }) {
+            assertFalse(seq + " data must be deleted", exists(baseDir, seq + VCT));
+            assertFalse(seq + " look-aside file must be deleted", exists(baseDir, seq + VCT + LAF));
+        }
+        assertTrue("static structure is never compressed and must be kept", exists(baseDir, STATIC_STRUCTURE));
+    }
+
+    /**
+     * A half-finished delete leaves a data file without its look-aside file, or the reverse. Neither is readable,
+     * so both are finished off; an intact compressed component is kept.
+     */
+    @Test
+    public void compressedComponentWithoutPartnerIsDropped() throws Exception {
+        FileReference baseDir = harness.getFileReference();
+        baseDir.getFile().mkdirs();
+        create(baseDir, "0_0" + VCT);
+        create(baseDir, "0_0" + VCT + LAF);
+        create(baseDir, "1_1" + VCT); // look-aside file already deleted
+        create(baseDir, "2_2" + VCT + LAF); // data file already deleted
+        create(baseDir, STATIC_STRUCTURE);
+
+        List<LSMComponentFileReferences> valid = compressedFileManager(baseDir).cleanupAndGetValidFiles();
+
+        assertEquals(1, valid.size());
+        assertTrue(valid.get(0).getInsertIndexFileReference().getFile().getName().startsWith("0_0"));
+        assertFalse(exists(baseDir, "1_1" + VCT));
+        assertFalse(exists(baseDir, "2_2" + VCT + LAF));
+        assertTrue(exists(baseDir, "0_0" + VCT + LAF));
+    }
+
+    private LSMVTreeFileManager compressedFileManager(FileReference baseDir) {
+        return fileManager(baseDir, new SnappyCompressorDecompressorFactory());
+    }
+
+    /** The file manager deletes through the buffer cache, so it needs a factory that carries the real one. */
+    private LSMVTreeFileManager fileManager(FileReference baseDir, ICompressorDecompressorFactory compression) {
+        TreeIndexFactory<ITreeIndex> factory = new TreeIndexFactory<>(harness.getIOManager(),
+                harness.getDiskBufferCache(), null, null, null, null, 0) {
+            @Override
+            public ITreeIndex createIndexInstance(FileReference file) {
+                throw new UnsupportedOperationException();
+            }
+        };
+        return new LSMVTreeFileManager(harness.getIOManager(), baseDir, factory, compression);
     }
 
     private static void create(FileReference baseDir, String name) throws Exception {

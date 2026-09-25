@@ -24,8 +24,10 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -50,6 +52,7 @@ import org.apache.hyracks.storage.am.vector.VectorTreeTestUtils;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -107,7 +110,8 @@ public class LSMVTreeMergeTest extends VectorIndexTestDriver {
                 harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(),
                 dataRecordSerdes, vectorDimension, harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory());
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), null, 0,
+                compressorDecompressorFactory());
 
         // Set test data in context
         ctx.setStaticStructureCentroids(centroids);
@@ -156,9 +160,27 @@ public class LSMVTreeMergeTest extends VectorIndexTestDriver {
             int queryK = 500;
             verifyMergedRecords(ctx, queryVector, queryK);
             LOGGER.info("Verification: Records from both components found after merge");
+
+            // Reactivation rediscovers the merged component from disk through the file manager's recovery path.
+            ctx.getIndex().deactivate();
+            ctx.getIndex().activate();
+            assertEquals("Should rediscover 1 disk component on reactivation", 1, lsmvTree.getDiskComponents().size());
+            verifyMergedRecords(ctx, queryVector, queryK);
+            verifyComponentFiles(harness.getFileReference());
         } finally {
             ctx.getIndex().deactivate();
         }
+    }
+
+    /** Page compression for the data components; subclasses override to run the same flow compressed. */
+    protected ICompressorDecompressorFactory compressorDecompressorFactory() {
+        return NoOpCompressorDecompressorFactory.INSTANCE;
+    }
+
+    /** Checks the on-disk files the merge left, once reactivation has reconciled them. */
+    protected void verifyComponentFiles(FileReference indexDir) {
+        String[] lafs = indexDir.getFile().list((dir, name) -> name.endsWith(".dic"));
+        assertEquals("an uncompressed index writes no look-aside file", 0, lafs == null ? 0 : lafs.length);
     }
 
     /**

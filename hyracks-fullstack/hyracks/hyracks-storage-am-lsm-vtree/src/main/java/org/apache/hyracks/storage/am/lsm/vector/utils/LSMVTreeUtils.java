@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.vector.utils;
 
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -98,6 +99,8 @@ public final class LSMVTreeUtils {
      *                           would be a second source of truth for it. Callers that do not care
      *                           about replication pass an explicit single-closest config.
      * @param epsilon            level-wise candidate window from the index DDL, for the same reason.
+     * @param compressorDecompressorFactory page compression for the data components; the shared static
+     *                           structure is never compressed.
      */
     public static LSMVTree createLSMTree(NCConfig storageConfig, IIOManager ioManager,
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
@@ -111,7 +114,8 @@ public final class LSMVTreeUtils {
             IVTreeBinaryAccessorFactory vectorAccessorFactory, int[] identityFields,
             IVTreeDataTupleBuilderFactory dataTupleBuilderFactory, VTreeQuantizationParams quantizationParams,
             IVTreeDistanceFunctionFactory distanceFunctionFactory, IVTreeQuantizerFactory quantizerFactory,
-            CrossPollinationConfig crossPollination, double epsilon) throws HyracksDataException {
+            CrossPollinationConfig crossPollination, double epsilon,
+            ICompressorDecompressorFactory compressorDecompressorFactory) throws HyracksDataException {
 
         // VTree tuples contain no field that is both fixed-length AND nullable, so the null bitmap is never
         // load-bearing and no INullIntrospector is needed (unlike BTree/RTree secondary keys):
@@ -179,7 +183,8 @@ public final class LSMVTreeUtils {
                 interiorFrameFactory, leafFrameFactory, metadataFrameFactory, insertDataFrameFactory, cmpFactories,
                 TREE_INDEX_FIELD_COUNT, vectorDimensions, vectorAccessorFactory, dataTupleBuilderFactory,
                 quantizationParams, distanceFunctionFactory, quantizerFactory, crossPollination, epsilon);
-        ILSMIndexFileManager fileManager = new LSMVTreeFileManager(ioManager, file, vtreeFactory);
+        ILSMIndexFileManager fileManager =
+                new LSMVTreeFileManager(ioManager, file, vtreeFactory, compressorDecompressorFactory);
         ILSMDiskComponentFactory componentFactory = new LSMVTreeDiskComponentFactory(vtreeFactory, filterHelper);
 
         return new LSMVTree(storageConfig, ioManager, virtualBufferCaches, interiorFrameFactory, leafFrameFactory,
